@@ -1,0 +1,31 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
+! supported by 'nfacctd' and 'pmacctd' ?
+!
+! debug: true 
+!
+interface: eth0
+daemonize: false
+aggregate: src_host,dst_host
+! aggregate: src_net,dst_net 
+! plugins: pgsql 
+plugins: mysql
+sql_db: pmacct
+sql_table: acct
+sql_table_version: 1
+sql_passwd: arealsmartpwd
+sql_user: pmacct
+sql_refresh_time: 90
+! sql_optimize_clauses: true
+sql_history: 10m 
+sql_history_roundoff: mh
+! sql_preprocess: qnum=1000, minp=5
+!
+! networks_file: ./networks.example
+! ports_file: ./ports.example
+! sampling_rate: 10
+! sql_trigger_time: 1h
+! sql_trigger_exec: /home/paolo/codes/hello.sh  
+!

@@ -1,0 +1,40 @@
+PMACCTD PLUGIN WRITING HOW-TO
+
+SHORT OVERVIEW
+the plugin architecture should allow people that need some kind of
+their own backend, to write and implement it without knowing too
+much of the core functionalities of pmacctd and other plugins.
+Of course you will need to touch configure.in and Makefile.am in
+order to let your plugin compile automatically via a --enable switch. 
+Below are listed a few steps to hook your plugin in pmacctd; pmacct 
+is a project extremely open to new ideas, so if you wish to contribute
+your work, you are welcome. 
+
+- minor hacks to configure.in script following the example of what
+  has been done there for mysql plugin; you can handle in the same
+  way other requirements such as paths for header or libraries. If
+  you'll handle correctly the PLUGINS variable, you will not need
+  to touch at all the Makefile.am script. Moreover, doing a definition
+  in configure.in (ex. AC_DEFINE(WITH_MYSQL, 1)) whose existence can
+  be checked via instructions to compiler's preprocessor is an easy
+  way to propagate the user configuration choices at compilation time.
+
+- [OPTIONAL] If you need commandline switches, whose values  need to
+  be passed to your plugin, you have to modify the configuration struct
+  (in cfg.h) and the getopt block in pmacctd.c . First change is needed
+  to add fields you need to carry your values; second change is needed
+  if you wish to support new commandline switches to supply your values.
+
+- Now, hook your plugin in pmacctd; you have to add an entry in the
+  plugin_types_list[] array in pmacct-data.h . An entry consists of
+  two fields: an id string and a pointer to a function to be called.
+  The first is the string you wish to write as an argument for '-P'
+  commandline switch or value for 'plugins' configuration key. The
+  second is the entry point for your plugin.
+
+- if you need to add configuration keys that suit your needs, you have
+  simply to add an entry in the dictionary[] array in pmacct-data.h .
+  An entry consists of two fields a key name and an handler. While the
+  first is intuitive, few words about the second field: once a key has
+  been recognized successfully by the parser, its value is handled via
+  a configuration handler (you find them in cfg_handlers.c).  

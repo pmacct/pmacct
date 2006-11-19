@@ -1,0 +1,20 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
+! supported by 'nfacctd' and 'pmacctd' ?
+!
+! debug: true
+daemonize: true
+interface: eth0
+aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+plugins: nfprobe
+nfprobe_receiver: 1.2.3.4:2100
+nfprobe_version: 9
+! nfprobe_engine: 1:1
+! nfprobe_timeouts: tcp=120:maxlife=3600
+!
+! networks_file: /path/to/networks.lst
+! classifiers: /path/to/classifiers/
+! snaplen: 700
+

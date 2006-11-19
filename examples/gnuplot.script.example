@@ -1,0 +1,10 @@
+set term png small color
+set data style lines
+set grid
+set yrange [ 0 : ]
+set title "Traffic in last XX hours"
+set xlabel "hours"
+set ylabel "kBytes"
+set multiplot
+plot "in.txt" using ($1/3600):($2/1000) title "IN Traffic" with linespoints, "out.txt" using ($1/3600):($2/1000) title "OUT Traffic" with linespoints
+

@@ -1,0 +1,14 @@
+This document is about the use of larger byte/packet/flow fields in order to easily
+accomodate larger counters. Why such counters aren't declared by default such large ?
+Because they would require much extra space that often is absolutely not a need.
+
+MySQL.
+There is nothing to do. Each MySQL schema already sports counters large enough. bytes,
+packets and flows fields are declared either of the type INT or BIGINT. It translates
+respectively in 10 and 20 bytes fields. 
+
+PostgreSQL and SQLite.
+There is very little to do. bytes field is already declared BIGINT, thus does not need
+any change. You will need to fix packets and flows fields and declare them as BIGINT
+aswell.
+

@@ -1,0 +1,434 @@
+pmacct (Promiscuous mode IP Accounting package)
+pmacct is Copyright (C) 2003-2006 by Paolo Lucente
+
+(poorman's) TABLE OF CONTENTS: 
+I.	Introduction
+II.	Primitives
+III.	The whole picture
+IV.	Processes Vs. threads
+V.	Communications between core process and plugins
+VI.	Memory table plugin
+VII.	SQL issues and *SQL plugins
+VIII.	Recovery modes
+IX.	pmacctd flows counter implementation
+X.	Classifier and connection tracking engines
+XI.	Jumps and flow diversions in Pre-Tagging infrastructure
+
+
+I. Introduction
+Giving a quick look to the old 'INTERNALS' textfile, this new one starts with a big step
+forward: a rough table of contents, though the document is still not fancy nor formatted.
+I'm also conscious the package is still missing its man page. The goal of this document
+would be an 'as much as possible' careful description of the development paths, trying to
+expose the work done to constructive critics.
+Since March 2005, this document is complemented by a paper about an architectural overview
+of the project 'pmacct: steps forward interface counters'; the referred paper is available
+for download at the pmacct homepage. 
+
+
+II. Primitives
+Either individual packets or specific flows are identified by their header fields (which
+union gives origin to a rather large set of primitives). Aggregates are identified by a
+reduced set of primitives instead. Packets are merged into aggregates by stripping from
+the original set of primitives those not used in the reduced set and then summing their
+referred counters (bytes and packets). Additional operations involved into the merging
+process include the logical grouping of specific primitives into more general entities
+(IP addresses into network prefixes, for example) and tagging of packets.
+While looking forward, we already have a more generalized view of the primitives, which
+will enable to bind aggregation methods to arbitrary pieces of the packet but actually
+primitives already give the desired flexibility. In fact, the concept of primitive itself
+carries the idea of a simple entity that could be stacked along with other primitives to
+form complex expressions using boolean operators. But going practical, what are primitives ?
+They are atomic expressions like "src_port", "dst_host", "proto"; currently the unique
+boolean operator supported to glue expressions is "and". Hence, traffic could be aggregated
+translating a "who connects where, using which service" speech language phrase into one
+recognized by pmacct: "src_host,dst_host,dst_port,proto". Comma, because of the unique
+logical connective "and", is simply intended as a separator.
+
+
+III. The whole picture
+	  ----[ nfacctd loop ]---------------------------
+         |						  |
+	 |	    [ check ]      [   handle    ]        |
+	 | ... =====[ Allow ]======[ pre_tag_map ]=== ... |
+	 |	    [ table ]				  |
+	 |						  |
+	  ------------------------------------------------
+		 \		
+		  |
+		  |
+	    -----[ core process ]--------------------------------------------------------------------------------
+	   |	  | 												 |
+	   |	  | [     apply      ]	    [  evaluate  ]       [     handle     ]    [ write buffer ] 	 |
+	   |	  | [ pre_tag_filter ]      [ primitives ]    |==[ channel buffer ]====[  to plugin   ]==== ...  |
+mirrored   |	 /          &&		          && 	      |							 |
+traffic	   |    /   [       apply      ]    [   apply  ]      |  [     handle     ]    [ write buffer ]		 |
+====================[ aggregate_filter ]====[ post_tag ]======|==[ channel buffer ]====[  to plugin   ]==== ...  |
+NetFlow	   |    \	    &&				      |  						 |
+	   |	 |  [    evaluate     ]			      |  [     handle     ]    [ write buffer ]		 |
+	   |	 |  [ packet sampling ]			      |==[ channel buffer ]====[  to plugin   ]==== ...  |
+	   |	 | 												 |
+	   |      \												 | 
+	    -----------------------------------------------------------------------------------------------------
+		   |
+		   |
+		  /
+          ----[ pmacctd loop ]------------------------------------------------------------
+         |								    		  |
+	 |         [   handle   ]     [  handle  ]    [  handle   ]	[ handle ]        |
+	 | ... ====[ link layer ]=====[ IP layer ]====[ fragments ]==== [ flows ]==== ... |
+	 |								    		  |
+	  --------------------------------------------------------------------------------
+
+
+IV. Processes Vs. threads 
+pmacctd, nfacctd and sfacctd, the pmacct package daemons, rely strongly over a multi-process
+organization rather than over threads. For threads we mean what is commonly referred as
+threads of execution that share their entire address space inside a single process.
+Processes are used to encapsulate each plugin instance and, indeed, the Core Process. It 
+either captures packets via the well-known libpcap API (pmacctd) or listens for specific
+packets coming from the network (nfacctd, for example, listens for NetFlow packets); packets
+are then processed (filtered out, tagged, aggregated and bufferized) and sent to the active
+plugins. They pick and handle in some meaningful way aggregated data (struct pkt_data).
+A picture follows:
+					   |===> [ pmacctd/plugin ]
+libpcap			           pipe/shm|
+===========> [ pmacctd/core ]==============|===> [ pmacctd/plugin ]
+socket
+
+I don't like, except for specific cases (eg. big memory structures that would lead the
+pages' copy-on-write to perform horrendly), the idea of threads on UNIXes and Linux. They
+are suitable and are born in environments with expensive process spawning and weak IPC
+facilities. Moreover the task of managing critical regions in a shared address space is
+sometimes a fertile source of bugs simply because they easily know too much about each
+others' internal states. They frequently translate in adding tricky issues described in
+each good Operating Systems' textbook: a fully new range of timing dependent bugs that
+are excruciatingly difficult to even reproduce. These considerations leave untouched
+portability troubles and differences of behaviour across platforms.
+
+
+V. Communications between core process and plugins
+A single running Core Process, which gathers packets or flows from the network, is able to
+feed aggregated data to multiple plugins; plugins are distinguished by their name. Names,
+for this purpose, need to be unique. Aggregates are then pushed to active plugins through 
+a shared circular queue. Each plugin has a private control channel with the Core Process.
+Circular queues are encapsulated into a more complex channel structure which also includes:
+copy of the aggregation method, an OOB (Out-of-Band) signalling channel, buffers, one or
+more filters and a pointer to the next free queue element. The Core Process simply loops
+around all established channels, in a round-robin fashion, feeding data to active plugins.
+The circular queue is effectively a shared memory segment; if the Plugin is sleeping (eg.
+because the arrival of new data from the network is not sustained), the Core Process kicks
+the Plugin signalling that new data are now available at the specified memory address; the
+Plugin catches the message and copies the buffer into its private memory space; if it is
+not sleeping, once finished, will check the next queue element to see whether new data are
+available. Either cases, the Plugin continues processing the received buffer.
+'plugin_pipe_size' configuration directive aims to tune manually the circular queue size;
+raising its size is vital when facing large volumes of traffic, because the amount of data
+pushed onto the queue is directly (linearly) proportional to the number of packets captured
+by the core process. A small additional space is allocated for the out-of-band signallation
+mechanism, which is pipe-based. 'plugin_buffer_size' defines the transfer buffer size and
+is disabled by default. Its value has to be <= the circular queue size, hence the queue
+will be divided into 'plugin_buffer_size'/'plugin_pipe_size' chunks. Let's write down a
+few simple equations:
+
+dss = Default Segment Size
+dbs = Default Buffer Size = sizeof(struct pkt_data) ~ 40 bytes
+as = Address Size = sizeof(char *) (it depends upon the hardware architecture)
+bs = 'plugin_buffer_size' value
+ss = 'plugin_pipe_size' value
+
+	a) no 'plugin_buffer_size' and no 'plugin_pipe_size':
+	   circular queue size = (dss / as) * dbs 
+	   signallation queue size = dss
+
+	b) 'plugin_buffer_size' defined but no 'plugin_pipe_size':
+	   circular queue size = (dss / as) * bs 
+	   signallation queue size = dss
+
+	c) no 'plugin_buffer_size' but 'plugin_pipe_size' defined: 
+  	   circular queue size = ss 
+	   signallation queue size = (ss / dbs) * as
+
+	d) 'plugin_buffer_size' and 'plugin_pipe_size' defined:
+	   circular queue size = ss 
+	   signallation queue size = (ss / bs) * as
+	
+Intuitively, the equations above tell that if no 'plugin_pipe_size' is defined, the size
+of the circular queue is inferred by the size of the signallation queue, which is selected
+by the Operating System. If 'plugin_pipe_size' is defined, the circular queue size is set
+to the supplied value and the signallation queue size is adjusted accordingly.
+If 'plugin_buffer_size' is not defined, it's assumed to be sizeof(struct pkt_data), which
+is the size of a single aggregate travelling through the circolar queue; 'sizeof(char *)'
+is the size of a pointer, which is architecture-dependant. 
+
+Few final remarks: a) buffer size of 10KB and pipe size of 10MB are well-tailored for most
+common environments; b) by enabling buffering, attaching the collector to a mute interface 
+and doing some pings will not show any result (... data are buffered); c) take care to the
+ratio between the buffer size and pipe size; choose for a ratio not less than 1:100. But 
+keeping it around 1:1000 is strongly adviceable; selecting a reduced ratio could lead to
+filling the queue. You may alternatively do some calculations based on the knowledge of
+your network environment:
+
+average_traffic = packets per seconds in your network segment
+sizeof(struct pkt_data) = ~70 bytes
+
+pipe size >= average_traffic * sizeof(struct pkt_data)
+
+                     circular queue 
+[ pmacctd/core ] =================================> [ pmacctd/plugin ]
+           |      |                                |   |
+           |      |   enqueued buffers     free    |   |
+           |      |==|==|==|==|==|==|==|===========|   |
+	   |					       |
+	   `-------------------------------------------'
+			OOB signallation queue
+
+	
+VI. Memory table plugin
+In-Memory Table plugin (IMT) stores the aggregates as they have been assembled by core
+process in a memory structure, organized as an hash table. Such table is divided in a
+number of buckets. Aggregates are framed into a structure defined as 'struct acc' and
+then direct mapped to a bucket by the mean of a modulo function. Collisions in each
+bucket are solved building collision chains. An auxiliar structure, a LSU cache (Last
+Recently Used), is provided to speed up searches and updates into the main table. LSU
+saves last updated or searched element for each bucket: when a new operation on the
+bucket is required, the LSU cache is compared first; if it doesn't match, the collision
+chain gets traversed.
+It's adviceable to use a prime number of buckets (defined by 'imt_buckets' configuration
+directive), because it helps in achieving better data dispersion when applying the modulo
+function. Collision chains are organized as linked lists of elements, so they should be
+kept short because of the linear search over them; having a flat table (so, raising the
+number of buckets) helps in keeping chains short. Memory is allocated in large chunks,
+called memory pools, to limit as possible bad effects (such as trashing) derived from
+dispersion through the memory pages. In fact, drawbacks of the dense use of malloc()
+calls are extensively described on every Operating Systems textbook. Memory allocations
+are tracked via a linked list of chunk descriptors (struct memory_pool_desc) for later
+jobs such as freeing unused memory chunks, operations over the list, etc. 
+The memory structure can be allocated either 'fixed' or 'dynamic'; when dealing with a
+fixed table, all descriptors are allocated in a single shot when the daemon is fired up;
+when dealing with a 'dynamic' memory table (which is allowed to grow undefinitely in
+memory new chunks of memory are allocated and added to the list during the execution.
+Using a fixed table places a maximum limit to the number of entries the table is able
+to store; the following calculation may help in building a fixed table: 
+ES (Entry Size) ~ 50 bytes
+NE (Number of entries)
+
+   NE = ('imt_mem_pools_number' * 'imt_mem_pools_size') / ES
+
+Default values are: imt_mem_pools_number = 16; imt_mem_pools_size = 8192; this will let
+the default fixed table to contain a maximum of slightly more than 2600 aggregates.  
+ 
+IMT plugin does not rely any way over the realloc() function, but only mmap(). Table
+grows and shrinks with the help of the above described tracking structures. This is
+because of a few assumptions about the use of realloc():
+(a) try to reallocate on the original memory block and (b) if (a) failed, allocate
+another memory block and copy the contents of the original block to this new location.
+In this scheme (a) can be done in constant time; in (b) only the allocation of new memory
+block and the deallocation of original block are done in constant time, but the copy of
+previous memory area, for large in-memory tables, could perform horrendly.
+Data stored into the memory structure can be either fetched, erased or zeroed by a client
+tool, pmacct, communicating through a Unix Domain socket (/tmp/collect.pipe by default).
+The available queries are 'bulk data retrieval', 'group data retrieval' (partial match),
+'single entry retrieval' (exact match) and 'erase table'. Additionally, both partial and
+full matches may supply a request for resetting the counters.
+On the server side, the client query is evaluated: requests that need just a short stroll
+through the memory structure are accomplished by the plugin itself, the others (for example
+batch queries or bulk data retrieval) are served by a child process spawned by the plugin.
+Because memory table is allocated 'shared', operations requiring table modifications by
+such child (eg. resetting counters for an entry) are handled by raising a flag instead:
+next time the plugin will update that entry, it will also serve any pending request. 
+With the introduction of batch queries (which enable to group into a single query up to
+4096 requests) transfers may be fragmented by the Operating System. IMT plugin will take
+care of recomposing all fragments, expecting also a '\x4' placeholder as 'End of Message'
+marker. If an incomplete message is received, it's discarded as soon as current transfer
+timeout expires (1s).
+
+
+VII. SQL issues and *SQL plugins
+Currently two SQL plugins are available; one allows for aggregates insertion in a MySQL
+DB, the other into a PostgreSQL DB.
+Storing aggregates into a persistent backend leaves chances for advanced operations and
+so these plugins are intended to give a wider range of features (eg. fallback mechanisms
+and backup storage methods if DB fails, counters breakdown, etc.) not available in other
+plugins. Let's firstly give a whole picture of how these SQL plugins work. As packets
+received from core process via communication channel get unpacked, they are inserted in a
+direct-mapped cache; then, at fixed time intervals (configurable via 'sql_history' key)
+cache is purged and aggregates are pushed into DB; optionally triggers may be selected for
+execution. Data to cache bucket mapping is computed via a modulo function. If bucket already
+contains valid data then a new chain is built (or traversed when it already exists); the
+first free node encountered is used; if no free nodes are found then two more chances are
+explored: if any node has been marked as stale (it happens when an allocated node is unused
+for some  consecutive timeslots) it's reused by moving it away from its old chain; if no
+free nodes are available then a new one is allocated. Stale nodes are, then, retired if
+they still remain unused for longer times (RETIRE_TIME**2). To speed up nodes reuse and
+retirement, an additional LRU list of nodes is also mantained. 
+As told before, aggregates are pushed into the DB at regular intervals; to speed up such
+operation a queue of pending queries is built as nodes are used; this allows to avoid long
+walks through the whole cache structure.
+When current timeslot expires a new process is spawned and charged of queue processing; SQL
+queries are built and sent to the DB. Because we, at this moment, don't known if INSERT queries
+would create duplicates, an UPDATE query is launched first and only if no rows are affected,
+then an INSERT query is trapped. 'sql_dont_try_update' reverts this default behaviour and
+skips directly to INSERT queries; you must be sure there are no risks of duplicate aggregates
+to avoid data loss, when enabling this configuration directive.
+Data in the cache is never erased but simply marked as invalid; this way while correctess of
+data is still preserved, we avoid the waste of CPU cycles. 
+The number of cache buckets is tunable via the 'sql_cache_entries' configuration key; a prime 
+number is strongly advisable to ensure a better data dispersion through the cache. 
+Three notes about the above described process: (a) few time ago the concept of lazy data refresh
+deadlines has been introduced. Timeframes boundaries are checked without the auxilium of signals
+but when new data comes in. If such data arrival rate is low, data is not kept stale into the
+cache but a poll() timeout makes the wheel spin. (b) SQL plugins main loop has been kept sufficiently
+fast because of any direct interaction with the DB. It only gets data, computes modulo and handles
+both cache and queries queue. (c) cache has been thought to exploit a kind of temporal locality
+in internet flows. A picture follows:
+
+				    |====> [ cache ] ===|
+pipe				    |			|
+======> [ pmacctd/SQL plugin ] =====|====> [ cache ] ===|=============================| DB |======>
+			|	    |			|
+			|	    |====> [ cache ] ===|
+			|
+			|=======> [ fallback mechanisms ]
+
+Now, let's keep an eye on how aggregates are structured on the DB side. Data is simply organized
+in flat tuples, without any external references. After being not full convinced about better
+normalized solutions aimed to satifsy an abstract concept of flexibility, we've (and here come
+into play the load of mails exchanged with Wim Kerkhoff) found that simple means faster. And to
+let the wheel spin quickly is a key achievement, because pmacctd needs not only to insert new
+records but also update existing ones, putting under heavy pressure DB when placed in busy
+network environments and an high number of primitives are required. 
+Now a pair of concluding practical notes: (a) default SQL table and its primary key are suitable
+for many normal usages, however unused fields will be filled by zeroes. We took this choice a long
+time ago to allow people to compile sources and quickly get involved into the game, without caring
+too much about SQL details (assumption: who is involved in network management, shoult not have
+necessarily to be also involved into SQL stuff). So, everyone with a busy network segment under his
+feets has to carefully tune the table himself to avoid performance constraints; 'sql_optimize_clauses'
+configuration key evaluates what primitives have been selected and avoids long 'WHERE' clauses in
+'INSERT' and 'UPDATE' queries. This may involve the creation of auxiliar indexes to let the execution
+of 'UPDATE' queries to work smoothly. A custom table might be created, trading flexibility with disk
+space wasting. (b) when using timestamps to break down aggregates into timeframes ('sql_history' key),
+validity of data is connected not only to data itself but also to its timeframe; as stated before,
+aggregates are pushed into DB at regular intervals ('sql_refresh_time' key). Connecting these two
+elements (refresh time and historical timeframe width) with a multiplicative factor helps in avoiding
+transient cache aliasing phenomena and in fully exploiting cache benefits.
+
+
+VIII. Recovery modes
+The concept of recovery mechanism is available only in SQL plugins and is aimed to avoid data
+loss by taking a corrective action if the DB suffers an outage or simply becomes unresponsive.
+Actually, two mechanisms are supported: aggregates may be either (1) pulled into a structured
+logfile for later processing by a player program or (2) written to a backup DB. While the latter
+method is quite straightforward, let's spend few words about the logfile: things has been kept
+simple, so much care and responsibility for keeping aggregates meaningful is on users shoulders.
+A logfile is made of a (a) logfile header containing DB configuration parameters, a (b) template
+header which contains the description of record structure, followed by (c) records dumped by the
+plugin. When appending new aggregates to a logfile, if the file already exists, just two brief
+safety checks are made against actual parameters: (1) the magic number into the logfile header is
+checked to ensure we are not about to write to wrong files and (2) number of record fields and
+their total size are checked to be moderately sure we are not about to write logfile which template
+doesn't precisely reflect our records. If multiple SQL plugins are running, each one should have
+its own logfile, moreover, when upgrading from a previous version it's good rule to not continue
+writing to an old logfile. A final remark about logfiles: their maximum allowed size is 2Gb, this
+is because seems actually there is not a standard way to guarantee 'large files' to be read. Once
+the maximum size is reached, data will not start to get lost, the 'old' logfile is rotated and an
+INFO message is trapped instead: a small integer is added at the end of the filename (suppose the
+logfile is 'pmacct-recovery.dat', it is rotated as 'pmacct-recovery.dat.1', etc.) and a new logfile
+is started.
+The health of SQL server is checked everytime aggregates are purged into it. If the database becomes
+unresponsive a 'recovery' flag is raised. This flag remains valid, with no further checks, for the
+entire purging event. If transactions are being involved (e.g., PostgreSQL), an additional reprocess
+flag signals the need to not assume previous, already processed, elements have been successfully
+written to DB but recover them also. Player tools are available, 'pmmyplay' and 'pmpgplay'; they
+currently don't contain any advanced auto-process feature: both them extract needed informations
+(where to connect, which username to use, etc.) from the logfile header - though, some commandline
+parameters may be used to override them; players read each record basing over the template header
+ensuring that even in the case internal records structure has changed, they are still readable
+(that is, the template has backward compatibility effects but if new fields are added over the time,
+old players will not be able to handle them).
+While playing the entire logfile or even a part of it, database failures are detected and signalled.
+A final statistics screen summarizes what has been successfully written into the DB; this aims to
+help reprocess the logfile at a later stage if something goes wrong once again. 
+
+
+IX. pmacctd flows counter implementation
+Let's take the definition of IP flows from RFC3954, titled 'Cisco Systems NetFlow Services Export
+Version 9': an IP flow is defined as a set of IP packets passing an observation point in the network
+during a certain time interval. All packets that belong to a particular flow have a set of common
+properties derived both from the data contained in the packet and from the packet treatment at the
+observation point. Packets belonging to a specific flow also sport a very high temporal locality.
+While the handmade IP flows implementation in pmacctd mantains the fore-mentioned properties, it
+behaves quite differently when compared with NetFlow. In fact, the typical NetFlow implementation
+accumulates packets belonging to the same flow into a single memory object; when it comes to expire
+(because either the flow hits a timeout or an intercepted quit message - ie. TCP FIN/RST -) it is
+released and pushed into a NetFlow packet which is in turn sent to the collector. On the contrary,
+pmacctd does not accumulate; each packet is looked up against the flow buffer - a memory structure
+for active flows bookeping -: if it belongs to an already active flows its 'new flow' flag is
+deactivated (0); otherwise it's activated (1).
+While the above method is savy in terms of resource consumption, it could have some side-effects:
+for example it causes an entry to have a flow value '0' after either a reset of the backend memory
+structure (ie. pmacct -e, pmacct ... -r, etc.) or the beginning of a new timeframe when historical
+accounting is enabled (ie. print plugin, 'sql_history', etc.).
+
+
+X. Classifier and connection tracking engines
+pmacct 0.10.0 sees the introduction of new packet/stream classification and connection tracking
+features in the pmacctd daemon. Firstly, let's give a look to the global picture; then how they
+work:
+
+          ----[ pmacctd loop ]-------------------------------------------------------------
+	 |						     [  regular   ]		   |
+	 |						     [ expression ]		   |
+	 |						  ___[  patterns  ]		   |
+         |                                               /		 /		   |
+	 |						/	  ______/		   |
+	 |						|	 /			   |
+	 |						|       /			   |
+         |        [ fragment ]   [   flow   ]   [      flow      ]   [ connection ]	   |
+         | ... ==>[ handling ]==>[ handling ]==>[ classification ]==>[  tracking  ]==> ... |
+         |        [  engine  ]   [  engine  ]   [     engine     ]   [   engine   ]	   |
+	 |						|       \			   |
+	 |						|        \___			   |
+	 |						\            \			   |
+	 |						 \  [ shared  ]			   |
+	 |						  --[ object  ]			   |
+	 |						    [ pattern ]			   |
+          ---------------------------------------------------------------------------------
+
+As the above picture shows, the classification engine is hooked to the flow handling engine. In
+fact, being able to successfully classify single packets means we can mark accordingly the whole
+bi-directional flow (referred also as stream) they belong to. The flow engine determines whether
+a flow is either newly established or terminated, sets its timeouts per protocol and state and
+handles timestamps. The classification engine coordinates the efforts to classify the packets by
+setting a maximum number of classification tentatives, handling bytes/packets accumulators for
+(still) unknown flows and attaching connection tracking modules whenever required. In case of
+successful classification, accumulators are released and sent to the active plugins, which, in
+turn, whenever possible (ie. counters have not been cleared, sent to the DB, etc.) will move
+such quantities from the 'unknown' class to the newly determined one.
+A connection tracking module might be assigned to certain classified streams if they belong to
+a protocol which is known to be based over a control channel (ie. FTP, RTSP, SIP, H.323, etc.).
+However, some protocols (ie. MSN messenger) spawn data channels that can still be distinguished
+because of some regular patterns into the payload; in such cases a classificator exists rather
+than a tracking module. Connection tracking modules are C routines statically compiled into the
+collector code that hint IP address/port couples for upcoming data streams as signalled by one
+of the parties into the control channel; such information fragments are then meant to classify
+the new data streams; classification patterns are either regular expressions (RE) or pluggable 
+shared objects (SO, written in C), both loaded at runtime.  
+In this context, 'snaplen' directive, which specifies the maximum number of bytes to capture for
+each packet, has key importance. In fact, some protocols (mostly text-based eg. RTSP, SIP, etc.)
+benefit of extra bytes because they give more chances to identify new data streams spawned by
+by the control channel. But it must be also noted that capturing larger packet portion require
+more system resources. Thus, the right value need to be traded-off. By enabling classification,
+values under 200 bytes are often meaningless. 500-750 bytes should be enough even for text-based
+protocols.
+
+
+XI. Jumps and flow diversions in Pre-Tagging infrastructure
+Pre-Tagging infrastructure allows to flexibly mark either packets or flows collected from the
+network. It's basically a chain of rules: the first matching rule wins (ie. tags collected data).
+This approach is effective to mantain a 1-to-1 relationship between data and tags; but this is
+somewhat limiting in some scenarios, ie. the need to account internal data to both the sender
+and the receiver: this time you would need a 1-to-2 relationship. In this context, being able
+to handle 1-to-2 relationships becomes a requirement when sampling comes into play as any
+single sample is required to be assigned to both parties in order for the algorithms to work
+correctly. Relationships 1-to->1 are precisely the aim for jeq, stack and return keys. 

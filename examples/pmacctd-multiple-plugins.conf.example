@@ -1,0 +1,19 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
+! supported by 'nfacctd' and 'pmacctd' ?
+!
+! debug: true 
+daemonize: true 
+interface: eth0
+aggregate[in]: src_host
+aggregate[out]: dst_host 
+aggregate_filter[in]: dst net 192.168.0.0/16
+aggregate_filter[out]: src net 192.168.0.0/16
+plugins: memory[in], memory[out]
+imt_path[in]: /tmp/acct_in.pipe
+imt_path[out]: /tmp/acct_out.pipe
+imt_buckets: 65537 
+imt_mem_pools_size: 65536 
+imt_mem_pools_number: 0

@@ -1,0 +1,18 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
+! supported by 'nfacctd' and 'pmacctd' ?
+!
+! debug: true 
+!
+interface: eth0
+daemonize: false
+aggregate: sum_host
+plugins: sqlite3 
+sql_db: /tmp/pmacct.db 
+sql_table_version: 4 
+sql_refresh_time: 60
+sql_history: 10m 
+sql_history_roundoff: h
+

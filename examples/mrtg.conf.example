@@ -1,0 +1,24 @@
+# This is a trivial and basic config for use pmacct to export statistics
+# to mrtg. If you need more informations of the few commands shown below
+# refer to the online referenge guide at the official MRTG web page:
+# http://people.ee.ethz.ch/~oetiker/webtools/mrtg/reference.html
+
+# Some general definition
+WorkDir: /var/www/html/monitor
+Options[_]: growright, bits
+
+# Target specific definitions
+Target[ezwf]: `./mrtg-example.sh`
+SetEnv[ezwf]: MRTG_INT_IP="10.0.0.1" MRTG_INT_DESCR="yourip.yourdomain.com"
+MaxBytes[ezwf]: 1250000
+LegendI[ezwf]: 
+Title[ezwf]: yourip.yourdomain.com 
+PageTop[ezwf]: <H1>yourip.yourdomain.com</H1>
+ <TABLE>
+   <TR><TD>System:</TD>	    <TD>yourip.yourdomain.com in </TD></TR>
+   <TR><TD>Maintainer:</TD> <TD></TD></TR>
+   <TR><TD>Ip:</TD>	    <TD>10.0.0.1 (yourip.yourdomain.com)</TD></TR>
+ </TABLE>
+
+# ...
+# Put here more targets and their definitions

@@ -1,0 +1,14 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
+! supported by 'nfacctd' and 'pmacctd' ?
+!
+! debug: true 
+interface: eth0
+daemonize: true 
+plugins: memory
+aggregate: src_host,dst_host
+imt_buckets: 65537
+imt_mem_pools_size: 65536
+! imt_mem_pools_number: 0

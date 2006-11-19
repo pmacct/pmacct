@@ -1,0 +1,123 @@
+! 
+! Pre-Tagging map -- multiplexes various fields into a small (1-65535) numerical ID 
+!
+! File syntax is key-based. Position of keys inside the same row (rule) is not relevant.
+! An atomic expression (example: 'id=1') does not allow spaces. The first full match wins
+! (like in firewall rules); take care to the order you write rules! Negative values might
+! be matched (ie., match data NOT coming from interface 2: in=-2); only 'id', 'ip' and
+! 'filter' keys don't support negative values. 'label', 'jeq', 'return' and 'stack' keys
+! can be used to alter the usual rule evaluation flow.
+!
+! 'nfacctd': valid keys: 'id', 'ip', 'in', 'out', 'engine_type', 'engine_id', 'nexthop',
+! 'bgp_nexthop', 'v8agg' and 'filter'; mandatory keys for each rule: 'id' and 'ip'.
+!
+! 'sfacctd': valid keys: 'id', 'ip', 'in', 'out', 'agent_id', 'nexthop', 'bgp_nexthop', 
+! 'sampling_rate' and 'filter'; mandatory keys for each rule: 'id' and 'ip'.
+!
+! 'pmacctd': valid keys: 'id' and 'filter'. 'id' is mandatory for each rule. All remaining
+! primitives don't apply.
+!
+! list of currently supported keys follow:
+!
+! 'id'			ID value to assign to a full matching flow
+! 'ip'			IP address of the exporter (router, probe, etc.) which is
+!			sending NetFlow packets.
+! 'in'  		Input interface of the flow 
+! 'out' 		Output interface of the flow 
+! 'engine_type'		In NetFlow V5 it's compared against the 'engine_type' header
+!			field. In NetFlow V9 it's compared against the 3rd byte of
+!			the 'source_id' header field. provides uniqueness with respect
+!			to the routing engine on the exporting device.
+! 'engine_id'		In NetFlow V5 it's compared against the 'engine_id' header
+!			field. In NetFlow V9 it's compared against the 4th byte of
+!			the 'source_id' header field. It provides uniqueness with
+!			respect to the particular line card or VIP on the exporting
+!			device.
+! 'nexthop'		IPv4/IPv4 address of the next-hop router
+! 'bgp_nexthop'		IPv4/IPv4 address of the next-hop BGP router
+! 'filter'		Matches incoming packets against the supplied filter expression
+!			(expected in libpcap syntax); the filter needs to be enclosed in
+!			quotes ('). In order to get support for MPLS label hierarchies,
+!			the use of CVS versions >= 06-06-2005 of libpcap is adviceable:
+!			they include the support for expressions like "mpls 100000 and
+!			mpls 1024" that will match packets/flows with an outer label of
+!			100000 and an inner label of 1024. 
+! 'v8agg'		In NetFlow V8 it's compared against the aggregation method in use.
+!			Valid values are in the range 0 > value > 15. 
+! 'agent_id'		In sFlow v5 it's compared against the subAgentId field. sFlow v2
+!			and v4 lack of such field, so it does not apply.
+! 'sampling_rate'       In sFlow v2/v4/v5 it is compared against the sampling_rate field;
+!			It also works against NetFlow v5. NetFlow v9 is unsupported.
+! 'src_as'		source Autonomous System Number. In pmacctd it works only against
+!			a Networks Map; in nf|sfacctd it works against either a Networks
+!			Map or ASN field in the datagram, if present (this is always true
+!			for sFlow but not for certain versions/subversions of NetFlow).  
+! 'dst_as'              destination Autonomous System Number. same 'src_as' remarks hold
+!			here. Read them above.
+! 'label'		Mark the rule with label's value. Labels don't need to be unique:
+!			when jumping, the first matching label wins.
+! 'jeq'			Jump on EQual. Jumps to the supplied label in case of rule match.
+!			Before jumping, the tagged flow is returned to active plugins, as
+!			it happens for any regular match (set return=false to change this
+!			behaviour). In case of multiple matches for a single flow, plugins
+!			showing 'tag' key inside 'aggregate' directive will receive each
+!			tagged copy; plugins not receiving tags will still receive unique
+!			copy of the flow.
+!			sFlow and NetFlow are usually uni-directional, ie. ingress-only or
+!			egress-only (in order to avoid duplicates). Meaningful application
+!			of JEQs is tagging flows two times: by incoming interface and by
+!			outgoing one. Only forward jumps are allowed. "next" is reserved
+!			label and causes to jump to the next rule. 
+! 'return'		If set to 'true' (which is default behaviour) returns the current
+!			packet/flow to active plugins, in case of match. If switched to
+!			'false', it will prevent this to happen. It may be thought either 
+!			as an extra filtering layer (bound to explicit Pre-Tagging rules)
+!			or (also in conjunction with 'stack') as a way to add flexibility
+!			to JEQs. 
+! 'stack'		Actually '+' (ie. sum symbol) is the unique supported value. This
+!			key makes sense only if JEQs are in use. When matching, accumulate
+!			IDs, using the specified operator/function. For example, usually
+!			<tag>=<current ID>. By setting 'stack=+' you will be able to get
+!			<tag>=<previous ID + current ID>. 
+!
+
+!
+! A few examples NetFlow-related. The format of the rules is the same of 'sfacctd' ones
+! but some keys don't apply to it. Note that the format of 'pmacctd' rules is slightly
+! different.
+!
+id=1	ip=192.168.2.1	in=4
+id=10	ip=192.168.1.1 	in=5	out=3
+id=11	ip=192.168.1.1 	in=3	out=5
+id=12	ip=192.168.1.1	in=3 
+id=13	ip=192.168.1.1  nexthop=10.0.0.254
+id=14	ip=192.168.1.1  engine_type=1 engine_id=0
+id=15	ip=192.168.1.1  in=3 filter='src net 192.168.0.0/24' 
+
+!
+! The following rule applies to 'pmacctd'; it will return an error if applied to either
+! 'nfacctd' or 'sfacctd'
+!
+id=21	filter='src net 192.168.0.0/16'
+
+!
+! A few examples sFlow-related. The format of the rules is the same of 'nfacctd' ones
+! but some keys don't apply to it. Note that the format of 'pmacctd' rules differs.
+!
+id=30 ip=192.168.1.1 
+id=31 ip=192.168.1.1 out=50
+id=32 ip=192.168.1.1 out=50 agent_id=0 sampling_rate=512
+
+!
+! An example for JEQs:
+! - implicit 'return' defaults to true which is what we want. 
+! - by returning, no need for 'stack'
+!
+id=1000 ip=192.168.1.1 in=1 jeq=eval_out 
+id=1001 ip=192.168.1.1 in=2 jeq=eval_out
+id=1002 ip=192.168.1.1 in=3 jeq=eval_out
+! ... further INs
+id=2000 ip=192.168.1.1 out=1 label=eval_out
+id=2001 ip=192.168.1.1 out=2 
+id=2002 ip=192.168.1.1 out=3 
+! ... further OUTs

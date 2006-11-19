@@ -1,0 +1,42 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+datadir=@datadir@
+mandir=@mandir@
+sysconfdir=@sysconfdir@
+srcdir=@srcdir@
+top_srcdir=@top_srcdir@
+VPATH=@srcdir@
+CC=@CC@
+DEFS=@DEFS@
+LDFLAGS=@LDFLAGS@
+CFLAGS=$(DEFS) -I$(srcdir) -I.. @CFLAGS@
+CPPFLAGS=@CPPFLAGS@
+LIBS=@LIBS@
+INSTALL=@INSTALL@
+RANLIB=@RANLIB@ 
+
+TARGETS=libsfprobe_plugin.a
+
+all: $(TARGETS)
+
+libsfprobe_plugin.a: sflow_agent.o sflow_poller.o sflow_receiver.o sflow_sampler.o sfprobe_plugin.o 
+	ar rc $@ sflow_agent.o sflow_poller.o sflow_receiver.o sflow_sampler.o sfprobe_plugin.o 
+	$(RANLIB) $@
+
+clean:
+	rm -f $(TARGETS) *.o core *.core
+
+realclean: clean
+	rm -rf autom4te.cache Makefile config.log config.status
+
+distclean: realclean
+	rm -f config.h* configure
+
+strip:
+	strip $(TARGETS)
+
+install: all
+

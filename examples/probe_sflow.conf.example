@@ -1,0 +1,14 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
+! supported by 'nfacctd' and 'pmacctd' ?
+!
+! debug: true
+daemonize: true
+interface: eth0
+plugins: sfprobe
+sfprobe_agentsubid: 1402
+sfprobe_receiver: 1.2.3.4:6343
+sfprobe_sampling_rate: 20
+
