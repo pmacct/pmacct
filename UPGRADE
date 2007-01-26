@@ -1,0 +1,47 @@
+UPGRAGE guidelines.
+pmacct is developed keeping an eye to backward compatibility: the upgrade to some
+newer version should be as smooth as possible from an user standpoint. This is
+because, for example, features like SQL table versioning have been introduced
+over the time. 
+ 
+However, sometimes the upgrade may require some easy operations aimed to support
+the changes done or break old assumptions no longer valid. Such happenings have
+been (and will be) very limited through the development process.
+ 
+TO:	>= 0.8.3 
+FROM:	<= 0.8.2 
+TOPIC:	Pre-Tagging, Post-Tagging
+DESC:	In all previous releases, the 'pre_tag_map' and 'post_tag' directives were
+        causing the captured traffic to be automatically tagged while forwarded to
+	each active plugin; this behaviour can result in reduced flexibility; the
+	0.8.3 release makes the two forementioned directives just to evaluate the
+	tag to be assigned to captured traffic; a new 'aggregate' directive keyword
+	- tag - causes the traffic to be marked (basing on the previous evaluation).
+	So, a configuration like the following:
+
+  	...
+	pre_tag_map: /usr/local/pmacct/pre_tag.map
+	aggregate[dummy]: src_host,dst_host,src_port,dst_port
+	...
+
+	Have to be rewritten the following way in order for the plugin 'dummy' to
+	receive the tags:
+
+	...
+	pre_tag_map: /usr/local/pmacct/pre_tag.map
+	aggregate[dummy]: tag,src_host,dst_host,src_port,dst_port
+	... 
+
+TO:     >= 0.10.0
+FROM:   <= 0.10.0rc3 
+TOPIC:  Configuration directives and command-line options 
+DESC:   In all previous releases, commandline options ( ie. -D -c ) were mutually
+	exclusive with respect to configuration directives; now, they can cohexist
+	and, more specifically, commandline options will override the content of
+	the configuration file. This exposes to more interesting usages:
+
+	shell> pmacctd -I <tracefile> -f <cfg>
+	to launch pmacctd sharing an unique configuration file while reading data
+	from different tcpdump/ethereal tracefiles among multiple runs.
+
+[EOF]
