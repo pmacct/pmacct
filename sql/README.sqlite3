@@ -1,0 +1,56 @@
+To create the database and the table you have to execute the following scripts.
+Remember that SQLite - unlike MySQL and PostgreSQL - does not endorse concepts
+of authentication (username and password couple) and permissions which are
+embedded into the filesystem instead. The database filename '/tmp/pmacct.db'
+is just a trivial example: you are free to build the database wherever fits
+better for you on the system (e.g., to follow a partitioning scheme, impose 
+specific permissions, etc.). 
+
+- To create v1 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table.sqlite3
+
+Data will be available in 'acct' table of '/tmp/pmacct.db' DB.
+
+- To create v2 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v2.sqlite3
+
+Data will be available in 'acct_v2' table of '/tmp/pmacct.db' DB.
+
+- To create v3 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v3.sqlite3
+
+Data will be available in 'acct_v3' table of '/tmp/pmacct.db' DB.
+
+- To create v4 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v4.sqlite3
+
+Data will be available in 'acct_v4' table of '/tmp/pmacct.db' DB.
+
+- To create v5 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v5.sqlite3
+
+Data will be available in 'acct_v5' table of '/tmp/pmacct.db' DB.
+
+- To create v6 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v6.sqlite3
+
+- To create v7 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v7.sqlite3
+
+Data will be available in 'acct_v6' table of '/tmp/pmacct.db' DB.
+
+- To understand difference between v1, v2, v3, v4, v5, v6 and v7 tables:
+  - Do you need TCP flags ? Then you have to use v7.
+  - Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
+  - Do you need packet classification ? Then you have to use v5.
+  - Do you need flows (other than packets) accounting ? Then you have to use v4.
+  - Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
+  - Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2. 
+  - Do you need VLAN traffic accounting ? Then you have to use v2.
+  - If all of the above points sound useless, then use v1.
+
+NOTE: mind to specify EVERYTIME which SQL table version you
+intend to adhere to by using either of the following rules:
+
+commandline:    -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+configuration:  sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]

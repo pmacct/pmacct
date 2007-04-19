@@ -1,0 +1,61 @@
+To create the database and grant default permission to pmacctd you have to execute
+the two scripts below, in the same order (assuming mysql command is in the path):
+
+- To create v1 tables:
+mysql -u root -p < pmacct-create-db_v1.mysql
+mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct' table of 'pmacct' DB.
+
+- To create v2 tables:
+mysql -u root -p < pmacct-create-db_v2.mysql
+mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v2' table of 'pmacct' DB.
+
+- To create v3 tables:
+shell> mysql -u root -p < pmacct-create-db_v3.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v3' table of 'pmacct' DB.
+
+- To create v4 tables:
+shell> mysql -u root -p < pmacct-create-db_v4.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v4' table of 'pmacct' DB.
+
+- To create v5 tables:
+shell> mysql -u root -p < pmacct-create-db_v5.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v5' table of 'pmacct' DB.
+
+- To create v6 tables:
+shell> mysql -u root -p < pmacct-create-db_v6.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v6' table of 'pmacct' DB.
+
+- To create v7 tables:
+shell> mysql -u root -p < pmacct-create-db_v7.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v7' table of 'pmacct' DB.
+
+- To understand difference between v1, v2, v3, v4, v5, v6 and v7 tables:
+  - Do you need TCP flags ? Then you have to use v7.
+  - Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
+  - Do you need packet classification ? Then you have to use v5.
+  - Do you need flows (other than packets) accounting ? Then you have to use v4.
+  - Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
+  - Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2. 
+  - Do you need VLAN traffic accounting ? Then you have to use v2.
+  - If all of the above points sound useless, then use v1.
+
+NOTE: mind to specify EVERYTIME which SQL table version you
+intend to adhere to by using either of the following rules:
+
+commandline:    -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+configuration:  sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+
