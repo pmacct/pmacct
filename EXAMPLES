@@ -1,0 +1,483 @@
+pmacct (Promiscuous mode IP Accounting package)
+pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+
+pmacct EXAMPLES file.
+
+(poorman's) TABLE OF CONTENTS:
+I.	Plugins included with pmacct distribution
+II.	Configuring pmacct for compilation
+III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) setup examples
+IV.	Running the libpcap-based daemon (pmacctd)
+V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
+VI.	Running the pmacct client (pmacct)
+VII.	Running the logfile players (pmmyplay/pmpgplay) 
+VIII.	Quickstart guide to packet/stream classifiers
+IX.	Quickstart guide to setup a NetFlow agent/probe 
+X.	Quickstart guide to setup a sFlow agent/probe 
+
+
+I. Plugins included with pmacct distribution
+As for any open and pluggable architecture, anyone could write his own plugins for pmacct;
+what follows is the list of plugins included in the official pmacct distribution. That is, 
+what can do pmacct once it has collected data from the network ?
+
+'memory':  data are stored in a tunable memory table and can be fetched via the pmacct client
+	   tool, 'pmacct'. It also allows easily data injection into tools like GNUplot, MRTG,
+	   RRDtool or a Net-SNMP server.
+'mysql':   an available MySQL database is selected for data storage.
+'pgsql':   an available PostgreSQL database is selected for data storage.
+'sqlite3': an available SQLite 3.x database is selected for data storage.
+'print':   data are simply pulled to standard output (ie. on the screen) in a way similar to
+	   tcpdump. 
+
+
+II. Configuring pmacct for compilation
+The simplest chance is to let the configure script to test default headers and libraries
+locations for you. However note that this will not enable any of the optional plugins, ie.
+MySQL, PostgreSQL and SQLite 3.x; at your convenience you may also enable IPv6 hooks and
+64bit counters. Let's continue with some examples; as usual, to get help and the list of
+available switches:
+
+shell> ./configure --help
+
+Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite and any (4)
+mixed compilation:
+
+(1) shell> ./configure --enable-mysql
+(2) shell> ./configure --enable-pgsql
+(3) shell> ./configure --enable-sqlite3
+(4) shell> ./configure --enable-mysql --enable-pgsql
+
+
+III. Brief SQL setup examples
+Scripts for setting up databases (MySQL, PostgreSQL and SQLite) are into the sql/ tree. Once
+there, if you need an IPv6-ready package, don't miss the 'README.IPv6' document. Examples to
+create database, tables and grant default permissions will follow. 
+
+IIIa. SQL table versioning
+pmacct version 0.7.1 introduced SQL table versioning: what is it ? It allows to introduce new
+features over the time (which translate in changes to the SQL schema) without giving the pain
+of breaking backward compatibility. Mind to specify EVERYTIME which SQL table version you
+intend to adhere to as this will strongly influence the way collected data will be written to
+the database (ie. until v5 AS numbers are written into ip_src-ip_dst table fields; since v6
+they are written to as_src-as-dst ones). Furthermore, 'sql_optimize_clauses' directive allows
+to run stripped-down versions of each SQL table thus allowing to save both disk space and CPU
+cycles required to run the SQL engine (read more about it in CONFIG-KEYS). To specify the SQL
+table version, you an use either of the following rules: 
+
+commandline: 	'-v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]'
+configuration:  'sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]'
+
+To understand difference between v1, v2, v3, v4, v5 and v6 tables:
+
+- Do you need TCP flags ? Then you have to use v7.
+- Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
+- Do you need packet classification ? Then you have to use v5.
+- Do you need flows (other than packets) accounting ? Then you have to use v4.
+- Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
+- Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2.  
+- Do you need VLAN traffic accounting ? Then you have to use v2.
+- If all of the above point sound useless for you, then use v1.
+ 
+IIIb. MySQL examples 
+shell> cd sql/
+
+- To create v1 tables:
+shell> mysql -u root -p < pmacct-create-db_v1.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct' table of 'pmacct' DB.
+
+- To create v2 tables:
+shell> mysql -u root -p < pmacct-create-db_v2.mysql
+shell> mysql -u root -p < pmacct-grant-db.mysql
+
+Data will be available in 'acct_v2' table of 'pmacct' DB.
+
+... And so on for the newer versions.
+
+IIIc. PostgreSQL examples
+Which user has to execute the following two scripts and how to autenticate with the PostgreSQL
+server depends upon your current configuration. Keep in mind that both scripts need postgres
+superuser permissions to execute some commands successfully:
+shell> cp -p *.pgsql /tmp
+shell> su - postgres
+
+To create v1 tables:
+shell> psql -d template1 -f /tmp/pmacct-create-db.pgsql
+shell> psql -d pmacct -f /tmp/pmacct-create-table_v1.pgsql
+
+To create v2 tables:
+shell> psql -d template1 -f /tmp/pmacct-create-db.pgsql
+shell> psql -d pmacct -f /tmp/pmacct-create-table_v2.pgsql
+
+... And so on for the newer versions.
+
+A few tables will be created into 'pmacct' DB. 'acct' ('acct_v2' or 'acct_v3') table is
+the default table where data will be written when in 'typed' mode (see 'sql_data' option
+in CONFIG-KEYS document; default value is 'typed'); 'acct_uni' ('acct_uni_v2' or
+'acct_uni_v3') is the default table where data will be written when in 'unified' mode.
+Since v6 unified mode will be no longer supported: an unique table ('acct_v6', etc.) is
+used instead. 
+
+IIId. SQLite examples
+shell> cd sql/
+
+- To create v1 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table.sqlite3 
+
+Data will be available in 'acct' table of '/tmp/pmacct.db' DB. Of course, you can change
+the database filename basing on your preferences.  
+
+- To create v2 tables:
+shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v2.sqlite3 
+
+Data will be available in 'acct_v2' table of '/tmp/pmacct.db' DB.
+
+... And so on for the newer versions.
+
+
+IV. Running the libpcap-based daemon (pmacctd) 
+You can run pmacctd either with commandline options or using a configuration file. Please remember
+that sample configuration files are in examples/ tree. Note also that most of the new features are
+available only as configuration directives (so, no commandline switches). Using a configuration file
+and commandline switches is mutual exclusive. To be aware of the existing configuration directives,
+please read the CONFIG-KEYS document. 
+
+Show all available pmacctd commandline switches:
+shell> pmacctd -h
+
+Run pmacctd reading configuration from a specified file (see examples/ tree for a brief list of some
+commonly useed keys; divert your eyes to CONFIG-KEYS for the full list). This example applies to all
+other daemons too:
+shell> pmacctd -f pmacctd.conf
+
+Daemonize the process; listen on eth0; aggregate data by src_host/dst_host; write to a MySQL server;
+limit traffic matching only source ip network 10.0.0.0/16; note that filters work the same as tcpdump.
+So, refer to libpcap/tcpdump man pages for examples and further reading. 
+
+shell> pmacctd -D -c src_host,dst_host -i eth0 -P mysql src net 10.0.0.0/16
+
+And now written the configuration way:
+!
+daemonize: true
+plugins: mysql
+aggregate: src_host, dst_host
+interface: eth0
+pcap_filter: src net 10.0.0.0/16
+! ...
+
+Print collected traffic data aggregated by src_host/dst_host over the screen; refresh data every 30
+seconds and listen on eth0. 
+
+shell> pmacctd -P print -r 30 -i eth0 -c src_host,dst_host
+
+!
+plugins: print
+print_refresh_time: 30
+aggregate: src_host, dst_host
+interface: eth0
+! ...
+
+Daemonize the process; let pmacct aggregate traffic in order to show inbound vs. outbound traffic
+for network 192.168.0.0/16; send data to a PostgreSQL server. This configuration is not possible via
+commandline switches; the corresponding configuration follows: 
+
+!
+daemonize: true
+plugins: pgsql[in], pgsql[out]
+aggregate[in]: dst_host
+aggregate[out]: src_host
+aggregate_filter[in]: dst net 192.168.0.0/16
+aggregate_filter[out]: src net 192.168.0.0/16
+sql_table[in]: acct_in
+sql_table[out]: acct_out
+! ...
+
+The previous example looks nice ! But how to make data historical ? Simple enough, let's suppose to
+divide traffic by hour and we wish to refresh data into the database each 60 seconds. 
+
+!
+daemonize: true
+plugins: pgsql[in], pgsql[out]
+aggregate[in]: dst_host
+aggregate[out]: src_host
+aggregate_filter[in]: dst net 192.168.0.0/16
+aggregate_filter[out]: src net 192.168.0.0/16
+sql_table[in]: acct_in
+sql_table[out]: acct_out
+sql_refresh_time: 60
+sql_history: 1h
+sql_history_roundoff: h
+! ...
+
+Let's now translate the same example in the memory plugin world. It's use is valuable expecially
+when it's required to feed bytes/packets/flows counters to external programs. Examples about the 
+client program will follow later in this document. Now, note that each memory table need its own
+pipe file in order to get correctly contacted by the client:
+
+!
+daemonize: true
+plugins: memory[in], memory[out]
+aggregate[in]: dst_host
+aggregate[out]: src_host
+aggregate_filter[in]: dst net 192.168.0.0/16
+aggregate_filter[out]: src net 192.168.0.0/16
+imt_path[in]: /tmp/pmacct_in.pipe
+imt_path[out]: /tmp/pmacct_out.pipe
+! ...
+
+As a further note, check the CONFIG-KEYS document about more imt_* directives as they will help
+to tune the size of memory tables, if default values are not ok for your setup. 
+
+Now, fire multiple instances of pmacctd, each on a different interface; again, because each instance will
+have its own memory table, it will require its own pipe file for client queries aswell (as explained in
+the previous examples):
+shell> pmacctd -D -i eth0 -m 8 -s 65535 -p /tmp/pipe.eth0 
+shell> pmacctd -D -i ppp0 -m 0 -s 32768 -p /tmp/pipe.ppp0 
+
+Run pmacctd logging what happens to syslog and using "local2" facility:
+shell> pmacctd -c src_host,dst_host -S local2
+
+NOTE: superuser privileges are needed to execute pmacctd correctly. 
+
+
+V. Running the NetFlow and sFlow daemons (nfacctd/sfacctd) 
+All examples about pmacctd are also valid for nfacctd and sfacctd with the exception of directives that apply
+exclusively to libpcap. If you've skipped examples in section 'IV', please read them before continuing. To be
+aware of all existing configuration keys available, please read also the CONFIG-KEYS document. And now, let's
+go to the examples:
+
+Run nfacctd reading configuration from a specified file.
+shell> nfacctd -f nfacctd.conf
+
+Daemonize the process; aggregate data by sum_host (by host, summing inbound + outbound traffic); write to a
+local MySQL server. Listen on port 5678 for incoming Netflow datagrams (from one or multiple NetFlow agents).
+Let's make pmacct refresh data each two minutes and let's make data historical, divided into timeslots of 10
+minutes each. Finally, let's make use of a SQL table, version 4.
+shell> nfacctd -D -c sum_host -P mysql -l 5678 
+
+And now written the configuration way:
+!
+daemonize: true
+plugins: mysql
+aggregate: sum_host
+nfacctd_port: 5678
+sql_refresh_time: 120
+sql_history: 10m
+sql_history_roundoff: mh
+sql_table_version: 4
+! ...
+
+VI. Running the pmacct client (pmacct)
+The pmacct client is used to gather data either from a memory table. Requests and answers are exchanged via a
+pipe file; hence, security is strictly connected with pipe file permissions. Of course, when using SQL plugins
+you will just need the specific DB client tool (ie. psql, mysql, sqlite3) to make queries. Note: while writing
+queries commandline, it may happen to write characters with a special meaning for the shell itself (ie. ; or *).
+Mind to either escape ( \; or \* ) or enclose in quotes ( " ) them.
+
+Show all available pmacct client commandline switches:
+shell> pmacct -h
+
+Fetch data stored into the memory table:
+shell> pmacct -s 
+
+Match data between src_host 192.168.0.10 and dst_host 192.168.0.3 and return a formatted output; display all
+fields (-a), this way the output is easy to be parsed by tools like awk/sed; each unused field will be zero-
+filled: 
+shell> pmacct -c src_host,dst_host -M 192.168.0.10,192.168.0.3 -a
+
+Similar to previous example; we request to reset data for the matched entry/ies; the server will return the
+actual counters to the client, then will reset them:
+shell> pmacct -c src_host,dst_host -M 192.168.0.10,192.168.0.3 -r
+
+Fetch data for IP address dst_host 10.0.1.200; we also ask for a 'counter only' output ('-N') suitable, this
+time, for injecting data in tools like MRTG or RRDtool (mind that sample scripts are in the examples/ tree).
+Bytes counter will be returned (but the '-n' switch allows also select which counter to display). If more
+entries match your request (ie. because your query is based just over dst_host but the daemon is aggregating
+by src_host/dst_host) their counters will be summed:
+shell> pmacct -c dst_host -N 10.0.1.200
+
+Another query; this time let's contact the server listening on pipe file /tmp/pipe.eth0:
+shell> pmacct -c sum_port -N 80 -p /tmp/pipe.eth0 
+
+Find all data matching host 192.168.84.133 as either their source or destination address. In particular, this
+example shows how to use wildcards and how to spawn multiple queries (each separated by the ';' symbol). Take
+care to follow the same order when specifying the primitive name (-c) and its actual value ('-M' or '-N'):
+shell> pmacct -c src_host,dst_host -N "192.168.84.133,*;*,192.168.84.133"
+
+Find all web and smtp traffic; we are interested in have just the total of such traffic (for example, to
+split legal network usage from the total); the output will be a unique counter, sum of the partial (coming
+from each query) values.
+shell> pmacct -c src_port,dst_port -N "25,*;*,25;80,*;*,80" -S 
+
+Show traffic between the specified hosts; this aims to be a simple example of a batch query; note that you
+can supply, as value of both '-N' and '-M' switches, a value like: 'file:/home/paolo/queries.list': actual
+values will be read from the specified file (and they need to be written into it, one per line) instead of
+commandline:
+shell> pmacct -c src_host,dst_host -N "10.0.0.10,10.0.0.1;10.0.0.9,10.0.0.1;10.0.0.8,10.0.0.1"
+shell> pmacct -c src_host,dst_host -N "file:/home/paolo/queries.list"
+
+
+VII. Running the logfile players (pmmyplay and pmpgplay)
+Examples will be shown using "pmmyplay" tool; they are same way applicable to "pmpgplay" tool. Two methods
+are supported as failover action when something fails while talking with the DB: logfiles or backup DB. Note 
+that using a logfile is a simple way to overcome transient failure situations that requires human intervention
+while using a backup DB could ease the following process of data merging.
+
+Display online help and available options:
+shell> pmmyplay -h
+
+Play the whole specified file, inserting elements in the DB and enabling debug:
+shell> pmmyplay -d -f /tmp/pmacct-recovery.dat
+
+Just see on the screen the content of the supplied logfile; that is, do not interact with the DB:
+shell> pmmyplay -d -t -f /tmp/pmacct-recovery.dat 
+
+Play a single (-n 1) element (the fifth) from the specified file (useful if just curious or, for example, a
+previously player execution has failed to write some element; remember that all element failed to be written,
+if any, will be displayed over your screen):
+shell> pmmyplay -o 5 -n 1 -f /tmp/pmacct-recovery.dat
+
+Play all elements until the end of file, starting from element number six:
+shell> pmmyplay -o 6 -f /tmp/pmacct-recovery.dat -p ohwhatanicepwrd
+
+
+VIII. Quickstart guide to packet classifiers
+pmacct 0.10.0 sees the introduction of a new packet classification feature. The approach is fully extensible:
+classification patterns are based over regular expressions (RE), human-readable, must be placed into a common
+directory and have a .pat file extension. Many patterns for widespread protocols are available and are just a
+click away. Furthermore, you can write your own patterns (and share them with the active L7-filter project's
+community). Don't miss a visit to the L7-filter project homepage, http://l7-filter.sourceforge.net/ .
+Now, the quickstarter guide:
+
+a) download pmacct
+shell> wget http://www.pmacct.net/pmacct-x.y.z.tar.gz 
+
+b) compile pmacct
+shell> cd pmacct-x.y.z; ./configure && make && make install 
+
+c-1) download regular expression (RE) classifiers as-you-need them: you need just to point your browser to
+     http://l7-filter.sourceforge.net/protocols/ then:
+
+     shell> cd /path/to/classifiers/
+     shell> wget http://l7-filter.sourceforge.net/layer7-protocols/protocols/[ protocol ].pat 
+
+c-2) download all RE classifiers: point your browser to http://sourceforge.net/projects/l7-filter (and take
+     to the latest Protocol definitions tarball).
+
+c-3) download shared object (SO) classifiers (written in C) as-you-need them: you need just to point your
+     browser to http://www.pmacct.net/classification/ , download the available package, extract files and
+     compile things following INSTALL instructions. When everything is finished, install the produced shared
+     objects:
+
+     shell> mv *.so /path/to/classifiers/
+
+d-1) build pmacct configuration, a memory table example:
+!
+daemonize: true
+interface: eth0
+aggregate: flows, class
+plugins: memory
+classifiers: /path/to/classifiers/
+snaplen: 700
+!...
+
+d-2) build pmacct configuration, a SQL example:
+!
+daemonize: true
+interface: eth0
+aggregate: flows, class
+plugins: mysql 
+classifiers: /path/to/classifiers/
+snaplen: 700
+sql_history: 1h
+sql_history_roundoff: h
+sql_table_version: 5
+sql_aggressive_classification: true
+!...
+
+e) Ok, we are done ! Fire the pmacct collector daemon:
+
+   shell> pmacctd -f /path/to/configuration/file 
+
+   You can now play with the SQL or pmacct client; furthermore, you can add/remove/write patterns and load
+   them by restarting the pmacct daemon. If using the memory plugin you can check out the list of loaded
+   plugins with 'pmacct -C'. Don't underestimate the importance of 'snaplen', 'pmacctd_flow_buffer_size',
+   and 'pmacctd_flow_buffer_buckets' values; get the time to take a read about them in the CONFIG-KEYS
+   document.
+
+
+IX. Quickstart guide to setup a NetFlow agent/probe
+pmacct 0.11.0 sees the introduction of new probing capabilities, both on NetFlow and sFlow sides. 
+Exporting traffic data from multiple probes through NetFlow to a collector (one or a set of them)
+is efficient and highly beneficial from a network management standpoint. NetFlow v9 adds further
+flexibility by allowing to transport custom informations (for example, pmacctd NetFlow probe can
+send flow classification tag to a remote collector). Now, the quickstarter guide:
+
+a) usual initial steps: download pmacct, unpack it, compile it.
+
+b) build NetFlow probe configuration, using pmacctd:
+!
+daemonize: true
+interface: eth0
+aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+plugins: nfprobe
+nfprobe_receiver: 1.2.3.4:2100
+nfprobe_version: 9
+! nfprobe_engine: 1:1
+! nfprobe_timeouts: tcp=120:maxlife=3600
+!
+! networks_file: /path/to/networks.lst
+! classifiers: /path/to/classifiers/
+! snaplen: 700
+!...
+
+   This is very simple (and working) configuration. You can complicate it by adding features. 1) you
+   can generate AS numbers by uncommenting 'networks_file' line, crafting a proper Networks File and
+   piling up  'src_as,dst_as' to the 'aggregate' directive; 2) you can embed flow classification
+   informations in your NetFlow v9 datagrams by uncommenting 'classifiers' and 'snaplen' lines,
+   setting up a proper directory for your classification patterns and piling up 'class' to the
+   'aggregate' directive; 3) you can add L2 (MAC addresses, VLANs) informations to your NetFlow v9
+   flowsets.
+
+c) build NetFlow collector configuration, using nfacctd:
+!
+daemonize: true
+nfacctd_ip: 1.2.3.4
+nfacctd_port: 2100
+plugins: memory[display]
+aggregate[display]: src_host, dst_host, src_port, dst_port, proto
+!
+! classifiers: /path/to/classifiers
+
+d) Ok, we are done ! Now fire both daemons:
+
+   shell a> pmacctd -f /path/to/configuration/file
+   shell b> nfacctd -f /path/to/configuration/file
+
+
+X. Quickstart guide to setup a sFlow agent/probe
+pmacct 0.11.0 sees the introduction of new probing capabilities, both on NetFlow and sFlow sides.
+Even if interested in sFlow, take a moment to read the previous chapter. Furthermore, steps a/c/d
+will be cut as they are very similar to the previous example. sFlow relies heavily on random packet
+sampling rather than joining proper sets of packets into shared flows; this less-stateful and light
+approach makes it a valuable export protocol expecially tailored for high-speed networks. Further,
+you can exploit the great flexibility offered by sFlow v5 for, ie., embedding packet classification
+informations or adding basic (ie. src_as, dst_as) Extended Gateway informations through the use of
+a 'networks_file'. Now, the quickstarter guide:
+
+b) build sFlow probe configuration, using pmacctd:
+!
+daemonize: true
+interface: eth0
+plugins: sfprobe
+sfprobe_agentsubid: 1402
+sfprobe_receiver: 1.2.3.4:6343
+sfprobe_sampling_rate: 20
+!
+! networks_file: /path/to/networks.lst
+! classifiers: /path/to/classifiers/
+! snaplen: 700
+!...
+

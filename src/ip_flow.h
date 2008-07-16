@@ -1,0 +1,147 @@
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+*/
+
+/*
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
+#ifndef _IP_FLOW_H_
+#define _IP_FLOW_H_
+
+#if defined ENABLE_THREADS
+#include "thread_pool.h"
+#endif
+
+/* defines */
+#define FLOW_TABLE_HASHSZ 256 
+#define FLOW_GENERIC_LIFETIME 60 
+#define FLOW_TCPSYN_LIFETIME 60 
+#define FLOW_TCPEST_LIFETIME 432000
+#define FLOW_TCPFIN_LIFETIME 30 
+#define FLOW_TCPRST_LIFETIME 10 
+#define FLOW_TABLE_PRUNE_INTERVAL 3600 
+#define FLOW_TABLE_EMER_PRUNE_INTERVAL 60
+#define DEFAULT_FLOW_BUFFER_SIZE 16384000 /* 16 Mb */
+
+struct context_chain {
+  char *protocol;
+  void *data;
+  struct context_chain *next;
+};
+
+/* structures */
+struct ip_flow_common {
+  /*
+     [0] = forward flow data
+     [1] = reverse flow data
+  */
+  u_int16_t bucket;
+  struct timeval last[2];
+  u_int32_t last_tcp_seq;
+  u_int8_t tcp_flags[2];
+  u_int8_t proto;
+  /* classifier hooks */
+  pm_class_t class[2]; 
+  struct class_st cst[2]; 
+  struct context_chain *cc[2];
+  /* conntrack hooks */
+  void (*conntrack_helper)(time_t, struct packet_ptrs *);
+};
+
+struct ip_flow {
+  struct ip_flow_common cmn;
+  u_int32_t ip_src;
+  u_int32_t ip_dst;
+  u_int16_t port_src;
+  u_int16_t port_dst;
+  struct ip_flow *lru_next;
+  struct ip_flow *lru_prev;
+  struct ip_flow *next;
+  struct ip_flow *prev;
+};
+
+struct flow_lru_l {
+  struct ip_flow *root;
+  struct ip_flow *last;
+};
+
+#if defined ENABLE_IPV6
+struct ip_flow6 {
+  struct ip_flow_common cmn;
+  u_int32_t ip_src[4];
+  u_int32_t ip_dst[4];
+  u_int16_t port_src;
+  u_int16_t port_dst;
+  struct ip_flow6 *lru_next;
+  struct ip_flow6 *lru_prev;
+  struct ip_flow6 *next;
+  struct ip_flow6 *prev;
+};
+
+struct flow_lru_l6 {
+  struct ip_flow6 *root;
+  struct ip_flow6 *last;
+};
+#endif
+
+#if (!defined __IP_FLOW_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+/* prototypes */
+EXT void init_ip_flow_handler(); /* wrapper */ 
+EXT void init_ip4_flow_handler(); 
+EXT void ip_flow_handler(struct packet_ptrs *); 
+EXT void find_flow(struct timeval *, struct packet_ptrs *); 
+EXT void create_flow(struct timeval *, struct ip_flow *, u_int8_t, unsigned int, struct packet_ptrs *, struct my_iphdr *, struct my_tlhdr *, unsigned int); 
+EXT void prune_old_flows(struct timeval *); 
+
+EXT unsigned int hash_flow(u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t);
+EXT unsigned int normalize_flow(u_int32_t *, u_int32_t *, u_int16_t *, u_int16_t *);
+EXT unsigned int is_expired(struct timeval *, struct ip_flow_common *);
+EXT unsigned int is_expired_uni(struct timeval *, struct ip_flow_common *, unsigned int);
+EXT void evaluate_tcp_flags(struct timeval *, struct packet_ptrs *, struct ip_flow_common *, unsigned int);
+EXT void clear_tcp_flow_cmn(struct ip_flow_common *, unsigned int);
+
+#if defined ENABLE_IPV6
+EXT void init_ip6_flow_handler();
+EXT void ip_flow6_handler(struct packet_ptrs *);
+EXT unsigned int hash_flow6(u_int32_t, struct in6_addr *, struct in6_addr *);
+EXT unsigned int normalize_flow6(struct in6_addr *, struct in6_addr *, u_int16_t *, u_int16_t *);
+EXT void find_flow6(struct timeval *, struct packet_ptrs *);
+EXT void create_flow6(struct timeval *, struct ip_flow6 *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_hdr *, struct my_tlhdr *, unsigned int);
+EXT void prune_old_flows6(struct timeval *); 
+#endif
+
+/* global vars */
+EXT struct ip_flow **ip_flow_table;
+EXT struct flow_lru_l flow_lru_list;
+
+#if defined ENABLE_THREADS
+pthread_mutex_t *ip_flow_table_mutex;
+pthread_mutex_t *flow_lru_list_mutex;
+EXT void t_ip_flow_handler(struct packet_ptrs *);
+#endif
+
+#if defined ENABLE_IPV6
+EXT struct ip_flow6 **ip_flow_table6;
+EXT struct flow_lru_l6 flow_lru_list6;
+#endif
+#undef EXT
+
+#endif /* _IP_FLOW_H_ */

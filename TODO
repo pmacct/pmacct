@@ -1,0 +1,40 @@
+pmacct (Promiscuous mode IP Accounting package)
+pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+
+
+This software is currently under strong development, i'll try to
+reach a good and stable stage as soon as possible; the project
+has been started for practical reasons and i'm working on it,
+enthusiastically, mostly in my spare time. Any comment, idea,
+and any other kind of help, contribution or support is warmly
+welcome. Listed below are only few ideas to be reached as soon
+as possible.
+Currently, this software has to be considered in a development
+stage, so take care when using it in a production environment.
+If you find any bug, problem or misbehaviour don't hesitate to
+contact me.
+I'm currently not able to provide any kind of mission critical
+support, mainly for lack of resources. However, you may find
+useful the 'pmacct-discussion' mailing-list for getting in
+touch with us. Find details about it onto the project homepage. 
+If you have resources or proposals, feel free to contact me
+(email is in AUTHORS document); i'll be happy to read about
+them; i'll answer you as soon as possible.
+ 
+ ! sFlow: lacks of support for common architectures such as 
+   POS, ATM and F-Relay, mainly because of missing hardware
+   to test them. Moreover, the actual PPP support lacks of
+   an extensive testing. Requests, feedbacks and support 
+   are welcome. 
+ + improvements to the plugins architecture; more advanced
+   concepts will be greatly useful: they would permit some
+   advanced feature such as hotswap of old plugins without
+   the need to restart the daemon and should ease/encourage
+   the development of new plugins. 
+ + find new and interesting backends to support out there.
+   Writing to files is an already inflated method currently
+   supported by a number of applications. 
+
+Cheers,
+Paolo
+
