@@ -1,0 +1,48 @@
+# $Id$
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+datadir=@datadir@
+mandir=@mandir@
+sysconfdir=@sysconfdir@
+srcdir=@srcdir@
+top_srcdir=@top_srcdir@
+VPATH=@srcdir@
+CC=@CC@
+DEFS=@DEFS@
+LDFLAGS=@LDFLAGS@
+CFLAGS=$(DEFS) -I$(srcdir) -I.. @CFLAGS@
+CPPFLAGS=@CPPFLAGS@
+LIBS=@LIBS@
+INSTALL=@INSTALL@
+RANLIB=@RANLIB@ 
+
+#CFLAGS+=
+
+TARGETS=libbgp.a
+
+COMMON=
+
+all: $(TARGETS)
+
+libbgp.a: bgp.o bgp_aspath.o bgp_community.o bgp_ecommunity.o bgp_hash.o bgp_prefix.o bgp_table.o $(COMMON)
+	ar rc $@ bgp.o bgp_aspath.o bgp_community.o bgp_ecommunity.o bgp_hash.o bgp_prefix.o bgp_table.o $(COMMON)
+	$(RANLIB) $@
+
+clean:
+	rm -f $(TARGETS) *.o core *.core
+
+realclean: clean
+	rm -rf autom4te.cache Makefile config.log config.status
+
+distclean: realclean
+	rm -f config.h* configure
+
+strip:
+	strip $(TARGETS)
+
+install: all
+
