@@ -1,0 +1,37 @@
+pmacct (Promiscuous mode IP Accounting package) v0.11.6
+pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+
+Founder:
+
+	Paolo Lucente                   <paolo@pmacct.net>
+
+Contributors:
+
+	Francois Deppierraz             <francois@ctrlaltdel.ch>
+
+Who cares about the project:
+
+	Marcelo Goes (Gentoo)		<vanquirius@gentoo.org>
+	Kirill Ponomarew (FreeBSD)	<ponomarew@oberon.net>
+	Jamie Wilkinson (Debian)	<jaq@debian.org>
+   KP Kirchdoerfer (LEAF Bering-uClibc)	<kapeka@users.sourceforge.net> 
+	Peter Nixon (OpenSUSE RPMs)	<listuser@peternixon.net>
+
+Thanks to the following people for their strong support along
+the time: 
+
+	Martin Anderberg
+	Sven Anderson
+	Joerg Behrens
+	Robert Blechinger
+	Arnaud De-Bermingham
+	Marcello Di Leonardo
+	Rich Gade
+	Aaron Glenn
+	Gianluca Guida
+	Wim Kerkhoff
+	Peter Nixon
+	Karl O. Pinc
+	Vasiliy Ponomarev
+	Martin Pot
+	Anik Rahman
