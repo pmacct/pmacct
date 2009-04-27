@@ -80,6 +80,11 @@ typedef u_int16_t as16_t;
 #include "bgp_aspath.h"
 
 /* structures */
+struct bgp_peer_buf {
+  char *base;
+  int len;
+  int truncated_len;
+};
 
 /* Currently we only support one peer; bgp_peer is indeed a good
  * foundation for future support of both multiple peers and peer
@@ -90,11 +95,12 @@ struct bgp_peer {
   u_int8_t status;
   u_int32_t as;
   u_int16_t ht;
-  struct in_addr id;
-  struct host_addr addr;
+  struct host_addr id;
   u_int8_t cap_mp;
   char *cap_4as;
   u_int16_t msglen;
+  struct bgp_table *rib[AFI_MAX][SAFI_MAX];
+  struct bgp_peer_buf buf;
 };
 
 struct bgp_nlri {
@@ -153,6 +159,7 @@ EXT void bgp_attr_init();
 EXT struct bgp_attr *bgp_attr_intern(struct bgp_attr *);
 EXT void bgp_attr_unintern (struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
+EXT void bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 
@@ -161,7 +168,8 @@ EXT int attrhash_cmp(void *, void *);
 EXT void attrhash_init();
 
 /* global variables */
-EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
+// EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
+EXT struct bgp_peer *peers;
 EXT struct hash *attrhash;
 
 #undef EXT

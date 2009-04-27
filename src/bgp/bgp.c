@@ -47,15 +47,13 @@ void nfacctd_bgp_wrapper()
 
 void skinny_bgp_daemon()
 {
-  int slen, ret, sock, rc;
-  int truncated_len = 0, reassembly_buflen = BGP_MAX_PACKET_SIZE;
+  int slen, ret, sock, rc, peers_idx;
   struct host_addr addr;
   struct bgp_header *bhdr;
-  struct bgp_peer peer;
+  struct bgp_peer *peer;
   struct bgp_open *bopen;
-  unsigned char bgp_packet[BGP_MAX_PACKET_SIZE], *bgp_packet_ptr;
-  unsigned char bgp_reply_pkt[BGP_MAX_PACKET_SIZE], *bgp_reply_pkt_ptr;
-  unsigned char *reassembly_buf;
+  char bgp_packet[BGP_MAX_PACKET_SIZE], *bgp_packet_ptr;
+  char bgp_reply_pkt[BGP_MAX_PACKET_SIZE], *bgp_reply_pkt_ptr;
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
@@ -73,16 +71,6 @@ void skinny_bgp_daemon()
   memset(&client, 0, sizeof(client));
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
   bgp_attr_init();
-
-  reassembly_buf = malloc(reassembly_buflen);
-  memset(reassembly_buf, 0, reassembly_buflen);
-
-  /* initializing RIBs */
-  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      rib[afi][safi] = bgp_table_init(afi, safi);
-    }
-  }
 
   /* socket creation for BGP server: mostly stolen from nfacctd.c code */
 #if (defined ENABLE_IPV6 && defined V4_MAPPED)
@@ -116,6 +104,9 @@ void skinny_bgp_daemon()
   if (!config.nfacctd_max_bgp_peers) config.nfacctd_max_bgp_peers = MAX_BGP_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( default/core/BGP ): maximum BGP peers allowed: %d\n", config.nfacctd_max_bgp_peers);
 
+  peers = malloc(config.nfacctd_max_bgp_peers*sizeof(struct bgp_peer));
+  memset(peers, 0, config.nfacctd_max_bgp_peers*sizeof(struct bgp_peer));
+
   sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (sock < 0) {
     Log(LOG_ERR, "ERROR ( default/core/BGP ): thread socket() failed. Terminating thread.\n");
@@ -135,63 +126,74 @@ void skinny_bgp_daemon()
   }
   
   bgp_accept:
-  memset(&peer, 0, sizeof(peer));
-  peer.fd = accept(sock, (struct sockaddr *) &client, &clen);
+  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+    if (peers[peers_idx].fd == 0) {
+      peer = &peers[peers_idx];
+      bgp_peer_init(peer);
+      break;
+    }
+  }
+
+  if (!peer) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_max_bgp_peers' (%d).\n", config.nfacctd_max_bgp_peers);
+    exit_all(1);
+  }
+  peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
   
   for(;;) {
     bgp_recv:
-      peer.msglen = ret = recv(peer.fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
+      peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
 
     if (ret == -1) {
       Log(LOG_INFO, "INFO ( default/core/BGP ): Existing BGP connection was reset (%d). Goto accept()\n", errno);
-      bgp_peer_close(&peer);
+      bgp_peer_close(peer);
       goto bgp_accept;
     }
-    else if (peer.msglen+truncated_len < BGP_HEADER_SIZE) {
+    else if (peer->msglen+peer->buf.truncated_len < BGP_HEADER_SIZE) {
       Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (too short). Goto accept()\n");
-      bgp_peer_close(&peer);
+      bgp_peer_close(peer);
       goto bgp_accept;
     }
     else {
       /* BGP payload reassembly if required */
-      if (truncated_len) {
-		if (truncated_len+peer.msglen > reassembly_buflen) {
+      if (peer->buf.truncated_len) {
+		if (peer->buf.truncated_len+peer->msglen > peer->buf.len) {
 		  char *newptr;
 
-		  reassembly_buflen += truncated_len+peer.msglen;
-		  newptr = malloc(reassembly_buflen);
-		  memcpy(newptr, reassembly_buf, truncated_len);
-		  free(reassembly_buf);
-		  reassembly_buf = newptr;
+		  peer->buf.len += peer->buf.truncated_len+peer->msglen;
+		  newptr = malloc(peer->buf.len);
+		  memcpy(newptr, peer->buf.base, peer->buf.truncated_len);
+		  free(peer->buf.base);
+		  peer->buf.base = newptr;
 		}
-		memcpy(reassembly_buf+truncated_len, bgp_packet, peer.msglen);
-		peer.msglen += truncated_len;
-		truncated_len = 0;
+		memcpy(peer->buf.base+peer->buf.truncated_len, bgp_packet, peer->msglen);
+		peer->msglen += peer->buf.truncated_len;
+		peer->buf.truncated_len = 0;
 
-		bgp_packet_ptr = reassembly_buf;
+		bgp_packet_ptr = peer->buf.base;
 	  }
 	  else {
-		if (reassembly_buflen > BGP_MAX_PACKET_SIZE) { 
-		  realloc(reassembly_buf, BGP_MAX_PACKET_SIZE);
-		  memset(reassembly_buf, 0, BGP_MAX_PACKET_SIZE);
-		  reassembly_buflen = BGP_MAX_PACKET_SIZE;
+		if (peer->buf.len > BGP_MAX_PACKET_SIZE) { 
+		  realloc(peer->buf.base, BGP_MAX_PACKET_SIZE);
+		  memset(peer->buf.base, 0, BGP_MAX_PACKET_SIZE);
+		  peer->buf.len = BGP_MAX_PACKET_SIZE;
 		}
 		bgp_packet_ptr = bgp_packet;
 	  } 
-	  for ( ; peer.msglen > 0; peer.msglen -= ntohs(bhdr->bgpo_len), bgp_packet_ptr += ntohs(bhdr->bgpo_len)) { 
+	  for ( ; peer->msglen > 0; peer->msglen -= ntohs(bhdr->bgpo_len), bgp_packet_ptr += ntohs(bhdr->bgpo_len)) { 
 	    bhdr = (struct bgp_header *) bgp_packet_ptr;
 
 		/* BGP payload fragmentation check */
-		if (peer.msglen < BGP_HEADER_SIZE || peer.msglen < ntohs(bhdr->bgpo_len)) {
-		  truncated_len = peer.msglen;
-		  if (bgp_packet_ptr != reassembly_buf)
-		    memcpy(reassembly_buf, bgp_packet_ptr, truncated_len);
+		if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr->bgpo_len)) {
+		  peer->buf.truncated_len = peer->msglen;
+		  if (bgp_packet_ptr != peer->buf.base)
+		    memcpy(peer->buf.base, bgp_packet_ptr, peer->buf.truncated_len);
 		  goto bgp_recv;
 		}
 
 	    if (!bgp_marker_check(bhdr, BGP_MARKER_SIZE)) {
           Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (marker check failed). Goto accept()\n");
-		  bgp_peer_close(&peer);
+		  bgp_peer_close(peer);
 	      goto bgp_accept;
         }
 
@@ -199,8 +201,8 @@ void skinny_bgp_daemon()
 
 	    switch (bhdr->bgpo_type) {
 	    case BGP_OPEN:
-		  if (peer.status < OpenSent) {
-		    peer.status = Active;
+		  if (peer->status < OpenSent) {
+		    peer->status = Active;
 		    bopen = (struct bgp_open *) bgp_packet;  
 
 		    if (bopen->bgpo_version == BGP_VERSION4) {
@@ -208,8 +210,9 @@ void skinny_bgp_daemon()
 			  char *bgp_open_cap_reply_ptr = bgp_open_cap_reply, *bgp_open_cap_ptr;
 
 			  remote_as = ntohs(bopen->bgpo_myas);
-			  peer.ht = MAX(5, ntohs(bopen->bgpo_holdtime));
-			  peer.id.s_addr = bopen->bgpo_id;
+			  peer->ht = MAX(5, ntohs(bopen->bgpo_holdtime));
+			  peer->id.family = AF_INET; 
+			  peer->id.address.ipv4.s_addr = bopen->bgpo_id;
 
 			  /* OPEN options parsing */
 			  if (bopen->bgpo_optlen && bopen->bgpo_optlen >= 2) {
@@ -225,7 +228,7 @@ void skinny_bgp_daemon()
 
 				  if (opt_len > bopen->bgpo_optlen) {
 				    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (option length). Goto accept()\n");
-					bgp_peer_close(&peer);
+					bgp_peer_close(peer);
 				    goto bgp_accept;
 				  } 
 
@@ -245,7 +248,7 @@ void skinny_bgp_daemon()
 					  
 				      Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
 							cap_type, ntohs(cap_data->afi), cap_data->safi);
-					  peer.cap_mp = TRUE;
+					  peer->cap_mp = TRUE;
 					  memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
 					  bgp_open_cap_reply_ptr += opt_len+2;
 				    }
@@ -262,12 +265,12 @@ void skinny_bgp_daemon()
 						as4_ptr = (u_int32_t *) cap_ptr;
 						remote_as4 = ntohl(*as4_ptr);
 					    memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
-						peer.cap_4as = bgp_open_cap_reply_ptr+4;
+						peer->cap_4as = bgp_open_cap_reply_ptr+4;
 					    bgp_open_cap_reply_ptr += opt_len+2;
 					  }
 					  else {
 					    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (malformed AS4 option). Goto accept()\n");
-						bgp_peer_close(&peer);
+						bgp_peer_close(peer);
 						goto bgp_accept;
 					  }
 				    }
@@ -282,84 +285,84 @@ void skinny_bgp_daemon()
 			  /* Let's grasp the remote ASN */
 			  if (remote_as == BGP_AS_TRANS) {
 				if (remote_as4 && remote_as4 != BGP_AS_TRANS)
-				  peer.as = remote_as4;
+				  peer->as = remote_as4;
 				/* It is not valid to use the transitional ASN in the BGP OPEN and
  				   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 				else {
 				  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (invalid AS4 option). Goto accept()\n");
-				  bgp_peer_close(&peer);
+				  bgp_peer_close(peer);
 				  goto bgp_accept;
 				}
 			  }
 			  else {
 				if (remote_as4 == 0 || remote_as4 == remote_as)
-				  peer.as = remote_as;
+				  peer->as = remote_as;
  				/* It is not valid to not use the transitional ASN in the BGP OPEN and
 				   present an ASN != remote_as in the 4AS capability */
 				else {
 				  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (mismatching AS4 option). Goto accept()\n");
-				  bgp_peer_close(&peer);
+				  bgp_peer_close(peer);
 				  goto bgp_accept;
 				}
 			  }
 
-			  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_OPEN: Id: %s Asn: %u HoldTime: %u\n", inet_ntoa(peer.id), peer.as, peer.ht);
+			  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_OPEN: Id: %s Asn: %u HoldTime: %u\n", inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
 
 			  bgp_reply_pkt_ptr = bgp_reply_pkt;
 
 			  /* Replying to OPEN message */
-			  ret = bgp_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, &peer);
+			  ret = bgp_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
 			  if (ret > 0) bgp_reply_pkt_ptr += ret;
 			  else {
 				Log(LOG_INFO, "INFO ( default/core/BGP ): Local peer is 4AS while remote peer is 2AS: unsupported configuration. Goto accept()\n");
-				bgp_peer_close(&peer);
+				bgp_peer_close(peer);
 				goto bgp_accept;
 			  }
 
 			  /* sticking a KEEPALIVE to it */
 			  bgp_reply_pkt_ptr += bgp_keepalive_msg(bgp_reply_pkt_ptr);
 
-			  ret = send(peer.fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+			  ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
 		    }
 		    else {
   			  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported version). Goto accept()\n");
-			  bgp_peer_close(&peer);
+			  bgp_peer_close(peer);
 			  goto bgp_accept;
 		    }
 
-			peer.status = OpenSent;
+			peer->status = OpenSent;
 	      }
 		  /* If we already passed successfully through an BGP OPEN exchange
   			 let's just ignore further BGP OPEN messages */
 		  break;
 	    case BGP_NOTIFICATION:
-		  bgp_peer_close(&peer);
+		  bgp_peer_close(peer);
 
-		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_NOTIFICATION: Id: %s\n", inet_ntoa(peer.id));
+		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_NOTIFICATION: Id: %s\n", inet_ntoa(peer->id.address.ipv4));
 		  goto bgp_accept;
 		  break;
 		case BGP_KEEPALIVE:
-		  if (peer.status >= OpenSent) {
-		    if (peer.status < Established) peer.status = Established;
+		  if (peer->status >= OpenSent) {
+		    if (peer->status < Established) peer->status = Established;
 
 		    bgp_reply_pkt_ptr = bgp_reply_pkt;
 		    bgp_reply_pkt_ptr += bgp_keepalive_msg(bgp_reply_pkt_ptr);
-		    ret = send(peer.fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+		    ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
 
-		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_KEEPALIVE: Id: %s\n", inet_ntoa(peer.id));
+		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_KEEPALIVE: Id: %s\n", inet_ntoa(peer->id.address.ipv4));
 		  }
 		  /* If we didn't pass through a successful BGP OPEN exchange just yet
   			 let's temporarily discard BGP KEEPALIVEs */
 		  break;
 		case BGP_UPDATE:
 		  printf("BGP UPDATE\n");
-		  if (peer.status < Established) {
-		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP UPDATE: Id: %s (no neighbor). Goto accept()\n", inet_ntoa(peer.id));
-			bgp_peer_close(&peer);
+		  if (peer->status < Established) {
+		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP UPDATE: Id: %s (no neighbor). Goto accept()\n", inet_ntoa(peer->id.address.ipv4));
+			bgp_peer_close(peer);
 			goto bgp_accept;
 		  }
 
-		  ret = bgp_update_msg(&peer, bgp_packet_ptr);
+		  ret = bgp_update_msg(peer, bgp_packet_ptr);
 		  if (ret < 0) Log(LOG_WARNING, "WARN ( default/core/BGP ): BGP UPDATE: malformed (%d)\n", ret);
 
 		  /* XXX: DEBUG: Ad-hoc BGP RIB checks */
@@ -427,7 +430,7 @@ void skinny_bgp_daemon()
 		  break;
 	    default:
 		  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported message type). Goto accept()\n");
-		  bgp_peer_close(&peer);
+		  bgp_peer_close(peer);
 	      goto bgp_accept;
 		}
 	  }
@@ -892,7 +895,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   struct bgp_info *ri, *new;
   struct bgp_attr *attr_new;
 
-  route = bgp_node_get(rib[afi][safi], p);
+  route = bgp_node_get(peer->rib[afi][safi], p);
 
   /* Check previously received route. */
   for (ri = route->info; ri; ri = ri->next)
@@ -972,7 +975,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   struct bgp_info *ri;
 
   /* Lookup node. */
-  route = bgp_node_get(rib[afi][safi], p);
+  route = bgp_node_get(peer->rib[afi][safi], p);
 
   /* Lookup withdrawn route. */
   for (ri = route->info; ri; ri = ri->next)
@@ -1202,27 +1205,42 @@ void *bgp_attr_hash_alloc (void *p)
   return attr;
 }
 
+void bgp_peer_init(struct bgp_peer *peer)
+{
+  afi_t afi;
+  safi_t safi;
+
+  memset(peer, 0, sizeof(struct bgp_peer));
+  peer->status = Idle;
+  peer->buf.len = BGP_MAX_PACKET_SIZE;
+  peer->buf.base = malloc(peer->buf.len);
+  memset(peer->buf.base, 0, peer->buf.len);
+
+  /* Let's initialize clean RIBs once again */
+  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+      peer->rib[afi][safi] = bgp_table_init(afi, safi);
+    }
+  }
+}
+
 void bgp_peer_close(struct bgp_peer *peer)
 {
   afi_t afi;
   safi_t safi;
 
-  peer->status = Idle;
   close(peer->fd);
+  peer->fd = 0;
 
   /* Let's fully invalidate current RIBs first */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-	  bgp_table_finish(&rib[afi][safi]);
-	}
+      // XXX: is this working?
+      bgp_table_finish(&peer->rib[afi][safi]);
+    }
   }
 
-  /* Let's initialize clean RIBs once again */
-  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-	  rib[afi][safi] = bgp_table_init(afi, safi);
-	}
-  }
+  free(peer->buf.base);
 }
 
 int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct aspath *as4path)

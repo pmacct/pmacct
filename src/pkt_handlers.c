@@ -1322,50 +1322,63 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 
 void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
   struct bgp_node *src_ret, *dst_ret;
   struct bgp_info *info;
+  struct bgp_peer *peer;
   struct in_addr *pref4;
 #if defined ENABLE_IPV6
   struct in6_addr *pref6;
 #endif
+  int peers_idx;
 
-  /* XXX: to be slightly optimized */
-  if (pptrs->l3_proto == ETHERTYPE_IP) {
-    pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_src;
-    src_ret = bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], pref4);
-    pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst;
-    dst_ret = bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], pref4);
-  }
+  /* XXX: to be highly optimized */
+  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].id)) {
+      peer = &peers[peers_idx];
+      break;
+    }
+  } 
+
+  if (peer) {
+    /* XXX: to be slightly optimized */
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_src;
+      src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
+      pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst;
+      dst_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
+    }
 #if defined ENABLE_IPV6
-  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-    pref6 = (struct in6_addr *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src;
-    dst_ret = bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], pref6);
-    pref6 = (struct in6_addr *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst;
-    dst_ret = bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], pref6);
-  }
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      pref6 = (struct in6_addr *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src;
+      dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], pref6);
+      pref6 = (struct in6_addr *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst;
+      dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], pref6);
+    }
 #endif
 
-  if (src_ret) {
-    info = (struct bgp_info *) src_ret->info;
-    if (info && info->attr) {
-      if (info->attr->community && info->attr->community->str)
-        strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS); 
-      if (info->attr->ecommunity && info->attr->ecommunity->str)
-        strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS); 
+    if (src_ret) {
+      info = (struct bgp_info *) src_ret->info;
+      if (info && info->attr) {
+        if (info->attr->community && info->attr->community->str)
+          strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS); 
+        if (info->attr->ecommunity && info->attr->ecommunity->str)
+          strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS); 
+      }
     }
-  }
 
-  if (dst_ret) {
-    info = (struct bgp_info *) dst_ret->info;
-    if (info && info->attr) {
-      if (info->attr->community && info->attr->community->str)
-        strlcpy(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-      if (info->attr->ecommunity && info->attr->ecommunity->str)
-        strlcpy(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-      if (info->attr->aspath && info->attr->aspath->str)
-        strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
+    if (dst_ret) {
+      info = (struct bgp_info *) dst_ret->info;
+      if (info && info->attr) {
+        if (info->attr->community && info->attr->community->str)
+          strlcpy(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+        if (info->attr->ecommunity && info->attr->ecommunity->str)
+          strlcpy(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+        if (info->attr->aspath && info->attr->aspath->str)
+          strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
+      }
     }
   }
 }
