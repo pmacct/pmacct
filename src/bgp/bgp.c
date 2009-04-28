@@ -66,6 +66,10 @@ void skinny_bgp_daemon()
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
 
+  /* select() stuff */
+  fd_set read_descs, bkp_read_descs; 
+  int select_fd, select_num;
+
   /* initial cleanups */
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
@@ -124,83 +128,119 @@ void skinny_bgp_daemon()
     Log(LOG_ERR, "ERROR ( default/core/BGP ): listen() failed (errno: %d).\n", errno);
     exit_all(1);
   }
-  
-  bgp_accept:
-  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
-    if (peers[peers_idx].fd == 0) {
-      peer = &peers[peers_idx];
-      bgp_peer_init(peer);
-      break;
+
+  /* Preparing for syncronous I/O multiplexing */
+  select_fd = 0;
+  FD_ZERO(&bkp_read_descs);
+  FD_SET(sock, &bkp_read_descs);
+
+  for (;;) {
+    select_again:
+    select_fd = sock;
+    for (peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++)
+      if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
+    select_fd++;
+    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+    select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
+    if (select_num < 0) goto select_again;
+
+    /* New connection is coming in */ 
+    if (FD_ISSET(sock, &read_descs)) {
+      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+        if (peers[peers_idx].fd == 0) {
+          peer = &peers[peers_idx];
+          bgp_peer_init(peer);
+          break;
+        }
+      }
+
+      if (!peer) {
+        Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_max_bgp_peers' (%d).\n", config.nfacctd_max_bgp_peers);
+        // exit_all(1); 
+	goto select_again;
+      }
+      peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
+      FD_SET(peer->fd, &bkp_read_descs);
+      goto select_again; // XXX: is this correct?
     }
-  }
 
-  if (!peer) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_max_bgp_peers' (%d).\n", config.nfacctd_max_bgp_peers);
-    exit_all(1);
-  }
-  peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
-  
-  for(;;) {
-    bgp_recv:
-      peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
+    /* We have something coming in: let's lookup which peer is thatl
+       XXX: to be optimized */
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+      if (peers[peers_idx].fd && FD_ISSET(peers[peers_idx].fd, &read_descs)) {
+	peer = &peers[peers_idx];
+	break;
+      }
+    } 
 
-    if (ret == -1) {
+    if (!peer) {
+      Log(LOG_ERR, "ERROR ( default/core/BGP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", select_num, select_fd);
+      goto select_again;
+    }
+    
+    peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
+
+    if (ret <= 0) {
       Log(LOG_INFO, "INFO ( default/core/BGP ): Existing BGP connection was reset (%d). Goto accept()\n", errno);
+      FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer);
-      goto bgp_accept;
+      goto select_again;
     }
     else if (peer->msglen+peer->buf.truncated_len < BGP_HEADER_SIZE) {
       Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (too short). Goto accept()\n");
+      FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer);
-      goto bgp_accept;
+      goto select_again;
     }
     else {
       /* BGP payload reassembly if required */
       if (peer->buf.truncated_len) {
-		if (peer->buf.truncated_len+peer->msglen > peer->buf.len) {
-		  char *newptr;
+	if (peer->buf.truncated_len+peer->msglen > peer->buf.len) {
+	  char *newptr;
 
-		  peer->buf.len += peer->buf.truncated_len+peer->msglen;
-		  newptr = malloc(peer->buf.len);
-		  memcpy(newptr, peer->buf.base, peer->buf.truncated_len);
-		  free(peer->buf.base);
-		  peer->buf.base = newptr;
-		}
-		memcpy(peer->buf.base+peer->buf.truncated_len, bgp_packet, peer->msglen);
-		peer->msglen += peer->buf.truncated_len;
-		peer->buf.truncated_len = 0;
+	  peer->buf.len += peer->buf.truncated_len+peer->msglen;
+	  newptr = malloc(peer->buf.len);
+	  memcpy(newptr, peer->buf.base, peer->buf.truncated_len);
+	  free(peer->buf.base);
+	  peer->buf.base = newptr;
+	}
+	memcpy(peer->buf.base+peer->buf.truncated_len, bgp_packet, peer->msglen);
+	peer->msglen += peer->buf.truncated_len;
+	peer->buf.truncated_len = 0;
 
-		bgp_packet_ptr = peer->buf.base;
+	bgp_packet_ptr = peer->buf.base;
+      }
+      else {
+	if (peer->buf.len > BGP_MAX_PACKET_SIZE) { 
+	  realloc(peer->buf.base, BGP_MAX_PACKET_SIZE);
+	  memset(peer->buf.base, 0, BGP_MAX_PACKET_SIZE);
+	  peer->buf.len = BGP_MAX_PACKET_SIZE;
+	}
+	bgp_packet_ptr = bgp_packet;
+      } 
+      for ( ; peer->msglen > 0; peer->msglen -= ntohs(bhdr->bgpo_len), bgp_packet_ptr += ntohs(bhdr->bgpo_len)) { 
+	bhdr = (struct bgp_header *) bgp_packet_ptr;
+
+	/* BGP payload fragmentation check */
+	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr->bgpo_len)) {
+	  peer->buf.truncated_len = peer->msglen;
+	  if (bgp_packet_ptr != peer->buf.base)
+	    memcpy(peer->buf.base, bgp_packet_ptr, peer->buf.truncated_len);
+	    // goto bgp_recv;
+	    goto select_again;
 	  }
-	  else {
-		if (peer->buf.len > BGP_MAX_PACKET_SIZE) { 
-		  realloc(peer->buf.base, BGP_MAX_PACKET_SIZE);
-		  memset(peer->buf.base, 0, BGP_MAX_PACKET_SIZE);
-		  peer->buf.len = BGP_MAX_PACKET_SIZE;
-		}
-		bgp_packet_ptr = bgp_packet;
-	  } 
-	  for ( ; peer->msglen > 0; peer->msglen -= ntohs(bhdr->bgpo_len), bgp_packet_ptr += ntohs(bhdr->bgpo_len)) { 
-	    bhdr = (struct bgp_header *) bgp_packet_ptr;
 
-		/* BGP payload fragmentation check */
-		if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr->bgpo_len)) {
-		  peer->buf.truncated_len = peer->msglen;
-		  if (bgp_packet_ptr != peer->buf.base)
-		    memcpy(peer->buf.base, bgp_packet_ptr, peer->buf.truncated_len);
-		  goto bgp_recv;
-		}
+	  if (!bgp_marker_check(bhdr, BGP_MARKER_SIZE)) {
+            Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (marker check failed). Goto accept()\n");
+	    FD_CLR(peer->fd, &bkp_read_descs);
+	    bgp_peer_close(peer);
+	    goto select_again;
+          }
 
-	    if (!bgp_marker_check(bhdr, BGP_MARKER_SIZE)) {
-          Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (marker check failed). Goto accept()\n");
-		  bgp_peer_close(peer);
-	      goto bgp_accept;
-        }
+	  memset(bgp_reply_pkt, 0, BGP_MAX_PACKET_SIZE);
 
-		memset(bgp_reply_pkt, 0, BGP_MAX_PACKET_SIZE);
-
-	    switch (bhdr->bgpo_type) {
-	    case BGP_OPEN:
+	  switch (bhdr->bgpo_type) {
+	  case BGP_OPEN:
 		  if (peer->status < OpenSent) {
 		    peer->status = Active;
 		    bopen = (struct bgp_open *) bgp_packet;  
@@ -228,8 +268,9 @@ void skinny_bgp_daemon()
 
 				  if (opt_len > bopen->bgpo_optlen) {
 				    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (option length). Goto accept()\n");
-					bgp_peer_close(peer);
-				    goto bgp_accept;
+				    FD_CLR(peer->fd, &bkp_read_descs);
+				    bgp_peer_close(peer);
+				    goto select_again;
 				  } 
 
 				  /* 
@@ -270,8 +311,9 @@ void skinny_bgp_daemon()
 					  }
 					  else {
 					    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (malformed AS4 option). Goto accept()\n");
+						FD_CLR(peer->fd, &bkp_read_descs);
 						bgp_peer_close(peer);
-						goto bgp_accept;
+						goto select_again;
 					  }
 				    }
 				  }
@@ -290,8 +332,9 @@ void skinny_bgp_daemon()
  				   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 				else {
 				  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (invalid AS4 option). Goto accept()\n");
+				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer);
-				  goto bgp_accept;
+				  goto select_again;
 				}
 			  }
 			  else {
@@ -301,8 +344,9 @@ void skinny_bgp_daemon()
 				   present an ASN != remote_as in the 4AS capability */
 				else {
 				  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (mismatching AS4 option). Goto accept()\n");
+				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer);
-				  goto bgp_accept;
+				  goto select_again;
 				}
 			  }
 
@@ -315,8 +359,9 @@ void skinny_bgp_daemon()
 			  if (ret > 0) bgp_reply_pkt_ptr += ret;
 			  else {
 				Log(LOG_INFO, "INFO ( default/core/BGP ): Local peer is 4AS while remote peer is 2AS: unsupported configuration. Goto accept()\n");
+				FD_CLR(peer->fd, &bkp_read_descs);
 				bgp_peer_close(peer);
-				goto bgp_accept;
+				goto select_again;
 			  }
 
 			  /* sticking a KEEPALIVE to it */
@@ -326,8 +371,9 @@ void skinny_bgp_daemon()
 		    }
 		    else {
   			  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported version). Goto accept()\n");
+			  FD_CLR(peer->fd, &bkp_read_descs);
 			  bgp_peer_close(peer);
-			  goto bgp_accept;
+			  goto select_again;
 		    }
 
 			peer->status = OpenSent;
@@ -335,11 +381,11 @@ void skinny_bgp_daemon()
 		  /* If we already passed successfully through an BGP OPEN exchange
   			 let's just ignore further BGP OPEN messages */
 		  break;
-	    case BGP_NOTIFICATION:
-		  bgp_peer_close(peer);
-
+	  case BGP_NOTIFICATION:
 		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_NOTIFICATION: Id: %s\n", inet_ntoa(peer->id.address.ipv4));
-		  goto bgp_accept;
+		  FD_CLR(peer->fd, &bkp_read_descs);
+		  bgp_peer_close(peer);
+		  goto select_again;
 		  break;
 		case BGP_KEEPALIVE:
 		  if (peer->status >= OpenSent) {
@@ -354,85 +400,24 @@ void skinny_bgp_daemon()
 		  /* If we didn't pass through a successful BGP OPEN exchange just yet
   			 let's temporarily discard BGP KEEPALIVEs */
 		  break;
-		case BGP_UPDATE:
+	  case BGP_UPDATE:
 		  printf("BGP UPDATE\n");
 		  if (peer->status < Established) {
 		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP UPDATE: Id: %s (no neighbor). Goto accept()\n", inet_ntoa(peer->id.address.ipv4));
+			FD_CLR(peer->fd, &bkp_read_descs);
 			bgp_peer_close(peer);
-			goto bgp_accept;
+			goto select_again;
 		  }
 
 		  ret = bgp_update_msg(peer, bgp_packet_ptr);
 		  if (ret < 0) Log(LOG_WARNING, "WARN ( default/core/BGP ): BGP UPDATE: malformed (%d)\n", ret);
-
-		  /* XXX: DEBUG: Ad-hoc BGP RIB checks */
-/*
-		  {
-			struct bgp_node *node;
-			struct bgp_info *info = NULL;
-			struct in_addr pref;
-			struct sockaddr_in6 pref6; 
- 			char lookup_addr1[] = "13.0.2.255";
- 			char lookup_addr2[] = "2001:11:31:19::1";
-			char pref6_str[INET6_ADDRSTRLEN];
-
-			pref.s_addr = inet_addr(lookup_addr1);
-			node = bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref);
-	
-			if (node) {
-			  if (node->info) info = (struct bgp_info *) node->info;
-			  printf("LOOKING FOR: %s, FOUND: %s\n", lookup_addr1, inet_ntoa(node->p.u.prefix4));
-			  if (info) {
-			    if (info->attr) {
-			  	  if (info->attr->community) {
-			  		if (info->attr->community->str) printf("WITH COMMUNITIES: '%s'\n", info->attr->community->str);
-				  }
-			  	  if (info->attr->ecommunity) {
-			  		if (info->attr->ecommunity->str) printf("WITH ECOMMUNITIES: '%s'\n", info->attr->ecommunity->str);
-				  }
-			  	  if (info->attr->aspath) {
-			  		if (info->attr->aspath->str) printf("WITH AS PATH: '%s'\n", info->attr->aspath->str);
-				  }
-				  if (info->attr->med) printf("WITH MED: '%u'\n", info->attr->med);
-				  if (info->attr->local_pref) printf("WITH LOCAL PREFERENCE: '%u'\n", info->attr->local_pref);
-				}
-			  }
-			}
-			else printf("LOOKING FOR: %s, NOT FOUND\n", lookup_addr1);
-#ifdef ENABLE_IPV6
-			inet_pton(AF_INET6, lookup_addr2, &(pref6.sin6_addr));
-			node = bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &(pref6.sin6_addr));
-
-            if (node) {
-			  if (node->info) info = (struct bgp_info *) node->info;
-			  inet_ntop(AF_INET6, &node->p.u.prefix6, pref6_str, INET6_ADDRSTRLEN);
-              printf("LOOKING FOR: %s, FOUND: %s\n", lookup_addr2, pref6_str);
-			  if (info) {
-			  	if (info->attr) {
-			      if (info->attr->community) {
-			        if (info->attr->community->str) printf("WITH COMMUNITIES: '%s'\n", info->attr->community->str);
-				  }
-		  		  if (info->attr->ecommunity) {
-				    if (info->attr->ecommunity->str) printf("WITH ECOMMUNITIES: '%s'\n", info->attr->ecommunity->str);
-			  	  }
-				  if (info->attr->aspath) {
-				    if (info->attr->aspath->str) printf("WITH AS PATH: '%s'\n", info->attr->aspath->str);
-				  }
-				  if (info->attr->med) printf("WITH MED: '%u'\n", info->attr->med);
-				  if (info->attr->local_pref) printf("WITH LOCAL PREFERENCE: '%u'\n", info->attr->local_pref);
-				}
-		      }
-			}
-		    else printf("LOOKING FOR: %s, NOT FOUND\n", lookup_addr2);
-#endif
-		  }
-*/
 		  break;
 	    default:
-		  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported message type). Goto accept()\n");
-		  bgp_peer_close(peer);
-	      goto bgp_accept;
-		}
+	      Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported message type). Goto accept()\n");
+	      FD_CLR(peer->fd, &bkp_read_descs);
+	      bgp_peer_close(peer);
+	      goto select_again;
+	    }
 	  }
 	}
   }
