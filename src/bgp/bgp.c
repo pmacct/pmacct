@@ -161,7 +161,7 @@ void skinny_bgp_daemon()
       }
       peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
       FD_SET(peer->fd, &bkp_read_descs);
-      goto select_again; // XXX: is this correct?
+      goto select_again; 
     }
 
     /* We have something coming in: let's lookup which peer is thatl
@@ -1216,11 +1216,11 @@ void bgp_peer_close(struct bgp_peer *peer)
 
   close(peer->fd);
   peer->fd = 0;
+  memset(&peer->id, 0, sizeof(peer->id));
 
   /* Let's fully invalidate current RIBs first */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      // XXX: is this working?
       bgp_table_finish(&peer->rib[afi][safi]);
     }
   }

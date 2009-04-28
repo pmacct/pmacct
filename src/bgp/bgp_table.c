@@ -89,26 +89,24 @@ bgp_node_free_aggressive (struct bgp_node *node)
 {
   struct bgp_info *ri, *next;
 
-  /* XXX: This bases on the assumption we will never have more
-	 than one concurrent peer - which should always the case */
   for (ri = node->info; ri; ri = next) {
-	if (config.nfacctd_bgp_msglog) {
-	  char empty[] = "";
-	  char prefix_str[INET6_ADDRSTRLEN];
-	  char *aspath, *comm, *ecomm;
+    if (config.nfacctd_bgp_msglog) {
+      char empty[] = "";
+      char prefix_str[INET6_ADDRSTRLEN];
+      char *aspath, *comm, *ecomm;
 
-	  memset(prefix_str, 0, INET6_ADDRSTRLEN);
-	  prefix2str(&node->p, prefix_str, INET6_ADDRSTRLEN);
+      memset(prefix_str, 0, INET6_ADDRSTRLEN);
+      prefix2str(&node->p, prefix_str, INET6_ADDRSTRLEN);
 
-	  aspath = ri->attr->aspath ? ri->attr->aspath->str : empty;
-	  comm = ri->attr->community ? ri->attr->community->str : empty;
-	  ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
+      aspath = ri->attr->aspath ? ri->attr->aspath->str : empty;
+      comm = ri->attr->community ? ri->attr->community->str : empty;
+      ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
-	  Log(LOG_INFO, "INFO ( default/core/BGP ): d Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n", prefix_str, aspath, comm, ecomm);
+      Log(LOG_INFO, "INFO ( default/core/BGP ): d Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n", prefix_str, aspath, comm, ecomm);
     }
 
-	next = ri->next;
-	bgp_info_free(ri);
+    next = ri->next;
+    bgp_info_free(ri);
   }
 
   free (node);
