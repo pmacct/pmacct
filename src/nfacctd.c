@@ -477,6 +477,8 @@ int main(int argc,char **argv, char **envp)
   if (config.nfacctd_bgp) {
     nfacctd_bgp_wrapper();
     req.bpf_filter = TRUE;
+
+    /* XXX: nfacctd_bgp_stdcomm_pattern compilation */
   }
 #else
   if (config.nfacctd_bgp) {

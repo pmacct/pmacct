@@ -913,3 +913,16 @@ void stop_timer(struct mytimer *t, const char *format, ...)
   fprintf(stderr, "TIMER:%s:%d\n", msg, (t->t1.tv_sec - t->t0.tv_sec) * 1000000 + (t->t1.tv_usec - t->t0.tv_usec));
 }
 #endif
+
+void evaluate_bgp_aspath_radius(char *path, int len, int radius)
+{
+  int count, idx;
+
+  for (idx = 0, count = 0; idx < len; idx++) {
+    if (path[idx] == ' ') count++;
+    if (count == radius) {
+      path[idx] = '\0';
+      break;
+    }
+  }
+}

@@ -122,6 +122,9 @@ EXT int cfg_key_nfacctd_bgp_msglog(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_myas(char *, char *, char *);
 EXT int cfg_key_nfacctd_max_bgp_peers(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_ip(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_aspath_radius(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_stdcomm_pattern(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_extcomm_pattern(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 #undef EXT

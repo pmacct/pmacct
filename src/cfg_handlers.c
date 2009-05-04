@@ -1582,6 +1582,45 @@ int cfg_key_nfacctd_bgp_myas(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_aspath_radius(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 1) {
+        Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_aspath_radius' has to be >= 1.\n", filename);
+        return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_aspath_radius = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_aspath_radius'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_stdcomm_pattern(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_stdcomm_pattern = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_stdcomm_pattern'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_extcomm_pattern(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_extcomm_pattern = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_extcomm_pattern'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_max_bgp_peers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -309,6 +309,9 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_bgp_ip", cfg_key_nfacctd_bgp_ip},
   {"nfacctd_max_bgp_peers", cfg_key_nfacctd_max_bgp_peers},
   {"nfacctd_bgp_msglog", cfg_key_nfacctd_bgp_msglog},
+  {"nfacctd_bgp_aspath_radius", cfg_key_nfacctd_bgp_aspath_radius},
+  {"nfacctd_bgp_stdcomm_pattern", cfg_key_nfacctd_bgp_stdcomm_pattern},
+  {"nfacctd_bgp_extcomm_pattern", cfg_key_nfacctd_bgp_extcomm_pattern},
   {"", NULL},
 };
 

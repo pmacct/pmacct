@@ -1334,7 +1334,7 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 #endif
   int peers_idx;
 
-  /* XXX: to be highly optimized */
+  /* XXX: to be optimized */
   for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
     if (!sa_addr_cmp(sa, &peers[peers_idx].id)) {
       peer = &peers[peers_idx];
@@ -1343,7 +1343,6 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   } 
 
   if (peer) {
-    /* XXX: to be slightly optimized */
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_src;
       src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
@@ -1362,22 +1361,39 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     if (src_ret) {
       info = (struct bgp_info *) src_ret->info;
       if (info && info->attr) {
-        if (info->attr->community && info->attr->community->str)
+        if (info->attr->community && info->attr->community->str) {
           strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS); 
-        if (info->attr->ecommunity && info->attr->ecommunity->str)
+	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
+	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	}
+        if (info->attr->ecommunity && info->attr->ecommunity->str) {
           strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS); 
+	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
+	    pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	}
       }
     }
 
     if (dst_ret) {
       info = (struct bgp_info *) dst_ret->info;
       if (info && info->attr) {
-        if (info->attr->community && info->attr->community->str)
+        if (info->attr->community && info->attr->community->str) {
           strlcpy(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-        if (info->attr->ecommunity && info->attr->ecommunity->str)
+	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
+	    pbgp->dst_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	}
+        if (info->attr->ecommunity && info->attr->ecommunity->str) {
           strlcpy(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-        if (info->attr->aspath && info->attr->aspath->str)
+	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
+	    pbgp->dst_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	}
+        if (info->attr->aspath && info->attr->aspath->str) {
           strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
+	  if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
+	    pbgp->as_path[MAX_BGP_ASPATH-1] = '+';
+	  if (config.nfacctd_bgp_aspath_radius)
+	    evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+	}
       }
     }
   }

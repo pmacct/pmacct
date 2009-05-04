@@ -158,7 +158,7 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS  ");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS  "); 
-    if (what_to_count & COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM) printf("SRC_BGP_COMM             ");
+    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM)) printf("SRC_BGP_COMM             ");
     if (what_to_count & COUNT_DST_STD_COMM) printf("DST_BGP_COMM             ");
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
 #if defined ENABLE_IPV6
