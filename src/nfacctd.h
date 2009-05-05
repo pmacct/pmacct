@@ -385,10 +385,6 @@ struct data_hdr_v9 {
 #define NF_AS_KEEP 0 /* Keep AS numbers in NetFlow packets */
 #define NF_AS_NEW 1 /* ignore AS numbers in NetFlow packets and generate new ones */ 
 
-/* Maximum BGP standard/extended community patterns supported:
-   nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
-#define MAX_NF_BGP_COMM_PATTERN 16 
-
 /* NetFlow V9 stuff */
 #define NF9_TEMPLATE_FLOWSET_ID         0
 #define NF9_OPTIONS_FLOWSET_ID          1

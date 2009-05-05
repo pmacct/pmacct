@@ -72,6 +72,11 @@
 /* BGP misc */
 #define MAX_BGP_PEERS_DEFAULT 4
 
+/* Maximum BGP standard/extended community patterns supported:
+   nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
+#define MAX_BGP_COMM_PATTERNS 16
+
+
 /* typedefs */
 typedef u_int32_t as_t;
 typedef u_int16_t as16_t;
@@ -162,15 +167,19 @@ EXT void *bgp_attr_hash_alloc (void *);
 EXT void bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
+EXT void load_comm_patterns(char **, char **);
+EXT void evaluate_stdcomm_patterns(char *, char *, int);
+EXT void evaluate_extcomm_patterns(char *, char *, int);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(void *, void *);
 EXT void attrhash_init();
 
 /* global variables */
-// EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 EXT struct bgp_peer *peers;
 EXT struct hash *attrhash;
+EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
+EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 
 #undef EXT
 #endif 

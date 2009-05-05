@@ -1242,3 +1242,76 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   aspath_unintern(attr->aspath);
   attr->aspath = aspath_intern(newpath);
 }
+
+void load_comm_patterns(char **stdcomm, char **extcomm)
+{
+  int idx;
+  char *token;
+
+  memset(std_comm_patterns, 0, sizeof(std_comm_patterns));
+  memset(ext_comm_patterns, 0, sizeof(ext_comm_patterns));
+
+  if (*stdcomm) {
+    idx = 0;
+    while ( (token = extract_token(stdcomm, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+      std_comm_patterns[idx] = token;
+      trim_spaces(std_comm_patterns[idx]);
+      idx++;
+    }
+  }
+ 
+  if (*extcomm) {
+    idx = 0;
+    while ( (token = extract_token(extcomm, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+      ext_comm_patterns[idx] = token;
+      trim_spaces(ext_comm_patterns[idx]);
+      idx++;
+    }
+  }
+} 
+
+/* XXX: to be tested! */
+void evaluate_stdcomm_patterns(char *dst, char *src, int dstlen)
+{
+  char *ptr, *haystack;
+  int idx, i, j, srclen;
+
+  srclen = strlen(src);
+
+  for (idx = 0, j = 0; std_comm_patterns[idx]; idx++) {
+    haystack = src;
+
+    find_again:
+    ptr = strstr(haystack, std_comm_patterns[idx]);
+
+    if (ptr) {
+      /* If we have already something on the stack, let's insert a space */
+      if (j && j < dstlen) {
+	dst[j] = ' ';
+	j++;
+      }
+
+      /* We should be able to trust this string */
+      for (i = 0; ptr[i] != ' ' && ptr[i] != '\0'; i++, j++) {
+	if (j < dstlen) dst[j] = ptr[i];
+	else break;
+      } 
+
+      haystack = &ptr[i];
+    }
+
+    /* If we don't have space anymore, let's finish it here */
+    if (j >= dstlen) {
+      dst[dstlen-1] = '+';
+      break;
+    }
+
+    /* Trick to find multiple occurrences */ 
+    if (ptr) goto find_again;
+  }
+}
+
+/* XXX: to be done! */
+void evaluate_extcomm_patterns(char *dst, char *src, int len)
+{
+}

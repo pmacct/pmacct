@@ -1362,14 +1362,22 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       info = (struct bgp_info *) src_ret->info;
       if (info && info->attr) {
         if (info->attr->community && info->attr->community->str) {
-          strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS); 
-	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	  if (config.nfacctd_bgp_stdcomm_pattern)
+	    evaluate_stdcomm_patterns(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+	  else {
+            strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS); 
+	    if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
+	      pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	  }
 	}
         if (info->attr->ecommunity && info->attr->ecommunity->str) {
-          strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS); 
-	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-	    pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	  if (config.nfacctd_bgp_extcomm_pattern)
+	    evaluate_extcomm_patterns(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+	  else {
+            strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS); 
+	    if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
+	      pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	  }
 	}
       }
     }
@@ -1378,14 +1386,22 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       info = (struct bgp_info *) dst_ret->info;
       if (info && info->attr) {
         if (info->attr->community && info->attr->community->str) {
-          strlcpy(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	    pbgp->dst_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	  if (config.nfacctd_bgp_stdcomm_pattern)
+	    evaluate_stdcomm_patterns(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+	  else {
+            strlcpy(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+	    if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
+	      pbgp->dst_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	  }
 	}
         if (info->attr->ecommunity && info->attr->ecommunity->str) {
-          strlcpy(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-	    pbgp->dst_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	  if (config.nfacctd_bgp_extcomm_pattern)
+	    evaluate_extcomm_patterns(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+	  else {
+            strlcpy(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+	    if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
+	      pbgp->dst_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	  }
 	}
         if (info->attr->aspath && info->attr->aspath->str) {
           strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
