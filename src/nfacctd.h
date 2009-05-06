@@ -383,7 +383,8 @@ struct data_hdr_v9 {
 #define NF_TIME_NEW 2 /* ignore netflow engine times and generate new ones */ 
 
 #define NF_AS_KEEP 0 /* Keep AS numbers in NetFlow packets */
-#define NF_AS_NEW 1 /* ignore AS numbers in NetFlow packets and generate new ones */ 
+#define NF_AS_NEW 1 /* ignore ASN from NetFlow and generate from network files */ 
+#define NF_AS_BGP 2 /* ignore ASN from NetFlow and generate from BGP peerings */
 
 /* NetFlow V9 stuff */
 #define NF9_TEMPLATE_FLOWSET_ID         0

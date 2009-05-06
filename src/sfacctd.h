@@ -7,8 +7,12 @@
 #define NF_AS_KEEP 0 /* Keep AS numbers in NetFlow packets */
 #endif
 #if (!defined NF_AS_NEW)
-#define NF_AS_NEW 1 /* ignore AS numbers in NetFlow packets and generate new ones */
+#define NF_AS_NEW 1 /* ignore ASN from sFlow and generate from network files */ 
 #endif
+#if (!defined NF_AS_BGP)
+#define NF_AS_BGP 2 /* ignore ASN from sFlow and generate from BGP peerings */
+#endif
+
 
 #if (!defined NF9_FTYPE_IPV4)
 #define NF9_FTYPE_IPV4                  0

@@ -1270,19 +1270,18 @@ void load_comm_patterns(char **stdcomm, char **extcomm)
   }
 } 
 
-/* XXX: to be tested! */
-void evaluate_stdcomm_patterns(char *dst, char *src, int dstlen)
+void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 {
   char *ptr, *haystack;
   int idx, i, j, srclen;
 
   srclen = strlen(src);
 
-  for (idx = 0, j = 0; std_comm_patterns[idx]; idx++) {
+  for (idx = 0, j = 0; patterns[idx]; idx++) {
     haystack = src;
 
     find_again:
-    ptr = strstr(haystack, std_comm_patterns[idx]);
+    ptr = strstr(haystack, patterns[idx]);
 
     if (ptr) {
       /* If we have already something on the stack, let's insert a space */
@@ -1311,7 +1310,16 @@ void evaluate_stdcomm_patterns(char *dst, char *src, int dstlen)
   }
 }
 
-/* XXX: to be done! */
-void evaluate_extcomm_patterns(char *dst, char *src, int len)
+u_int32_t evaluate_last_asn(char *src)
 {
+  int idx, len = strlen(src); 
+  char *endptr;
+  u_int32_t asn;
+  
+  for (idx = len; idx && src[idx] != ' '; idx--);
+
+  asn = strtoul(&src[idx], &endptr, 10);
+
+  return asn;
 }
+

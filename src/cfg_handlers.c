@@ -157,6 +157,9 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "src_std_comm")) value |= COUNT_SRC_STD_COMM;
     else if (!strcmp(count_token, "dst_std_comm")) value |= COUNT_DST_STD_COMM;
     else if (!strcmp(count_token, "sum_std_comm")) value |= COUNT_SUM_STD_COMM;
+    else if (!strcmp(count_token, "src_ext_comm")) value |= COUNT_SRC_EXT_COMM;
+    else if (!strcmp(count_token, "dst_ext_comm")) value |= COUNT_DST_EXT_COMM;
+    else if (!strcmp(count_token, "sum_ext_comm")) value |= COUNT_SUM_EXT_COMM;
     else if (!strcmp(count_token, "as_path")) value |= COUNT_AS_PATH;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
@@ -1778,10 +1781,7 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_as = NF_AS_NEW;
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_as_str = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_as_new'. Globalized.\n", filename);
 
   return changes;

@@ -335,7 +335,8 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count |= COUNT_DST_PORT;
 	list->cfg.what_to_count |= COUNT_IP_TOS;
 	list->cfg.what_to_count |= COUNT_IP_PROTO;
-	if (list->cfg.networks_file || list->cfg.nfacctd_as == NF_AS_KEEP) {
+	if (list->cfg.networks_file || list->cfg.nfacctd_as == NF_AS_KEEP || 
+	    list->cfg.nfacctd_as == NF_AS_BGP) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	}
@@ -377,8 +378,15 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
-	if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SUM_STD_COMM|
-	    COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM|COUNT_SUM_EXT_COMM|COUNT_AS_PATH)) {
+	if (list->cfg.what_to_count & (COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SUM_STD_COMM|
+	    			       COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM|COUNT_SUM_EXT_COMM|
+				       COUNT_AS_PATH)) {
+	  /* Sanitizing the aggregation method */
+	  if ( (list->cfg.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM|COUNT_DST_STD_COMM)) &&
+               (list->cfg.what_to_count & (COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM|COUNT_DST_EXT_COMM)) ) {
+	    printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+	    exit(1);
+	  }
 	  list->cfg.data_type |= PIPE_TYPE_BGP;
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
@@ -485,6 +493,16 @@ int main(int argc,char **argv, char **envp)
 	exit(1);
   }
 #endif
+
+  if (config.nfacctd_as_str) {
+    if (!strcmp(config.nfacctd_as_str, "false"))
+      config.nfacctd_as = NF_AS_KEEP;
+    else if (!strcmp(config.nfacctd_as_str, "true") ||
+             !strcmp(config.nfacctd_as_str, "file"))
+      config.nfacctd_as = NF_AS_NEW;
+    else if (!strcmp(config.nfacctd_as_str, "bgp"))
+      config.nfacctd_as = NF_AS_BGP;
+  }
 
   if (config.pre_tag_map) {
     load_id_file(config.acct_type, config.pre_tag_map, &idt, &req);

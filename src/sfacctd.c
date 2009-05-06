@@ -343,7 +343,8 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count |= COUNT_DST_PORT;
 	list->cfg.what_to_count |= COUNT_IP_TOS;
 	list->cfg.what_to_count |= COUNT_IP_PROTO;
-	if (list->cfg.networks_file || list->cfg.nfacctd_as == NF_AS_KEEP) {
+	if (list->cfg.networks_file || list->cfg.nfacctd_as == NF_AS_KEEP ||
+	    list->cfg.nfacctd_as == NF_AS_BGP) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	}
@@ -472,6 +473,18 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
   else memset(&allow, 0, sizeof(allow));
+
+  /* XXX: BGP handling goes here */
+
+  if (config.nfacctd_as_str) {
+    if (!strcmp(config.nfacctd_as_str, "false"))
+      config.nfacctd_as = NF_AS_KEEP;
+    else if (!strcmp(config.nfacctd_as_str, "true") ||
+             !strcmp(config.nfacctd_as_str, "file"))
+      config.nfacctd_as = NF_AS_NEW;
+    else if (!strcmp(config.nfacctd_as_str, "bgp"))
+      config.nfacctd_as = NF_AS_BGP;
+  }
 
   if (config.pre_tag_map) {
     load_id_file(config.acct_type, config.pre_tag_map, &idt, &req);

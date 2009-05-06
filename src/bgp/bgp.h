@@ -168,8 +168,8 @@ EXT void bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **);
-EXT void evaluate_stdcomm_patterns(char *, char *, int);
-EXT void evaluate_extcomm_patterns(char *, char *, int);
+EXT void evaluate_comm_patterns(char *, char *, char **, int);
+EXT u_int32_t evaluate_last_asn(char *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(void *, void *);

@@ -62,7 +62,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | flows | \n\t class | src_std_comm | dst_std_comm | as_path ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | flows | \n\t class | src_std_comm | dst_std_comm | sum_std_comm | src_ext_comm | dst_ext_comm | sum_ext_comm | as_path ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -158,8 +158,10 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS  ");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS  "); 
-    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM)) printf("SRC_BGP_COMM             ");
-    if (what_to_count & COUNT_DST_STD_COMM) printf("DST_BGP_COMM             ");
+    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM))
+      printf("SRC_BGP_COMM             ");
+    if (what_to_count & (COUNT_DST_STD_COMM|COUNT_DST_EXT_COMM))
+      printf("DST_BGP_COMM             ");
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
 #if defined ENABLE_IPV6
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP                                         "); 
@@ -402,6 +404,18 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_DST_STD_COMM;
           what_to_count |= COUNT_DST_STD_COMM;
         }
+        else if (!strcmp(count_token[count_index], "src_ext_comm")) {
+          count_token_int[count_index] = COUNT_SRC_EXT_COMM;
+          what_to_count |= COUNT_SRC_EXT_COMM;
+        }
+        else if (!strcmp(count_token[count_index], "sum_ext_comm")) {
+          count_token_int[count_index] = COUNT_SUM_EXT_COMM;
+          what_to_count |= COUNT_SUM_EXT_COMM;
+        }
+        else if (!strcmp(count_token[count_index], "dst_ext_comm")) {
+          count_token_int[count_index] = COUNT_DST_EXT_COMM;
+          what_to_count |= COUNT_DST_EXT_COMM;
+        }
         else if (!strcmp(count_token[count_index], "as_path")) {
           count_token_int[count_index] = COUNT_AS_PATH;
           what_to_count |= COUNT_AS_PATH;
@@ -521,6 +535,15 @@ int main(int argc,char **argv)
       fetch_from_file = TRUE; 
       ptr += strlen(prefix);
       strlcpy(file, ptr, sizeof(file)); 
+    }
+  }
+
+  /* Sanitizing the aggregation method */ 
+  if (what_to_count) {
+    if ( (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM|COUNT_DST_STD_COMM)) &&
+	 (what_to_count & (COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM|COUNT_DST_EXT_COMM)) ) {
+      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+      exit(1);
     }
   }
 
@@ -764,11 +787,19 @@ int main(int argc,char **argv)
 	    else request.data.class = value;
 	  }
         }
-        else if (!strcmp(count_token[match_string_index], "src_std_comm")) {
+        else if (!strcmp(count_token[match_string_index], "src_std_comm") ||
+		 !strcmp(count_token[match_string_index], "sum_std_comm")) {
           strlcpy(request.pbgp.src_std_comms, match_string_token, MAX_BGP_STD_COMMS);
         }
         else if (!strcmp(count_token[match_string_index], "dst_std_comm")) {
           strlcpy(request.pbgp.dst_std_comms, match_string_token, MAX_BGP_STD_COMMS);
+        }
+        else if (!strcmp(count_token[match_string_index], "src_ext_comm") ||
+                 !strcmp(count_token[match_string_index], "sum_ext_comm")) {
+          strlcpy(request.pbgp.src_ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_ext_comm")) {
+          strlcpy(request.pbgp.dst_ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
         }
         else if (!strcmp(count_token[match_string_index], "as_path")) {
           strlcpy(request.pbgp.as_path, match_string_token, MAX_BGP_ASPATH);
@@ -875,6 +906,14 @@ int main(int argc,char **argv)
 
         if (!have_wtc || (what_to_count & COUNT_DST_STD_COMM)) {
           printf("%-22s   ", pbgp->dst_std_comms);
+        }
+
+        if (!have_wtc || (what_to_count & (COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM))) {
+          printf("%-22s   ", pbgp->src_ext_comms);
+        }
+
+        if (!have_wtc || (what_to_count & COUNT_DST_EXT_COMM)) {
+          printf("%-22s   ", pbgp->dst_ext_comms);
         }
 
         if (!have_wtc || (what_to_count & COUNT_AS_PATH)) {

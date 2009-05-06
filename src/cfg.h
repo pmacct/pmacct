@@ -87,6 +87,7 @@ struct configuration {
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_as;
+  char *nfacctd_as_str;
   int sfacctd_renormalize;
   int nfacctd_disable_checks;
   int nfacctd_sql_log;
