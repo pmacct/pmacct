@@ -559,7 +559,7 @@ void sql_sum_port_insert(struct pkt_data *data, struct insert_data *idata)
 
 void sql_sum_as_insert(struct pkt_data *data, struct insert_data *idata)
 {
-  u_int16_t asn;
+  as_t asn;
 
   asn = data->primitives.dst_as;
   data->primitives.dst_as = 0;

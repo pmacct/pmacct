@@ -1337,7 +1337,7 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct in6_addr *pref6;
 #endif
   int peers_idx;
-  u_int32_t asn;
+  as_t asn;
 
   --pdata; /* Bringing back to original place */
 
@@ -1598,7 +1598,6 @@ void SF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  u_int32_t asn32;
   
   pdata->primitives.src_as = sample->src_as;
 }
@@ -1607,7 +1606,6 @@ void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  u_int32_t asn32;
 
   pdata->primitives.dst_as = sample->dst_as;
 }

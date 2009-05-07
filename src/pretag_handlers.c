@@ -269,16 +269,13 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
 
 int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
 {
-  int tmp;
+  as_t tmp;
   int x = 0;
+  char *endptr;
 
   e->src_as.neg = pt_check_neg(&value);
 
-  tmp = atoi(value);
-  if (tmp < 1 || tmp > 65535) {
-    Log(LOG_ERR, "ERROR ( %s ): 'src_as' need to be in the following range: 0 > value > 65536. ", filename);
-    return TRUE;
-  }
+  tmp = strtoul(value, &endptr, 10);
 
   e->src_as.n = tmp;
   for (x = 0; e->func[x]; x++);
@@ -304,16 +301,13 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
 
 int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
 {
-  int tmp;
+  as_t tmp;
   int x = 0;
+  char *endptr;
 
   e->dst_as.neg = pt_check_neg(&value);
 
-  tmp = atoi(value);
-  if (tmp < 1 || tmp > 65535) {
-    Log(LOG_ERR, "ERROR ( %s ): 'dst_as' need to be in the following range: 0 > value > 65536. ", filename);
-    return TRUE;
-  }
+  tmp = strtoul(value, &endptr, 10);
 
   e->dst_as.n = tmp;
   for (x = 0; e->func[x]; x++);
@@ -836,7 +830,7 @@ int SF_pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  u_int16_t res = search_pretag_src_as(&nt, &nc, pptrs);
+  as_t res = search_pretag_src_as(&nt, &nc, pptrs);
 
   if (entry->src_as.n == res) return (FALSE | entry->src_as.neg);
   else return (TRUE ^ entry->src_as.neg);
@@ -845,7 +839,7 @@ int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int PM_pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  u_int16_t res = search_pretag_dst_as(&nt, &nc, pptrs);
+  as_t res = search_pretag_dst_as(&nt, &nc, pptrs);
 
   if (entry->dst_as.n == res) return (FALSE | entry->dst_as.neg);
   else return (TRUE ^ entry->dst_as.neg);

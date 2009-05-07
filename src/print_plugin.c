@@ -541,7 +541,7 @@ void P_sum_port_insert(struct pkt_data *data)
 
 void P_sum_as_insert(struct pkt_data *data)
 {
-  u_int16_t asn;
+  as_t asn;
 
   asn = data->primitives.dst_as;
   data->primitives.dst_as = 0;

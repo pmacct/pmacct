@@ -121,8 +121,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("SRC_MAC            ");
     printf("DST_MAC            ");
     printf("VLAN   ");
-    printf("SRC_AS  ");
-    printf("DST_AS  "); 
+    printf("SRC_AS      ");
+    printf("DST_AS      "); 
     printf("SRC_BGP_COMM             ");
     printf("DST_BGP_COMM             "); 
     printf("AS_PATH                  "); 
@@ -156,8 +156,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_DST_MAC) printf("DST_MAC            "); 
     if (what_to_count & COUNT_VLAN) printf("VLAN   ");
 #endif
-    if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS  ");
-    if (what_to_count & COUNT_DST_AS) printf("DST_AS  "); 
+    if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS      ");
+    if (what_to_count & COUNT_DST_AS) printf("DST_AS      "); 
     if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM))
       printf("SRC_BGP_COMM             ");
     if (what_to_count & (COUNT_DST_STD_COMM|COUNT_DST_EXT_COMM))
@@ -725,16 +725,14 @@ int main(int argc,char **argv)
 	else if (!strcmp(count_token[match_string_index], "none"));
 	else if (!strcmp(count_token[match_string_index], "src_as") ||
 		 !strcmp(count_token[match_string_index], "sum_as")) {
-	  u_int32_t asn32; 
+	  char *endptr;
 
-	  asn32 = atoi(match_string_token);
-	  request.data.src_as = asn32;
+	  request.data.src_as = strtoul(match_string_token, &endptr, 10);
 	}
 	else if (!strcmp(count_token[match_string_index], "dst_as")) {
-	  u_int32_t asn32;
+	  char *endptr;
 
-	  asn32 = atoi(match_string_token);
-	  request.data.dst_as = asn32;
+	  request.data.dst_as = strtoul(match_string_token, &endptr, 10);
 	}
 	else if (!strcmp(count_token[match_string_index], "tag")) {
 	  char *endptr = NULL;
@@ -893,11 +891,11 @@ int main(int argc,char **argv)
         }
 #endif
 	if (!have_wtc || (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS))) {
-          printf("%-5d   ", acc_elem->primitives.src_as);
+          printf("%-10d  ", acc_elem->primitives.src_as);
         }
 
 	if (!have_wtc || (what_to_count & COUNT_DST_AS)) {
-          printf("%-5d   ", acc_elem->primitives.dst_as);
+          printf("%-10d  ", acc_elem->primitives.dst_as);
         }
 
 	if (!have_wtc || (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM))) {

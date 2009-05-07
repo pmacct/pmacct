@@ -150,6 +150,11 @@ struct my_tlhdr {
    u_int16_t	dst_port;
 };
 
+/* typedefs */
+typedef u_int32_t as_t;
+typedef u_int16_t as16_t;
+
+
 /* class status */
 struct class_st {
    u_int8_t tentatives;	
@@ -206,8 +211,8 @@ struct pkt_primitives {
 #endif
   struct host_addr src_ip;
   struct host_addr dst_ip;
-  u_int16_t src_as;
-  u_int16_t dst_as;
+  as_t src_as;
+  as_t dst_as;
   u_int16_t src_port;
   u_int16_t dst_port;
   u_int8_t tos;

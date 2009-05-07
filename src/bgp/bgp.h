@@ -76,11 +76,6 @@
    nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
 #define MAX_BGP_COMM_PATTERNS 16
 
-
-/* typedefs */
-typedef u_int32_t as_t;
-typedef u_int16_t as16_t;
-
 /* requires as_t */
 #include "bgp_aspath.h"
 

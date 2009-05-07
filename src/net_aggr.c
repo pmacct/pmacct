@@ -109,10 +109,12 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 		  if (iscomment(buf))
 			continue;
 	  if (delim = strchr(buf, ',')) {
+	    char *endptr;
+
 	    as = buf;
 	    *delim = '\0';
 	    bufptr = delim+1;
-	    tmpt->table[eff_rows].as = atoi(as);
+	    tmpt->table[eff_rows].as = strtoul(as, &endptr, 10);
 	  }
 	  else tmpt->table[eff_rows].as = 0;
 	  if (!sanitize_buf_net(filename, bufptr, rows)) {
@@ -658,7 +660,7 @@ void drop_dst_host(struct networks_table *nt, struct networks_cache *nc, struct 
   memset(&p->dst_ip, 0, HostAddrSz);
 }
 
-u_int16_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, struct packet_ptrs *pptrs)
+as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, struct packet_ptrs *pptrs)
 {
   struct networks_table_entry *res;
   struct host_addr addr;
@@ -684,7 +686,7 @@ u_int16_t search_pretag_src_as(struct networks_table *nt, struct networks_cache 
 #endif
 }
 
-u_int16_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, struct packet_ptrs *pptrs)
+as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, struct packet_ptrs *pptrs)
 {
   struct networks_table_entry *res;
   struct host_addr addr;
@@ -782,10 +784,12 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         memset(buf, 0, SRVBUFLEN);
         if (fgets(buf, SRVBUFLEN, file)) {
           if (delim = strchr(buf, ',')) {
+	    char *endptr;
+
             as = buf;
             *delim = '\0';
             bufptr = delim+1;
-            tmpt->table6[eff_rows].as = atoi(as);
+            tmpt->table6[eff_rows].as = strtoul(as, &endptr, 10);
           }
           else tmpt->table6[eff_rows].as = 0;
           if (!sanitize_buf_net(filename, bufptr, rows)) {

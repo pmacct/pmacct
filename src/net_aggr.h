@@ -95,8 +95,8 @@ EXT void search_src_net(struct networks_table *, struct networks_cache *, struct
 EXT void search_dst_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_src_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_dst_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
-EXT u_int16_t search_pretag_src_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
-EXT u_int16_t search_pretag_dst_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
+EXT as_t search_pretag_src_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
+EXT as_t search_pretag_dst_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
 EXT void drop_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void drop_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 
