@@ -43,6 +43,8 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  struct pkt_bgp_primitives *pbgp;
+  char *dataptr;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -256,10 +258,18 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	}
 
-	(*insert_func)(data, &idata);
+        /* XXX: can be optimized? */
+        if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
+        else pbgp = NULL;
+
+	(*insert_func)(data, pbgp, &idata);
 	
 	((struct ch_buf_hdr *)pipebuf)->num--;
-        if (((struct ch_buf_hdr *)pipebuf)->num) data++;
+        if (((struct ch_buf_hdr *)pipebuf)->num) {
+          dataptr = (unsigned char *) data;
+          dataptr += PdataSz + PbgpSz;
+          data = (struct pkt_data *) dataptr;
+	}
       }
       goto read_data;
     }

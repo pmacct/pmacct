@@ -103,6 +103,7 @@ struct db_cache {
   u_int8_t tentatives;	/* support to classifiers: tentatives remaining */
   time_t basetime;
   time_t endtime;
+  struct pkt_bgp_primitives *pbgp;
   short int valid;
   unsigned int signature;
   u_int8_t chained;
@@ -236,10 +237,10 @@ EXT void sql_init_refresh_deadline(time_t *);
 EXT void sql_init_pipe(struct pollfd *, int);
 EXT struct template_entry *sql_init_logfile_template(struct template_header *);
 EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);
-EXT void sql_cache_modulo(struct pkt_primitives *, struct insert_data *);
+EXT void sql_cache_modulo(struct pkt_primitives *, struct pkt_bgp_primitives *, struct insert_data *);
 EXT int sql_cache_flush(struct db_cache *[], int, struct insert_data *);
-EXT void sql_cache_insert(struct pkt_data *, struct insert_data *);
-EXT struct db_cache *sql_cache_search(struct pkt_primitives *, time_t);
+EXT void sql_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
+EXT struct db_cache *sql_cache_search(struct pkt_primitives *, struct pkt_bgp_primitives *, time_t);
 EXT int sql_trigger_exec(char *);
 EXT void sql_db_ok(struct DBdesc *);
 EXT void sql_db_fail(struct DBdesc *);
@@ -253,12 +254,14 @@ EXT void sql_invalidate_shadow_entries(struct db_cache *[], int *);
 EXT int sql_select_locking_style(char *);
 EXT int sql_compose_static_set(int); 
 
-EXT void sql_sum_host_insert(struct pkt_data *, struct insert_data *);
-EXT void sql_sum_port_insert(struct pkt_data *, struct insert_data *);
-EXT void sql_sum_as_insert(struct pkt_data *, struct insert_data *);
+EXT void sql_sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
+EXT void sql_sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
+EXT void sql_sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
 #if defined (HAVE_L2)
-EXT void sql_sum_mac_insert(struct pkt_data *, struct insert_data *);
+EXT void sql_sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
 #endif
+EXT void sql_sum_std_comm_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
+EXT void sql_sum_ext_comm_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
 
 #undef EXT
 
@@ -284,7 +287,7 @@ EXT unsigned char *pipebuf;
 EXT struct db_cache *cache;
 EXT struct db_cache **queries_queue, **pending_queries_queue;
 EXT struct db_cache *collision_queue;
-EXT int cq_ptr, qq_ptr, qq_size, pp_size, dbc_size, cq_size, pqq_ptr;
+EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, dbc_size, cq_size, pqq_ptr;
 EXT struct db_cache lru_head, *lru_tail;
 EXT struct frags where[N_PRIMITIVES+2];
 EXT struct frags values[N_PRIMITIVES+2];
@@ -297,7 +300,7 @@ EXT int glob_dyn_table; /* last resort for signal handling */
 EXT int glob_nfacctd_sql_log; /* last resort for sql handlers */
 
 EXT struct sqlfunc_cb_registry sqlfunc_cbr; 
-EXT void (*insert_func)(struct pkt_data *, struct insert_data *);
+EXT void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
 EXT struct DBdesc p;
 EXT struct DBdesc b;
 EXT struct BE_descs bed;

@@ -337,9 +337,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  }
 
 	  /* XXX: can be optimized? */
-	  if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SUM_STD_COMM|COUNT_AS_PATH)) {
-	    pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
-	  }
+	  if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
 	  else pbgp = NULL;
 
           (*insert_func)(data, pbgp);
