@@ -498,7 +498,8 @@ int MY_compose_static_queries()
     config.what_to_count |= COUNT_FLOWS;
     have_flows = TRUE;
 
-    if (config.sql_table_version < 4 && !config.sql_optimize_clauses) {
+    if ((config.sql_table_version < 4 && !config.sql_optimize_clauses) ||
+	config.sql_table_version >= SQL_TABLE_VERSION_BGP) {
       Log(LOG_ERR, "ERROR ( %s/%s ): The accounting of flows requires SQL table v4. Exiting.\n", config.name, config.type);
       exit_plugin(1);
     }
@@ -659,6 +660,7 @@ void MY_init_default_values(struct insert_data *idata)
     else if (config.sql_table_version == 4) config.sql_table = mysql_table_v4;
     else if (config.sql_table_version == 3) config.sql_table = mysql_table_v3;
     else if (config.sql_table_version == 2) config.sql_table = mysql_table_v2;
+    else if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = mysql_table_bgp;
     else config.sql_table = mysql_table;
   }
   if (strchr(config.sql_table, '%')) idata->dyn_table = TRUE;

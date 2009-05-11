@@ -55,6 +55,9 @@
 #define SQL_CACHE_COMMITTED	1
 #define SQL_CACHE_INUSE		2 /* has to be SQL_CACHE_ top-most entry */
 
+#define SQL_TABLE_VERSION_PLAIN 0
+#define SQL_TABLE_VERSION_BGP   1000
+
 /* macros */
 #define SPACELEFT(x) (sizeof(x)-strlen(x))
 #define SPACELEFT_LEN(x,y) (sizeof(x)-y)
@@ -198,6 +201,11 @@ EXT void count_src_host_handler(const struct db_cache *, const struct insert_dat
 EXT void count_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_std_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_dst_std_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_ext_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_dst_ext_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_ip_tos_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -211,6 +219,8 @@ EXT void count_tcpflags_handler(const struct db_cache *, const struct insert_dat
 EXT void fake_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void fake_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void fake_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 
 EXT void count_counters_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_flows_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

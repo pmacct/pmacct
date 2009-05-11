@@ -105,7 +105,7 @@ void sql_init_default_values()
 	config.what_to_count & COUNT_TCPFLAGS ||
 	config.nfacctd_sql_log) &&
        config.sql_recovery_logfile) {
-    Log(LOG_ERR, "ERROR: sql_recovery_logfile is not compatible with: classifiers, TCP flags and nfacctd_sql_log. Try configuring a backup DB.\n");
+    Log(LOG_ERR, "ERROR ( %s/%s ): sql_recovery_logfile is not compatible with: classifiers, TCP flags and nfacctd_sql_log. Try configuring a backup DB.\n", config.name, config.type);
     exit_plugin(1);
   }
 
@@ -118,6 +118,14 @@ void sql_init_default_values()
   if (config.sql_aggressive_classification) {
     if (config.acct_type == ACCT_PM && config.what_to_count & COUNT_CLASS);
     else config.sql_aggressive_classification = FALSE;
+  }
+
+  /* SQL table type parsing; basically mapping everything down to a SQL table version */
+  /* ie. BGP == 1000 */
+  if (!strcmp(config.sql_table_type, "bgp")) config.sql_table_version += SQL_TABLE_VERSION_BGP;  
+  else if (config.sql_table_type) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unknown sql_table_type value: '%s'.\n", config.name, config.type, config.sql_table_type);
+    exit_plugin(1);
   }
 
   qq_ptr = 0; 
@@ -704,7 +712,7 @@ int sql_evaluate_primitives(int primitive)
   if (((config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET) &&
      config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) || (config.what_to_count & COUNT_DST_AS
      && config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET))) && config.sql_table_version < 6) { 
-    Log(LOG_ERR, "ERROR ( %s/%s ): SQL tables < v6 are unable to mix IP addresses and AS numbers for the same direction (ie. src, dst).\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): SQL tables < v6 are unable to mix IP addresses and AS numbers (ie. src_ip, src_as).\n", config.name, config.type);
     exit_plugin(1);
   }
 
@@ -713,14 +721,30 @@ int sql_evaluate_primitives(int primitive)
     assume_custom_table = TRUE;
   }
   else {
-    /* we are requested to avoid optimization;
-       then we'll construct an all-true "what
-       to count" bitmap */ 
-    if (config.what_to_count & COUNT_SRC_MAC) what_to_count |= COUNT_SRC_MAC;
-    else if (config.what_to_count & COUNT_SUM_MAC) what_to_count |= COUNT_SUM_MAC;
-    else fakes |= FAKE_SRC_MAC;
-    if (config.what_to_count & COUNT_DST_MAC) what_to_count |= COUNT_DST_MAC;
-    else fakes |= FAKE_DST_MAC;
+    /* It is being requested to avoid SQL query optmization;
+       then we will build an all-true bitmap */
+    if (config.sql_table_version < SQL_TABLE_VERSION_BGP) {
+      if (config.what_to_count & COUNT_SRC_MAC) what_to_count |= COUNT_SRC_MAC;
+      else if (config.what_to_count & COUNT_SUM_MAC) what_to_count |= COUNT_SUM_MAC;
+      else fakes |= FAKE_SRC_MAC;
+      if (config.what_to_count & COUNT_DST_MAC) what_to_count |= COUNT_DST_MAC;
+      else fakes |= FAKE_DST_MAC;
+
+      if (config.what_to_count & COUNT_SUM_PORT) what_to_count |= COUNT_SUM_PORT;
+
+      what_to_count |= COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_TCPFLAGS|COUNT_IP_PROTO|COUNT_CLASS|COUNT_VLAN|COUNT_IP_TOS;
+    }
+    else if (config.sql_table_version >= SQL_TABLE_VERSION_BGP /* && config.sql_table_version < ... */) {
+      if (PbgpSz) {
+        if (config.what_to_count & COUNT_SUM_STD_COMM) what_to_count |= COUNT_SUM_STD_COMM;
+        if (config.what_to_count & COUNT_SUM_EXT_COMM) what_to_count |= COUNT_SUM_EXT_COMM;
+        what_to_count |= COUNT_AS_PATH|COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM;
+      }
+      else {
+        /* Corner case: using a sql_table_type == 'bgp' BUT not a single BGP primitive is in use */
+	fakes |= (FAKE_SRC_COMM|FAKE_DST_COMM|FAKE_AS_PATH);
+      }
+    }
 
     if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) what_to_count |= COUNT_SRC_HOST;
     else if (config.what_to_count & COUNT_SUM_HOST) what_to_count |= COUNT_SUM_HOST;
@@ -761,9 +785,7 @@ int sql_evaluate_primitives(int primitive)
       }
     }
 
-    if (config.what_to_count & COUNT_SUM_PORT) what_to_count |= COUNT_SUM_PORT;
-
-    what_to_count |= COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_TCPFLAGS|COUNT_IP_PROTO|COUNT_ID|COUNT_CLASS|COUNT_VLAN|COUNT_IP_TOS;
+    what_to_count |= COUNT_ID;
   }
 
   /* 1st part: arranging pointers to an opaque structure and 
@@ -909,6 +931,60 @@ int sql_evaluate_primitives(int primitive)
     }
     values[primitive].type = where[primitive].type = COUNT_DST_AS;
     values[primitive].handler = where[primitive].handler = count_dst_as_handler;
+    primitive++;
+  }
+
+  if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM)) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "comm_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "comm_src=\'%s\'", SPACELEFT(where[primitive].string));
+    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM)) {
+      values[primitive].type = where[primitive].type = COUNT_SRC_STD_COMM;
+      values[primitive].handler = where[primitive].handler = count_src_std_comm_handler;
+    }
+    else if (what_to_count & (COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM)) {
+      values[primitive].type = where[primitive].type = COUNT_SRC_EXT_COMM;
+      values[primitive].handler = where[primitive].handler = count_src_ext_comm_handler;
+    }
+    primitive++;
+  }
+
+  if (what_to_count & (COUNT_DST_STD_COMM|COUNT_DST_EXT_COMM)) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "comm_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "comm_dst=\'%s\'", SPACELEFT(where[primitive].string));
+    if (what_to_count & COUNT_DST_STD_COMM) {
+      values[primitive].type = where[primitive].type = COUNT_DST_STD_COMM;
+      values[primitive].handler = where[primitive].handler = count_dst_std_comm_handler;
+    }
+    else if (what_to_count & COUNT_DST_EXT_COMM) {
+      values[primitive].type = where[primitive].type = COUNT_DST_EXT_COMM;
+      values[primitive].handler = where[primitive].handler = count_dst_ext_comm_handler;
+    }
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_AS_PATH) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "as_path", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "as_path=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_AS_PATH;
+    values[primitive].handler = where[primitive].handler = count_as_path_handler;
     primitive++;
   }
 
@@ -1176,6 +1252,48 @@ int sql_evaluate_primitives(int primitive)
     }
     values[primitive].type = where[primitive].type = FAKE_DST_AS;
     values[primitive].handler = where[primitive].handler = fake_as_handler;
+    primitive++;
+  }
+
+  if (fakes & FAKE_SRC_COMM) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "comm_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "comm_src=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = FAKE_SRC_COMM;
+    values[primitive].handler = where[primitive].handler = fake_comm_handler;
+    primitive++;
+  }
+
+  if (fakes & FAKE_DST_COMM) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "comm_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "comm_dst=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = FAKE_DST_COMM;
+    values[primitive].handler = where[primitive].handler = fake_comm_handler;
+    primitive++;
+  }
+
+  if (fakes & FAKE_AS_PATH) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "as_path", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "as_path=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = FAKE_AS_PATH;
+    values[primitive].handler = where[primitive].handler = fake_as_path_handler;
     primitive++;
   }
 

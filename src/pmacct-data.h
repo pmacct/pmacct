@@ -231,6 +231,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_table", cfg_key_sql_table},
   {"sql_table_schema", cfg_key_sql_table_schema},
   {"sql_table_version", cfg_key_sql_table_version},
+  {"sql_table_type", cfg_key_sql_table_type},
   {"sql_host", cfg_key_sql_host},
   {"sql_data", cfg_key_sql_data},
   {"sql_backup_host", cfg_key_sql_recovery_backup_host}, /* obsolete */

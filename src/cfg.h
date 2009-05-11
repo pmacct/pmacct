@@ -53,6 +53,7 @@ struct configuration {
   char *sql_table;
   char *sql_table_schema;
   int sql_table_version;
+  char *sql_table_type;
   char *sql_user;
   char *sql_passwd;
   char *sql_host;

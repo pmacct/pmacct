@@ -590,6 +590,25 @@ int cfg_key_sql_table_version(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sql_table_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_table_type = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sql_table_type = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_data(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

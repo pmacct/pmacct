@@ -39,6 +39,8 @@
 static const char fake_mac[] = "0:0:0:0:0:0";
 static const char fake_host[] = "0.0.0.0";
 static const char fake_as[] = "0";
+static const char fake_comm[] = ":";
+static const char fake_as_path[] = "0";
 
 /* Functions */
 #if defined (HAVE_L2)
@@ -112,6 +114,47 @@ void count_dst_as_handler(const struct db_cache *cache_elem, const struct insert
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.dst_as);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.dst_as);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+
+void count_src_std_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_std_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_std_comms);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_dst_std_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->dst_std_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->dst_std_comms);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_src_ext_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_ext_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_ext_comms);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_dst_ext_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->dst_ext_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->dst_ext_comms);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_as_path_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->as_path);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->as_path);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -278,6 +321,22 @@ void fake_as_handler(const struct db_cache *cache_elem, const struct insert_data
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, fake_as);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, fake_as);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void fake_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, fake_comm);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, fake_comm);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void fake_as_path_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, fake_as_path);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, fake_as_path);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
