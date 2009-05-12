@@ -494,7 +494,9 @@ int MY_compose_static_queries()
 {
   int primitives=0, set_primitives=0, have_flows=0;
 
-  if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 && !config.sql_optimize_clauses)) {
+  if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 &&
+					     config.sql_table_version < SQL_TABLE_VERSION_BGP &&
+					     !config.sql_optimize_clauses)) {
     config.what_to_count |= COUNT_FLOWS;
     have_flows = TRUE;
 

@@ -39,8 +39,8 @@
 static const char fake_mac[] = "0:0:0:0:0:0";
 static const char fake_host[] = "0.0.0.0";
 static const char fake_as[] = "0";
-static const char fake_comm[] = ":";
-static const char fake_as_path[] = "0";
+static const char fake_comm[] = "";
+static const char fake_as_path[] = "";
 
 /* Functions */
 #if defined (HAVE_L2)

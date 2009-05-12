@@ -103,9 +103,10 @@ void sql_init_default_values()
      check */ 
   if ( (config.what_to_count & COUNT_CLASS ||
 	config.what_to_count & COUNT_TCPFLAGS ||
+	PbgpSz || /* In short: any BGP primitives */
 	config.nfacctd_sql_log) &&
        config.sql_recovery_logfile) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): sql_recovery_logfile is not compatible with: classifiers, TCP flags and nfacctd_sql_log. Try configuring a backup DB.\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): sql_recovery_logfile is not compatible with: classifiers, BGP-related primitives, TCP flags and nfacctd_sql_log. Try configuring a backup DB.\n", config.name, config.type);
     exit_plugin(1);
   }
 
@@ -122,10 +123,18 @@ void sql_init_default_values()
 
   /* SQL table type parsing; basically mapping everything down to a SQL table version */
   /* ie. BGP == 1000 */
-  if (!strcmp(config.sql_table_type, "bgp")) config.sql_table_version += SQL_TABLE_VERSION_BGP;  
-  else if (config.sql_table_type) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unknown sql_table_type value: '%s'.\n", config.name, config.type, config.sql_table_type);
-    exit_plugin(1);
+  if (config.sql_table_type) {
+    if (!strcmp(config.sql_table_type, "bgp")) config.sql_table_version += SQL_TABLE_VERSION_BGP;  
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unknown sql_table_type value: '%s'.\n", config.name, config.type, config.sql_table_type);
+      exit_plugin(1);
+    }
+  }
+  else {
+    /* PbgpSz is non-zero if at least one of the BGP-related
+       primitives is enabled. This helps putting ASNs in the
+       right field */
+    if (PbgpSz) config.sql_table_version += SQL_TABLE_VERSION_BGP;
   }
 
   qq_ptr = 0; 
@@ -337,7 +346,7 @@ struct db_cache *sql_cache_search(struct pkt_primitives *data, struct pkt_bgp_pr
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, data, sizeof(struct pkt_primitives));
       if (PbgpSz) {
-	if (Cursor->pbgp) res_bgp = memcmp(&Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+	if (Cursor->pbgp) res_bgp = memcmp(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
       }
       else res_bgp = FALSE;
 
@@ -450,7 +459,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
       res_data = memcmp(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
 
       if (PbgpSz) {
-        if (Cursor->pbgp) res_bgp = memcmp(&Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+        if (Cursor->pbgp) res_bgp = memcmp(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
       }
       else res_bgp = FALSE;
 

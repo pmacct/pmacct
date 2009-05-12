@@ -45,6 +45,7 @@ Inline void RetireElem(struct db_cache *Cursor)
   }
   else Cursor->prev->next = NULL;
 
+  if (Cursor->pbgp) free(Cursor->pbgp);
   free(Cursor);
 }
 
