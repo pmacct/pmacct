@@ -154,13 +154,13 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "flows")) value |= COUNT_FLOWS;
     else if (!strcmp(count_token, "class")) value |= COUNT_CLASS;
     else if (!strcmp(count_token, "tcpflags")) value |= COUNT_TCPFLAGS;
-    else if (!strcmp(count_token, "src_std_comm")) value |= COUNT_SRC_STD_COMM;
-    else if (!strcmp(count_token, "dst_std_comm")) value |= COUNT_DST_STD_COMM;
-    else if (!strcmp(count_token, "sum_std_comm")) value |= COUNT_SUM_STD_COMM;
-    else if (!strcmp(count_token, "src_ext_comm")) value |= COUNT_SRC_EXT_COMM;
-    else if (!strcmp(count_token, "dst_ext_comm")) value |= COUNT_DST_EXT_COMM;
-    else if (!strcmp(count_token, "sum_ext_comm")) value |= COUNT_SUM_EXT_COMM;
+    else if (!strcmp(count_token, "std_comm")) value |= COUNT_STD_COMM;
+    else if (!strcmp(count_token, "ext_comm")) value |= COUNT_EXT_COMM;
     else if (!strcmp(count_token, "as_path")) value |= COUNT_AS_PATH;
+    else if (!strcmp(count_token, "local_pref")) value |= COUNT_LOCAL_PREF;
+    else if (!strcmp(count_token, "med")) value |= COUNT_MED;
+    else if (!strcmp(count_token, "peer_src_as")) value |= COUNT_PEER_SRC_AS;
+    else if (!strcmp(count_token, "peer_src_ip")) value |= COUNT_PEER_SRC_IP;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 

@@ -126,8 +126,6 @@ EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
 EXT void sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 EXT void sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 EXT void sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT void sum_std_comm_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT void sum_ext_comm_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 #if defined HAVE_L2
 EXT void sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 #endif

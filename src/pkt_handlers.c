@@ -106,8 +106,8 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    if (channels_list[index].aggregation & (COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SUM_STD_COMM|
-        COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM|COUNT_SUM_EXT_COMM|COUNT_AS_PATH)) {
+    if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
+                                            COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)) {
       /* ACCT_PM and ACCT_SF do nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	channels_list[index].phandler[primitives] = NF_bgp_ext_handler;
@@ -1341,7 +1341,7 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
   --pdata; /* Bringing back to original place */
 
-  /* XXX: to be optimized */
+  /* XXX: to be optimized; START: section to be taken out of here */
   for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
     if (!sa_addr_cmp(sa, &peers[peers_idx].id)) {
       peer = &peers[peers_idx];
@@ -1364,30 +1364,18 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], pref6);
     }
 #endif
+  /* XXX: END: section to be taken out of here */
 
     if (src_ret) {
       info = (struct bgp_info *) src_ret->info;
       if (info && info->attr) {
-        if (info->attr->community && info->attr->community->str) {
-	  if (config.nfacctd_bgp_stdcomm_pattern)
-	    evaluate_comm_patterns(pbgp->src_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
-	  else {
-            strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS); 
-	    if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	      pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	if (config.nfacctd_as == NF_AS_BGP) {
+	  if (chptr->aggregation & COUNT_PEER_SRC_AS) {
+	    NF_src_as_handler(chptr, pptrs, data);
+	    pbgp->peer_src_as = pdata->primitives.src_as;
+	    pdata->primitives.src_as = 0;
 	  }
-	}
-        if (info->attr->ecommunity && info->attr->ecommunity->str) {
-	  if (config.nfacctd_bgp_extcomm_pattern)
-	    evaluate_comm_patterns(pbgp->src_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
-	  else {
-            strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS); 
-	    if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-	      pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
-	  }
-	}
-	if (info->attr->aspath && info->attr->aspath->str) {
-	  if (config.nfacctd_as == NF_AS_BGP) {
+	  if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath && info->attr->aspath->str) {
 	    asn = evaluate_last_asn(info->attr->aspath->str);
 	    pdata->primitives.src_as = asn;
 	  }
@@ -1398,25 +1386,25 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     if (dst_ret) {
       info = (struct bgp_info *) dst_ret->info;
       if (info && info->attr) {
-        if (info->attr->community && info->attr->community->str) {
+        if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
 	  if (config.nfacctd_bgp_stdcomm_pattern)
-	    evaluate_comm_patterns(pbgp->dst_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
+	    evaluate_comm_patterns(pbgp->std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
 	  else {
-            strlcpy(pbgp->dst_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+            strlcpy(pbgp->std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
 	    if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	      pbgp->dst_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	      pbgp->std_comms[MAX_BGP_STD_COMMS-1] = '+';
 	  }
 	}
-        if (info->attr->ecommunity && info->attr->ecommunity->str) {
+        if (chptr->aggregation & COUNT_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
 	  if (config.nfacctd_bgp_extcomm_pattern)
-	    evaluate_comm_patterns(pbgp->dst_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
+	    evaluate_comm_patterns(pbgp->ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
 	  else {
-            strlcpy(pbgp->dst_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+            strlcpy(pbgp->ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
 	    if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-	      pbgp->dst_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	      pbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
 	  }
 	}
-        if (info->attr->aspath && info->attr->aspath->str) {
+        if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
           strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
 	  if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
 	    pbgp->as_path[MAX_BGP_ASPATH-1] = '+';
@@ -1427,8 +1415,11 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	    pdata->primitives.dst_as = asn;
 	  }
 	}
+	if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
+	if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
       }
     }
+    if (chptr->aggregation & COUNT_PEER_SRC_IP) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
   }
 }
 

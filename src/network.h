@@ -258,11 +258,13 @@ struct pkt_extras {
 #define MAX_BGP_ASPATH          128
 
 struct pkt_bgp_primitives {
-  char src_std_comms[MAX_BGP_STD_COMMS];
-  char dst_std_comms[MAX_BGP_STD_COMMS];
-  char src_ext_comms[MAX_BGP_EXT_COMMS];
-  char dst_ext_comms[MAX_BGP_EXT_COMMS];
+  u_int32_t peer_src_as;
+  struct host_addr peer_src_ip;
+  char std_comms[MAX_BGP_STD_COMMS];
+  char ext_comms[MAX_BGP_EXT_COMMS];
   char as_path[MAX_BGP_ASPATH];
+  u_int32_t local_pref;
+  u_int32_t med;
 };
 /* END: BGP section */
 

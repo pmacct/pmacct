@@ -201,11 +201,13 @@ EXT void count_src_host_handler(const struct db_cache *, const struct insert_dat
 EXT void count_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
-EXT void count_src_std_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
-EXT void count_dst_std_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
-EXT void count_src_ext_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
-EXT void count_dst_ext_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_std_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_ext_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_local_pref_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_med_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_peer_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_peer_src_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_ip_tos_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -219,7 +221,7 @@ EXT void count_tcpflags_handler(const struct db_cache *, const struct insert_dat
 EXT void fake_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
-EXT void fake_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void fake_comms_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 
 EXT void count_counters_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

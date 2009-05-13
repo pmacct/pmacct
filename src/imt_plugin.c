@@ -75,8 +75,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     insert_func = sum_host_insert;
   else if (config.what_to_count & COUNT_SUM_PORT) insert_func = sum_port_insert;
   else if (config.what_to_count & COUNT_SUM_AS) insert_func = sum_as_insert;
-  else if (config.what_to_count & COUNT_SUM_STD_COMM) insert_func = sum_std_comm_insert;
-  else if (config.what_to_count & COUNT_SUM_EXT_COMM) insert_func = sum_ext_comm_insert;
 #if defined (HAVE_L2)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = sum_mac_insert;
 #endif
@@ -84,8 +82,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* Dirty but allows to save some IFs, centralizes
      checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SUM_STD_COMM|
-	COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM|COUNT_SUM_EXT_COMM|COUNT_AS_PATH)))
+  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
+                                COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP))) 
     PbgpSz = 0;
 
   memset(&nt, 0, sizeof(nt));
@@ -414,24 +412,6 @@ void sum_as_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
   insert_accounting_structure(data, pbgp);
   data->primitives.src_as = asn;
   insert_accounting_structure(data, pbgp);
-}
-
-void sum_std_comm_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
-{
-  struct pkt_bgp_primitives tmp_pbgp;
-
-  memset(&tmp_pbgp, 0, PbgpSz);
-  if (pbgp) memcpy(tmp_pbgp.src_std_comms, pbgp->src_std_comms, MAX_BGP_STD_COMMS);
-  insert_accounting_structure(data, &tmp_pbgp);
-  memset(&tmp_pbgp, 0, PbgpSz);
-  if (pbgp) memcpy(tmp_pbgp.src_std_comms, pbgp->dst_std_comms, MAX_BGP_STD_COMMS);
-  insert_accounting_structure(data, &tmp_pbgp);
-}
-
-void sum_ext_comm_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
-{
-  /* XXX: to be filled */
-  exit_plugin(1);
 }
 
 #if defined (HAVE_L2)

@@ -624,18 +624,6 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
       Log(LOG_WARNING, "WARN ( %s/%s ): SUM aggregation is to be used alone. Resetting other aggregation methods.\n", name, type);
     }
   }
-  else if (*wtc & COUNT_SUM_STD_COMM) {
-    if (*wtc != COUNT_SUM_STD_COMM) {
-      *wtc = COUNT_SUM_STD_COMM;
-      Log(LOG_WARNING, "WARN ( %s/%s ): SUM aggregation is to be used alone. Resetting other aggregation methods.\n", name, type);
-    }
-  }
-  else if (*wtc & COUNT_SUM_EXT_COMM) {
-    if (*wtc != COUNT_SUM_EXT_COMM) {
-      *wtc = COUNT_SUM_EXT_COMM;
-      Log(LOG_WARNING, "WARN ( %s/%s ): SUM aggregation is to be used alone. Resetting other aggregation methods.\n", name, type);
-    }
-  }
 
   if (tag) *wtc |= COUNT_ID;
   if (class) *wtc |= COUNT_CLASS;

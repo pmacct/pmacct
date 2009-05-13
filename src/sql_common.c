@@ -50,8 +50,6 @@ void sql_set_insert_func()
     insert_func = sql_sum_host_insert;
   else if (config.what_to_count & COUNT_SUM_PORT) insert_func = sql_sum_port_insert;
   else if (config.what_to_count & COUNT_SUM_AS) insert_func = sql_sum_as_insert;
-  else if (config.what_to_count & COUNT_SUM_STD_COMM) insert_func = sql_sum_std_comm_insert;
-  else if (config.what_to_count & COUNT_SUM_EXT_COMM) insert_func = sql_sum_ext_comm_insert;
 #if defined (HAVE_L2)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = sql_sum_mac_insert;
 #endif
@@ -149,8 +147,8 @@ void sql_init_default_values()
 
   /* Dirty but allows to save some IFs, centralizes
      checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SUM_STD_COMM|
-        COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM|COUNT_SUM_EXT_COMM|COUNT_AS_PATH)))
+  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
+                                COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)))
     PbgpSz = 0;
 }
 
@@ -631,14 +629,6 @@ void sql_sum_mac_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, 
 }
 #endif
 
-void sql_sum_std_comm_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
-{
-}
-
-void sql_sum_ext_comm_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
-{
-}
-
 int sql_trigger_exec(char *filename)
 {
   char *args[1];
@@ -742,23 +732,25 @@ int sql_evaluate_primitives(int primitive)
       if (config.what_to_count & COUNT_SUM_PORT) what_to_count |= COUNT_SUM_PORT;
 
       what_to_count |= COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_TCPFLAGS|COUNT_IP_PROTO|COUNT_CLASS|COUNT_VLAN|COUNT_IP_TOS;
+
+      if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) what_to_count |= COUNT_SRC_HOST;
+      else if (config.what_to_count & COUNT_SUM_HOST) what_to_count |= COUNT_SUM_HOST;
+      else if (config.what_to_count & COUNT_SUM_NET) what_to_count |= COUNT_SUM_NET;
+      else fakes |= FAKE_SRC_HOST;
+
+      if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) what_to_count |= COUNT_DST_HOST;
+      else fakes |= FAKE_DST_HOST;
     }
     else if (config.sql_table_version >= SQL_TABLE_VERSION_BGP /* && config.sql_table_version < ... */) {
       if (PbgpSz) {
-        if (config.what_to_count & COUNT_SUM_STD_COMM) what_to_count |= COUNT_SUM_STD_COMM;
-        if (config.what_to_count & COUNT_SUM_EXT_COMM) what_to_count |= COUNT_SUM_EXT_COMM;
-        what_to_count |= COUNT_AS_PATH|COUNT_SRC_STD_COMM|COUNT_DST_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_DST_EXT_COMM;
+        what_to_count |= COUNT_AS_PATH|COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
+                         COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP;
       }
       else {
         /* Corner case: using a sql_table_type == 'bgp' BUT not a single BGP primitive is in use */
-	fakes |= (FAKE_SRC_COMM|FAKE_DST_COMM|FAKE_AS_PATH);
+        fakes |= (FAKE_COMMS|FAKE_AS_PATH|FAKE_PEER_SRC_IP);
       }
     }
-
-    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) what_to_count |= COUNT_SRC_HOST;
-    else if (config.what_to_count & COUNT_SUM_HOST) what_to_count |= COUNT_SUM_HOST;
-    else if (config.what_to_count & COUNT_SUM_NET) what_to_count |= COUNT_SUM_NET;
-    else fakes |= FAKE_SRC_HOST;
 
     if (config.sql_table_version < 6) {
       if (config.what_to_count & COUNT_SRC_AS) what_to_count |= COUNT_SRC_AS;
@@ -769,9 +761,6 @@ int sql_evaluate_primitives(int primitive)
       what_to_count |= COUNT_SRC_AS; 
       if (config.what_to_count & COUNT_SUM_AS) what_to_count |= COUNT_SUM_AS;
     }
-
-    if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) what_to_count |= COUNT_DST_HOST;
-    else fakes |= FAKE_DST_HOST;
 
     if (config.sql_table_version < 6) {
       if (config.what_to_count & COUNT_DST_AS) what_to_count |= COUNT_DST_AS;
@@ -943,42 +932,22 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
-  if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM)) {
+  if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
-    strncat(insert_clause, "comm_src", SPACELEFT(insert_clause));
+    strncat(insert_clause, "comms", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "comm_src=\'%s\'", SPACELEFT(where[primitive].string));
-    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SUM_STD_COMM)) {
-      values[primitive].type = where[primitive].type = COUNT_SRC_STD_COMM;
-      values[primitive].handler = where[primitive].handler = count_src_std_comm_handler;
+    strncat(where[primitive].string, "comms=\'%s\'", SPACELEFT(where[primitive].string));
+    if (what_to_count & COUNT_STD_COMM) {
+      values[primitive].type = where[primitive].type = COUNT_STD_COMM;
+      values[primitive].handler = where[primitive].handler = count_std_comm_handler;
     }
-    else if (what_to_count & (COUNT_SRC_EXT_COMM|COUNT_SUM_EXT_COMM)) {
-      values[primitive].type = where[primitive].type = COUNT_SRC_EXT_COMM;
-      values[primitive].handler = where[primitive].handler = count_src_ext_comm_handler;
-    }
-    primitive++;
-  }
-
-  if (what_to_count & (COUNT_DST_STD_COMM|COUNT_DST_EXT_COMM)) {
-    if (primitive) {
-      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
-      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
-    }
-    strncat(insert_clause, "comm_dst", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "comm_dst=\'%s\'", SPACELEFT(where[primitive].string));
-    if (what_to_count & COUNT_DST_STD_COMM) {
-      values[primitive].type = where[primitive].type = COUNT_DST_STD_COMM;
-      values[primitive].handler = where[primitive].handler = count_dst_std_comm_handler;
-    }
-    else if (what_to_count & COUNT_DST_EXT_COMM) {
-      values[primitive].type = where[primitive].type = COUNT_DST_EXT_COMM;
-      values[primitive].handler = where[primitive].handler = count_dst_ext_comm_handler;
+    else if (what_to_count & COUNT_EXT_COMM) {
+      values[primitive].type = where[primitive].type = COUNT_EXT_COMM;
+      values[primitive].handler = where[primitive].handler = count_ext_comm_handler;
     }
     primitive++;
   }
@@ -994,6 +963,63 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "as_path=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_AS_PATH;
     values[primitive].handler = where[primitive].handler = count_as_path_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_LOCAL_PREF) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "local_pref", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "local_pref=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_LOCAL_PREF;
+    values[primitive].handler = where[primitive].handler = count_local_pref_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_MED) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "med", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "med=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_MED;
+    values[primitive].handler = where[primitive].handler = count_med_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_PEER_SRC_AS) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+
+    strncat(insert_clause, "peer_as_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "peer_as_src=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_PEER_SRC_AS;
+    values[primitive].handler = where[primitive].handler = count_peer_src_as_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_PEER_SRC_IP) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "peer_ip_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "peer_ip_src=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_PEER_SRC_IP;
+    values[primitive].handler = where[primitive].handler = count_peer_src_ip_handler;
     primitive++;
   }
 
@@ -1264,31 +1290,17 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
-  if (fakes & FAKE_SRC_COMM) {
+  if (fakes & FAKE_COMMS) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
-    strncat(insert_clause, "comm_src", SPACELEFT(insert_clause));
+    strncat(insert_clause, "comms", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "comm_src=\'%s\'", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = FAKE_SRC_COMM;
-    values[primitive].handler = where[primitive].handler = fake_comm_handler;
-    primitive++;
-  }
-
-  if (fakes & FAKE_DST_COMM) {
-    if (primitive) {
-      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
-      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
-    }
-    strncat(insert_clause, "comm_dst", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "comm_dst=\'%s\'", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = FAKE_DST_COMM;
-    values[primitive].handler = where[primitive].handler = fake_comm_handler;
+    strncat(where[primitive].string, "comms=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = FAKE_COMMS;
+    values[primitive].handler = where[primitive].handler = fake_comms_handler;
     primitive++;
   }
 
@@ -1303,6 +1315,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "as_path=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = FAKE_AS_PATH;
     values[primitive].handler = where[primitive].handler = fake_as_path_handler;
+    primitive++;
+  }
+
+  if (fakes & FAKE_PEER_SRC_IP) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "peer_ip_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "peer_ip_src=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = FAKE_PEER_SRC_IP;
+    values[primitive].handler = where[primitive].handler = fake_host_handler;
     primitive++;
   }
 

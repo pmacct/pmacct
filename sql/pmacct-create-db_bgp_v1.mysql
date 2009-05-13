@@ -6,16 +6,17 @@ use pmacct;
 drop table if exists acct_bgp; 
 create table acct_bgp (
 	agent_id INT(2) UNSIGNED NOT NULL,
-	ip_src CHAR(15) NOT NULL,
-	ip_dst CHAR(15) NOT NULL,
         as_src INT(4) UNSIGNED NOT NULL,
         as_dst INT(4) UNSIGNED NOT NULL,
-	comm_src CHAR(24) NOT NULL,
-	comm_dst CHAR(24) NOT NULL,
+	peer_as_src INT(4) UNSIGNED NOT NULL,
+	peer_ip_src CHAR(15) NOT NULL,
+	comms CHAR(24) NOT NULL,
 	as_path CHAR(21) NOT NULL,
+	local_pref INT(4) UNSIGNED NOT NULL,
+	med INT(4) UNSIGNED NOT NULL,
         packets INT UNSIGNED NOT NULL,
 	bytes BIGINT UNSIGNED NOT NULL,
 	stamp_inserted DATETIME NOT NULL,
 	stamp_updated DATETIME,
-	PRIMARY KEY (agent_id, ip_src, ip_dst, as_src, as_dst, comm_src, comm_dst, as_path, stamp_inserted)
+	PRIMARY KEY (agent_id, as_src, as_dst, peer_as_src, peer_ip_src, comms, as_path, local_pref, med, stamp_inserted)
 );
