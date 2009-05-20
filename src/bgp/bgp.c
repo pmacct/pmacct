@@ -802,9 +802,12 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 	    attr->mp_nexthop.family = AF_INET;
 	    memcpy(&attr->mp_nexthop.address.ipv4, ptr, 4); 
 	    break;
+#if defined ENABLE_IPV6
 	  case 16:
-	    /* XXX: IPv6 to be fixed */ 
+	    attr->mp_nexthop.family = AF_INET6;
+	    memcpy(&attr->mp_nexthop.address.ipv6, ptr, 16); 
 	    break;
+#endif
 	  default:
 	    memset(&attr->mp_nexthop, 0, sizeof(struct host_addr));
 	    break;

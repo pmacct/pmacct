@@ -1419,11 +1419,12 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	if (chptr->aggregation & COUNT_PEER_DST_IP) {
 	  if (info->attr->mp_nexthop.family == AF_INET) {
 	    pbgp->peer_dst_ip.family = AF_INET;
-	    pbgp->peer_dst_ip.address.ipv4.s_addr = info->attr->mp_nexthop.address.ipv4.s_addr;
+	    memcpy(&pbgp->peer_dst_ip.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
 	  }
 #if defined ENABLE_IPV6
 	  else if (info->attr->mp_nexthop.family == AF_INET6) {
-	    /* XXX: IPv6 to be fixed */
+	    pbgp->peer_dst_ip.family = AF_INET6;
+	    memcpy(&pbgp->peer_dst_ip.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
 	  }
 #endif
 	  else {
