@@ -379,7 +379,7 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-	    			       COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)) {
+	    			       COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
 	  /* Sanitizing the aggregation method */
 	  if ( (list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM) ) {
 	    printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");

@@ -208,6 +208,7 @@ EXT void count_local_pref_handler(const struct db_cache *, const struct insert_d
 EXT void count_med_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_src_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_peer_dst_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_ip_tos_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

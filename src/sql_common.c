@@ -148,7 +148,7 @@ void sql_init_default_values()
   /* Dirty but allows to save some IFs, centralizes
      checks and makes later comparison statements lean */
   if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)))
+                                COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)))
     PbgpSz = 0;
 }
 
@@ -744,7 +744,7 @@ int sql_evaluate_primitives(int primitive)
     else if (config.sql_table_version >= SQL_TABLE_VERSION_BGP /* && config.sql_table_version < ... */) {
       if (PbgpSz) {
         what_to_count |= COUNT_AS_PATH|COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                         COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP;
+                         COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP;
       }
       else {
         /* Corner case: using a sql_table_type == 'bgp' BUT not a single BGP primitive is in use */
@@ -1020,6 +1020,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "peer_ip_src=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_PEER_SRC_IP;
     values[primitive].handler = where[primitive].handler = count_peer_src_ip_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_PEER_DST_IP) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "peer_ip_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "peer_ip_dst=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_PEER_DST_IP;
+    values[primitive].handler = where[primitive].handler = count_peer_dst_ip_handler;
     primitive++;
   }
 

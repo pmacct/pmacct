@@ -116,6 +116,7 @@
 #define COUNT_MED		0x0000000040000000
 #define COUNT_PEER_SRC_AS	0x0000000080000000
 #define COUNT_PEER_SRC_IP	0x0000000100000000
+#define COUNT_PEER_DST_IP	0x0000000200000000
 
 /* BYTES and PACKETS are used into templates; we let their values to
    overlap with some values we will not need into templates */ 
@@ -132,7 +133,8 @@
 #define FAKE_DST_AS		0x00000020
 #define FAKE_COMMS		0x00000040
 #define FAKE_PEER_SRC_IP	0x00000080
-#define FAKE_AS_PATH		0x00000100
+#define FAKE_PEER_DST_IP	0x00000100
+#define FAKE_AS_PATH		0x00000200
 
 #define COUNT_MINUTELY          0x00000001
 #define COUNT_HOURLY            0x00000002

@@ -260,6 +260,7 @@ struct pkt_extras {
 struct pkt_bgp_primitives {
   u_int32_t peer_src_as;
   struct host_addr peer_src_ip;
+  struct host_addr peer_dst_ip;
   char std_comms[MAX_BGP_STD_COMMS];
   char ext_comms[MAX_BGP_EXT_COMMS];
   char as_path[MAX_BGP_ASPATH];

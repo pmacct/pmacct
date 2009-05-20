@@ -634,6 +634,9 @@ int bgp_attr_parse(struct bgp_peer *peer, void *attr, char *ptr, int len, struct
 		printf("ATTRIBUTE: AS4 PATH\n");
 		ret = bgp_attr_parse_as4path(peer, attr_len, (struct bgp_attr *) attr, ptr, flag, &as4_path);
 		break;
+	case BGP_ATTR_NEXT_HOP:
+		printf("ATTRIBUTE: NEXHOP\n");
+		ret = bgp_attr_parse_nexthop(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 	case BGP_ATTR_COMMUNITIES:
 		printf("ATTRIBUTE: COMMUNITIES\n");
 		ret = bgp_attr_parse_community(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
@@ -704,6 +707,20 @@ int bgp_attr_parse_aspath(struct bgp_peer *peer, u_int16_t len, struct bgp_attr 
 int bgp_attr_parse_as4path(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag, struct aspath **aspath4)
 {
   *aspath4 = aspath_parse(ptr, len, 1);
+
+  return 0;
+}
+
+int bgp_attr_parse_nexthop(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
+{
+  u_int32_t *tmp;
+
+  /* Length check. */
+  if (len != 4) return -1;
+
+  tmp = (u_int32_t *) ptr;
+  attr->nexthop.s_addr = *tmp;
+  ptr += 4;
 
   return 0;
 }
@@ -780,6 +797,19 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
   /* IPv4, RD+IPv4, IPv6, IPv6 link-local+IPv6 global */
   if (mpnhoplen == 4 || mpnhoplen == 12 || mpnhoplen == 16 || mpnhoplen == 32) {
 	if (mpreachlen > mpnhoplen) {
+	  switch (mpnhoplen) {
+	  case 4:
+	    attr->mp_nexthop.family = AF_INET;
+	    memcpy(&attr->mp_nexthop.address.ipv4, ptr, 4); 
+	    break;
+	  case 16:
+	    /* XXX: IPv6 to be fixed */ 
+	    break;
+	  default:
+	    memset(&attr->mp_nexthop, 0, sizeof(struct host_addr));
+	    break;
+	  }
+
 	  mpreachlen -= mpnhoplen;
 	  ptr += mpnhoplen;
 
@@ -927,7 +957,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   bgp_unlock_node(route);
 
   if (config.nfacctd_bgp_msglog)
-	goto log_update;
+    goto log_update;
 
   /* XXX: Impose a maximum number of prefixes allowed */
   // if (bgp_maximum_prefix_overflow(peer, afi, safi, 0))

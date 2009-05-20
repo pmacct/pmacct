@@ -117,6 +117,7 @@ struct bgp_attr {
   unsigned long refcnt;
   u_int32_t flag;
   struct in_addr nexthop;
+  struct host_addr mp_nexthop;
   u_int32_t med;
   u_int32_t local_pref;
   struct {
@@ -143,6 +144,7 @@ EXT int bgp_attr_parse_community(struct bgp_peer *, u_int16_t, struct bgp_attr *
 EXT int bgp_attr_parse_ecommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_aspath(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_as4path(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t, struct aspath **);
+EXT int bgp_attr_parse_nexthop(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_med(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 EXT int bgp_attr_parse_local_pref(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 EXT int bgp_attr_parse_mp_reach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);

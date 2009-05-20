@@ -161,6 +161,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "med")) value |= COUNT_MED;
     else if (!strcmp(count_token, "peer_src_as")) value |= COUNT_PEER_SRC_AS;
     else if (!strcmp(count_token, "peer_src_ip")) value |= COUNT_PEER_SRC_IP;
+    else if (!strcmp(count_token, "peer_dst_ip")) value |= COUNT_PEER_DST_IP;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 

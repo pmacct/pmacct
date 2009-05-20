@@ -178,6 +178,17 @@ void count_peer_src_ip_handler(const struct db_cache *cache_elem, const struct i
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_peer_dst_ip_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->pbgp->peer_dst_ip);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_src_port_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.src_port);

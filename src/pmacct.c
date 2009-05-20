@@ -129,6 +129,7 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("MED    ");
     printf("PEER_SRC_AS ");
     printf("PEER_SRC_IP      ");
+    printf("PEER_DST_IP      ");
 #if defined ENABLE_IPV6
     printf("SRC_IP                                         ");
     printf("DST_IP                                         ");
@@ -167,7 +168,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_LOCAL_PREF) printf("PREF   ");
     if (what_to_count & COUNT_MED) printf("MED    ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
-    if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_IP      ");
+    if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP      ");
+    if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP      ");
 #if defined ENABLE_IPV6
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP                                         "); 
     if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP                                         ");
@@ -424,6 +426,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "peer_src_ip")) {
           count_token_int[count_index] = COUNT_PEER_SRC_IP;
           what_to_count |= COUNT_PEER_SRC_IP;
+        }
+        else if (!strcmp(count_token[count_index], "peer_dst_ip")) {
+          count_token_int[count_index] = COUNT_PEER_DST_IP;
+          what_to_count |= COUNT_PEER_DST_IP;
         }
         else printf("WARN: ignoring unknown aggregation method: %s.\n", count_token[count_index]);
 	what_to_count |= COUNT_COUNTERS; /* we always count counters ;-) */
@@ -816,6 +822,12 @@ int main(int argc,char **argv)
             exit(1);
           }
         }
+        if (!strcmp(count_token[match_string_index], "peer_dst_ip")) {
+          if (!str_to_addr(match_string_token, &request.pbgp.peer_dst_ip)) {
+            printf("ERROR: peer_dst_ip: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
         else printf("WARN: ignoring unknown aggregation method: '%s'.\n", *count_token);
         match_string_index++;
       }
@@ -880,7 +892,7 @@ int main(int argc,char **argv)
     while (printed < unpacked) {
       acc_elem = (struct pkt_data *) elem;
       if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                           COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)) {
+                           COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
 	pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem+sizeof(struct pkt_data));
       }
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0) {
@@ -945,6 +957,15 @@ int main(int argc,char **argv)
 #endif
         }
 
+        if (!have_wtc || (what_to_count & COUNT_PEER_DST_IP)) {
+          addr_to_str(ip_address, &pbgp->peer_dst_ip);
+#if defined ENABLE_IPV6
+          printf("%-45s  ", ip_address);
+#else
+          printf("%-15s  ", ip_address);
+#endif
+        }
+
 	if (!have_wtc || (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST|
 					   COUNT_SRC_NET|COUNT_SUM_NET))) {
 	  addr_to_str(ip_address, &acc_elem->primitives.src_ip);
@@ -1000,7 +1021,7 @@ int main(int argc,char **argv)
         counter++;
       }
       if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                           COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)) {
+                           COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
 	elem += (sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
 	printed += (sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
       }

@@ -107,7 +107,7 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                            COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP)) {
+                                            COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
       /* ACCT_PM and ACCT_SF do nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	channels_list[index].phandler[primitives] = NF_bgp_ext_handler;
@@ -1370,16 +1370,15 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       info = (struct bgp_info *) src_ret->info;
       if (info && info->attr) {
 	if (config.nfacctd_as == NF_AS_BGP) {
-	  if (chptr->aggregation & COUNT_PEER_SRC_AS) {
-	    NF_src_as_handler(chptr, pptrs, data);
-	    pbgp->peer_src_as = pdata->primitives.src_as;
-	    pdata->primitives.src_as = 0;
-	  }
 	  if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath && info->attr->aspath->str) {
 	    asn = evaluate_last_asn(info->attr->aspath->str);
 	    pdata->primitives.src_as = asn;
 	  }
 	}
+        if (chptr->aggregation & COUNT_PEER_SRC_AS) {
+          /* XXX: fill this section in */
+	  pbgp->peer_src_as = 0;
+        }
       }
     }
 
@@ -1417,6 +1416,21 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	}
 	if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
 	if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
+	if (chptr->aggregation & COUNT_PEER_DST_IP) {
+	  if (info->attr->mp_nexthop.family == AF_INET) {
+	    pbgp->peer_dst_ip.family = AF_INET;
+	    pbgp->peer_dst_ip.address.ipv4.s_addr = info->attr->mp_nexthop.address.ipv4.s_addr;
+	  }
+#if defined ENABLE_IPV6
+	  else if (info->attr->mp_nexthop.family == AF_INET6) {
+	    /* XXX: IPv6 to be fixed */
+	  }
+#endif
+	  else {
+	    pbgp->peer_dst_ip.family = AF_INET; 
+	    pbgp->peer_dst_ip.address.ipv4.s_addr = info->attr->nexthop.s_addr;
+	  }
+	}
       }
     }
     if (chptr->aggregation & COUNT_PEER_SRC_IP) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 

@@ -289,9 +289,16 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w & COUNT_PEER_SRC_IP) {
       if (s2->peer_src_ip.family == AF_INET) d2->peer_src_ip.address.ipv4.s_addr = s2->peer_src_ip.address.ipv4.s_addr;
 #if defined ENABLE_IPV6
-      else if (s2->src_ip.family == AF_INET6) memcpy(&d2->peer_src_ip.address.ipv6,  &s2->peer_src_ip.address.ipv6, sizeof(struct in6_addr));
+      else if (s2->peer_src_ip.family == AF_INET6) memcpy(&d2->peer_src_ip.address.ipv6,  &s2->peer_src_ip.address.ipv6, sizeof(struct in6_addr));
 #endif
       d2->peer_src_ip.family = s2->peer_src_ip.family;
+    }
+    if (w & COUNT_PEER_DST_IP) {
+      if (s2->peer_dst_ip.family == AF_INET) d2->peer_dst_ip.address.ipv4.s_addr = s2->peer_dst_ip.address.ipv4.s_addr;
+#if defined ENABLE_IPV6
+      else if (s2->peer_dst_ip.family == AF_INET6) memcpy(&d2->peer_dst_ip.address.ipv6,  &s2->peer_dst_ip.address.ipv6, sizeof(struct in6_addr));
+#endif
+      d2->peer_dst_ip.family = s2->peer_dst_ip.family;
     }
   }
 }
