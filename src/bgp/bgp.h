@@ -96,6 +96,7 @@ struct bgp_peer {
   u_int32_t as;
   u_int16_t ht;
   struct host_addr id;
+  struct host_addr addr;
   u_int8_t cap_mp;
   char *cap_4as;
   u_int16_t msglen;
@@ -125,6 +126,11 @@ struct bgp_attr {
 	u_char ttl;
   } pathlimit;
   u_char origin;
+};
+
+struct bgp_comm_range {
+  u_int32_t first;
+  u_int32_t last;
 };
 
 /* prototypes */
@@ -165,6 +171,7 @@ EXT void bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **);
+EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT u_int32_t evaluate_last_asn(char *);
 
@@ -177,6 +184,8 @@ EXT struct bgp_peer *peers;
 EXT struct hash *attrhash;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
+EXT struct bgp_comm_range peer_src_as_ifrange; 
+EXT struct bgp_comm_range peer_src_as_asrange; 
 
 #undef EXT
 #endif 

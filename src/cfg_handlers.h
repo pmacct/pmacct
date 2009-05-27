@@ -126,6 +126,8 @@ EXT int cfg_key_nfacctd_bgp_ip(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_aspath_radius(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_stdcomm_pattern(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_extcomm_pattern(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_peer_src_as_ifrange(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_peer_src_as_asrange(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 #undef EXT

@@ -161,6 +161,8 @@ void skinny_bgp_daemon()
       }
       peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
       FD_SET(peer->fd, &bkp_read_descs);
+      peer->addr.family = AF_INET;
+      peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
       goto select_again; 
     }
 
@@ -1250,6 +1252,7 @@ void bgp_peer_close(struct bgp_peer *peer)
   close(peer->fd);
   peer->fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
+  memset(&peer->addr, 0, sizeof(peer->addr));
 
   /* Let's fully invalidate current RIBs first */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
@@ -1302,6 +1305,11 @@ void load_comm_patterns(char **stdcomm, char **extcomm)
     }
   }
 } 
+
+void load_peer_src_as_comm_ranges(char *ifrange, char *asrange)
+{
+  /* XXX: to be filled in */
+}
 
 void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 {

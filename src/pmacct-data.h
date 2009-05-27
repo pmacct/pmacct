@@ -313,6 +313,8 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_bgp_aspath_radius", cfg_key_nfacctd_bgp_aspath_radius},
   {"nfacctd_bgp_stdcomm_pattern", cfg_key_nfacctd_bgp_stdcomm_pattern},
   {"nfacctd_bgp_extcomm_pattern", cfg_key_nfacctd_bgp_extcomm_pattern},
+  {"nfacctd_bgp_peer_src_as_ifrange", cfg_key_nfacctd_bgp_peer_src_as_ifrange},
+  {"nfacctd_bgp_peer_src_as_asrange", cfg_key_nfacctd_bgp_peer_src_as_asrange},
   {"", NULL},
 };
 

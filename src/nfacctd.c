@@ -484,6 +484,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
     req.bpf_filter = TRUE;
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
+    load_peer_src_as_comm_ranges(config.nfacctd_bgp_peer_src_as_ifrange, config.nfacctd_bgp_peer_src_as_asrange);
   }
 #else
   if (config.nfacctd_bgp) {

@@ -1343,7 +1343,7 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
   /* XXX: to be optimized; START: section to be taken out of here */
   for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
-    if (!sa_addr_cmp(sa, &peers[peers_idx].id)) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
       peer = &peers[peers_idx];
       break;
     }
