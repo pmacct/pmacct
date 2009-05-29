@@ -160,6 +160,9 @@
 #define CHLD_WARNING		0x00000001
 #define CHLD_ALERT		0x00000002
 
+#define PEER_SRC_AS_BGP		0x00000001
+#define PEER_SRC_AS_MAP		0x00000002
+
 typedef u_int32_t pm_class_t;
 typedef u_int32_t pm_id_t;
 

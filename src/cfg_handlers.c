@@ -1644,6 +1644,23 @@ int cfg_key_nfacctd_bgp_extcomm_pattern(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = PEER_SRC_AS_BGP;
+  else if (!strncmp(value_ptr, "map", strlen("map"))) value = PEER_SRC_AS_MAP;
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_peer_src_as_type' value.\n", filename);
+
+  
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_src_as_type = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_peer_src_as_type'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_peer_src_as_ifrange(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

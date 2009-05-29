@@ -1308,7 +1308,21 @@ void load_comm_patterns(char **stdcomm, char **extcomm)
 
 void load_peer_src_as_comm_ranges(char *ifrange, char *asrange)
 {
-  /* XXX: to be filled in */
+  char *ifrange_ptr, *asrange_ptr, *end_ptr;
+
+  ifrange_ptr = pt_check_range(ifrange);
+  asrange_ptr = pt_check_range(asrange);
+
+  if (!ifrange_ptr || !asrange_ptr) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_peer_src_as_ifrange' or 'nfacctd_bgp_peer_src_as_asrange' value is not valid. Terminating thread.\n");
+    exit_all(1);
+  }
+
+  // XXX: check strtoul() output?
+  peer_src_as_ifrange.first = strtoul(ifrange, &end_ptr, 10);
+  peer_src_as_ifrange.last = strtoul(ifrange_ptr, &end_ptr, 10);
+  peer_src_as_asrange.first = strtoul(asrange, &end_ptr, 10);
+  peer_src_as_asrange.last = strtoul(asrange_ptr, &end_ptr, 10);
 }
 
 void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
