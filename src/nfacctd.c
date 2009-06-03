@@ -378,8 +378,8 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
-	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-	    			       COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+	    			       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
 	  /* Sanitizing the aggregation method */
 	  if ( (list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM) ) {
 	    printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
@@ -484,9 +484,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
     req.bpf_filter = TRUE;
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
-    if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_BGP)
-      load_peer_src_as_comm_ranges(config.nfacctd_bgp_peer_src_as_ifrange, config.nfacctd_bgp_peer_src_as_asrange);
-    else if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_MAP) {
+    if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_MAP) {
       // XXX: fill in
     }
   }

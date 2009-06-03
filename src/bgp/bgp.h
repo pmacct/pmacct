@@ -173,7 +173,8 @@ EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspa
 EXT void load_comm_patterns(char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
-EXT u_int32_t evaluate_last_asn(char *);
+EXT as_t evaluate_last_asn(char *);
+EXT as_t evaluate_first_asn(char *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(void *, void *);

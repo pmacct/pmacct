@@ -147,8 +147,8 @@ void sql_init_default_values()
 
   /* Dirty but allows to save some IFs, centralizes
      checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)))
+  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)))
     PbgpSz = 0;
 }
 
@@ -750,6 +750,9 @@ int sql_evaluate_primitives(int primitive)
 
     if (config.what_to_count & COUNT_PEER_SRC_AS) what_to_count |= COUNT_PEER_SRC_AS;
     else fakes |= FAKE_PEER_SRC_AS;
+
+    if (config.what_to_count & COUNT_PEER_DST_AS) what_to_count |= COUNT_PEER_DST_AS;
+    else fakes |= FAKE_PEER_DST_AS;
     
     if (config.what_to_count & COUNT_PEER_SRC_IP) what_to_count |= COUNT_PEER_SRC_IP;
     else fakes |= FAKE_PEER_SRC_IP;
@@ -1108,6 +1111,31 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, "peer_as_src=%u", SPACELEFT(where[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_PEER_SRC_AS;
       values[primitive].handler = where[primitive].handler = count_peer_src_as_handler;
+      primitive++;
+    }
+  }
+
+  if (what_to_count & COUNT_PEER_DST_AS) {
+    int count_it = FALSE;
+
+    if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+    else count_it = TRUE;
+
+    if (count_it) {
+      if (primitive) {
+        strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+        strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+        strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+      }
+
+      strncat(insert_clause, "peer_as_dst", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, "peer_as_dst=%u", SPACELEFT(where[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_PEER_DST_AS;
+      values[primitive].handler = where[primitive].handler = count_peer_dst_as_handler;
       primitive++;
     }
   }
@@ -1569,6 +1597,29 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, "peer_as_src=\'%s\'", SPACELEFT(where[primitive].string));
       values[primitive].type = where[primitive].type = FAKE_PEER_SRC_AS;
+      values[primitive].handler = where[primitive].handler = fake_as_handler;
+      primitive++;
+    }
+  }
+
+  if (fakes & FAKE_PEER_DST_AS) {
+    int count_it = FALSE;
+
+    if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
+      fakes ^= FAKE_PEER_DST_AS;
+    }
+    else count_it = TRUE;
+
+    if (count_it) {
+      if (primitive) {
+        strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+        strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+        strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+      }
+      strncat(insert_clause, "peer_as_dst", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, "peer_as_dst=\'%s\'", SPACELEFT(where[primitive].string));
+      values[primitive].type = where[primitive].type = FAKE_PEER_DST_AS;
       values[primitive].handler = where[primitive].handler = fake_as_handler;
       primitive++;
     }

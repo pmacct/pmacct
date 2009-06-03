@@ -160,6 +160,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "local_pref")) value |= COUNT_LOCAL_PREF;
     else if (!strcmp(count_token, "med")) value |= COUNT_MED;
     else if (!strcmp(count_token, "peer_src_as")) value |= COUNT_PEER_SRC_AS;
+    else if (!strcmp(count_token, "peer_dst_as")) value |= COUNT_PEER_DST_AS;
     else if (!strcmp(count_token, "peer_src_ip")) value |= COUNT_PEER_SRC_IP;
     else if (!strcmp(count_token, "peer_dst_ip")) value |= COUNT_PEER_DST_IP;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
@@ -1657,28 +1658,6 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_src_as_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_peer_src_as_type'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_nfacctd_bgp_peer_src_as_ifrange(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_src_as_ifrange = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_peer_src_as_ifrange'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_nfacctd_bgp_peer_src_as_asrange(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_src_as_asrange = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_peer_src_as_asrange'. Globalized.\n", filename);
 
   return changes;
 }

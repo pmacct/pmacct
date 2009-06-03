@@ -9,6 +9,7 @@ create table acct_bgp (
         as_src INT(4) UNSIGNED NOT NULL,
         as_dst INT(4) UNSIGNED NOT NULL,
 	peer_as_src INT(4) UNSIGNED NOT NULL,
+	peer_as_dst INT(4) UNSIGNED NOT NULL,
 	peer_ip_src CHAR(15) NOT NULL,
 	peer_ip_dst CHAR(15) NOT NULL,
 	comms CHAR(24) NOT NULL,
@@ -19,5 +20,5 @@ create table acct_bgp (
 	bytes BIGINT UNSIGNED NOT NULL,
 	stamp_inserted DATETIME NOT NULL,
 	stamp_updated DATETIME,
-	PRIMARY KEY (agent_id, as_src, as_dst, peer_as_src, peer_ip_src, peer_ip_dst, comms, as_path, local_pref, med, stamp_inserted)
+	PRIMARY KEY (agent_id, as_src, as_dst, peer_as_src, peer_as_dst, peer_ip_src, peer_ip_dst, comms, as_path, local_pref, med, stamp_inserted)
 );

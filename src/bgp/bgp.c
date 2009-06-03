@@ -1306,25 +1306,6 @@ void load_comm_patterns(char **stdcomm, char **extcomm)
   }
 } 
 
-void load_peer_src_as_comm_ranges(char *ifrange, char *asrange)
-{
-  char *ifrange_ptr, *asrange_ptr, *end_ptr;
-
-  ifrange_ptr = pt_check_range(ifrange);
-  asrange_ptr = pt_check_range(asrange);
-
-  if (!ifrange_ptr || !asrange_ptr) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_peer_src_as_ifrange' or 'nfacctd_bgp_peer_src_as_asrange' value is not valid. Terminating thread.\n");
-    exit_all(1);
-  }
-
-  // XXX: check strtoul() output?
-  peer_src_as_ifrange.first = strtoul(ifrange, &end_ptr, 10);
-  peer_src_as_ifrange.last = strtoul(ifrange_ptr, &end_ptr, 10);
-  peer_src_as_asrange.first = strtoul(asrange, &end_ptr, 10);
-  peer_src_as_asrange.last = strtoul(asrange_ptr, &end_ptr, 10);
-}
-
 void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 {
   char *ptr, *haystack;
@@ -1365,7 +1346,7 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
   }
 }
 
-u_int32_t evaluate_last_asn(char *src)
+as_t evaluate_last_asn(char *src)
 {
   int idx, len = strlen(src); 
   char *endptr;
@@ -1378,3 +1359,24 @@ u_int32_t evaluate_last_asn(char *src)
   return asn;
 }
 
+as_t evaluate_first_asn(char *src)
+{
+  int idx, is_space = FALSE, len = strlen(src);
+  char *endptr;
+  u_int32_t asn;
+
+  for (idx = 0; idx < len && src[idx] != ' '; idx++);
+
+  /* Mangling the AS_PATH string */
+  if (src[idx] == ' ') {
+    is_space = TRUE;  
+    src[idx] = '\0';
+  }
+
+  asn = strtoul(src, &endptr, 10);
+
+  /* Restoring mangled AS_PATH */
+  if (is_space) src[idx] = ' '; 
+
+  return asn;
+}

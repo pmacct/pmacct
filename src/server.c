@@ -286,6 +286,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w & COUNT_LOCAL_PREF) d2->local_pref = s2->local_pref;
     if (w & COUNT_MED) d2->med = s2->med;
     if (w & COUNT_PEER_SRC_AS) d2->peer_src_as = s2->peer_src_as;
+    if (w & COUNT_PEER_DST_AS) d2->peer_dst_as = s2->peer_dst_as;
     if (w & COUNT_PEER_SRC_IP) {
       if (s2->peer_src_ip.family == AF_INET) d2->peer_src_ip.address.ipv4.s_addr = s2->peer_src_ip.address.ipv4.s_addr;
 #if defined ENABLE_IPV6

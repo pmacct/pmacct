@@ -102,8 +102,6 @@ struct configuration {
   char *nfacctd_bgp_stdcomm_pattern;
   char *nfacctd_bgp_extcomm_pattern;
   int nfacctd_bgp_peer_src_as_type;
-  char *nfacctd_bgp_peer_src_as_ifrange;
-  char *nfacctd_bgp_peer_src_as_asrange;
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */
   char *pcap_savefile;

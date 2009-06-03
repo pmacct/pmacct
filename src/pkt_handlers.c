@@ -107,11 +107,25 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                            COUNT_AS_PATH|COUNT_PEER_SRC_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
       /* ACCT_PM and ACCT_SF do nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	channels_list[index].phandler[primitives] = NF_bgp_ext_handler;
         primitives++;
+      }
+    }
+
+    if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
+      /* ACCT_PM and ACCT_SF do nothing */
+      if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
+	if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_BGP) {
+          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_handler;
+          primitives++;
+	}
+        else if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_MAP) {
+          channels_list[index].phandler[primitives] = NF_map_peer_src_as_handler;
+          primitives++;
+        } 
       }
     }
 
@@ -1416,6 +1430,11 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	}
 	if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
 	if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
+	if (chptr->aggregation & COUNT_PEER_DST_AS) {
+	  /* XXX: evaluate_first_asn() mangles the AS_PATH and then restores it;
+	          maybe safer to copy it in the first place? */
+	  pbgp->peer_dst_as = evaluate_first_asn(info->attr->aspath->str);
+	}
 	if (chptr->aggregation & COUNT_PEER_DST_IP) {
 	  if (info->attr->mp_nexthop.family == AF_INET) {
 	    pbgp->peer_dst_ip.family = AF_INET;
@@ -1436,6 +1455,110 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     }
     if (chptr->aggregation & COUNT_PEER_SRC_IP) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
   }
+}
+
+void NF_bgp_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct bgp_node *src_ret;
+  struct bgp_info *info;
+  struct bgp_peer *peer;
+  struct in_addr *pref4;
+  int peers_idx, comm_idx;
+  u_int32_t comval;
+  u_int16_t val, as, nf_ifindex;
+
+  --pdata; /* Bringing back to original place */
+
+  /* XXX: to be optimized; START: section to be taken out of here */
+  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
+      peer = &peers[peers_idx];
+      break;
+    }
+  }
+  /* XXX: END: section to be taken out of here */
+
+  if (peer) {
+    pref4 = (struct in_addr *) &peer->addr.address.ipv4;
+    src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
+
+    if (src_ret) {
+      info = (struct bgp_info *) src_ret->info;
+
+      if (info && info->attr && info->attr->community) {
+        for (comm_idx = 0; comm_idx < info->attr->community->size; comm_idx++) {
+          comval = ntohl (info->attr->community->val[comm_idx]);
+          as = (comval >> 16) & 0xFFFF;
+          val = comval & 0xFFFF;
+
+          switch(hdr->version) {
+          case 9:
+            memcpy(&nf_ifindex, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len);
+            break;
+          case 8:
+            switch(hdr->aggregation) {
+            case 1:
+              nf_ifindex = ((struct struct_export_v8_1 *) pptrs->f_data)->input;
+              break;
+            case 3:
+              nf_ifindex = ((struct struct_export_v8_3 *) pptrs->f_data)->input;
+              break;
+            case 5:
+              nf_ifindex = ((struct struct_export_v8_5 *) pptrs->f_data)->input;
+              break;
+            case 7:
+              nf_ifindex = ((struct struct_export_v8_7 *) pptrs->f_data)->input;
+              break;
+            case 8:
+              nf_ifindex = ((struct struct_export_v8_8 *) pptrs->f_data)->input;
+              break;
+            case 9:
+              nf_ifindex = ((struct struct_export_v8_9 *) pptrs->f_data)->input;
+              break;
+            case 10:
+              nf_ifindex = ((struct struct_export_v8_10 *) pptrs->f_data)->input;
+              break;
+            case 11:
+              nf_ifindex = ((struct struct_export_v8_11 *) pptrs->f_data)->input;
+              break;
+            case 13:
+              nf_ifindex = ((struct struct_export_v8_13 *) pptrs->f_data)->input;
+              break;
+            case 14:
+              nf_ifindex = ((struct struct_export_v8_14 *) pptrs->f_data)->input;
+              break;
+            default:
+              nf_ifindex = 0;
+              break;
+            }
+            break;
+          default:
+            nf_ifindex = ((struct struct_export_v5 *) pptrs->f_data)->input;
+            break;
+          }
+          if (as == ntohs(nf_ifindex)) {
+            /* FOUND: copying value */
+            pbgp->peer_src_as = val;
+            break;
+          }
+          else if (as > ntohs(nf_ifindex)) {
+            /* NOT FOUND: break here */
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+void NF_map_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  // XXX: fill this in
 }
 
 #if defined (HAVE_L2)
