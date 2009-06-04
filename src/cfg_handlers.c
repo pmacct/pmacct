@@ -1650,7 +1650,8 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = PEER_SRC_AS_BGP;
+  if (!strncmp(value_ptr, "bgp_comms", strlen("bgp_comms"))) value = PEER_SRC_AS_BGP_COMMS;
+  else if (!strncmp(value_ptr, "bgp_ecomms", strlen("bgp_ecomms"))) value = PEER_SRC_AS_BGP_ECOMMS;
   else if (!strncmp(value_ptr, "map", strlen("map"))) value = PEER_SRC_AS_MAP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_peer_src_as_type' value.\n", filename);
 
