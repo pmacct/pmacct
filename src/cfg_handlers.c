@@ -1663,19 +1663,19 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   return changes;
 }
 
-int cfg_key_nfacctd_max_bgp_peers(char *filename, char *name, char *value_ptr)
+int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
   if (value < 1) {
-        Log(LOG_ERR, "WARN ( %s ): 'nfacctd_max_bgp_peers' has to be >= 1.\n", filename);
+        Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_max_peers' has to be >= 1.\n", filename);
         return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_max_bgp_peers = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_max_bgp_peers'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_max_peers = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_max_peers'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1687,6 +1687,23 @@ int cfg_key_nfacctd_bgp_ip(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_ip = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_port = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_port'. Globalized.\n", filename);
 
   return changes;
 }

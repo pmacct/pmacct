@@ -34,7 +34,7 @@ thread_pool_t *bgp_pool;
 void nfacctd_bgp_wrapper()
 {
   /* initialize variables */
-  config.nfacctd_bgp_port = BGP_TCP_PORT;
+  if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 
   /* initialize threads pool */
   bgp_pool = allocate_thread_pool(1);
@@ -105,11 +105,11 @@ void skinny_bgp_daemon()
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bgp_port);
   }
 
-  if (!config.nfacctd_max_bgp_peers) config.nfacctd_max_bgp_peers = MAX_BGP_PEERS_DEFAULT;
-  Log(LOG_INFO, "INFO ( default/core/BGP ): maximum BGP peers allowed: %d\n", config.nfacctd_max_bgp_peers);
+  if (!config.nfacctd_bgp_max_peers) config.nfacctd_bgp_max_peers = MAX_BGP_PEERS_DEFAULT;
+  Log(LOG_INFO, "INFO ( default/core/BGP ): maximum BGP peers allowed: %d\n", config.nfacctd_bgp_max_peers);
 
-  peers = malloc(config.nfacctd_max_bgp_peers*sizeof(struct bgp_peer));
-  memset(peers, 0, config.nfacctd_max_bgp_peers*sizeof(struct bgp_peer));
+  peers = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
+  memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (sock < 0) {
@@ -123,7 +123,7 @@ void skinny_bgp_daemon()
     exit_all(1);
   }
 
-  rc = listen(sock, config.nfacctd_max_bgp_peers);
+  rc = listen(sock, config.nfacctd_bgp_max_peers);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( default/core/BGP ): listen() failed (errno: %d).\n", errno);
     exit_all(1);
@@ -137,7 +137,7 @@ void skinny_bgp_daemon()
   for (;;) {
     select_again:
     select_fd = sock;
-    for (peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++)
+    for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++)
       if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
     select_fd++;
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
@@ -146,7 +146,7 @@ void skinny_bgp_daemon()
 
     /* New connection is coming in */ 
     if (FD_ISSET(sock, &read_descs)) {
-      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (peers[peers_idx].fd == 0) {
           peer = &peers[peers_idx];
           bgp_peer_init(peer);
@@ -155,7 +155,7 @@ void skinny_bgp_daemon()
       }
 
       if (!peer) {
-        Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_max_bgp_peers' (%d).\n", config.nfacctd_max_bgp_peers);
+        Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_bgp_max_peers' (%d).\n", config.nfacctd_bgp_max_peers);
         // exit_all(1); 
 	goto select_again;
       }
@@ -168,7 +168,7 @@ void skinny_bgp_daemon()
 
     /* We have something coming in: let's lookup which peer is thatl
        XXX: to be optimized */
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_max_bgp_peers; peers_idx++) {
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
       if (peers[peers_idx].fd && FD_ISSET(peers[peers_idx].fd, &read_descs)) {
 	peer = &peers[peers_idx];
 	break;

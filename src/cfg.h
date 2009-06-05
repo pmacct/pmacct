@@ -97,7 +97,7 @@ struct configuration {
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
   u_int32_t nfacctd_bgp_myas;
-  int nfacctd_max_bgp_peers;
+  int nfacctd_bgp_max_peers;
   int nfacctd_bgp_aspath_radius;
   char *nfacctd_bgp_stdcomm_pattern;
   char *nfacctd_bgp_extcomm_pattern;
