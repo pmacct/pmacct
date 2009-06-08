@@ -119,7 +119,11 @@ void skinny_bgp_daemon()
 
   rc = bind(sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.nfacctd_bgp_ip, config.nfacctd_bgp_port, errno);
+    char null_ip_address[] = "0.0.0.0";
+    char *ip_address;
+
+    ip_address = config.nfacctd_bgp_ip ? config.nfacctd_bgp_ip : null_ip_address;
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", ip_address, config.nfacctd_bgp_port, errno);
     exit_all(1);
   }
 
