@@ -95,6 +95,7 @@ struct bgp_peer {
   u_int8_t status;
   u_int32_t as;
   u_int16_t ht;
+  time_t last_keepalive;
   struct host_addr id;
   struct host_addr addr;
   u_int8_t cap_mp;

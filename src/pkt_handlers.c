@@ -1349,9 +1349,9 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct bgp_node *src_ret, *dst_ret;
   struct bgp_info *info;
   struct bgp_peer *peer;
-  struct in_addr *pref4;
+  struct in_addr pref4;
 #if defined ENABLE_IPV6
-  struct in6_addr *pref6;
+  struct in6_addr pref6;
 #endif
   int peers_idx;
   as_t asn;
@@ -1368,17 +1368,17 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
   if (peer) {
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_src;
-      src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
-      pref4 = (struct in_addr *) &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst;
-      dst_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
+      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+      src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
+      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+      dst_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
     }
 #if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      pref6 = (struct in6_addr *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src;
-      dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], pref6);
-      pref6 = (struct in6_addr *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst;
-      dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], pref6);
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+      src_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+      dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
     }
 #endif
   /* XXX: END: section to be taken out of here */

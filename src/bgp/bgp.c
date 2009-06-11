@@ -65,6 +65,8 @@ void skinny_bgp_daemon()
   int clen = sizeof(client);
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
+  u_int16_t bgpo_len;
+  time_t now;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
@@ -199,6 +201,17 @@ void skinny_bgp_daemon()
       goto select_again;
     }
     else {
+      /* Appears a valid peer with a valid BGP message: before
+	 continuing let's see if it's time to send a KEEPALIVE
+	 back */
+      now = time(NULL);
+      if (peer->status == Established && ((now - peer->last_keepalive) > (peer->ht / 2))) {
+        bgp_reply_pkt_ptr = bgp_reply_pkt;
+        bgp_reply_pkt_ptr += bgp_keepalive_msg(bgp_reply_pkt_ptr);
+        ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+	peer->last_keepalive = now;
+      } 
+
       /* BGP payload reassembly if required */
       if (peer->buf.truncated_len) {
 	if (peer->buf.truncated_len+peer->msglen > peer->buf.len) {
@@ -224,11 +237,12 @@ void skinny_bgp_daemon()
 	}
 	bgp_packet_ptr = bgp_packet;
       } 
-      for ( ; peer->msglen > 0; peer->msglen -= ntohs(bhdr->bgpo_len), bgp_packet_ptr += ntohs(bhdr->bgpo_len)) { 
+      for ( ; peer->msglen > 0; peer->msglen -= ntohs(bgpo_len), bgp_packet_ptr += ntohs(bgpo_len)) { 
 	bhdr = (struct bgp_header *) bgp_packet_ptr;
+	memcpy(&bgpo_len, &bhdr->bgpo_len, 2);
 
 	/* BGP payload fragmentation check */
-	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr->bgpo_len)) {
+	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bgpo_len)) {
 	  peer->buf.truncated_len = peer->msglen;
 	  if (bgp_packet_ptr != peer->buf.base)
 	    memcpy(peer->buf.base, bgp_packet_ptr, peer->buf.truncated_len);
@@ -291,10 +305,12 @@ void skinny_bgp_daemon()
 				    cap_type = (u_int8_t) ptr[0];
 				    if (cap_type == BGP_CAPABILITY_MULTIPROTOCOL) {
 					  char *cap_ptr = ptr+2;
-					  struct capability_mp_data *cap_data = (struct capability_mp_data *) cap_ptr;
+					  struct capability_mp_data cap_data;
+
+					  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
 				      Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
-							cap_type, ntohs(cap_data->afi), cap_data->safi);
+							cap_type, ntohs(cap_data.afi), cap_data.safi);
 					  peer->cap_mp = TRUE;
 					  memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
 					  bgp_open_cap_reply_ptr += opt_len+2;
@@ -372,8 +388,8 @@ void skinny_bgp_daemon()
 
 			  /* sticking a KEEPALIVE to it */
 			  bgp_reply_pkt_ptr += bgp_keepalive_msg(bgp_reply_pkt_ptr);
-
 			  ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+			  peer->last_keepalive = now;
 		    }
 		    else {
   			  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported version). Goto accept()\n");
@@ -382,7 +398,8 @@ void skinny_bgp_daemon()
 			  goto select_again;
 		    }
 
-			peer->status = OpenSent;
+			// peer->status = OpenSent;
+			peer->status = Established;
 	      }
 		  /* If we already passed successfully through an BGP OPEN exchange
   			 let's just ignore further BGP OPEN messages */
@@ -393,13 +410,14 @@ void skinny_bgp_daemon()
 		  bgp_peer_close(peer);
 		  goto select_again;
 		  break;
-		case BGP_KEEPALIVE:
+	  case BGP_KEEPALIVE:
 		  if (peer->status >= OpenSent) {
 		    if (peer->status < Established) peer->status = Established;
 
 		    bgp_reply_pkt_ptr = bgp_reply_pkt;
 		    bgp_reply_pkt_ptr += bgp_keepalive_msg(bgp_reply_pkt_ptr);
 		    ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+		    peer->last_keepalive = now;
 
 		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_KEEPALIVE: Id: %s\n", inet_ntoa(peer->id.address.ipv4));
 		  }
@@ -407,7 +425,7 @@ void skinny_bgp_daemon()
   			 let's temporarily discard BGP KEEPALIVEs */
 		  break;
 	  case BGP_UPDATE:
-		  printf("BGP UPDATE\n");
+		  //printf("BGP UPDATE\n");
 		  if (peer->status < Established) {
 		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP UPDATE: Id: %s (no neighbor). Goto accept()\n", inet_ntoa(peer->id.address.ipv4));
 			FD_CLR(peer->fd, &bkp_read_descs);
@@ -444,13 +462,14 @@ int bgp_marker_check(struct bgp_header *bhdr, int length)
 /* write BGP KEEPALIVE msg */
 int bgp_keepalive_msg(char *msg)
 {
-	struct bgp_header *bhdr = (struct bgp_header *) msg;
+  struct bgp_header bhdr;
 	
-	memset(bhdr->bgpo_marker, 0xff, BGP_MARKER_SIZE);
-	bhdr->bgpo_type = BGP_KEEPALIVE;
-	bhdr->bgpo_len = htons(BGP_HEADER_SIZE);
+  memset(&bhdr.bgpo_marker, 0xff, BGP_MARKER_SIZE);
+  bhdr.bgpo_type = BGP_KEEPALIVE;
+  bhdr.bgpo_len = htons(BGP_HEADER_SIZE);
+  memcpy(msg, &bhdr, sizeof(bhdr));
 
-	return BGP_HEADER_SIZE;
+  return BGP_HEADER_SIZE;
 }
 
 /* write BGP OPEN msg */
@@ -504,7 +523,7 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   u_int16_t attribute_len;
   u_int16_t update_len;
   u_int16_t withdraw_len;
-  u_int16_t end, *tmp;
+  u_int16_t end, tmp;
   struct bgp_nlri update;
   struct bgp_nlri withdraw;
   struct bgp_nlri mp_update;
@@ -518,14 +537,15 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   memset(&mp_update, 0, sizeof (struct bgp_nlri));
   memset(&mp_withdraw, 0, sizeof (struct bgp_nlri));
 
-  end = ntohs(bhdr->bgpo_len);
+  memcpy(&tmp, &bhdr->bgpo_len, 2);
+  end = ntohs(tmp);
   end -= BGP_HEADER_SIZE;
   pkt += BGP_HEADER_SIZE;
 
   /* handling Unfeasible routes */
-  tmp = (u_int16_t *) pkt;
-  withdraw_len = ntohs(*tmp);
-  printf("WITHDRAW_LEN: %u\n", withdraw_len);
+  memcpy(&tmp, pkt, 2);
+  withdraw_len = ntohs(tmp);
+  //printf("WITHDRAW_LEN: %u\n", withdraw_len);
   if (withdraw_len > end) return -1;  
   else {
 	end -= withdraw_len;
@@ -541,9 +561,9 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   }
 
   /* handling Attributes */
-  tmp = (u_int16_t *) pkt;
-  attribute_len = ntohs(*tmp);
-  printf("ATTRIBUTE_LEN: %u\n", attribute_len);
+  memcpy(&tmp, pkt, 2);
+  attribute_len = ntohs(tmp);
+  //printf("ATTRIBUTE_LEN: %u\n", attribute_len);
   if (attribute_len > end) return -1;
   else {
 	end -= attribute_len;
@@ -557,7 +577,7 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   }
 
   update_len = end; end = 0;
-  printf("UPDATE_LEN: %u\n", update_len);
+  //printf("UPDATE_LEN: %u\n", update_len);
 
   if (update_len > 0) {
 	update.afi = AFI_IP;
@@ -612,7 +632,7 @@ int bgp_attr_parse(struct bgp_peer *peer, void *attr, char *ptr, int len, struct
 {
   int to_the_end = len, ret;
   u_int8_t flag, type, *tmp, mp_nlri = 0;
-  u_int16_t *tmp16, attr_len;
+  u_int16_t tmp16, attr_len;
   struct aspath *as4_path = NULL;
 
   while (to_the_end > 0) {
@@ -623,7 +643,7 @@ int bgp_attr_parse(struct bgp_peer *peer, void *attr, char *ptr, int len, struct
 
     /* Attribute length */
 	if (flag & BGP_ATTR_FLAG_EXTLEN) {
-	  tmp16 = (u_int16_t *) ptr; ptr += 2; to_the_end -= 2; attr_len = ntohs(*tmp16);
+	  memcpy(&tmp16, ptr, 2); ptr += 2; to_the_end -= 2; attr_len = ntohs(tmp16);
 	  if (attr_len > to_the_end) return -1;
 	}
 	else {
@@ -633,44 +653,44 @@ int bgp_attr_parse(struct bgp_peer *peer, void *attr, char *ptr, int len, struct
 
 	switch (type) {
 	case BGP_ATTR_AS_PATH:
-		printf("ATTRIBUTE: AS PATH\n");
+		//printf("ATTRIBUTE: AS PATH\n");
 		ret = bgp_attr_parse_aspath(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 		break;
 	case BGP_ATTR_AS4_PATH:
-		printf("ATTRIBUTE: AS4 PATH\n");
+		//printf("ATTRIBUTE: AS4 PATH\n");
 		ret = bgp_attr_parse_as4path(peer, attr_len, (struct bgp_attr *) attr, ptr, flag, &as4_path);
 		break;
 	case BGP_ATTR_NEXT_HOP:
-		printf("ATTRIBUTE: NEXHOP\n");
+		//printf("ATTRIBUTE: NEXHOP\n");
 		ret = bgp_attr_parse_nexthop(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 	case BGP_ATTR_COMMUNITIES:
-		printf("ATTRIBUTE: COMMUNITIES\n");
+		//printf("ATTRIBUTE: COMMUNITIES\n");
 		ret = bgp_attr_parse_community(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 		break;
 	case BGP_ATTR_EXT_COMMUNITIES:
-		printf("ATTRIBUTE: EXTENDED COMMUNITIES\n");
+		//printf("ATTRIBUTE: EXTENDED COMMUNITIES\n");
 		ret = bgp_attr_parse_ecommunity(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 		break;
 	case BGP_ATTR_MULTI_EXIT_DISC:
-		printf("ATTRIBUTE: MED\n");
+		//printf("ATTRIBUTE: MED\n");
 		ret = bgp_attr_parse_med(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 		break;
 	case BGP_ATTR_LOCAL_PREF:
-		printf("ATTRIBUTE: LOCAL PREFERENCE\n");
+		//printf("ATTRIBUTE: LOCAL PREFERENCE\n");
 		ret = bgp_attr_parse_local_pref(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
 		break;
 	case BGP_ATTR_MP_REACH_NLRI:
-		printf("ATTRIBUTE: MP REACH NLRI\n");
+		//printf("ATTRIBUTE: MP REACH NLRI\n");
 		ret = bgp_attr_parse_mp_reach(peer, attr_len, (struct bgp_attr *) attr, ptr, mp_update);
 		mp_nlri = TRUE;
 		break;
 	case BGP_ATTR_MP_UNREACH_NLRI:
-		printf("ATTRIBUTE: MP UNREACH NLRI\n");
+		//printf("ATTRIBUTE: MP UNREACH NLRI\n");
 		ret = bgp_attr_parse_mp_unreach(peer, attr_len, (struct bgp_attr *) attr, ptr, mp_withdraw);
 		mp_nlri = TRUE;
 		break;
 	default:
-		printf("ATTRIBUTE: UNKNOWN (%u)\n", type);
+		//printf("ATTRIBUTE: UNKNOWN (%u)\n", type);
 		ret = 0;
 		break;
 	}
@@ -719,13 +739,13 @@ int bgp_attr_parse_as4path(struct bgp_peer *peer, u_int16_t len, struct bgp_attr
 
 int bgp_attr_parse_nexthop(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
 {
-  u_int32_t *tmp;
+  u_int32_t tmp;
 
   /* Length check. */
   if (len != 4) return -1;
 
-  tmp = (u_int32_t *) ptr;
-  attr->nexthop.s_addr = *tmp;
+  memcpy(&tmp, ptr, 4);
+  attr->nexthop.s_addr = tmp;
   ptr += 4;
 
   return 0;
@@ -753,13 +773,13 @@ int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 /* MED atrribute. */
 int bgp_attr_parse_med(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
 {
-  u_int32_t *tmp;
+  u_int32_t tmp;
 
   /* Length check. */
   if (len != 4) return -1;
 
-  tmp = (u_int32_t *) ptr;
-  attr->med = ntohl(*tmp);
+  memcpy(&tmp, ptr, 4);
+  attr->med = ntohl(tmp);
   ptr += 4;
 
   return 0;
@@ -768,7 +788,7 @@ int bgp_attr_parse_med(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *at
 /* Local preference attribute. */
 int bgp_attr_parse_local_pref(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
 {
-  u_int32_t *tmp;
+  u_int32_t tmp;
 
   /* If it is contained in an UPDATE message that is received from an
 	 external peer, then this attribute MUST be ignored by the receiving
@@ -777,8 +797,8 @@ int bgp_attr_parse_local_pref(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
   if (len != 4) return -1;
 
-  tmp = (u_int32_t *) ptr;
-  attr->local_pref = ntohl(*tmp);
+  memcpy(&tmp, ptr, 4);
+  attr->local_pref = ntohl(tmp);
   ptr += 4;
 
   return 0;
@@ -786,7 +806,7 @@ int bgp_attr_parse_local_pref(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
 int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, struct bgp_nlri *mp_update)
 {
-  u_int16_t afi, *tmp16, mpreachlen, mpnhoplen;
+  u_int16_t afi, tmp16, mpreachlen, mpnhoplen;
   u_int16_t nlri_len;
   u_char safi;
 
@@ -795,7 +815,7 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
   if (len < BGP_MP_REACH_MIN_SIZE) return -1;
 
   mpreachlen = len;
-  tmp16 = (u_int16_t *) ptr; afi = ntohs(*tmp16); ptr += 2; 
+  memcpy(&tmp16, ptr, 2); afi = ntohs(tmp16); ptr += 2;
   safi = *ptr; ptr++;
   mpnhoplen = *ptr; ptr++;
   mpreachlen -= 4; /* 2+1+1 above */ 
@@ -846,7 +866,7 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 
 int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, struct bgp_nlri *mp_withdraw)
 {
-  u_int16_t afi, mpunreachlen, *tmp16;
+  u_int16_t afi, mpunreachlen, tmp16;
   u_int16_t withdraw_len;
   u_char safi;
 
@@ -855,7 +875,7 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
   if (len < BGP_MP_UNREACH_MIN_SIZE) return -1;
 
   mpunreachlen = len;
-  tmp16 = (u_int16_t *) ptr; afi = ntohs(*tmp16); ptr += 2;
+  memcpy(&tmp16, ptr, 2); afi = ntohs(tmp16); ptr += 2;
   safi = *ptr; ptr++;
   mpunreachlen -= 3; /* 2+1 above */
 

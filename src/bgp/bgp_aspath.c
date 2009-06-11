@@ -679,8 +679,8 @@ assegments_parse(char *s, size_t length, int use32bit)
   struct assegment *seg, *prev = NULL, *head = NULL;
   size_t bytes = 0, aspathlen;
   u_char *tmp8;
-  u_int16_t *tmp16;
-  u_int32_t *tmp32;
+  u_int16_t tmp16;
+  u_int32_t tmp32;
 
   /* empty aspath (ie iBGP or somesuch) */
   if (length == 0) return NULL;
@@ -722,10 +722,10 @@ assegments_parse(char *s, size_t length, int use32bit)
       
       for (i = 0; i < segh.length; i++) {
 		if (use32bit) {
-		  tmp32 = (u_int32_t *) s; seg->as[i] = ntohl(*tmp32); s += sizeof(u_int32_t);
+		  memcpy(&tmp32, s, 4); seg->as[i] = ntohl(tmp32); s += 4;
 		}
 		else {
-		  tmp16 = (u_int16_t *) s; seg->as[i] = ntohs(*tmp16); s += sizeof(u_int16_t);
+		  memcpy(&tmp16, s, 2); seg->as[i] = ntohs(tmp16); s += 2;
 		}
 	  }
 	  
