@@ -49,7 +49,7 @@ void skinny_bgp_daemon()
 {
   int slen, ret, sock, rc, peers_idx;
   struct host_addr addr;
-  struct bgp_header *bhdr;
+  struct bgp_header bhdr;
   struct bgp_peer *peer;
   struct bgp_open *bopen;
   char bgp_packet[BGP_MAX_PACKET_SIZE], *bgp_packet_ptr;
@@ -65,7 +65,6 @@ void skinny_bgp_daemon()
   int clen = sizeof(client);
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
-  u_int16_t bgpo_len;
   time_t now;
 
   /* select() stuff */
@@ -237,12 +236,13 @@ void skinny_bgp_daemon()
 	}
 	bgp_packet_ptr = bgp_packet;
       } 
-      for ( ; peer->msglen > 0; peer->msglen -= ntohs(bgpo_len), bgp_packet_ptr += ntohs(bgpo_len)) { 
-	bhdr = (struct bgp_header *) bgp_packet_ptr;
-	memcpy(&bgpo_len, &bhdr->bgpo_len, 2);
+
+      memset(&bhdr, 0, sizeof(bhdr));
+      for ( ; peer->msglen > 0; peer->msglen -= ntohs(bhdr.bgpo_len), bgp_packet_ptr += ntohs(bhdr.bgpo_len)) { 
+	memcpy(&bhdr, bgp_packet_ptr, sizeof(bhdr));
 
 	/* BGP payload fragmentation check */
-	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bgpo_len)) {
+	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr.bgpo_len)) {
 	  peer->buf.truncated_len = peer->msglen;
 	  if (bgp_packet_ptr != peer->buf.base)
 	    memcpy(peer->buf.base, bgp_packet_ptr, peer->buf.truncated_len);
@@ -250,7 +250,7 @@ void skinny_bgp_daemon()
 	    goto select_again;
 	  }
 
-	  if (!bgp_marker_check(bhdr, BGP_MARKER_SIZE)) {
+	  if (!bgp_marker_check(&bhdr, BGP_MARKER_SIZE)) {
             Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (marker check failed). Goto accept()\n");
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer);
@@ -259,7 +259,7 @@ void skinny_bgp_daemon()
 
 	  memset(bgp_reply_pkt, 0, BGP_MAX_PACKET_SIZE);
 
-	  switch (bhdr->bgpo_type) {
+	  switch (bhdr.bgpo_type) {
 	  case BGP_OPEN:
 		  if (peer->status < OpenSent) {
 		    peer->status = Active;
@@ -517,7 +517,7 @@ int bgp_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
 
 int bgp_update_msg(struct bgp_peer *peer, char *pkt)
 {
-  struct bgp_header *bhdr = (struct bgp_header *) pkt;
+  struct bgp_header bhdr;
   u_char *startp, *endp;
   struct bgp_attr attr;
   u_int16_t attribute_len;
@@ -537,8 +537,8 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   memset(&mp_update, 0, sizeof (struct bgp_nlri));
   memset(&mp_withdraw, 0, sizeof (struct bgp_nlri));
 
-  memcpy(&tmp, &bhdr->bgpo_len, 2);
-  end = ntohs(tmp);
+  memcpy(&bhdr, pkt, sizeof(bhdr));
+  end = ntohs(bhdr.bgpo_len);
   end -= BGP_HEADER_SIZE;
   pkt += BGP_HEADER_SIZE;
 
@@ -628,7 +628,7 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
 }
 
 /* BGP UPDATE Attribute parsing */
-int bgp_attr_parse(struct bgp_peer *peer, void *attr, char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
+int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
 {
   int to_the_end = len, ret;
   u_int8_t flag, type, *tmp, mp_nlri = 0;
@@ -653,44 +653,44 @@ int bgp_attr_parse(struct bgp_peer *peer, void *attr, char *ptr, int len, struct
 
 	switch (type) {
 	case BGP_ATTR_AS_PATH:
-		//printf("ATTRIBUTE: AS PATH\n");
-		ret = bgp_attr_parse_aspath(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
+		// printf("ATTRIBUTE: AS PATH\n");
+		ret = bgp_attr_parse_aspath(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_AS4_PATH:
-		//printf("ATTRIBUTE: AS4 PATH\n");
-		ret = bgp_attr_parse_as4path(peer, attr_len, (struct bgp_attr *) attr, ptr, flag, &as4_path);
+		// printf("ATTRIBUTE: AS4 PATH\n");
+		ret = bgp_attr_parse_as4path(peer, attr_len, attr, ptr, flag, &as4_path);
 		break;
 	case BGP_ATTR_NEXT_HOP:
-		//printf("ATTRIBUTE: NEXHOP\n");
-		ret = bgp_attr_parse_nexthop(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
+		// printf("ATTRIBUTE: NEXHOP\n");
+		ret = bgp_attr_parse_nexthop(peer, attr_len, attr, ptr, flag);
 	case BGP_ATTR_COMMUNITIES:
-		//printf("ATTRIBUTE: COMMUNITIES\n");
-		ret = bgp_attr_parse_community(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
+		// printf("ATTRIBUTE: COMMUNITIES\n");
+		ret = bgp_attr_parse_community(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_EXT_COMMUNITIES:
-		//printf("ATTRIBUTE: EXTENDED COMMUNITIES\n");
-		ret = bgp_attr_parse_ecommunity(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
+		// printf("ATTRIBUTE: EXTENDED COMMUNITIES\n");
+		ret = bgp_attr_parse_ecommunity(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_MULTI_EXIT_DISC:
-		//printf("ATTRIBUTE: MED\n");
-		ret = bgp_attr_parse_med(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
+		// printf("ATTRIBUTE: MED\n");
+		ret = bgp_attr_parse_med(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_LOCAL_PREF:
-		//printf("ATTRIBUTE: LOCAL PREFERENCE\n");
-		ret = bgp_attr_parse_local_pref(peer, attr_len, (struct bgp_attr *) attr, ptr, flag);
+		// printf("ATTRIBUTE: LOCAL PREFERENCE\n");
+		ret = bgp_attr_parse_local_pref(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_MP_REACH_NLRI:
-		//printf("ATTRIBUTE: MP REACH NLRI\n");
-		ret = bgp_attr_parse_mp_reach(peer, attr_len, (struct bgp_attr *) attr, ptr, mp_update);
+		// printf("ATTRIBUTE: MP REACH NLRI\n");
+		ret = bgp_attr_parse_mp_reach(peer, attr_len, attr, ptr, mp_update);
 		mp_nlri = TRUE;
 		break;
 	case BGP_ATTR_MP_UNREACH_NLRI:
-		//printf("ATTRIBUTE: MP UNREACH NLRI\n");
-		ret = bgp_attr_parse_mp_unreach(peer, attr_len, (struct bgp_attr *) attr, ptr, mp_withdraw);
+		// printf("ATTRIBUTE: MP UNREACH NLRI\n");
+		ret = bgp_attr_parse_mp_unreach(peer, attr_len, attr, ptr, mp_withdraw);
 		mp_nlri = TRUE;
 		break;
 	default:
-		//printf("ATTRIBUTE: UNKNOWN (%u)\n", type);
+		// printf("ATTRIBUTE: UNKNOWN (%u)\n", type);
 		ret = 0;
 		break;
 	}
@@ -1296,7 +1296,7 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   if (peer->cap_4as) return 0;
 
   /* pre-requisite for AS4_PATH is AS_PATH indeed */ 
-  if (as4path && !attr->aspath) return -1;
+  // XXX if (as4path && !attr->aspath) return -1;
 
   newpath = aspath_reconcile_as4(attr->aspath, as4path);
   aspath_unintern(attr->aspath);
