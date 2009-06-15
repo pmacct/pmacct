@@ -687,9 +687,11 @@ assegments_parse(char *s, size_t length, int use32bit)
   
   /* basic checks; XXX: length? */
   if (length % AS16_VALUE_SIZE) return NULL;
+
   aspathlen = length;
   
   // while ((length > AS_HEADER_SIZE) && (bytes < length)) {
+  // while ((aspathlen > AS_HEADER_SIZE) && (bytes < aspathlen)) {
   while (aspathlen > 0) {
       int i;
       int seg_size;
@@ -701,11 +703,11 @@ assegments_parse(char *s, size_t length, int use32bit)
       seg_size = ASSEGMENT_SIZE(segh.length, use32bit);
 
       /* check it.. */
-      if ( ((bytes + seg_size) > aspathlen)
+      if ( ((bytes + seg_size) > length)
           /* 1771bis 4.3b: seg length contains one or more */
           || (segh.length == 0) 
           /* Paranoia in case someone changes type of segment length */
-          || ((sizeof segh.length > 1) && (segh.length > AS_SEGMENT_MAX)) )
+          || ((sizeof(segh.length) > 1) && (segh.length > AS_SEGMENT_MAX)) )
         {
           if (head)
             assegment_free_all (head);
@@ -727,10 +729,10 @@ assegments_parse(char *s, size_t length, int use32bit)
 		else {
 		  memcpy(&tmp16, s, 2); seg->as[i] = ntohs(tmp16); s += 2;
 		}
-	  }
+      }
 	  
       bytes += seg_size;
-	  aspathlen -= seg_size;
+      aspathlen -= seg_size;
       prev = seg;
     }
  

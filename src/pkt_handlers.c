@@ -1426,18 +1426,21 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	    pbgp->as_path[MAX_BGP_ASPATH-1] = '+';
 	  if (config.nfacctd_bgp_aspath_radius)
 	    evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
-	  if (config.nfacctd_as == NF_AS_BGP) {
-	    asn = evaluate_last_asn(info->attr->aspath->str);
-	    pdata->primitives.dst_as = asn;
-	  }
 	}
+        if (config.nfacctd_as == NF_AS_BGP) {
+          if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath && info->attr->aspath->str) {
+            asn = evaluate_last_asn(info->attr->aspath->str);
+            pdata->primitives.dst_as = asn;
+          }
+        }
+
 	if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
+
 	if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
-	if (chptr->aggregation & COUNT_PEER_DST_AS) {
-	  /* XXX: evaluate_first_asn() mangles the AS_PATH and then restores it;
-	          maybe safer to copy it in the first place? */
+
+	if (chptr->aggregation & COUNT_PEER_DST_AS && info->attr->aspath && info->attr->aspath->str)
 	  pbgp->peer_dst_as = evaluate_first_asn(info->attr->aspath->str);
-	}
+
 	if (chptr->aggregation & COUNT_PEER_DST_IP) {
 	  if (info->attr->mp_nexthop.family == AF_INET) {
 	    pbgp->peer_dst_ip.family = AF_INET;
@@ -1456,6 +1459,7 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	}
       }
     }
+
     if (chptr->aggregation & COUNT_PEER_SRC_IP) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
   }
 }

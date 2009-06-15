@@ -309,27 +309,29 @@ void skinny_bgp_daemon()
 
 					  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
-				      Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+					  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
 							cap_type, ntohs(cap_data.afi), cap_data.safi);
 					  peer->cap_mp = TRUE;
 					  memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
 					  bgp_open_cap_reply_ptr += opt_len+2;
 				    }
 				    else if (cap_type == BGP_CAPABILITY_4_OCTET_AS_NUMBER) {
-					  u_int32_t *as4_ptr;
+					  u_int32_t as4_ptr;
 					  u_int8_t cap_len = ptr[1];
 					  char *cap_ptr = ptr+2;
 
 				   	  if (cap_len == CAPABILITY_CODE_AS4_LEN && cap_len == (opt_len-2)) {
-						struct capability_as4 *cap_data = (struct capability_as4 *) cap_ptr;
+						struct capability_as4 cap_data;
 
-				        Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability 4-bytes AS [%x] ASN [%u]\n",
-							cap_type, ntohl(cap_data->as4));
-						as4_ptr = (u_int32_t *) cap_ptr;
-						remote_as4 = ntohl(*as4_ptr);
-					    memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
+						memcpy(&cap_data, cap_ptr, sizeof(cap_data));
+
+						Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
+							cap_type, ntohl(cap_data.as4));
+						memcpy(&as4_ptr, cap_ptr, 4);
+						remote_as4 = ntohl(as4_ptr);
+						memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
 						peer->cap_4as = bgp_open_cap_reply_ptr+4;
-					    bgp_open_cap_reply_ptr += opt_len+2;
+						bgp_open_cap_reply_ptr += opt_len+2;
 					  }
 					  else {
 					    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (malformed AS4 option). Goto accept()\n");
@@ -1373,12 +1375,19 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 as_t evaluate_last_asn(char *src)
 {
   int idx, len = strlen(src); 
-  char *endptr;
+  char *endptr, *ptr, saved;
   u_int32_t asn;
   
-  for (idx = len; idx && src[idx] != ' '; idx--);
+  for (idx = len; idx && (src[idx] != ' ' && src[idx] != '('); idx--);
 
-  asn = strtoul(&src[idx], &endptr, 10);
+  if (src[idx] == '(') {
+    src[len-1] = '\0';
+    asn = strtoul(&src[idx+1], &endptr, 10);
+    src[len-1] = ')';
+  }
+  else {
+    asn = strtoul(&src[idx], &endptr, 10);
+  }
 
   return asn;
 }
@@ -1386,21 +1395,25 @@ as_t evaluate_last_asn(char *src)
 as_t evaluate_first_asn(char *src)
 {
   int idx, is_space = FALSE, len = strlen(src);
-  char *endptr;
+  char *endptr, *ptr, saved;
   u_int32_t asn;
 
-  for (idx = 0; idx < len && src[idx] != ' '; idx++);
+  for (idx = 0; idx < len && (src[idx] != ' ' && src[idx] != ')'); idx++);
 
   /* Mangling the AS_PATH string */
-  if (src[idx] == ' ') {
+  if (src[idx] == ' ' || src[idx] == ')') {
     is_space = TRUE;  
+    saved =  src[idx];
     src[idx] = '\0';
   }
 
-  asn = strtoul(src, &endptr, 10);
+  if (src[0] == '(') ptr = src+1;
+  else ptr = src;
+
+  asn = strtoul(ptr, &endptr, 10);
 
   /* Restoring mangled AS_PATH */
-  if (is_space) src[idx] = ' '; 
+  if (is_space) src[idx] = saved; 
 
   return asn;
 }
