@@ -57,6 +57,7 @@ int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct pl
 int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
 {
   int x = 0, len;
+  char *endptr;
 
   e->input.neg = pt_check_neg(&value);
   len = strlen(value);
@@ -69,7 +70,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
     x++;
   }
   
-  e->input.n = atoi(value);
+  e->input.n = strtoul(value, &endptr, 10);
   for (x = 0; e->func[x]; x++);
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_input_handler; 
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_input_handler; 
@@ -80,6 +81,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
 int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
 {
   int x = 0, len;
+  char *endptr;
 
   e->output.neg = pt_check_neg(&value);
   len = strlen(value);
@@ -92,7 +94,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
     x++;
   }
 
-  e->output.n = atoi(value);
+  e->output.n = strtoul(value, &endptr, 10);
   for (x = 0; e->func[x]; x++);
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_output_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_output_handler;
@@ -371,50 +373,56 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t input = htons(entry->input.n);
+  u_int16_t input16 = htons(entry->input.n);
+  u_int32_t input32 = htonl(entry->input.n);
   u_int8_t neg = entry->input.neg;
 
   switch(hdr->version) {
   case 9:
-    if (!memcmp(&input, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len)) return (FALSE | neg);
+    if (tpl->tpl[NF9_INPUT_SNMP].len == 2) 
+      if (!memcmp(&input16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
+	return (FALSE | neg);
+    else if (tpl->tpl[NF9_INPUT_SNMP].len == 4) 
+      if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
+	return (FALSE | neg);
     else return (TRUE ^ neg);
   case 8: 
     switch(hdr->aggregation) {
       case 1:
-	if (input == ((struct struct_export_v8_1 *)pptrs->f_data)->input) return (FALSE | neg);
+	if (input16 == ((struct struct_export_v8_1 *)pptrs->f_data)->input) return (FALSE | neg);
 	else return (TRUE ^ neg);
       case 3:
-	if (input == ((struct struct_export_v8_3 *)pptrs->f_data)->input) return (FALSE | neg);
+	if (input16 == ((struct struct_export_v8_3 *)pptrs->f_data)->input) return (FALSE | neg);
 	else return (TRUE ^ neg);
       case 5:
-        if (input == ((struct struct_export_v8_5 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_5 *)pptrs->f_data)->input) return (FALSE | neg);
 	else return (TRUE ^ neg);
       case 7:
-	if (input == ((struct struct_export_v8_7 *)pptrs->f_data)->input) return (FALSE | neg);
+	if (input16 == ((struct struct_export_v8_7 *)pptrs->f_data)->input) return (FALSE | neg);
 	else return (TRUE ^ neg);
       case 8:
-        if (input == ((struct struct_export_v8_8 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_8 *)pptrs->f_data)->input) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 9:
-        if (input == ((struct struct_export_v8_9 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_9 *)pptrs->f_data)->input) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 10:
-        if (input == ((struct struct_export_v8_10 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_10 *)pptrs->f_data)->input) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 11: 
-        if (input == ((struct struct_export_v8_11 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_11 *)pptrs->f_data)->input) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 13:
-        if (input == ((struct struct_export_v8_13 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_13 *)pptrs->f_data)->input) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 14:
-        if (input == ((struct struct_export_v8_14 *)pptrs->f_data)->input) return (FALSE | neg);
+        if (input16 == ((struct struct_export_v8_14 *)pptrs->f_data)->input) return (FALSE | neg);
         else return (TRUE ^ neg);
       default:
 	return (TRUE ^ neg);
     }
   default:
-    if (input == ((struct struct_export_v5 *)pptrs->f_data)->input) return (FALSE | neg);
+    if (input16 == ((struct struct_export_v5 *)pptrs->f_data)->input) return (FALSE | neg);
     else return (TRUE ^ neg); 
   }
 }
@@ -424,53 +432,59 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t output = htons(entry->output.n);
+  u_int16_t output16 = htons(entry->output.n);
+  u_int32_t output32 = htonl(entry->output.n);
   u_int8_t neg = entry->output.neg;
 
   switch(hdr->version) {
   case 9:
-    if (!memcmp(&output, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len)) return (FALSE | neg);
+    if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2)
+      if (!memcmp(&output16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
+	return (FALSE | neg);
+    else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4)
+      if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
+	return (FALSE | neg);
     else return (TRUE ^ neg);
   case 8:
     switch(hdr->aggregation) {
       case 1:
-        if (output == ((struct struct_export_v8_1 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_1 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 4:
-        if (output == ((struct struct_export_v8_4 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_4 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 5:
-        if (output == ((struct struct_export_v8_5 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_5 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 6:
-        if (output == ((struct struct_export_v8_6 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_6 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 7:
-        if (output == ((struct struct_export_v8_7 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_7 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 8:
-        if (output == ((struct struct_export_v8_8 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_8 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 9:
-        if (output == ((struct struct_export_v8_9 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_9 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 10:
-        if (output == ((struct struct_export_v8_10 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_10 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 12:
-        if (output == ((struct struct_export_v8_12 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_12 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 13:
-        if (output == ((struct struct_export_v8_13 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_13 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       case 14:
-        if (output == ((struct struct_export_v8_14 *)pptrs->f_data)->output) return (FALSE | neg);
+        if (output16 == ((struct struct_export_v8_14 *)pptrs->f_data)->output) return (FALSE | neg);
         else return (TRUE ^ neg);
       default:
         return (TRUE ^ neg);
     }
   default:
-    if (output == ((struct struct_export_v5 *)pptrs->f_data)->output) return (FALSE | neg);
+    if (output16 == ((struct struct_export_v5 *)pptrs->f_data)->output) return (FALSE | neg);
     else return (TRUE ^ neg);
   }
 }
