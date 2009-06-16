@@ -106,11 +106,11 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
     for (idx = 0; idx < config.buckets; idx++) {
       if (!following_chain) acc_elem = (struct acc *) elem;
       if (acc_elem->packet_counter && !acc_elem->reset_flag) {
-	enQueue_elem(sd, &rb, acc_elem, sizeof(struct pkt_data));
+	enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz);
 	/* XXX: to be optimized ? */
 	if (PbgpSz) {
-	  if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, sizeof(struct pkt_bgp_primitives));
-	  else enQueue_elem(sd, &rb, &dummy_pbgp, sizeof(struct pkt_bgp_primitives)); 
+	  if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, PbgpSz);
+	  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 	}
       } 
       if (acc_elem->next != NULL) {
@@ -142,7 +142,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
         following_chain = TRUE;
       } while (acc_elem->next != NULL);
 
-      enQueue_elem(sd, &rb, &bd, sizeof(struct bucket_desc));
+      enQueue_elem(sd, &rb, &bd, sizeof(struct bucket_desc), sizeof(struct bucket_desc));
       elem += sizeof(struct acc);
     }
     send(sd, rb.buf, rb.packed, 0);
@@ -158,11 +158,11 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
         acc_elem = search_accounting_structure(&request.data, &request.pbgp);
         if (acc_elem) { 
 	  if (acc_elem->packet_counter && !acc_elem->reset_flag) {
-	    enQueue_elem(sd, &rb, acc_elem, sizeof(struct pkt_data));
+	    enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz);
 	    /* XXX: to be optimized ? */
 	    if (PbgpSz) {
-	      if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, sizeof(struct pkt_bgp_primitives));
-	      else enQueue_elem(sd, &rb, &dummy_pbgp, sizeof(struct pkt_bgp_primitives));
+	      if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, PbgpSz);
+	      else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 	    }
 	    if (reset_counter) {
 	      if (forked) set_reset_flag(acc_elem);
@@ -171,15 +171,15 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 	  }
 	  else {
 	    if (q->type & WANT_COUNTER) {
-	      enQueue_elem(sd, &rb, &dummy, sizeof(struct pkt_data));
-	      if (PbgpSz) enQueue_elem(sd, &rb, &dummy_pbgp, sizeof(struct pkt_bgp_primitives));
+	      enQueue_elem(sd, &rb, &dummy, PdataSz, PdataSz+PbgpSz);
+	      if (PbgpSz) enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 	    }
 	  }
         }
 	else {
 	  if (q->type & WANT_COUNTER) {
-	    enQueue_elem(sd, &rb, &dummy, sizeof(struct pkt_data));
-	    if (PbgpSz) enQueue_elem(sd, &rb, &dummy_pbgp, sizeof(struct pkt_bgp_primitives));
+	    enQueue_elem(sd, &rb, &dummy, PdataSz, PdataSz+PbgpSz);
+	    if (PbgpSz) enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 	  }
 	}
       }
@@ -199,10 +199,10 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives))) {
 	      if (q->type & WANT_COUNTER) Accumulate_Counters(&abuf, acc_elem); 
 	      else {
-		enQueue_elem(sd, &rb, acc_elem, sizeof(struct pkt_data)); /* q->type == WANT_MATCH */
+		enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz); /* q->type == WANT_MATCH */
 		if (PbgpSz) {
-		  if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, sizeof(struct pkt_bgp_primitives));
-		  else enQueue_elem(sd, &rb, &dummy_pbgp, sizeof(struct pkt_bgp_primitives));
+		  if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, PbgpSz);
+		  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 		}
 	      }
 	      if (reset_counter) set_reset_flag(acc_elem);
@@ -218,7 +218,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
             following_chain = FALSE;
           }
         }
-	if (q->type & WANT_COUNTER) enQueue_elem(sd, &rb, &abuf, sizeof(struct pkt_data)); /* enqueue accumulated data */
+	if (q->type & WANT_COUNTER) enQueue_elem(sd, &rb, &abuf, PdataSz, PdataSz); /* enqueue accumulated data */
       }
     }
     send(sd, rb.buf, rb.packed, 0); /* send remainder data */
@@ -232,13 +232,13 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
     if (!q->num && config.classifiers_path) q->num = MAX_CLASSIFIERS;
 
     while (idx < q->num) {
-      enQueue_elem(sd, &rb, &class[idx], sizeof(struct stripped_class));
+      enQueue_elem(sd, &rb, &class[idx], sizeof(struct stripped_class), sizeof(struct stripped_class));
       idx++;
     }
 
     send_ct_dummy:
     memset(&dummy, 0, sizeof(dummy));
-    enQueue_elem(sd, &rb, &dummy, sizeof(dummy));
+    enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
     send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
 }
@@ -304,9 +304,9 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   }
 }
 
-void enQueue_elem(int sd, struct reply_buffer *rb, void *elem, int size)
+void enQueue_elem(int sd, struct reply_buffer *rb, void *elem, int size, int tot_size)
 {
-  if ((rb->packed + size) < rb->len) {
+  if ((rb->packed + tot_size) < rb->len) {
     memcpy(rb->ptr, elem, size);
     rb->ptr += size;
     rb->packed += size; 

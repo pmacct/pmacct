@@ -36,8 +36,8 @@ void write_class_table_header();
 char *extract_token(char **, int);
 int CHECK_Q_TYPE(int);
 int check_data_sizes(struct query_header *, struct pkt_data *);
-void client_counters_merge_sort(struct pkt_data *, int, int, int);
-void client_counters_merge(struct pkt_data *, int, int, int, int);
+void client_counters_merge_sort(void *, int, int, int, int);
+void client_counters_merge(void *, int, int, int, int, int);
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -62,7 +62,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | flows | \n\t class | src_std_comm | dst_std_comm | sum_std_comm | src_ext_comm | dst_ext_comm | sum_ext_comm | as_path ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | flows | \n\t class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -246,6 +246,7 @@ int main(int argc,char **argv)
   struct bucket_desc *bd;
   struct query_header q; 
   struct pkt_primitives empty_addr;
+  struct pkt_bgp_primitives empty_pbgp;
   struct query_entry request;
   struct stripped_class *class_table = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;
@@ -253,6 +254,7 @@ int main(int argc,char **argv)
   unsigned char *largebuf, *elem, *ct;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
   char path[128], file[128], password[9];
+  char *as_path, empty_aspath[] = "^$";
   int sd, buflen, unpacked, printed;
   int counter=0, ct_idx=0, ct_num=0;
 
@@ -271,9 +273,12 @@ int main(int argc,char **argv)
   u_int64_t what_to_count, have_wtc;
   u_int32_t tmpnum;
 
+  int PbgpSz = FALSE;
+
   /* Administrativia */
   memset(&q, 0, sizeof(struct query_header));
   memset(&empty_addr, 0, sizeof(struct pkt_primitives));
+  memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
 
@@ -805,8 +810,18 @@ int main(int argc,char **argv)
           strlcpy(request.pbgp.std_comms, match_string_token, MAX_BGP_STD_COMMS);
         else if (!strcmp(count_token[match_string_index], "ext_comm"))
           strlcpy(request.pbgp.ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
-        else if (!strcmp(count_token[match_string_index], "as_path"))
-          strlcpy(request.pbgp.as_path, match_string_token, MAX_BGP_ASPATH);
+        else if (!strcmp(count_token[match_string_index], "as_path")) {
+	  if (!strcmp(match_string_token, "^$"))
+	    memset(request.pbgp.as_path, 0, MAX_BGP_ASPATH);
+	  else {
+            strlcpy(request.pbgp.as_path, match_string_token, MAX_BGP_ASPATH);
+            as_path = request.pbgp.as_path;
+            while (as_path) {
+              as_path = strchr(request.pbgp.as_path, '_');
+              if (as_path) *as_path = ' ';
+            }
+	  }
+	}
         else if (!strcmp(count_token[match_string_index], "local_pref")) {
 	  char *endptr;
 
@@ -822,13 +837,18 @@ int main(int argc,char **argv)
 
           request.pbgp.peer_src_as = strtoul(match_string_token, &endptr, 10);
         }
-        if (!strcmp(count_token[match_string_index], "peer_src_ip")) {
+        else if (!strcmp(count_token[match_string_index], "peer_dst_as")) {
+          char *endptr;
+
+          request.pbgp.peer_dst_as = strtoul(match_string_token, &endptr, 10);
+        }
+        else if (!strcmp(count_token[match_string_index], "peer_src_ip")) {
           if (!str_to_addr(match_string_token, &request.pbgp.peer_src_ip)) {
             printf("ERROR: peer_src_ip: Invalid IP address: '%s'\n", match_string_token);
             exit(1);
           }
         }
-        if (!strcmp(count_token[match_string_index], "peer_dst_ip")) {
+        else if (!strcmp(count_token[match_string_index], "peer_dst_ip")) {
           if (!str_to_addr(match_string_token, &request.pbgp.peer_dst_ip)) {
             printf("ERROR: peer_dst_ip: Invalid IP address: '%s'\n", match_string_token);
             exit(1);
@@ -888,20 +908,38 @@ int main(int argc,char **argv)
       }
     }
 
+    if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                         COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP))
+      PbgpSz = TRUE;
+
     write_stats_header(what_to_count, have_wtc);
     elem = largebuf+sizeof(struct query_header);
     unpacked -= sizeof(struct query_header);
 
     acc_elem = (struct pkt_data *) elem;
-    if (topN_counter) client_counters_merge_sort(acc_elem, 0, unpacked/sizeof(struct pkt_data), topN_counter);
+    if (topN_counter) {
+      int num, size;
+ 
+      if (PbgpSz) {
+	num = unpacked/(sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
+	size = sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives);
+      }
+      else {
+	num = unpacked/sizeof(struct pkt_data);
+	size = sizeof(struct pkt_data);
+      }
+
+      client_counters_merge_sort((void *)acc_elem, 0, num, size, topN_counter);
+    }
 
     while (printed < unpacked) {
       acc_elem = (struct pkt_data *) elem;
-      if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                           COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
-	pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem+sizeof(struct pkt_data));
-      }
-      if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0) {
+
+      if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem+sizeof(struct pkt_data)); 
+      else pbgp = &empty_pbgp;
+
+      if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
+	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_ID))
 	  printf("%-10u  ", acc_elem->primitives.id);
         if (!have_wtc || (what_to_count & COUNT_CLASS))
@@ -939,7 +977,15 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count & COUNT_AS_PATH)) {
-          printf("%-22s   ", pbgp->as_path);
+	  as_path = pbgp->as_path;
+	  while (as_path) {
+	    as_path = strchr(pbgp->as_path, ' ');
+	    if (as_path) *as_path = '_';
+	  }
+          if (strlen(pbgp->as_path))
+	    printf("%-22s   ", pbgp->as_path);
+	  else
+	    printf("%-22s   ", empty_aspath); 
         }
 
         if (!have_wtc || (what_to_count & COUNT_LOCAL_PREF)) {
@@ -1030,8 +1076,7 @@ int main(int argc,char **argv)
 #endif
         counter++;
       }
-      if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                           COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+      if (PbgpSz) {
 	elem += (sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
 	printed += (sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
       }
@@ -1215,7 +1260,7 @@ int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
 }
 
 /* sort the (sub)array v from start to end */
-void client_counters_merge_sort(struct pkt_data *table, int start, int end, int order)
+void client_counters_merge_sort(void *table, int start, int end, int size, int order)
 {
   int middle;
 
@@ -1226,23 +1271,24 @@ void client_counters_merge_sort(struct pkt_data *table, int start, int end, int 
   middle = (start+end)/2;
 
   /* sort the subarray from start..middle */
-  client_counters_merge_sort(table, start, middle, order);
+  client_counters_merge_sort(table, start, middle, size, order);
 
   /* sort the subarray from middle..end */
-  client_counters_merge_sort(table, middle, end, order);
+  client_counters_merge_sort(table, middle, end, size, order);
 
   /* merge the two sorted halves */
-  client_counters_merge(table, start, middle, end, order);
+  client_counters_merge(table, start, middle, end, size, order);
 }
 
 /*
    merge the subarray v[start..middle] with v[middle..end], placing the
    result back into v.
 */
-void client_counters_merge(struct pkt_data *table, int start, int middle, int end, int order)
+void client_counters_merge(void *table, int start, int middle, int end, int size, int order)
 {
-  struct pkt_data *v1, *v2;
-  int  v1_n, v2_n, v1_index, v2_index, i, s = sizeof(struct pkt_data);
+  void *v1, *v2;
+  int  v1_n, v2_n, v1_index, v2_index, i, s = size;
+  struct pkt_data data1, data2;
 
   v1_n = middle-start;
   v2_n = end-middle;
@@ -1252,8 +1298,12 @@ void client_counters_merge(struct pkt_data *table, int start, int middle, int en
 
   if ((!v1) || (!v2)) printf("ERROR: Memory sold out while sorting statistics.\n");
 
-  for (i=0; i<v1_n; i++) memcpy(&v1[i], &table[start+i], s);
-  for (i=0; i<v2_n; i++) memcpy(&v2[i], &table[middle+i], s);
+  for (i=0; i<v1_n; i++) {
+    memcpy(v1+(i*s), table+((start+i)*s), s);
+  }
+  for (i=0; i<v2_n; i++) {
+    memcpy(v2+(i*s), table+((middle+i)*s), s);
+  }
 
   v1_index = 0;
   v2_index = 0;
@@ -1262,31 +1312,70 @@ void client_counters_merge(struct pkt_data *table, int start, int middle, int en
   if (order == 1) { /* bytes */ 
     for (i=0; (v1_index < v1_n) && (v2_index < v2_n); i++) {
       /* current v1 element less than current v2 element? */
-      if (v1[v1_index].pkt_len < v2[v2_index].pkt_len) memcpy(&table[start+i], &v2[v2_index++], s);
-      else if (v1[v1_index].pkt_len == v2[v2_index].pkt_len) memcpy(&table[start+i], &v2[v2_index++], s);
-      else memcpy(&table[start+i], &v1[v1_index++], s);
+      memcpy(&data1, v1+(v1_index*s), sizeof(data1));
+      memcpy(&data2, v2+(v2_index*s), sizeof(data2));
+      if (data1.pkt_len < data2.pkt_len) {
+	memcpy(table+((start+i)*s), v2+(v2_index*s), s);
+	v2_index++;
+      }
+      else if (data1.pkt_len == data2.pkt_len) {
+	memcpy(table+((start+i)*s), v2+(v2_index*s), s);
+	v2_index++;
+      }
+      else {
+	memcpy(table+((start+i)*s), v1+(v1_index*s), s);
+	v1_index++;
+      }
     }
   }
   else if (order == 2) { /* packets */
     for (i=0; (v1_index < v1_n) && (v2_index < v2_n); i++) {
       /* current v1 element less than current v2 element? */
-      if (v1[v1_index].pkt_num < v2[v2_index].pkt_num) memcpy(&table[start+i], &v2[v2_index++], s);
-      else if (v1[v1_index].pkt_num == v2[v2_index].pkt_num) memcpy(&table[start+i], &v2[v2_index++], s);
-      else memcpy(&table[start+i], &v1[v1_index++], s);
+      memcpy(&data1, v1+(v1_index*s), sizeof(data1));
+      memcpy(&data2, v2+(v2_index*s), sizeof(data2));
+      if (data1.pkt_num < data2.pkt_num) {
+	memcpy(table+((start+i)*s), v2+(v2_index*s), s); 
+	v2_index++;
+      }
+      else if (data1.pkt_num == data2.pkt_num) {
+        memcpy(table+((start+i)*s), v2+(v2_index*s), s);
+        v2_index++;
+      }
+      else {
+	memcpy(table+((start+i)*s), v1+(v1_index*s), s);
+        v1_index++;
+      }
     }
   }
   else if (order == 3) { /* flows */
     for (i=0; (v1_index < v1_n) && (v2_index < v2_n); i++) {
       /* current v1 element less than current v2 element? */
-      if (v1[v1_index].flo_num < v2[v2_index].flo_num) memcpy(&table[start+i], &v2[v2_index++], s);
-      else if (v1[v1_index].flo_num == v2[v2_index].flo_num) memcpy(&table[start+i], &v2[v2_index++], s);
-      else memcpy(&table[start+i], &v1[v1_index++], s);
+      memcpy(&data1, v1+(v1_index*s), sizeof(data1));
+      memcpy(&data2, v2+(v2_index*s), sizeof(data2));
+      if (data1.flo_num < data2.flo_num) {
+        memcpy(table+((start+i)*s), v2+(v2_index*s), s);
+        v2_index++;
+      }
+      else if (data1.flo_num == data2.flo_num) {
+        memcpy(table+((start+i)*s), v2+(v2_index*s), s);
+        v2_index++;
+      }
+      else {
+        memcpy(table+((start+i)*s), v1+(v1_index*s), s);
+        v1_index++;
+      }
     }
   }
 
   /* clean up; either v1 or v2 may have stuff left in it */
-  for (; v1_index < v1_n; i++) memcpy(&table[start+i], &v1[v1_index++], s);
-  for (; v2_index < v2_n; i++) memcpy(&table[start+i], &v2[v2_index++], s);
+  for (; v1_index < v1_n; i++) {
+    memcpy(table+((start+i)*s), v1+(v1_index*s), s);
+    v1_index++;
+  }
+  for (; v2_index < v2_n; i++) {
+    memcpy(table+((start+i)*s), v2+(v2_index*s), s);
+    v2_index++;
+  }
 
   free(v1);
   free(v2);

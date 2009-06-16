@@ -114,7 +114,7 @@ EXT void reset_counters(struct acc *);
 EXT int build_query_server(char *);
 EXT void process_query_data(int, unsigned char *, int, int);
 EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct acc *, u_int64_t);
-EXT void enQueue_elem(int, struct reply_buffer *, void *, int);
+EXT void enQueue_elem(int, struct reply_buffer *, void *, int, int);
 EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
 #undef EXT
 
