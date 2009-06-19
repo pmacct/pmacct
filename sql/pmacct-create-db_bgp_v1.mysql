@@ -5,7 +5,7 @@ use pmacct;
 
 drop table if exists acct_bgp; 
 create table acct_bgp (
-	agent_id INT(2) UNSIGNED NOT NULL,
+	agent_id INT(4) UNSIGNED NOT NULL,
         as_src INT(4) UNSIGNED NOT NULL,
         as_dst INT(4) UNSIGNED NOT NULL,
 	peer_as_src INT(4) UNSIGNED NOT NULL,

@@ -5,7 +5,7 @@ use pmacct;
 
 drop table if exists acct_v5; 
 create table acct_v5 (
-	agent_id INT(2) UNSIGNED NOT NULL,
+	agent_id INT(4) UNSIGNED NOT NULL,
 	class_id CHAR(16) NOT NULL,
 	mac_src CHAR(17) NOT NULL,
 	mac_dst CHAR(17) NOT NULL,
