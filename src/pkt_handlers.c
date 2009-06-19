@@ -107,7 +107,7 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS)) {
       /* ACCT_PM and ACCT_SF do nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	channels_list[index].phandler[primitives] = NF_bgp_ext_handler;
@@ -119,14 +119,15 @@ void evaluate_packet_handlers()
       /* ACCT_PM and ACCT_SF do nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_BGP_COMMS) {
-          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_handler;
+          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromstd_handler;
           primitives++;
 	}
 	else if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_BGP_ECOMMS) {
-	  // XXX: fill in
+          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromext_handler;
+          primitives++;
 	}
         else if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_MAP) {
-          channels_list[index].phandler[primitives] = NF_map_peer_src_as_handler;
+          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_frommap_handler;
           primitives++;
         } 
       }
@@ -1464,7 +1465,7 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   }
 }
 
-void NF_bgp_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -1563,7 +1564,13 @@ void NF_bgp_peer_src_as_handler(struct channels_list_entry *chptr, struct packet
   }
 }
 
-void NF_map_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  // XXX: fill this in
+}
+
+
+void NF_bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   // XXX: fill this in
 }

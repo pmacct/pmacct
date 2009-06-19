@@ -188,13 +188,13 @@ void skinny_bgp_daemon()
     peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( default/core/BGP ): Existing BGP connection was reset (%d). Goto accept()\n", errno);
+      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", inet_ntoa(peer->id.address.ipv4), errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer);
       goto select_again;
     }
     else if (peer->msglen+peer->buf.truncated_len < BGP_HEADER_SIZE) {
-      Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (too short). Goto accept()\n");
+      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (too short).\n", inet_ntoa(peer->id.address.ipv4));
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer);
       goto select_again;
@@ -251,7 +251,7 @@ void skinny_bgp_daemon()
 	  }
 
 	  if (!bgp_marker_check(&bhdr, BGP_MARKER_SIZE)) {
-            Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (marker check failed). Goto accept()\n");
+            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (marker check failed).\n", inet_ntoa(peer->id.address.ipv4));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer);
 	    goto select_again;
@@ -287,7 +287,7 @@ void skinny_bgp_daemon()
 				  opt_len = (u_int8_t) ptr[1];
 
 				  if (opt_len > bopen->bgpo_optlen) {
-				    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (option length). Goto accept()\n");
+				    Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (option length).\n", inet_ntoa(peer->id.address.ipv4));
 				    FD_CLR(peer->fd, &bkp_read_descs);
 				    bgp_peer_close(peer);
 				    goto select_again;
@@ -334,7 +334,7 @@ void skinny_bgp_daemon()
 						bgp_open_cap_reply_ptr += opt_len+2;
 					  }
 					  else {
-					    Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (malformed AS4 option). Goto accept()\n");
+					    Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
 						FD_CLR(peer->fd, &bkp_read_descs);
 						bgp_peer_close(peer);
 						goto select_again;
@@ -355,7 +355,7 @@ void skinny_bgp_daemon()
 				/* It is not valid to use the transitional ASN in the BGP OPEN and
  				   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 				else {
-				  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (invalid AS4 option). Goto accept()\n");
+				  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (invalid AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer);
 				  goto select_again;
@@ -367,14 +367,14 @@ void skinny_bgp_daemon()
  				/* It is not valid to not use the transitional ASN in the BGP OPEN and
 				   present an ASN != remote_as in the 4AS capability */
 				else {
-				  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (mismatching AS4 option). Goto accept()\n");
+				  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (mismatching AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer);
 				  goto select_again;
 				}
 			  }
 
-			  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_OPEN: Id: %s Asn: %u HoldTime: %u\n", inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
+			  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_OPEN: Asn: %u HoldTime: %u\n", inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
 
 			  bgp_reply_pkt_ptr = bgp_reply_pkt;
 
@@ -382,7 +382,7 @@ void skinny_bgp_daemon()
 			  ret = bgp_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
 			  if (ret > 0) bgp_reply_pkt_ptr += ret;
 			  else {
-				Log(LOG_INFO, "INFO ( default/core/BGP ): Local peer is 4AS while remote peer is 2AS: unsupported configuration. Goto accept()\n");
+				Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n", inet_ntoa(peer->id.address.ipv4));
 				FD_CLR(peer->fd, &bkp_read_descs);
 				bgp_peer_close(peer);
 				goto select_again;
@@ -394,7 +394,7 @@ void skinny_bgp_daemon()
 			  peer->last_keepalive = now;
 		    }
 		    else {
-  			  Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported version). Goto accept()\n");
+  			  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported version).\n", inet_ntoa(peer->id.address.ipv4));
 			  FD_CLR(peer->fd, &bkp_read_descs);
 			  bgp_peer_close(peer);
 			  goto select_again;
@@ -407,12 +407,13 @@ void skinny_bgp_daemon()
   			 let's just ignore further BGP OPEN messages */
 		  break;
 	  case BGP_NOTIFICATION:
-		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_NOTIFICATION: Id: %s\n", inet_ntoa(peer->id.address.ipv4));
+		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", inet_ntoa(peer->id.address.ipv4));
 		  FD_CLR(peer->fd, &bkp_read_descs);
 		  bgp_peer_close(peer);
 		  goto select_again;
 		  break;
 	  case BGP_KEEPALIVE:
+		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_KEEPALIVE received\n", inet_ntoa(peer->id.address.ipv4));
 		  if (peer->status >= OpenSent) {
 		    if (peer->status < Established) peer->status = Established;
 
@@ -421,7 +422,7 @@ void skinny_bgp_daemon()
 		    ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
 		    peer->last_keepalive = now;
 
-		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP_KEEPALIVE: Id: %s\n", inet_ntoa(peer->id.address.ipv4));
+		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_KEEPALIVE sent\n", inet_ntoa(peer->id.address.ipv4));
 		  }
 		  /* If we didn't pass through a successful BGP OPEN exchange just yet
   			 let's temporarily discard BGP KEEPALIVEs */
@@ -429,17 +430,17 @@ void skinny_bgp_daemon()
 	  case BGP_UPDATE:
 		  //printf("BGP UPDATE\n");
 		  if (peer->status < Established) {
-		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): BGP UPDATE: Id: %s (no neighbor). Goto accept()\n", inet_ntoa(peer->id.address.ipv4));
+		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP UPDATE received (no neighbor). Discarding.\n", inet_ntoa(peer->id.address.ipv4));
 			FD_CLR(peer->fd, &bkp_read_descs);
 			bgp_peer_close(peer);
 			goto select_again;
 		  }
 
 		  ret = bgp_update_msg(peer, bgp_packet_ptr);
-		  if (ret < 0) Log(LOG_WARNING, "WARN ( default/core/BGP ): BGP UPDATE: malformed (%d)\n", ret);
+		  if (ret < 0) Log(LOG_WARNING, "WARN ( default/core/BGP ): [Id: %s] BGP UPDATE: malformed (%d).\n", inet_ntoa(peer->id.address.ipv4), ret);
 		  break;
 	    default:
-	      Log(LOG_INFO, "INFO ( default/core/BGP ): Received malformed BGP packet (unsupported message type). Goto accept()\n");
+	      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported message type).\n", inet_ntoa(peer->id.address.ipv4));
 	      FD_CLR(peer->fd, &bkp_read_descs);
 	      bgp_peer_close(peer);
 	      goto select_again;
@@ -1009,7 +1010,7 @@ log_update:
 	comm = attr_new->community ? attr_new->community->str : empty;
 	ecomm = attr_new->ecommunity ? attr_new->ecommunity->str : empty;
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n", prefix_str, aspath, comm, ecomm);
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n", inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
   }
 
   return 0;
@@ -1040,7 +1041,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	comm = ri->attr->community ? ri->attr->community->str : empty;
 	ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n", prefix_str, aspath, comm, ecomm);
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n", inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
   }
 
   /* Withdraw specified route from routing table. */

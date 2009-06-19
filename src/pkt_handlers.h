@@ -76,8 +76,9 @@ EXT void NF_sfprobe_payload_handler(struct channels_list_entry *, struct packet_
 EXT void NF_nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_bgp_peer_src_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_map_peer_src_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_bgp_peer_src_as_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_bgp_peer_dst_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void SF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

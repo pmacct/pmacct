@@ -37,7 +37,7 @@ struct acc *search_accounting_structure(struct pkt_primitives *addr, struct pkt_
   hash = cache_crc32((unsigned char *)addr, pp_size);
   /* XXX: to be optimized? */
   if (PbgpSz) {
-    if (pbgp) hash += cache_crc32((unsigned char *)pbgp, pb_size);
+    if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   }
   pos = hash % config.buckets;
 
@@ -114,7 +114,7 @@ void insert_accounting_structure(struct pkt_data *data, struct pkt_bgp_primitive
   hash = cache_crc32((unsigned char *)addr, pp_size);
   /* XXX: to be optimized? */
   if (PbgpSz) {
-    if (pbgp) hash += cache_crc32((unsigned char *)pbgp, pb_size);
+    if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   }
   pos = hash % config.buckets;
       

@@ -266,7 +266,7 @@ void sql_cache_modulo(struct pkt_primitives *srcdst, struct pkt_bgp_primitives *
 {
   idata->hash = cache_crc32((unsigned char *)srcdst, pp_size);
   if (PbgpSz) {
-    if (pbgp) idata->hash += cache_crc32((unsigned char *)pbgp, pb_size);
+    if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   }
   idata->modulo = idata->hash % config.sql_cache_entries;
 }

@@ -910,6 +910,7 @@ void evaluate_bgp_aspath_radius(char *path, int len, int radius)
     if (path[idx] == ' ') count++;
     if (count == radius) {
       path[idx] = '\0';
+      memset(&path[idx+1], 0, len-strlen(path)); 
       break;
     }
   }

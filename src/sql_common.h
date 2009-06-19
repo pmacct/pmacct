@@ -142,7 +142,7 @@ typedef int (*preprocess_func) (struct db_cache *[], int *);
 
 struct frags {
   dbop_handler handler;
-  unsigned long int type;
+  u_int64_t type;
   char string[SRVBUFLEN];
 };
 
