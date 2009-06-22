@@ -28,9 +28,7 @@
 #include "pretag_handlers.h"
 #include "pretag-data.h"
 
-int pre_tag_map_allocated = FALSE;
-
-void load_id_file(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req)
+void load_id_file(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req, int map_allocated)
 {
   struct id_table tmp;
   struct id_entry *ptr, *ptr2;
@@ -47,7 +45,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   char *start, *key = NULL, *value = NULL;
   int len;
 
-  Log(LOG_INFO, "INFO ( default/core ): Trying to (re)load pre tag map\n") ;
+  Log(LOG_INFO, "INFO ( default/core ): Trying to (re)load map: %s\n", filename);
 
   memset(&st, 0, sizeof(st));
 
@@ -55,16 +53,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR: Pre-Tagging map '%s' not found.\n", filename);
+      Log(LOG_ERR, "ERROR: map '%s' not found.\n", filename);
       goto handle_error;
     }
 
     sz = sizeof(struct id_entry)*config.pre_tag_map_entries;
 
-    if (!pre_tag_map_allocated) {
+    if (!map_allocated) {
       memset(t, 0, sizeof(struct id_table));
       t->e = (struct id_entry *) malloc(sz);
-      pre_tag_map_allocated = TRUE;
+      map_allocated = TRUE;
     }
     else {
       ptr = t->e ;
@@ -170,6 +168,21 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		v4_num++; tmp.num++;
 	      } 
 	    }
+	    else if (acct_type == MAP_BGP_PEER_AS_SRC) {
+              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family && tmp.e[tmp.num].input.n) {
+                int j;
+
+                for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                tmp.e[tmp.num].func[j] = pretag_id_handler;
+                if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+#if defined ENABLE_IPV6
+                else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+#endif
+                tmp.num++;
+              }
+              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family || !tmp.e[tmp.num].input.n) && !err)
+                Log(LOG_ERR, "ERROR ( %s ): required key missing at line: %d. Required keys are: 'id', 'ip', 'in'.\n", filename, tot_lines);
+	    }
           }
           else Log(LOG_ERR, "ERROR ( %s ): malformed line: %d. Ignored.\n", filename, tot_lines);
         }
@@ -257,14 +270,14 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   }
 
   free(tmp.e) ;
-  Log(LOG_INFO, "INFO ( default/core ): Pre tag map successfully (re)loaded.\n") ;
+  Log(LOG_INFO, "INFO ( default/core ): map '%s' successfully (re)loaded.\n", filename);
 
   return;
 
   handle_error:
   free(tmp.e) ;
   if (t->timestamp) {
-    Log(LOG_WARNING, "WARN: Rolling back the old Pre-Tagging Map.\n");
+    Log(LOG_WARNING, "WARN: Rolling back the old map '%s'.\n", filename);
 
     /* we update the timestamp to avoid loops */
     stat(filename, &st);

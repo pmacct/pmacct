@@ -118,15 +118,15 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       /* ACCT_PM and ACCT_SF do nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
-	if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_BGP_COMMS) {
+	if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
           channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromstd_handler;
           primitives++;
 	}
-	else if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_BGP_ECOMMS) {
+	else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_ECOMMS) {
           channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromext_handler;
           primitives++;
 	}
-        else if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_MAP) {
+        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
           channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_frommap_handler;
           primitives++;
         } 
@@ -1393,10 +1393,6 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 	    pdata->primitives.src_as = asn;
 	  }
 	}
-        if (chptr->aggregation & COUNT_PEER_SRC_AS) {
-          /* XXX: fill this section in */
-	  pbgp->peer_src_as = 0;
-        }
       }
     }
 
@@ -1566,13 +1562,21 @@ void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struc
 
 void NF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  pbgp->peer_src_as = 0;
+
   // XXX: fill this in
 }
 
 
 void NF_bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  // XXX: fill this in
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  pbgp->peer_src_as = pptrs->bpas;
 }
 
 #if defined (HAVE_L2)

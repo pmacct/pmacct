@@ -172,12 +172,14 @@ struct packet_ptrs {
   u_char *f_tpl; /* ptr to NetFlow V9 template */
   u_char *f_status; /* ptr to status table entry */
   u_char *idtable; /* ptr to pretag table map */
+  u_char *bpas_table; /* ptr to *_bgp_peer_as_src table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
   u_int16_t l3_proto; /* layer-3 protocol: IPv4, IPv6 */
   int (*l3_handler)(register struct packet_ptrs *); /* layer-3 protocol handler */
   u_int16_t l4_proto; /* layer-4 protocol */
   pm_id_t tag; /* pre tag id */
+  pm_id_t bpas; /* bgp_peer_as_src */
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 

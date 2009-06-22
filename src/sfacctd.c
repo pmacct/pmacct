@@ -145,6 +145,9 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
+  tag_map_allocated = FALSE;
+  bpas_map_allocated = FALSE;
+
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;
   errflag = 0;
@@ -487,7 +490,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req);
+    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated);
     pptrs.v4.idtable = (u_char *) &idt;
   }
   else {
@@ -671,7 +674,7 @@ int main(int argc,char **argv, char **envp)
 
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
-      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req);
+      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated);
       reload_map = FALSE;
     }
 
@@ -1922,7 +1925,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrs->l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrs->tag = SF_find_id(pptrs);
+      if (config.pre_tag_map) pptrs->tag = SF_find_id((struct id_table *)pptrs->idtable, pptrs);
       exec_plugins(pptrs);
       break;
 #if defined ENABLE_IPV6
@@ -1943,7 +1946,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->v6.tag = SF_find_id(&pptrsv->v6);
+      if (config.pre_tag_map) pptrsv->v6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6);
       exec_plugins(&pptrsv->v6);
       break;
 #endif
@@ -1965,7 +1968,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->vlan4.tag = SF_find_id(&pptrsv->vlan4);
+      if (config.pre_tag_map) pptrsv->vlan4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4);
       exec_plugins(&pptrsv->vlan4);
       break;
 #if defined ENABLE_IPV6
@@ -1987,7 +1990,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->vlan6.tag = SF_find_id(&pptrsv->vlan6);
+      if (config.pre_tag_map) pptrsv->vlan6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6);
       exec_plugins(&pptrsv->vlan6);
       break;
 #endif
@@ -2022,7 +2025,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->mpls4.tag = SF_find_id(&pptrsv->mpls4);
+      if (config.pre_tag_map) pptrsv->mpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4);
       exec_plugins(&pptrsv->mpls4);
       break;
 #if defined ENABLE_IPV6
@@ -2056,7 +2059,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->mpls6.tag = SF_find_id(&pptrsv->mpls6);
+      if (config.pre_tag_map) pptrsv->mpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6);
       exec_plugins(&pptrsv->mpls6);
       break;
 #endif
@@ -2091,7 +2094,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->vlanmpls4.tag = SF_find_id(&pptrsv->vlanmpls4);
+      if (config.pre_tag_map) pptrsv->vlanmpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4);
       exec_plugins(&pptrsv->vlanmpls4);
       break;
 #if defined ENABLE_IPV6
@@ -2126,7 +2129,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.pre_tag_map) pptrsv->vlanmpls6.tag = SF_find_id(&pptrsv->vlanmpls6);
+      if (config.pre_tag_map) pptrsv->vlanmpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6);
       exec_plugins(&pptrsv->vlanmpls6);
       break;
 #endif
@@ -2136,9 +2139,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   }
 }
 
-int SF_find_id(struct packet_ptrs *pptrs)
+pm_id_t SF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
 {
-  struct id_table *t = (struct id_table *)pptrs->idtable;
   SFSample *sample = (SFSample *)pptrs->f_data; 
   int x, j, id, stop;
 

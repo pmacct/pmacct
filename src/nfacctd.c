@@ -96,6 +96,7 @@ int main(int argc,char **argv, char **envp)
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table idt;
+  struct id_table bpas_table;
   u_int32_t idx;
   u_int16_t ret;
 
@@ -139,6 +140,9 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
+  tag_map_allocated = FALSE;
+  bpas_map_allocated = FALSE;
+
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;
   errflag = 0;
@@ -484,8 +488,15 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
     req.bpf_filter = TRUE;
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
-    if (config.nfacctd_bgp_peer_src_as_type == PEER_SRC_AS_MAP) {
-      // XXX: fill in
+    if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+      if (config.nfacctd_bgp_peer_as_src_map) {
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, bpas_map_allocated);
+        pptrs.v4.bpas_table = (u_char *) &bpas_table;
+      }
+    }
+    else {
+      memset(&bpas_table, 0, sizeof(bpas_table));
+      pptrs.v4.bpas_table = NULL;
     }
   }
 #else
@@ -506,7 +517,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req);
+    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated);
     pptrs.v4.idtable = (u_char *) &idt;
   }
   else {
@@ -679,7 +690,9 @@ int main(int argc,char **argv, char **envp)
 
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
-      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req); 
+      if (config.nfacctd_bgp_peer_as_src_map) 
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, bpas_map_allocated); 
+      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated); 
       reload_map = FALSE;
     }
 
@@ -746,7 +759,8 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       pptrs->l4_proto = exp_v1->prot;
 
       /* IP header's id field is unused; we will use it to transport our id */
-      if (config.pre_tag_map) pptrs->tag = NF_find_id(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.pre_tag_map) pptrs->tag = NF_find_id((struct id_table *)pptrs->idtable, pptrs);
       exec_plugins(pptrs);
       exp_v1++;           
       count--;             
@@ -793,7 +807,8 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       pptrs->l4_proto = exp_v5->prot;
 
       /* IP header's id field is unused; we will use it to transport our id */ 
-      if (config.pre_tag_map) pptrs->tag = NF_find_id(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.pre_tag_map) pptrs->tag = NF_find_id((struct id_table *)pptrs->idtable, pptrs);
       exec_plugins(pptrs);
       exp_v5++;
       count--;
@@ -840,7 +855,8 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       pptrs->l4_proto = exp_v7->prot;
 
       /* IP header's id field is unused; we will use it to transport our id */
-      if (config.pre_tag_map) pptrs->tag = NF_find_id(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.pre_tag_map) pptrs->tag = NF_find_id((struct id_table *)pptrs->idtable, pptrs);
       exec_plugins(pptrs);
       exp_v7++;
       count--;
@@ -879,7 +895,8 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (req->bpf_filter) v8_handlers[hdr_v8->aggregation].fh(pptrs, exp_v8);
 
       /* IP header's id field is unused; we will use it to transport our id */
-      if (config.pre_tag_map) pptrs->tag = NF_find_id(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.pre_tag_map) pptrs->tag = NF_find_id((struct id_table *)pptrs->idtable, pptrs);
       exec_plugins(pptrs);
       exp_v8 += v8_handlers[hdr_v8->aggregation].exp_size;
       count--;
@@ -1005,7 +1022,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrs->class = NF_evaluate_classifiers((pptrs->f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrs->tag = NF_find_id(pptrs);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrs->tag = NF_find_id((struct id_table *)pptrs->idtable, pptrs);
           exec_plugins(pptrs);
 	  break;
 #if defined ENABLE_IPV6
@@ -1033,7 +1051,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->v6.class = NF_evaluate_classifiers((pptrsv->v6.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrsv->v6.tag = NF_find_id(&pptrsv->v6);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrsv->v6.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6);
           exec_plugins(&pptrsv->v6);
 	  break;
 #endif
@@ -1063,7 +1082,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->vlan4.class = NF_evaluate_classifiers((pptrsv->vlan4.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrsv->vlan4.tag = NF_find_id(&pptrsv->vlan4);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrsv->vlan4.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4);
 	  exec_plugins(&pptrsv->vlan4);
 	  break;
 #if defined ENABLE_IPV6
@@ -1093,7 +1113,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->vlan6.class = NF_evaluate_classifiers((pptrsv->vlan6.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrsv->vlan6.tag = NF_find_id(&pptrsv->vlan6);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrsv->vlan6.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6);
 	  exec_plugins(&pptrsv->vlan6);
 	  break;
 #endif
@@ -1134,7 +1155,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->mpls4.class = NF_evaluate_classifiers((pptrsv->mpls4.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-          if (config.pre_tag_map) pptrsv->mpls4.tag = NF_find_id(&pptrsv->mpls4);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+          if (config.pre_tag_map) pptrsv->mpls4.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4);
           exec_plugins(&pptrsv->mpls4);
           break;
 #if defined ENABLE_IPV6
@@ -1174,7 +1196,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->mpls6.class = NF_evaluate_classifiers((pptrsv->mpls6.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrsv->mpls6.tag = NF_find_id(&pptrsv->mpls6);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrsv->mpls6.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6);
 	  exec_plugins(&pptrsv->mpls6);
 	  break;
 #endif
@@ -1216,7 +1239,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->vlanmpls4.class = NF_evaluate_classifiers((pptrsv->vlanmpls4.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrsv->vlanmpls4.tag = NF_find_id(&pptrsv->vlanmpls4);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrsv->vlanmpls4.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4);
 	  exec_plugins(&pptrsv->vlanmpls4);
 	  break;
 #if defined ENABLE_IPV6
@@ -1257,7 +1281,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (config.classifiers_path && tpl->tpl[NF9_CUST_CLASS].len == 16)
 	    pptrsv->vlanmpls6.class = NF_evaluate_classifiers((pptrsv->vlanmpls6.f_data+tpl->tpl[NF9_CUST_CLASS].off));
-	  if (config.pre_tag_map) pptrsv->vlanmpls6.tag = NF_find_id(&pptrsv->vlanmpls6);
+	  if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = NF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+	  if (config.pre_tag_map) pptrsv->vlanmpls6.tag = NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6);
 	  exec_plugins(&pptrsv->vlanmpls6);
 	  break;
 #endif
@@ -1423,9 +1448,8 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
   Log(severity, errstr);
 }
 
-int NF_find_id(struct packet_ptrs *pptrs)
+pm_id_t NF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
 {
-  struct id_table *t = (struct id_table *)pptrs->idtable;
   int x, j, id, stop;
   void *src_ret, *dst_ret;
 

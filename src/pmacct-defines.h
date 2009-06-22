@@ -83,6 +83,11 @@
 #define ACCT_NF		2	/* NetFlow */
 #define ACCT_SF		3	/* sFlow */
 
+/* map type */
+#define MAP_TAG 		0	/* pre_tag_map */
+#define MAP_BGP_PEER_AS_SRC	100	/* *_bgp_peer_as_src */
+
+
 #define COUNT_SRC_HOST		0x0000000000000001ULL
 #define COUNT_DST_HOST		0x0000000000000002ULL
 #define COUNT_SUM_HOST          0x0000000000000004ULL

@@ -115,6 +115,9 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
+  tag_map_allocated = FALSE;
+  bpas_map_allocated = FALSE;
+
   errflag = 0;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
@@ -522,7 +525,7 @@ int main(int argc,char **argv, char **envp)
 
   /* loading pre-tagging map, if any */
   if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req);
+    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated);
     cb_data.idt = (u_char *) &idt;
   }
   else {
@@ -609,7 +612,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
-    load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req);
+    load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req, tag_map_allocated);
     reload_map = FALSE;
   }
 } 
