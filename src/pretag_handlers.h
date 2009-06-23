@@ -44,8 +44,10 @@ EXT int PT_map_label_handler(char *, struct id_entry *, char *, struct plugin_re
 EXT int PT_map_jeq_handler(char *, struct id_entry *, char *, struct plugin_requests *);
 EXT int PT_map_return_handler(char *, struct id_entry *, char *, struct plugin_requests *);
 EXT int PT_map_stack_handler(char *, struct id_entry *, char *, struct plugin_requests *);
-
 EXT pm_id_t PT_stack_sum(pm_id_t, pm_id_t);
+
+/* BPAS_*: bgp_peer_as_src map specific handlers */
+EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *);
 
 
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);
@@ -72,4 +74,6 @@ EXT int SF_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
 
 EXT int PM_pretag_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int PM_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
+
+EXT int BPAS_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 #undef EXT

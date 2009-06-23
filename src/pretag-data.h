@@ -19,7 +19,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-static const struct _map_dictionary_line map_dictionary[] = {
+static const struct _map_dictionary_line tag_map_dictionary[] = {
   {"id", PT_map_id_handler},
   {"ip", PT_map_ip_handler},
   {"in", PT_map_input_handler},
@@ -38,5 +38,13 @@ static const struct _map_dictionary_line map_dictionary[] = {
   {"jeq", PT_map_jeq_handler},
   {"return", PT_map_return_handler},
   {"stack", PT_map_stack_handler},
+  {"", NULL}
+};
+
+static const struct _map_dictionary_line bpas_map_dictionary[] = {
+  {"id", PT_map_id_handler},
+  {"ip", PT_map_ip_handler},
+  {"in", PT_map_input_handler},
+  {"bgp_nexthop", BPAS_map_bgp_nexthop_handler},
   {"", NULL}
 };

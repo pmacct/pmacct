@@ -114,7 +114,7 @@ struct pretag_filter {
 #else
 #define EXT
 #endif
-EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int);
+EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
 EXT u_int8_t pt_check_neg(char **);
 EXT char * pt_check_range(char *);
 

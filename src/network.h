@@ -180,6 +180,9 @@ struct packet_ptrs {
   u_int16_t l4_proto; /* layer-4 protocol */
   pm_id_t tag; /* pre tag id */
   pm_id_t bpas; /* bgp_peer_as_src */
+  char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
+  char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 
+  char *bgp_peer; /* BGP peer's Router-ID */
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 

@@ -1344,216 +1344,169 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 
 void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-  struct bgp_node *src_ret, *dst_ret;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src; 
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
-  struct bgp_peer *peer;
-  struct in_addr pref4;
-#if defined ENABLE_IPV6
-  struct in6_addr pref6;
-#endif
-  int peers_idx;
   as_t asn;
 
   --pdata; /* Bringing back to original place */
 
-  /* XXX: to be optimized; START: section to be taken out of here */
-  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
-      peer = &peers[peers_idx];
-      break;
-    }
-  } 
-
-  if (peer) {
-    if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
-      src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
-      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-      dst_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
-    }
-#if defined ENABLE_IPV6
-    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-      src_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
-      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-      dst_ret = bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
-    }
-#endif
-  /* XXX: END: section to be taken out of here */
-
-    if (src_ret) {
-      info = (struct bgp_info *) src_ret->info;
-      if (info && info->attr) {
-	if (config.nfacctd_as == NF_AS_BGP) {
-	  if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath && info->attr->aspath->str) {
-	    asn = evaluate_last_asn(info->attr->aspath->str);
-	    pdata->primitives.src_as = asn;
-	  }
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      if (config.nfacctd_as == NF_AS_BGP) {
+	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath && info->attr->aspath->str) {
+	  asn = evaluate_last_asn(info->attr->aspath->str);
+	  pdata->primitives.src_as = asn;
 	}
       }
     }
-
-    if (dst_ret) {
-      info = (struct bgp_info *) dst_ret->info;
-      if (info && info->attr) {
-        if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
-	  if (config.nfacctd_bgp_stdcomm_pattern)
-	    evaluate_comm_patterns(pbgp->std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
-	  else {
-            strlcpy(pbgp->std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-	    if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	      pbgp->std_comms[MAX_BGP_STD_COMMS-1] = '+';
-	  }
-	}
-        if (chptr->aggregation & COUNT_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
-	  if (config.nfacctd_bgp_extcomm_pattern)
-	    evaluate_comm_patterns(pbgp->ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
-	  else {
-            strlcpy(pbgp->ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-	    if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-	      pbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
-	  }
-	}
-        if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
-          strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
-	  if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
-	    pbgp->as_path[MAX_BGP_ASPATH-1] = '+';
-	  if (config.nfacctd_bgp_aspath_radius)
-	    evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
-	}
-        if (config.nfacctd_as == NF_AS_BGP) {
-          if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath && info->attr->aspath->str) {
-            asn = evaluate_last_asn(info->attr->aspath->str);
-            pdata->primitives.dst_as = asn;
-          }
-        }
-
-	if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
-
-	if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
-
-	if (chptr->aggregation & COUNT_PEER_DST_AS && info->attr->aspath && info->attr->aspath->str)
-	  pbgp->peer_dst_as = evaluate_first_asn(info->attr->aspath->str);
-
-	if (chptr->aggregation & COUNT_PEER_DST_IP) {
-	  if (info->attr->mp_nexthop.family == AF_INET) {
-	    pbgp->peer_dst_ip.family = AF_INET;
-	    memcpy(&pbgp->peer_dst_ip.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
-	  }
-#if defined ENABLE_IPV6
-	  else if (info->attr->mp_nexthop.family == AF_INET6) {
-	    pbgp->peer_dst_ip.family = AF_INET6;
-	    memcpy(&pbgp->peer_dst_ip.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
-	  }
-#endif
-	  else {
-	    pbgp->peer_dst_ip.family = AF_INET; 
-	    pbgp->peer_dst_ip.address.ipv4.s_addr = info->attr->nexthop.s_addr;
-	  }
-	}
-      }
-    }
-
-    if (chptr->aggregation & COUNT_PEER_SRC_IP) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
   }
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr) {
+      if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
+	if (config.nfacctd_bgp_stdcomm_pattern)
+	  evaluate_comm_patterns(pbgp->std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
+	else {
+          strlcpy(pbgp->std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
+	    pbgp->std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	}
+      }
+      if (chptr->aggregation & COUNT_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
+	if (config.nfacctd_bgp_extcomm_pattern)
+	  evaluate_comm_patterns(pbgp->ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
+	else {
+          strlcpy(pbgp->ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
+	    pbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	}
+      }
+      if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
+        strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
+	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
+	  pbgp->as_path[MAX_BGP_ASPATH-1] = '+';
+	if (config.nfacctd_bgp_aspath_radius)
+	  evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+      }
+      if (config.nfacctd_as == NF_AS_BGP) {
+        if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath && info->attr->aspath->str) {
+          asn = evaluate_last_asn(info->attr->aspath->str);
+          pdata->primitives.dst_as = asn;
+        }
+      }
+
+      if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
+
+      if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
+
+      if (chptr->aggregation & COUNT_PEER_DST_AS && info->attr->aspath && info->attr->aspath->str)
+	pbgp->peer_dst_as = evaluate_first_asn(info->attr->aspath->str);
+
+      if (chptr->aggregation & COUNT_PEER_DST_IP) {
+	if (info->attr->mp_nexthop.family == AF_INET) {
+	  pbgp->peer_dst_ip.family = AF_INET;
+	  memcpy(&pbgp->peer_dst_ip.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
+	}
+#if defined ENABLE_IPV6
+	else if (info->attr->mp_nexthop.family == AF_INET6) {
+	  pbgp->peer_dst_ip.family = AF_INET6;
+	  memcpy(&pbgp->peer_dst_ip.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
+	}
+#endif
+	else {
+	  pbgp->peer_dst_ip.family = AF_INET; 
+	  pbgp->peer_dst_ip.address.ipv4.s_addr = info->attr->nexthop.s_addr;
+	}
+      }
+    }
+  }
+
+  if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
 }
 
 void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-  struct bgp_node *src_ret;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
-  struct bgp_peer *peer;
-  struct in_addr *pref4;
-  int peers_idx, comm_idx;
+  int comm_idx;
   u_int32_t comval;
   u_int16_t val, as, nf_ifindex;
 
   --pdata; /* Bringing back to original place */
 
-  /* XXX: to be optimized; START: section to be taken out of here */
-  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
-      peer = &peers[peers_idx];
-      break;
-    }
-  }
-  /* XXX: END: section to be taken out of here */
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
 
-  if (peer) {
-    pref4 = (struct in_addr *) &peer->addr.address.ipv4;
-    src_ret = bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], pref4);
+    if (info && info->attr && info->attr->community) {
+      for (comm_idx = 0; comm_idx < info->attr->community->size; comm_idx++) {
+        comval = ntohl (info->attr->community->val[comm_idx]);
+        as = (comval >> 16) & 0xFFFF;
+        val = comval & 0xFFFF;
 
-    if (src_ret) {
-      info = (struct bgp_info *) src_ret->info;
-
-      if (info && info->attr && info->attr->community) {
-        for (comm_idx = 0; comm_idx < info->attr->community->size; comm_idx++) {
-          comval = ntohl (info->attr->community->val[comm_idx]);
-          as = (comval >> 16) & 0xFFFF;
-          val = comval & 0xFFFF;
-
-          switch(hdr->version) {
-          case 9:
-            memcpy(&nf_ifindex, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len);
+        switch(hdr->version) {
+        case 9:
+          memcpy(&nf_ifindex, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len);
+          break;
+        case 8:
+          switch(hdr->aggregation) {
+          case 1:
+            nf_ifindex = ((struct struct_export_v8_1 *) pptrs->f_data)->input;
+            break;
+          case 3:
+            nf_ifindex = ((struct struct_export_v8_3 *) pptrs->f_data)->input;
+            break;
+          case 5:
+            nf_ifindex = ((struct struct_export_v8_5 *) pptrs->f_data)->input;
+            break;
+          case 7:
+            nf_ifindex = ((struct struct_export_v8_7 *) pptrs->f_data)->input;
             break;
           case 8:
-            switch(hdr->aggregation) {
-            case 1:
-              nf_ifindex = ((struct struct_export_v8_1 *) pptrs->f_data)->input;
-              break;
-            case 3:
-              nf_ifindex = ((struct struct_export_v8_3 *) pptrs->f_data)->input;
-              break;
-            case 5:
-              nf_ifindex = ((struct struct_export_v8_5 *) pptrs->f_data)->input;
-              break;
-            case 7:
-              nf_ifindex = ((struct struct_export_v8_7 *) pptrs->f_data)->input;
-              break;
-            case 8:
-              nf_ifindex = ((struct struct_export_v8_8 *) pptrs->f_data)->input;
-              break;
-            case 9:
-              nf_ifindex = ((struct struct_export_v8_9 *) pptrs->f_data)->input;
-              break;
-            case 10:
-              nf_ifindex = ((struct struct_export_v8_10 *) pptrs->f_data)->input;
-              break;
-            case 11:
-              nf_ifindex = ((struct struct_export_v8_11 *) pptrs->f_data)->input;
-              break;
-            case 13:
-              nf_ifindex = ((struct struct_export_v8_13 *) pptrs->f_data)->input;
-              break;
-            case 14:
-              nf_ifindex = ((struct struct_export_v8_14 *) pptrs->f_data)->input;
-              break;
-            default:
-              nf_ifindex = 0;
-              break;
-            }
+            nf_ifindex = ((struct struct_export_v8_8 *) pptrs->f_data)->input;
+            break;
+          case 9:
+            nf_ifindex = ((struct struct_export_v8_9 *) pptrs->f_data)->input;
+            break;
+          case 10:
+            nf_ifindex = ((struct struct_export_v8_10 *) pptrs->f_data)->input;
+            break;
+          case 11:
+            nf_ifindex = ((struct struct_export_v8_11 *) pptrs->f_data)->input;
+            break;
+          case 13:
+            nf_ifindex = ((struct struct_export_v8_13 *) pptrs->f_data)->input;
+            break;
+          case 14:
+            nf_ifindex = ((struct struct_export_v8_14 *) pptrs->f_data)->input;
             break;
           default:
-            nf_ifindex = ((struct struct_export_v5 *) pptrs->f_data)->input;
+            nf_ifindex = 0;
             break;
           }
-          if (as == ntohs(nf_ifindex)) {
-            /* FOUND: copying value */
-            pbgp->peer_src_as = val;
-            break;
-          }
-          else if (as > ntohs(nf_ifindex)) {
-            /* NOT FOUND: break here */
-            break;
-          }
+          break;
+        default:
+          nf_ifindex = ((struct struct_export_v5 *) pptrs->f_data)->input;
+          break;
+        }
+        if (as == ntohs(nf_ifindex)) {
+          /* FOUND: copying value */
+          pbgp->peer_src_as = val;
+          break;
+        }
+        else if (as > ntohs(nf_ifindex)) {
+          /* NOT FOUND: break here */
+          break;
         }
       }
     }

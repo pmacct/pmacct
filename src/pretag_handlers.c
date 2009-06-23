@@ -138,6 +138,23 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
   return FALSE;
 }
 
+int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+{
+  int x = 0;
+
+  e->bgp_nexthop.neg = pt_check_neg(&value);
+
+  if (!str_to_addr(value, &e->bgp_nexthop.a)) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad BGP nexthop address '%s'. ", filename, value);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++);
+  if (config.nfacctd_bgp) e->func[x] = BPAS_bgp_nexthop_handler;
+
+  return FALSE;
+}
+
 int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
 {
   int x = 0, j, len;
@@ -862,4 +879,35 @@ int PM_pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 pm_id_t PT_stack_sum(pm_id_t tag, pm_id_t pre)
 {
   return tag + pre;
+}
+
+int BPAS_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      if (entry->bgp_nexthop.a.family == AF_INET) {
+	if (info->attr->mp_nexthop.family == AF_INET) {
+          if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4))
+            return (FALSE | entry->bgp_nexthop.neg);
+	}
+	else {
+          if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, &info->attr->nexthop, 4))
+            return (FALSE | entry->bgp_nexthop.neg);
+	}
+      }
+#if defined ENABLE_IPV6
+      else if (entry->nexthop.a.family == AF_INET6) {
+	if (!memcmp(&entry->bgp_nexthop.a.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16))
+          return (FALSE | entry->bgp_nexthop.neg);
+      }
+#endif
+    }
+  }
+
+  return (TRUE ^ entry->bgp_nexthop.neg);
 }

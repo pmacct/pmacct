@@ -28,7 +28,7 @@
 #include "pretag_handlers.h"
 #include "pretag-data.h"
 
-void load_id_file(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req, int map_allocated)
+void load_id_file(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req, int *map_allocated)
 {
   struct id_table tmp;
   struct id_entry *ptr, *ptr2;
@@ -40,6 +40,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 #if defined ENABLE_IPV6
   int v6_num = 0;
 #endif
+
+  if (!map_allocated) return;
 
   /* parsing engine vars */
   char *start, *key = NULL, *value = NULL;
@@ -59,10 +61,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
     sz = sizeof(struct id_entry)*config.pre_tag_map_entries;
 
-    if (!map_allocated) {
+    if (*map_allocated == 0) {
       memset(t, 0, sizeof(struct id_table));
       t->e = (struct id_entry *) malloc(sz);
-      map_allocated = TRUE;
+      *map_allocated = TRUE;
     }
     else {
       ptr = t->e ;
@@ -123,19 +125,36 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
               if (key && value) {
                 int dindex; /* dictionary index */
 
-                for (dindex = 0; strcmp(map_dictionary[dindex].key, ""); dindex++) {
-                  if (!strcmp(map_dictionary[dindex].key, key)) {
-                    err = (*map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req);
+		if (acct_type == MAP_BGP_PEER_AS_SRC) {
+                  for (dindex = 0; strcmp(bpas_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(bpas_map_dictionary[dindex].key, key)) {
+                      err = (*bpas_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+                  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s ): unknown key '%s' at line %d. Ignored.\n", filename, key, tot_lines);
+                    else Log(LOG_ERR, "Line %d ignored.\n", tot_lines);
                     break;
                   }
-                  else err = E_NOTFOUND; /* key not found */
-                }
-                if (err) {
-                  if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s ): unknown key '%s' at line %d. Ignored.\n", filename, key, tot_lines);
-                  else Log(LOG_ERR, "Line %d ignored.\n", tot_lines);
-                  break; 
-                }
-                key = NULL; value = NULL;
+                  key = NULL; value = NULL;
+		}
+		else {
+                  for (dindex = 0; strcmp(tag_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(tag_map_dictionary[dindex].key, key)) {
+                      err = (*tag_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+                  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s ): unknown key '%s' at line %d. Ignored.\n", filename, key, tot_lines);
+                    else Log(LOG_ERR, "Line %d ignored.\n", tot_lines);
+                    break; 
+                  }
+                  key = NULL; value = NULL;
+		}
               }
             }
             /* verifying errors and required fields */

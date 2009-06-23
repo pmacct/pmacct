@@ -490,7 +490,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated);
+    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
     pptrs.v4.idtable = (u_char *) &idt;
   }
   else {
@@ -674,7 +674,7 @@ int main(int argc,char **argv, char **envp)
 
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
-      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, tag_map_allocated);
+      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
       reload_map = FALSE;
     }
 
