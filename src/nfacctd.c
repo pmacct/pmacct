@@ -692,7 +692,8 @@ int main(int argc,char **argv, char **envp)
       load_networks(config.networks_file, &nt, &nc);
       if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map) 
         load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated); 
-      load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated); 
+      if (config.pre_tag_map) 
+        load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated); 
       reload_map = FALSE;
     }
 
