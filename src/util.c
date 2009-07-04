@@ -685,6 +685,7 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
     return(0); 
   } 
   else *ptr = '\0';
+  return (int)*ptr-(int)*buf;
 } 
 
 void stick_bosbit(u_char *label)

@@ -153,6 +153,8 @@ void skinny_bgp_daemon()
 
     /* New connection is coming in */ 
     if (FD_ISSET(sock, &read_descs)) {
+      int peers_check_idx;
+
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (peers[peers_idx].fd == 0) {
           peer = &peers[peers_idx];
@@ -170,6 +172,17 @@ void skinny_bgp_daemon()
       FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = AF_INET;
       peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+
+      /* Check: only one TCP connection is allowed per peer */
+      for (peers_check_idx = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
+	if (peers_idx != peers_check_idx && peers[peers_check_idx].addr.address.ipv4.s_addr == peer->addr.address.ipv4.s_addr) { 
+          Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4));
+          FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
+          bgp_peer_close(&peers[peers_check_idx]);
+          goto select_again;
+        }
+      }
+
       goto select_again; 
     }
 
@@ -186,7 +199,7 @@ void skinny_bgp_daemon()
       Log(LOG_ERR, "ERROR ( default/core/BGP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", select_num, select_fd);
       goto select_again;
     }
-    
+
     peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
 
     if (ret <= 0) {
@@ -1123,6 +1136,16 @@ void bgp_info_free(struct bgp_info *ri)
 }
 
 /* Initialization of attributes */
+/*
+void bgp_attr_init(struct bgp_peer *peer)
+{
+  aspath_init(peer);
+  attrhash_init(peer);
+  community_init(peer);
+  ecommunity_init(peer);
+}
+*/
+
 void bgp_attr_init()
 {
   aspath_init();
@@ -1170,10 +1193,21 @@ int attrhash_cmp(void *p1,void *p2)
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
       && attr1->pathlimit.ttl == attr2->pathlimit.ttl
-      && attr1->pathlimit.as == attr2->pathlimit.as)
-    return 1;
-  else
-    return 0;
+      && attr1->pathlimit.as == attr2->pathlimit.as) {
+    if (attr1->mp_nexthop.family == attr2->mp_nexthop.family) {
+      if (attr1->mp_nexthop.family == AF_INET
+	  && attr1->mp_nexthop.address.ipv4.s_addr == attr2->mp_nexthop.address.ipv4.s_addr) 
+        return 1;
+#if defined ENABLE_IPV6
+      else if (attr1->mp_nexthop.family == AF_INET6
+	  && !memcmp(&attr1->mp_nexthop.address.ipv6, &attr2->mp_nexthop.address.ipv6, 16)
+        return 1;
+#endif
+      else return 1;
+    }
+  }
+
+  return 0;
 }
 
 void attrhash_init()
@@ -1229,8 +1263,10 @@ void bgp_attr_unintern(struct bgp_attr *attr)
   /* If reference becomes zero then free attribute object. */
   if (attr->refcnt == 0) {
 	ret = (struct bgp_attr *) hash_release (attrhash, attr);
-	assert (ret != NULL);
-	if (ret) free(attr);
+	// assert (ret != NULL);
+	// if (ret) free(attr);
+	if (!ret) Log(LOG_WARNING, "WARN ( default/core/BGP ): bgp_attr_unintern() hash lookup failed.\n");
+	free(attr);
   }
 
   /* aspath refcount shoud be decrement. */
@@ -1248,6 +1284,7 @@ void *bgp_attr_hash_alloc (void *p)
   struct bgp_attr *attr;
 
   attr = malloc(sizeof (struct bgp_attr));
+  memset(attr, 0, sizeof (struct bgp_attr));
   *attr = *val;
   attr->refcnt = 0;
 

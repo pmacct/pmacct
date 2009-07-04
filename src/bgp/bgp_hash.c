@@ -33,6 +33,7 @@ hash_create_size (unsigned int size, unsigned int (*hash_key) (void *),
   struct hash *hash;
 
   hash = malloc(sizeof (struct hash));
+  memset (hash, 0, sizeof (struct hash));
   hash->index = malloc(sizeof (struct hash_backet *) * size);
   memset (hash->index, 0, sizeof (struct hash_backet *) * size);
   hash->size = size;
@@ -85,6 +86,7 @@ hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
 	return NULL;
 
       backet = malloc(sizeof (struct hash_backet));
+      memset(backet, 0, sizeof (struct hash_backet));
       backet->data = newdata;
       backet->key = key;
       backet->next = hash->index[index];

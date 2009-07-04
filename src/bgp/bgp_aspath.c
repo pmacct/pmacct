@@ -67,7 +67,7 @@ struct assegment_header
 };
 
 /* Hash for aspath.  This is the top level structure of AS path. */
-struct hash *ashash;
+// struct hash *ashash;
 
 
 static inline as_t *
@@ -1623,7 +1623,7 @@ aspath_cmp (const void *arg1, const void *arg2)
 
 /* AS path hash initialize. */
 void
-aspath_init (void)
+aspath_init ()
 {
   ashash = hash_create_size (32767, aspath_key_make, aspath_cmp);
 }

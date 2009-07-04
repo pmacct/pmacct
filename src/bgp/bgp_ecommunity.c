@@ -28,7 +28,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "bgp_aspath.h"
 
 /* Hash of community attribute. */
-struct hash *ecomhash;
+// struct hash *ecomhash;
 
 /* Allocate a new ecommunities.  */
 struct ecommunity *
@@ -256,7 +256,7 @@ ecommunity_cmp (const void *arg1, const void *arg2)
 
 /* Initialize Extended Comminities related hash. */
 void
-ecommunity_init (void)
+ecommunity_init ()
 {
   ecomhash = hash_create (ecommunity_hash_make, ecommunity_cmp);
 }

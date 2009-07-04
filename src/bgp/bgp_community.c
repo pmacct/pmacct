@@ -26,7 +26,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "bgp_community.h"
 
 /* Hash of community attribute. */
-struct hash *comhash;
+// struct hash *comhash;
 
 /* Allocate a new communities value.  */
 static struct community *
@@ -631,7 +631,7 @@ community_hash (void)
 
 /* Initialize comminity related hash. */
 void
-community_init (void)
+community_init ()
 {
   comhash = hash_create ((unsigned int (*) (void *))community_hash_make,
 			 (int (*) (const void *, const void *))community_cmp);

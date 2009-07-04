@@ -184,6 +184,9 @@ EXT void attrhash_init();
 /* global variables */
 EXT struct bgp_peer *peers;
 EXT struct hash *attrhash;
+EXT struct hash *ashash;
+EXT struct hash *comhash;
+EXT struct hash *ecomhash;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT struct bgp_comm_range peer_src_as_ifrange; 

@@ -56,7 +56,7 @@ struct community
 #else
 #define EXT
 #endif
-EXT void community_init (void);
+EXT void community_init ();
 EXT void community_free (struct community *);
 EXT struct community *community_uniq_sort (struct community *);
 EXT struct community *community_parse (u_int32_t *, u_short);

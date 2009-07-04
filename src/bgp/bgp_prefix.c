@@ -626,6 +626,8 @@ prefix_new ()
   struct prefix *p;
 
   p = malloc (sizeof *p);
+  memset(p, 0, sizeof *p); 
+
   return p;
 }
 
