@@ -27,25 +27,29 @@ VALUES:		[true|false]
 DESC:		daemonizes the process (default: false).
 
 KEY:		aggregate (-c)
-VALUES:		[src_mac,dst_mac,vlan,src_host,dst_host,src_net,dst_net,src_as,dst_as,src_port,
-		 dst_port,tos,proto,none,sum_mac,sum_host,sum_net,sum_as,sum_port,flows,tag,
-		 class, tcpflags]
-PREAMBLE:	individual packets are uniquely identified by their header field values (a rather
-		large set of primitives !). Aggregates are identified by a custom and stripped
-		set of primitives, instead. Packets are framed into aggregates (a) by removing
-		the primitives not included in the reduced set, (b) by casting certain primitive
-		values into broader logical entities, if requested (e.g.: IP address values of
-		ip_src/ip_dst fields into network prefixes or Autonomous System Numbers) and (c)
-		by summing bytes/flows/packets counters each time a new packet is found to be
-		constituent of the aggregate.
-DESC:		selects the reduced set of primitives by which aggregate packets. sum_<primitive>
-		are compound primitives which allow to join inbound and outbound traffic into a
-		single aggregate. The 'none' primitive allows to make an unique aggregate which
-		accounts for the grand total of traffic flowing through a specific interface (it
-                gives best results when used in conjunction with Pre/Post-Tagging). 'tag' enables
-		reception of tags whenever Pre/Post-Tagging engines (pre_tag_map, post_tag) are
-		in use. 'class' enables reception of classes whenever Packet/Flow Classification
-		engine (classifiers) is in use. (default: src_host).
+VALUES:		[src_mac, dst_mac, vlan, src_host, dst_host, src_net, dst_net, src_as, dst_as,
+		 src_port, dst_port, tos, proto, none, sum_mac, sum_host, sum_net, sum_as, 
+		 sum_port, flows, tag, class, tcpflags, std_comm, ext_comm, as_path, peer_src_ip,
+		 peer_dst_ip, peer_src_as, peer_dst_as]
+PREAMBLE:	individual IP packets are uniquely identified by their header fields values (a
+		rather large set of primitives!). Same applies to uni-directional IP flows, as
+		they have at least to discriminate where packets are coming from and going to.
+		Aggregates instead are used for the sole purpose of IP accounting and hence can
+		be identified by a custom and stripped down set of primitives.
+		The procedure to create an aggregate starting from IP packets or flow is: (a)
+		select only the primitives of interest (generic aggregation), (b) optionally
+		cast certain primitive values into broader logical entities, ie. IP addresses
+		into network prefixes or Autonomous System Numbers (spatial aggregation) and
+		(c) sum bytes/flows/packets counters whenever a new constituent IP packet or
+		flow is captured (temporal aggregation).
+DESC:		aggregate captured traffic by selecting the specified set of primitives.
+		sum_<primitive> are compound primitives which allow to join both inbound and
+		outbound traffic into a single aggregate. The 'none' primitive allows to make
+		an unique aggregate which accounts for the grand total of traffic which is
+		flowing through a specific interface. 'tag' enables reception of tags whenever
+		Pre/Post-Tagging engines (pre_tag_map, post_tag) are in use. 'class' enables
+		reception of classes whenever Packet/Flow Classification engine (classifiers)
+		is in use. (default: src_host).
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		when multiple plugins are active, each one should sport an 'aggregate' directive
@@ -291,13 +295,20 @@ DESC:		full pathname to a file containing a SQL table schema. It allows to creat
 
 KEY:		sql_table_version (-v)
 VALUES		[ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
-DESC:		defines the version of the SQL table. SQL table versioning has been introduced to allow
-                introduction of new features over the time (which, in turn, translate in changes to the
-		SQL schema) without giving the pain of breaking backward compatibility. Mind to specify
-		EVERYTIME which SQL table version you intend to adhere to as this will strongly influence
-		the way data will be written to the database (ie. until v5 AS numbers are written into
-		ip_src-ip_dst table fields; since v6 they are written to as_src-as-dst ones). At this
-		propo, take also a look to the 'sql_optimize_clauses' directive. (default: 1) 
+DESC:		defines the version of the SQL table. SQL table versioning was introduced to achieve two
+		goals: a) make tables work out-of-the-box for the less SQL experts, smaller installations
+		and quick try-outs; and in this context b) to allow introduction of new features over
+		time without the pain of breaking backward compatibility. The alternative to versioning
+		for the most experts is 'sql_optimize_clauses' which allows custom mix-and-match of
+		primitives: in such a case you have to build yourself custom SQL schemas and indexes. 
+		See within the 'sql/' directory the SQL table profiles which arw supported by the pmacct
+		version you are using (default: 1)
+
+KEY:		sql_table_type 
+VALUES		[ bgp ]
+DESC:		optionally combined with "sql_table_version", defines one of the supported SQL table
+		profiles. Currently this directive has to be defined only if one of the default BGP
+		table profiles is to be selected.
 
 KEY:		sql_data
 VALUES:		[ typed | unified ]
@@ -585,11 +596,12 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 		(default: false) 
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new ] [GLOBAL, NO_PMACCTD]
-VALUES:		[true|false]
-DESC:		if either 'src_as' or 'dst_as' primitives are in use, this directive instructs 'nfacctd' to
-		generate new AS numbers basing on a) IP addresses carried inside the flow and b) a specified
-		'networks_file' map. This way, the NetFlow export agent is not required being involved in a
-		BGP session. (default: false) 
+VALUES:		[ false | (true|file) | bgp ]
+DESC:		When 'false', it instructs nfacctd to populate 'src_as' and 'dst_as' from the same primitives
+		in the NetFlow datagram; when 'true' ('file' being an alias of 'true') it instructs nfacctd to
+		generate AS numbers looking up source and destination IP addresses against a 'networks_file'
+		map. When 'bgp' is specified, AS numbers are looked up against the BGP RIB of the peer from
+		which the NetFlow datagram was received. (default: false) 
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]
 DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are
