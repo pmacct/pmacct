@@ -32,7 +32,6 @@
 #include "sflow.h"
 #include "sfacctd.h"
 #include "pretag_handlers.h"
-#include "pretag-data.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"

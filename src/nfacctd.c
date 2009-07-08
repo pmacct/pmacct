@@ -26,7 +26,6 @@
 #include "pmacct.h"
 #include "nfacctd.h"
 #include "pretag_handlers.h"
-#include "pretag-data.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
@@ -482,30 +481,6 @@ int main(int argc,char **argv, char **envp)
   if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
   else memset(&allow, 0, sizeof(allow));
 
-#if defined ENABLE_THREADS
-  /* starting the BGP thread */
-  if (config.nfacctd_bgp) {
-    nfacctd_bgp_wrapper();
-    req.bpf_filter = TRUE;
-    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
-    if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
-      if (config.nfacctd_bgp_peer_as_src_map) {
-        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
-        pptrs.v4.bpas_table = (u_char *) &bpas_table;
-      }
-    }
-    else {
-      memset(&bpas_table, 0, sizeof(bpas_table));
-      pptrs.v4.bpas_table = NULL;
-    }
-  }
-#else
-  if (config.nfacctd_bgp) {
-	Log(LOG_ERR, "ERROR ( default/core ): 'nfacctd_bgp' is available only with threads (--enable-threads). Exiting.\n");
-	exit(1);
-  }
-#endif
-
   if (config.nfacctd_as_str) {
     if (!strcmp(config.nfacctd_as_str, "false"))
       config.nfacctd_as = NF_AS_KEEP;
@@ -524,6 +499,32 @@ int main(int argc,char **argv, char **envp)
     memset(&idt, 0, sizeof(idt));
     pptrs.v4.idtable = NULL;
   }
+
+#if defined ENABLE_THREADS
+  /* starting the BGP thread */
+  if (config.nfacctd_bgp) {
+    req.bpf_filter = TRUE;
+    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
+    if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+      if (config.nfacctd_bgp_peer_as_src_map) {
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
+        pptrs.v4.bpas_table = (u_char *) &bpas_table;
+      }
+    }
+    else {
+      memset(&bpas_table, 0, sizeof(bpas_table));
+      pptrs.v4.bpas_table = NULL;
+    }
+
+    nfacctd_bgp_wrapper();
+  }
+#else
+  if (config.nfacctd_bgp) {
+        Log(LOG_ERR, "ERROR ( default/core ): 'nfacctd_bgp' is available only with threads (--enable-threads). Exiting.\n");
+        exit(1);
+  }
+#endif
+
   load_nfv8_handlers();
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);

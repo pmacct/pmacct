@@ -26,7 +26,6 @@
 #include "sflow.h"
 #include "sfacctd.h"
 #include "pretag_handlers.h"
-#include "pretag-data.h"
 #include "net_aggr.h"
 
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
@@ -152,6 +151,35 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   for (x = 0; e->func[x]; x++);
   if (config.nfacctd_bgp) e->func[x] = BPAS_bgp_nexthop_handler;
 
+  return FALSE;
+}
+
+int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+{
+  struct pcap_device device;
+  bpf_u_int32 localnet, netmask;  /* pcap library stuff */
+  char errbuf[PCAP_ERRBUF_SIZE];
+  char filter_str[28];
+  int x, link_type;
+
+  memset(&device, 0, sizeof(struct pcap_device));
+  if (glob_pcapt) device.link_type = pcap_datalink(glob_pcapt);
+  else device.link_type = 1;
+  device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+my_iphdr+my_tlhdr */
+
+  pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
+
+  memset(filter_str, 0, sizeof(filter_str));
+  snprintf(filter_str, sizeof(filter_str), "ether src %s", value);
+  if (pcap_compile(device.dev_desc, &e->filter, filter_str, 0, netmask) < 0) {
+    Log(LOG_ERR, "ERROR ( %s ): malformed src_mac filter: %s\n", filename, pcap_geterr(device.dev_desc));
+    return TRUE;
+  }
+
+  pcap_close(device.dev_desc);
+  for (x = 0; e->func[x]; x++);
+  e->func[x] = pretag_filter_handler;
+  req->bpf_filter = TRUE;
   return FALSE;
 }
 
@@ -312,6 +340,10 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
     e->func[x] = SF_pretag_src_as_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_bgp_src_as_handler;
+    return FALSE;
+  }
 
   Log(LOG_ERR, "ERROR ( %s ): 'src_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
 
@@ -344,8 +376,58 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
     e->func[x] = SF_pretag_dst_as_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_bgp_dst_as_handler;
+    return FALSE;
+  }
 
   Log(LOG_ERR, "ERROR ( %s ): 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
+
+  return TRUE;
+}
+
+int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+{
+  as_t tmp;
+  int x = 0;
+  char *endptr;
+
+  e->peer_src_as.neg = pt_check_neg(&value);
+
+  tmp = strtoul(value, &endptr, 10);
+
+  e->peer_src_as.n = tmp;
+  for (x = 0; e->func[x]; x++);
+
+  if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_peer_src_as_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+
+  return TRUE;
+}
+
+int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+{
+  as_t tmp;
+  int x = 0;
+  char *endptr;
+
+  e->peer_dst_as.neg = pt_check_neg(&value);
+
+  tmp = strtoul(value, &endptr, 10);
+
+  e->peer_dst_as.n = tmp;
+  for (x = 0; e->func[x]; x++);
+
+  if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_peer_dst_as_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
 
   return TRUE;
 }
@@ -691,6 +773,26 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->src_as.neg);
 }
 
+int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+  as_t asn;
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      if (info->attr->aspath && info->attr->aspath->str) {
+        asn = evaluate_last_asn(info->attr->aspath->str);
+      }
+    }
+  }
+
+  if (entry->src_as.n == asn) return (FALSE | entry->src_as.neg);
+  else return (TRUE ^ entry->src_as.neg);
+}
+
 int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -741,6 +843,64 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->dst_as.n == asn32) return (FALSE | entry->dst_as.neg);
   else return (TRUE ^ entry->dst_as.neg);
+}
+
+int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+  as_t asn;
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr) {
+      if (info->attr->aspath && info->attr->aspath->str) {
+        asn = evaluate_last_asn(info->attr->aspath->str);
+      }
+    }
+  }
+
+  if (entry->dst_as.n == asn) return (FALSE | entry->dst_as.neg);
+  else return (TRUE ^ entry->dst_as.neg);
+}
+
+int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  as_t asn;
+
+  if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+    asn = pptrs->bpas;
+  }
+  else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS ||
+	   config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_ECOMMS) {
+    /* XXX: unsupported feature */
+    asn = 0;
+  }
+
+  if (entry->peer_src_as.n == asn) return (FALSE | entry->peer_src_as.neg);
+  else return (TRUE ^ entry->peer_src_as.neg);
+}
+
+int pretag_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+  as_t asn;
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr) {
+      if (info->attr->aspath && info->attr->aspath->str) {
+        asn = evaluate_first_asn(info->attr->aspath->str);
+      }
+    }
+  }
+
+  if (entry->peer_dst_as.n == asn) return (FALSE | entry->peer_dst_as.neg);
+  else return (TRUE ^ entry->peer_dst_as.neg);
 }
 
 int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)

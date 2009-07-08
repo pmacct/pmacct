@@ -188,7 +188,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	      } 
 	    }
 	    else if (acct_type == MAP_BGP_PEER_AS_SRC) {
-              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family && tmp.e[tmp.num].input.n) {
+              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
                 int j;
 
                 for (j = 0; tmp.e[tmp.num].func[j]; j++);
@@ -199,8 +199,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 #endif
                 tmp.num++;
               }
-              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family || !tmp.e[tmp.num].input.n) && !err)
-                Log(LOG_ERR, "ERROR ( %s ): required key missing at line: %d. Required keys are: 'id', 'ip', 'in'.\n", filename, tot_lines);
+              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                Log(LOG_ERR, "ERROR ( %s ): required key missing at line: %d. Required keys are: 'id', 'ip'.\n", filename, tot_lines);
 	    }
           }
           else Log(LOG_ERR, "ERROR ( %s ): malformed line: %d. Ignored.\n", filename, tot_lines);
