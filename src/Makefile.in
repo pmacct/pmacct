@@ -138,7 +138,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 SOURCES = $(pmmyplay_SOURCES) $(pmpgplay_SOURCES) $(pmacct_SOURCES) $(pmacctd_SOURCES) $(nfacctd_SOURCES) $(sfacctd_SOURCES)
 OBJECTS = $(pmmyplay_OBJECTS) $(pmpgplay_OBJECTS) $(pmacct_OBJECTS) $(pmacctd_OBJECTS) $(nfacctd_OBJECTS) $(sfacctd_OBJECTS)

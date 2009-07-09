@@ -474,6 +474,11 @@ AC_ARG_ENABLE(mysql,
       ])])
     else 
       LIBS="${LIBS} -lmysqlclient"
+      case "$host_os" in
+        Sun*)
+	  LIBS="${LIBS} -lrt"
+	;;
+      esac
     fi 
 
     AC_ARG_WITH(mysql-includes,
