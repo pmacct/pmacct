@@ -2116,7 +2116,7 @@ fi
       case "$host_os" in
         Sun*)
 	  LIBS="${LIBS} -lrt"
-	;;
+	  ;;
       esac
     fi 
 

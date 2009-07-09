@@ -477,7 +477,7 @@ AC_ARG_ENABLE(mysql,
       case "$host_os" in
         Sun*)
 	  LIBS="${LIBS} -lrt"
-	;;
+	  ;;
       esac
     fi 
 
