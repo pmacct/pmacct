@@ -131,10 +131,23 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
   }
 
   for (x = 0; e->func[x]; x++);
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_bgp_nexthop_handler;
-  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_bgp_nexthop_handler;
 
-  return FALSE;
+  if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_bgp_nexthop_handler;
+    return FALSE;
+  }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_bgp_bgp_nexthop_handler;
+    return FALSE;
+  }
+  else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_SF) {
+    e->func[x] = SF_pretag_bgp_nexthop_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'bgp_nexthop' is not supported when a 'networks_file' is specified or by the 'pmacctd' daemon. ", filename);
+
+  return TRUE;
 }
 
 int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
@@ -642,6 +655,34 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (entry->bgp_nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->bgp_nexthop.neg);
     else return (TRUE ^ entry->bgp_nexthop.neg);
   }
+}
+
+int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+  int ret = -1;
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr) {
+      if (info->attr->mp_nexthop.family == AF_INET) {
+        ret = memcmp(&entry->bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
+      }
+#if defined ENABLE_IPV6
+      else if (info->attr->mp_nexthop.family == AF_INET6) {
+        ret = memcmp(&entry->bgp_nexthop.a.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
+      }
+#endif
+      else {
+	ret = memcmp(&entry->bgp_nexthop.a.address.ipv4, &info->attr->nexthop, 4);
+      }
+    }
+  }
+
+  if (!ret) return (FALSE | entry->bgp_nexthop.neg);
+  else return (TRUE ^ entry->bgp_nexthop.neg);
 }
 
 int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)

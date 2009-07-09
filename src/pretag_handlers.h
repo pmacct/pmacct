@@ -57,6 +57,7 @@ EXT int pretag_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_output_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_engine_type_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_engine_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_filter_handler(struct packet_ptrs *, void *, void *);

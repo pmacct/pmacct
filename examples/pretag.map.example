@@ -1,40 +1,39 @@
 ! 
-! Pre-Tagging map -- multiplexes various fields into a small (1-65535) numerical ID 
+! Pre-Tagging map -- multiplexes various fields into a 4-bytes numerical-only ID 
 !
-! File syntax is key-based. Position of keys inside the same row (rule) is not relevant.
-! An atomic expression (example: 'id=1') does not allow spaces. The first full match wins
-! (like in firewall rules); take care to the order you write rules! Negative values might
-! be matched (ie., match data NOT coming from interface 2: in=-2); only 'id', 'ip' and
-! 'filter' keys don't support negative values. 'label', 'jeq', 'return' and 'stack' keys
-! can be used to alter the usual rule evaluation flow.
+! File syntax is key-based. Position of keys inside the same row (rule) is not relevant;
+! Spaces are not allowed (ie. 'id = 1' is not valid). The first full match wins (like in
+! firewall rules). Negative values mean negations  (ie. match data NOT entering interface
+! 2: 'in=-2'); 'id', 'ip' and 'filter' keys don't support negative values. 'label', 'jeq',
+! 'return' and 'stack' keys can be used to alter the standard rule evaluation flow.
 !
-! 'nfacctd': valid keys: 'id', 'ip', 'in', 'out', 'engine_type', 'engine_id', 'nexthop',
-! 'bgp_nexthop', 'v8agg' and 'filter'; mandatory keys for each rule: 'id' and 'ip'.
+! nfacctd: valid keys: id, ip, in, out, engine_type, engine_id, nexthop, bgp_nexthop,
+! src_as, dst_as, peer_src_as, peer_dst_as, v8agg and filter; mandatory keys for each
+! rule: id and ip.
 !
-! 'sfacctd': valid keys: 'id', 'ip', 'in', 'out', 'agent_id', 'nexthop', 'bgp_nexthop', 
-! 'sampling_rate' and 'filter'; mandatory keys for each rule: 'id' and 'ip'.
+! sfacctd: valid keys: id, ip, in, out, agent_id, nexthop, bgp_nexthop, src_as, dst_as, 
+! sampling_rate and filter; mandatory keys for each rule: id and ip.
 !
-! 'pmacctd': valid keys: 'id' and 'filter'. 'id' is mandatory for each rule. All remaining
-! primitives don't apply.
+! pmacctd: valid keys: id, src_as, dst_as and filter. Only id is mandatory for each rule. 
 !
 ! list of currently supported keys follow:
 !
-! 'id'			ID value to assign to a full matching flow
-! 'ip'			IP address of the exporter (router, probe, etc.) which is
-!			sending NetFlow packets.
-! 'in'  		Input interface of the flow 
-! 'out' 		Output interface of the flow 
+! 'id'			ID value to assign to a matching packet or flow
+! 'ip'			IP address of the device which is originating sFlow or NetFlow
+!			datagrams (router, probe, etc.)
+! 'in'  		Input interface 
+! 'out' 		Output interface 
 ! 'engine_type'		In NetFlow V5 it's compared against the 'engine_type' header
 !			field. In NetFlow V9 it's compared against the 3rd byte of
-!			the 'source_id' header field. provides uniqueness with respect
+!			the 'source_id' header field. Provides uniqueness with respect
 !			to the routing engine on the exporting device.
 ! 'engine_id'		In NetFlow V5 it's compared against the 'engine_id' header
 !			field. In NetFlow V9 it's compared against the 4th byte of
 !			the 'source_id' header field. It provides uniqueness with
 !			respect to the particular line card or VIP on the exporting
 !			device.
-! 'nexthop'		IPv4/IPv4 address of the next-hop router
-! 'bgp_nexthop'		IPv4/IPv4 address of the next-hop BGP router
+! 'nexthop'		IPv4/IPv6 address of the next-hop router
+! 'bgp_nexthop'		IPv4/IPv6 address of the next-hop BGP router
 ! 'filter'		Matches incoming packets against the supplied filter expression
 !			(expected in libpcap syntax); the filter needs to be enclosed in
 !			quotes ('). In order to get support for MPLS label hierarchies,
@@ -49,11 +48,16 @@
 ! 'sampling_rate'       In sFlow v2/v4/v5 it is compared against the sampling_rate field;
 !			It also works against NetFlow v5. NetFlow v9 is unsupported.
 ! 'src_as'		source Autonomous System Number. In pmacctd it works only against
-!			a Networks Map; in nf|sfacctd it works against either a Networks
-!			Map or ASN field in the datagram, if present (this is always true
-!			for sFlow but not for certain versions/subversions of NetFlow).  
-! 'dst_as'              destination Autonomous System Number. same 'src_as' remarks hold
-!			here. Read them above.
+!			a Networks map (see 'networks_file' directive); in nf|sfacctd it
+!			works against a Networks Map, the source ASN field in either sFlow
+!			or NetFlow datagrams and, since release 0.12.0, the BGP RIB of the
+!			exporting device (see 'nfacctd_bgp' directive).
+! 'dst_as'              destination Autonomous System Number. Same 'src_as' remarks hold
+!			here. Please read them above.
+! 'peer_src_as'		peering source Autonomous System Number. This is compared against
+!			the BGP RIB of the exporting device (see 'nfacctd_bgp' directive).
+! 'peer_dst_as'		peering destination Autonomous System Number. Same 'peer_src_as'
+!			remarks hold here. Please read them above.
 ! 'label'		Mark the rule with label's value. Labels don't need to be unique:
 !			when jumping, the first matching label wins.
 ! 'jeq'			Jump on EQual. Jumps to the supplied label in case of rule match.

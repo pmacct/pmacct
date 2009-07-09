@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
 pmacct EXAMPLES file.
 
@@ -14,6 +14,7 @@ VII.	Running the logfile players (pmmyplay/pmpgplay)
 VIII.	Quickstart guide to packet/stream classifiers
 IX.	Quickstart guide to setup a NetFlow agent/probe 
 X.	Quickstart guide to setup a sFlow agent/probe 
+XI.	Quickstart guide to setup the BGP daemon
 
 
 I. Plugins included with pmacct distribution
@@ -480,4 +481,97 @@ sfprobe_sampling_rate: 20
 ! classifiers: /path/to/classifiers/
 ! snaplen: 700
 !...
+
+
+XI. Quickstart guide to setup the BGP daemon
+pmacct 0.12.0 introduces a new BGP daemon feature. Such daemon is run as a parallel thread within
+the NetFlow collector nfacctd. The underlying idea is to receive from Provider Edge routers both
+NetFlow traffic samples (typically ingress) and full routing tables via BGP. Per-peer BGP RIBs are
+used to gain extra information about the traffic and, where applicable (ie. a large network split
+into multiple BGP clusters), ensure regionalized views of the network. 
+
+The first requirement is that pmacct has to be configured for compilation with threads, this line
+will do it:
+
+./configure --enable-threads
+
+The following configuration fragment is alone sufficient to set up a BGP daemon which will bind
+to an IP address, will present itself as being AS12345 and will support a maximum number of 100
+peers. Once PE routers begin sending NetFlow datagrams and peer up, it should be possible to see
+the BGP-related fields, ie. src_as, dst_as, peer_as_src, peer_as_dst, local_pref, etc., correctly
+populated while querying the memory table:
+
+nfacctd_bgp: true
+nfacctd_bgp_ip: X.X.X.X
+nfacctd_bgp_myas: 12345 
+nfacctd_bgp_max_peers: 100
+nfacctd_as_new: bgp
+[ ... ]
+plugins: memory
+
+The following configuration fragment turns on some optional features aimed at filtering in only the
+bits of information of interest (ie. cutting AS-PATHs after the third ASN away, relevant standard or
+extended communities). 
+
+nfacctd_bgp_aspath_radius: 3
+nfacctd_bgp_stdcomm_pattern: 12345:
+
+The peer_src_as primitive adds useful insight in understanding where traffic enters the network;
+unfortunately asymmetric routing compromises accuracy of grasping such information from NetFlow,
+when configured with the peer-as feature. A mapping is required and pmacct offers a few methods
+to achieve this. Below it's shown how to use a map reloadable at runtime (for syntax please see
+the 'peers.map.example' file within the examples): 
+
+nfacctd_bgp_peer_src_as_type: map
+nfacctd_bgp_peer_src_as_map: /path/to/peers.map
+
+Once nfacctd is configured and started up, the only remaining step is to let routers to export
+NetFlow samples to the collector and, with the same management IP address, peer with it via BGP.  
+As you might see below, it would be adviceable to configure the collector as a Route-Reflector
+client.
+
+A relevant configuration example for a Cisco router follows:
+
+ip flow-export source Loopback12345
+ip flow-export version 5
+ip flow-export destination X.X.X.X 2100
+!
+router bgp 12345
+ neighbor 193.242.91.196 remote-as 12345
+ neighbor 193.242.91.196 update-source Loopback12345
+ neighbor 193.242.91.196 version 4
+ neighbor 193.242.91.196 send-community
+ neighbor 193.242.91.196 route-reflector-client
+ neighbor 193.242.91.196 description nfacctd 
+
+A relevant configuration example for a Juniper router follows:
+
+forwarding-options {
+    sampling {
+        output {
+            cflowd X.X.X.X {
+                port 2100;
+                source-address Y.Y.Y.Y;
+                version 5;
+            }
+        }
+    }
+}
+protocols bgp {
+    group rr-ipt-netflow {
+        type internal;
+        local-address Y.Y.Y.Y;
+        family inet {
+            any;
+        }
+        cluster Y.Y.Y.Y;
+        neighbor X.X.X.X {
+            description "nfacctd";
+        }
+    }
+}
+
+As concluding notes: the implementation is 4-bytes ASN ready. It is foreseen that soon the same
+implementation will be ported to the sFlow collector, sfacctd. For a full review of the available
+configurable features see the CONFIG-KEYS document. 
 
