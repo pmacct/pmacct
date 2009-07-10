@@ -1589,23 +1589,6 @@ int cfg_key_nfacctd_bgp_msglog(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_myas(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value < 1) {
-	Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_myas' has to be >= 1.\n", filename);
-	return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_myas = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_myas'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_nfacctd_bgp_aspath_radius(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -394,6 +394,7 @@ void skinny_bgp_daemon()
 			  bgp_reply_pkt_ptr = bgp_reply_pkt;
 
 			  /* Replying to OPEN message */
+			  peer->myas = peer->as;
 			  ret = bgp_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
 			  if (ret > 0) bgp_reply_pkt_ptr += ret;
 			  else {
@@ -503,22 +504,22 @@ int bgp_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
   bopen_reply->bgpo_type = BGP_OPEN;
   bopen_reply->bgpo_version = BGP_VERSION4;
   bopen_reply->bgpo_holdtime = htons(peer->ht);
-  if (config.nfacctd_bgp_myas > BGP_AS_MAX) {
-	if (peer->cap_4as) {
-	  bopen_reply->bgpo_myas = htons(BGP_AS_TRANS);
-	  local_as4 = (u_int32_t *) peer->cap_4as;
-	  *local_as4 = htonl(config.nfacctd_bgp_myas);
-	}
-	/* This is currently an unsupported configuration */
-	else return -1;
+  if (peer->myas > BGP_AS_MAX) {
+    if (peer->cap_4as) {
+      bopen_reply->bgpo_myas = htons(BGP_AS_TRANS);
+      local_as4 = (u_int32_t *) peer->cap_4as;
+      *local_as4 = htonl(peer->myas);
+    }
+    /* This is currently an unsupported configuration */
+    else return -1;
   }
   else {
-	local_as = config.nfacctd_bgp_myas;
-	bopen_reply->bgpo_myas = htons(local_as);
-	if (peer->cap_4as) {
-	  local_as4 = (u_int32_t *) peer->cap_4as;
-	  *local_as4 = htonl(config.nfacctd_bgp_myas);
-	}
+    local_as = peer->myas;
+    bopen_reply->bgpo_myas = htons(local_as);
+    if (peer->cap_4as) {
+      local_as4 = (u_int32_t *) peer->cap_4as;
+      *local_as4 = htonl(peer->myas);
+    }
   }
 
   bopen_reply->bgpo_optlen = cp_msglen;
@@ -807,11 +808,6 @@ int bgp_attr_parse_med(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *at
 int bgp_attr_parse_local_pref(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
 {
   u_int32_t tmp;
-
-  /* If it is contained in an UPDATE message that is received from an
-	 external peer, then this attribute MUST be ignored by the receiving
-	 speaker. */
-  if (peer->as != config.nfacctd_bgp_myas) return 0;
 
   if (len != 4) return -1;
 

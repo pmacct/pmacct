@@ -306,7 +306,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sfprobe_agentsubid", cfg_key_sfprobe_agentsubid},
   {"flow_handling_threads", cfg_key_flow_handling_threads},
   {"nfacctd_bgp", cfg_key_nfacctd_bgp},
-  {"nfacctd_bgp_myas", cfg_key_nfacctd_bgp_myas},
   {"nfacctd_bgp_ip", cfg_key_nfacctd_bgp_ip},
   {"nfacctd_bgp_port", cfg_key_nfacctd_bgp_port},
   {"nfacctd_bgp_max_peers", cfg_key_nfacctd_bgp_max_peers},

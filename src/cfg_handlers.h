@@ -120,7 +120,6 @@ EXT int cfg_key_sfprobe_agentsubid(char *, char *, char *);
 EXT int cfg_key_flow_handling_threads(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_msglog(char *, char *, char *);
-EXT int cfg_key_nfacctd_bgp_myas(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_max_peers(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_ip(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_port(char *, char *, char *);

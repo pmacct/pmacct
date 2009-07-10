@@ -93,7 +93,8 @@ struct bgp_peer {
   int fd;
   int lock;
   u_int8_t status;
-  u_int32_t as;
+  as_t myas;
+  as_t as;
   u_int16_t ht;
   time_t last_keepalive;
   struct host_addr id;
