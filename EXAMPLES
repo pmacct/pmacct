@@ -496,22 +496,23 @@ will do it:
 ./configure --enable-threads
 
 The following configuration fragment is alone sufficient to set up a BGP daemon which will bind
-to an IP address, will present itself as being AS12345 and will support a maximum number of 100
-peers. Once PE routers begin sending NetFlow datagrams and peer up, it should be possible to see
-the BGP-related fields, ie. src_as, dst_as, peer_as_src, peer_as_dst, local_pref, etc., correctly
-populated while querying the memory table:
+to an IP address and will support up to a maximum number of 100 peers. Once the PE routers begin
+sending NetFlow datagrams and peer up, it should be possible to see the BGP-related fields, ie.
+src_as, dst_as, peer_as_src, peer_as_dst, local_pref, etc., correctly populated while querying
+the memory table:
 
 nfacctd_bgp: true
 nfacctd_bgp_ip: X.X.X.X
-nfacctd_bgp_myas: 12345 
 nfacctd_bgp_max_peers: 100
 nfacctd_as_new: bgp
 [ ... ]
 plugins: memory
 
+Note that the BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically
+presents itself as part of the same Autonomous System - so to ensure an iBGP peerins is established.
 The following configuration fragment turns on some optional features aimed at filtering in only the
-bits of information of interest (ie. cutting AS-PATHs after the third ASN away, relevant standard or
-extended communities). 
+bits of information of interest (ie. cutting AS-PATHs after the third ASN away, relevant standard
+or extended communities). 
 
 nfacctd_bgp_aspath_radius: 3
 nfacctd_bgp_stdcomm_pattern: 12345:

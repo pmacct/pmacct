@@ -118,9 +118,11 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
   if (!have_wtc) {
     printf("ID          ");
     printf("CLASS             ");
+#if defined HAVE_L2
     printf("SRC_MAC            ");
     printf("DST_MAC            ");
     printf("VLAN   ");
+#endif
     printf("SRC_AS      ");
     printf("DST_AS      "); 
     printf("BGP_COMMS                ");

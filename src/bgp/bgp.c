@@ -153,7 +153,7 @@ void skinny_bgp_daemon()
 
     /* New connection is coming in */ 
     if (FD_ISSET(sock, &read_descs)) {
-      int peers_check_idx;
+      int peers_check_idx, peers_num;
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (peers[peers_idx].fd == 0) {
@@ -174,14 +174,18 @@ void skinny_bgp_daemon()
       peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
 
       /* Check: only one TCP connection is allowed per peer */
-      for (peers_check_idx = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
+      for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && peers[peers_check_idx].addr.address.ipv4.s_addr == peer->addr.address.ipv4.s_addr) { 
           Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4));
           FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
           bgp_peer_close(&peers[peers_check_idx]);
-          goto select_again;
         }
+	else {
+	  if (peers[peers_check_idx].fd) peers_num++;
+	}
       }
+
+      Log(LOG_INFO, "INFO ( default/core/BGP ): BGP peers usage: %u/%u\n", peers_num, config.nfacctd_bgp_max_peers);
 
       goto select_again; 
     }

@@ -42,6 +42,7 @@ struct chained_cache {
   pm_counter_t packet_counter;
   pm_counter_t flow_counter;
   u_int32_t tcp_flags;
+  struct pkt_bgp_primitives *pbgp;
   int valid;
   struct chained_cache *next;
 };
@@ -49,15 +50,15 @@ struct chained_cache {
 /* prototypes */
 void print_plugin(int, struct configuration *, void *);
 struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
-unsigned int P_cache_modulo(struct pkt_primitives *);
-void P_sum_host_insert(struct pkt_data *);
-void P_sum_port_insert(struct pkt_data *);
-void P_sum_as_insert(struct pkt_data *);
+unsigned int P_cache_modulo(struct pkt_primitives *, struct pkt_bgp_primitives *);
+void P_sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+void P_sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+void P_sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 #if defined (HAVE_L2)
-void P_sum_mac_insert(struct pkt_data *);
+void P_sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 #endif
-struct chained_cache *P_cache_search(struct pkt_primitives *);
-void P_cache_insert(struct pkt_data *);
+struct chained_cache *P_cache_search(struct pkt_primitives *, struct pkt_bgp_primitives *);
+void P_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 void P_cache_flush(struct chained_cache *[], int);
 void P_cache_purge(struct chained_cache *[], int);
 void P_write_stats_header();
@@ -65,10 +66,10 @@ void *Malloc(unsigned int);
 void P_exit_now(int);
 
 /* global vars */
-void (*insert_func)(struct pkt_data *); /* pointer to INSERT function */
+void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *); /* pointer to INSERT function */
 struct scratch_area sa;
 struct chained_cache *cache;
 struct chained_cache **queries_queue;
 struct timeval flushtime;
-int qq_ptr, pp_size, dbc_size, quit; 
+int qq_ptr, pp_size, pb_size, dbc_size, quit; 
 time_t refresh_deadline;
