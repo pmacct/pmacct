@@ -43,6 +43,8 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  struct pkt_bgp_primitives *pbgp;
+  char *dataptr;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -255,10 +257,17 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
         }
 
-        (*insert_func)(data, &idata); 
+        if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
+        else pbgp = NULL;
 
-	((struct ch_buf_hdr *)pipebuf)->num--;
-	if (((struct ch_buf_hdr *)pipebuf)->num) data++;
+        (*insert_func)(data, pbgp, &idata);
+
+        ((struct ch_buf_hdr *)pipebuf)->num--;
+        if (((struct ch_buf_hdr *)pipebuf)->num) {
+          dataptr = (unsigned char *) data;
+          dataptr += PdataSz + PbgpSz;
+          data = (struct pkt_data *) dataptr;
+	}
       }
       goto read_data;
     }
@@ -534,11 +543,14 @@ int PG_compose_static_queries()
 {
   int primitives=0, set_primitives=0, have_flows=0, lock=0;
 
-  if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 && !config.sql_optimize_clauses)) {
+  if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 &&
+                                             config.sql_table_version < SQL_TABLE_VERSION_BGP &&
+                                             !config.sql_optimize_clauses)) {
     config.what_to_count |= COUNT_FLOWS;
     have_flows = TRUE;
 
-    if (config.sql_table_version < 4 && !config.sql_optimize_clauses) {
+    if ((config.sql_table_version < 4 && !config.sql_optimize_clauses) ||
+        config.sql_table_version >= SQL_TABLE_VERSION_BGP) {
       Log(LOG_ERR, "ERROR ( %s/%s ): The accounting of flows requires SQL table v4. Exiting.\n", config.name, config.type);
       exit_plugin(1);
     }
@@ -787,7 +799,8 @@ void PG_init_default_values(struct insert_data *idata)
     }
 
     if (typed) {
-      if (config.sql_table_version == 7) config.sql_table = pgsql_table_v7;
+      if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = pgsql_table_bgp;
+      else if (config.sql_table_version == 7) config.sql_table = pgsql_table_v7;
       else if (config.sql_table_version == 6) config.sql_table = pgsql_table_v6; 
       else if (config.sql_table_version == 5) {
         if (config.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) config.sql_table = pgsql_table_as_v5;

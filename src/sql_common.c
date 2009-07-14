@@ -94,11 +94,17 @@ void sql_init_global_buffers()
   memset(pending_queries_queue, 0, qq_size*sizeof(struct db_cache *));
 }
 
+/* being the first routine to be called by each SQL plugin, this is
+   also the place for some initial common configuration consistency
+   check */ 
 void sql_init_default_values()
 {
-  /* being the first routine to be called by each SQL plugin, this is
-     also the place for some initial common configuration consistency
-     check */ 
+  /* Dirty but allows to save some IFs, centralizes
+     checks and makes later comparison statements lean */
+  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)))
+    PbgpSz = 0;
+
   if ( (config.what_to_count & COUNT_CLASS ||
 	config.what_to_count & COUNT_TCPFLAGS ||
 	PbgpSz || /* In short: any BGP primitives */
@@ -144,12 +150,6 @@ void sql_init_default_values()
   glob_nfacctd_sql_log = config.nfacctd_sql_log;
 
   memset(&sql_writers, 0, sizeof(sql_writers));
-
-  /* Dirty but allows to save some IFs, centralizes
-     checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)))
-    PbgpSz = 0;
 }
 
 void sql_init_historical_acct(time_t now, struct insert_data *idata)

@@ -656,13 +656,13 @@ void MY_init_default_values(struct insert_data *idata)
   if (!config.sql_db) config.sql_db = mysql_db;
   if (!config.sql_passwd) config.sql_passwd = mysql_pwd;
   if (!config.sql_table) {
-    if (config.sql_table_version == 7) config.sql_table = mysql_table_v7;
+    if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = mysql_table_bgp;
+    else if (config.sql_table_version == 7) config.sql_table = mysql_table_v7;
     else if (config.sql_table_version == 6) config.sql_table = mysql_table_v6;
     else if (config.sql_table_version == 5) config.sql_table = mysql_table_v5;
     else if (config.sql_table_version == 4) config.sql_table = mysql_table_v4;
     else if (config.sql_table_version == 3) config.sql_table = mysql_table_v3;
     else if (config.sql_table_version == 2) config.sql_table = mysql_table_v2;
-    else if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = mysql_table_bgp;
     else config.sql_table = mysql_table;
   }
   if (strchr(config.sql_table, '%')) idata->dyn_table = TRUE;

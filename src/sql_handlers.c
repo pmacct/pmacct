@@ -188,11 +188,12 @@ void count_peer_src_ip_handler(const struct db_cache *cache_elem, const struct i
 
 void count_peer_dst_ip_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char ptr[INET6_ADDRSTRLEN];
+  char ptr[INET6_ADDRSTRLEN], *indirect_ptr = ptr;
 
   addr_to_str(ptr, &cache_elem->pbgp->peer_dst_ip);
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ptr);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ptr);
+  if (!strlen(ptr)) indirect_ptr = (char *) fake_host;
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, indirect_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, indirect_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
