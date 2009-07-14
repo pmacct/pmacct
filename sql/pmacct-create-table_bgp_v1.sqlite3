@@ -1,0 +1,20 @@
+DROP TABLE acct_bgp; 
+CREATE TABLE acct_bgp (
+	agent_id INT(8) NOT NULL DEFAULT 0,
+        as_src INT(8) NOT NULL DEFAULT 0,
+        as_dst INT(8) NOT NULL DEFAULT 0,
+        peer_as_src INT(8) NOT NULL DEFAULT 0,
+        peer_as_dst INT(8) NOT NULL DEFAULT 0,
+        peer_ip_src CHAR(15) NOT NULL DEFAULT '0.0.0.0',
+        peer_ip_dst CHAR(15) NOT NULL DEFAULT '0.0.0.0',
+        comms CHAR(24) NOT NULL DEFAULT ' ',
+        as_path CHAR(21) NOT NULL DEFAULT ' ',
+        local_pref INT(8) NOT NULL DEFAULT 0,
+        med INT(8) NOT NULL DEFAULT 0,
+        packets INT NOT NULL,
+	bytes BIGINT NOT NULL,
+	flows INT NOT NULL DEFAULT 0,
+	stamp_inserted DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+	stamp_updated DATETIME,
+        PRIMARY KEY (agent_id, as_src, as_dst, peer_as_src, peer_as_dst, peer_ip_src, peer_ip_dst, comms, as_path, local_pref, med, stamp_inserted)
+);

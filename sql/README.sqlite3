@@ -7,50 +7,65 @@ better for you on the system (e.g., to follow a partitioning scheme, impose
 specific permissions, etc.). 
 
 - To create v1 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table.sqlite3
+  * sqlite3 /tmp/pmacct.db < pmacct-create-table.sqlite3
 
-Data will be available in 'acct' table of '/tmp/pmacct.db' DB.
+- To use v1 tables:
+  * data will be available in 'acct' table of 'pmacct' DB.
+  * Add 'sql_table_version: 1' line to your configuration.
+
+Similarly, v2 to v7 tables:
 
 - To create v2 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v2.sqlite3
+  * sqlite3 /tmp/pmacct.db < pmacct-create-table_v2.sqlite3
 
-Data will be available in 'acct_v2' table of '/tmp/pmacct.db' DB.
+- To use v2 tables:
+  * data will be available in 'acct_v2' table of 'pmacct' DB.
+  * Add 'sql_table_version: 2' line to your configuration.
 
-- To create v3 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v3.sqlite3
-
-Data will be available in 'acct_v3' table of '/tmp/pmacct.db' DB.
-
-- To create v4 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v4.sqlite3
-
-Data will be available in 'acct_v4' table of '/tmp/pmacct.db' DB.
-
-- To create v5 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v5.sqlite3
-
-Data will be available in 'acct_v5' table of '/tmp/pmacct.db' DB.
-
-- To create v6 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v6.sqlite3
+[ ... ]
 
 - To create v7 tables:
-shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v7.sqlite3
+  * sqlite3 /tmp/pmacct.db < pmacct-create-table_v7.sqlite3
 
-Data will be available in 'acct_v6' table of '/tmp/pmacct.db' DB.
+- To use v7 tables:
+  * data will be available in 'acct_v7' table of 'pmacct' DB.
+  * Add 'sql_table_version: 7' line to your configuration.
 
-- To understand difference between v1, v2, v3, v4, v5, v6 and v7 tables:
-  - Do you need TCP flags ? Then you have to use v7.
-  - Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
-  - Do you need packet classification ? Then you have to use v5.
-  - Do you need flows (other than packets) accounting ? Then you have to use v4.
-  - Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
-  - Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2. 
-  - Do you need VLAN traffic accounting ? Then you have to use v2.
-  - If all of the above points sound useless, then use v1.
+Similarly, BGP tables:
+
+- To create BGP v1 tables:
+  * sqlite3 /tmp/pmacct.db < pmacct-create-table_bgp_v1.sqlite3
+
+- To use BGP v1 tables:
+  * data will be available in 'acct_bgp' table of 'pmacct' DB.
+  * Add 'sql_table_version: 1' line to your configuration.
+  * Add 'sql_table_type: bgp' line to your configuration.
+
+- To understand difference between the various table versions:
+  * Do you need any of the BGP primitives ? Then look the next section.
+  * Do you need TCP flags ? Then you have to use v7.
+  * Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
+  * Do you need packet classification ? Then you have to use v5.
+  * Do you need flows (other than packets) accounting ? Then you have to use v4.
+  * Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
+  * Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2. 
+  * Do you need VLAN traffic accounting ? Then you have to use v2.
+  * If all of the above points sound useless, then use v1.
+
+- To understand difference between the various BGP table versions:
+  * Only BGP table v1 is currently available.
+
 
 NOTE: mind to specify EVERYTIME which SQL table version you
 intend to adhere to by using either of the following rules:
 
-commandline:    -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
-configuration:  sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+When using commandline options:
+  * -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+
+When using configuration directives:
+  * sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+  * sql_table_type: [ bgp ]
+
+NOTE: specifying a non-documented SQL table profile will result
+in an non-determined behaviour. Unless this will create crashes
+to the application, such situations will not be supported.

@@ -47,3 +47,4 @@ static char sqlite3_table_v4[] = "acct_v4";
 static char sqlite3_table_v5[] = "acct_v5";
 static char sqlite3_table_v6[] = "acct_v6";
 static char sqlite3_table_v7[] = "acct_v7";
+static char sqlite3_table_bgp[] = "acct_bgp";

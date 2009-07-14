@@ -43,6 +43,8 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  struct pkt_bgp_primitives *pbgp;
+  char *dataptr;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -252,10 +254,17 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	}
 
-	(*insert_func)(data, &idata);
-	
-	((struct ch_buf_hdr *)pipebuf)->num--;
-        if (((struct ch_buf_hdr *)pipebuf)->num) data++;
+        if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
+        else pbgp = NULL;
+
+        (*insert_func)(data, pbgp, &idata);
+
+        ((struct ch_buf_hdr *)pipebuf)->num--;
+        if (((struct ch_buf_hdr *)pipebuf)->num) {
+          dataptr = (unsigned char *) data;
+          dataptr += PdataSz + PbgpSz;
+          data = (struct pkt_data *) dataptr;
+        }
       }
       goto read_data;
     }
@@ -471,7 +480,9 @@ int SQLI_compose_static_queries()
 {
   int primitives=0, set_primitives=0, have_flows=0;
 
-  if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 && !config.sql_optimize_clauses)) {
+  if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 &&
+                                             config.sql_table_version < SQL_TABLE_VERSION_BGP &&
+                                             !config.sql_optimize_clauses)) {
     config.what_to_count |= COUNT_FLOWS;
     have_flows = TRUE;
 
@@ -617,7 +628,8 @@ void SQLI_init_default_values(struct insert_data *idata)
   /* Linking database parameters */
   if (!config.sql_db) config.sql_db = sqlite3_db;
   if (!config.sql_table) {
-    if (config.sql_table_version == 7) config.sql_table = sqlite3_table_v7;
+    if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = sqlite3_table_bgp;
+    else if (config.sql_table_version == 7) config.sql_table = sqlite3_table_v7;
     else if (config.sql_table_version == 6) config.sql_table = sqlite3_table_v6;
     else if (config.sql_table_version == 5) config.sql_table = sqlite3_table_v5;
     else if (config.sql_table_version == 4) config.sql_table = sqlite3_table_v4;

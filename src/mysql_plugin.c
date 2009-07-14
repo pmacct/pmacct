@@ -258,7 +258,6 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	}
 
-        /* XXX: can be optimized? */
         if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
         else pbgp = NULL;
 
