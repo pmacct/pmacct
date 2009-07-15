@@ -177,6 +177,7 @@ EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(char *);
 EXT as_t evaluate_first_asn(char *);
+EXT void bgp_srcdst_lookup(struct packet_ptrs *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(void *, void *);

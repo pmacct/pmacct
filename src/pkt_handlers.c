@@ -108,15 +108,19 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS)) {
-      /* ACCT_PM and ACCT_SF do nothing */
+      /* ACCT_PM does nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
-	channels_list[index].phandler[primitives] = NF_bgp_ext_handler;
+	channels_list[index].phandler[primitives] = bgp_ext_handler;
+        primitives++;
+      }
+      else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
+        channels_list[index].phandler[primitives] = bgp_ext_handler;
         primitives++;
       }
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
-      /* ACCT_PM and ACCT_SF do nothing */
+      /* ACCT_PM does nothing */
       if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
           channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromstd_handler;
@@ -127,9 +131,23 @@ void evaluate_packet_handlers()
           primitives++;
 	}
         else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
-          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_frommap_handler;
+          channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         } 
+      }
+      else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
+          channels_list[index].phandler[primitives] = SF_bgp_peer_src_as_fromstd_handler;
+          primitives++;
+        }
+        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_ECOMMS) {
+          channels_list[index].phandler[primitives] = SF_bgp_peer_src_as_fromext_handler;
+          primitives++;
+        }
+        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+          channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
+          primitives++;
+        }
       }
     }
 
@@ -1342,7 +1360,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   }
 }
 
-void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
@@ -1427,7 +1445,15 @@ void NF_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     }
   }
 
-  if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
+  if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) {
+    if (!pptrs->bta) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
+    else {
+      struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
+
+      pbgp->peer_src_ip.family = sa->sa_family;
+      pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
+    }
+  }
 }
 
 void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1524,7 +1550,7 @@ void NF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
 }
 
 
-void NF_bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
@@ -1786,4 +1812,24 @@ void sfprobe_sampling_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_payload *payload = (struct pkt_payload *) *data;
 
   evaluate_sampling(&chptr->s, &payload->pkt_len, &payload->pkt_num, &payload->sample_pool);
+}
+
+void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  pbgp->peer_src_as = 0;
+
+  // XXX: fill this in
+}
+
+void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  pbgp->peer_src_as = 0;
+
+  // XXX: fill this in
 }

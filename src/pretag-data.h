@@ -51,3 +51,9 @@ const struct _map_dictionary_line bpas_map_dictionary[] = {
   {"src_mac", BPAS_map_src_mac_handler},
   {"", NULL}
 };
+
+const struct _map_dictionary_line bta_map_dictionary[] = {
+  {"id", PT_map_id_handler},
+  {"ip", PT_map_ip_handler},
+  {"", NULL}
+};

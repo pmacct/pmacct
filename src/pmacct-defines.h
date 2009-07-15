@@ -85,7 +85,8 @@
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
-#define MAP_BGP_PEER_AS_SRC	100	/* *_bgp_peer_as_src */
+#define MAP_BGP_PEER_AS_SRC	100	/* bgp_peer_as_src */
+#define MAP_BGP_TO_XFLOW_AGENT	101	/* bgp_to_agent_map */
 
 
 #define COUNT_SRC_HOST		0x0000000000000001ULL

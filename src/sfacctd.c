@@ -38,6 +38,8 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
+#include "bgp/bgp_packet.h"
+#include "bgp/bgp.h"
 
 /* variables to be exported away */
 int debug;
@@ -100,6 +102,8 @@ int main(int argc,char **argv, char **envp)
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table idt;
+  struct id_table bpas_table;
+  struct id_table bta_table;
   u_int32_t idx;
   u_int16_t ret;
   SFSample spp;
@@ -146,6 +150,7 @@ int main(int argc,char **argv, char **envp)
   reload_map = FALSE;
   tag_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
+  bta_map_allocated = FALSE;
 
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;
@@ -367,6 +372,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }
       else {
+	list->cfg.data_type = PIPE_TYPE_METADATA;
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
 	if (!list->cfg.what_to_count) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
@@ -384,8 +390,16 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
+        if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+          /* Sanitizing the aggregation method */
+          if ( (list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM) ) {
+            printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+            exit(1);
+          }
+          list->cfg.data_type |= PIPE_TYPE_BGP;
+        }
 	list->cfg.what_to_count |= COUNT_COUNTERS;
-	list->cfg.data_type = PIPE_TYPE_METADATA;
       }
     }
     list = list->next;
@@ -496,6 +510,41 @@ int main(int argc,char **argv, char **envp)
     memset(&idt, 0, sizeof(idt));
     pptrs.v4.idtable = NULL;
   }
+
+#if defined ENABLE_THREADS
+  /* starting the BGP thread */
+  if (config.nfacctd_bgp) {
+    req.bpf_filter = TRUE;
+    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
+
+    if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+      if (config.nfacctd_bgp_peer_as_src_map) {
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
+        pptrs.v4.bpas_table = (u_char *) &bpas_table;
+      }
+    }
+    else {
+      memset(&bpas_table, 0, sizeof(bpas_table));
+      pptrs.v4.bpas_table = NULL;
+    }
+
+    if (config.nfacctd_bgp_to_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
+      pptrs.v4.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      memset(&bta_table, 0, sizeof(bta_table));
+      pptrs.v4.bta_table = NULL;
+    }
+
+    nfacctd_bgp_wrapper();
+  }
+#else
+  if (config.nfacctd_bgp) {
+    Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    exit(1);
+  }
+#endif
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);
 
@@ -673,6 +722,10 @@ int main(int argc,char **argv, char **envp)
 
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
+      if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
+      if (config.nfacctd_bgp && config.nfacctd_bgp_to_agent_map)
+        load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
       if (config.pre_tag_map)
         load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
       reload_map = FALSE;
@@ -832,6 +885,7 @@ void compute_once()
   PdataSz = sizeof(struct pkt_data);
   PpayloadSz = sizeof(struct pkt_payload);
   PextrasSz = sizeof(struct pkt_extras);
+  PbgpSz = sizeof(struct pkt_bgp_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);
   CharPtrSz = sizeof(char *);
   IP4HdrSz = sizeof(struct my_iphdr);
@@ -1925,6 +1979,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrs->l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrs->tag = SF_find_id((struct id_table *)pptrs->idtable, pptrs);
       exec_plugins(pptrs);
       break;
@@ -1946,6 +2003,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->v6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6);
       exec_plugins(&pptrsv->v6);
       break;
@@ -1968,6 +2028,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->vlan4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4);
       exec_plugins(&pptrsv->vlan4);
       break;
@@ -1990,6 +2053,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->vlan6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6);
       exec_plugins(&pptrsv->vlan6);
       break;
@@ -2025,6 +2091,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->mpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4);
       exec_plugins(&pptrsv->mpls4);
       break;
@@ -2059,6 +2128,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->mpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6);
       exec_plugins(&pptrsv->mpls6);
       break;
@@ -2094,6 +2166,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->vlanmpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4);
       exec_plugins(&pptrsv->vlanmpls4);
       break;
@@ -2129,6 +2204,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
 
+      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
       if (config.pre_tag_map) pptrsv->vlanmpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6);
       exec_plugins(&pptrsv->vlanmpls6);
       break;

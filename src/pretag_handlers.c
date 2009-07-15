@@ -28,22 +28,40 @@
 #include "pretag_handlers.h"
 #include "net_aggr.h"
 
-int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
+  struct host_addr a;
   char *endptr = NULL;
   pm_id_t j;
 
-  j = strtoul(value, &endptr, 10);
-  if (!j) {
-    Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID 0 specified. ", filename);
-    return TRUE;
-  } 
+  /* If we spot a '.' within the string let's see if we are given a vaild
+      IPv4 address; by default we would treat it as an unsigned integer */
+  if (strchr(value, '.')) {
+    if (acct_type != MAP_BGP_TO_XFLOW_AGENT) {
+      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
+      return TRUE;
+    } 
+    memset(&a, 0, sizeof(a));
+    str_to_addr(value, &a);
+    if (a.family == AF_INET) j = a.address.ipv4.s_addr;
+    else {
+      Log(LOG_ERR, "ERROR ( %s ): Agent ID does not appear to be a valid IPv4 address. ", filename);
+      return TRUE;
+    }
+  }
+  else {
+    j = strtoul(value, &endptr, 10);
+    if (!j) {
+      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
+      return TRUE;
+    } 
+  }
   e->id = j; 
 
   return FALSE;
 }
 
-int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   if (!str_to_addr(value, &e->agent_ip.a)) {
     Log(LOG_ERR, "ERROR ( %s ): Bad IP address '%s'. ", filename, value);
@@ -53,7 +71,7 @@ int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct pl
   return FALSE;
 }
 
-int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, len;
   char *endptr;
@@ -77,7 +95,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   return FALSE;
 }
 
-int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, len;
   char *endptr;
@@ -101,7 +119,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
   return FALSE;
 }
 
-int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
 
@@ -119,7 +137,7 @@ int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
-int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
 
@@ -144,13 +162,17 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
     e->func[x] = SF_pretag_bgp_nexthop_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+    e->func[x] = pretag_bgp_bgp_nexthop_handler;
+    return FALSE;
+  }
 
   Log(LOG_ERR, "ERROR ( %s ): 'bgp_nexthop' is not supported when a 'networks_file' is specified or by the 'pmacctd' daemon. ", filename);
 
   return TRUE;
 }
 
-int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
 
@@ -167,7 +189,7 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   return FALSE;
 }
 
-int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct pcap_device device;
   bpf_u_int32 localnet, netmask;  /* pcap library stuff */
@@ -196,7 +218,7 @@ int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, st
   return FALSE;
 }
 
-int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, j, len;
 
@@ -223,7 +245,7 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
   return FALSE;
 }
 
-int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, j, len;
 
@@ -250,7 +272,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
   return FALSE;
 }
 
-int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct pcap_device device;
   bpf_u_int32 localnet, netmask;  /* pcap library stuff */
@@ -275,7 +297,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   return FALSE;
 }
 
-int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int tmp, x = 0, len;
 
@@ -302,7 +324,7 @@ int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct
   return FALSE;
 }
 
-int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
 
@@ -314,7 +336,7 @@ int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, str
   return FALSE;
 }
 
-int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
 
@@ -327,7 +349,7 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
   return FALSE;
 }
 
-int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
   int x = 0;
@@ -357,13 +379,17 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
     e->func[x] = pretag_bgp_src_as_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+    e->func[x] = pretag_bgp_src_as_handler;
+    return FALSE;
+  }
 
   Log(LOG_ERR, "ERROR ( %s ): 'src_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
 
   return TRUE;
 }
 
-int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
   int x = 0;
@@ -393,13 +419,17 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
     e->func[x] = pretag_bgp_dst_as_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+    e->func[x] = pretag_bgp_dst_as_handler;
+    return FALSE;
+  }
 
   Log(LOG_ERR, "ERROR ( %s ): 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
 
   return TRUE;
 }
 
-int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
   int x = 0;
@@ -416,13 +446,17 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
     e->func[x] = pretag_peer_src_as_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+    e->func[x] = pretag_peer_src_as_handler;
+    return FALSE;
+  }
 
   Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
 
   return TRUE;
 }
 
-int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
   int x = 0;
@@ -439,20 +473,24 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
     e->func[x] = pretag_peer_dst_as_handler;
     return FALSE;
   }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+    e->func[x] = pretag_peer_dst_as_handler;
+    return FALSE;
+  } 
 
   Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
 
   return TRUE;
 }
 
-int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   strlcpy(e->label, value, MAX_LABEL_LEN); 
 
   return FALSE;
 }
 
-int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   e->jeq.label = malloc(MAX_LABEL_LEN);
   if (e->jeq.label) strlcpy(e->jeq.label, value, MAX_LABEL_LEN);
@@ -461,7 +499,7 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
   return FALSE;
 }
 
-int PT_map_return_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_return_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int res = parse_truefalse(value);
   if (res < 0) Log(LOG_ERR, "ERROR ( %s ): Unknown RETURN value: '%s'. Ignoring.\n", filename, value);
@@ -470,7 +508,7 @@ int PT_map_return_handler(char *filename, struct id_entry *e, char *value, struc
   return FALSE;
 }
 
-int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req)
+int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   e->stack.func = NULL;
 

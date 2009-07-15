@@ -67,7 +67,7 @@ void load_plugins(struct plugin_requests *req)
       }
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) min_sz += PextrasSz; 
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += PbgpSz; 
-      
+
       /* If nothing is supplied, let's hint some working default values */
       if (list->cfg.pcap_savefile && !list->cfg.pipe_size && !list->cfg.buffer_size) {
         list->cfg.pipe_size = 4096000; /* 4Mb */

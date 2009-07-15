@@ -102,7 +102,7 @@ struct id_table {
 
 struct _map_dictionary_line {
   char key[SRVBUFLEN];
-  int (*func)(char *, struct id_entry *, char *, struct plugin_requests *);
+  int (*func)(char *, struct id_entry *, char *, struct plugin_requests *, int);
 };
 
 struct pretag_filter {
@@ -122,5 +122,6 @@ EXT char * pt_check_range(char *);
 
 EXT int tag_map_allocated;
 EXT int bpas_map_allocated;
+EXT int bta_map_allocated;
 
 #undef EXT

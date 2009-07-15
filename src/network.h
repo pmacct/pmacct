@@ -172,7 +172,8 @@ struct packet_ptrs {
   u_char *f_tpl; /* ptr to NetFlow V9 template */
   u_char *f_status; /* ptr to status table entry */
   u_char *idtable; /* ptr to pretag table map */
-  u_char *bpas_table; /* ptr to *_bgp_peer_as_src table map */
+  u_char *bpas_table; /* ptr to bgp_peer_as_src table map */
+  u_char *bta_table; /* ptr to bgp_to_agent table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
   u_int16_t l3_proto; /* layer-3 protocol: IPv4, IPv6 */
@@ -180,6 +181,7 @@ struct packet_ptrs {
   u_int16_t l4_proto; /* layer-4 protocol */
   pm_id_t tag; /* pre tag id */
   pm_id_t bpas; /* bgp_peer_as_src */
+  pm_id_t bta; /* bgp_to_agent */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
   char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 
   char *bgp_peer; /* BGP peer's Router-ID */

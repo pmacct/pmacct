@@ -1457,3 +1457,52 @@ as_t evaluate_first_asn(char *src)
 
   return asn;
 }
+
+void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
+{
+  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
+  struct bgp_peer *peer;
+  struct in_addr pref4;
+#if defined ENABLE_IPV6
+  struct in6_addr pref6;
+#endif
+  int peers_idx;
+
+  if (pptrs->bta) {
+    sa = &sa_local;
+    memset(sa, 0, sizeof(struct sockaddr));
+    sa->sa_family = AF_INET;
+    ((struct sockaddr_in *)sa)->sin_addr.s_addr = pptrs->bta; 
+  }
+
+  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
+      peer = &peers[peers_idx];
+      pptrs->bgp_peer = (char *) &peers[peers_idx];
+      break;
+    }
+  }
+
+  if (peer) {
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+      pptrs->bgp_src = (char *) bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
+      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+      pptrs->bgp_dst = (char *) bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
+    }
+#if defined ENABLE_IPV6
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+      pptrs->bgp_src = (char *) bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+      pptrs->bgp_dst = (char *) bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
+    }
+#endif
+  }
+  else {
+    pptrs->bgp_peer = NULL;
+    pptrs->bgp_src = NULL;
+    pptrs->bgp_dst = NULL;
+  }
+}
+

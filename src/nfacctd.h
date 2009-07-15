@@ -527,6 +527,5 @@ EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
 EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *);
 EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
-EXT void NF_bgp_srcdst_lookup(struct packet_ptrs *);
 #undef EXT
 
