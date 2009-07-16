@@ -1668,6 +1668,19 @@ int cfg_key_nfacctd_bgp_to_agent_map(char *filename, char *name, char *value_ptr
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_follow_default(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_follow_default = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_follow_default'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

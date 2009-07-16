@@ -103,6 +103,7 @@ struct configuration {
   int nfacctd_bgp_peer_as_src_type;
   char *nfacctd_bgp_peer_as_src_map;
   char *nfacctd_bgp_to_agent_map;
+  int nfacctd_bgp_follow_default;
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */
   char *pcap_savefile;

@@ -315,7 +315,8 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_extcomm_pattern", cfg_key_nfacctd_bgp_extcomm_pattern},
   {"bgp_peer_src_as_type", cfg_key_nfacctd_bgp_peer_src_as_type},
   {"bgp_peer_src_as_map", cfg_key_nfacctd_bgp_peer_src_as_map},
-  {"bgp_to_agent_map", cfg_key_nfacctd_bgp_to_agent_map},
+  {"bgp_agent_map", cfg_key_nfacctd_bgp_to_agent_map},
+  {"bgp_follow_default", cfg_key_nfacctd_bgp_follow_default},
   {"", NULL},
 };
 

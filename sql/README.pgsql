@@ -65,11 +65,11 @@ mode. Since v6 unified mode is no longer supported.
   * Only BGP table v1 is currently available.
 
 - What is the difference between 'typed' and 'unified' modes ? 
-The 'unified' table has IP addresses and MAC addresses specified as standard CHAR strings,
-slower but flexible (in the sense it may store each kind of strings); 'typed' tables sport
-PostgreSQL own types (inet, mac, etc.), faster but rigid. When not specifying your own
-'sql_table', this switch instructs the plugin which tables has to use. (default: 'typed').
-Since v6 unified mode is not supported anymore.
+It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses
+and MAC addresses specified as standard CHAR strings, slower but flexible (in the sense it
+may store each kind of strings); 'typed' tables sport PostgreSQL own types (inet, mac, etc.),
+faster but rigid. When not specifying your own 'sql_table', this switch instructs the plugin
+which tables has to use. (default: 'typed'). Since v6 unified mode is not supported anymore.
 
 - What is the 'proto' table ?
 The auxiliar 'proto' table will be created by default. Its tuples are simply number-string

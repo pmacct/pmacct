@@ -6,7 +6,7 @@
 -- Tables 
 DROP TABLE acct_uni_v4;
 CREATE TABLE acct_uni_v4 (
-        agent_id INT NOT NULL DEFAULT 0,
+        agent_id BIGINT NOT NULL DEFAULT 0,
         mac_src CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
         vlan INT NOT NULL DEFAULT 0,
@@ -26,7 +26,7 @@ CREATE TABLE acct_uni_v4 (
 
 DROP TABLE acct_v4;
 CREATE TABLE acct_v4 (
-	agent_id INT NOT NULL DEFAULT 0,
+	agent_id BIGINT NOT NULL DEFAULT 0,
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
 	vlan INT NOT NULL DEFAULT 0,
@@ -46,7 +46,7 @@ CREATE TABLE acct_v4 (
 
 DROP TABLE acct_as_v4;
 CREATE TABLE acct_as_v4 (
-        agent_id INT NOT NULL DEFAULT 0,
+        agent_id BIGINT NOT NULL DEFAULT 0,
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
         vlan INT NOT NULL DEFAULT 0,

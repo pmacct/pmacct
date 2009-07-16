@@ -6,13 +6,13 @@
 -- Tables 
 DROP TABLE acct_v6;
 CREATE TABLE acct_v6 (
-	agent_id INT NOT NULL DEFAULT 0,
+	agent_id BIGINT NOT NULL DEFAULT 0,
 	class_id CHAR(16) NOT NULL DEFAULT ' ',
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
 	vlan INT NOT NULL DEFAULT 0,
-        as_src INT NOT NULL DEFAULT 0,
-        as_dst INT NOT NULL DEFAULT 0,
+        as_src BIGINT NOT NULL DEFAULT 0,
+        as_dst BIGINT NOT NULL DEFAULT 0,
         ip_src inet NOT NULL DEFAULT '0.0.0.0',
         ip_dst inet NOT NULL DEFAULT '0.0.0.0',
         port_src INT NOT NULL DEFAULT 0,

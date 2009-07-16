@@ -486,11 +486,12 @@ sfprobe_sampling_rate: 20
 XI. Quickstart guide to setup the BGP daemon
 pmacct 0.12.0 introduces a new BGP daemon feature to nfacctd and sfacctd, respectively the NetFlow
 and sFlow collectors. Such daemon is run as a parallel thread within the Core process. The idea is
-to receive from edge routers both NetFlow (or sFlow) traffic samples and full routing tables via
-BGP. To save resources or in case of smaller edge routers, NetFlow (or sFlow) agents can also be
-conveniently mapped onto a router which has a full routing table (ie. a Route Reflector). Per-peer
-BGP RIBs are maintained to ensure local or regional (ie. in case of large networks partitioned in
-BGP federations or clusters) views of the network.
+to receive both (ingress) NetFlow (or sFlow) traffic samples and full routing tables via BGP from
+edge routers. Per-peer BGP RIBs are maintained to ensure local or regional (ie. in case of large
+networks partitioned in BGP federations or clusters) views of the network. NOTE: Default route can
+be followed up (bgp_default_follow) in case of edge routers with default-only or partial routing
+table; also, in order to save resources, agents can mapped (bgp_agent_map) onto a BGP peer which
+has a full routing table.
 
 The first requirement is that pmacct has to be configured for compilation with threads, this line
 will do it:
@@ -500,7 +501,7 @@ will do it:
 The following configuration fragment is alone sufficient to set up a BGP daemon which will bind
 to an IP address and will support up to a maximum number of 100 peers. Once the PE routers begin
 sending NetFlow datagrams and peer up, it should be possible to see the BGP-related fields, ie.
-src_as, dst_as, peer_as_src, peer_as_dst, local_pref, etc., correctly populated while querying
+src_as, dst_as, as_path, peer_as_dst, local_pref, MED, etc., correctly populated while querying
 the memory table:
 
 bgp_daemon: true
@@ -509,29 +510,38 @@ bgp_daemon_max_peers: 100
 nfacctd_as_new: bgp
 [ ... ]
 plugins: memory
+aggregation: src_as, dst_as, local_pref, med, as_path, peer_dst_as 
 
-Note that the BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically
-presents itself as part of the same Autonomous System - so to ensure an iBGP peerins is established.
-The following configuration fragment turns on some optional features aimed at filtering in only the
-bits of information of interest (ie. cutting AS-PATHs after the third ASN away, relevant standard
-or extended communities). 
+The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically presents
+itself as part of the same Autonomous System - so to ensure an iBGP relationship is established.
+The following configuration fragment turns on some optional features aimed at filtering in only
+the bits of information of interest (ie. cutting AS-PATHs after the third ASN away, allowing in
+only relevant standard communities). 
 
 bgp_aspath_radius: 3
 bgp_stdcomm_pattern: 12345:
 
 The peer_src_as primitive adds useful insight in understanding where traffic enters the network;
-unfortunately asymmetric routing compromises accuracy of grasping such information from NetFlow,
-when configured with the peer-as feature. A mapping is required and pmacct offers a few methods
-to achieve this. Below it's shown how to use a map reloadable at runtime (for syntax please see
-the 'peers.map.example' file within the examples): 
+unfortunately asymmetric routing compromises accuracy such information in NetFlow datagrams when
+configured with the peer-as feature (as the router would do a lookup on the source IP address in
+the BGP table). A mapping is required and pmacct offers a few methods to achieve this. Below it's
+shown how to use a map reloadable at runtime and contents of the peers.map (for full syntax guide
+lines, please see the 'peers.map.example' file within the examples section): 
 
 nfacctd_bgp_peer_src_as_type: map
 nfacctd_bgp_peer_src_as_map: /path/to/peers.map
 
-peer_src_as doesn't apply to egress NetFlow (or sFlow) as it relies on the input ifIndex. Once
-the collector is configured and started up, the only remaining step is to let routers to export
-samples to the collector and, with the same management IP address, peer with it via BGP. As it
-can be seen below, it would be adviceable to configure the collector as a Route-Reflector client.
+[/path/to/peers.map]
+id=12345 ip=1.2.3.4 in=10
+id=34567 ip=1.2.3.4 in=20
+
+NOTE: the peer_src_as primitive doesn't really apply to egress NetFlow (or sFlow) as it mainly
+relies on either the input ifIndex, the source MAC address, a reverse BGP next-hop lookup or a
+combination of these.
+
+Once the collector is configured and started up, the only remaining step is to let routers to
+export traffic samples to the collector and, with the same management IP address, peer with it
+via BGP. It is adviceable to configure the collector as a Route-Reflector client.
 
 A relevant configuration example for a Cisco router follows:
 
@@ -574,8 +584,8 @@ protocols bgp {
     }
 }
 
-As concluding notes: the implementation is 4-bytes ASN ready. When storing data via SQL, BGP
-primitives can be freely mix-and-matched with L2/L3/L4 primitives when customizing the table
-(sql_optimize_clauses: true). For a review of all the configurable knobs and features see the
-CONFIG-KEYS document. 
+As concluding notes: the implementation is both 4-bytes ASN and IPv6 ready. When storing data
+via SQL, BGP primitives can be freely mix-and-matched with L2/L3/L4 primitives when customizing
+the table (sql_optimize_clauses: true). For a review of all the configurable knobs and features
+see the CONFIG-KEYS document. 
 

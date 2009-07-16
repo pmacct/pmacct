@@ -280,6 +280,8 @@ void skinny_bgp_daemon()
 
 	  switch (bhdr.bgpo_type) {
 	  case BGP_OPEN:
+		  remote_as = remote_as4 = 0;
+
 		  if (peer->status < OpenSent) {
 		    peer->status = Active;
 		    bopen = (struct bgp_open *) bgp_packet;  
@@ -686,6 +688,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
 	case BGP_ATTR_NEXT_HOP:
 		// printf("ATTRIBUTE: NEXHOP\n");
 		ret = bgp_attr_parse_nexthop(peer, attr_len, attr, ptr, flag);
+		break;
 	case BGP_ATTR_COMMUNITIES:
 		// printf("ATTRIBUTE: COMMUNITIES\n");
 		ret = bgp_attr_parse_community(peer, attr_len, attr, ptr, flag);
@@ -780,7 +783,7 @@ int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_at
 	attr->community = NULL;
 	return 0;
   }
-  else attr->community = (struct community *) community_parse(ptr, len);
+  else attr->community = (struct community *) community_parse((u_int32_t *)ptr, len);
 
   return 0;
 }
@@ -1200,7 +1203,7 @@ int attrhash_cmp(void *p1,void *p2)
         return 1;
 #if defined ENABLE_IPV6
       else if (attr1->mp_nexthop.family == AF_INET6
-	  && !memcmp(&attr1->mp_nexthop.address.ipv6, &attr2->mp_nexthop.address.ipv6, 16)
+	  && !memcmp(&attr1->mp_nexthop.address.ipv6, &attr2->mp_nexthop.address.ipv6, 16))
         return 1;
 #endif
       else return 1;
@@ -1461,12 +1464,19 @@ as_t evaluate_first_asn(char *src)
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
-  struct bgp_peer *peer;
+  struct bgp_peer *peer, *saved_peer = NULL;
+  struct bgp_node *default_node, *result;
+  struct bgp_info *info;
   struct in_addr pref4;
+  struct prefix default_prefix;
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
   int peers_idx;
+  int follow_default = config.nfacctd_bgp_follow_default;
+
+  pptrs->bgp_src = NULL;
+  pptrs->bgp_dst = NULL;
 
   if (pptrs->bta) {
     sa = &sa_local;
@@ -1474,6 +1484,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     sa->sa_family = AF_INET;
     ((struct sockaddr_in *)sa)->sin_addr.s_addr = pptrs->bta; 
   }
+
+  start_again:
 
   for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
     if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
@@ -1486,23 +1498,93 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   if (peer) {
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
-      pptrs->bgp_src = (char *) bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
+      if (!pptrs->bgp_src) pptrs->bgp_src = (char *) bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
       memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-      pptrs->bgp_dst = (char *) bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
+      if (!pptrs->bgp_dst) pptrs->bgp_dst = (char *) bgp_node_match_ipv4(peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
     }
 #if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-      pptrs->bgp_src = (char *) bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      if (!pptrs->bgp_src) pptrs->bgp_src = (char *) bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
       memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-      pptrs->bgp_dst = (char *) bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      if (!pptrs->bgp_dst) pptrs->bgp_dst = (char *) bgp_node_match_ipv6(peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
     }
 #endif
+
+    if (follow_default) {
+      default_node = NULL;
+
+      if (pptrs->l3_proto == ETHERTYPE_IP) {
+        memset(&default_prefix, 0, sizeof(default_prefix));
+        default_prefix.family = AF_INET;
+
+        result = (struct bgp_node *) pptrs->bgp_src;
+        if (result && prefix_match(&result->p, &default_prefix)) {
+	  default_node = result;
+	  pptrs->bgp_src = NULL;
+        }
+
+        result = (struct bgp_node *) pptrs->bgp_dst;
+        if (result && prefix_match(&result->p, &default_prefix)) {
+	  default_node = result;
+	  pptrs->bgp_dst = NULL;
+        }
+      }
+#if defined ENABLE_IPV6
+      else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+        memset(&default_prefix, 0, sizeof(default_prefix));
+        default_prefix.family = AF_INET6;
+
+        result = (struct bgp_node *) pptrs->bgp_src;
+        if (result && prefix_match(&result->p, &default_prefix)) {
+          default_node = result;
+          pptrs->bgp_src = NULL;
+        }
+
+        result = (struct bgp_node *) pptrs->bgp_dst;
+        if (result && prefix_match(&result->p, &default_prefix)) {
+          default_node = result;
+          pptrs->bgp_dst = NULL;
+        }
+      }
+#endif
+      
+      if (!pptrs->bgp_src || !pptrs->bgp_dst) {
+	follow_default--;
+	if (!saved_peer) saved_peer = peer;
+
+        if (default_node) {
+	  info = (struct bgp_info *) default_node->info;
+          if (info && info->attr) {
+            if (info->attr->mp_nexthop.family == AF_INET) {
+              sa = &sa_local;
+              memset(sa, 0, sizeof(struct sockaddr));
+              sa->sa_family = AF_INET;
+              memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->mp_nexthop.address.ipv4, 4);
+	      goto start_again;
+            }
+#if defined ENABLE_IPV6
+            else if (info->attr->mp_nexthop.family == AF_INET6) {
+              sa = &sa_local;
+              memset(sa, 0, sizeof(struct sockaddr));
+              sa->sa_family = AF_INET6;
+              memcpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6, 16);
+              goto start_again;
+            }
+#endif
+            else {
+              sa = &sa_local;
+              memset(sa, 0, sizeof(struct sockaddr));
+              sa->sa_family = AF_INET;
+              memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->nexthop, 4);
+              goto start_again;
+	    }
+	  }
+        }
+      }
+    }
   }
-  else {
-    pptrs->bgp_peer = NULL;
-    pptrs->bgp_src = NULL;
-    pptrs->bgp_dst = NULL;
-  }
+
+  if (saved_peer) pptrs->bgp_peer = (char *) saved_peer;
 }
 
