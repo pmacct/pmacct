@@ -1446,13 +1446,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   }
 
   if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) {
-    /* XXX: is bta replacement correct? */
     if (!pptrs->bta) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
     else {
       struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 
       pbgp->peer_src_ip.family = sa->sa_family;
-      pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
+      if (sa->sa_family == AF_INET) pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
+#if defined ENABLE_IPV6
+      else if (sa->sa_family == AF_INET6) memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, 16); 
+#endif
     }
   }
 }

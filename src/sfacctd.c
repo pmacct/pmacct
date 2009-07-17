@@ -2003,9 +2003,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->v6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->v6);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->v6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6);
       if (config.pre_tag_map) pptrsv->v6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6);
       exec_plugins(&pptrsv->v6);
       break;
@@ -2028,9 +2028,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlan4.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan4);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlan4.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4);
       if (config.pre_tag_map) pptrsv->vlan4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4);
       exec_plugins(&pptrsv->vlan4);
       break;
@@ -2053,9 +2053,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlan6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan6);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlan6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6);
       if (config.pre_tag_map) pptrsv->vlan6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6);
       exec_plugins(&pptrsv->vlan6);
       break;
@@ -2091,9 +2091,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->mpls4.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls4);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->mpls4.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4);
       if (config.pre_tag_map) pptrsv->mpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4);
       exec_plugins(&pptrsv->mpls4);
       break;
@@ -2128,9 +2128,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->mpls6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls6);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->mpls6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6);
       if (config.pre_tag_map) pptrsv->mpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6);
       exec_plugins(&pptrsv->mpls6);
       break;
@@ -2166,9 +2166,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlanmpls4.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls4);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlanmpls4.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4);
       if (config.pre_tag_map) pptrsv->vlanmpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4);
       exec_plugins(&pptrsv->vlanmpls4);
       break;
@@ -2204,9 +2204,9 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlanmpls6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6);
+      if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls6);
+      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlanmpls6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6);
       if (config.pre_tag_map) pptrsv->vlanmpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6);
       exec_plugins(&pptrsv->vlanmpls6);
       break;

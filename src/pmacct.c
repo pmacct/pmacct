@@ -131,8 +131,13 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("MED    ");
     printf("PEER_SRC_AS ");
     printf("PEER_DST_AS ");
+#if defined ENABLE_IPV6
+    printf("PEER_SRC_IP                                    ");
+    printf("PEER_DST_IP                                    ");
+#else
     printf("PEER_SRC_IP      ");
     printf("PEER_DST_IP      ");
+#endif
 #if defined ENABLE_IPV6
     printf("SRC_IP                                         ");
     printf("DST_IP                                         ");
@@ -172,8 +177,13 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_MED) printf("MED    ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS ");
+#if defined ENABLE_IPV6
+    if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP                                    ");
+    if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP                                    ");
+#else
     if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP      ");
     if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP      ");
+#endif
 #if defined ENABLE_IPV6
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP                                         "); 
     if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP                                         ");

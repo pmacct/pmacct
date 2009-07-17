@@ -1018,17 +1018,31 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 log_update:
   {
     char empty[] = "";
-	char prefix_str[INET6_ADDRSTRLEN];
-	char *aspath, *comm, *ecomm; 
+    char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
+    char *aspath, *comm, *ecomm; 
+    u_int32_t lp, med;
 
     memset(prefix_str, 0, INET6_ADDRSTRLEN);
-	prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
+    memset(nexthop_str, 0, INET6_ADDRSTRLEN);
+    prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
 
-	aspath = attr_new->aspath ? attr_new->aspath->str : empty;
-	comm = attr_new->community ? attr_new->community->str : empty;
-	ecomm = attr_new->ecommunity ? attr_new->ecommunity->str : empty;
+    aspath = attr_new->aspath ? attr_new->aspath->str : empty;
+    comm = attr_new->community ? attr_new->community->str : empty;
+    ecomm = attr_new->ecommunity ? attr_new->ecommunity->str : empty;
+    lp = attr_new->local_pref;
+    med = attr_new->med;
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n", inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
+    if (attr_new->mp_nexthop.family == AF_INET)
+      inet_ntop(AF_INET, &attr_new->mp_nexthop.address.ipv4, nexthop_str, INET6_ADDRSTRLEN);
+#if defined ENABLE_IPV6
+    else if (attr_new->mp_nexthop.family == AF_INET6)
+      inet_ntop(AF_INET6, &attr_new->mp_nexthop.address.ipv4, nexthop_str, INET6_ADDRSTRLEN);
+#endif
+    else
+      inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
+
+    Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
   }
 
   return 0;

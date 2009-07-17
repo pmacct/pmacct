@@ -133,24 +133,37 @@ unsigned int sa_to_addr(struct sockaddr *sa, struct host_addr *a, u_int16_t *por
  * sa_addr_cmp(): compare two IP addresses: the first encapsulated into a
  * 'struct sockaddr' and the second into a 'struct host_addr'.
  * returns 0 if they match; 1 if they don't match; -1 to signal a generic
- * error (e.g. family mismatch).
+ * error (e.g. unsupported family mismatch).
  */
 unsigned int sa_addr_cmp(struct sockaddr *sa, struct host_addr *a)
 {
   struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
 #if defined ENABLE_IPV6
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+  struct sockaddr_in6 sa6_local;
 #endif
 
-  if (sa->sa_family != a->family) return -1;
-
-  if (a->family == AF_INET) {
+  if (a->family == AF_INET && sa->sa_family == AF_INET) {
     if (sa4->sin_addr.s_addr == a->address.ipv4.s_addr) return FALSE;
     else return TRUE; 
   }
 #if defined ENABLE_IPV6
-  if (a->family == AF_INET6) {
+  if (a->family == AF_INET6 && sa->sa_family == AF_INET6) {
     if (!ip6_addr_cmp(&sa6->sin6_addr, &a->address.ipv6)) return FALSE;
+    else return TRUE;
+  }
+  else if (a->family == AF_INET && sa->sa_family == AF_INET6) {
+    memset(&sa6_local, 0, sizeof(sa6_local));
+    memset((u_int8_t *)&sa6_local.sin6_addr+10, 0xff, 2);
+    memcpy((u_int8_t *)&sa6_local.sin6_addr+12, &a->address.ipv4.s_addr, 4);
+    if (!ip6_addr_cmp(&sa6->sin6_addr, &sa6_local.sin6_addr)) return FALSE;
+    else return TRUE;
+  }
+  else if (a->family == AF_INET6 && sa->sa_family == AF_INET) {
+    memset(&sa6_local, 0, sizeof(sa6_local));
+    memset((u_int8_t *)&sa6_local.sin6_addr+10, 0xff, 2);
+    memcpy((u_int8_t *)&sa6_local.sin6_addr+12, &sa4->sin_addr, 4);
+    if (!ip6_addr_cmp(&sa6_local.sin6_addr, &a->address.ipv6)) return FALSE;
     else return TRUE;
   }
 #endif

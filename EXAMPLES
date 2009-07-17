@@ -586,6 +586,7 @@ protocols bgp {
 
 As concluding notes: the implementation is both 4-bytes ASN and IPv6 ready. When storing data
 via SQL, BGP primitives can be freely mix-and-matched with L2/L3/L4 primitives when customizing
-the table (sql_optimize_clauses: true). For a review of all the configurable knobs and features
-see the CONFIG-KEYS document. 
+the table (sql_optimize_clauses: true). Environments making large use of BGP Multi-Path are not
+currently supported. For a review of all the configurable knobs and features see the CONFIG-KEYS
+document. 
 
