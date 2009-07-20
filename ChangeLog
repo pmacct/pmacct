@@ -1,7 +1,9 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.0p1
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
-0.11.6 -- 07-04-2008
+0.12.0p1 -- xx-xx-2009
+
+0.11.6 -- 07-04-2009
   + Introduced support for tag ranges into the 'pre_tag_filter' 
     configuration directive (ie. '10-20' matches traffic tagged
     in the range 10..20). This works both in addition to and in

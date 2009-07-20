@@ -1,9 +1,7 @@
 pmacct (Promiscuous mode IP Accounting package)
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
-pmacct EXAMPLES file.
-
-(poorman's) TABLE OF CONTENTS:
+TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
 II.	Configuring pmacct for compilation
 III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) setup examples
@@ -18,31 +16,29 @@ XI.	Quickstart guide to setup the BGP daemon
 
 
 I. Plugins included with pmacct distribution
-As for any open and pluggable architecture, anyone could write his own plugins for pmacct;
-what follows is the list of plugins included in the official pmacct distribution. That is, 
-what can do pmacct once it has collected data from the network ?
+Given its open and pluggable architecture, pmacct is easily extensible by writing new
+plugins. Here is a list of plugins included within the official pmacct distribution.
 
-'memory':  data are stored in a tunable memory table and can be fetched via the pmacct client
-	   tool, 'pmacct'. It also allows easily data injection into tools like GNUplot, MRTG,
-	   RRDtool or a Net-SNMP server.
-'mysql':   an available MySQL database is selected for data storage.
-'pgsql':   an available PostgreSQL database is selected for data storage.
-'sqlite3': an available SQLite 3.x database is selected for data storage.
-'print':   data are simply pulled to standard output (ie. on the screen) in a way similar to
-	   tcpdump. 
+'memory':  data are stored in a memory table and can be fetched via the pmacct client
+	   tool, 'pmacct'. It also allows easily data injection into 3rd party tools
+	   like GNUplot, MRTG, RRDtool or a Net-SNMP server
+'mysql':   a working MySQL installation can be used for data storage
+'pgsql':   a working PostgreSQL installation can be used for data storage
+'sqlite3': a working SQLite 3.x installation can be used for data storage
+'print':   data are printed at regular intervals to the standard output
 
 
 II. Configuring pmacct for compilation
-The simplest chance is to let the configure script to test default headers and libraries
-locations for you. However note that this will not enable any of the optional plugins, ie.
-MySQL, PostgreSQL and SQLite 3.x; at your convenience you may also enable IPv6 hooks and
-64bit counters. Let's continue with some examples; as usual, to get help and the list of
-available switches:
+The simplest way to configure the package for compilation is to let the configure
+script to probe default headers and libraries for you. By default SQL plugins are
+not enabled; much like multi-threading (pre-requisite for compiling the BGP daemon
+code), IPv6 support and 64 bits counters. A few examples will follow; as usual to
+get the list of available switches, you can use the following command-line:
 
 shell> ./configure --help
 
-Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite and any (4)
-mixed compilation:
+Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite and
+any (4) mixed compilation:
 
 (1) shell> ./configure --enable-mysql
 (2) shell> ./configure --enable-pgsql
@@ -51,36 +47,12 @@ mixed compilation:
 
 
 III. Brief SQL setup examples
-Scripts for setting up databases (MySQL, PostgreSQL and SQLite) are into the sql/ tree. Once
-there, if you need an IPv6-ready package, don't miss the 'README.IPv6' document. Examples to
-create database, tables and grant default permissions will follow. 
+Scripts for setting up databases (MySQL, PostgreSQL and SQLite) are into the 'sql/'
+tree. For further guidance read the relevant README files in such directory. One of
+the crucial concepts to deal with, when using default IP or BGP SQL tables, is table
+versioning: please read more about it in the FAQS document (Q16). 
 
-IIIa. SQL table versioning
-pmacct version 0.7.1 introduced SQL table versioning: what is it ? It allows to introduce new
-features over the time (which translate in changes to the SQL schema) without giving the pain
-of breaking backward compatibility. Mind to specify EVERYTIME which SQL table version you
-intend to adhere to as this will strongly influence the way collected data will be written to
-the database (ie. until v5 AS numbers are written into ip_src-ip_dst table fields; since v6
-they are written to as_src-as-dst ones). Furthermore, 'sql_optimize_clauses' directive allows
-to run stripped-down versions of each SQL table thus allowing to save both disk space and CPU
-cycles required to run the SQL engine (read more about it in CONFIG-KEYS). To specify the SQL
-table version, you an use either of the following rules: 
-
-commandline: 	'-v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]'
-configuration:  'sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]'
-
-To understand difference between v1, v2, v3, v4, v5 and v6 tables:
-
-- Do you need TCP flags ? Then you have to use v7.
-- Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
-- Do you need packet classification ? Then you have to use v5.
-- Do you need flows (other than packets) accounting ? Then you have to use v4.
-- Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
-- Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2.  
-- Do you need VLAN traffic accounting ? Then you have to use v2.
-- If all of the above point sound useless for you, then use v1.
- 
-IIIb. MySQL examples 
+IIIa. MySQL examples 
 shell> cd sql/
 
 - To create v1 tables:
@@ -97,10 +69,10 @@ Data will be available in 'acct_v2' table of 'pmacct' DB.
 
 ... And so on for the newer versions.
 
-IIIc. PostgreSQL examples
-Which user has to execute the following two scripts and how to autenticate with the PostgreSQL
-server depends upon your current configuration. Keep in mind that both scripts need postgres
-superuser permissions to execute some commands successfully:
+IIIb. PostgreSQL examples
+Which user has to execute the following two scripts and how to autenticate with the
+PostgreSQL server depends upon your current configuration. Keep in mind that both
+scripts need postgres superuser permissions to execute some commands successfully:
 shell> cp -p *.pgsql /tmp
 shell> su - postgres
 
@@ -118,10 +90,11 @@ A few tables will be created into 'pmacct' DB. 'acct' ('acct_v2' or 'acct_v3') t
 the default table where data will be written when in 'typed' mode (see 'sql_data' option
 in CONFIG-KEYS document; default value is 'typed'); 'acct_uni' ('acct_uni_v2' or
 'acct_uni_v3') is the default table where data will be written when in 'unified' mode.
-Since v6 unified mode will be no longer supported: an unique table ('acct_v6', etc.) is
-used instead. 
 
-IIId. SQLite examples
+Since v6, PostgreSQL tables are greatly simplified: unified mode is no longer supported
+and an unique table ('acct_v6', for example) is created instead. 
+
+IIIc. SQLite examples
 shell> cd sql/
 
 - To create v1 tables:
@@ -137,29 +110,64 @@ Data will be available in 'acct_v2' table of '/tmp/pmacct.db' DB.
 
 ... And so on for the newer versions.
 
+IIId. Custom SQL tables
+Custom SQL tables can be built by creating your own SQL schema and indexes. This allows
+to freely mix-and-match the primitives relevant to your accounting scenario. Specifying
+SQL table version and type (sql_table_version, sql_table_type) is not required; whereas
+a new directive, sql_optimize_clauses, is introduced to flag table customization to
+pmacct. This is a simple configuration snippet:
+
+sql_optimize_clauses: true
+sql_table: <table name>
+aggregate: <aggregation primitives list> 
+
+IIIe. Historical accounting
+Enabling historical accounting allows to aggregate data over time (ie. 5 mins, hourly,
+daily) in a flexible and fully configurable way. Timestamps are lodged into two fields:
+'stamp_inserted' which represents the basetime of the timeslot and 'stamp_updated' which
+says when a given timeslot was updated for the last time. Following there is a pretty
+standard configuration fragment to slice data into nicely aligned (or rounded-off) 5
+minutes timeslots:
+
+sql_history: 5m 
+sql_history_roundoff: m
+
+IIIf. INSERTs-only 
+UPDATE queries are demanding in terms of resources; this is why, even if they are 
+supported by pmacct, a savy approach is to cache data for longer times in memory and
+write them off once per timeslot (sql_history): this produces a much lighter INSERTs-
+only environemnt. This is an example based on 5 minutes timeslots:
+
+sql_refresh_time: 300
+sql_history: 5m
+sql_history_roundoff: m
+sql_dont_try_update: true
+
+Note that sql_refresh_time is always expressed in seconds.
+
 
 IV. Running the libpcap-based daemon (pmacctd) 
-You can run pmacctd either with commandline options or using a configuration file. Please remember
-that sample configuration files are in examples/ tree. Note also that most of the new features are
-available only as configuration directives (so, no commandline switches). Using a configuration file
-and commandline switches is mutual exclusive. To be aware of the existing configuration directives,
-please read the CONFIG-KEYS document. 
+pmacctd, like the other daemons, can be run with commandline options, using a config
+file or a mix of the two. Sample configuration files are in examples/ tree. Note also 
+that most of the new features are available only as configuration directives. To be
+aware of the existing configuration directives, please read the CONFIG-KEYS document. 
 
 Show all available pmacctd commandline switches:
 shell> pmacctd -h
 
-Run pmacctd reading configuration from a specified file (see examples/ tree for a brief list of some
-commonly useed keys; divert your eyes to CONFIG-KEYS for the full list). This example applies to all
-other daemons too:
+Run pmacctd reading configuration from a specified file (see examples/ tree for a brief
+list of some commonly useed keys; divert your eyes to CONFIG-KEYS for the full list).
+This example applies to all daemons:
 shell> pmacctd -f pmacctd.conf
 
-Daemonize the process; listen on eth0; aggregate data by src_host/dst_host; write to a MySQL server;
-limit traffic matching only source ip network 10.0.0.0/16; note that filters work the same as tcpdump.
-So, refer to libpcap/tcpdump man pages for examples and further reading. 
+Daemonize the process; listen on eth0; aggregate data by src_host/dst_host; write to a
+MySQL server; limit traffic matching only source ip network 10.0.0.0/16; note that
+filters work the same as tcpdump. So, refer to libpcap/tcpdump man pages for examples
+and further reading. 
 
 shell> pmacctd -D -c src_host,dst_host -i eth0 -P mysql src net 10.0.0.0/16
 
-And now written the configuration way:
+Or written the configuration way:
 !
 daemonize: true
 plugins: mysql
@@ -168,11 +176,12 @@ interface: eth0
 pcap_filter: src net 10.0.0.0/16
 ! ...
 
-Print collected traffic data aggregated by src_host/dst_host over the screen; refresh data every 30
-seconds and listen on eth0. 
+Print collected traffic data aggregated by src_host/dst_host over the screen; refresh
+data every 30 seconds and listen on eth0. 
 
 shell> pmacctd -P print -r 30 -i eth0 -c src_host,dst_host
 
+Or written the configuration way:
 !
 plugins: print
 print_refresh_time: 30
@@ -180,9 +189,9 @@ aggregate: src_host, dst_host
 interface: eth0
 ! ...
 
-Daemonize the process; let pmacct aggregate traffic in order to show inbound vs. outbound traffic
-for network 192.168.0.0/16; send data to a PostgreSQL server. This configuration is not possible via
-commandline switches; the corresponding configuration follows: 
+Daemonize the process; let pmacct aggregate traffic in order to show in vs out traffic
+for network 192.168.0.0/16; send data to a PostgreSQL server. This configuration is not
+possible via commandline switches; the corresponding configuration follows: 
 
 !
 daemonize: true
@@ -195,8 +204,8 @@ sql_table[in]: acct_in
 sql_table[out]: acct_out
 ! ...
 
-The previous example looks nice ! But how to make data historical ? Simple enough, let's suppose to
-divide traffic by hour and we wish to refresh data into the database each 60 seconds. 
+The previous example looks nice! But how to make data historical ? Simple enough, let's
+suppose you want to split traffic by hour and write data into the DB every 60 seconds. 
 
 !
 daemonize: true
@@ -212,10 +221,11 @@ sql_history: 1h
 sql_history_roundoff: h
 ! ...
 
-Let's now translate the same example in the memory plugin world. It's use is valuable expecially
-when it's required to feed bytes/packets/flows counters to external programs. Examples about the 
-client program will follow later in this document. Now, note that each memory table need its own
-pipe file in order to get correctly contacted by the client:
+Let's now translate the same example in the memory plugin world. It's use is valuable
+expecially when it's required to feed bytes/packets/flows counters to external programs.
+Examples about the client program will follow later in this document. Now, note that
+each memory table need its own pipe file in order to get correctly contacted by the
+client:
 
 !
 daemonize: true
@@ -228,12 +238,13 @@ imt_path[in]: /tmp/pmacct_in.pipe
 imt_path[out]: /tmp/pmacct_out.pipe
 ! ...
 
-As a further note, check the CONFIG-KEYS document about more imt_* directives as they will help
-to tune the size of memory tables, if default values are not ok for your setup. 
+As a further note, check the CONFIG-KEYS document about more imt_* directives as they
+will support in the task of fine tuning the size and boundaries of memory tables, if
+default values are not ok for your setup. 
 
-Now, fire multiple instances of pmacctd, each on a different interface; again, because each instance will
-have its own memory table, it will require its own pipe file for client queries aswell (as explained in
-the previous examples):
+Now, fire multiple instances of pmacctd, each on a different interface; again, because
+each instance will have its own memory table, it will require its own pipe file for
+client queries aswell (as explained in the previous examples):
 shell> pmacctd -D -i eth0 -m 8 -s 65535 -p /tmp/pipe.eth0 
 shell> pmacctd -D -i ppp0 -m 0 -s 32768 -p /tmp/pipe.ppp0 
 
