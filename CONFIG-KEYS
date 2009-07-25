@@ -625,14 +625,12 @@ DESC:		under the NetFlow accounting daemon (nfacctd), it makes the SQL plugin to
 		It can be applied in conjunction with sql_history_since_epoch directive. (default: false)
 
 KEY:		pre_tag_map [GLOBAL]
-DESC:		full pathname to a file containing tag mappings. Enables the use of Pre-Tagging. When used in
-		nfacctd and sfacctd this map allows (a) to translate some NetFlow/sFlow packet fields ('ip':
-		agent IP address, 'in': Input interface, 'out': Output interface, 'engine_type', 'engine_id'
-		(NetFlow specific), 'agent_id' (sFlow agentSubId), 'nexthop' and 'bgp_nexthop' are actually
-		supported) and (b) to match a filter expression (tcpdump syntax) into an ID (a small number
-		in the range 1-65535). In pmacctd it allows just the (b). Take a look to the examples/ tree
-		for some practical examples. Pre Tagging is enforced shortly after the packet collection from
-		the network. 
+DESC:		full pathname to a file containing tag mappings. Enables the use of Pre-Tagging. When used
+		in nfacctd and sfacctd this map allows (a) to translate some NetFlow/sFlow packet fields
+		(for example 'ip': agent IP address, 'in': Input interface, 'out': Output interface)and (b)
+		to match a filter expression (tcpdump syntax) into an ID (in the range 1-4294967295). In
+		pmacctd it allows just the (b). Take a look to the examples/ tree for detailed examples.
+		Pre-Tagging is enforced in the Core Process shortly after packet/flow/sample collection.
 
 KEY:		pre_tag_map_entries [GLOBAL]
 DESC:		defines the maximum number of entries the Pre-Tagging map can contain. The default value is
@@ -652,12 +650,12 @@ DESC:		when enabled, this directive allows to reload map files without restartin
 		to elicit local reloads. (default: true)
 
 KEY:            pre_tag_filter [NO_GLOBAL]
-VALUES:         [0-65535]
+VALUES:         [0-4294967295]
 DESC:		it expects one or more ID (when multiple ID are supplied, they need to be comma separated and a
 		logical OR is used in the evaluation phase) as value and allows to filter aggregates basing upon
 		their Pre Tag ID: in case of a match, the aggregate is delivered to the plugin. This directive
 		has to be bound to a plugin (that is, it cannot be global) and is suitable to split tagged data
-		among the active plugins. While the IDs need to be in the range 1-65535, this directive also
+		among the active plugins. While the IDs need to be in the range 1-4294967295, this directive also
 		allows to specify an ID '0' - which intercepts non-tagged aggregates - thus allowing to split
 		tagged traffic from untagged one. It also allows negations by pre-pending a minus sign to the
 		tag value (ie. '-6' would send everything but traffic tagged as '6') and ranges (ie. '10-20'
@@ -665,7 +663,7 @@ DESC:		it expects one or more ID (when multiple ID are supplied, they need to be
 		makes sense if coupled with 'pre_tag_map'; it could be used in conjunction with 'aggregate_filter'.
 
 KEY:            post_tag 
-VALUES:         [1-65535]
+VALUES:         [1-4294967295]
 DESC:           it expects an ID as its value. Enables the use of Post-Tagging. Once the aggregate has passed
 		all filters and is on the final way to the plugin, this directive allows to statically tag it
 		using the specified value. 

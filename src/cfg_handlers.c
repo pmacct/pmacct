@@ -223,7 +223,9 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   char *count_token, *range_ptr;
-  int value, range = 0, changes = 0;
+  pm_id_t value, range = 0;
+  int changes = 0;
+  char *endptr_v, *endptr_r;
   u_int8_t neg;
 
   if (!name) {
@@ -239,27 +241,14 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 	while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_MAP_ENTRIES/4) {
 	  neg = pt_check_neg(&count_token);
 	  range_ptr = pt_check_range(count_token); 
-	  value = atoi(count_token);
-	  if (range_ptr) range = atoi(range_ptr);
+	  value = strtoul(count_token, &endptr_v, 10);
+	  if (range_ptr) range = strtoul(range_ptr, &endptr_r, 10);
 	  else range = value;
 
-	  if ((value < 0) || (value > 65535)) {
-	    Log(LOG_ERR, "WARN ( %s ): 'pre_tag_filter' values has to be in the range 0-65535. '%d' not loaded.\n", filename, value);
-	    changes++;
-	    break;
-	  }
-
-	  if (range_ptr) { 
-	    if ((range < 1) || (range > 65535)) {
-	      Log(LOG_ERR, "WARN ( %s ): Range values has to be in the range 1-65535. '%d' not loaded.\n", filename, range);
-	      changes++;
-	      break;
-	    }
-	    if (range <= value) {
+	  if (range_ptr && range <= value) {
 	      Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%d-%d' not loaded.\n", filename, value, range);
 	      changes++;
 	      break;
-	    }
 	  }
 
           list->cfg.ptf.table[list->cfg.ptf.num].neg = neg;
@@ -1365,11 +1354,12 @@ int cfg_key_print_markers(char *filename, char *name, char *value_ptr)
 int cfg_key_post_tag(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  pm_id_t value, changes = 0;
+  char *endptr;
 
-  value = atoi(value_ptr);
-  if ((value < 1) || (value > 65535)) {
-    Log(LOG_ERR, "WARN ( %s ): 'post_tag' has to be in the range 1-65535.\n", filename);
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value < 1) {
+    Log(LOG_ERR, "WARN ( %s ): 'post_tag' cannot be zero.\n", filename);
     return ERR;
   }
 

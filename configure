@@ -729,7 +729,7 @@ fi
 
 PACKAGE=pmacctd
 
-VERSION=0.12.0p1-cvs
+VERSION=0.12.0rc1-cvs
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -3559,8 +3559,11 @@ LDFLAGS ...... : ${LDFLAGS}
 
 Now type 'make' to compile the source code.
 
-Are you willing to get in touch with other pmacct users ?
+Are you willing to get in touch with other pmacct users?
 Join the pmacct mailing-list by sending a message to pmacct-discussion-subscribe@pmacct.net
+
+Need for documentation and examples?
+Read the README file or go to http://wiki.pmacct.net/
 
 "
 

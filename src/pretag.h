@@ -59,9 +59,9 @@ typedef struct {
 /* Pre-Tag table (ptt) element definition */
 typedef struct {
   u_int8_t neg;
-  u_int16_t n;
-  u_int16_t r;
-} ptt_uint16_t;
+  pm_id_t n;
+  pm_id_t r;
+} ptt_t;
 
 struct id_entry {
   pm_id_t id;
@@ -107,7 +107,7 @@ struct _map_dictionary_line {
 
 struct pretag_filter {
   u_int16_t num;
-  ptt_uint16_t table[MAX_PRETAG_MAP_ENTRIES/4];
+  ptt_t table[MAX_PRETAG_MAP_ENTRIES/4];
 };
 
 /* prototypes */

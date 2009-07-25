@@ -76,7 +76,7 @@ struct channels_list_entry {
   int same_aggregate;
   pkt_handler phandler[N_PRIMITIVES];
   int pipe;
-  u_int16_t id;						/* post-tagging id */
+  pm_id_t id;						/* post-tagging id */
   struct pretag_filter tag_filter; 			/* filter aggregates basing on their tag */
   struct aggregate_filter agg_filter; 			/* filter aggregates basing on L2-L4 primitives */
   struct sampling s;
@@ -103,7 +103,7 @@ EXT struct channels_list_entry *insert_pipe_channel(struct configuration *, int)
 EXT void delete_pipe_channel(int);
 EXT void sort_pipe_channels();
 EXT void init_pipe_channels();
-EXT int evaluate_tags(struct pretag_filter *, u_int16_t);
+EXT int evaluate_tags(struct pretag_filter *, pm_id_t);
 EXT int evaluate_filters(struct aggregate_filter *, char *, struct pcap_pkthdr *);
 EXT void recollect_pipe_memory(struct channels_list_entry *);
 EXT void init_random_seed();

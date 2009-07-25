@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl configuration file for pmacct 
 
-AC_INIT([src/pmacctd.c], [0.12.0p1-cvs], [paolo@pmacct.net])
-AM_INIT_AUTOMAKE([pmacctd], [0.12.0p1-cvs])
+AC_INIT([src/pmacctd.c], [0.12.0rc1-cvs], [paolo@pmacct.net])
+AM_INIT_AUTOMAKE([pmacctd], [0.12.0rc1-cvs])
 AC_PREFIX_DEFAULT([/usr/local])
 
 dnl Checks for programs.
@@ -875,8 +875,11 @@ LDFLAGS ...... : ${LDFLAGS}
 
 Now type 'make' to compile the source code.
 
-Are you willing to get in touch with other pmacct users ?
+Are you willing to get in touch with other pmacct users?
 Join the pmacct mailing-list by sending a message to pmacct-discussion-subscribe@pmacct.net
+
+Need for documentation and examples?
+Read the README file or go to http://wiki.pmacct.net/
 
 "
 AC_SUBST([PLUGINS])

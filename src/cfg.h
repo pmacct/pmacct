@@ -129,7 +129,7 @@ struct configuration {
   struct pretag_filter ptf;
   char *pre_tag_map;
   int pre_tag_map_entries;
-  int post_tag;
+  pm_id_t post_tag;
   int sampling_rate;
   char *syslog;
   int debug;

@@ -44,4 +44,15 @@ DESC:   In all previous releases, commandline options ( ie. -D -c ) were mutuall
 	to launch pmacctd sharing an unique configuration file while reading data
 	from different tcpdump/ethereal tracefiles among multiple runs.
 
+TO:     >= 0.12.0rc1
+FROM:   <= 0.11
+TOPIC:  agent_id size and SQL table schemas
+DESC:   With release 0.12, the agent_id field becomes 4-bytes large (from 2-bytes
+	previously). SQL table schemas have been updated accordingly. If running
+	a previous release and upgrading, you might incur into the risk that both
+	Pre/Post-tagging infrastructures will accept values up to ~4M while the
+	underlying SQL table schema is configured with a 2-bytes field. Solution
+	is to run an "ALTER TABLE" statement to increase the field size during a
+	maintenance window. 
+
 [EOF]

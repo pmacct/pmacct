@@ -467,7 +467,7 @@ pm_counter_t take_simple_systematic_skip(pm_counter_t mean)
    FALSE: Discard it!
 */
 
-int evaluate_tags(struct pretag_filter *filter, u_int16_t tag)
+int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
 {
   int index;
 
