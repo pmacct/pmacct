@@ -530,20 +530,30 @@ aggregation: src_as, dst_as, local_pref, med, as_path, peer_dst_as
 
 The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically
 presents itself as part of the same Autonomous System - so to ensure an iBGP relationship
-is established. The following configuration fragment turns on some optional features
-aimed at filtering in only the bits of information of interest (ie. cutting AS-PATHs
-after the third ASN away, allowing in only relevant standard communities). 
+is established.
+
+XIa. Limiting AS-PATH and BGP community attributes length
+AS-PATH and BGP communities can by nature easily get long, when represented as strings.
+Sometimes only a small portion of their content is relevant to the accounting task and
+hence a filtering layer was developed to take special care of these attributes. the
+bgp_aspath_radius cuts the AS-PATH down after a specified amount of hops; whereas the
+bgp_stdcomm_pattern does a simple sub-string matching against standard BGP communities,
+filtering in only those that match. See an usage example:
 
 bgp_aspath_radius: 3
 bgp_stdcomm_pattern: 12345:
 
+Find detailed description of these configuration directives in the CONFIG-KEYS document. 
+
+XIb. The source peer AS case 
 The peer_src_as primitive adds useful insight in understanding where traffic enters
 the network; unfortunately asymmetric routing compromises accuracy such information
-in NetFlow datagrams when configured with the peer-as feature (as the router would do
-a lookup on the source IP address in the BGP table). A mapping is required and pmacct
-offers a few methods to achieve this. Below it's shown how to use a map reloadable at
-runtime and contents of the peers.map (for full syntax guide lines, please see the
-'peers.map.example' file within the examples section): 
+in NetFlow datagrams when configured with the peer-as feature (as the router simply
+performs a lookup on the source IP address in the BGP table and return its supposed
+symmetric entrance point). For more accuracy, some mapping is required and pmacct
+offers a few ways to do this. Below it's shown how to use a map reloadable at runtime
+and its contents (for full syntax guide lines, please see the 'peers.map.example'
+file within the examples section): 
 
 nfacctd_bgp_peer_src_as_type: map
 nfacctd_bgp_peer_src_as_map: /path/to/peers.map
@@ -552,14 +562,20 @@ nfacctd_bgp_peer_src_as_map: /path/to/peers.map
 id=12345 ip=1.2.3.4 in=10
 id=34567 ip=1.2.3.4 in=20
 
-NOTE: the peer_src_as primitive doesn't really apply to egress NetFlow (or sFlow) as
-it mainly relies on either the input ifIndex, the source MAC address, a reverse BGP
-next-hop lookup or a combination of these.
+Even though all this mapping is static, it can be auto-provisioned to a good degree
+by means of external scripts running at regular intervals and querying routers via
+SNMP to check-out the bgpPeerTable MIB.
 
-Once the collector is configured and started up, the only remaining step is to let
-routers to export traffic samples to the collector and, with the same management IP
-address, peer with it via BGP. It is adviceable to configure the collector as a oute-
-Reflector (RR) client.
+NOTE: the peer_src_as primitive doesn't really apply to egress NetFlow (or egress
+sFlow) as it mainly relies on either the input ifIndex, the source MAC address, a
+reverse BGP next-hop lookup or a combination of these.
+
+XIc. Preparing the router to BGP peer 
+Once the collector is configured and started up the remaining step is to let routers
+to export traffic samples to the collector and BGP peer with it. Configuring the same
+source IP address across both NetFlow and BGP and setting the BGP Router ID same as
+the source IP address allows the collector to perform the required correlations. It
+is adviceable to configure the collector as a Route-Reflector (RR) client.
 
 A relevant configuration example for a Cisco router follows:
 
@@ -568,12 +584,12 @@ ip flow-export version 5
 ip flow-export destination X.X.X.X 2100
 !
 router bgp 12345
- neighbor 193.242.91.196 remote-as 12345
- neighbor 193.242.91.196 update-source Loopback12345
- neighbor 193.242.91.196 version 4
- neighbor 193.242.91.196 send-community
- neighbor 193.242.91.196 route-reflector-client
- neighbor 193.242.91.196 description nfacctd 
+ neighbor X.X.X.X remote-as 12345
+ neighbor X.X.X.X update-source Loopback12345
+ neighbor X.X.X.X version 4
+ neighbor X.X.X.X send-community
+ neighbor X.X.X.X route-reflector-client
+ neighbor X.X.X.X description nfacctd 
 
 A relevant configuration example for a Juniper router follows:
 
@@ -602,9 +618,90 @@ protocols bgp {
     }
 }
 
-As concluding notes: the implementation is both 4-bytes ASN and IPv6 ready. When
-storing data via SQL, BGP primitives can be freely mix-and-matched with L2/L3/L4
-primitives when customizing the table (sql_optimize_clauses: true). Environments
-making large use of BGP Multi-Path are not currently supported. For a review of all
-the configurable knobs and features see the CONFIG-KEYS document. 
+XId. A working configuration example writing to a MySQL database
+
+daemonize: true
+nfacctd_port: 2100
+nfacctd_time_new: true
+
+plugins: mysql[5mins], mysql[hourly]
+
+sql_optimize_clauses: true
+sql_dont_try_update: true
+sql_multi_values: 1024000
+
+sql_history_roundoff[5mins]: m
+sql_history[5mins]: 5m
+sql_refresh_time[5mins]: 300
+sql_table[5mins]: acct_bgp_5mins
+
+sql_history_roundoff[hourly]: h
+sql_history[hourly]: 1h
+sql_refresh_time[hourly]: 3600
+sql_table[hourly]: acct_bgp_1hr
+
+bgp_daemon: true
+bgp_daemon_ip: X.X.X.X
+bgp_daemon_max_peers: 100
+bgp_aspath_radius: 3
+nfacctd_as_new: bgp
+bgp_peer_src_as_type: map
+bgp_peer_src_as_map: /path/to/peers.map
+
+plugin_buffer_size: 10240
+plugin_pipe_size: 1024000
+aggregate: tag, src_as, dst_as, peer_src_as, peer_dst_as, peer_src_ip, peer_dst_ip, local_pref, as_path
+
+pre_tag_map: /path/to/pretag.map
+refresh_maps: true
+pre_tag_map_entries: 3840
+
+The content of the maps (bgp_peer_src_as_map, pre_tag_map) is meant to be pretty
+standard and will not be shown. As it can be grasped from the configuration, the
+SQL schema was also changed from the default BGP one. Here is how it looks like:
+
+create table acct_bgp_5mins (
+        id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT,
+        agent_id INT(4) UNSIGNED NOT NULL,
+        as_src INT(4) UNSIGNED NOT NULL,
+        as_dst INT(4) UNSIGNED NOT NULL,
+        peer_as_src INT(4) UNSIGNED NOT NULL,
+        peer_as_dst INT(4) UNSIGNED NOT NULL,
+        peer_ip_src CHAR(15) NOT NULL,
+        peer_ip_dst CHAR(15) NOT NULL,
+        as_path CHAR(21) NOT NULL,
+        local_pref INT(4) UNSIGNED NOT NULL,
+        packets INT UNSIGNED NOT NULL,
+        bytes BIGINT UNSIGNED NOT NULL,
+        stamp_inserted DATETIME NOT NULL,
+        stamp_updated DATETIME,
+        PRIMARY KEY (id),
+        INDEX ...
+) TYPE=MyISAM AUTO_INCREMENT=1;
+
+create table acct_bgp_1hr (
+        id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT,
+        agent_id INT(4) UNSIGNED NOT NULL,
+        as_src INT(4) UNSIGNED NOT NULL,
+        as_dst INT(4) UNSIGNED NOT NULL,
+        peer_as_src INT(4) UNSIGNED NOT NULL,
+        peer_as_dst INT(4) UNSIGNED NOT NULL,
+        peer_ip_src CHAR(15) NOT NULL,
+        peer_ip_dst CHAR(15) NOT NULL,
+        as_path CHAR(21) NOT NULL,
+        local_pref INT(4) UNSIGNED NOT NULL,
+        packets INT UNSIGNED NOT NULL,
+        bytes BIGINT UNSIGNED NOT NULL,
+        stamp_inserted DATETIME NOT NULL,
+        stamp_updated DATETIME,
+        PRIMARY KEY (id),
+        INDEX ...
+) TYPE=MyISAM AUTO_INCREMENT=1;
+
+As concluding notes: the implementation is both 4-bytes ASN and IPv6 ready (MP-BGP);
+IPv6 peers are not supported yet though. When storing data via SQL, BGP primitives
+can be freely mix-and-matched with L2/L3/L4 primitives when customizing the table
+(sql_optimize_clauses: true). Environments making large use of BGP Multi-Path are
+not currently supported. For a review of all the configurable knobs and features see
+the CONFIG-KEYS document. 
 

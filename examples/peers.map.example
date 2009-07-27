@@ -4,7 +4,7 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in this same
 ! directory.
 !
-! nfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac.
+! nfacctd, sfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac.
 !
 ! list of currently supported keys follow:
 !

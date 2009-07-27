@@ -840,3 +840,76 @@ DESC:		sets the value of agentIp field inside the sFlow datagram header.
 KEY:		sfprobe_agentsubid
 DESC:		sets the value of agentSubId field inside the sFlow datagram header.
 
+KEY:		bgp_daemon
+VALUES:		[true|false]
+DESC:		enables the skinny BGP daemon thread. This feature requires the package to be supporting multi-
+		threading (--enable-threads). Neighbors are not defined explicitely via a piece of configuration
+		(see bgp_daemon_max_peers directive); also, for security purposes, the daemon doesn't implement
+		outbound BGP UPDATE messages and acts passively (ie. it never establishes a connection to a
+		remote peer but waits for incoming connections); upon receipt of a BGP OPEN message, the local
+		daemon presents itself as belonging to the same AS number as the remote peer and supporting
+		same BGP capabilities (ie. MP-BGP, 4-bytes ASNs). (default: false) 
+
+KEY:		bgp_daemon_ip
+DESC:		binds the BGP daemon to a specific interface. Expects as value an IPv4 address. The same is
+		used as BGP Router-ID to its peers - otherwise a dumb "1.2.3.4" value is presented. Setting
+		this directive is highly adviced. (default: 0.0.0.0)
+
+KEY:		bgp_daemon_port
+DESC:		binds the BGP daemon to a port different from the standard BGP port: 179/tcp. (default: 179)
+
+KEY:		bgp_daemon_max_peers
+DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon reaching of the limit,
+		no more BGP sessions can be established. Differently from routers BGP neighbors don't need to
+		be defined explicitely one-by-one rather an upper boundary to the number of neighbors applies.
+
+KEY:		bgp_daemon_msglog
+VALUES:		[true|false]
+DESC:		enables BGP messages logging, intended for debug and troubleshooting purposes only.
+
+KEY:		bgp_aspath_radius
+DESC:		cuts down AS-PATHs to the specified number of ASN hops. If the same ASN is repeated multiple
+		time (ie. as effect of prepending), each of them is regarded as one hop. By default AS-PATHs
+		are left intact. 
+
+KEY:		[ bgp_stdcomm_pattern | bgp_extcomm_pattern ]
+DESC:		filters BGP standard/extended communities against the supplied pattern. The underlying idea
+		is that many communities can be attached to a prefix; some of these can be of little or no
+		interest for the task of IP accounting; this feature allows to select only the relevant ones.
+		By default the list of communities is left intact.
+
+KEY:		bgp_peer_src_as_type
+VALUES:		[ map | bgp_comms ]
+DESC:		instructs which method to use to map incoming traffic to a source peer ASN. "map" selects a
+		map, reloadable at runtime, specified by the bgp_peer_src_as_map directive (refer to it for
+		further information); "bgp_comms" maps basing on standard BGP communities, expressed in the
+		format <ifIndex>:<ASN>, attached to the <BGP Router ID>/32 prefix properly re-distributed in
+		BGP. The "map" method is adviced as being much more flexibile, scalable and future-proof.
+
+KEY:		bgp_peer_src_as_map
+DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
+		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB to
+		look up the source IP prefix). This is sufficient to model popular tecniques for both public
+		and private BGP peerings.
+
+KEY:		bgp_agent_map
+DESC:		full pathname to a file containing NetFlow/sFlow agent to BGP peer map. It is particularly
+		aimed as a resource-savy alternative to have N agents but only a restricted number of BGP
+		peers (ie. a BGP RR), in case of simpler topologies (ie. hub-and-spoke) or scenarios (ie.
+		single-homed). It can also be viewed as a temporary workaround to certain situations.
+
+KEY:		bgp_follow_default
+DESC:		expects positive number value which instructs how many times a default route, if any, can
+		be followed in order to successfully resolve both source and destination IP prefixes. This
+		is aimed at scenarios where routers BGP peering with pmacct have a default-only or partial
+		BGP view. At each recursion (default route follow-up) the value is decremented by one; the
+		process stops when one of these conditions is met:
+
+			* both source and destination IP prefixes are resolved
+			* there is no available default route
+			* the default gateway is not BGP peering with pmacct
+			* the the recusion value reaches zero
+
+		As soon as an IP prefix is matched, it is not looked up anymore in case of more recursions
+		(ie. the more near the router is, the most specific the route is assumed to be). (default: 0)
+

@@ -1,11 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package) 
-pmacct is Copyright (C) 2003-2008 by Paolo Lucente
-
-This is mostly a default INSTALL file. PLEASE, divert your eyes to EXAMPLES
-documentation for installation and configuration tips. Here you will find
-generic tips about how a configure script and Makefile work together with
-compiler options.
-
+pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
 QUICK INSTALLATION:
 
@@ -19,6 +13,15 @@ Read accepted options with "<name> -h" and run with "<name> [options]".
 
 (*) x.y.z is the release version.
 
+The rationale behind pmacct compilation is that by default all features
+are turned off (IPv6, MySQL, PostgreSQL, SQLite, multi-threading, 64bit
+counters) making the package dependant only on a working libpcap. So if
+you need any of these don't forget to turn them on manually.
+
+Some features will get turned on by default in future once they will
+pick up sufficient ground (ie. IPv6) or will be sufficiently tested to
+be considered stable (ie. multi-threading).
+ 
 
 BASIC INSTALLATION:
 

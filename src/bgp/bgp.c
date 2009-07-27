@@ -101,8 +101,8 @@ void skinny_bgp_daemon()
   else {
     trim_spaces(config.nfacctd_bgp_ip);
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
-    if (!ret) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_ip' value is not valid. Terminating thread.\n");
+    if (!ret || addr.family != AF_INET) {
+      Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_ip' value is not a valid IPv4 address. Terminating thread.\n");
       exit_all(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bgp_port);
@@ -450,7 +450,6 @@ void skinny_bgp_daemon()
   			 let's temporarily discard BGP KEEPALIVEs */
 		  break;
 	  case BGP_UPDATE:
-		  //printf("BGP UPDATE\n");
 		  if (peer->status < Established) {
 		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP UPDATE received (no neighbor). Discarding.\n", inet_ntoa(peer->id.address.ipv4));
 			FD_CLR(peer->fd, &bkp_read_descs);
@@ -570,7 +569,6 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   /* handling Unfeasible routes */
   memcpy(&tmp, pkt, 2);
   withdraw_len = ntohs(tmp);
-  //printf("WITHDRAW_LEN: %u\n", withdraw_len);
   if (withdraw_len > end) return -1;  
   else {
 	end -= withdraw_len;
@@ -588,7 +586,6 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   /* handling Attributes */
   memcpy(&tmp, pkt, 2);
   attribute_len = ntohs(tmp);
-  //printf("ATTRIBUTE_LEN: %u\n", attribute_len);
   if (attribute_len > end) return -1;
   else {
 	end -= attribute_len;
@@ -602,7 +599,6 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
   }
 
   update_len = end; end = 0;
-  //printf("UPDATE_LEN: %u\n", update_len);
 
   if (update_len > 0) {
 	update.afi = AFI_IP;
@@ -678,45 +674,35 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
 
 	switch (type) {
 	case BGP_ATTR_AS_PATH:
-		// printf("ATTRIBUTE: AS PATH\n");
 		ret = bgp_attr_parse_aspath(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_AS4_PATH:
-		// printf("ATTRIBUTE: AS4 PATH\n");
 		ret = bgp_attr_parse_as4path(peer, attr_len, attr, ptr, flag, &as4_path);
 		break;
 	case BGP_ATTR_NEXT_HOP:
-		// printf("ATTRIBUTE: NEXHOP\n");
 		ret = bgp_attr_parse_nexthop(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_COMMUNITIES:
-		// printf("ATTRIBUTE: COMMUNITIES\n");
 		ret = bgp_attr_parse_community(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_EXT_COMMUNITIES:
-		// printf("ATTRIBUTE: EXTENDED COMMUNITIES\n");
 		ret = bgp_attr_parse_ecommunity(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_MULTI_EXIT_DISC:
-		// printf("ATTRIBUTE: MED\n");
 		ret = bgp_attr_parse_med(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_LOCAL_PREF:
-		// printf("ATTRIBUTE: LOCAL PREFERENCE\n");
 		ret = bgp_attr_parse_local_pref(peer, attr_len, attr, ptr, flag);
 		break;
 	case BGP_ATTR_MP_REACH_NLRI:
-		// printf("ATTRIBUTE: MP REACH NLRI\n");
 		ret = bgp_attr_parse_mp_reach(peer, attr_len, attr, ptr, mp_update);
 		mp_nlri = TRUE;
 		break;
 	case BGP_ATTR_MP_UNREACH_NLRI:
-		// printf("ATTRIBUTE: MP UNREACH NLRI\n");
 		ret = bgp_attr_parse_mp_unreach(peer, attr_len, attr, ptr, mp_withdraw);
 		mp_nlri = TRUE;
 		break;
 	default:
-		// printf("ATTRIBUTE: UNKNOWN (%u)\n", type);
 		ret = 0;
 		break;
 	}

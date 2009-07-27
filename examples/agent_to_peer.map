@@ -1,0 +1,18 @@
+! 
+! NetFlow/sFlow agent to BGP peer map
+!
+! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in this same
+! directory.
+!
+! nfacctd, sfacctd: valid keys: id, ip.
+!
+! list of currently supported keys follow:
+!
+! 'id'			IP address of the BGP peer
+! 'ip'			IP address of the sFlow/NetFlow agent
+!
+! A couple of straightforward examples follow.  
+!
+id=1.2.3.4	ip=2.3.4.5
+!
+! id=3.4.5.6	ip=::ffff:4.5.6.7
