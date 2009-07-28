@@ -324,7 +324,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   return;
 
   handle_error:
-  free(tmp.e) ;
+  if (*map_allocated && tmp.e) free(tmp.e) ;
   if (t->timestamp) {
     Log(LOG_WARNING, "WARN: Rolling back the old map '%s'.\n", filename);
 

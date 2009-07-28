@@ -79,16 +79,7 @@ void skinny_bgp_daemon()
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
   bgp_attr_init();
 
-  /* socket creation for BGP server: mostly stolen from nfacctd.c code */
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
-  if (!config.nfacctd_bgp_ip) {
-    struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
-
-    sa6->sin6_family = AF_INET6;
-    sa6->sin6_port = htons(config.nfacctd_bgp_port);
-    slen = sizeof(struct sockaddr_in6);
-  }
-#else
+  /* socket creation for BGP server: IPv4 only */
   if (!config.nfacctd_bgp_ip) {
     struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
 
@@ -97,7 +88,6 @@ void skinny_bgp_daemon()
     sa4->sin_port = htons(config.nfacctd_bgp_port);
     slen = sizeof(struct sockaddr_in);
   }
-#endif
   else {
     trim_spaces(config.nfacctd_bgp_ip);
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
@@ -140,6 +130,16 @@ void skinny_bgp_daemon()
   select_fd = 0;
   FD_ZERO(&bkp_read_descs);
   FD_SET(sock, &bkp_read_descs);
+
+  {
+    char srv_string[INET6_ADDRSTRLEN];
+    struct host_addr srv_addr;
+    u_int16_t srv_port;
+
+    sa_to_addr(&server, &srv_addr, &srv_port);
+    addr_to_str(srv_string, &srv_addr);
+    Log(LOG_INFO, "INFO ( default/core/BGP ): waiting for BGP data on %s:%u\n", srv_string, srv_port);
+  }
 
   for (;;) {
     select_again:

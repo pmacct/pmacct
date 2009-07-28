@@ -699,8 +699,16 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls6.l3_proto = ETHERTYPE_IP;
 #endif
 
-  Log(LOG_INFO, "INFO ( default/core ): waiting for data on UDP port '%u'\n", config.nfacctd_port);
-  allowed = TRUE;
+  {
+    char srv_string[INET6_ADDRSTRLEN];
+    struct host_addr srv_addr;
+    u_int16_t srv_port;
+
+    sa_to_addr(&server, &srv_addr, &srv_port);
+    addr_to_str(srv_string, &srv_addr);
+    Log(LOG_INFO, "INFO ( default/core ): waiting for sFlow data on %s:%u\n", srv_string, srv_port);
+    allowed = TRUE;
+  }
 
   /* Main loop */
   for (;;) {
