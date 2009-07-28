@@ -847,8 +847,8 @@ DESC:		enables the skinny BGP daemon thread. This feature requires the package t
 		(see bgp_daemon_max_peers directive); also, for security purposes, the daemon doesn't implement
 		outbound BGP UPDATE messages and acts passively (ie. it never establishes a connection to a
 		remote peer but waits for incoming connections); upon receipt of a BGP OPEN message, the local
-		daemon presents itself as belonging to the same AS number as the remote peer and supporting
-		same BGP capabilities (ie. MP-BGP, 4-bytes ASNs). (default: false) 
+		daemon presents itself as belonging to the same AS number and supporting same BGP capabilities
+		(ie. MP-BGP, 4-bytes ASNs) as the remote peer. Per-peer RIBs are maintained. (default: false)
 
 KEY:		bgp_daemon_ip
 DESC:		binds the BGP daemon to a specific interface. Expects as value an IPv4 address. The same is
@@ -865,18 +865,20 @@ DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon rea
 
 KEY:		bgp_daemon_msglog
 VALUES:		[true|false]
-DESC:		enables BGP messages logging, intended for debug and troubleshooting purposes only.
+DESC:		enables BGP messages logging: as this can get easily verbose, it is intended for debug and
+		troubleshooting purposes only.
 
 KEY:		bgp_aspath_radius
 DESC:		cuts down AS-PATHs to the specified number of ASN hops. If the same ASN is repeated multiple
-		time (ie. as effect of prepending), each of them is regarded as one hop. By default AS-PATHs
-		are left intact. 
+		times (ie. as effect of prepending), each of them is regarded as one hop. By default AS-PATHs
+		are left intact unless reaching the maximum length of the buffer (128 chars). 
 
 KEY:		[ bgp_stdcomm_pattern | bgp_extcomm_pattern ]
 DESC:		filters BGP standard/extended communities against the supplied pattern. The underlying idea
 		is that many communities can be attached to a prefix; some of these can be of little or no
-		interest for the task of IP accounting; this feature allows to select only the relevant ones.
-		By default the list of communities is left intact.
+		interest for the accounting task; this feature allows to select only the relevant ones. By
+		default the list of communities is left intact unless reaching the maximum length of the
+		buffer (96 chars).
 
 KEY:		bgp_peer_src_as_type
 VALUES:		[ map | bgp_comms ]
@@ -900,16 +902,17 @@ DESC:		full pathname to a file containing NetFlow/sFlow agent to BGP peer map. I
 
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can
-		be followed in order to successfully resolve both source and destination IP prefixes. This
-		is aimed at scenarios where routers BGP peering with pmacct have a default-only or partial
-		BGP view. At each recursion (default route follow-up) the value is decremented by one; the
-		process stops when one of these conditions is met:
+		be followed in order to successfully resolve source and destination IP prefixes. This is
+		aimed at scenarios where neighbors peering with pmacct have a default-only or partial BGP
+		view. At each recursion (default route follow-up) the value gets decremented; the process
+		stops when one of these conditions is met:
 
 			* both source and destination IP prefixes are resolved
 			* there is no available default route
 			* the default gateway is not BGP peering with pmacct
 			* the the recusion value reaches zero
 
-		As soon as an IP prefix is matched, it is not looked up anymore in case of more recursions
-		(ie. the more near the router is, the most specific the route is assumed to be). (default: 0)
+		As soon as an IP prefix is matched, it is not looked up anymore in case more recursions
+		are required (ie. the closer the router is, the most specific the route is assumed to be).
+		(default: 0)
 

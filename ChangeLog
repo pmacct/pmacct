@@ -2,6 +2,41 @@ pmacct (Promiscuous mode IP Accounting package) v0.12.0rc1
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
 0.12.0rc1 -- xx-xx-2009
+  + a BGP daemon thread has been integrated in both the NetFlow
+    and sFlow collectors, nfacctd and sfacctd. It maintains per-
+    peer RIBs and supports MP-BGP (IPv4, IPv6) and 32-bit ASNs.
+    As a result the following configuration directives are being
+    introduced: bgp_daemon, bgp_daemon_ip, bgp_daemon_max_peers,
+    bgp_daemon_port and bgp_daemon_msglog. For a quick-start and
+    implementation notes refer to EXAMPLES document and detailed
+    configuration directives description in CONFIG-KEYS.
+  + A new set of BGP-related aggregation primitives are now
+    supported by the "aggregate" directive: std_comm, ext_comm,
+    as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as,
+    med, local_pref. A few extra directives are being introduced
+    to support (filter, map, cut down, etc.) some primitives:
+    bgp_peer_src_as_type, bgp_peer_src_as_map, bgp_aspath_radius, 
+    bgp_stdcomm_pattern and bgp_extcomm_pattern.
+  + nfacctd_as_new supports a new value "bgp". It is meant to
+    populate src_as and dst_as primitives by looking up source
+    and destination IP prefixes against the NetFlow (or sFlow)
+    agent RIB. 
+  + A new sql_table_type directive is introduced: by combining
+    it with sql_table_version, defines one of the standard BGP
+    tables. 
+  + Two new directives have been developed to support scenarios
+    where NetFlow (or sFlow) agents are not running BGP or have
+    default-only or partial views: bgp_follow_default and
+    bgp_agent_map.
+  + Pre-Tagging: the ID is now a 32-bit unsigned value (it was
+    16-bit). As a result, there valid tags can be in the range
+    1-4294967295 and maps can now express the resulting ID as
+    an IPv4 address (ie. bgp_agent_map).  
+  + Pre-tagging: support for 32-bit input/output interfaces is
+    now available.
+  ! fix: read_SQLquery_from_file() was returning a random value,
+    regardless of the successful result. Patch was provided by
+    Giedrius Liubavicius
 
 0.11.6 -- 07-04-2009
   + Introduced support for tag ranges into the 'pre_tag_filter' 
