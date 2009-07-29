@@ -157,6 +157,10 @@ int main(int argc,char **argv, char **envp)
   memset(&req, 0, sizeof(req));
   memset(&class, 0, sizeof(class));
   memset(&xflow_status_table, 0, sizeof(xflow_status_table));
+
+  memset(&idt, 0, sizeof(idt));
+  memset(&bpas_table, 0, sizeof(bpas_table));
+  memset(&bta_table, 0, sizeof(bta_table));
   config.acct_type = ACCT_NF;
 
   rows = 0;
@@ -454,7 +458,7 @@ int main(int argc,char **argv, char **envp)
 
   rc = bind(config.sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( default/core): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.nfacctd_ip, config.nfacctd_port, errno);
+    Log(LOG_ERR, "ERROR ( default/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.nfacctd_ip, config.nfacctd_port, errno);
     exit(1);
   }
 
@@ -497,10 +501,7 @@ int main(int argc,char **argv, char **envp)
     load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
     pptrs.v4.idtable = (u_char *) &idt;
   }
-  else {
-    memset(&idt, 0, sizeof(idt));
-    pptrs.v4.idtable = NULL;
-  }
+  else pptrs.v4.idtable = NULL;
 
 #if defined ENABLE_THREADS
   /* starting the BGP thread */
@@ -514,19 +515,13 @@ int main(int argc,char **argv, char **envp)
         pptrs.v4.bpas_table = (u_char *) &bpas_table;
       }
     }
-    else {
-      memset(&bpas_table, 0, sizeof(bpas_table));
-      pptrs.v4.bpas_table = NULL;
-    }
+    else pptrs.v4.bpas_table = NULL;
 
     if (config.nfacctd_bgp_to_agent_map) {
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
       pptrs.v4.bta_table = (u_char *) &bta_table;
     }
-    else {
-      memset(&bta_table, 0, sizeof(bta_table));
-      pptrs.v4.bta_table = NULL;
-    }
+    else pptrs.v4.bta_table = NULL;
 
     nfacctd_bgp_wrapper();
   }
