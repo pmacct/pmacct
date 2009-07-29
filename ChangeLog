@@ -34,9 +34,12 @@ pmacct is Copyright (C) 2003-2009 by Paolo Lucente
     an IPv4 address (ie. bgp_agent_map).  
   + Pre-tagging: support for 32-bit input/output interfaces is
     now available.
-  ! fix: read_SQLquery_from_file() was returning a random value,
-    regardless of the successful result. Patch was provided by
-    Giedrius Liubavicius
+  ! fix, sql_common.c: read_SQLquery_from_file() was returning
+    a random value, regardless of the successful result. Patch
+    has been provided provided by Giedrius Liubavicius
+  ! fix, pmacct.c: when unused, source/destination IP address
+    fields were presented as NULL values. This is now replaced
+    with a '0' value to improve output parsing.
 
 0.11.6 -- 07-04-2009
   + Introduced support for tag ranges into the 'pre_tag_filter' 

@@ -980,12 +980,16 @@ int main(int argc,char **argv)
           printf("%-10d  ", acc_elem->primitives.dst_as);
         }
 
-	if (!have_wtc || (what_to_count & COUNT_STD_COMM)) {
-          printf("%-22s   ", pbgp->std_comms);
+	/* Slightly special "!have_wtc" handling due to standard and
+	   extended BGP communities being mutual exclusive */
+	if ((!have_wtc && !(what_to_count & COUNT_EXT_COMM)) || (what_to_count & COUNT_STD_COMM)) {
+          if (strlen(pbgp->std_comms)) printf("%-22s   ", pbgp->std_comms);
+	  else printf("%-22u   ", 0);
         }
 
-        if (!have_wtc || (what_to_count & COUNT_EXT_COMM)) {
-          printf("%-22s   ", pbgp->ext_comms);
+        if (what_to_count & COUNT_EXT_COMM) {
+          if (strlen(pbgp->ext_comms)) printf("%-22s   ", pbgp->ext_comms);
+	  else printf("%-22u   ", 0);
         }
 
         if (!have_wtc || (what_to_count & COUNT_AS_PATH)) {
@@ -1018,19 +1022,24 @@ int main(int argc,char **argv)
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_IP)) {
           addr_to_str(ip_address, &pbgp->peer_src_ip);
+
 #if defined ENABLE_IPV6
-          printf("%-45s  ", ip_address);
+          if (strlen(ip_address)) printf("%-45s  ", ip_address);
+          else printf("%-45u  ", 0);
 #else
-          printf("%-15s  ", ip_address);
+          if (strlen(ip_address)) printf("%-15s  ", ip_address);
+          else printf("%-15u  ", 0);
 #endif
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_DST_IP)) {
           addr_to_str(ip_address, &pbgp->peer_dst_ip);
 #if defined ENABLE_IPV6
-          printf("%-45s  ", ip_address);
+          if (strlen(ip_address)) printf("%-45s  ", ip_address);
+	  else printf("%-45u  ", 0);
 #else
-          printf("%-15s  ", ip_address);
+          if (strlen(ip_address)) printf("%-15s  ", ip_address);
+	  else printf("%-15u  ", 0);
 #endif
         }
 
@@ -1038,18 +1047,22 @@ int main(int argc,char **argv)
 					   COUNT_SRC_NET|COUNT_SUM_NET))) {
 	  addr_to_str(ip_address, &acc_elem->primitives.src_ip);
 #if defined ENABLE_IPV6
-	  printf("%-45s  ", ip_address);
+	  if (strlen(ip_address)) printf("%-45s  ", ip_address);
+	  else printf("%-45u  ", 0);
 #else
-	  printf("%-15s  ", ip_address);
+	  if (strlen(ip_address)) printf("%-15s  ", ip_address);
+	  else printf("%-15u  ", 0);
 #endif
 	}
 
 	if (!have_wtc || (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET))) {
 	  addr_to_str(ip_address, &acc_elem->primitives.dst_ip);
 #if defined ENABLE_IPV6
-	  printf("%-45s  ", ip_address);
+	  if (strlen(ip_address)) printf("%-45s  ", ip_address);
+	  else printf("%-45u  ", 0);
 #else
-	  printf("%-15s  ", ip_address);
+	  if (strlen(ip_address)) printf("%-15s  ", ip_address);
+	  else printf("%-15u  ", 0);
 #endif
 	}
 

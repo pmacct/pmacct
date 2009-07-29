@@ -1446,7 +1446,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   }
 
   if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) {
-    if (!pptrs->bta) memcpy(&pbgp->peer_src_ip, &peer->id, sizeof(struct host_addr)); 
+    if (!pptrs->bta) memcpy(&pbgp->peer_src_ip, &peer->addr, sizeof(struct host_addr)); 
     else {
       struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 

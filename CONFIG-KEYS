@@ -604,8 +604,8 @@ DESC:		When 'false', it instructs nfacctd to populate 'src_as' and 'dst_as' from
 		in the NetFlow datagram; when 'true' ('file' being an alias of 'true') it instructs nfacctd to
 		generate AS numbers looking up source and destination IP addresses against a 'networks_file'
 		map. When 'bgp' is specified, AS numbers are looked up against the BGP RIB of the peer from
-		which the NetFlow datagram was received (assuming: BGP Router ID == Source IP address of the
-		sFlow/NetFlow agent). (default: false) 
+		which the NetFlow datagram was received. The assumption is: BGP Source IP address equals to
+		the sFlow/NetFlow source IP address. (default: false) 
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]
 DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are
@@ -848,7 +848,8 @@ DESC:		enables the skinny BGP daemon thread. This feature requires the package t
 		outbound BGP UPDATE messages and acts passively (ie. it never establishes a connection to a
 		remote peer but waits for incoming connections); upon receipt of a BGP OPEN message, the local
 		daemon presents itself as belonging to the same AS number and supporting same BGP capabilities
-		(ie. MP-BGP, 4-bytes ASNs) as the remote peer. Per-peer RIBs are maintained. (default: false)
+		(ie. MP-BGP, 4-bytes ASNs) as the remote peer. Per-peer RIBs are maintained basing on the IP
+		address of the peer (and for clarity not its BGP Router-ID). (default: false)
 
 KEY:		bgp_daemon_ip
 DESC:		binds the BGP daemon to a specific interface. Expects as value an IPv4 address. The same is
@@ -885,8 +886,9 @@ VALUES:		[ map | bgp_comms ]
 DESC:		instructs which method to use to map incoming traffic to a source peer ASN. "map" selects a
 		map, reloadable at runtime, specified by the bgp_peer_src_as_map directive (refer to it for
 		further information); "bgp_comms" maps basing on standard BGP communities, expressed in the
-		format <ifIndex>:<ASN>, attached to the <BGP Router ID>/32 prefix properly re-distributed in
-		BGP. The "map" method is adviced as being much more flexibile, scalable and future-proof.
+		format <ifIndex>:<ASN>, attached to the <BGP peer's source IP address>/32 prefix properly
+		re-distributed in BGP. The "map" method is adviced as being much more flexibile, scalable
+		and future-proof.
 
 KEY:		bgp_peer_src_as_map
 DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
@@ -895,10 +897,11 @@ DESC:		full pathname to a file containing source peer AS mappings. The AS can be
 		and private BGP peerings.
 
 KEY:		bgp_agent_map
-DESC:		full pathname to a file containing NetFlow/sFlow agent to BGP peer map. It is particularly
-		aimed as a resource-savy alternative to have N agents but only a restricted number of BGP
-		peers (ie. a BGP RR), in case of simpler topologies (ie. hub-and-spoke) or scenarios (ie.
-		single-homed). It can also be viewed as a temporary workaround to certain situations.
+DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agents to BGP peers'
+		ones. It is particularly aimed as a resource-savy alternative to have N agents but only a
+		restricted number of BGP peers (ie. a BGP RR), in case of simpler topologies (ie. hub-and-
+		spoke) or scenarios (ie. single-homed). It can also be viewed as a temporary workaround to
+		certain situations.
 
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can

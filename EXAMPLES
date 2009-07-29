@@ -575,10 +575,10 @@ reverse BGP next-hop lookup or a combination of these.
 XIc. Preparing the router to BGP peer 
 Once the collector is configured and started up the remaining step is to let routers
 to export traffic samples to the collector and BGP peer with it. Configuring the same
-source IP address across both NetFlow and BGP features and setting the BGP Router ID
-same as the BGP source IP address allows the pmacct collector to perform the required
-correlations. It is adviceable to configure the collector as a Route-Reflector (RR)
-client.
+source IP address across both NetFlow and BGP features allows the pmacct collector to
+perform the required correlations. Also, setting the BGP Router ID accordingly allows
+for more clear log messages. It's adviceable to configure the collector at the routers
+as a Route-Reflector (RR) client.
 
 A relevant configuration example for a Cisco router follows:
 

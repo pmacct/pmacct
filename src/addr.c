@@ -51,11 +51,8 @@ unsigned int str_to_addr(const char *str, struct host_addr *a)
  */
 unsigned int addr_to_str(char *str, const struct host_addr *a)
 {
-  char *ptr;
-
   if (a->family == AF_INET) {
-    ptr = inet_ntoa(a->address.ipv4);
-    strcpy(str, ptr);
+    inet_ntop(AF_INET, &a->address.ipv4, str, INET6_ADDRSTRLEN); 
     return a->family;
   }
 #if defined ENABLE_IPV6
@@ -66,6 +63,7 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
 #endif
 
   memset(str, 0, INET6_ADDRSTRLEN);
+
   return 0;
 }
 
