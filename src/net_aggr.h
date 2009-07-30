@@ -54,7 +54,7 @@ struct networks_table {
 struct networks_table_entry {
   u_int32_t net;
   u_int32_t mask;
-  u_int32_t as;
+  as_t as;
   struct networks_table childs_table;
 };
 
@@ -67,7 +67,7 @@ struct networks6_cache_entry {
 struct networks6_table_entry {
   u_int32_t net[4];
   u_int32_t mask[4];
-  u_int32_t as;
+  as_t as;
   struct networks_table childs_table;
 };
 #endif

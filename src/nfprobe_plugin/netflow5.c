@@ -116,8 +116,14 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 			flw->dest_ip = flows[i]->addr[1].v4.s_addr;
 			flw->src_port = flows[i]->port[0];
 			flw->dest_port = flows[i]->port[1];
-			flw->src_as = flows[i]->as[0];
-			flw->dest_as = flows[i]->as[1];
+			{
+			  as_t tmp_as;
+
+			  tmp_as = ntohl(flows[i]->as[0]);
+			  flw->src_as = htons(tmp_as);
+			  tmp_as = ntohl(flows[i]->as[1]);
+			  flw->dest_as = htons(tmp_as);
+			}
 			flw->flow_packets = htonl(flows[i]->packets[0]);
 			flw->flow_octets = htonl(flows[i]->octets[0]);
 			flw->flow_start =
@@ -140,8 +146,14 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 			flw->dest_ip = flows[i]->addr[0].v4.s_addr;
 			flw->src_port = flows[i]->port[1];
 			flw->dest_port = flows[i]->port[0];
-			flw->src_as = flows[i]->as[1];
-			flw->dest_as = flows[i]->as[0];
+			{
+			  as_t tmp_as;
+			  
+			  tmp_as = ntohl(flows[i]->as[1]);
+			  flw->src_as = htons(tmp_as);
+			  tmp_as = ntohl(flows[i]->as[0]);
+			  flw->dest_as = htons(tmp_as);
+			}
 			flw->flow_packets = htonl(flows[i]->packets[1]);
 			flw->flow_octets = htonl(flows[i]->octets[1]);
 			flw->flow_start =

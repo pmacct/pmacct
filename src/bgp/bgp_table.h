@@ -59,6 +59,8 @@ struct bgp_node
 
   void *info;
 
+  unsigned int lock;
+/*
   struct bgp_adj_out *adj_out;
 
   struct bgp_adj_in *adj_in;
@@ -69,6 +71,7 @@ struct bgp_node
 
   u_char flags;
 #define BGP_NODE_PROCESS_SCHEDULED	(1 << 0)
+*/
 };
 
 struct bgp_info
@@ -81,6 +84,7 @@ struct bgp_info
   unsigned int lock;
 
   /* BGP information status.  */
+/*
   u_int16_t flags;
 #define BGP_INFO_IGP_CHANGED    (1 << 0)
 #define BGP_INFO_DAMPED         (1 << 1)
@@ -93,13 +97,14 @@ struct bgp_info
 #define BGP_INFO_STALE          (1 << 8)
 #define BGP_INFO_REMOVED        (1 << 9)
 #define BGP_INFO_COUNTED    (1 << 10)
+*/
 
   u_char type;
   u_char sub_type;
   u_char valid;
 
   /* MPLS label.  */
-  u_char tag[3];
+// u_char tag[3];
 
   /* AS-Pathlimit TTL */
   u_char ttl;

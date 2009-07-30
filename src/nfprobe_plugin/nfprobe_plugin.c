@@ -264,8 +264,8 @@ void handle_hostbyteorder_packet(struct pkt_data *data)
 #endif
   data->primitives.src_port = htons(data->primitives.src_port); 
   data->primitives.dst_port = htons(data->primitives.dst_port); 
-  data->primitives.src_as = htons(data->primitives.src_as); 
-  data->primitives.dst_as = htons(data->primitives.dst_as); 
+  data->primitives.src_as = htonl(data->primitives.src_as); 
+  data->primitives.dst_as = htonl(data->primitives.dst_as); 
 }
 
 /* Fill in transport-layer (tcp/udp) portions of flow record */

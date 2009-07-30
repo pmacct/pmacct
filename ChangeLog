@@ -28,6 +28,10 @@ pmacct is Copyright (C) 2003-2009 by Paolo Lucente
     where NetFlow (or sFlow) agents are not running BGP or have
     default-only or partial views: bgp_follow_default and
     bgp_agent_map.
+  + 4-bytes ASNs are now supported: including NetFlow and sFlow
+    collectors, NetFlow and sFlow probes, networks_file to map
+    prefixes to ASNs. The new BGP daemon implementation is, of
+    course, fully compliant.  
   + Pre-Tagging: the ID is now a 32-bit unsigned value (it was
     16-bit). As a result, there valid tags can be in the range
     1-4294967295 and maps can now express the resulting ID as
@@ -40,6 +44,9 @@ pmacct is Copyright (C) 2003-2009 by Paolo Lucente
   ! fix, pmacct.c: when unused, source/destination IP address
     fields were presented as NULL values. This is now replaced
     with a '0' value to improve output parsing.
+  ! Standard major release compilation check-pointing: thanks
+    very much to Manuel Pata and Tobias Lott for their strong
+    support with OpenBSD and FreeBSD respectively.
 
 0.11.6 -- 07-04-2009
   + Introduced support for tag ranges into the 'pre_tag_filter' 

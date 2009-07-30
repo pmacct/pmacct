@@ -113,7 +113,7 @@ struct NF9_SOFTFLOWD_DATA_COMMON {
 	u_int32_t bytes, packets, flows;
 	u_int16_t src_port, dst_port;
 	u_int8_t protocol, tos, tcp_flags, ipproto;
-	u_int16_t src_as, dst_as;
+	as_t src_as, dst_as;
 	u_int8_t src_mac[6], dst_mac[6];
 	u_int16_t vlan;
 } __packed;
@@ -379,16 +379,16 @@ nf9_init_template(void)
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_AS) {
 	  v4_template.r[rcount].type = htons(NF9_SRC_AS);
-	  v4_template.r[rcount].length = htons(2);
+	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_src_as_handler;
-	  v4_int_template.r[rcount].length = 2;
+	  v4_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_AS) {
 	  v4_template.r[rcount].type = htons(NF9_DST_AS);
-	  v4_template.r[rcount].length = htons(2);
+	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_dst_as_handler;
-	  v4_int_template.r[rcount].length = 2;
+	  v4_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_MAC) {
@@ -524,16 +524,16 @@ nf9_init_template(void)
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_AS) {
 	  v6_template.r[rcount].type = htons(NF9_SRC_AS);
-	  v6_template.r[rcount].length = htons(2);
+	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_src_as_handler;
-	  v6_int_template.r[rcount].length = 2;
+	  v6_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_AS) {
 	  v6_template.r[rcount].type = htons(NF9_DST_AS);
-	  v6_template.r[rcount].length = htons(2);
+	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_dst_as_handler;
-	  v6_int_template.r[rcount].length = 2;
+	  v6_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_MAC) {

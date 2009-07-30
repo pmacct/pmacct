@@ -152,7 +152,7 @@ struct FLOW {
 	u_int8_t tos[2];			/* ToS/DSCP */
 
 	/* ASN stuff */
-	u_int16_t as[2];			/* Autonomous System numbers */
+	as_t as[2];				/* Autonomous System numbers */
 
 	/* L2 stuff */
 	u_int8_t mac[2][6];			/* Endpoint L2/Ethernet MAC addresses */
