@@ -24,6 +24,7 @@
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
+#include "thread_pool.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
 
