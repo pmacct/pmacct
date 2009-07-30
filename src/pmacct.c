@@ -266,7 +266,7 @@ int main(int argc,char **argv)
   unsigned char *largebuf, *elem, *ct;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
   char path[128], file[128], password[9];
-  char *as_path, empty_aspath[] = "^$";
+  char *as_path, empty_aspath[] = "^$", *bgp_comm;
   int sd, buflen, unpacked, printed;
   int counter=0, ct_idx=0, ct_num=0;
 
@@ -818,10 +818,30 @@ int main(int argc,char **argv)
 	    else request.data.class = value;
 	  }
         }
-        else if (!strcmp(count_token[match_string_index], "std_comm"))
-          strlcpy(request.pbgp.std_comms, match_string_token, MAX_BGP_STD_COMMS);
-        else if (!strcmp(count_token[match_string_index], "ext_comm"))
-          strlcpy(request.pbgp.ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
+        else if (!strcmp(count_token[match_string_index], "std_comm")) {
+	  if (!strcmp(match_string_token, "0"))
+	    memset(request.pbgp.std_comms, 0, MAX_BGP_STD_COMMS);
+	  else {
+            strlcpy(request.pbgp.std_comms, match_string_token, MAX_BGP_STD_COMMS);
+	    bgp_comm = request.pbgp.std_comms;
+	    while (bgp_comm) {
+	      bgp_comm = strchr(request.pbgp.std_comms, '_');
+	      if (bgp_comm) *bgp_comm = ' ';
+	    }
+	  }
+	}
+        else if (!strcmp(count_token[match_string_index], "ext_comm")) {
+          if (!strcmp(match_string_token, "0"))
+            memset(request.pbgp.ext_comms, 0, MAX_BGP_EXT_COMMS);
+          else {
+            strlcpy(request.pbgp.ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
+            bgp_comm = request.pbgp.ext_comms;
+            while (bgp_comm) {
+              bgp_comm = strchr(request.pbgp.ext_comms, '_');
+              if (bgp_comm) *bgp_comm = ' ';
+            }
+	  }
+	}
         else if (!strcmp(count_token[match_string_index], "as_path")) {
 	  if (!strcmp(match_string_token, "^$"))
 	    memset(request.pbgp.as_path, 0, MAX_BGP_ASPATH);
@@ -983,13 +1003,27 @@ int main(int argc,char **argv)
 	/* Slightly special "!have_wtc" handling due to standard and
 	   extended BGP communities being mutual exclusive */
 	if ((!have_wtc && !(what_to_count & COUNT_EXT_COMM)) || (what_to_count & COUNT_STD_COMM)) {
-          if (strlen(pbgp->std_comms)) printf("%-22s   ", pbgp->std_comms);
-	  else printf("%-22u   ", 0);
+	  bgp_comm = pbgp->std_comms;
+	  while (bgp_comm) {
+	    bgp_comm = strchr(pbgp->std_comms, ' ');
+	    if (bgp_comm) *bgp_comm = '_';
+	  }
+          if (strlen(pbgp->std_comms))
+	    printf("%-22s   ", pbgp->std_comms);
+	  else
+	    printf("%-22u   ", 0);
         }
 
         if (what_to_count & COUNT_EXT_COMM) {
-          if (strlen(pbgp->ext_comms)) printf("%-22s   ", pbgp->ext_comms);
-	  else printf("%-22u   ", 0);
+          bgp_comm = pbgp->ext_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->ext_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+          if (strlen(pbgp->ext_comms))
+	    printf("%-22s   ", pbgp->ext_comms);
+	  else
+	    printf("%-22u   ", 0);
         }
 
         if (!have_wtc || (what_to_count & COUNT_AS_PATH)) {
