@@ -55,4 +55,12 @@ DESC:   With release 0.12, the agent_id field becomes 4-bytes large (from 2-byte
 	is to run an "ALTER TABLE" statement to increase the field size during a
 	maintenance window. 
 
+TOPIC:  nfprobe plugin: NetFlow v9 and 32-bit ASNs
+DESC:	Release 0.12 introduces support for 32-bit ASNs in pmacct; things do not
+	change in NetFlow v5 as if a 32-bit ASN is encountered, it is written as
+	AS23456. In NetFlow v9, though, the source and destination AS fields are
+	specified as 4 bytes long in the template. Given the template nature of
+	NetFlow v9, this shouldn't pose a problem with 3rd party implementations
+	but it's better to pay some extra attention while upgrading an existing
+	installation.
 [EOF]
