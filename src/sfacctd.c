@@ -79,13 +79,7 @@ void usage_daemon(char *prog_name)
   printf("  -r  \tRefresh time (in seconds)\n");
   printf("  -v  \t[ 1 | 2 | 3 | 4 | 5 | 6 | 7 ] \n\tTable version\n");
   printf("\n");
-  printf("Examples:\n");
-  printf("  Daemonize the process and write data into a MySQL database\n");
-  printf("  sfacctd -c src_host,dst_host -D -P mysql\n\n");
-  printf("  Print flows over the screen and refresh data every 30 seconds\n");
-  printf("  sfacctd -c src_host,dst_host,proto -P print -r 30\n");
-  printf("\n");
-  printf("  See EXAMPLES for further hints\n");
+  printf("  See EXAMPLES or visit http://wiki.pmacct.net/ for examples.\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
