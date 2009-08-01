@@ -1,7 +1,7 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.0rc1
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
-0.12.0rc1 -- xx-xx-2009
+0.12.0rc1 -- 01-08-2009
   + a BGP daemon thread has been integrated in both the NetFlow
     and sFlow collectors, nfacctd and sfacctd. It maintains per-
     peer RIBs and supports MP-BGP (IPv4, IPv6) and 32-bit ASNs.

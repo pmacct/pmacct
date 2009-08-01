@@ -15,4 +15,9 @@
 !
 id=1.2.3.4	ip=2.3.4.5
 !
+! The following comes handy when compiling pmacct for IPv6; BGP peers
+! are always IPv4 addresses. Whereas remote sFlow or NetFlow agents are
+! likely to be intended as IPv4-mapped IPv6 addresses, if nfacctd_ip is
+! not specified.
+!
 ! id=3.4.5.6	ip=::ffff:4.5.6.7
