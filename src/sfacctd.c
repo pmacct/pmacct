@@ -2339,8 +2339,10 @@ char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
 
   if (hash >= 0) {
     entry = search_status_table(&salocal, aux1, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
-    update_status_table(entry, spp->sequenceNo);
-    entry->inc = 1;
+    if (entry) {
+      update_status_table(entry, spp->sequenceNo);
+      entry->inc = 1;
+    }
   }
 
   return (char *) entry;

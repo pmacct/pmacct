@@ -1557,8 +1557,10 @@ char *nfv578_check_status(struct packet_ptrs *pptrs)
   
   if (hash >= 0) {
     entry = search_status_table(sa, aux1, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
-    update_status_table(entry, ntohl(hdr->flow_sequence));
-    entry->inc = ntohs(hdr->count);
+    if (entry) {
+      update_status_table(entry, ntohl(hdr->flow_sequence));
+      entry->inc = ntohs(hdr->count);
+    }
   }
 
   return (char *) entry;
@@ -1574,8 +1576,10 @@ char *nfv9_check_status(struct packet_ptrs *pptrs)
   
   if (hash >= 0) {
     entry = search_status_table(sa, aux1, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
-    update_status_table(entry, ntohl(hdr->flow_sequence));
-    entry->inc = 1;
+    if (entry) {
+      update_status_table(entry, ntohl(hdr->flow_sequence));
+      entry->inc = 1;
+    }
   }
 
   return (char *) entry;
