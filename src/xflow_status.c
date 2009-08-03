@@ -130,12 +130,15 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno)
 void print_status_table(time_t now, int buckets)
 {
   struct xflow_status_entry *entry; 
-  char ip_address[INET6_ADDRSTRLEN];
   char nf [] = "NetFlow";
   char sf [] = "sFlow";
   char uf [] = "unknown";
   char *ftype = uf; 
   int idx;
+  char agent_ip_address[INET6_ADDRSTRLEN];
+  char collector_ip_address[INET6_ADDRSTRLEN];
+  char null_ip_address[] = "0.0.0.0";
+
 
   if (config.acct_type == ACCT_NF) ftype = nf; 
   if (config.acct_type == ACCT_SF) ftype = sf; 
@@ -145,10 +148,15 @@ void print_status_table(time_t now, int buckets)
 
     bucket_cycle:
     if (entry) {
-      addr_to_str(ip_address, &entry->agent_addr);
+      addr_to_str(agent_ip_address, &entry->agent_addr);
+      if (config.nfacctd_ip)
+	memcpy(collector_ip_address, config.nfacctd_ip, MAX(strlen(config.nfacctd_ip), INET6_ADDRSTRLEN));
+      else
+        strcpy(collector_ip_address, null_ip_address);
+
       Log(LOG_NOTICE, "\n+++\n");
       Log(LOG_NOTICE, "%s statistics collector=%s:%u agent=%s:%u (%u):\n",
-		      ftype, config.nfacctd_ip, config.nfacctd_port, ip_address, entry->aux1, now);
+		      ftype, collector_ip_address, config.nfacctd_port, agent_ip_address, entry->aux1, now);
       Log(LOG_NOTICE, "Good datagrams:	%u\n", entry->counters.good);
       Log(LOG_NOTICE, "Forward jumps:	%u\n", entry->counters.jumps_f);
       Log(LOG_NOTICE, "Backward jumps:	%u\n", entry->counters.jumps_b);
