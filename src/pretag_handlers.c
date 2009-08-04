@@ -483,6 +483,33 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
   return TRUE;
 }
 
+int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  u_int32_t tmp;
+  int x = 0;
+  char *endptr;
+
+  e->local_pref.neg = pt_check_neg(&value);
+
+  tmp = strtoul(value, &endptr, 10);
+
+  e->local_pref.n = tmp;
+  for (x = 0; e->func[x]; x++);
+
+  if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_local_pref_handler;
+    return FALSE;
+  }
+  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+    e->func[x] = pretag_local_pref_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+
+  return TRUE;
+}
+
 int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   strlcpy(e->label, value, MAX_LABEL_LEN); 
@@ -980,6 +1007,24 @@ int pretag_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->peer_dst_as.n == asn) return (FALSE | entry->peer_dst_as.neg);
   else return (TRUE ^ entry->peer_dst_as.neg);
+}
+
+int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+  u_int32_t local_pref;
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      local_pref = info->attr->local_pref;
+    }
+  }
+
+  if (entry->local_pref.n == local_pref) return (FALSE | entry->local_pref.neg);
+  else return (TRUE ^ entry->local_pref.neg);
 }
 
 int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)

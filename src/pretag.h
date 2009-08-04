@@ -79,6 +79,7 @@ struct id_entry {
   pt_uint32_t dst_as; 
   pt_uint32_t peer_src_as;
   pt_uint32_t peer_dst_as;
+  pt_uint32_t local_pref;
   struct bpf_program filter;
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];
