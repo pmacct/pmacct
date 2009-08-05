@@ -58,10 +58,8 @@
 !			the BGP RIB of the exporting device (see 'nfacctd_bgp' directive).
 ! 'peer_dst_as'		peering destination Autonomous System Number. Same 'peer_src_as'
 !			remarks hold here. Please read them above.
-! 'local_pref'		Source IP prefix (be careful not destination IP prefix) BGP local
-!			preference attribute. This is compared against the BGP RIB of the
-!			exporting device. This is meant as an effort to infer nature of
-!			incoming traffic in case of non-edge NNIs. 
+! 'local_pref'		Destination IP prefix BGP local preference attribute. This is
+!			compared against the BGP RIB of the exporting device.  
 ! 'label'		Mark the rule with label's value. Labels don't need to be unique:
 !			when jumping, the first matching label wins.
 ! 'jeq'			Jump on EQual. Jumps to the supplied label in case of rule match.
