@@ -87,11 +87,13 @@ void sql_init_global_buffers()
   cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
   queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
   pending_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
+  purge_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
 
   memset(pipebuf, 0, config.buffer_size);
   memset(cache, 0, config.sql_cache_entries*sizeof(struct db_cache));
   memset(queries_queue, 0, qq_size*sizeof(struct db_cache *));
   memset(pending_queries_queue, 0, qq_size*sizeof(struct db_cache *));
+  memset(purge_queries_queue, 0, qq_size*sizeof(struct db_cache *));
 }
 
 /* being the first routine to be called by each SQL plugin, this is
@@ -284,11 +286,21 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
         pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
+      else if (queue[j]->basetime > idata->basetime) {
+	pending_queries_queue[pqq_ptr] = queue[j];
+	pqq_ptr++;
+      }
       else queue[j]->valid = SQL_CACHE_COMMITTED;
     }
   }
   else {
-    for (j = 0; j < index; j++) queue[j]->valid = SQL_CACHE_COMMITTED;
+    for (j = 0, pqq_ptr = 0; j < index; j++) {
+      if (queue[j]->basetime > idata->basetime) {
+        pending_queries_queue[pqq_ptr] = queue[j];
+        pqq_ptr++;
+      }
+      else queue[j]->valid = SQL_CACHE_COMMITTED;
+    }
   }
 
   /* Imposing maximum number of writers */

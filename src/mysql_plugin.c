@@ -406,15 +406,25 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 {
   struct logfile lf;
   time_t start;
-  int j, stop, ret;
+  int j, pqq, stop, ret;
 
   bed.lf = &lf;
   memset(&lf, 0, sizeof(struct logfile));
 
+  /* Let's leave anything from the "future" for later purges */
+  for (j = 0, pqq = 0; j < index; j++) {
+    if (queue[j]->basetime <= idata->basetime) {
+      purge_queries_queue[pqq] = queue[j];
+      pqq++;
+    }
+  } 
+
+  index = pqq;
+
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++)
-    stop = preprocess_funcs[j](queue, &index); 
+    stop = preprocess_funcs[j](purge_queries_queue, &index); 
   if (config.what_to_count & COUNT_CLASS)
-    sql_invalidate_shadow_entries(queue, &index);
+    sql_invalidate_shadow_entries(purge_queries_queue, &index);
   idata->ten = index;
 
   if (config.debug) {
@@ -435,14 +445,14 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (idata->locks == PM_LOCK_EXCLUSIVE) (*sqlfunc_cbr.lock)(bed.p); 
 
   for (idata->current_queue_elem = 0; idata->current_queue_elem < index; idata->current_queue_elem++) {
-    if (queue[idata->current_queue_elem]->valid) sql_query(&bed, queue[idata->current_queue_elem], idata);
+    if (purge_queries_queue[idata->current_queue_elem]->valid) sql_query(&bed, purge_queries_queue[idata->current_queue_elem], idata);
   }
 
   /* multi-value INSERT query: wrap-up */
   if (idata->mv.buffer_elem_num) {
     idata->mv.last_queue_elem = TRUE;
-    queue[idata->current_queue_elem-1]->valid = SQL_CACHE_COMMITTED;
-    sql_query(&bed, queue[idata->current_queue_elem-1], idata);
+    purge_queries_queue[idata->current_queue_elem-1]->valid = SQL_CACHE_COMMITTED;
+    sql_query(&bed, purge_queries_queue[idata->current_queue_elem-1], idata);
   }
 
   /* rewinding stuff */

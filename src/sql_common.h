@@ -299,7 +299,7 @@ EXT char *multi_values_buffer;
 EXT char where_clause[LONGSRVBUFLEN];
 EXT unsigned char *pipebuf;
 EXT struct db_cache *cache;
-EXT struct db_cache **queries_queue, **pending_queries_queue;
+EXT struct db_cache **queries_queue, **pending_queries_queue, **purge_queries_queue;
 EXT struct db_cache *collision_queue;
 EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, dbc_size, cq_size, pqq_ptr;
 EXT struct db_cache lru_head, *lru_tail;
