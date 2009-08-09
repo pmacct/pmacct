@@ -35,6 +35,8 @@ Inline void AddToLRUTail(struct db_cache *Cursor)
 
 Inline void RetireElem(struct db_cache *Cursor)
 {
+  assert(Cursor->prev);
+
   Cursor->lru_prev->lru_next = Cursor->lru_next;
   if (Cursor->lru_next) Cursor->lru_next->lru_prev = Cursor->lru_prev;
   if (Cursor == lru_tail) lru_tail = &lru_head; 
@@ -69,6 +71,7 @@ Inline void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem)
   newElem->next = NULL;
 }
 
+/*
 Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
 {
   struct db_cache *auxPtr;
@@ -90,6 +93,48 @@ Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem
   }
   staleElem->next = auxPtr;
   if (auxPtr) staleElem->next->prev = staleElem;
+}
+*/
+
+Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
+{
+  struct db_cache *auxPtr;
+
+  assert(Cursor != staleElem);
+  assert(Cursor->prev);
+  assert(staleElem->prev);
+
+  /* Specific cases first */
+  if (Cursor == staleElem->prev) {
+    staleElem->prev = Cursor->prev;
+    Cursor->next = staleElem->next;
+    staleElem->next = Cursor;
+    Cursor->prev = staleElem;
+    staleElem->prev->next = staleElem;
+    if (Cursor->next) Cursor->next->prev = Cursor;
+  }
+  else if (staleElem == Cursor->prev) {
+    Cursor->prev = staleElem->prev;
+    staleElem->next = Cursor->next;
+    Cursor->next = staleElem;
+    staleElem->prev = Cursor;
+    Cursor->prev->next = Cursor;
+    if (staleElem->next) staleElem->next->prev = staleElem;
+  }
+  /* General case */
+  else {
+    auxPtr = Cursor->prev;
+    Cursor->prev = staleElem->prev;
+    Cursor->prev->next = Cursor;
+    staleElem->prev = auxPtr;
+    staleElem->prev->next = staleElem; 
+
+    auxPtr = Cursor->next;
+    Cursor->next = staleElem->next;
+    if (Cursor->next) Cursor->next->prev = Cursor;
+    staleElem->next = auxPtr;
+    if (staleElem->next) staleElem->next->prev = staleElem;
+  }
 }
 
 Inline void SQL_SetENV()

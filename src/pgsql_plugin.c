@@ -126,6 +126,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         exit(0);
       default: /* Parent */
+	if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	gettimeofday(&idata.flushtime, &tz);
 	refresh_deadline += config.sql_refresh_time; 
 	if (idata.now > idata.triggertime) {
@@ -136,7 +137,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	idata.new_basetime = FALSE;
 	glob_new_basetime = FALSE;
 	qq_ptr = pqq_ptr;
-	memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+	memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
 
 	if (reload_map) {
 	  load_networks(config.networks_file, &nt, &nc);
@@ -207,6 +208,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
           exit(0);
         default: /* Parent */
+	  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	  gettimeofday(&idata.flushtime, &tz);
 	  refresh_deadline += config.sql_refresh_time; 
 	  if (idata.now > idata.triggertime) {
@@ -217,7 +219,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  idata.new_basetime = FALSE;
 	  glob_new_basetime = FALSE;
 	  qq_ptr = pqq_ptr;
-	  memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+	  memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
 
 	  if (reload_map) {
 	    load_networks(config.networks_file, &nt, &nc);
@@ -398,25 +400,15 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   PGresult *ret;
   struct logfile lf;
   time_t start;
-  int j, pqq, r, reprocess = 0, stop;
+  int j, r, reprocess = 0, stop;
 
   memset(&lf, 0, sizeof(struct logfile));
   bed.lf = &lf;
 
-  /* Let's leave anything from the "future" for later purges */
-  for (j = 0, pqq = 0; j < index; j++) {
-    if (queue[j]->basetime <= idata->basetime) {
-      purge_queries_queue[pqq] = queue[j];
-      pqq++;
-    }
-  }
-
-  index = pqq;
-
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++) 
-    stop = preprocess_funcs[j](purge_queries_queue, &index);
+    stop = preprocess_funcs[j](queue, &index);
   if (config.what_to_count & COUNT_CLASS)
-    sql_invalidate_shadow_entries(purge_queries_queue, &index);
+    sql_invalidate_shadow_entries(queue, &index);
   idata->ten = index;
 
   if (config.debug) {
@@ -446,7 +438,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
      need to be reprocessed because at the time of DB failure they were not yet committed */
 
   for (j = 0; j < index; j++) {
-    if (purge_queries_queue[j]->valid) r = sql_query(&bed, purge_queries_queue[j], idata);
+    if (queue[j]->valid) r = sql_query(&bed, queue[j], idata);
     else r = FALSE; /* not valid elements are marked as not to be reprocessed */ 
     if (r && !reprocess) {
       idata->uqn = 0;
@@ -478,7 +470,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     if (reprocess) {
       for (j = 0; j <= reprocess; j++) {
 	/* don't reprocess free (SQL_CACHE_FREE) and already recovered (SQL_CACHE_ERROR) elements */
-        if (purge_queries_queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, purge_queries_queue[j], idata);
+        if (queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, queue[j], idata);
       }
     }
   }

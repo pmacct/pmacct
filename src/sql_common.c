@@ -87,13 +87,11 @@ void sql_init_global_buffers()
   cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
   queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
   pending_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
-  purge_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
 
   memset(pipebuf, 0, config.buffer_size);
   memset(cache, 0, config.sql_cache_entries*sizeof(struct db_cache));
   memset(queries_queue, 0, qq_size*sizeof(struct db_cache *));
   memset(pending_queries_queue, 0, qq_size*sizeof(struct db_cache *));
-  memset(purge_queries_queue, 0, qq_size*sizeof(struct db_cache *));
 }
 
 /* being the first routine to be called by each SQL plugin, this is
@@ -276,6 +274,7 @@ void sql_cache_modulo(struct pkt_primitives *srcdst, struct pkt_bgp_primitives *
 int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *idata)
 {
   int j, tmp_retired = sql_writers.retired;
+  struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
 
   /* If aggressive classification is enabled and there are still
      chances for the stream to be classified - ie. tentatives is
@@ -327,6 +326,43 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   }
 
   return index;
+}
+
+int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_data *idata)
+{
+  struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
+  int j;
+
+  /* Not everything was purged, let's sort out the SQL cache buckets involved into that */
+  if (index) {
+    for (j = 0; j < index; j++) {
+      PendingElem = queue[j];
+      for (Cursor = PendingElem, auxCursor = NULL; Cursor; auxCursor = Cursor, Cursor = Cursor->prev);
+
+      /* Check whether we are already first in the bucket */
+      if (auxCursor != PendingElem) {
+        for (Cursor = auxCursor; Cursor && Cursor->valid == SQL_CACHE_INUSE; Cursor = Cursor->next);
+        /* Check whether the whole bucket chain is currently in use */
+        if (Cursor) {
+          /* Check whether we have to replace the first element in the bucket */
+          if (!Cursor->prev) {
+            memcpy(&SavedCursor, Cursor, sizeof(struct db_cache));
+            memcpy(Cursor, PendingElem, sizeof(struct db_cache));
+            Cursor->prev = NULL;
+            Cursor->next = SavedCursor.next;
+            Cursor->chained = 0;
+            Cursor->lru_prev = NULL;
+            Cursor->lru_next = NULL;
+            Cursor->lru_tag = PendingElem->lru_tag;
+            RetireElem(PendingElem);
+            queue[j] = Cursor;
+          }
+          /* We found at least one Cursor->valid == SQL_CACHE_INUSE */
+          else SwapChainedElems(PendingElem, Cursor);
+        }
+      }
+    }
+  }
 }
 
 struct db_cache *sql_cache_search(struct pkt_primitives *data, struct pkt_bgp_primitives *pbgp, time_t basetime)

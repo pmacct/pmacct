@@ -124,6 +124,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  
         exit(0);
       default: /* Parent */
+	if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	gettimeofday(&idata.flushtime, &tz);
 	refresh_deadline += config.sql_refresh_time; 
 	if (idata.now > idata.triggertime) {
@@ -134,7 +135,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	idata.new_basetime = FALSE;
 	glob_new_basetime = FALSE;
 	qq_ptr = pqq_ptr;
-	memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+	memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
 
 	if (reload_map) {
 	  load_networks(config.networks_file, &nt, &nc);
@@ -204,6 +205,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
           exit(0);
         default: /* Parent */
+	  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	  gettimeofday(&idata.flushtime, &tz);
 	  refresh_deadline += config.sql_refresh_time; 
           if (idata.now > idata.triggertime) {
@@ -214,7 +216,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  idata.new_basetime = FALSE;
 	  glob_new_basetime = FALSE;
 	  qq_ptr = pqq_ptr;
-	  memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+	  memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
 
 	  if (reload_map) {
 	    load_networks(config.networks_file, &nt, &nc);
@@ -394,23 +396,14 @@ int SQLI_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct inser
 
 void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *idata)
 {
+  struct db_cache *LastElemCommitted = NULL;
   time_t start;
-  int j, pqq, stop, ret;
-
-  /* Let's leave anything from the "future" for later purges */
-  for (j = 0, pqq = 0; j < index; j++) {
-    if (queue[j]->basetime <= idata->basetime) {
-      purge_queries_queue[pqq] = queue[j];
-      pqq++;
-    }
-  }
-
-  index = pqq;
+  int j, stop, ret;
 
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++)
-    stop = preprocess_funcs[j](purge_queries_queue, &index); 
+    stop = preprocess_funcs[j](queue, &index); 
   if (config.what_to_count & COUNT_CLASS)
-    sql_invalidate_shadow_entries(purge_queries_queue, &index);
+    sql_invalidate_shadow_entries(queue, &index);
   idata->ten = index;
 
   if (config.debug) {
@@ -432,14 +425,16 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   (*sqlfunc_cbr.lock)(bed.p); 
 
   for (idata->current_queue_elem = 0; idata->current_queue_elem < index; idata->current_queue_elem++) {
-    if (purge_queries_queue[idata->current_queue_elem]->valid) sql_query(&bed, purge_queries_queue[idata->current_queue_elem], idata);
+    if (queue[idata->current_queue_elem]->valid)
+      sql_query(&bed, queue[idata->current_queue_elem], idata);
+    if (queue[idata->current_queue_elem]->valid == SQL_CACHE_COMMITTED)
+      LastElemCommitted = queue[idata->current_queue_elem];
   }
 
   /* multi-value INSERT query: wrap-up */
   if (idata->mv.buffer_elem_num) {
     idata->mv.last_queue_elem = TRUE;
-    purge_queries_queue[idata->current_queue_elem-1]->valid = SQL_CACHE_COMMITTED;
-    sql_query(&bed, purge_queries_queue[idata->current_queue_elem-1], idata);
+    sql_query(&bed, LastElemCommitted, idata);
   }
   
   /* rewinding stuff */
