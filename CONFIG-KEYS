@@ -335,11 +335,12 @@ DESC:		sets the fixed time interval at which data is purged from the Plugin Memo
 
 KEY:		sql_startup_delay
 DESC:		defines the time, in seconds, the first purging event has to be delayed. This delay is,
-		in turn, propagated to all the following purges. This directive allows multiple plugins
-		to use the very same 'sql_refresh_time' value, allowing them to spread the writes among
-		the width of the time interval. It's particularly useful whenever multiple plugins write
-		to the same SQL server or even to the same table. The value is intended to be in seconds
-		(default: 0)
+		in turn, propagated to all the following purges. It comes useful in two scenarios: a) so 
+		that multiple plugins can use the same 'sql_refresh_time' value, allowing them to spread
+		the writes among the length of the time-bin; b) with NetFlow, to keep original flow start
+		time (nfacctd_time_new: false) while enabling the sql_dont_try_update feature (for RDBMS
+		efficiency purposes); in such a context, sql_startup_delay value should be greater of
+		NetFlow active flow timeout. (default: 0)
 
 KEY:		sql_optimize_clauses
 VALUES:		[true|false]

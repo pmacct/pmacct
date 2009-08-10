@@ -285,7 +285,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
         pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
-      else if (queue[j]->basetime > idata->basetime) {
+      else if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
 	pending_queries_queue[pqq_ptr] = queue[j];
 	pqq_ptr++;
       }
@@ -294,7 +294,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   }
   else {
     for (j = 0, pqq_ptr = 0; j < index; j++) {
-      if (queue[j]->basetime > idata->basetime) {
+      if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
         pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
