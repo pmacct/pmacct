@@ -1845,7 +1845,14 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_as_str = value_ptr;
+  if (!strcmp(value_ptr, "false"))
+    value = NF_AS_KEEP;
+  else if (!strcmp(value_ptr, "true") || !strcmp(value_ptr, "file"))
+    value = NF_AS_NEW;
+  else if (!strcmp(value_ptr, "bgp"))
+    value = NF_AS_BGP;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_as = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_as_new'. Globalized.\n", filename);
 
   return changes;

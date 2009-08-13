@@ -77,7 +77,10 @@ void evaluate_packet_handlers()
     }
     
     if (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_SUM_AS)) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+      if (config.acct_type == ACCT_PM) {
+	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = src_host_handler;
+	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+      }
       else if (config.acct_type == ACCT_NF) {
 	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_src_as_handler;
 	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = NF_src_host_handler;
@@ -92,7 +95,10 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & (COUNT_DST_AS|COUNT_SUM_AS)) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+      if (config.acct_type == ACCT_PM) {
+	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = dst_host_handler;
+	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+      }
       else if (config.acct_type == ACCT_NF) {
 	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_dst_as_handler; 
 	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = NF_dst_host_handler;
@@ -107,9 +113,13 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS)) {
-      /* ACCT_PM does nothing */
-      if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
+                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS)
+      || (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_DST_AS) && config.nfacctd_as == NF_AS_BGP)) {
+      if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
+	channels_list[index].phandler[primitives] = bgp_ext_handler;
+        primitives++;
+      }
+      else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	channels_list[index].phandler[primitives] = bgp_ext_handler;
         primitives++;
       }
@@ -120,8 +130,13 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
-      /* ACCT_PM does nothing */
-      if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
+      if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+          channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
+          primitives++;
+        }
+      }
+      else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
 	if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
           channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromstd_handler;
           primitives++;

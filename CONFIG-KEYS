@@ -599,14 +599,17 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 		('sql_history') and an INSERT-only mechanism is in use ('sql_dont_try_update', 'sql_use_copy').
 		(default: false) 
 
-KEY:		[ nfacctd_as_new | sfacctd_as_new ] [GLOBAL, NO_PMACCTD]
+KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp ]
 DESC:		When 'false', it instructs nfacctd to populate 'src_as' and 'dst_as' from the same primitives
 		in the NetFlow datagram; when 'true' ('file' being an alias of 'true') it instructs nfacctd to
 		generate AS numbers looking up source and destination IP addresses against a 'networks_file'
 		map. When 'bgp' is specified, AS numbers are looked up against the BGP RIB of the peer from
 		which the NetFlow datagram was received. The assumption is: BGP Source IP address equals to
-		the sFlow/NetFlow source IP address. (default: false) 
+		the sFlow/NetFlow source IP address.
+		If any of these directives is configured to a value differet than 'file' (or its equivalent)
+		and in conjunction with a networks_file, they get honoured for src_as and dst_as primitives.
+		(default: false) 
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]
 DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are

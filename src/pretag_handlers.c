@@ -154,15 +154,11 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
     e->func[x] = pretag_bgp_nexthop_handler;
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_bgp_bgp_nexthop_handler;
-    return FALSE;
-  }
   else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_SF) {
     e->func[x] = SF_pretag_bgp_nexthop_handler;
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+  else if (config.nfacctd_as == NF_AS_BGP) {
     e->func[x] = pretag_bgp_bgp_nexthop_handler;
     return FALSE;
   }
@@ -375,11 +371,7 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
     e->func[x] = SF_pretag_src_as_handler;
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_bgp_src_as_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+  else if (config.nfacctd_as == NF_AS_BGP) {
     e->func[x] = pretag_bgp_src_as_handler;
     return FALSE;
   }
@@ -415,11 +407,7 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
     e->func[x] = SF_pretag_dst_as_handler;
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_bgp_dst_as_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+  else if (config.nfacctd_as == NF_AS_BGP) {
     e->func[x] = pretag_bgp_dst_as_handler;
     return FALSE;
   }
@@ -442,11 +430,7 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
   e->peer_src_as.n = tmp;
   for (x = 0; e->func[x]; x++);
 
-  if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_peer_src_as_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+  if (config.nfacctd_as == NF_AS_BGP) {
     e->func[x] = pretag_peer_src_as_handler;
     return FALSE;
   }
@@ -469,11 +453,7 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
   e->peer_dst_as.n = tmp;
   for (x = 0; e->func[x]; x++);
 
-  if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_peer_dst_as_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+  if (config.nfacctd_as == NF_AS_BGP) {
     e->func[x] = pretag_peer_dst_as_handler;
     return FALSE;
   } 
@@ -496,11 +476,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   e->local_pref.n = tmp;
   for (x = 0; e->func[x]; x++);
 
-  if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_local_pref_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_BGP && config.acct_type == ACCT_SF) {
+  if (config.nfacctd_as == NF_AS_BGP) {
     e->func[x] = pretag_local_pref_handler;
     return FALSE;
   }

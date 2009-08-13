@@ -192,7 +192,10 @@ struct pcap_device {
 };
 
 struct pcap_callback_data {
+  u_char * f_agent; 
   u_char * idt; 
+  u_char * bta_table;
+  u_char * bpas_table; 
   struct pcap_device *device;
 };
 
@@ -266,7 +269,7 @@ EXT void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptrs *
 EXT int ip_handler(register struct packet_ptrs *);
 EXT int ip6_handler(register struct packet_ptrs *);
 EXT void pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
-EXT int PM_find_id(struct packet_ptrs *);
+EXT pm_id_t PM_find_id(struct id_table *, struct packet_ptrs *);
 EXT void compute_once();
 #undef EXT
 

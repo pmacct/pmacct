@@ -180,3 +180,8 @@ typedef u_int64_t pm_counter_t;
 #else
 typedef u_int32_t pm_counter_t;
 #endif
+
+#if defined __PMACCTD_C
+#define NF_AS_KEEP 0 
+#define NF_AS_BGP 2 
+#endif

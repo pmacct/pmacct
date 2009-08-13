@@ -449,14 +449,29 @@ nfprobe_version: 9
 ! snaplen: 700
 !...
 
-   This is a basic working configuration. You can complicate it by adding features. For
-   example, you can: 1) generate ASNs by uncommenting the 'networks_file' line, crafting
-   a proper Networks File (see examples/ directory) and adding 'src_as, dst_as' keys to
-   the 'aggregate' directive; 2) embed flow classification informations in your NetFlow
-   v9 datagrams by uncommenting 'classifiers' and 'snaplen' lines, reading for further
-   information the section of this document about stream classification and finally
-   adding the 'class' key to the 'aggregate' directive; 3) you can add L2 (MAC addresses,
-   VLANs) informations to your NetFlow v9 flowsets.
+   This is a basic working configuration. Additional features include: 1) generate ASNs
+   by using a networks_file pointing to a valid Networks File (see examples/ directory)
+   and adding src_as, dst_as primitives to the 'aggregate' directive; alternatively, as
+   of release 0.12.0rc2, it's possible to generate ASNs from the pmacctd BGP thread. The
+   following fragment can be added to the configuration above:
+
+pmacctd_as: bgp
+bgp_daemon: true
+bgp_daemon_ip: X.X.X.X
+bgp_agent_map: /path/to/agent_to_peer.map
+! bgp_daemon_port: 17917
+
+   The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
+   co-exist with other BGP routing software which might be running on the same host.
+   Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
+   In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
+   the BGP peer (ie. 127.0.0.1: 'id=127.0.0.1 ip=0.0.0.0'); 
+
+   2) embed flow classification informations in NetFlow v9 datagrams by uncommenting
+   'classifiers' and 'snaplen' lines, reading for further information the section of
+   this document about stream classification and finally adding the 'class' key to the
+   'aggregate' directive; 3) add L2 (MAC addresses, VLANs) information to NetFlow v9
+   flowsets.
 
 c) build NetFlow collector configuration, using nfacctd:
 !
@@ -470,8 +485,8 @@ aggregate[display]: src_host, dst_host, src_port, dst_port, proto
 
 d) Ok, we are done ! Now fire both daemons:
 
-   shell a> pmacctd -f /path/to/configuration/file
-   shell b> nfacctd -f /path/to/configuration/file
+   shell a> pmacctd -f /path/to/configuration/pmacctd-nfprobe.conf
+   shell b> nfacctd -f /path/to/configuration/nfacctd-memory.conf
 
 
 X. Quickstart guide to setup a sFlow agent/probe

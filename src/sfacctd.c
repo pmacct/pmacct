@@ -357,6 +357,11 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_CLASS;
 	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map)
 	  list->cfg.what_to_count |= COUNT_ID;
+        if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+          Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
+          exit(1);
+        }
 	list->cfg.what_to_count |= COUNT_COUNTERS;
 
 	list->cfg.data_type = PIPE_TYPE_METADATA;
@@ -487,18 +492,6 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
   else memset(&allow, 0, sizeof(allow));
-
-  /* XXX: BGP handling goes here */
-
-  if (config.nfacctd_as_str) {
-    if (!strcmp(config.nfacctd_as_str, "false"))
-      config.nfacctd_as = NF_AS_KEEP;
-    else if (!strcmp(config.nfacctd_as_str, "true") ||
-             !strcmp(config.nfacctd_as_str, "file"))
-      config.nfacctd_as = NF_AS_NEW;
-    else if (!strcmp(config.nfacctd_as_str, "bgp"))
-      config.nfacctd_as = NF_AS_BGP;
-  }
 
   if (config.pre_tag_map) {
     load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
@@ -2218,6 +2211,8 @@ pm_id_t SF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
 {
   SFSample *sample = (SFSample *)pptrs->f_data; 
   int x, j, id, stop;
+
+  if (!t) return 0;
 
   /* The id_table is shared between by IPv4 and IPv6 sFlow collectors.
      IPv4 ones are in the lower part (0..x), IPv6 ones are in the upper

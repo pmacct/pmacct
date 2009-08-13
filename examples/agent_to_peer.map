@@ -21,3 +21,9 @@ id=1.2.3.4	ip=2.3.4.5
 ! not specified.
 !
 ! id=3.4.5.6	ip=::ffff:4.5.6.7
+!
+! The following maps something which isn't a Netflow/sFlow agent to the
+! specified BGP peer. The only application for this lies with pmacctd.
+!
+! id=4.5.6.7	ip=0.0.0.0
+!

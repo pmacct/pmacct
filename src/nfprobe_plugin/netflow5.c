@@ -121,7 +121,7 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 
 			  tmp_as = ntohl(flows[i]->as[0]);
 			  if (tmp_as > 65535) flw->src_as = htons(23456);
-			  else flw->src_as = tmp_as;
+			  else flw->src_as = htons(tmp_as);
 
 			  tmp_as = ntohl(flows[i]->as[1]);
 			  if (tmp_as > 65535) flw->dest_as = htons(23456);

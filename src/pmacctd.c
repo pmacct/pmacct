@@ -94,6 +94,8 @@ int main(int argc,char **argv, char **envp)
   char config_file[SRVBUFLEN];
   int psize = DEFAULT_SNAPLEN;
 
+  struct id_table bpas_table;
+  struct id_table bta_table;
   struct id_table idt;
   struct pcap_callback_data cb_data;
 
@@ -101,6 +103,13 @@ int main(int argc,char **argv, char **envp)
   extern char *optarg;
   extern int optind, opterr, optopt;
   int errflag, cp; 
+
+#if defined ENABLE_IPV6
+  struct sockaddr_storage client;
+#else
+  struct sockaddr client;
+#endif
+
 
   umask(077);
   compute_once();
@@ -121,6 +130,9 @@ int main(int argc,char **argv, char **envp)
   memset(&req, 0, sizeof(req));
   memset(dummy_tlhdr, 0, sizeof(dummy_tlhdr));
   memset(sll_mac, 0, sizeof(sll_mac));
+  memset(&bpas_table, 0, sizeof(bpas_table));
+  memset(&bta_table, 0, sizeof(bta_table));
+  memset(&client, 0, sizeof(client));
   config.acct_type = ACCT_PM;
 
   rows = 0;
@@ -334,7 +346,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count |= COUNT_DST_PORT;
 	list->cfg.what_to_count |= COUNT_IP_TOS;
 	list->cfg.what_to_count |= COUNT_IP_PROTO;
-	if (list->cfg.networks_file) {
+	if (list->cfg.networks_file || (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP)) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	}
@@ -344,6 +356,11 @@ int main(int argc,char **argv, char **envp)
 	}
 	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map)
 	  list->cfg.what_to_count |= COUNT_ID;
+	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+	  Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
+	  exit(1);
+	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
 
 	list->cfg.data_type = PIPE_TYPE_METADATA;
@@ -358,6 +375,10 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
+        if (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP) {
+          list->cfg.what_to_count |= COUNT_SRC_AS;
+          list->cfg.what_to_count |= COUNT_DST_AS;
+        }
 	if (list->cfg.pre_tag_map) list->cfg.what_to_count |= COUNT_ID;
 
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
@@ -382,8 +403,8 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
 	}
-	if ((list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) && !list->cfg.networks_file) { 
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation has been selected but NO 'networks_file' has been specified. Exiting...\n\n", list->name, list->type.string);
+	if ((list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) && !list->cfg.networks_file && list->cfg.nfacctd_as != NF_AS_BGP) { 
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation has been selected but no 'networks_file' or 'pmacctd_bgp' has been specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
 	if ((list->cfg.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET|COUNT_SUM_NET)) && !list->cfg.networks_file && !list->cfg.networks_mask) {
@@ -394,8 +415,17 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
+        if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+          /* Sanitizing the aggregation method */
+          if ( (list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM) ) {
+            printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+            exit(1);
+          }
+          list->cfg.data_type |= PIPE_TYPE_BGP;
+        }
 	list->cfg.what_to_count |= COUNT_COUNTERS;
-	list->cfg.data_type = PIPE_TYPE_METADATA;
+	list->cfg.data_type |= PIPE_TYPE_METADATA;
       }
     }
     list = list->next;
@@ -526,6 +556,38 @@ int main(int argc,char **argv, char **envp)
     cb_data.idt = NULL; 
   }
 
+#if defined ENABLE_THREADS
+  /* starting the BGP thread */
+  if (config.nfacctd_bgp) {
+    req.bpf_filter = TRUE;
+    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
+
+    if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+      if (config.nfacctd_bgp_peer_as_src_map) {
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
+	cb_data.bpas_table = (u_char *) &bpas_table;
+      }
+      else cb_data.bpas_table = NULL;
+    }
+    if (config.nfacctd_bgp_to_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
+      cb_data.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n");
+      exit(1);
+    }
+
+    cb_data.f_agent = (char *)&client;
+    nfacctd_bgp_wrapper();
+  }
+#else
+  if (config.nfacctd_bgp) {
+    Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    exit(1);
+  }
+#endif
+
   /* plugins glue: creation (until 093) */
   evaluate_packet_handlers();
   pm_setproctitle("%s [%s]", "Core Process", "default");
@@ -586,25 +648,31 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.packet_ptr = (u_char *) buf;
     pptrs.mac_ptr = 0; pptrs.vlan_ptr = 0; pptrs.mpls_ptr = 0;
     pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag_dist = 1; pptrs.tag = 0;
-    pptrs.class = 0;
+    pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0;
+    pptrs.f_agent = cb_data->f_agent;
     pptrs.idtable = cb_data->idt;
+    pptrs.bpas_table = cb_data->bpas_table;
+    pptrs.bta_table = cb_data->bta_table;
+
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
-	if (config.pre_tag_map) pptrs.tag = PM_find_id(&pptrs);
-#ifdef ENABLE_THREADS
-	/* If we are not calling t_ip_flow_handler(), ie. not using classification
-	   or counting flows, we still need to give a kick to exec_plugins() here */ 
-	if ( !(config.what_to_count & COUNT_FLOWS) ) exec_plugins(&pptrs); 
-#else
+	if (config.nfacctd_bgp_to_agent_map) pptrs.bta = PM_find_id((struct id_table *)pptrs.bta_table, &pptrs);
+	if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrs);
+        if (config.nfacctd_bgp_peer_as_src_map) pptrs.bpas = PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs);
+	if (config.pre_tag_map) pptrs.tag = PM_find_id((struct id_table *)pptrs.idtable, &pptrs);
+
 	exec_plugins(&pptrs); 
-#endif
       }
     }
   }
 
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
+    if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
+      load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
+    if (config.nfacctd_bgp && config.nfacctd_bgp_to_agent_map)
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
     if (config.pre_tag_map)
       load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req, &tag_map_allocated);
     reload_map = FALSE;
@@ -678,11 +746,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
 	if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK; 
       }
 
-#if defined ENABLE_THREADS
-      t_ip_flow_handler(pptrs);
-#else
       ip_flow_handler(pptrs);
-#endif
     }
 
     /* XXX: optimize/short circuit here! */
@@ -797,11 +861,7 @@ int ip6_handler(register struct packet_ptrs *pptrs)
         if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
       }
 
-#if defined ENABLE_THREADS
-      t_ip_flow6_handler(pptrs);
-#else
       ip_flow6_handler(pptrs);
-#endif
     }
 
     /* XXX: optimize/short circuit here! */
@@ -815,10 +875,11 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 }
 #endif
 
-int PM_find_id(struct packet_ptrs *pptrs)
+pm_id_t PM_find_id(struct id_table *t, struct packet_ptrs *pptrs)
 {
-  struct id_table *t = (struct id_table *)pptrs->idtable;
   int x, j, id, stop;
+
+  if (!t) return 0;
 
   id = 0;
   for (x = 0; x < t->ipv4_num; x++) {
@@ -851,6 +912,7 @@ void compute_once()
   PdataSz = sizeof(struct pkt_data);
   PpayloadSz = sizeof(struct pkt_payload);
   PextrasSz = sizeof(struct pkt_extras);
+  PbgpSz = sizeof(struct pkt_bgp_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);
   CharPtrSz = sizeof(char *);
   IP4HdrSz = sizeof(struct my_iphdr);
