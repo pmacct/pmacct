@@ -99,6 +99,7 @@ struct configuration {
   int nfacctd_bgp_aspath_radius;
   char *nfacctd_bgp_stdcomm_pattern;
   char *nfacctd_bgp_extcomm_pattern;
+  char *nfacctd_bgp_stdcomm_pattern_to_asn;
   int nfacctd_bgp_peer_as_src_type;
   char *nfacctd_bgp_peer_as_src_map;
   char *nfacctd_bgp_to_agent_map;

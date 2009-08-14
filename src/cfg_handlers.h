@@ -126,6 +126,7 @@ EXT int cfg_key_nfacctd_bgp_port(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_aspath_radius(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_stdcomm_pattern(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_extcomm_pattern(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_peer_src_as_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_peer_src_as_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_to_agent_map(char *, char *, char *);

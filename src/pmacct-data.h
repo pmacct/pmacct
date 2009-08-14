@@ -314,6 +314,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_aspath_radius", cfg_key_nfacctd_bgp_aspath_radius},
   {"bgp_stdcomm_pattern", cfg_key_nfacctd_bgp_stdcomm_pattern},
   {"bgp_extcomm_pattern", cfg_key_nfacctd_bgp_extcomm_pattern},
+  {"bgp_stdcomm_pattern_to_asn", cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn},
   {"bgp_peer_src_as_type", cfg_key_nfacctd_bgp_peer_src_as_type},
   {"bgp_peer_src_as_map", cfg_key_nfacctd_bgp_peer_src_as_map},
   {"bgp_agent_map", cfg_key_nfacctd_bgp_to_agent_map},

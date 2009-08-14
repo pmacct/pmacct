@@ -404,11 +404,11 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
 	}
 	if ((list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) && !list->cfg.networks_file && list->cfg.nfacctd_as != NF_AS_BGP) { 
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation has been selected but no 'networks_file' or 'pmacctd_bgp' has been specified. Exiting...\n\n", list->name, list->type.string);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but NO 'networks_file' or 'pmacctd_bgp' are specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
 	if ((list->cfg.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET|COUNT_SUM_NET)) && !list->cfg.networks_file && !list->cfg.networks_mask) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): NET aggregation has been selected but NO 'networks_file' has been specified. Exiting...\n\n", list->name, list->type.string);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): NET aggregation selected but NO 'networks_file' specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
@@ -560,7 +560,7 @@ int main(int argc,char **argv, char **envp)
   /* starting the BGP thread */
   if (config.nfacctd_bgp) {
     req.bpf_filter = TRUE;
-    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern);
+    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern, &config.nfacctd_bgp_stdcomm_pattern_to_asn);
 
     if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
       if (config.nfacctd_bgp_peer_as_src_map) {

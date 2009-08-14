@@ -885,6 +885,13 @@ DESC:		filters BGP standard/extended communities against the supplied pattern. T
 		default the list of communities is left intact unless reaching the maximum length of the
 		buffer (96 chars).
 
+KEY:            [ bgp_stdcomm_pattern_to_asn ]
+DESC:           filters BGP standard communities against the supplied pattern. The first community is taken
+		and split using the ':' symbol as delimiter. The first part is mapped onto the peer AS field
+		while the second is mapped onto the origin AS field. The aim of this directive is to deal
+		with IP prefixes on the own address space, ie. statics or connected redistributed in BGP.
+		Example: BGP standard community XXXXX:YYYYY is mapped as: Peer-AS=XXXXX, Origin-AS=YYYYY.
+
 KEY:		bgp_peer_src_as_type
 VALUES:		[ map | bgp_comms ]
 DESC:		instructs which method to use to map incoming traffic to a source peer ASN. "map" selects a

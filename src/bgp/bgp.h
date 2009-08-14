@@ -172,7 +172,7 @@ EXT void *bgp_attr_hash_alloc (void *);
 EXT void bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
-EXT void load_comm_patterns(char **, char **);
+EXT void load_comm_patterns(char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(char *);
@@ -191,6 +191,7 @@ EXT struct hash *comhash;
 EXT struct hash *ecomhash;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
+EXT char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 EXT struct bgp_comm_range peer_src_as_ifrange; 
 EXT struct bgp_comm_range peer_src_as_asrange; 
 

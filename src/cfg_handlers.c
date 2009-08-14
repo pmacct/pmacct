@@ -1618,6 +1618,17 @@ int cfg_key_nfacctd_bgp_extcomm_pattern(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_stdcomm_pattern_to_asn = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_stdcomm_pattern_to_asn'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

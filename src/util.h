@@ -71,6 +71,7 @@ EXT void reset_tagdist_status(struct packet_ptrs_vector *);
 EXT void set_shadow_status(struct packet_ptrs *);
 EXT FILE *open_logfile(char *);
 EXT void evaluate_bgp_aspath_radius(char *, int, int);
+EXT void copy_stdcomm_to_asn(char *, as_t *, int);
 
 EXT unsigned int str_to_addr(const char *, struct host_addr *);
 

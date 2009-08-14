@@ -916,3 +916,20 @@ void evaluate_bgp_aspath_radius(char *path, int len, int radius)
     }
   }
 }
+
+void copy_stdcomm_to_asn(char *stdcomm, as_t *asn, int is_origin)
+{
+  char *delim, *delim2;
+  char *p1, *p2;
+
+  if (!stdcomm || !strlen(stdcomm) || (delim = strchr(stdcomm, ':')) == NULL) return; 
+
+  delim2 = strchr(stdcomm, ',');
+  *delim = '\0';
+  if (delim2) *delim2 = '\0';
+  p1 = stdcomm;
+  p2 = delim+1;
+
+  if (is_origin) *asn = atoi(p2); 
+  else *asn = atoi(p1);
+}

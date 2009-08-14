@@ -1348,13 +1348,14 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   attr->aspath = aspath_intern(newpath);
 }
 
-void load_comm_patterns(char **stdcomm, char **extcomm)
+void load_comm_patterns(char **stdcomm, char **extcomm, char **stdcomm_to_asn)
 {
   int idx;
   char *token;
 
   memset(std_comm_patterns, 0, sizeof(std_comm_patterns));
   memset(ext_comm_patterns, 0, sizeof(ext_comm_patterns));
+  memset(std_comm_patterns_to_asn, 0, sizeof(std_comm_patterns_to_asn));
 
   if (*stdcomm) {
     idx = 0;
@@ -1370,6 +1371,15 @@ void load_comm_patterns(char **stdcomm, char **extcomm)
     while ( (token = extract_token(extcomm, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
       ext_comm_patterns[idx] = token;
       trim_spaces(ext_comm_patterns[idx]);
+      idx++;
+    }
+  }
+
+  if (*stdcomm_to_asn) {
+    idx = 0;
+    while ( (token = extract_token(stdcomm_to_asn, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+      std_comm_patterns_to_asn[idx] = token;
+      trim_spaces(std_comm_patterns_to_asn[idx]);
       idx++;
     }
   }
