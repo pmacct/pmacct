@@ -546,7 +546,8 @@ aggregation: src_as, dst_as, local_pref, med, as_path, peer_dst_as
 
 The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically
 presents itself as part of the same Autonomous System - to ensure an iBGP relationship
-is established all the times.
+is established all the times. Also, the BGP daemon acts as a passive BGP neighbor and
+hence will never try to re-establish a fallen peering session.  
 
 XIa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.

@@ -133,6 +133,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bpas_table, 0, sizeof(bpas_table));
   memset(&bta_table, 0, sizeof(bta_table));
   memset(&client, 0, sizeof(client));
+  memset(&cb_data, 0, sizeof(cb_data));
   config.acct_type = ACCT_PM;
 
   rows = 0;
@@ -580,6 +581,9 @@ int main(int argc,char **argv, char **envp)
 
     cb_data.f_agent = (char *)&client;
     nfacctd_bgp_wrapper();
+
+    /* Sleep a bit to let the other thread initialize structures */
+    sleep(5);
   }
 #else
   if (config.nfacctd_bgp) {
