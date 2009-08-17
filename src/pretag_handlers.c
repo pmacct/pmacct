@@ -865,8 +865,8 @@ int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (src_ret) {
     info = (struct bgp_info *) src_ret->info;
     if (info && info->attr) {
-      if (info->attr->aspath && info->attr->aspath->str) {
-        asn = evaluate_last_asn(info->attr->aspath->str);
+      if (info->attr->aspath) {
+        asn = evaluate_last_asn(info->attr->aspath);
       }
     }
   }
@@ -937,8 +937,8 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (dst_ret) {
     info = (struct bgp_info *) dst_ret->info;
     if (info && info->attr) {
-      if (info->attr->aspath && info->attr->aspath->str) {
-        asn = evaluate_last_asn(info->attr->aspath->str);
+      if (info->attr->aspath) {
+        asn = evaluate_last_asn(info->attr->aspath);
       }
     }
   }

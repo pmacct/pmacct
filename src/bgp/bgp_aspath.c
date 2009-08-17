@@ -582,6 +582,7 @@ aspath_make_str_count (struct aspath *as)
       for (i = 0; i < seg->length; i++)
         {
           len += snprintf (str_buf + len, str_size - len, "%u", seg->as[i]);
+	  as->last_as = seg->as[i];
           
           if (i < (seg->length - 1))
             len += snprintf (str_buf + len, str_size - len, "%c", seperator);
@@ -649,6 +650,7 @@ aspath_dup (struct aspath *aspath)
     new->segments = NULL;
 
   new->str = aspath_make_str_count (aspath);
+  new->last_as = aspath->last_as;
 
   return new;
 }

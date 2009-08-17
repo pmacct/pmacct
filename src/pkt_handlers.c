@@ -1383,7 +1383,6 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
-  as_t asn;
 
   --pdata; /* Bringing back to original place */
 
@@ -1391,9 +1390,8 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
     info = (struct bgp_info *) src_ret->info;
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
-	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath && info->attr->aspath->str) {
-	  asn = evaluate_last_asn(info->attr->aspath->str);
-	  pdata->primitives.src_as = asn;
+	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
+	  pdata->primitives.src_as = evaluate_last_asn(info->attr->aspath);
 
 	  if (!pdata->primitives.src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
 	    char tmp_stdcomms[MAX_BGP_STD_COMMS];
@@ -1437,18 +1435,17 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
       }
       if (config.nfacctd_as == NF_AS_BGP) {
-        if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath && info->attr->aspath->str) {
-          asn = evaluate_last_asn(info->attr->aspath->str);
-          pdata->primitives.dst_as = asn;
-        }
+        if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
+          pdata->primitives.dst_as = evaluate_last_asn(info->attr->aspath);
 
-        if (!pdata->primitives.dst_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
-          char tmp_stdcomms[MAX_BGP_STD_COMMS];
+          if (!pdata->primitives.dst_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+            char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
-          if (info->attr->community && info->attr->community->str) {
-            evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
-            copy_stdcomm_to_asn(tmp_stdcomms, &pdata->primitives.dst_as, TRUE);
-          }
+            if (info->attr->community && info->attr->community->str) {
+              evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
+              copy_stdcomm_to_asn(tmp_stdcomms, &pdata->primitives.dst_as, TRUE);
+            }
+	  }
         }
       }
 

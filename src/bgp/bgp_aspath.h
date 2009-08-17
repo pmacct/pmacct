@@ -54,6 +54,7 @@ struct aspath
 
   /* segment data */
   struct assegment *segments;
+  as_t last_as;
 
   char *str;
 };

@@ -579,6 +579,11 @@ int main(int argc,char **argv, char **envp)
       exit(1);
     }
 
+    /* Limiting BGP peers to only two: one would suffice in pmacctd
+       but in case maps are reloadable (ie. bta), it could be handy
+       to keep a backup feed in memory */
+    config.nfacctd_bgp_max_peers = 2;
+
     cb_data.f_agent = (char *)&client;
     nfacctd_bgp_wrapper();
 
@@ -661,8 +666,10 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
-	if (config.nfacctd_bgp_to_agent_map) pptrs.bta = PM_find_id((struct id_table *)pptrs.bta_table, &pptrs);
-	if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrs);
+	if (config.nfacctd_bgp) {
+	  pptrs.bta = PM_find_id((struct id_table *)pptrs.bta_table, &pptrs);
+	  bgp_srcdst_lookup(&pptrs);
+	}
         if (config.nfacctd_bgp_peer_as_src_map) pptrs.bpas = PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs);
 	if (config.pre_tag_map) pptrs.tag = PM_find_id((struct id_table *)pptrs.idtable, &pptrs);
 
@@ -675,7 +682,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     load_networks(config.networks_file, &nt, &nc);
     if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
       load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
-    if (config.nfacctd_bgp && config.nfacctd_bgp_to_agent_map)
+    if (config.nfacctd_bgp)
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
     if (config.pre_tag_map)
       load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req, &tag_map_allocated);
