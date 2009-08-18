@@ -368,7 +368,6 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
       }
       else if (list->type.id == PLUGIN_ID_SFPROBE) {
-        config.handle_fragments = FALSE;
 	if (psize < 128) psize = config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
 	if (list->cfg.classifiers_path) {
