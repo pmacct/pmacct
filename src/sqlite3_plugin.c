@@ -102,7 +102,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata);
+      if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
       switch (fork()) {
       case 0: /* Child */
 	/* we have to ignore signals to avoid loops:
@@ -183,7 +183,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       /* lazy sql refresh handling */ 
       if (idata.now > refresh_deadline) {
-        if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata);
+        if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
         switch (fork()) {
         case 0: /* Child */
           /* we have to ignore signals to avoid loops:

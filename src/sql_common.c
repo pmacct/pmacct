@@ -271,7 +271,7 @@ void sql_cache_modulo(struct pkt_primitives *srcdst, struct pkt_bgp_primitives *
   idata->modulo = idata->hash % config.sql_cache_entries;
 }
 
-int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *idata)
+int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *idata, int exiting)
 {
   int j, tmp_retired = sql_writers.retired;
   struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
@@ -279,28 +279,34 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   /* If aggressive classification is enabled and there are still
      chances for the stream to be classified - ie. tentatives is
      non-zero - let's leave it in SQL_CACHE_INUSE state */
-  if (config.sql_aggressive_classification) {
-    for (j = 0, pqq_ptr = 0; j < index; j++) {
-      if (!queue[j]->primitives.class && queue[j]->tentatives && (queue[j]->start_tag > (idata->now - ((STALE_M-1) * config.sql_refresh_time))) ) {
-        pending_queries_queue[pqq_ptr] = queue[j];
-        pqq_ptr++;
+  if (!exiting) {
+    if (config.sql_aggressive_classification) {
+      for (j = 0, pqq_ptr = 0; j < index; j++) {
+        if (!queue[j]->primitives.class && queue[j]->tentatives && (queue[j]->start_tag > (idata->now - ((STALE_M-1) * config.sql_refresh_time))) ) {
+          pending_queries_queue[pqq_ptr] = queue[j];
+          pqq_ptr++;
+        }
+        else if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
+	  pending_queries_queue[pqq_ptr] = queue[j];
+	  pqq_ptr++;
+        }
+        else queue[j]->valid = SQL_CACHE_COMMITTED;
       }
-      else if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
-	pending_queries_queue[pqq_ptr] = queue[j];
-	pqq_ptr++;
+    }
+    else {
+      for (j = 0, pqq_ptr = 0; j < index; j++) {
+        if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
+          pending_queries_queue[pqq_ptr] = queue[j];
+          pqq_ptr++;
+        }
+        else queue[j]->valid = SQL_CACHE_COMMITTED;
       }
-      else queue[j]->valid = SQL_CACHE_COMMITTED;
     }
   }
+  /* If exiting commit everything is still in the cache */
   else {
-    for (j = 0, pqq_ptr = 0; j < index; j++) {
-      if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
-        pending_queries_queue[pqq_ptr] = queue[j];
-        pqq_ptr++;
-      }
-      else queue[j]->valid = SQL_CACHE_COMMITTED;
-    }
-  }
+    for (j = 0; j < index; j++) queue[j]->valid = SQL_CACHE_COMMITTED; 
+  } 
 
   /* Imposing maximum number of writers */
   sql_writers.active -= MIN(sql_writers.active, tmp_retired);
@@ -341,9 +347,11 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
 
       /* Check whether we are already first in the bucket */
       if (auxCursor != PendingElem) {
-        for (Cursor = auxCursor; Cursor && Cursor->valid == SQL_CACHE_INUSE; Cursor = Cursor->next);
-        /* Check whether the whole bucket chain is currently in use */
-        if (Cursor) {
+        for (Cursor = auxCursor; Cursor && Cursor != PendingElem && Cursor->valid == SQL_CACHE_INUSE; Cursor = Cursor->next);
+        /* Check whether a) the whole bucket chain is currently in use
+	   or b) we came across the current pending element: meaning no
+	   free positions are available in the chain, ahead of it */
+        if (Cursor || Cursor == PendingElem) {
           /* Check whether we have to replace the first element in the bucket */
           if (!Cursor->prev) {
             memcpy(&SavedCursor, Cursor, sizeof(struct db_cache));
@@ -354,6 +362,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             Cursor->lru_prev = NULL;
             Cursor->lru_next = NULL;
             Cursor->lru_tag = PendingElem->lru_tag;
+	    if (PendingElem->pbgp) PendingElem->pbgp = NULL;
             RetireElem(PendingElem);
             queue[j] = Cursor;
           }
@@ -584,7 +593,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   safe_action:
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
 
-  if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata); 
+  if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
   switch (fork()) {
   case 0: /* Child */
     signal(SIGINT, SIG_IGN);
@@ -736,7 +745,7 @@ void sql_exit_gracefully(int signum)
   if (config.sql_backup_host || config.sql_recovery_logfile) idata.recover = TRUE;
   if (config.what_to_count & COUNT_CLASS) config.sql_aggressive_classification = FALSE;
 
-  sql_cache_flush(queries_queue, qq_ptr, &idata);
+  sql_cache_flush(queries_queue, qq_ptr, &idata, TRUE);
   if (sql_writers.flags != CHLD_ALERT) {
     if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
     (*sqlfunc_cbr.connect)(&p, config.sql_host);

@@ -329,18 +329,17 @@ KEY:		sql_passwd
 DESC:		defines the password to use when connecting to the SQL server (default: arealsmartpwd).
 
 KEY:		[ sql_refresh_time | print_refresh_time ] (-r)
-DESC:		sets the fixed time interval at which data is purged from the Plugin Memory Cache (PMC)
-		to the to the specified SQL table (SQL plugins) or onto the screen (Print plugin). The
-		value is expressed in seconds.
+DESC:		time interval between consecutive executions of the SQL cache scanner. The scanner purges
+		data from the cache into the RDBMS. The value is expressed in seconds.
 
 KEY:		sql_startup_delay
-DESC:		defines the time, in seconds, the first purging event has to be delayed. This delay is,
-		in turn, propagated to all the following purges. It comes useful in two scenarios: a) so 
+DESC:		defines the time, in seconds, the first SQL cache scan event has to be delayed. This delay
+		is, in turn, propagated to the subsequent scans. It comes useful in two scenarios: a) so 
 		that multiple plugins can use the same 'sql_refresh_time' value, allowing them to spread
 		the writes among the length of the time-bin; b) with NetFlow, to keep original flow start
 		time (nfacctd_time_new: false) while enabling the sql_dont_try_update feature (for RDBMS
-		efficiency purposes); in such a context, sql_startup_delay value should be greater of
-		NetFlow active flow timeout. (default: 0)
+		efficiency purposes); in such a context, sql_startup_delay value should be greater (better
+		>= 2x the value) of the NetFlow active flow timeout. (default: 0)
 
 KEY:		sql_optimize_clauses
 VALUES:		[true|false]

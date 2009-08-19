@@ -252,7 +252,7 @@ EXT void sql_init_pipe(struct pollfd *, int);
 EXT struct template_entry *sql_init_logfile_template(struct template_header *);
 EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);
 EXT void sql_cache_modulo(struct pkt_primitives *, struct pkt_bgp_primitives *, struct insert_data *);
-EXT int sql_cache_flush(struct db_cache *[], int, struct insert_data *);
+EXT int sql_cache_flush(struct db_cache *[], int, struct insert_data *, int);
 EXT int sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
 EXT void sql_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
 EXT struct db_cache *sql_cache_search(struct pkt_primitives *, struct pkt_bgp_primitives *, time_t);
