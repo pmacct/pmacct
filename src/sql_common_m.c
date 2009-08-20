@@ -60,6 +60,8 @@ Inline void BuildChain(struct db_cache *Cursor, struct db_cache *newElem)
 
 Inline void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem)
 {
+  assert(Cursor != newElem);
+
   if (newElem->next) {
     newElem->prev->next = newElem->next;
     newElem->next->prev = newElem->prev;
@@ -70,31 +72,6 @@ Inline void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem)
   newElem->prev = Cursor;
   newElem->next = NULL;
 }
-
-/*
-Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
-{
-  struct db_cache *auxPtr;
-
-  auxPtr = Cursor->prev;
-  Cursor->prev = staleElem->prev;
-  Cursor->prev->next = Cursor;
-  if (auxPtr == staleElem) staleElem->prev = Cursor;
-  else {
-    staleElem->prev = auxPtr;
-    staleElem->prev->next = staleElem;
-  }
-
-  auxPtr = Cursor->next;
-  if (staleElem->next == Cursor) Cursor->next = staleElem;
-  else {
-    Cursor->next = staleElem->next;
-    Cursor->next->prev = Cursor;
-  }
-  staleElem->next = auxPtr;
-  if (auxPtr) staleElem->next->prev = staleElem;
-}
-*/
 
 Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
 {

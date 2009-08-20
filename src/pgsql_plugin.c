@@ -128,8 +128,9 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       default: /* Parent */
 	if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	gettimeofday(&idata.flushtime, &tz);
-	refresh_deadline += config.sql_refresh_time; 
-	if (idata.now > idata.triggertime) {
+	while (idata.now > refresh_deadline)
+	  refresh_deadline += config.sql_refresh_time; 
+	while (idata.now > idata.triggertime) {
 	  idata.triggertime  += idata.t_timeslot;
 	  if (config.sql_trigger_time == COUNT_MONTHLY)
 	    idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
@@ -210,8 +211,9 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         default: /* Parent */
 	  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	  gettimeofday(&idata.flushtime, &tz);
-	  refresh_deadline += config.sql_refresh_time; 
-	  if (idata.now > idata.triggertime) {
+	  while (idata.now > refresh_deadline)
+	    refresh_deadline += config.sql_refresh_time; 
+	  while (idata.now > idata.triggertime) {
             idata.triggertime  += idata.t_timeslot;
             if (config.sql_trigger_time == COUNT_MONTHLY)
               idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
@@ -231,7 +233,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       } 
       else {
         if (config.sql_trigger_exec) {
-          if (idata.now > idata.triggertime) {
+          while (idata.now > idata.triggertime) {
             sql_trigger_exec(config.sql_trigger_exec);
 	    idata.triggertime += idata.t_timeslot;
 	    if (config.sql_trigger_time == COUNT_MONTHLY)
@@ -241,7 +243,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
-      if (idata.now > (idata.basetime + idata.timeslot)) {
+      while (idata.now > (idata.basetime + idata.timeslot)) {
 	idata.basetime += idata.timeslot;
 	if (config.sql_history == COUNT_MONTHLY)
 	  idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);

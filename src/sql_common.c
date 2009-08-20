@@ -351,7 +351,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
         /* Check whether a) the whole bucket chain is currently in use
 	   or b) we came across the current pending element: meaning no
 	   free positions are available in the chain, ahead of it */
-        if (Cursor || Cursor == PendingElem) {
+        if (Cursor && Cursor != PendingElem) {
           /* Check whether we have to replace the first element in the bucket */
           if (!Cursor->prev) {
             memcpy(&SavedCursor, Cursor, sizeof(struct db_cache));
@@ -488,11 +488,18 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
       else {
         if (lru_head.lru_next && ((idata->now-lru_head.lru_next->lru_tag) > STALE_M*config.sql_refresh_time)) {
           newElem = lru_head.lru_next;
-          ReBuildChain(Cursor, newElem);
-          Cursor = newElem;
-          goto insert; /* we have successfully reused a stale element */
+	  if (newElem != Cursor) { 
+            ReBuildChain(Cursor, newElem);
+            Cursor = newElem;
+            goto insert; /* we have successfully reused a stale element */
+	  }
+	  /* if the last LRU element is our cursor and is still in use,
+	     we are forced to abort the LRU idea and create a new brand
+	     new element */
+	  else goto create;
         }
         else {
+	  create:
           newElem = (struct db_cache *) malloc(sizeof(struct db_cache));
           if (newElem) {
             memset(newElem, 0, sizeof(struct db_cache));
@@ -572,7 +579,9 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   Cursor->start_tag = idata->now;
   Cursor->lru_tag = idata->now;
   Cursor->signature = idata->hash;
-  if (Cursor->chained) AddToLRUTail(Cursor); /* we cannot reuse not-malloc()'ed elements */
+  /* We are not so fancy to reuse elements which have
+     not been malloc()'d before */
+  if (Cursor->chained) AddToLRUTail(Cursor); 
   if (SafePtr) goto safe_action;
   if (staleElem) SwapChainedElems(Cursor, staleElem);
   return;
