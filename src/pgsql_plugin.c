@@ -130,7 +130,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	gettimeofday(&idata.flushtime, &tz);
 	while (idata.now > refresh_deadline)
 	  refresh_deadline += config.sql_refresh_time; 
-	while (idata.now > idata.triggertime) {
+	while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
 	  idata.triggertime  += idata.t_timeslot;
 	  if (config.sql_trigger_time == COUNT_MONTHLY)
 	    idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
@@ -213,7 +213,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  gettimeofday(&idata.flushtime, &tz);
 	  while (idata.now > refresh_deadline)
 	    refresh_deadline += config.sql_refresh_time; 
-	  while (idata.now > idata.triggertime) {
+	  while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
             idata.triggertime  += idata.t_timeslot;
             if (config.sql_trigger_time == COUNT_MONTHLY)
               idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
@@ -233,7 +233,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       } 
       else {
         if (config.sql_trigger_exec) {
-          while (idata.now > idata.triggertime) {
+          while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
             sql_trigger_exec(config.sql_trigger_exec);
 	    idata.triggertime += idata.t_timeslot;
 	    if (config.sql_trigger_time == COUNT_MONTHLY)
