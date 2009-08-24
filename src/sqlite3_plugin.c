@@ -37,7 +37,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pollfd pfd;
   struct insert_data idata;
   struct timezone tz;
-  time_t now, refresh_deadline;
+  time_t refresh_deadline;
   int timeout;
   int ret, num;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
@@ -65,15 +65,14 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* some LOCAL initialization AFTER setting some default values */
   reload_map = FALSE;
-  timeout = config.sql_refresh_time*1000; /* dirty */
-  now = time(NULL);
-  refresh_deadline = now;
+  idata.now = time(NULL);
+  refresh_deadline = idata.now;
 
   sql_init_maps(&nt, &nc, &pt);
   sql_init_global_buffers();
   sql_init_pipe(&pfd, pipe_fd);
-  sql_init_historical_acct(now, &idata);
-  sql_init_triggers(now, &idata);
+  sql_init_historical_acct(idata.now, &idata);
+  sql_init_triggers(idata.now, &idata);
   sql_init_refresh_deadline(&refresh_deadline);
 
   /* setting number of entries in _protocols structure */
@@ -95,6 +94,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
+    sql_calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
     ret = poll(&pfd, 1, timeout);
     if (ret < 0) goto poll_again;
 
@@ -241,12 +241,14 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
       while (idata.now > (idata.basetime + idata.timeslot)) {
+	time_t saved_basetime = idata.basetime;
+
 	idata.basetime += idata.timeslot;
 	if (config.sql_history == COUNT_MONTHLY)
 	  idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);
 	glob_basetime = idata.basetime;
-	idata.new_basetime = TRUE;
-	glob_new_basetime = TRUE;
+	idata.new_basetime = saved_basetime;
+	glob_new_basetime = saved_basetime;
       }
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {

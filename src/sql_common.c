@@ -177,8 +177,11 @@ void sql_init_historical_acct(time_t now, struct insert_data *idata)
 
     idata->basetime = t;
     glob_basetime = idata->basetime;
-    idata->new_basetime = TRUE;
-    glob_new_basetime = TRUE;
+    idata->new_basetime = idata->basetime;
+    glob_new_basetime = idata->basetime;
+    glob_timeslot = idata->timeslot;
+    idata->committed_basetime = 0;
+    glob_committed_basetime = 0;
   }
 }
 
@@ -228,6 +231,11 @@ void sql_init_refresh_deadline(time_t *rd)
   *rd += (config.sql_refresh_time+config.sql_startup_delay); /* it's a deadline not a basetime */
 }
 
+void sql_calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
+{
+  *timeout = ((deadline-now)+1)*1000;
+}
+
 void sql_init_pipe(struct pollfd *pollfd, int fd)
 {
   pollfd->fd = fd;
@@ -273,8 +281,25 @@ void sql_cache_modulo(struct pkt_primitives *srcdst, struct pkt_bgp_primitives *
 
 int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *idata, int exiting)
 {
-  int j, tmp_retired = sql_writers.retired;
+  int j, tmp_retired = sql_writers.retired, delay = 0, new_basetime = FALSE;
   struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
+
+  /* We are seeking how many time-bins data has to be delayed by; residual
+     time is taken into account by scanner deadlines (sql_refresh_time) */
+  if (config.sql_startup_delay) {
+    delay = config.sql_startup_delay/idata->timeslot; 
+    delay = delay*idata->timeslot;
+  }
+
+  /* check-pointing: we record last committed time-bin; part of this is
+     checking whether basetime was moved forward yet (as this is not for
+     sure). */
+  if (idata->new_basetime && idata->new_basetime < idata->basetime &&
+      idata->new_basetime > idata->committed_basetime) {
+    new_basetime = TRUE;
+    idata->committed_basetime = idata->new_basetime; 
+  }
+  else idata->committed_basetime = idata->basetime;
 
   /* If aggressive classification is enabled and there are still
      chances for the stream to be classified - ie. tentatives is
@@ -286,16 +311,24 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
           pending_queries_queue[pqq_ptr] = queue[j];
           pqq_ptr++;
         }
-        else if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
+        else if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
 	  pending_queries_queue[pqq_ptr] = queue[j];
 	  pqq_ptr++;
+        }
+        else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
+          pending_queries_queue[pqq_ptr] = queue[j];
+          pqq_ptr++;
         }
         else queue[j]->valid = SQL_CACHE_COMMITTED;
       }
     }
     else {
       for (j = 0, pqq_ptr = 0; j < index; j++) {
-        if (queue[j]->basetime > (idata->basetime-config.sql_startup_delay)) {
+        if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
+          pending_queries_queue[pqq_ptr] = queue[j];
+          pqq_ptr++;
+        }
+        else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
           pending_queries_queue[pqq_ptr] = queue[j];
           pqq_ptr++;
         }
@@ -751,6 +784,8 @@ void sql_exit_gracefully(int signum)
   idata.basetime = glob_basetime;
   idata.dyn_table = glob_dyn_table;
   idata.new_basetime = glob_new_basetime;
+  idata.timeslot = glob_timeslot;
+  idata.committed_basetime = glob_committed_basetime;
   if (config.sql_backup_host || config.sql_recovery_logfile) idata.recover = TRUE;
   if (config.what_to_count & COUNT_CLASS) config.sql_aggressive_classification = FALSE;
 

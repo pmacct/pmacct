@@ -131,10 +131,8 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
-          channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
-          primitives++;
-        }
+        channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
+        primitives++;
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
         if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
@@ -145,7 +143,7 @@ void evaluate_packet_handlers()
           channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromext_handler;
           primitives++;
         }
-        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+        else {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
@@ -159,7 +157,7 @@ void evaluate_packet_handlers()
           channels_list[index].phandler[primitives] = SF_bgp_peer_src_as_fromext_handler;
           primitives++;
         }
-        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+        else { 
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
@@ -1579,7 +1577,7 @@ void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struc
       }
     }
 
-    if (!pbgp->peer_src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+    if (!pbgp->peer_src_as && !pdata->primitives.src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
       char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
       if (info->attr->community && info->attr->community->str) {
@@ -1608,7 +1606,11 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_info *info;
 
+  --pdata; /* Bringing back to original place */
+
   pbgp->peer_src_as = pptrs->bpas;
+
+  /* XXX: extra check: was src_as written by copy_stdcomm_to_asn() ? */
 
   if (!pbgp->peer_src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
     if (src_ret) {

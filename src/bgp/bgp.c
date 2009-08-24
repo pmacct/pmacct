@@ -1387,7 +1387,8 @@ void load_comm_patterns(char **stdcomm, char **extcomm, char **stdcomm_to_asn)
 
 void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 {
-  char *ptr, *haystack;
+  char *ptr, *haystack, *delim_src, *delim_ptn;
+  char local_ptr[MAX_BGP_STD_COMMS], *auxptr;
   int idx, i, j, srclen;
 
   srclen = strlen(src);
@@ -1396,7 +1397,29 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
     haystack = src;
 
     find_again:
+    delim_ptn = strchr(patterns[idx], '.');
+    if (delim_ptn) *delim_ptn = '\0';
     ptr = strstr(haystack, patterns[idx]);
+
+    if (ptr && delim_ptn) {
+      delim_src = strchr(ptr, ' ');
+      if (delim_src) {
+	memcpy(local_ptr, ptr, delim_src-ptr);
+        local_ptr[delim_src-ptr] = '\0';
+      }
+      else memcpy(local_ptr, ptr, strlen(ptr)+1);
+      *delim_ptn = '.';
+
+      if (strlen(local_ptr) != strlen(patterns[idx])) ptr = NULL;
+      else {
+	for (auxptr = strchr(patterns[idx], '.'); auxptr; auxptr = strchr(auxptr, '.')) {
+	  local_ptr[auxptr-patterns[idx]] = '.';
+	  auxptr++;
+	} 
+	if (strncmp(patterns[idx], local_ptr, strlen(patterns[idx]))) ptr = NULL;
+      }
+    } 
+    else if (delim_ptn) *delim_ptn = '.';
 
     if (ptr) {
       /* If we have already something on the stack, let's insert a space */

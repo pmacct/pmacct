@@ -457,15 +457,24 @@ nfprobe_version: 9
 
 pmacctd_as: bgp
 bgp_daemon: true
-bgp_daemon_ip: X.X.X.X
+bgp_daemon_ip: 127.0.0.1
 bgp_agent_map: /path/to/agent_to_peer.map
-! bgp_daemon_port: 17917
+bgp_daemon_port: 17917
 
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
    co-exist with other BGP routing software which might be running on the same host.
    Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
-   the BGP peer (ie. 127.0.0.1: 'id=127.0.0.1 ip=0.0.0.0'); 
+   the BGP peer (ie. 127.0.0.1: 'id=127.0.0.1 ip=0.0.0.0'); this setup, while generic,
+   was tested working in conjunction with Quagga 0.99.14. Following a relevant fragment
+   of the Quagga configuration:
+
+router bgp Y 
+ bgp router-id X.X.X.X
+ neighbor 127.0.0.1 remote-as Y 
+ neighbor 127.0.0.1 port 17917
+ neighbor 127.0.0.1 update-source X.X.X.X
+!
 
    2) embed flow classification informations in NetFlow v9 datagrams by uncommenting
    'classifiers' and 'snaplen' lines, reading for further information the section of
@@ -555,7 +564,9 @@ Sometimes only a small portion of their content is relevant to the accounting ta
 hence a filtering layer was developed to take special care of these attributes. The
 bgp_aspath_radius cuts the AS-PATH down after a specified amount of hops; whereas the
 bgp_stdcomm_pattern does a simple sub-string matching against standard BGP communities,
-filtering in only those that match. See a typical usage example below:
+filtering in only those that match (optionally, for better precision, a pre-defined
+number of characters can be wildcarded by employing the '.' symbol, like in regular
+expressions). See a typical usage example below:
 
 bgp_aspath_radius: 3
 bgp_stdcomm_pattern: 12345:

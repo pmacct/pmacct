@@ -294,4 +294,12 @@ A: Few hints are summed below in order to improve SQL database performances. The
    * Disabling fsync() does improve performance. This might have painful consequences
      in case of unsecured shutdowns (remember power failure is a variable ...).
 
+
+Q19: I've configured the server hosting pmacct with my local timezone - which includes
+     DST (Daylight Saving Time). Is this allright?
+A: In general, it's good rule to run the backend part of any accounting system as UTC;
+   pmacct uses the underlying system clock, expecially in the SQL plugins to calculate
+   time-bins and scanner deadlines among the others. The use of timezones is supported
+   but not recommended. 
+
 /* EOF */

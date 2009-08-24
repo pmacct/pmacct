@@ -85,7 +85,8 @@ struct insert_data {
   int dyn_table;
   int recover;
   int locks;
-  int new_basetime;
+  time_t new_basetime;
+  time_t committed_basetime;
   int current_queue_elem;
   struct multi_values mv;
   /* stats */
@@ -248,6 +249,7 @@ EXT void sql_init_default_values();
 EXT void sql_init_historical_acct(time_t, struct insert_data *);
 EXT void sql_init_triggers(time_t, struct insert_data *);
 EXT void sql_init_refresh_deadline(time_t *);
+EXT void sql_calc_refresh_timeout(time_t, time_t, int *);
 EXT void sql_init_pipe(struct pollfd *, int);
 EXT struct template_entry *sql_init_logfile_template(struct template_header *);
 EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);
@@ -310,9 +312,11 @@ EXT struct frags copy_values[N_PRIMITIVES+2];
 EXT struct frags set[N_PRIMITIVES+2];
 EXT int glob_num_primitives; /* last resort for signal handling */
 EXT int glob_basetime; /* last resort for signal handling */
-EXT int glob_new_basetime; /* last resort for signal handling */
+EXT time_t glob_new_basetime; /* last resort for signal handling */
+EXT time_t glob_committed_basetime; /* last resort for signal handling */
 EXT int glob_dyn_table; /* last resort for signal handling */
 EXT int glob_nfacctd_sql_log; /* last resort for sql handlers */
+EXT int glob_timeslot; /* last resort for sql handlers */
 
 EXT struct sqlfunc_cb_registry sqlfunc_cbr; 
 EXT void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *, struct insert_data *);
