@@ -934,3 +934,8 @@ DESC:		expects positive number value which instructs how many times a default ro
 		are required (ie. the closer the router is, the most specific the route is assumed to be).
 		(default: 0)
 
+KEY:            bgp_neighbors_file
+DESC:		writes a list of the BGP neighbors in the established state to the specified file, one
+		per line. This gets particularly useful for automation purposes (ie. auto-discovery of
+		devices to poll via SNMP). (default: none)
+

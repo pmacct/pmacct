@@ -187,6 +187,9 @@ void skinny_bgp_daemon()
 
       Log(LOG_INFO, "INFO ( default/core/BGP ): BGP peers usage: %u/%u\n", peers_num, config.nfacctd_bgp_max_peers);
 
+      if (config.nfacctd_bgp_neighbors_file)
+	write_neighbors_file(config.nfacctd_bgp_neighbors_file);
+
       goto select_again; 
     }
 
@@ -1331,6 +1334,9 @@ void bgp_peer_close(struct bgp_peer *peer)
   }
 
   free(peer->buf.base);
+
+  if (config.nfacctd_bgp_neighbors_file)
+    write_neighbors_file(config.nfacctd_bgp_neighbors_file);
 }
 
 int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct aspath *as4path)
@@ -1606,5 +1612,41 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   }
 
   if (saved_peer) pptrs->bgp_peer = (char *) saved_peer;
+}
+
+void write_neighbors_file(char *filename)
+{
+  FILE *file;
+  char neighbor[INET6_ADDRSTRLEN+1];
+  int idx, len;
+
+  unlink(filename);
+
+  file = fopen(filename,"w");
+  if (file) {
+    if (file_lock(fileno(file))) {
+      Log(LOG_ALERT, "ALERT: Unable to obtain lock for bgp_neighbors_file '%s'.\n", filename);
+      return;
+    }
+    for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
+      if (peers[idx].fd) {
+        if (peers[idx].addr.family == AF_INET) {
+          inet_ntop(AF_INET, &peers[idx].addr.address.ipv4, neighbor, INET6_ADDRSTRLEN);
+	  len = strlen(neighbor);
+	  neighbor[len] = '\n'; len++;
+	  neighbor[len] = '\0';
+          fwrite(neighbor, len, 1, file);
+        }
+        /* we don't happen to support IPv6 neighbors just yet */
+      }
+    }
+
+    file_unlock(fileno(file));
+    fclose(file);
+  }
+  else {
+    Log(LOG_ERR, "ERROR: Unable to open bgp_neighbors_file '%s'\n", filename);
+    return;
+  }
 }
 

@@ -86,9 +86,6 @@ struct bgp_peer_buf {
   int truncated_len;
 };
 
-/* Currently we only support one peer; bgp_peer is indeed a good
- * foundation for future support of both multiple peers and peer
- * groups */
 struct bgp_peer {
   int fd;
   int lock;
@@ -179,6 +176,7 @@ EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
 EXT void bgp_srcdst_lookup(struct packet_ptrs *);
+EXT void write_neighbors_file(char *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(void *, void *);

@@ -1682,6 +1682,17 @@ int cfg_key_nfacctd_bgp_follow_default(char *filename, char *name, char *value_p
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_neighbors_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_neighbors_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_neighbors_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
