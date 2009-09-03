@@ -115,8 +115,16 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS)
       || (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_DST_AS) && config.nfacctd_as == NF_AS_BGP)) {
-      if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-        channels_list[index].phandler[primitives] = bgp_ext_handler;
+      if (config.acct_type != ACCT_PM && channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
+	/* Let's basically get out of here this case - XXX: silently */
+      } 
+      else if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
+	if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) { 
+	  channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
+	}
+	else {
+          channels_list[index].phandler[primitives] = bgp_ext_handler;
+	}
         primitives++;
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
@@ -444,10 +452,12 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   char *buf = (char *) *data, *tmpp = (char *) &tmp;
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
 
-  src_host_handler(chptr, pptrs, &tmpp);
-  dst_host_handler(chptr, pptrs, &tmpp);
-  memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
-  memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+  if (chptr->plugin->cfg.networks_file) {
+    src_host_handler(chptr, pptrs, &tmpp);
+    dst_host_handler(chptr, pptrs, &tmpp);
+    memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
+    memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+  }
 
   payload->cap_len = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
   payload->pkt_len = ((struct pcap_pkthdr *)pptrs->pkthdr)->len;
@@ -1492,6 +1502,37 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 #if defined ENABLE_IPV6
       else if (sa->sa_family == AF_INET6) memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, 16); 
 #endif
+    }
+  }
+}
+
+void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_payload *payload = (struct pkt_payload *) *data;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src; 
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
+  struct bgp_info *info;
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      if (config.nfacctd_as == NF_AS_BGP) {
+	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
+	  payload->src_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+	}
+      }
+    }
+  }
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr) {
+      if (config.nfacctd_as == NF_AS_BGP) {
+        if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
+          payload->dst_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+	}
+      }
     }
   }
 }

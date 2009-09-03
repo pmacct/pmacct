@@ -243,7 +243,7 @@ static void init_agent(SflSp *sp)
   sp->sampler = sfl_agent_getSampler(sp->agent, &dsi);
 }
 
-
+#define NF_AS_BGP 2
 /*_________________---------------------------__________________
   _________________       readPacket          __________________
   -----------------___________________________------------------
@@ -360,7 +360,7 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
          informations; we will fill in only infos pertaining
 	 to src and dst ASNs
       */
-      if (config.networks_file) {
+      if (config.networks_file || config.nfacctd_as == NF_AS_BGP) {
 	memset(&gatewayHdrElem, 0, sizeof(gatewayHdrElem));
 	memset(&as_path_segment, 0, sizeof(as_path_segment));
 	gatewayHdrElem.tag = SFLFLOW_EX_GATEWAY;
