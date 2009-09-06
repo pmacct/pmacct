@@ -554,9 +554,10 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 		      key.
 
                 KEY: adjb 
-                DESC: action. Adds (or subtracts) 'adjb' bytes to the bytes counter of each aggregate. This is a
-		      particularly useful action when - for example - fixed lower (link, llc, etc.) layer sizes
-		      need to be included into the bytes counter (as explained by Q7 in FAQS document).
+                DESC: action. Adds (or subtracts) 'adjb' bytes to the bytes counter multiplied by the number of
+		      packet in each aggregate. This is a particularly useful action when - for example - fixed
+		      lower (link, llc, etc.) layer sizes need to be included into the bytes counter (as explained
+		      by Q7 in FAQS document).
 
 		KEY: recover
 		DESC: action. If previously evaluated checks have marked the aggregate as invalid, a positive

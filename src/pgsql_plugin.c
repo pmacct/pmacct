@@ -410,7 +410,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   bed.lf = &lf;
 
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++) 
-    stop = preprocess_funcs[j](queue, &index);
+    stop = preprocess_funcs[j](queue, &index, j);
   if (config.what_to_count & COUNT_CLASS)
     sql_invalidate_shadow_entries(queue, &index);
   idata->ten = index;

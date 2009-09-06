@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 */
 
 /*
@@ -58,24 +58,25 @@ struct _fsrc_queue {
 #define EXT
 #endif
 EXT void set_preprocess_funcs(char *, struct preprocess *);
-EXT int cond_qnum(struct db_cache *[], int *);
-EXT int check_minp(struct db_cache *[], int *);
-EXT int check_minb(struct db_cache *[], int *);
-EXT int check_minf(struct db_cache *[], int *);
-EXT int check_maxp(struct db_cache *[], int *);
-EXT int check_maxb(struct db_cache *[], int *);
-EXT int check_maxf(struct db_cache *[], int *);
-EXT int check_maxbpp(struct db_cache *[], int *);
-EXT int check_maxppf(struct db_cache *[], int *);
-EXT int check_minbpp(struct db_cache *[], int *);
-EXT int check_minppf(struct db_cache *[], int *);
-EXT int check_fss(struct db_cache *[], int *);
-EXT int check_fsrc(struct db_cache *[], int *);
-EXT int action_usrf(struct db_cache *[], int *);
-EXT int action_adjb(struct db_cache *[], int *);
+EXT int cond_qnum(struct db_cache *[], int *, int);
+EXT int check_minp(struct db_cache *[], int *, int);
+EXT int check_minb(struct db_cache *[], int *, int);
+EXT int check_minf(struct db_cache *[], int *, int);
+EXT int check_maxp(struct db_cache *[], int *, int);
+EXT int check_maxb(struct db_cache *[], int *, int);
+EXT int check_maxf(struct db_cache *[], int *, int);
+EXT int check_maxbpp(struct db_cache *[], int *, int);
+EXT int check_maxppf(struct db_cache *[], int *, int);
+EXT int check_minbpp(struct db_cache *[], int *, int);
+EXT int check_minppf(struct db_cache *[], int *, int);
+EXT int check_fss(struct db_cache *[], int *, int);
+EXT int check_fsrc(struct db_cache *[], int *, int);
+EXT int action_usrf(struct db_cache *[], int *, int);
+EXT int action_adjb(struct db_cache *[], int *, int);
 
-EXT int mandatory_invalidate(struct db_cache *[], int *);
-EXT int mandatory_validate(struct db_cache *[], int *);
+EXT int mandatory_invalidate(struct db_cache *[], int *, int);
+EXT int mandatory_validate(struct db_cache *[], int *, int);
+EXT void check_validity(struct db_cache *, int);
 
 EXT preprocess_func preprocess_funcs[2*N_FUNCS]; /* 20 */
 EXT struct preprocess prep;

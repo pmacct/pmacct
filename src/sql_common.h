@@ -50,10 +50,10 @@
 #define PM_LOCK_ROW_EXCLUSIVE	1
 
 /* cache element states */
-#define SQL_CACHE_ERROR		-1
 #define SQL_CACHE_FREE		0
 #define SQL_CACHE_COMMITTED	1
-#define SQL_CACHE_INUSE		2 /* has to be SQL_CACHE_ top-most entry */
+#define SQL_CACHE_INUSE		2 
+#define SQL_CACHE_ERROR		255
 
 #define SQL_TABLE_VERSION_PLAIN 0
 #define SQL_TABLE_VERSION_BGP   1000
@@ -108,7 +108,8 @@ struct db_cache {
   time_t basetime;
   time_t endtime;
   struct pkt_bgp_primitives *pbgp;
-  short int valid;
+  u_int8_t valid;
+  u_int8_t prep_valid;
   unsigned int signature;
   u_int8_t chained;
   struct db_cache *prev;
@@ -139,7 +140,7 @@ struct logfile {
 };
 
 typedef void (*dbop_handler) (const struct db_cache *, const struct insert_data *, int, char **, char **);
-typedef int (*preprocess_func) (struct db_cache *[], int *);
+typedef int (*preprocess_func) (struct db_cache *[], int *, int);
 
 struct frags {
   dbop_handler handler;
