@@ -529,7 +529,7 @@ aspath_make_str_count (struct aspath *as)
    * With 32bit ASNs, this range will increase, but only worth changing
    * once there are significant numbers of ASN >= 100000
    */
-#define ASN_STR_LEN (5 + 1)
+#define ASN_STR_LEN (10 + 1)
   str_size = MAX (assegment_count_asns (seg, 0) * ASN_STR_LEN + 2 + 1,
                   ASPATH_STR_DEFAULT_LEN);
   str_buf = malloc(str_size);
