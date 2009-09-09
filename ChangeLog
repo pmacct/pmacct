@@ -1,6 +1,56 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.0rc2
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
+0.12.0rc2 -- 09-09-2009
+  + BGP daemon thread has been tied up with both the NetFlow and
+    sFlow probe plugins, nfprobe and sfprobe, allowing to encode
+    dynamic ASN information (src_as, dst_as) instead of reading
+    it from text files. This finds special applicability within
+    open-source router solutions.
+  + 'bgp_stdcomm_pattern_to_asn' feature is introduced: filters
+    BGP standard communities against the supplied pattern. The
+    first matching community is split using the ':' symbol. The
+    first part is mapped onto the peer AS field while the second
+    is mapped onto the origin AS field. The aim is to deal with
+    prefixes on the own address space. Ie. BGP standard community
+    XXXXX:YYYYY is mapped as: Peer-AS=XXXXX, Origin-AS=YYYYY.
+  + 'bgp_neighbors_file' feature is introduced: writes a list of
+    the BGP neighbors in the established state to the specified
+    file. This gets particularly useful for automation purposes
+    (ie. auto-discovery of devices to poll via SNMP).
+  + 'bgp_stdcomm_pattern' feature was improved by supporting the
+    regex '.' symbol which can be used to wildcard a pre-defined
+    number of characters, ie. '65534:64...' will match community
+    values in the range 64000-64999 only.
+  + SQL preprocess layer: removed dependency between actions and
+    checks. Overral logics was reviewed to act more consistently
+    with recently introduced SQL cache entry status field.
+  + SQL common layer: poll() timeout is now calculated adaptively
+    for increased deadline precision. 
+  + sql_startup_delay feature functionality was improved in order
+    to let it work as a sliding window to match NetFlow setups in
+    which a) mainain original flow timestamps and b) enable the
+    sql_dont_try_update feature is required.
+  ! DST (Daylight Saving Time) support introduced to sql_history
+    and sql_refresh_time directives. Thanks to <alshu@tut.by> for
+    reporting the issue.
+  ! fix, pmacctd.c: initial sfprobe plugin checks were disabling
+    IP fragments handler. This was causing pmacctd to crash under
+    certain conditions. Thanks to Stig Thormodsrud for having
+    reported the issue.
+  ! fix, nfprobe, netflow5.c: missing htons() call while encoding
+    src_as primitive. 
+  ! fix, BGP thread, bgp_aspath.c: estimated AS-PATH length was
+    not enough for 32-bit ASNs. String length per-ASN increased
+    from 5 to 10 chars.
+  ! Documentation update, EXAMPLES: how to establish a local BGP
+    peering between pmacctd and Quagga 0.99.14 for NetFlow and
+    sFlow probe purposes.
+  ! fix, print_status_table(): SEGV was showing up while trying
+    to retrieve xFlow statistics by sending a SIGUSR1 signal and
+    a collector IP address was not configured.
+  ! ip_flow.[c|h]: code cleanup.
+
 0.12.0rc1 -- 01-08-2009
   + a BGP daemon thread has been integrated in both the NetFlow
     and sFlow collectors, nfacctd and sfacctd. It maintains per-
