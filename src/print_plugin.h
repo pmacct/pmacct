@@ -62,7 +62,6 @@ void P_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 void P_cache_flush(struct chained_cache *[], int);
 void P_cache_purge(struct chained_cache *[], int);
 void P_write_stats_header();
-void *Malloc(unsigned int);
 void P_exit_now(int);
 
 /* global vars */

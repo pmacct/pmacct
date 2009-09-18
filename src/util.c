@@ -933,3 +933,21 @@ void copy_stdcomm_to_asn(char *stdcomm, as_t *asn, int is_origin)
   if (is_origin) *asn = atoi(p2); 
   else *asn = atoi(p1);
 }
+
+void *Malloc(unsigned int size)
+{
+  unsigned char *obj;
+
+  obj = (unsigned char *) malloc(size);
+  if (!obj) {
+    sbrk(size);
+    obj = (unsigned char *) malloc(size);
+    if (!obj) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %u bytes). Exiting ...\n",
+      config.name, config.type, size);
+      exit_plugin(1);
+    }
+  }
+
+  return obj;
+}

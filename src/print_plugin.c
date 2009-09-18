@@ -568,24 +568,6 @@ void P_write_stats_header()
 #endif
 }
 
-void *Malloc(unsigned int size)
-{
-  unsigned char *obj;
-
-  obj = (unsigned char *) malloc(size);  
-  if (!obj) {
-    sbrk(size); 
-    obj = (unsigned char *) malloc(size);
-    if (!obj) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %u bytes). Exiting ...\n", 
-		      config.name, config.type, size);
-      exit_plugin(1);
-    }
-  }
-
-  return obj;
-}
-
 void P_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
 {
   struct in_addr ip;

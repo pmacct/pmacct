@@ -25,6 +25,7 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp.h"
+#include "bgp_hash.h"
 #include "thread_pool.h"
 
 /* variables to be exported away */

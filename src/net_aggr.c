@@ -27,6 +27,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "net_aggr.h"
+#include "addr.h"
 #include "jhash.h"
 
 void load_networks(char *filename, struct networks_table *nt, struct networks_cache *nc)

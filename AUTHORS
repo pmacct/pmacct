@@ -1,4 +1,4 @@
-pmacct (Promiscuous mode IP Accounting package) v0.12.0rc2
+pmacct (Promiscuous mode IP Accounting package) v0.12.0rc3
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
 Founder:
@@ -16,6 +16,7 @@ Package maintainers:
 	Jamie Wilkinson (Debian)	<jaq@debian.org>
    KP Kirchdoerfer (LEAF Bering-uClibc)	<kapeka@users.sourceforge.net> 
 	Peter Nixon (OpenSUSE RPMs)	<listuser@peternixon.net>
+	Slava Dubrovskiy (ALTLinux)	<slava@tangramltd.com>
 
 Thanks to the following people for their strong support along
 the time: 
