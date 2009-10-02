@@ -288,6 +288,32 @@ int cfg_key_interface(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_files_umask(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+  char *endp;
+
+  value = strtoul(value_ptr, &endp, 8);
+  if (value < 2) {
+    Log(LOG_WARNING, "WARN ( %s ): 'files_umask' has to be >= '002'.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.files_umask = value & 0666;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.files_umask = value & 0666;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_interface_wait(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

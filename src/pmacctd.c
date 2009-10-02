@@ -278,6 +278,8 @@ int main(int argc,char **argv, char **envp)
     list = list->next;
   }
 
+  if (config.files_umask) umask(config.files_umask);
+
   /* Let's check whether we need superuser privileges */
   if (config.snaplen) psize = config.snaplen;
   else config.snaplen = psize;

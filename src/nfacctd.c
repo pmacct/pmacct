@@ -286,6 +286,8 @@ int main(int argc,char **argv, char **envp)
     list = list->next;
   }
 
+  if (config.files_umask) umask(config.files_umask);
+
   if (config.daemon) {
     list = plugins_list;
     while (list) {

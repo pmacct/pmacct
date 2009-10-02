@@ -40,6 +40,7 @@ struct configuration {
   int data_type; 
   int pipe_size;
   int buffer_size;
+  int files_umask;
   int handle_fragments;
   int handle_flows;
   int frag_bufsz;
