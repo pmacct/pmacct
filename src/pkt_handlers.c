@@ -1359,14 +1359,24 @@ void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
 
 void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+  struct xflow_status_entry_sampling *sentry;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
-  struct struct_header_v9 *hdr9 = (struct struct_header_v9 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0, is_sampled = 0;
+  u_int8_t sampler_id = 0;
 
   switch (hdr->version) {
+  case 9:
+    memcpy(&sampler_id, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, tpl->tpl[NF9_FLOW_SAMPLER_ID].len);
+    sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+    if (sentry) {
+      pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
+      pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;
+    }
+    break;
   case 5:
     hdr5 = (struct struct_header_v5 *) pptrs->f_header;
     is_sampled = ( ntohs(hdr5->sampling) & 0xC000 );

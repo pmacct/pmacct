@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 */
 
 /*
@@ -27,13 +27,20 @@
 #include "nfacctd.h"
 #include "pmacct-data.h"
 
-void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs)
+void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t type)
 {
   struct template_cache_entry *tpl;
 
-  if (tpl = find_template_v9(hdr->template_id, pptrs))
-    refresh_template_v9(hdr, tpl, pptrs);
-  else insert_template_v9(hdr, pptrs);
+  if (type == 0) {
+    if (tpl = find_template_v9(hdr->template_id, pptrs))
+      refresh_template_v9(hdr, tpl, pptrs);
+    else insert_template_v9(hdr, pptrs);
+  }
+  else if (type == 1) {
+    if (tpl = find_template_v9(hdr->template_id, pptrs))
+      refresh_opt_template_v9((struct options_template_hdr_v9 *)hdr, tpl, pptrs);
+    else insert_opt_template_v9((struct options_template_hdr_v9 *)hdr, pptrs);
+  }
 }
 
 struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *pptrs)
@@ -78,6 +85,7 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &ptr->agent, &port);
   ptr->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
   ptr->template_id = hdr->template_id;
+  ptr->template_type = 0;
   ptr->num = num;
 
   count = num;
@@ -111,12 +119,92 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
   tpl->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
   tpl->template_id = hdr->template_id;
+  tpl->template_type = 0;
   tpl->num = num;
   tpl->next = next;
 
   count = num;
   ptr = (u_char *) hdr;
   ptr += NfTplHdrV9Sz;
+  field = (struct template_field_v9 *)ptr;
+  while (count) {
+    type = ntohs(field->type);
+    tpl->tpl[type].off = tpl->len;
+    tpl->tpl[type].len = ntohs(field->len);
+    tpl->len += tpl->tpl[type].len;
+    count--;
+    field++;
+  }
+}
+
+struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *hdr, struct packet_ptrs *pptrs)
+{
+  struct template_cache_entry *ptr, *prevptr = NULL;
+  struct template_field_v9 *field;
+  u_int16_t modulo = (ntohs(hdr->template_id)%tpl_cache.num), count;
+  u_int16_t slen = ntohs(hdr->scope_len), olen = ntohs(hdr->option_len);
+  u_int16_t type, port;
+  u_char *tpl;
+
+  ptr = tpl_cache.c[modulo];
+
+  while (ptr) {
+    prevptr = ptr;
+    ptr = ptr->next;
+  }
+
+  ptr = malloc(sizeof(struct template_cache_entry));
+  if (!ptr) {
+    Log(LOG_ERR, "ERROR ( default/core ): Unable to allocate enough memory for a new Options Template Cache Entry.\n");
+    return NULL;
+  }
+
+  memset(ptr, 0, sizeof(struct template_cache_entry));
+  sa_to_addr((struct sockaddr *)pptrs->f_agent, &ptr->agent, &port);
+  ptr->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
+  ptr->template_id = hdr->template_id;
+  ptr->template_type = 1;
+  ptr->num = (olen+slen)/sizeof(struct template_field_v9);
+
+  count = ptr->num;
+  tpl = (u_char *) hdr;
+  tpl += NfOptTplHdrV9Sz;
+  field = (struct template_field_v9 *)tpl;
+  while (count) {
+    type = ntohs(field->type);
+    ptr->tpl[type].off = ptr->len;
+    ptr->tpl[type].len = ntohs(field->len);
+    ptr->len += ptr->tpl[type].len;
+    count--;
+    field++;
+  }
+
+  if (prevptr) prevptr->next = ptr;
+  else tpl_cache.c[modulo] = ptr;
+
+  return ptr;
+}
+
+void refresh_opt_template_v9(struct options_template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+{
+  struct template_cache_entry *next;
+  struct template_field_v9 *field;
+  u_int16_t slen = ntohs(hdr->scope_len), olen = ntohs(hdr->option_len);
+  u_int16_t count, type, port;
+  u_char *ptr;
+
+  next = tpl->next;
+  memset(tpl, 0, sizeof(struct template_cache_entry));
+  sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
+  tpl->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
+  tpl->template_id = hdr->template_id;
+  tpl->template_type = 1;
+  tpl->num = (olen+slen)/sizeof(struct template_field_v9);
+  tpl->next = next;
+
+  count = tpl->num;
+  ptr = (u_char *) hdr;
+  ptr += NfOptTplHdrV9Sz;
   field = (struct template_field_v9 *)ptr;
   while (count) {
     type = ntohs(field->type);

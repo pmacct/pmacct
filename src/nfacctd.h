@@ -351,8 +351,14 @@ struct template_hdr_v9 {
   u_int16_t num;
 };
 
+struct options_template_hdr_v9 {
+  u_int16_t template_id;
+  u_int16_t scope_len;
+  u_int16_t option_len;
+};
+
 struct data_hdr_v9 {
-  u_int16_t flow_id; /* == 0: template; >= 256: data */
+  u_int16_t flow_id; /* == 0: template; == 1: options template; >= 256: data */
   u_int16_t flow_len;
 };
 
@@ -390,7 +396,6 @@ struct data_hdr_v9 {
 #define NF9_TEMPLATE_FLOWSET_ID         0
 #define NF9_OPTIONS_FLOWSET_ID          1
 #define NF9_MIN_RECORD_FLOWSET_ID       256
-// #define NF9_MAX_DEFINED_FIELD	100
 #define NF9_MAX_DEFINED_FIELD		210
 
 /* Flowset record types the we care about */
@@ -462,6 +467,19 @@ struct data_hdr_v9 {
 #define NF9_FTYPE_VLAN_MPLS_IPV4	15
 #define NF9_FTYPE_VLAN_MPLS_IPV6	16
 
+/* Sampling */
+#define NF9_SAMPLING_INTERVAL		34
+#define NF9_SAMPLING_ALGORITHM		35
+#define NF9_FLOW_SAMPLER_ID		48
+#define NF9_FLOW_SAMPLER_MODE		49
+#define NF9_FLOW_SAMPLER_INTERVAL	50
+
+#define NF9_OPT_SCOPE_SYSTEM		1
+#define NF9_OPT_SCOPE_IF		2
+#define NF9_OPT_SCOPE_LC		3
+#define NF9_OPT_SCOPE_CACHE		4
+#define NF9_OPT_SCOPE_TPL		5
+
 /* Ordered Template field */
 struct otpl_field {
   u_int16_t off;
@@ -472,6 +490,7 @@ struct template_cache_entry {
   struct host_addr agent;		/* NetFlow Exporter agent */
   u_int32_t source_id;			/* Exporter Observation Domain */
   u_int16_t template_id;		/* template ID */
+  u_int16_t template_type;		/* Data = 0, Options = 1 */
   u_int16_t num;			/* number of fields described into template */ 
   u_int16_t len;			/* total length of the described flowset */
   struct otpl_field tpl[NF9_MAX_DEFINED_FIELD];
@@ -523,9 +542,11 @@ EXT struct v8_handler_entry v8_handlers[15];
 #else
 #define EXT
 #endif
-EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
+EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t);
 EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *);
 EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
+EXT struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *, struct packet_ptrs *);
+EXT void refresh_opt_template_v9(struct options_template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
 #undef EXT
 

@@ -7,7 +7,7 @@
 EXT u_int32_t PdataSz, ChBufHdrSz, CharPtrSz, CounterSz, HostAddrSz;
 EXT u_int32_t PpayloadSz, PextrasSz;
 EXT u_int32_t NfHdrV5Sz, NfHdrV1Sz, NfHdrV7Sz, NfHdrV8Sz, NfHdrV9Sz;
-EXT u_int32_t NfDataHdrV9Sz, NfTplHdrV9Sz;
+EXT u_int32_t NfDataHdrV9Sz, NfTplHdrV9Sz, NfOptTplHdrV9Sz;
 EXT u_int32_t NfDataV1Sz, NfDataV5Sz, NfDataV7Sz;
 EXT u_int32_t IP4HdrSz, IP4TlSz, IP6HdrSz, IP6AddrSz, IP6TlSz; 
 EXT u_int32_t MyTLHdrSz, TCPFlagOff;

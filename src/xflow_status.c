@@ -185,6 +185,16 @@ search_smp_if_status_table(struct xflow_status_entry_sampling *sentry, u_int32_t
   return NULL;
 }
 
+struct xflow_status_entry_sampling *
+search_smp_id_status_table(struct xflow_status_entry_sampling *sentry, u_int8_t sampler_id)
+{
+  while (sentry) {
+    if (sentry->sampler_id == sampler_id) return sentry;
+    sentry = sentry->next;
+  }
+
+  return NULL;
+}
 
 struct xflow_status_entry_sampling *
 create_smp_entry_status_table(struct xflow_status_entry *entry)

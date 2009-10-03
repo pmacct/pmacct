@@ -936,6 +936,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
   struct template_hdr_v9 *template_hdr;
+  struct options_template_hdr_v9 *opt_template_hdr;
   struct template_cache_entry *tpl;
   struct data_hdr_v9 *data_hdr;
   struct packet_ptrs *pptrs = &pptrsv->v4;
@@ -979,7 +980,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         return;
       }
 
-      handle_template_v9(template_hdr, pptrs);
+      handle_template_v9(template_hdr, pptrs, fid);
 
       tpl_ptr += sizeof(struct template_hdr_v9)+ntohs(template_hdr->num)*sizeof(struct template_field_v9); 
       flowoff += sizeof(struct template_hdr_v9)+ntohs(template_hdr->num)*sizeof(struct template_field_v9); 
@@ -987,6 +988,32 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
     pkt += flowsetlen; 
     off += flowsetlen; 
+  }
+  else if (fid == 1) { /* options template */
+    unsigned char *tpl_ptr = pkt;
+
+    flowoff = 0;
+    tpl_ptr += NfDataHdrV9Sz;
+    flowoff += NfDataHdrV9Sz;
+    flowsetlen = ntohs(data_hdr->flow_len);
+
+    while (flowoff < flowsetlen) {
+      opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
+      if (off+flowsetlen > len) {
+        notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset; incomplete NetFlow v9 packet",
+                        (struct sockaddr *) pptrsv->v4.f_agent);
+        xflow_tot_bad_datagrams++;
+        return;
+      }
+
+      handle_template_v9((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid);
+
+      tpl_ptr += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9));
+      flowoff += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9)); 
+    }
+
+    pkt += flowsetlen;
+    off += flowsetlen;
   }
   else if (fid >= 256) { /* data */
     flowsetlen = ntohs(data_hdr->flow_len);
@@ -1013,6 +1040,35 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       Log(LOG_DEBUG, "DEBUG ( default/core ): Discarded NetFlow V9 packet (R: unknown template %u [%s:%u])\n", fid,
 		agent_addr, ntohl(((struct struct_header_v9 *)pptrs->f_header)->source_id)); 
       pkt += flowsetlen-NfDataHdrV9Sz;
+      off += flowsetlen;
+    }
+    else if (tpl->template_type == 1) { /* Options coming */
+      struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+      struct xflow_status_entry_sampling *sentry, *saved = NULL;
+      u_int8_t sampler_id = 0;
+
+      while (flowoff+tpl->len <= flowsetlen) {
+	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1)
+	  memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
+
+	sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+	if (!sentry) sentry = create_smp_entry_status_table(entry);
+	else saved = sentry->next;
+
+	if (sentry) {
+	  memset(sentry, 0, sizeof(struct xflow_status_entry_sampling));
+	  if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	  if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+	  sentry->sampler_id = sampler_id;
+	  sentry->sample_pool = ntohl(sentry->sample_pool);
+	  if (saved) sentry->next = saved;
+	}
+
+        pkt += tpl->len;
+        flowoff += tpl->len;
+      }
+
+      pkt += flowsetlen-flowoff; /* handling padding */
       off += flowsetlen;
     }
     else {
@@ -1417,6 +1473,7 @@ void compute_once()
   NfHdrV9Sz = sizeof(struct struct_header_v9);
   NfDataHdrV9Sz = sizeof(struct data_hdr_v9);
   NfTplHdrV9Sz = sizeof(struct template_hdr_v9);
+  NfOptTplHdrV9Sz = sizeof(struct options_template_hdr_v9);
   NfDataV1Sz = sizeof(struct struct_export_v1);
   NfDataV5Sz = sizeof(struct struct_export_v5);
   NfDataV7Sz = sizeof(struct struct_export_v7);
