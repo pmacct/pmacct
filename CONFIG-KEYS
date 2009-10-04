@@ -837,11 +837,6 @@ KEY:		sfprobe_receiver
 DESC:           defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.
                 The value is expected to be in the usual form 'address:port'. (default: 127.0.0.1:6343)
 		
-KEY:		sfprobe_sampling_rate
-VALUES:		[>= 1]
-DESC:		defines packet sampling. It expects a number which is the mean ratio of packets to be sampled
-                (1 out of N). The currently implemented sampling algorithm is a simple randomic one. (default: no sampling)
-
 KEY:		sfprobe_agentip
 DESC:		sets the value of agentIp field inside the sFlow datagram header.
 

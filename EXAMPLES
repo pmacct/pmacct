@@ -512,9 +512,9 @@ b) build sFlow probe configuration, using pmacctd:
 daemonize: true
 interface: eth0
 plugins: sfprobe
+sampling_rate: 20
 sfprobe_agentsubid: 1402
 sfprobe_receiver: 1.2.3.4:6343
-sfprobe_sampling_rate: 20
 !
 ! networks_file: /path/to/networks.lst
 ! classifiers: /path/to/classifiers/

@@ -302,8 +302,6 @@ static const struct _dictionary_line dictionary[] = {
   {"nfprobe_engine", cfg_key_nfprobe_engine},
   {"nfprobe_version", cfg_key_nfprobe_version},
   {"sfprobe_receiver", cfg_key_sfprobe_receiver},
-//  {"sfprobe_sampling_rate", cfg_key_sfprobe_sampling_rate},
-  {"sfprobe_sampling_rate", cfg_key_sampling_rate},
   {"sfprobe_agentip", cfg_key_sfprobe_agentip},
   {"sfprobe_agentsubid", cfg_key_sfprobe_agentsubid},
   {"flow_handling_threads", cfg_key_flow_handling_threads},
