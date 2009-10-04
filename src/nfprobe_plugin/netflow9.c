@@ -861,7 +861,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                           offset += options_template.tot_len;
 			  nf9->flows++;
 			  send_options = TRUE;
-			  printf("CI PASSO [OPTIONS TEMPLATE]\n");
 			}
 			nf9_pkts_until_template = NF9_DEFAULT_TEMPLATE_INTERVAL;
 		}
@@ -889,7 +888,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 				if (send_options) {
 				  dh->c.flowset_id = options_template.h.template_id;
 				  last_af = 0;
-				  printf("CI PASSO [OPTIONS DATA]: ID: %u\n", ntohs(options_template.h.template_id));
 				}
 				else {
 				  dh->c.flowset_id =
@@ -903,11 +901,9 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 				offset += sizeof(*dh);
 			}
 
-			if (send_options) {
+			if (send_options)
                           r = nf_options_to_flowset(packet + offset,
                             sizeof(packet) - offset, system_boot_time, &inc);
-			  printf("CI PASSO [OPTIONS DATA]: R: %u\n", r);
-			}
 			else 
 			  r = nf_flow_to_flowset(flows[i + j], packet + offset,
 			    sizeof(packet) - offset, system_boot_time, &inc);
@@ -930,7 +926,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			}
 
 			if (send_options) {
-			  printf("CI PASSO [OPTIONS DATA]: CHIUDO\n");
 			  send_options = FALSE;
 			  i--;
 			}
