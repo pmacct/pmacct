@@ -330,10 +330,15 @@ FILE *open_logfile(char *filename)
   FILE *file = NULL;
   struct tm *tmnow;
   time_t now;
+  uid_t owner = -1;
+  gid_t group = -1;
 
+  if (config.files_uid) owner = config.files_uid;
+  if (config.files_gid) group = config.files_gid;
 
   file = fopen(filename, "a"); 
   if (file) {
+    chown(filename, owner, group);
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for logfile '%s'.\n", filename);
       file = NULL;
@@ -359,11 +364,17 @@ void write_pid_file(char *filename)
 {
   FILE *file;
   char pid[10];
+  uid_t owner = -1;
+  gid_t group = -1;
 
   unlink(filename); 
+
+  if (config.files_uid) owner = config.files_uid;
+  if (config.files_gid) group = config.files_gid;
     
   file = fopen(filename,"w");
   if (file) {
+    chown(filename, owner, group);
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for pidfile '%s'.\n", filename);
       return;
@@ -385,6 +396,8 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
   int len = strlen(filename) + strlen(type) + strlen(name) + 3;
   FILE *file;
   char *fname, pid[10], minus[] = "-";
+  uid_t owner = -1;
+  gid_t group = -1;
 
   fname = malloc(len);
   memset(fname, 0, sizeof(fname));
@@ -397,8 +410,12 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
   config.pidfile = fname;
   unlink(fname);
 
+  if (config.files_uid) owner = config.files_uid;
+  if (config.files_gid) group = config.files_gid;
+
   file = fopen(fname,"w");
   if (file) {
+    chown(filename, owner, group);
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock of '%s'.\n", fname);
       return;

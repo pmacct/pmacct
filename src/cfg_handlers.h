@@ -39,6 +39,8 @@ EXT int cfg_key_pcap_filter(char *, char *, char *);
 EXT int cfg_key_interface(char *, char *, char *);
 EXT int cfg_key_interface_wait(char *, char *, char *);
 EXT int cfg_key_files_umask(char *, char *, char *);
+EXT int cfg_key_files_uid(char *, char *, char *);
+EXT int cfg_key_files_gid(char *, char *, char *);
 EXT int cfg_key_savefile_wait(char *, char *, char *);
 EXT int cfg_key_promisc(char *, char *, char *);
 EXT int cfg_key_imt_path(char *, char *, char *);

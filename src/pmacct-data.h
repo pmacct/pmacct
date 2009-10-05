@@ -218,6 +218,8 @@ static const struct _dictionary_line dictionary[] = {
   {"interface", cfg_key_interface},
   {"interface_wait", cfg_key_interface_wait},
   {"files_umask", cfg_key_files_umask},
+  {"files_uid", cfg_key_files_uid},
+  {"files_gid", cfg_key_files_gid},
   {"savefile_wait", cfg_key_savefile_wait},
   {"networks_mask", cfg_key_networks_mask},
   {"networks_file", cfg_key_networks_file},

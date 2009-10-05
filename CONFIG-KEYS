@@ -130,6 +130,16 @@ KEY:		files_umask
 DESC:		Defines the mask for newly created files (log, pid, etc.). A mask less than "002" is
 		currently not accepted due to security reasons. (default: 077)
 
+KEY:            files_uid
+DESC:           Defines the system user id (UID) for files opened for writing (log, pid, etc.); this
+		is indeed possible only when running the daemon as super-user; by default this is left
+		untouched. 
+
+KEY:            files_gid
+DESC:           Defines the system group id (GID) for files opened for writing (log, pid, etc.); this
+                is indeed possible only when running the daemon as super-user; by default this is left
+                untouched.
+
 KEY:		interface (-i) [GLOBAL, NO_NFACCTD]
 DESC:		interface on which 'pmacctd' listens. If such directive isn't supplied, a libpcap
 		function is used to select a valid device. [ns]facctd can catch similar behaviour by

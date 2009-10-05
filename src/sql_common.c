@@ -1839,10 +1839,16 @@ FILE *sql_file_open(const char *path, const char *mode, const struct insert_data
   struct template_header tth;
   FILE *f;
   int ret;
+  uid_t owner = -1;
+  gid_t group = -1;
+
+  if (config.files_uid) owner = config.files_uid;
+  if (config.files_gid) group = config.files_gid;
 
   file_open:
   f = fopen(path, "a+");
   if (f) {
+    chown(path, owner, group);
     if (file_lock(fileno(f))) {
       Log(LOG_ALERT, "ALERT ( %s/%s ): Unable to obtain lock of '%s'.\n", config.name, config.type, path);
       goto close;
