@@ -415,7 +415,7 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
 
   file = fopen(fname,"w");
   if (file) {
-    chown(filename, owner, group);
+    chown(fname, owner, group);
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock of '%s'.\n", fname);
       return;

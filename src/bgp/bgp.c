@@ -1620,11 +1620,17 @@ void write_neighbors_file(char *filename)
   FILE *file;
   char neighbor[INET6_ADDRSTRLEN+1];
   int idx, len;
+  uid_t owner = -1;
+  gid_t group = -1;
 
   unlink(filename);
 
+  if (config.files_uid) owner = config.files_uid; 
+  if (config.files_gid) group = config.files_gid; 
+
   file = fopen(filename,"w");
   if (file) {
+    chown(filename, owner, group);
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for bgp_neighbors_file '%s'.\n", filename);
       return;
