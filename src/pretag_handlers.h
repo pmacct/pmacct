@@ -27,6 +27,7 @@
 #endif
 
 EXT int PT_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_id2_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_input_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_output_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -55,6 +56,7 @@ EXT int BPAS_map_src_mac_handler(char *, struct id_entry *, char *, struct plugi
 
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_id2_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_output_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);

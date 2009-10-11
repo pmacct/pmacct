@@ -21,6 +21,7 @@
 
 const struct _map_dictionary_line tag_map_dictionary[] = {
   {"id", PT_map_id_handler},
+  {"id2", PT_map_id2_handler},
   {"ip", PT_map_ip_handler},
   {"in", PT_map_input_handler},
   {"out", PT_map_output_handler},

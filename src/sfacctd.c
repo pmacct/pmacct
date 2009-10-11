@@ -61,7 +61,7 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified UDP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t flows | class | tcpflags | none] \n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | none] \n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
@@ -357,8 +357,10 @@ int main(int argc,char **argv, char **envp)
 	}
 	if (list->cfg.nfprobe_version == 9 && list->cfg.classifiers_path)
 	  list->cfg.what_to_count |= COUNT_CLASS;
-	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map)
+	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_ID;
+	  list->cfg.what_to_count |= COUNT_ID2;
+	}
         if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
           Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
@@ -372,7 +374,10 @@ int main(int argc,char **argv, char **envp)
       else if (list->type.id == PLUGIN_ID_SFPROBE) {
 	list->cfg.what_to_count = COUNT_PAYLOAD;
 	if (list->cfg.classifiers_path) list->cfg.what_to_count |= COUNT_CLASS;
-	if (list->cfg.pre_tag_map) list->cfg.what_to_count |= COUNT_ID;
+	if (list->cfg.pre_tag_map) {
+	  list->cfg.what_to_count |= COUNT_ID;
+	  list->cfg.what_to_count |= COUNT_ID2;
+	}
 
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }
@@ -708,7 +713,6 @@ int main(int argc,char **argv, char **envp)
     spp.endp = sflow_packet + spp.rawSampleLen; 
     reset_tag_status(&pptrs);
     reset_shadow_status(&pptrs);
-    reset_tagdist_status(&pptrs);
 
     // if (ret < SFLOW_MIN_MSG_SIZE) continue; 
 
@@ -1559,6 +1563,7 @@ void readExtendedClass(SFSample *sample)
 void readExtendedTag(SFSample *sample)
 {
   sample->tag = getData32(sample);
+  sample->tag2 = getData32(sample);
 }
 
 void decodeMpls(SFSample *sample)
@@ -1975,10 +1980,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrs->l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrs->bta = SF_find_id((struct id_table *)pptrs->bta_table, pptrs);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrs->bpas = SF_find_id((struct id_table *)pptrs->bpas_table, pptrs);
-      if (config.pre_tag_map) pptrs->tag = SF_find_id((struct id_table *)pptrs->idtable, pptrs);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
       exec_plugins(pptrs);
       break;
 #if defined ENABLE_IPV6
@@ -1999,10 +2004,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->v6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->v6);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->v6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6);
-      if (config.pre_tag_map) pptrsv->v6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6, &pptrsv->v6.tag, &pptrsv->v6.tag2);
       exec_plugins(&pptrsv->v6);
       break;
 #endif
@@ -2024,10 +2029,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlan4.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan4);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlan4.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4);
-      if (config.pre_tag_map) pptrsv->vlan4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4, &pptrsv->vlan4.tag, &pptrsv->vlan4.tag2);
       exec_plugins(&pptrsv->vlan4);
       break;
 #if defined ENABLE_IPV6
@@ -2049,10 +2054,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlan6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan6);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlan6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6);
-      if (config.pre_tag_map) pptrsv->vlan6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6, &pptrsv->vlan6.tag, &pptrsv->vlan6.tag2);
       exec_plugins(&pptrsv->vlan6);
       break;
 #endif
@@ -2087,10 +2092,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->mpls4.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls4);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->mpls4.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4);
-      if (config.pre_tag_map) pptrsv->mpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4, &pptrsv->mpls4.tag, &pptrsv->mpls4.tag2);
       exec_plugins(&pptrsv->mpls4);
       break;
 #if defined ENABLE_IPV6
@@ -2124,10 +2129,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->mpls6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls6);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->mpls6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6);
-      if (config.pre_tag_map) pptrsv->mpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6, &pptrsv->mpls6.tag, &pptrsv->mpls6.tag2);
       exec_plugins(&pptrsv->mpls6);
       break;
 #endif
@@ -2162,10 +2167,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlanmpls4.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls4);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlanmpls4.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4);
-      if (config.pre_tag_map) pptrsv->vlanmpls4.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.tag, &pptrsv->vlanmpls4.tag2);
       exec_plugins(&pptrsv->vlanmpls4);
       break;
 #if defined ENABLE_IPV6
@@ -2200,10 +2205,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       }
       pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_bgp_to_agent_map) pptrsv->vlanmpls6.bta = SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6);
+      if (config.nfacctd_bgp_to_agent_map) SF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls6);
-      if (config.nfacctd_bgp_peer_as_src_map) pptrsv->vlanmpls6.bpas = SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6);
-      if (config.pre_tag_map) pptrsv->vlanmpls6.tag = SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6);
+      if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
+      if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.tag, &pptrsv->vlanmpls6.tag2);
       exec_plugins(&pptrsv->vlanmpls6);
       break;
 #endif
@@ -2213,12 +2218,13 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   }
 }
 
-pm_id_t SF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
+void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   SFSample *sample = (SFSample *)pptrs->f_data; 
-  int x, j, id, stop;
+  int x, j, stop;
+  pm_id_t id;
 
-  if (!t) return 0;
+  if (!t) return;
 
   /* The id_table is shared between by IPv4 and IPv6 sFlow collectors.
      IPv4 ones are in the lower part (0..x), IPv6 ones are in the upper
@@ -2231,15 +2237,24 @@ pm_id_t SF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
       if (t->e[x].agent_ip.a.address.ipv4.s_addr == sample->agent_addr.address.ip_v4.s_addr) {
         for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
         if (id) {
-	  if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, pptrs->tag);
-          pptrs->tag = id;
-	  pptrs->tag_dist = t->e[x].ret;
-          if (t->e[x].jeq.ptr) {
-            exec_plugins(pptrs);
+          if (stop == PRETAG_MAP_RCODE_ID) {
+            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
+            *tag = id;
+          }
+          else if (stop == PRETAG_MAP_RCODE_ID2) {
+            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
+            *tag2 = id;
+          }
 
+          if (t->e[x].jeq.ptr) {
+	    if (t->e[x].ret) {
+              exec_plugins(pptrs);
+	      set_shadow_status(pptrs);
+	      *tag = 0;
+	      *tag2 = 0;
+	    }
             x = t->e[x].jeq.ptr->pos;
             x--; /* yes, it will be automagically incremented by the for() cycle */
-            if (t->e[x].ret) set_shadow_status(pptrs);
             id = 0;
           }
           else break;
@@ -2253,16 +2268,24 @@ pm_id_t SF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
       if (!ip6_addr_cmp(&t->e[x].agent_ip.a.address.ipv6, &sample->agent_addr.address.ip_v6)) {
         for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
         if (id) {
-	  if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, pptrs->tag);
-          pptrs->tag = id;
-	  pptrs->tag_dist = t->e[x].ret;
+          if (stop == PRETAG_MAP_RCODE_ID) {
+            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
+            *tag = id;
+          }
+          else if (stop == PRETAG_MAP_RCODE_ID2) {
+            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
+            *tag2 = id;
+          }
 
           if (t->e[x].jeq.ptr) {
-            exec_plugins(pptrs);
-
+	    if (t->e[x].ret) {
+              exec_plugins(pptrs);
+              set_shadow_status(pptrs);
+	      *tag = 0;
+	      *tag2 = 0;
+	    }
             x = t->e[x].jeq.ptr->pos;
             x--; /* yes, it will be automagically incremented by the for() cycle */
-            if (t->e[x].ret) set_shadow_status(pptrs);
             id = 0;
           }
           else break;
@@ -2271,7 +2294,6 @@ pm_id_t SF_find_id(struct id_table *t, struct packet_ptrs *pptrs)
     }
   }
 #endif
-  return id;
 }
 
 u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)

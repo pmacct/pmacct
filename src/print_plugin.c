@@ -456,6 +456,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       continue;
 
     printf("%-10u  ", data->id);
+    printf("%-10u  ", data->id2);
     printf("%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 #if defined (HAVE_L2)
     etheraddr_string(data->eth_shost, src_mac);
@@ -528,7 +529,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
 void P_write_stats_header()
 {
-  printf("ID          ");
+  printf("TAG         ");
+  printf("TAG2        ");
   printf("CLASS             ");
 #if defined HAVE_L2
   printf("SRC_MAC            ");

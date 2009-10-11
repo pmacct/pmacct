@@ -292,6 +292,14 @@ void count_id_handler(const struct db_cache *cache_elem, const struct insert_dat
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_id2_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.id2);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.id2);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_class_id_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   char buf[MAX_PROTOCOL_LEN+1];

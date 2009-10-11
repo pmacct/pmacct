@@ -53,7 +53,7 @@ void usage_daemon(char *prog_name)
   printf("\nGeneral options:\n");
   printf("  -h  \tShow this page\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t proto | tos | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t flows | class | tcpflags | none ] \n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t proto | tos | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | none ] \n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -N  \tDisable promiscuous mode\n");
   printf("  -n  \tPath to a file containing Network definitions\n");
@@ -357,8 +357,10 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_CLASS; 
 	  config.handle_flows = TRUE;
 	}
-	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map)
+	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_ID;
+	  list->cfg.what_to_count |= COUNT_ID2;
+	}
 	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
 	  Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
@@ -381,7 +383,10 @@ int main(int argc,char **argv, char **envp)
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
         }
-	if (list->cfg.pre_tag_map) list->cfg.what_to_count |= COUNT_ID;
+	if (list->cfg.pre_tag_map) {
+	  list->cfg.what_to_count |= COUNT_ID;
+	  list->cfg.what_to_count |= COUNT_ID2;
+	}
 
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }
@@ -657,7 +662,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.pkthdr = (struct pcap_pkthdr *) pkthdr;
     pptrs.packet_ptr = (u_char *) buf;
     pptrs.mac_ptr = 0; pptrs.vlan_ptr = 0; pptrs.mpls_ptr = 0;
-    pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag_dist = 1; pptrs.tag = 0;
+    pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag = 0; pptrs.tag2 = 0;
     pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0;
     pptrs.f_agent = cb_data->f_agent;
     pptrs.idtable = cb_data->idt;
@@ -668,11 +673,11 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
 	if (config.nfacctd_bgp) {
-	  pptrs.bta = PM_find_id((struct id_table *)pptrs.bta_table, &pptrs);
+	  PM_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, NULL);
 	  bgp_srcdst_lookup(&pptrs);
 	}
-        if (config.nfacctd_bgp_peer_as_src_map) pptrs.bpas = PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs);
-	if (config.pre_tag_map) pptrs.tag = PM_find_id((struct id_table *)pptrs.idtable, &pptrs);
+        if (config.nfacctd_bgp_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
+	if (config.pre_tag_map) PM_find_id((struct id_table *)pptrs.idtable, &pptrs, &pptrs.tag, &pptrs.tag2);
 
 	exec_plugins(&pptrs); 
       }
@@ -887,33 +892,40 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 }
 #endif
 
-pm_id_t PM_find_id(struct id_table *t, struct packet_ptrs *pptrs)
+void PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  int x, j, id, stop;
+  int x, j, stop;
+  pm_id_t id;
 
-  if (!t) return 0;
+  if (!t) return;
 
   id = 0;
   for (x = 0; x < t->ipv4_num; x++) {
     for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
     if (id) {
-      if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, pptrs->tag);
-      pptrs->tag = id;
-      pptrs->tag_dist = t->e[x].ret; 
+      if (stop == PRETAG_MAP_RCODE_ID) {
+        if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
+        *tag = id;
+      }
+      else if (stop == PRETAG_MAP_RCODE_ID2) {
+        if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
+        *tag2 = id;
+      }
 
       if (t->e[x].jeq.ptr) {
-	exec_plugins(pptrs);
-
+	if (t->e[x].ret) {
+	  exec_plugins(pptrs);
+	  set_shadow_status(pptrs);
+	  *tag = 0;
+	  *tag2 = 0;
+	}
 	x = t->e[x].jeq.ptr->pos;
 	x--; /* yes, it will be automagically incremented by the for() cycle */
-	if (t->e[x].ret) set_shadow_status(pptrs);
 	id = 0;
       }
       else break;
     }
   }
-
-  return id;
 }
 
 void compute_once()

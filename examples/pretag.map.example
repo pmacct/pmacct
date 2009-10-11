@@ -4,21 +4,25 @@
 ! File syntax is key-based. Position of keys inside the same row (rule) is not relevant;
 ! Spaces are not allowed (ie. 'id = 1' is not valid). The first full match wins (like in
 ! firewall rules). Negative values mean negations  (ie. match data NOT entering interface
-! 2: 'in=-2'); 'id', 'ip' and 'filter' keys don't support negative values. 'label', 'jeq',
-! 'return' and 'stack' keys can be used to alter the standard rule evaluation flow.
+! 2: 'in=-2'); 'id', 'id2', 'ip' and 'filter' keys don't support negative values. 'label',
+! 'jeq', 'return' and 'stack' keys can be used to alter the standard rule evaluation flow.
 !
-! nfacctd: valid keys: id, ip, in, out, engine_type, engine_id, nexthop, bgp_nexthop,
+! nfacctd: valid keys: id, id2, ip, in, out, engine_type, engine_id, nexthop, bgp_nexthop,
 ! src_as, dst_as, peer_src_as, peer_dst_as, v8agg and filter; mandatory keys for each
-! rule: id and ip.
+! rule: id or id2 and ip.
 !
-! sfacctd: valid keys: id, ip, in, out, agent_id, nexthop, bgp_nexthop, src_as, dst_as, 
-! sampling_rate and filter; mandatory keys for each rule: id and ip.
+! sfacctd: valid keys: id, id2, ip, in, out, agent_id, nexthop, bgp_nexthop, src_as,
+! dst_as, sampling_rate and filter; mandatory keys for each rule: id or id2 and ip.
 !
-! pmacctd: valid keys: id, src_as, dst_as and filter. Only id is mandatory for each rule. 
+! pmacctd: valid keys: id, id2, src_as, dst_as and filter. Only either id or id2 are
+! mandatory for each rule. 
 !
 ! list of currently supported keys follow:
 !
-! 'id'			ID value to assign to a matching packet or flow
+! 'id'			tag assigned to a matching packet, flow or sample; its use is
+!			mutually exclusive with id2. 
+! 'id2'			tag assigned to a matching packet, flow or sample; its use is
+!			mutually exclusive with id.
 ! 'ip'			IP address of the device which is originating sFlow or NetFlow
 !			datagrams (router, probe, etc.)
 ! 'in'  		Input interface 
@@ -61,30 +65,28 @@
 ! 'local_pref'		Destination IP prefix BGP local preference attribute. This is
 !			compared against the BGP RIB of the exporting device.  
 ! 'label'		Mark the rule with label's value. Labels don't need to be unique:
-!			when jumping, the first matching label wins.
+!			when jumping, the first matching label wins. Label value "next"
+!			is reserved for internal use and hence not to be used in a map.
+!			Using it might give unexpected results.
 ! 'jeq'			Jump on EQual. Jumps to the supplied label in case of rule match.
-!			Before jumping, the tagged flow is returned to active plugins, as
-!			it happens for any regular match (set return=false to change this
-!			behaviour). In case of multiple matches for a single flow, plugins
-!			showing 'tag' key inside 'aggregate' directive will receive each
-!			tagged copy; plugins not receiving tags will still receive unique
-!			copy of the flow.
-!			sFlow and NetFlow are usually uni-directional, ie. ingress-only or
-!			egress-only (in order to avoid duplicates). Meaningful application
-!			of JEQs is tagging flows two times: by incoming interface and by
-!			outgoing one. Only forward jumps are allowed. "next" is reserved
-!			label and causes to jump to the next rule. 
-! 'return'		If set to 'true' (which is default behaviour) returns the current
-!			packet/flow to active plugins, in case of match. If switched to
-!			'false', it will prevent this to happen. It may be thought either 
-!			as an extra filtering layer (bound to explicit Pre-Tagging rules)
-!			or (also in conjunction with 'stack') as a way to add flexibility
-!			to JEQs. 
-! 'stack'		Actually '+' (ie. sum symbol) is the unique supported value. This
+!			Jumps are Only forward. Label "next" is reserved and causes to go
+!			to the next rule, if any.
+!			Before continuing the map workflow, tagged data can be optionally
+!			returned to active plugins (ie. jeq=xxx return=true). Disabled by
+!			default (ie. return=false). Beware setting return=true, depending
+!			on configuration, can generate spurious data and/or duplicates;
+!			the logics by which this would work is: plugins which include 'tag'
+!			as aggregation will receive each tagged copy (if not filtered out
+!			by the pre_tag_filter directive, indeed); plugins not configured
+!			for tags will only receive a single copy of the data.
+! 'return'		Works only associated to a 'jeq' and is set to 'false' by default.
+!			Read full context details in the 'jeq' section. If set to 'true',
+!			after tagged data is sent for accounting the tag is reset making
+!			in practice this feature mutually exclusive with a 'stack' one.
+! 'stack'		Currently '+' (ie. sum symbol) is the unique supported value. This
 !			key makes sense only if JEQs are in use. When matching, accumulate
-!			IDs, using the specified operator/function. For example, usually
-!			<tag>=<current ID>. By setting 'stack=+' you will be able to get
-!			<tag>=<previous ID + current ID>. 
+!			tags, using the specified operator/function. By setting 'stack=+',
+!			the resulting tag would be: <tag>=<previous ID + current ID>. 
 !
 
 !
@@ -115,15 +117,44 @@ id=31 ip=192.168.1.1 out=50
 id=32 ip=192.168.1.1 out=50 agent_id=0 sampling_rate=512
 
 !
-! An example for JEQs:
-! - implicit 'return' defaults to true which is what we want. 
-! - by returning, no need for 'stack'
+! === JEQ example #1:
+! - implicit 'return' defaults to false
 !
 id=1000 ip=192.168.1.1 in=1 jeq=eval_out 
 id=1001 ip=192.168.1.1 in=2 jeq=eval_out
 id=1002 ip=192.168.1.1 in=3 jeq=eval_out
 ! ... further INs
-id=2000 ip=192.168.1.1 out=1 label=eval_out
-id=2001 ip=192.168.1.1 out=2 
-id=2002 ip=192.168.1.1 out=3 
+id2=1000 ip=192.168.1.1 out=1 label=eval_out
+id2=1001 ip=192.168.1.1 out=2 
+id2=1002 ip=192.168.1.1 out=3 
 ! ... further OUTs
+!
+! ===
+!
+! === JEQ example #2:
+id=11000 ip=192.168.1.1 in=1 jeq=eval_out
+id=12000 ip=192.168.1.1 in=2 jeq=eval_out
+id=13000 ip=192.168.1.1 in=3 jeq=eval_out
+! ... further INs
+id2=100 ip=192.168.1.1 out=1 label=eval_out stack=+
+id2=101 ip=192.168.1.1 out=2 stack=+
+id2=102 ip=192.168.1.1 out=3 stack=+
+! ... further OUTs 
+!
+! ===
+!
+! === JEQ example #3:
+id=1001 ip=192.168.1.1 in=1 jeq=eval_out return=true
+id=1002 ip=192.168.1.1 in=2 jeq=eval_out return=true
+id=1003 ip=192.168.1.1 in=3 jeq=eval_out return=true
+! ... further INs
+id2=2001 ip=192.168.1.1 out=1 label=eval_out 
+id2=2002 ip=192.168.1.1 out=2 
+id2=2003 ip=192.168.1.1 out=3 
+! ... further OUTs
+!
+! perhaps associated by a pre_tag_filter configuration like:
+! pre_tag_filter[x]: 1001-1003
+! pre_tag_filter[y]: 2001-2003
+!
+! ===

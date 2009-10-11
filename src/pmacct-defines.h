@@ -124,6 +124,7 @@
 #define COUNT_PEER_DST_AS	0x0000000100000000ULL
 #define COUNT_PEER_SRC_IP	0x0000000200000000ULL
 #define COUNT_PEER_DST_IP	0x0000000400000000ULL
+#define COUNT_ID2		0x0000000800000000ULL
 
 /* BYTES and PACKETS are used into templates; we let their values to
    overlap with some values we will not need into templates */ 

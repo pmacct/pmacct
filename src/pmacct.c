@@ -62,7 +62,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | flows | \n\t class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | tag2 | flows | \n\t class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -116,7 +116,8 @@ void print_ex_options_error()
 void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
 {
   if (!have_wtc) {
-    printf("ID          ");
+    printf("TAG         ");
+    printf("TAG2        ");
     printf("CLASS             ");
 #if defined HAVE_L2
     printf("SRC_MAC            ");
@@ -161,7 +162,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
 #endif
   }
   else {
-    if (what_to_count & COUNT_ID) printf("ID          ");
+    if (what_to_count & COUNT_ID) printf("TAG         ");
+    if (what_to_count & COUNT_ID2) printf("TAG2        ");
     if (what_to_count & COUNT_CLASS) printf("CLASS             ");
 #if defined HAVE_L2
     if (what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) printf("SRC_MAC            "); 
@@ -414,6 +416,10 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_ID;
 	  what_to_count |= COUNT_ID;
 	}
+        else if (!strcmp(count_token[count_index], "tag2")) {
+          count_token_int[count_index] = COUNT_ID2;
+          what_to_count |= COUNT_ID2;
+        }
         else if (!strcmp(count_token[count_index], "class")) {
           count_token_int[count_index] = COUNT_CLASS;
           what_to_count |= COUNT_CLASS;
@@ -774,6 +780,13 @@ int main(int argc,char **argv)
 	  value = strtoul(match_string_token, &endptr, 10);
 	  request.data.id = value; 
 	}
+        else if (!strcmp(count_token[match_string_index], "tag2")) {
+          char *endptr = NULL;
+          u_int32_t value;
+
+          value = strtoul(match_string_token, &endptr, 10);
+          request.data.id2 = value;
+        }
         else if (!strcmp(count_token[match_string_index], "class")) {
 	  struct query_header qhdr;
 	  char sclass[MAX_PROTOCOL_LEN];
@@ -974,6 +987,8 @@ int main(int argc,char **argv)
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_ID))
 	  printf("%-10u  ", acc_elem->primitives.id);
+        if (!have_wtc || (what_to_count & COUNT_ID2))
+	  printf("%-10u  ", acc_elem->primitives.id2);
         if (!have_wtc || (what_to_count & COUNT_CLASS))
           printf("%-16s  ", (acc_elem->primitives.class == 0 || acc_elem->primitives.class > ct_idx ||
 		!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);

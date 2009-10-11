@@ -67,7 +67,6 @@ EXT void exit_all(int);
 EXT void exit_plugin(int);
 EXT void reset_tag_status(struct packet_ptrs_vector *);
 EXT void reset_shadow_status(struct packet_ptrs_vector *);
-EXT void reset_tagdist_status(struct packet_ptrs_vector *);
 EXT void set_shadow_status(struct packet_ptrs *);
 EXT FILE *open_logfile(char *);
 EXT void evaluate_bgp_aspath_radius(char *, int, int);

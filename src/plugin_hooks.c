@@ -44,11 +44,6 @@ void load_plugins(struct plugin_requests *req)
   int l = sizeof(list->cfg.pipe_size);
   struct channels_list_entry *chptr = NULL;
 
-#if defined ENABLE_THREADS
-  channels_list_mutex = malloc(sizeof(pthread_mutex_t));
-  assert(channels_list_mutex);
-  pthread_mutex_init(channels_list_mutex, NULL);
-#endif
   init_random_seed(); 
   init_pipe_channels();
 
@@ -197,13 +192,11 @@ void exec_plugins(struct packet_ptrs *pptrs)
   char *bptr;
   int index;
 
-#if defined ENABLE_THREADS
-  pthread_mutex_lock(channels_list_mutex);
-#endif
   for (index = 0; channels_list[index].aggregation; index++) {
     if (evaluate_filters(&channels_list[index].agg_filter, pptrs->packet_ptr, pptrs->pkthdr) &&
-        (!channels_list[index].tag_filter.num || !evaluate_tags(&channels_list[index].tag_filter, pptrs->tag)) && 
-	pptrs->tag_dist && !check_shadow_status(pptrs, &channels_list[index])) {
+        !evaluate_tags(&channels_list[index].tag_filter, pptrs->tag) && 
+        !evaluate_tags(&channels_list[index].tag2_filter, pptrs->tag2) && 
+	!check_shadow_status(pptrs, &channels_list[index])) {
       /* arranging buffer: supported primitives + packet total length */
 reprocess:
       channels_list[index].reprocess = FALSE;
@@ -269,9 +262,6 @@ reprocess:
       }
     }
   }
-#if defined ENABLE_THREADS
-  pthread_mutex_unlock(channels_list_mutex);
-#endif
 }
 
 struct channels_list_entry *insert_pipe_channel(struct configuration *cfg, int pipe)
@@ -295,6 +285,7 @@ struct channels_list_entry *insert_pipe_channel(struct configuration *cfg, int p
 	else chptr->s.sf = &take_simple_random_skip;
       } 
       memcpy(&chptr->tag_filter, &cfg->ptf, sizeof(struct pretag_filter));
+      memcpy(&chptr->tag2_filter, &cfg->pt2f, sizeof(struct pretag_filter));
       chptr->buf = 0;
       chptr->bufptr = chptr->buf;
       chptr->bufend = cfg->buffer_size-sizeof(struct ch_buf_hdr);
@@ -543,11 +534,9 @@ void fill_pipe_buffer()
 int check_shadow_status(struct packet_ptrs *pptrs, struct channels_list_entry *mychptr)
 {
   if (pptrs->shadow) {
-    if (pptrs->tag) {
-      if (mychptr->aggregation & COUNT_ID) return FALSE;
-      else return TRUE;
-    }
-    else TRUE;
+    if (pptrs->tag && mychptr->aggregation & COUNT_ID) return FALSE;
+    else if (pptrs->tag2 && mychptr->aggregation & COUNT_ID2) return FALSE;
+    else return TRUE;
   } 
   else return FALSE;
 }

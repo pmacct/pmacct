@@ -348,10 +348,11 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	SFLADD_ELEMENT(&fs, &classHdrElem);
       }
 
-      if (config.what_to_count & COUNT_ID) {
+      if (config.what_to_count & (COUNT_ID|COUNT_ID2)) {
         memset(&tagHdrElem, 0, sizeof(tagHdrElem));
         tagHdrElem.tag = SFLFLOW_EX_TAG;
         tagHdrElem.flowType.tag.tag = hdr->tag;
+        tagHdrElem.flowType.tag.tag2 = hdr->tag2;
         SFLADD_ELEMENT(&fs, &tagHdrElem);
       }
 

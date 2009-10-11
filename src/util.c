@@ -592,12 +592,18 @@ void lower_string(char *string)
 void evaluate_sums(u_int64_t *wtc, char *name, char *type)
 {
   int tag = FALSE;
+  int tag2 = FALSE;
   int class = FALSE;
   int flows = FALSE;
 
   if (*wtc & COUNT_ID) {
     *wtc ^= COUNT_ID;
     tag = TRUE;
+  }
+
+  if (*wtc & COUNT_ID2) {
+    *wtc ^= COUNT_ID2;
+    tag2 = TRUE;
   }
 
   if (*wtc & COUNT_CLASS) {
@@ -643,6 +649,7 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
   }
 
   if (tag) *wtc |= COUNT_ID;
+  if (tag2) *wtc |= COUNT_ID2;
   if (class) *wtc |= COUNT_CLASS;
   if (flows) *wtc |= COUNT_FLOWS;
 }
@@ -767,12 +774,20 @@ void reset_tag_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan4.tag = FALSE;
   pptrsv->mpls4.tag = FALSE;
   pptrsv->vlanmpls4.tag = FALSE;
+  pptrsv->v4.tag2 = FALSE;
+  pptrsv->vlan4.tag2 = FALSE;
+  pptrsv->mpls4.tag2 = FALSE;
+  pptrsv->vlanmpls4.tag2 = FALSE;
 
 #if defined ENABLE_IPV6
   pptrsv->v6.tag = FALSE;
   pptrsv->vlan6.tag = FALSE;
   pptrsv->mpls6.tag = FALSE;
   pptrsv->vlanmpls6.tag = FALSE;
+  pptrsv->v6.tag2 = FALSE;
+  pptrsv->vlan6.tag2 = FALSE;
+  pptrsv->mpls6.tag2 = FALSE;
+  pptrsv->vlanmpls6.tag2 = FALSE;
 #endif
 }
 
@@ -791,61 +806,10 @@ void reset_shadow_status(struct packet_ptrs_vector *pptrsv)
 #endif
 }
 
-void reset_tagdist_status(struct packet_ptrs_vector *pptrsv)
-{
-  pptrsv->v4.tag_dist = TRUE;
-  pptrsv->vlan4.tag_dist = TRUE;
-  pptrsv->mpls4.tag_dist = TRUE;
-  pptrsv->vlanmpls4.tag_dist = TRUE;
-
-#if defined ENABLE_IPV6
-  pptrsv->v6.tag_dist = TRUE;
-  pptrsv->vlan6.tag_dist = TRUE;
-  pptrsv->mpls6.tag_dist = TRUE;
-  pptrsv->vlanmpls6.tag_dist = TRUE;
-#endif
-}
-
 void set_shadow_status(struct packet_ptrs *pptrs)
 {
   pptrs->shadow = TRUE;
 }
-
-#if 0
-
-Fields denoted by X will have their content modified
-
-From network.h
-
-  struct packet_ptrs {
-D   struct pcap_pkthdr *pkthdr; /* ptr to header structure passed by libpcap */
-    u_char *f_agent; /* ptr to flow export agent */
-    u_char *f_header; /* ptr to NetFlow packet header */
-    u_char *f_data; /* ptr to NetFlow data */
-    u_char *f_tpl; /* ptr to NetFlow V9 template */
-    u_char *f_status; /* ptr to status table entry */
-    u_char *idtable; /* ptr to pretag table map */
-D   u_char *packet_ptr; /* ptr to the whole packet */
-    u_char *mac_ptr; /* ptr to mac addresses */
-    u_int16_t l3_proto; /* layer-3 protocol: IPv4, IPv6 */
-    int (*l3_handler)(register struct packet_ptrs *); /* layer-3 protocol handler */
-    u_int16_t l4_proto; /* layer-4 protocol */
-    u_int16_t tag; /* pre tag id */
-    u_int16_t pf; /* pending fragments or packets */
-    u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
-    u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */
-    u_char *vlan_ptr; /* ptr to vlan id */
-    u_char *mpls_ptr; /* ptr to base MPLS label */
-X   u_char *iph_ptr; /* ptr to ip header */
-X   u_char *tlh_ptr; /* ptr to transport level protocol header */
-X   u_char *payload_ptr; /* classifiers: ptr to packet payload */
-    pm_class_t class; /* classifiers: class id */
-    struct class_st cst; /* classifiers: class status */
-    u_int8_t shadow; /* 0=the packet is being distributed for the 1st time
-            1=the packet is being distributed for the 2nd+ time */
-    u_int8_t tag_dist; /* tagged packet: 0=do not distribute the packet; 1=distribute it */
-  };
-#endif
 
 struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *pptrs)
 {

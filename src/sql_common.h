@@ -220,6 +220,7 @@ EXT void PG_count_ip_proto_handler(const struct db_cache *, const struct insert_
 EXT void count_timestamp_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_copy_timestamp_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_id_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_id2_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_class_id_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_tcpflags_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

@@ -262,6 +262,7 @@ typedef struct _SFLExtended_classification {
 
 typedef struct _SFLExtended_tag {
   pm_id_t tag;
+  pm_id_t tag2;
 } SFLExtended_tag;
 
 enum SFLFlow_type_tag {

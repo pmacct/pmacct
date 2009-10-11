@@ -131,6 +131,7 @@ struct configuration {
   int bpfp_a_num;
   struct bpf_program *bpfp_a_table[AGG_FILTER_ENTRIES];
   struct pretag_filter ptf;
+  struct pretag_filter pt2f;
   char *pre_tag_map;
   int pre_tag_map_entries;
   pm_id_t post_tag;

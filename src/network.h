@@ -180,6 +180,7 @@ struct packet_ptrs {
   int (*l3_handler)(register struct packet_ptrs *); /* layer-3 protocol handler */
   u_int16_t l4_proto; /* layer-4 protocol */
   pm_id_t tag; /* pre tag id */
+  pm_id_t tag2; /* pre tag id2 */
   pm_id_t bpas; /* bgp_peer_as_src */
   pm_id_t bta; /* bgp_to_agent */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
@@ -197,7 +198,6 @@ struct packet_ptrs {
   struct class_st cst; /* classifiers: class status */
   u_int8_t shadow; /* 0=the packet is being distributed for the 1st time
 		      1=the packet is being distributed for the 2nd+ time */
-  u_int8_t tag_dist; /* tagged packet: 0=do not distribute the packet; 1=distribute it */
 };
 
 struct host_addr {
@@ -225,6 +225,7 @@ struct pkt_primitives {
   u_int8_t tos;
   u_int8_t proto;
   pm_id_t id;
+  pm_id_t id2;
   pm_class_t class;
 };
 
@@ -247,6 +248,7 @@ struct pkt_payload {
   u_int32_t time_start;
   pm_class_t class;
   pm_id_t tag;
+  pm_id_t tag2;
   struct host_addr src_ip;
   struct host_addr dst_ip;
 };

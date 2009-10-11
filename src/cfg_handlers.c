@@ -151,6 +151,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "sum_as")) value |= COUNT_SUM_AS;
     else if (!strcmp(count_token, "sum_port")) value |= COUNT_SUM_PORT;
     else if (!strcmp(count_token, "tag")) value |= COUNT_ID;
+    else if (!strcmp(count_token, "tag2")) value |= COUNT_ID2;
     else if (!strcmp(count_token, "flows")) value |= COUNT_FLOWS;
     else if (!strcmp(count_token, "class")) value |= COUNT_CLASS;
     else if (!strcmp(count_token, "tcpflags")) value |= COUNT_TCPFLAGS;
@@ -229,7 +230,7 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
   u_int8_t neg;
 
   if (!name) {
-    Log(LOG_ERR, "ERROR ( %s ): ID filter cannot be global. Not loaded.\n", filename);
+    Log(LOG_ERR, "ERROR ( %s ): TAG filter cannot be global. Not loaded.\n", filename);
     changes++;
   }
   else {
@@ -257,6 +258,52 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 	  list->cfg.ptf.num++;
           changes++;
 	}
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  char *count_token, *range_ptr;
+  pm_id_t value, range = 0;
+  int changes = 0;
+  char *endptr_v, *endptr_r;
+  u_int8_t neg;
+
+  if (!name) {
+    Log(LOG_ERR, "ERROR ( %s ): TAG2 filter cannot be global. Not loaded.\n", filename);
+    changes++;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        trim_all_spaces(value_ptr);
+
+        list->cfg.pt2f.num = 0;
+        while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_MAP_ENTRIES/4) {
+          neg = pt_check_neg(&count_token);
+          range_ptr = pt_check_range(count_token);
+          value = strtoul(count_token, &endptr_v, 10);
+          if (range_ptr) range = strtoul(range_ptr, &endptr_r, 10);
+          else range = value;
+
+          if (range_ptr && range <= value) {
+              Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%d-%d' not loaded.\n", filename, value, range);
+              changes++;
+              break;
+          }
+
+          list->cfg.pt2f.table[list->cfg.pt2f.num].neg = neg;
+          list->cfg.pt2f.table[list->cfg.pt2f.num].n = value;
+          list->cfg.pt2f.table[list->cfg.pt2f.num].r = range;
+          list->cfg.pt2f.num++;
+          changes++;
+        }
         break;
       }
     }

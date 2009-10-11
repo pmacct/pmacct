@@ -895,6 +895,11 @@ int sql_evaluate_primitives(int primitive)
     }
 
     what_to_count |= COUNT_ID;
+
+    /* aggregation primitives listed below are not part of any default SQL schema; hence
+       either statements' optimization is on or off, these have to be passed on blindly */
+    if (config.what_to_count & COUNT_ID2)
+      what_to_count |= COUNT_ID2;
   }
 
   /* 1st part: arranging pointers to an opaque structure and 
@@ -1469,6 +1474,20 @@ int sql_evaluate_primitives(int primitive)
       values[primitive].handler = where[primitive].handler = count_id_handler;
       primitive++;
     }
+  }
+
+  if (what_to_count & COUNT_ID2) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "agent_id2", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "agent_id2=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_ID2;
+    values[primitive].handler = where[primitive].handler = count_id2_handler;
+    primitive++;
   }
 
   if (what_to_count & COUNT_CLASS) {

@@ -95,6 +95,7 @@ struct NF9_DATA_FLOWSET_HEADER {
 /* CUSTOM TYPES START HERE */
 #define NF9_CUST_CLASS			200
 #define NF9_CUST_TAG			201
+#define NF9_CUST_TAG2			202
 /* CUSTOM TYPES END HERE */
 
 /* OPTION SCOPES */
@@ -292,10 +293,19 @@ flow_to_flowset_class_handler(char *flowset, const struct FLOW *flow, int idx, i
 static void
 flow_to_flowset_tag_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  u_int16_t rec16;
+  u_int32_t rec32;
 
-  rec16 = htons(flow->tag);
-  memcpy(flowset, &rec16, size);
+  rec32 = htonl(flow->tag[idx]);
+  memcpy(flowset, &rec32, size);
+}
+
+static void
+flow_to_flowset_tag2_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  u_int32_t rec32;
+
+  rec32 = htonl(flow->tag2[idx]);
+  memcpy(flowset, &rec32, size);
 }
 
 static void
@@ -465,11 +475,18 @@ nf9_init_template(void)
 	}
 	if (config.nfprobe_what_to_count & COUNT_ID) {
 	  v4_template.r[rcount].type = htons(NF9_CUST_TAG);
-	  v4_template.r[rcount].length = htons(2);
+	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_tag_handler;
-	  v4_int_template.r[rcount].length = 2;
+	  v4_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
+        if (config.nfprobe_what_to_count & COUNT_ID2) {
+          v4_template.r[rcount].type = htons(NF9_CUST_TAG2);
+          v4_template.r[rcount].length = htons(4);
+          v4_int_template.r[rcount].handler = flow_to_flowset_tag2_handler;
+          v4_int_template.r[rcount].length = 4;
+          rcount++;
+        }
         if (config.sampling_rate) {
           v4_template.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
           v4_template.r[rcount].length = htons(1);
@@ -617,11 +634,18 @@ nf9_init_template(void)
 	}
         if (config.nfprobe_what_to_count & COUNT_ID) {
 	  v6_template.r[rcount].type = htons(NF9_CUST_TAG);
-	  v6_template.r[rcount].length = htons(2);
+	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_tag_handler;
-	  v6_int_template.r[rcount].length = 2;
+	  v6_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
+        if (config.nfprobe_what_to_count & COUNT_ID2) {
+          v6_template.r[rcount].type = htons(NF9_CUST_TAG2);
+          v6_template.r[rcount].length = htons(4);
+          v6_int_template.r[rcount].handler = flow_to_flowset_tag2_handler;
+          v6_int_template.r[rcount].length = 4;
+          rcount++;
+        }
         if (config.sampling_rate) {
           v6_template.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
           v6_template.r[rcount].length = htons(1);

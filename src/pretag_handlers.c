@@ -61,6 +61,21 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   return FALSE;
 }
 
+int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  char *endptr = NULL;
+  pm_id_t j;
+
+  j = strtoul(value, &endptr, 10);
+  if (!j) {
+    Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID2 specified. ", filename);
+    return TRUE;
+  }
+  e->id2 = j;
+
+  return FALSE;
+}
+
 int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   if (!str_to_addr(value, &e->agent_ip.a)) {
@@ -1027,9 +1042,18 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 {
   struct id_entry *entry = e;
 
-  int *tid = id;
+  pm_id_t *tid = id;
   *tid = entry->id;
-  return TRUE; /* cap */
+  return PRETAG_MAP_RCODE_ID; /* cap */
+}
+
+int pretag_id2_handler(struct packet_ptrs *pptrs, void *id, void *e)
+{
+  struct id_entry *entry = e;
+
+  pm_id_t *tid = id;
+  *tid = entry->id2;
+  return PRETAG_MAP_RCODE_ID2; /* cap */
 }
 
 int SF_pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)

@@ -78,15 +78,13 @@ struct channels_list_entry {
   int pipe;
   pm_id_t id;						/* post-tagging id */
   struct pretag_filter tag_filter; 			/* filter aggregates basing on their tag */
+  struct pretag_filter tag2_filter; 			/* filter aggregates basing on their tag2 */
   struct aggregate_filter agg_filter; 			/* filter aggregates basing on L2-L4 primitives */
   struct sampling s;
   struct plugins_list_entry *plugin;			/* backpointer to the plugin the actual channel belongs to */
 };
 
 #if (defined __PLUGIN_HOOKS_C)
-#if (defined ENABLE_THREADS)
-pthread_mutex_t *channels_list_mutex;
-#endif
 extern struct channels_list_entry channels_list[MAX_N_PLUGINS];
 #endif
 

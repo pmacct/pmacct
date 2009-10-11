@@ -248,22 +248,6 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    if (channels_list[index].aggregation & COUNT_PAYLOAD) {
-      if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
-        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sfprobe_payload_handler;
-        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sfprobe_payload_handler;
-        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sfprobe_payload_handler;
-      }
-      primitives++;
-    }
-
-    if (channels_list[index].s.rate) {
-      if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE)
-	channels_list[index].phandler[primitives] = sfprobe_sampling_handler;
-      else channels_list[index].phandler[primitives] = sampling_handler;
-      primitives++;
-    }
-
     if (config.acct_type == ACCT_PM || config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
       if (channels_list[index].aggregation & COUNT_ID) {
 	/* we infer 'pre_tag_map' from configuration because it's global */
@@ -287,6 +271,44 @@ void evaluate_packet_handlers()
 	  primitives++;
 	}
       }
+    }
+
+    if (config.acct_type == ACCT_PM || config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
+      if (channels_list[index].aggregation & COUNT_ID2) {
+        if (config.pre_tag_map) {
+          channels_list[index].phandler[primitives] = ptag_id2_handler;
+          primitives++;
+        }
+        else {
+          if (config.acct_type == ACCT_NF) {
+            channels_list[index].phandler[primitives] = NF_id2_handler;
+            primitives++;
+          }
+          else if (config.acct_type == ACCT_SF) {
+            channels_list[index].phandler[primitives] = SF_id2_handler;
+            primitives++;
+          }
+        }
+      }
+    }
+
+    /* Better these two sfprobe-related functions to stay last due
+       to different structure put on the pipe; ie. id/id2 handlers
+       were writing in the middle of the payload */
+    if (channels_list[index].aggregation & COUNT_PAYLOAD) {
+      if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
+        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sfprobe_payload_handler;
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sfprobe_payload_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sfprobe_payload_handler;
+      }
+      primitives++;
+    }
+
+    if (channels_list[index].s.rate) {
+      if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE)
+        channels_list[index].phandler[primitives] = sfprobe_sampling_handler;
+      else channels_list[index].phandler[primitives] = sampling_handler;
+      primitives++;
     }
     index++;
   }
@@ -465,6 +487,7 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   payload->time_start = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
   payload->class = pptrs->class;
   payload->tag = pptrs->tag;
+  payload->tag2 = pptrs->tag2;
 
   /* We could be capturing the entire packet; DEFAULT_PLOAD_SIZE is our cut-off point */
   if (payload->cap_len > DEFAULT_PLOAD_SIZE) payload->cap_len = DEFAULT_PLOAD_SIZE;
@@ -1216,6 +1239,13 @@ void ptag_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   pdata->primitives.id = pptrs->tag;
 }
 
+void ptag_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->primitives.id2 = pptrs->tag2;
+}
+
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -1265,6 +1295,7 @@ void NF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet
   NF_counters_msecs_handler(chptr, pptrs, &tmpp);
   NF_class_handler(chptr, pptrs, &tmpp);
   NF_id_handler(chptr, pptrs, &tmpp); /* XXX: conditional? */
+  NF_id2_handler(chptr, pptrs, &tmpp); /* XXX: conditional? */
   NF_src_host_handler(chptr, pptrs, &tmpp);
   NF_dst_host_handler(chptr, pptrs, &tmpp);
 
@@ -1274,6 +1305,7 @@ void NF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet
   payload->time_start = tmp.time_start;
   payload->class = tmp.primitives.class;
   payload->tag = tmp.primitives.id;
+  payload->tag2 = tmp.primitives.id2;
   memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
   memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
 
@@ -1349,7 +1381,25 @@ void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   case 9:
     if (tpl->tpl[NF9_CUST_TAG].len) {
       memcpy(&pdata->primitives.id, pptrs->f_data+tpl->tpl[NF9_CUST_TAG].off, tpl->tpl[NF9_CUST_TAG].len);
-      pdata->primitives.id = ntohs(pdata->primitives.id);
+      pdata->primitives.id = ntohl(pdata->primitives.id);
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 9:
+    if (tpl->tpl[NF9_CUST_TAG2].len) {
+      memcpy(&pdata->primitives.id2, pptrs->f_data+tpl->tpl[NF9_CUST_TAG2].off, tpl->tpl[NF9_CUST_TAG2].len);
+      pdata->primitives.id2 = ntohl(pdata->primitives.id2);
     }
     break;
   default:
@@ -1874,6 +1924,7 @@ void SF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet
   payload->time_start = time(NULL); /* XXX */
   payload->class = sample->class;
   payload->tag = sample->tag;
+  payload->tag2 = sample->tag2;
 
   if (space >= payload->cap_len) {
     buf += PpayloadSz;
@@ -1916,6 +1967,14 @@ void SF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.id = sample->tag;
+}
+
+void SF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.id2 = sample->tag2;
 }
 
 void sampling_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

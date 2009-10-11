@@ -29,8 +29,8 @@ DESC:		daemonizes the process (default: false).
 KEY:		aggregate (-c)
 VALUES:		[src_mac, dst_mac, vlan, src_host, dst_host, src_net, dst_net, src_as, dst_as,
 		 src_port, dst_port, tos, proto, none, sum_mac, sum_host, sum_net, sum_as, 
-		 sum_port, flows, tag, class, tcpflags, std_comm, ext_comm, as_path, peer_src_ip,
-		 peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med ]
+		 sum_port, flows, tag, tag2, class, tcpflags, std_comm, ext_comm, as_path,
+		 peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med ]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -672,10 +672,10 @@ DESC:		when enabled, this directive allows to reload map files without restartin
 		daemon (killall) or to just a specific process (kill), this mechanism also offers the advantage
 		to elicit local reloads. (default: true)
 
-KEY:            pre_tag_filter [NO_GLOBAL]
+KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [0-4294967295]
-DESC:		it expects one or more ID (when multiple ID are supplied, they need to be comma separated and a
-		logical OR is used in the evaluation phase) as value and allows to filter aggregates basing upon
+DESC:		it expects one or more tags (when multiple tags are supplied, they need to be comma separated and
+		a logical OR is used in the evaluation phase) as value and allows to filter aggregates basing upon
 		their Pre Tag ID: in case of a match, the aggregate is delivered to the plugin. This directive
 		has to be bound to a plugin (that is, it cannot be global) and is suitable to split tagged data
 		among the active plugins. While the IDs need to be in the range 1-4294967295, this directive also
@@ -689,7 +689,7 @@ KEY:            post_tag
 VALUES:         [1-4294967295]
 DESC:           it expects an ID as its value. Enables the use of Post-Tagging. Once the aggregate has passed
 		all filters and is on the final way to the plugin, this directive allows to statically tag it
-		using the specified value. 
+		using the specified value. The tag is sticked to the 'tag' aggregate field. 
 
 KEY:		sampling_rate
 VALUES:		[>= 1]

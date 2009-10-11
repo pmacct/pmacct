@@ -454,6 +454,7 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_CUST_CLASS			200
 #define NF9_CUST_TAG			201
+#define NF9_CUST_TAG2			202
 
 #define NF9_FTYPE_IPV4			0
 #define NF9_FTYPE_IPV6			1
@@ -528,7 +529,7 @@ EXT void reset_mac_vlan(struct packet_ptrs *);
 EXT void reset_ip4(struct packet_ptrs *);
 EXT void reset_ip6(struct packet_ptrs *);
 EXT void notify_malf_packet(short int, char *, struct sockaddr *);
-EXT pm_id_t NF_find_id(struct id_table *, struct packet_ptrs *);
+EXT void NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
 EXT char *nfv578_check_status(struct packet_ptrs *);
 EXT char *nfv9_check_status(struct packet_ptrs *);

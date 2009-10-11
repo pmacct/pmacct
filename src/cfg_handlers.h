@@ -106,6 +106,7 @@ EXT int cfg_key_pcap_savefile(char *, char *, char *);
 EXT int cfg_key_pre_tag_map(char *, char *, char *);
 EXT int cfg_key_pre_tag_map_entries(char *, char *, char *);
 EXT int cfg_key_pre_tag_filter(char *, char *, char *);
+EXT int cfg_key_pre_tag2_filter(char *, char *, char *);
 EXT int cfg_key_post_tag(char *, char *, char *);
 EXT int cfg_key_sampling_rate(char *, char *, char *);
 EXT int cfg_key_classifiers(char *, char *, char *);

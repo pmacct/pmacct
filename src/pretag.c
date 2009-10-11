@@ -93,7 +93,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
 	    /* resetting the entry and enforcing defaults */
             memset(&tmp.e[tmp.num], 0, sizeof(struct id_entry));
-	    tmp.e[tmp.num].ret = TRUE;
+	    tmp.e[tmp.num].ret = FALSE;
 
             err = FALSE; key = NULL; value = NULL;
             start = buf;
@@ -174,11 +174,15 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
             }
             /* verifying errors and required fields */
 	    if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
-              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+	      if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2) 
+		 Log(LOG_ERR, "ERROR ( %s ): 'id' and 'id2' are mutual exclusive at line: %d.\n", filename, tot_lines);
+              else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2) && tmp.e[tmp.num].agent_ip.a.family) {
                 int j;
 
                 for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                tmp.e[tmp.num].func[j] = pretag_id_handler;
+                if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
+                else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
+
 	        if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
 	        else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
@@ -187,18 +191,21 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
               }
 	      /* if any required field is missing and other errors have been signalled
 	         before we will trap an error message */
-	      else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+	      else if (((!tmp.e[tmp.num].id && !tmp.e[tmp.num].id2) || !tmp.e[tmp.num].agent_ip.a.family) && !err)
 	        Log(LOG_ERR, "ERROR ( %s ): required key missing at line: %d. Required keys are: 'id', 'ip'.\n", filename, tot_lines); 
 	    }
 	    else if (acct_type == ACCT_PM) {
-	      if (tmp.e[tmp.num].agent_ip.a.family)
+	      if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2)
+                 Log(LOG_ERR, "ERROR ( %s ): 'id' and 'id2' are mutual exclusive at line: %d.\n", filename, tot_lines);
+	      else if (tmp.e[tmp.num].agent_ip.a.family)
 		Log(LOG_ERR, "ERROR ( %s ): key 'ip' not applicable here. Invalid line: %d.\n", filename, tot_lines);
-	      else if (!err && tmp.e[tmp.num].id) {
+	      else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2)) {
                 int j;
 
 		for (j = 0; tmp.e[tmp.num].func[j]; j++);
 		tmp.e[tmp.num].agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
-		tmp.e[tmp.num].func[j] = pretag_id_handler;
+		if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
+		else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
 		v4_num++; tmp.num++;
 	      } 
 	    }
