@@ -165,8 +165,12 @@ void skinny_bgp_daemon()
       }
 
       if (!peer) {
+	int fd;
+
+	/* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_bgp_max_peers' (%d).\n", config.nfacctd_bgp_max_peers);
-        // exit_all(1); 
+	fd = accept(sock, (struct sockaddr *) &client, &clen);
+	close(fd);
 	goto select_again;
       }
       peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
