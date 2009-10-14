@@ -48,6 +48,7 @@ EXT void ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char
 EXT void ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

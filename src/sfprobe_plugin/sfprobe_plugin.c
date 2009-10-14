@@ -413,6 +413,7 @@ static void process_config_options(SflSp *sp)
   if (config.sfprobe_agentsubid) sp->agentSubId = config.sfprobe_agentsubid;
   if (config.sfprobe_receiver) parse_receiver(config.sfprobe_receiver, &sp->collectorIP, &sp->collectorPort);
   if (config.sampling_rate) sp->samplingRate = config.sampling_rate;
+  else if (config.ext_sampling_rate) sp->samplingRate = config.ext_sampling_rate;
 }
 
 /*_________________---------------------------__________________

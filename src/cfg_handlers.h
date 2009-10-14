@@ -101,6 +101,7 @@ EXT int cfg_key_pmacctd_flow_buffer_size(char *, char *, char *);
 EXT int cfg_key_pmacctd_flow_buffer_buckets(char *, char *, char *);
 EXT int cfg_key_pmacctd_conntrack_buffer_size(char *, char *, char *);
 EXT int cfg_key_pmacctd_flow_lifetime(char *, char *, char *);
+EXT int cfg_key_pmacctd_ext_sampling_rate(char *, char *, char *);
 EXT int cfg_key_sfacctd_renormalize(char *, char *, char *);
 EXT int cfg_key_pcap_savefile(char *, char *, char *);
 EXT int cfg_key_pre_tag_map(char *, char *, char *);

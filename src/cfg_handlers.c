@@ -1960,6 +1960,26 @@ int cfg_key_pmacctd_flow_lifetime(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pmacctd_ext_sampling_rate(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 1) {
+    Log(LOG_ERR, "WARN ( %s ): 'pmacctd_ext_sampling_rate' has to be >= 1.\n", filename);
+    return ERR;
+  }
+
+  /* directive supported only in ACCT_PM, ie. pmacctd */
+  if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) value = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.ext_sampling_rate = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'pmacctd_ext_sampling_rate'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_sfacctd_renormalize(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

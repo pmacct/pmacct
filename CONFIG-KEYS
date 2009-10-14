@@ -731,6 +731,13 @@ KEY:            pmacctd_flow_lifetime [GLOBAL, NO_NFACCTD]
 DESC:           defines how long a flow could remain inactive (ie. no packets belonging to such flow are received)
 		before considering it expired. The value is expected in seconds. (default: 60 secs) 
 
+KEY:		pmacctd_ext_sampling_rate [GLOBAL, NO_NFACCTD]
+		flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
+		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow
+		probe plugins, if any of them is activated. External sampling might be performed by capturing
+		libraries/frameworks pmacctd is linked against (ie. PF_RING) or appliances (ie. sampled packet
+		mirroring). (default: no sampling) 
+
 KEY:            sfacctd_port (-l) [GLOBAL, NO_PMACCTD]
 DESC:           defines the UDP port where to bind the 'sfacctd' daemon (default: 6343).
 
@@ -743,7 +750,7 @@ DESC:           full pathname to a file containing the list of IPv4/IPv6 address
                 individual IP addresses. The Allow List is intended to be small. If you really need complex,
                 network-prefixed filters, you may prefer a few firewall rules instead. (default: allow all)
 
-KEY:		[ sfacctd_renormalize | nfacctd_renormalize ] (-R) [GLOBAL, NO_PMACCTD]
+KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize ] (-R)
 VALUES:		[true|false]
 DESC:		automatically renormalizes byte/packet counters value basing on informations acquired from 
 		either the NetFlow data unit or sFlow packet. In particular, it allows to deal with scenarios

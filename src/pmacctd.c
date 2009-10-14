@@ -247,6 +247,10 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
+    case 'R':
+      strlcpy(cfg_cmdline[rows], "sfacctd_renormalize: true", SRVBUFLEN);
+      rows++;
+      break;
     case 'h':
       usage_daemon(argv[0]);
       exit(0);
@@ -330,9 +334,14 @@ int main(int argc,char **argv, char **envp)
     if (list->type.id != PLUGIN_ID_CORE) {
       if (list->type.id == PLUGIN_ID_NFPROBE) {
 	if (config.classifiers_path && list->cfg.sampling_rate) {
-	  Log(LOG_ERR, "ERROR: Packet sampling and classification are actually mutual exclusive.\n");
+	  Log(LOG_ERR, "ERROR: Packet sampling and classification are mutual exclusive.\n");
 	  exit(1);
 	}
+
+	/* If we already renormalizing an external sampling rate,
+	   we cancel the sampling information from the probe plugin */
+	if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0; 
+
 	config.handle_fragments = TRUE;
 	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
 	list->cfg.what_to_count = 0;
@@ -372,6 +381,10 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
       }
       else if (list->type.id == PLUGIN_ID_SFPROBE) {
+        /* If we already renormalizing an external sampling rate,
+           we cancel the sampling information from the probe plugin */
+        if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
+
 	if (psize < 128) psize = config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
 	if (list->cfg.classifiers_path) {
@@ -391,8 +404,12 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }
       else {
+	if (list->cfg.sampling_rate && list->cfg.ext_sampling_rate) {
+          Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
+          exit(1);
+	}
         if (config.classifiers_path && list->cfg.sampling_rate) {
-	  Log(LOG_ERR, "ERROR: Packet sampling and classification are actually mutual exclusive.\n");
+	  Log(LOG_ERR, "ERROR: Packet sampling and classification are mutual exclusive.\n");
 	  exit(1);
         }
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);

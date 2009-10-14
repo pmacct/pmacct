@@ -22,7 +22,7 @@
 /* defines */
 #define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:R"
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:R"
-#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:"
+#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:R"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:"
 #define N_PRIMITIVES 21
 #define N_FUNCS 10 

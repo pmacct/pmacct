@@ -135,6 +135,7 @@ struct configuration {
   char *pre_tag_map;
   int pre_tag_map_entries;
   pm_id_t post_tag;
+  int ext_sampling_rate;
   int sampling_rate;
   char *syslog;
   int debug;

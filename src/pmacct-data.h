@@ -277,6 +277,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pmacctd_flow_buffer_buckets", cfg_key_pmacctd_flow_buffer_buckets},
   {"pmacctd_conntrack_buffer_size", cfg_key_pmacctd_conntrack_buffer_size},
   {"pmacctd_flow_lifetime", cfg_key_pmacctd_flow_lifetime},
+  {"pmacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"pmacctd_id", cfg_key_post_tag},	/* obsolete */
   {"nfacctd_id_file", cfg_key_pre_tag_map},	/* obsolete */
   {"pcap_savefile", cfg_key_pcap_savefile},
@@ -290,6 +291,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_ip", cfg_key_nfacctd_ip},
   {"sfacctd_allow_file", cfg_key_nfacctd_allow_file},
   {"sfacctd_as_new", cfg_key_nfacctd_as_new},
+  {"pmacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"sfacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"nfacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"nfacctd_disable_checks", cfg_key_nfacctd_disable_checks},

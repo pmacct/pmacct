@@ -221,7 +221,13 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = counters_handler;
+      if (config.acct_type == ACCT_PM) {
+	channels_list[index].phandler[primitives] = counters_handler;
+	if (config.sfacctd_renormalize) {
+	  primitives++;
+	  channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	}
+      }
       else if (config.acct_type == ACCT_NF) {
 	if (config.nfacctd_time == NF_TIME_SECS) channels_list[index].phandler[primitives] = NF_counters_secs_handler;
 	else if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = NF_counters_new_handler;
@@ -437,6 +443,14 @@ void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   else pdata->pkt_num = 1; 
   pdata->time_start = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
   pdata->time_end = 0;
+}
+
+void counters_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->pkt_len = pdata->pkt_len*config.ext_sampling_rate;
+  pdata->pkt_num = pdata->pkt_num*config.ext_sampling_rate; 
 }
 
 void id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

@@ -102,7 +102,10 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 			hdr->flow_sequence = htonl(*flows_exported);
 			hdr->engine_type = engine_type;
 			hdr->engine_id = engine_id;
-			hdr->sampling = htons(config.sampling_rate & 0x3FFF); 
+			if (config.sampling_rate) 
+			  hdr->sampling = htons(config.sampling_rate & 0x3FFF); 
+			else if (config.ext_sampling_rate) 
+			  hdr->sampling = htons(config.ext_sampling_rate & 0x3FFF); 
 			if (hdr->sampling) hdr->sampling |= (htons(1) >> 2);
 			offset = sizeof(*hdr);
 		}		

@@ -2,12 +2,13 @@ Before reading this document, read either 'README.mysql' or 'README.pgsql' depen
 upon which DB you are currently using.
 
 MySQL and SQLite.
-Into MySQL tables 'ip_src' and 'ip_dst' fields are both defined as 15-bytes character
-strings. They are large enough to hold an IPv4 address but not IPv6. This is in order
-to avoid penalties derived by the use of longer strings to people not interested to be 
-IPv6-ready.
-To store IPv6 addresses into such tables, simply declare 'ip_src' and 'ip_dst' fields
-as 45-bytes long character strings (for example: 'ip_src CHAR(45) NOT NULL').
+MySQL tables define fields containing IP addresses as 15-bytes CHAR strings. Fields
+affected are, for example,'ip_src', 'ip_dst', 'peer_ip_src', 'peer_ip_dst' which are
+large enough to hold an IPv4 address but not IPv6. As variable-length strings are not
+an option for the sake of performance, this is in order to avoid penalties derived by
+the use of longer strings to people not interested (yet) to be IPv6-ready.
+To store IPv6 addresses into such fields, simply manually edit the SQL schema and
+define them as 45-bytes long CHAR strings (for example: 'ip_src CHAR(45) NOT NULL').
 
 PostgreSQL.
 Typed tables. 'inet' network data type is able to store IPv6 addresses starting from
@@ -19,3 +20,4 @@ enough to hold an IPv4 address but not IPv6. This is in order to avoid penalties
 derived by the use of longer strings to people not interested to be IPv6-ready.
 To store IPv6 addresses into such tables, simply declare 'ip_src' and 'ip_dst' fields
 as 45-bytes long character strings (for example: 'ip_src CHAR(45) NOT NULL'). 
+Unified PostgreSQL tables are now deprecated.
