@@ -66,6 +66,7 @@ void usage_daemon(char *prog_name)
   printf("  -F  \tWrite Core Process PID into the specified file\n");
   printf("  -w  \tWait for the listening interface to become available\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
+  printf("  -R  \tRenormalize sampled data\n");
   printf("\nMemory Plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -332,12 +333,16 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while (list) {
     if (list->type.id != PLUGIN_ID_CORE) {
+      /* applies to all plugins */
+      if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
+        Log(LOG_ERR, "ERROR: Packet sampling and classification are mutual exclusive.\n");
+        exit(1);
+      }
+      if (list->cfg.sampling_rate && config.ext_sampling_rate) {
+        Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        exit(1);
+      }
       if (list->type.id == PLUGIN_ID_NFPROBE) {
-	if (config.classifiers_path && list->cfg.sampling_rate) {
-	  Log(LOG_ERR, "ERROR: Packet sampling and classification are mutual exclusive.\n");
-	  exit(1);
-	}
-
 	/* If we already renormalizing an external sampling rate,
 	   we cancel the sampling information from the probe plugin */
 	if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0; 
@@ -404,14 +409,6 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }
       else {
-	if (list->cfg.sampling_rate && list->cfg.ext_sampling_rate) {
-          Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
-          exit(1);
-	}
-        if (config.classifiers_path && list->cfg.sampling_rate) {
-	  Log(LOG_ERR, "ERROR: Packet sampling and classification are mutual exclusive.\n");
-	  exit(1);
-        }
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
 	if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS))
 	  config.handle_fragments = TRUE;
@@ -744,7 +741,16 @@ int ip_handler(register struct packet_ptrs *pptrs)
     
       if (((struct my_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_MF|IP_OFFMASK)) {
         ret = ip_fragment_handler(pptrs);
-	if (!ret) goto quit;
+	if (!ret) {
+	  if (!config.ext_sampling_rate) goto quit;
+	  else { 
+	    pptrs->tlh_ptr = dummy_tlhdr;
+	    pptrs->tcp_flags = FALSE;
+	    if (off < caplen) pptrs->payload_ptr = ptr;
+	    ret = TRUE;
+	    goto quit;
+	  }
+	}
       }
 
       /* Let's handle both fragments and packets. If we are facing any subsequent frag
@@ -859,7 +865,16 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 
       if (fhdr && (fhdr->ip6f_offlg & htons(IP6F_MORE_FRAG|IP6F_OFF_MASK))) {
         ret = ip6_fragment_handler(pptrs, fhdr);
-	if (!ret) goto quit;
+	if (!ret) {
+	  if (!config.ext_sampling_rate) goto quit;
+          else {
+            pptrs->tlh_ptr = dummy_tlhdr;
+            pptrs->tcp_flags = FALSE;
+            if (off < caplen) pptrs->payload_ptr = ptr;
+            ret = TRUE;
+            goto quit;
+          }
+	}
       }
 
       /* Let's handle both fragments and packets. If we are facing any subsequent frag

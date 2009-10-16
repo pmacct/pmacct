@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 */
 
 /*
@@ -102,8 +102,10 @@ int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
             return TRUE;
 	  }
 	  else { /* we still don't have the first fragment; increase accumulators */
-	    fp->pa++;
-	    fp->a += ntohs(iphp->ip_len);
+	    if (!config.ext_sampling_rate) {
+	      fp->pa++;
+	      fp->a += ntohs(iphp->ip_len);
+	    }
 	    return FALSE;
 	  } 
 	}
@@ -208,8 +210,10 @@ int create_fragment(u_int32_t now, struct ip_fragment *fp, u_int8_t is_candidate
   }
   else {
     /* not a first fragment; increase accumulators */
-    fp->pa++;
-    fp->a = ntohs(iphp->ip_len); 
+    if (!config.ext_sampling_rate) {
+      fp->pa++;
+      fp->a = ntohs(iphp->ip_len); 
+    }
     return FALSE;
   }
 }
@@ -359,8 +363,10 @@ int find_fragment6(u_int32_t now, struct packet_ptrs *pptrs, struct ip6_frag *fh
             return TRUE;
           }
           else { /* we still don't have the first fragment; increase accumulators */
-	    fp->pa++;
-            fp->a += IP6HdrSz+ntohs(iphp->ip6_plen);
+	    if (!config.ext_sampling_rate) {
+	      fp->pa++;
+              fp->a += IP6HdrSz+ntohs(iphp->ip6_plen);
+	    }
             return FALSE;
           }
         }
@@ -465,8 +471,10 @@ int create_fragment6(u_int32_t now, struct ip6_fragment *fp, u_int8_t is_candida
   }
   else {
     /* not a first fragment; increase accumulators */
-    fp->pa++;
-    fp->a = IP6HdrSz+ntohs(iphp->ip6_plen);
+    if (!config.ext_sampling_rate) {
+      fp->pa++;
+      fp->a = IP6HdrSz+ntohs(iphp->ip6_plen);
+    }
     return FALSE;
   }
 }
