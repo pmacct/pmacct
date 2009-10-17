@@ -23,6 +23,7 @@
 #define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:R"
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:R"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:R"
+#define ARGS_UACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:R"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:"
 #define N_PRIMITIVES 21
 #define N_FUNCS 10 
@@ -55,6 +56,7 @@
 
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 0.12.0rc3-cvs"
+#define UACCTD_USAGE_HEADER "Linux NetFilter ULOG Accounting Daemon, pmacctd 0.12.0rc3-cvs"
 #define PMACCT_USAGE_HEADER "pmacct, pmacct client 0.12.0rc3-cvs"
 #define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 0.12.0rc3-cvs"
 #define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 0.12.0rc3-cvs"
@@ -82,6 +84,7 @@
 #define ACCT_PM		1	/* promiscuous mode */
 #define ACCT_NF		2	/* NetFlow */
 #define ACCT_SF		3	/* sFlow */
+#define ACCT_UL		4	/* Linux NetFilter ULOG */
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
@@ -182,7 +185,7 @@ typedef u_int64_t pm_counter_t;
 typedef u_int32_t pm_counter_t;
 #endif
 
-#if defined __PMACCTD_C
+#if defined __PMACCTD_C || defined __UACCTD_C
 #define NF_AS_KEEP 0 
 #define NF_AS_BGP 2 
 #endif

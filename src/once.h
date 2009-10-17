@@ -1,4 +1,4 @@
-#if defined __PMACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C 
+#if defined __PMACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C || defined __UACCTD_C 
 #define EXT 
 #else
 #define EXT extern

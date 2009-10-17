@@ -68,7 +68,7 @@ THREADS_SOURCES = @THREADS_SOURCES@
 VERSION = @VERSION@
 
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp 
-sbin_PROGRAMS = pmacctd nfacctd sfacctd
+sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
 bin_PROGRAMS = pmacct @EXTRABIN@ 
 EXTRA_PROGRAMS = pmmyplay pmpgplay
 pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@
@@ -84,6 +84,10 @@ sfacctd_SOURCES = sfacctd.c signals.c util.c strlcpy.c plugin_hooks.c         se
 
 sfacctd_LDFLAGS = $(DEFS)
 sfacctd_LDADD = $(pmacctd_PLUGINS)
+uacctd_SOURCES = uacctd.c signals.c util.c strlcpy.c plugin_hooks.c         server.c acct.c memory.c ll.c cfg.c imt_plugin.c log.c pkt_handlers.c 	cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c ip_frag.c 	ports_aggr.c addr.c pretag.c pretag_handlers.c ip_flow.c setproctitle.c 	classifier.c regexp.c regsub.c conntrack.c xflow_status.c
+
+uacctd_LDFLAGS = $(DEFS) 
+uacctd_LDADD = $(pmacctd_PLUGINS)
 pmacct_SOURCES = pmacct.c strlcpy.c addr.c
 pmmyplay_SOURCES = pmmyplay.c strlcpy.c sql_handlers.c log_templates.c addr.c 
 pmpgplay_SOURCES = pmpgplay.c strlcpy.c sql_handlers.c log_templates.c addr.c 
@@ -129,6 +133,12 @@ cfg_handlers.o net_aggr.o bpf_filter.o print_plugin.o pretag.o \
 pretag_handlers.o ports_aggr.o addr.o ll.o setproctitle.o ip_flow.o \
 classifier.o regexp.o regsub.o conntrack.o xflow_status.o
 sfacctd_DEPENDENCIES = 
+uacctd_OBJECTS =  uacctd.o signals.o util.o strlcpy.o plugin_hooks.o \
+server.o acct.o memory.o ll.o cfg.o imt_plugin.o log.o pkt_handlers.o \
+cfg_handlers.o net_aggr.o bpf_filter.o print_plugin.o ip_frag.o \
+ports_aggr.o addr.o pretag.o pretag_handlers.o ip_flow.o setproctitle.o \
+classifier.o regexp.o regsub.o conntrack.o xflow_status.o
+uacctd_DEPENDENCIES = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -140,8 +150,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(pmmyplay_SOURCES) $(pmpgplay_SOURCES) $(pmacct_SOURCES) $(pmacctd_SOURCES) $(nfacctd_SOURCES) $(sfacctd_SOURCES)
-OBJECTS = $(pmmyplay_OBJECTS) $(pmpgplay_OBJECTS) $(pmacct_OBJECTS) $(pmacctd_OBJECTS) $(nfacctd_OBJECTS) $(sfacctd_OBJECTS)
+SOURCES = $(pmmyplay_SOURCES) $(pmpgplay_SOURCES) $(pmacct_SOURCES) $(pmacctd_SOURCES) $(nfacctd_SOURCES) $(sfacctd_SOURCES) $(uacctd_SOURCES)
+OBJECTS = $(pmmyplay_OBJECTS) $(pmpgplay_OBJECTS) $(pmacct_OBJECTS) $(pmacctd_OBJECTS) $(nfacctd_OBJECTS) $(sfacctd_OBJECTS) $(uacctd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -246,6 +256,10 @@ nfacctd: $(nfacctd_OBJECTS) $(nfacctd_DEPENDENCIES)
 sfacctd: $(sfacctd_OBJECTS) $(sfacctd_DEPENDENCIES)
 	@rm -f sfacctd
 	$(LINK) $(sfacctd_LDFLAGS) $(sfacctd_OBJECTS) $(sfacctd_LDADD) $(LIBS)
+
+uacctd: $(uacctd_OBJECTS) $(uacctd_DEPENDENCIES)
+	@rm -f uacctd
+	$(LINK) $(uacctd_LDFLAGS) $(uacctd_OBJECTS) $(uacctd_LDADD) $(LIBS)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.

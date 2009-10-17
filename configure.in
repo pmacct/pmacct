@@ -846,6 +846,19 @@ AC_ARG_ENABLE(threads,
         AC_MSG_RESULT(no)
 )
 
+AC_MSG_CHECKING(whether to enable ULOG support)
+AC_ARG_ENABLE(ulog,
+  [  --enable-ulog                    Enable ULOG support],
+       if test "x$enableval" = xyes ; then
+               AC_MSG_RESULT(yes)
+               CFLAGS="${CFLAGS} -DENABLE_ULOG"
+       else
+               AC_MSG_RESULT(no)
+       fi
+       ,
+       AC_MSG_RESULT(no)
+)
+
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 

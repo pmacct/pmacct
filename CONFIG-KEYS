@@ -772,15 +772,6 @@ DESC:		full path to a spool directory containing the packet classification patte
 		This configuration directive should be specified whenever the 'class' aggregation method is in
 		use (ie. 'aggregate: class'). It's supported only by pmacctd. 
 
-KEY:		flow_handling_threads [GLOBAL, NO_NFACCTD, NO_SFACCTD]
-VALUES:		[>= 1]	
-DESC:		number of threads to use for flow handling as well as classification. Allows multiple threads
-		to run the flow handling code and especially the classifiers. This feature requires the use of the
-		--enable-threads configure flag at compilation. It allows multiple classification threads to run
-		in parallel, for example when your classification module makes much I/O or need to wait for some
-		external event. When using more than one thread (which is quite usual) _all_ your classifiers
-		shared module must be thread-safe. It's supported only by pmacctd. 
-
 KEY:		sql_aggressive_classification 
 VALUES:		[true|false]
 DESC:		usually 5 to 10 packets are required to classify a stream by the 'classifiers' feature. Until

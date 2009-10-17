@@ -173,7 +173,7 @@ static const struct _protocols_struct _protocols[] = {
   {"", -1},
 };
 
-#ifdef __PMACCTD_C
+#if defined __PMACCTD_C || defined __UACCTD_C
 static struct _devices_struct _devices[] = {
   {null_handler, DLT_NULL},
   {eth_handler, DLT_EN10MB},
@@ -309,7 +309,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sfprobe_receiver", cfg_key_sfprobe_receiver},
   {"sfprobe_agentip", cfg_key_sfprobe_agentip},
   {"sfprobe_agentsubid", cfg_key_sfprobe_agentsubid},
-  {"flow_handling_threads", cfg_key_flow_handling_threads},
   {"bgp_daemon", cfg_key_nfacctd_bgp},
   {"bgp_daemon_ip", cfg_key_nfacctd_bgp_ip},
   {"bgp_daemon_port", cfg_key_nfacctd_bgp_port},
@@ -324,6 +323,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_agent_map", cfg_key_nfacctd_bgp_to_agent_map},
   {"bgp_follow_default", cfg_key_nfacctd_bgp_follow_default},
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},
+  {"uacctd_group", cfg_key_uacctd_group},
   {"", NULL},
 };
 

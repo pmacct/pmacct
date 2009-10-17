@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 */
 
 /*
@@ -451,10 +451,6 @@ int main(int argc,char **argv, char **envp)
     }
     list = list->next;
   }
-
-#if defined ENABLE_THREADS
-  if (!config.flow_handling_threads) config.flow_handling_threads = DEFAULT_TH_NUM; 
-#endif
 
   /* plugins glue: creation (since 094) */
   if (config.classifiers_path) {

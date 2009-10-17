@@ -261,7 +261,7 @@ EXT u_char *llc_handler(const struct pcap_pkthdr *, u_int, register u_char *, re
 EXT void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 #undef EXT
 
-#if (!defined __PMACCTD_C) 
+#if (!defined __PMACCTD_C) && (!defined __UACCTD_C)
 #define EXT extern
 #else
 #define EXT
@@ -273,7 +273,7 @@ EXT void PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t 
 EXT void compute_once();
 #undef EXT
 
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C)
+#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C)
 #define EXT extern
 #else
 #define EXT
@@ -289,7 +289,7 @@ size_t strlcpy(char *, const char *, size_t);
 pcap_t *glob_pcapt;
 struct pcap_stat ps;
 
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C)
+#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C)
 extern int debug;
 extern int have_num_memory_pools; /* global getopt() stuff */
 extern struct configuration config; /* global configuration structure */ 

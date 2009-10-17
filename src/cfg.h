@@ -153,7 +153,7 @@ struct configuration {
   char *sfprobe_receiver;
   char *sfprobe_agentip;
   int sfprobe_agentsubid;
-  int flow_handling_threads;
+  int uacctd_group;
 };
 
 struct plugin_type_entry {

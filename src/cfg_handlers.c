@@ -2278,29 +2278,6 @@ int cfg_key_sfprobe_agentsubid(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_flow_handling_threads(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-  int value;
-
-  value = atoi(value_ptr);
-  if (!name) for (; list; list = list->next, changes++) list->cfg.flow_handling_threads = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.flow_handling_threads = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
-
-
 void parse_time(char *filename, char *value, int *mu, int *howmany)
 {
   int k, j, len;
@@ -2334,3 +2311,14 @@ void parse_time(char *filename, char *value, int *mu, int *howmany)
   }
 }
 
+int cfg_key_uacctd_group(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.uacctd_group = value;
+  return changes;
+}

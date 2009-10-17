@@ -122,7 +122,6 @@ EXT int cfg_key_nfprobe_engine(char *, char *, char *);
 EXT int cfg_key_sfprobe_receiver(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentip(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentsubid(char *, char *, char *);
-EXT int cfg_key_flow_handling_threads(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_msglog(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_max_peers(char *, char *, char *);
@@ -137,6 +136,7 @@ EXT int cfg_key_nfacctd_bgp_peer_src_as_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_to_agent_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_default(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_neighbors_file(char *, char *, char *);
+EXT int cfg_key_uacctd_group(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 #undef EXT
