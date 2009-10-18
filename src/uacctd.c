@@ -514,7 +514,7 @@ int main(int argc,char **argv, char **envp)
     close(ulog_fd);
     exit_all(1);
   }
-  Log(LOG_INFO, "INFO ( default/core ): Netlink ULOG: binding to group %d\n", config.uacctd_group);
+  Log(LOG_INFO, "INFO ( default/core ): Netlink ULOG: binding to group %x\n", config.uacctd_group);
 
   /* loading pre-tagging map, if any */
   if (config.pre_tag_map) {

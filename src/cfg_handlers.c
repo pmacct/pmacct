@@ -2317,8 +2317,8 @@ int cfg_key_uacctd_group(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) return ERR;
+  if (value < 1) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.uacctd_group = value;
+  for (; list; list = list->next, changes++) list->cfg.uacctd_group = (1 << (value-1));
   return changes;
 }
