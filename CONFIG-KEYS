@@ -613,7 +613,7 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 		('sql_history') and an INSERT-only mechanism is in use ('sql_dont_try_update', 'sql_use_copy').
 		(default: false) 
 
-KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as ] [GLOBAL]
+KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp ]
 DESC:		When 'false', it instructs nfacctd to populate 'src_as' and 'dst_as' from the same primitives
 		in the NetFlow datagram; when 'true' ('file' being an alias of 'true') it instructs nfacctd to
@@ -731,7 +731,7 @@ KEY:            pmacctd_flow_lifetime [GLOBAL, NO_NFACCTD]
 DESC:           defines how long a flow could remain inactive (ie. no packets belonging to such flow are received)
 		before considering it expired. The value is expected in seconds. (default: 60 secs) 
 
-KEY:		pmacctd_ext_sampling_rate [GLOBAL, NO_NFACCTD]
+KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate ] [GLOBAL, NO_NFACCTD]
 		flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
 		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow
 		probe plugins, if any of them is activated. External sampling might be performed by capturing
@@ -750,7 +750,7 @@ DESC:           full pathname to a file containing the list of IPv4/IPv6 address
                 individual IP addresses. The Allow List is intended to be small. If you really need complex,
                 network-prefixed filters, you may prefer a few firewall rules instead. (default: allow all)
 
-KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize ] (-R)
+KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
 VALUES:		[true|false]
 DESC:		automatically renormalizes byte/packet counters value basing on informations acquired from 
 		either the NetFlow data unit or sFlow packet. In particular, it allows to deal with scenarios
@@ -946,4 +946,7 @@ KEY:            bgp_neighbors_file
 DESC:		writes a list of the BGP neighbors in the established state to the specified file, one
 		per line. This gets particularly useful for automation purposes (ie. auto-discovery of
 		devices to poll via SNMP). (default: none)
+
+KEY:		uacctd_group
+DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)
 

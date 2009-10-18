@@ -67,6 +67,7 @@ void usage_daemon(char *prog_name)
   printf("  -w  \tWait for the listening interface to become available\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -R  \tRenormalize sampled data\n");
+  printf("  -L  \tSet snapshot length\n");
   printf("\nMemory Plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");

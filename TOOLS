@@ -13,6 +13,10 @@ sfacctd         sFlow accounting daemon; it listens for sFlow packets v2,
                 v4 and v5 on one or more interfaces (both IPv4 and IPv6);
                 statistics may be either pushed to stdout, stored in a
                 memory table or a PostgreSQL/MySQL/SQLite database.
+uacctd		Linux Netlink ULOG accounting daemon; it gathers packets
+		from a ULOG multicast group and works only on Linux;
+		statistics may be either pushed to stdout, stored in a
+		memory table or a PostgreSQL/MySQL/SQLite database.
 pmacct  	commandline pmacct client; used to retrieve data from an
 		active memroy plugin; it may ask for specific entries,
 		partial fields or perform a bulk data retrieval; output

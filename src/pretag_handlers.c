@@ -292,6 +292,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
 
   memset(&device, 0, sizeof(struct pcap_device));
   if (glob_pcapt) device.link_type = pcap_datalink(glob_pcapt);
+  else if (config.uacctd_group) device.link_type = DLT_RAW;
   else device.link_type = 1;
   device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+my_iphdr+my_tlhdr */
 

@@ -126,7 +126,7 @@ void my_sigint_handler(int signum)
 
   Log(LOG_INFO, "OK: Exiting ...\n");
 
-  if (config.acct_type == ACCT_PM) {
+  if (config.acct_type == ACCT_PM && !config.uacctd_group /* XXX */) {
     if (config.dev) {
       if (pcap_stats(glob_pcapt, &ps) < 0) printf("\npcap_stats: %s\n", pcap_geterr(glob_pcapt));
       printf("\n%u packets received by filter\n", ps.ps_recv);

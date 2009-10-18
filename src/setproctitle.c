@@ -37,6 +37,7 @@ extern char *__progname;
 char pmacctd_globstr[] = "pmacctd\0";
 char nfacctd_globstr[] = "nfacctd\0";
 char sfacctd_globstr[] = "sfacctd\0";
+char uacctd_globstr[] = "uacctd\0";
 
 /*
  * NEWSTR -- Create a copy of a C string
@@ -135,6 +136,7 @@ initsetproctitle(argc, argv, envp)
 	if (config.acct_type == ACCT_PM) __progname = pmacctd_globstr;
 	else if (config.acct_type == ACCT_NF) __progname = nfacctd_globstr;
 	else if (config.acct_type == ACCT_SF) __progname = sfacctd_globstr;
+	else if (config.acct_type == ACCT_UL) __progname = uacctd_globstr;
 #endif
 }
 
@@ -211,7 +213,8 @@ pm_setproctitle(fmt, va_alist)
   memset(prefix, 0, sizeof(prefix));
   memset(buf, 0, sizeof(buf));
 
-  if (config.acct_type == ACCT_PM) strcpy(prefix, pmacctd_globstr);
+  if (config.uacctd_group) strcpy(prefix, uacctd_globstr); /* XXX: hack */
+  else if (config.acct_type == ACCT_PM) strcpy(prefix, pmacctd_globstr);
   else if (config.acct_type == ACCT_NF) strcpy(prefix, nfacctd_globstr);
   else if (config.acct_type == ACCT_SF) strcpy(prefix, sfacctd_globstr);
 

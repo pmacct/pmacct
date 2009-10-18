@@ -49,7 +49,7 @@ u_char dummy_tlhdr[16];
 void usage_daemon(char *prog_name)
 {
   printf("%s\n", UACCTD_USAGE_HEADER);
-  printf("Usage: %s [ -D | -d ] [ -i interface ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ] [ filter ]\n", prog_name);
+  printf("Usage: %s [ -D | -d ] [ -g ULOG group ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
   printf("\nGeneral options:\n");
@@ -57,18 +57,14 @@ void usage_daemon(char *prog_name)
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t proto | tos | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | none ] \n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
-  printf("  -N  \tDisable promiscuous mode\n");
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
   printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe ] \n\tActivate plugin\n"); 
   printf("  -d  \tEnable debug\n");
-  printf("  -i  \tListen on the specified interface\n");
-  printf("  -I  \tRead packets from the specified savefile\n");
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
-  printf("  -w  \tWait for the listening interface to become available\n");
-  printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -R  \tRenormalize sampled data\n");
+  printf("  -g  \tNetlink ULOG group\n");
   printf("\nMemory Plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -95,7 +91,7 @@ int main(int argc,char **argv, char **envp)
   struct plugins_list_entry *list;
   struct plugin_requests req;
   char config_file[SRVBUFLEN];
-  int psize = DEFAULT_SNAPLEN;
+  int psize = ULOG_BUFLEN;
 
   struct id_table bpas_table;
   struct id_table bta_table;
@@ -106,6 +102,19 @@ int main(int argc,char **argv, char **envp)
   extern char *optarg;
   extern int optind, opterr, optopt;
   int errflag, cp; 
+
+  /* ULOG stuff */
+  int ulog_fd;
+  struct nlmsghdr *nlh;
+  struct sockaddr_nl nls;
+  ulog_packet_msg_t *ulog_pkt;
+  ssize_t len = 0;
+  socklen_t alen;
+  unsigned char *ulog_buffer;
+  struct pcap_pkthdr hdr;
+  struct timeval tv;
+
+
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage client;
@@ -170,10 +179,6 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break; 
-    case 'N':
-      strlcpy(cfg_cmdline[rows], "promisc: false", SRVBUFLEN);
-      rows++;
-      break;
     case 'f':
       strlcpy(config_file, optarg, sizeof(config_file));
       break;
@@ -227,26 +232,8 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
-    case 'i':
-      strlcpy(cfg_cmdline[rows], "interface: ", SRVBUFLEN);
-      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
-      rows++;
-      break;
-    case 'I':
-      strlcpy(cfg_cmdline[rows], "pcap_savefile: ", SRVBUFLEN);
-      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
-      rows++;
-      break;
-    case 'w':
-      strlcpy(cfg_cmdline[rows], "interface_wait: true", SRVBUFLEN);
-      rows++;
-      break;
-    case 'W':
-      strlcpy(cfg_cmdline[rows], "savefile_wait: true", SRVBUFLEN);
-      rows++;
-      break;
-    case 'L':
-      strlcpy(cfg_cmdline[rows], "snaplen: ", SRVBUFLEN);
+    case 'g':
+      strlcpy(cfg_cmdline[rows], "uacctd_group: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
@@ -278,7 +265,7 @@ int main(int argc,char **argv, char **envp)
   /* XXX: glue; i'm conscious it's a dirty solution from an engineering viewpoint;
      someday later i'll fix this */
   list = plugins_list;
-  while(list) {
+  while (list) {
     list->cfg.acct_type = ACCT_PM;
     if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
@@ -287,15 +274,21 @@ int main(int argc,char **argv, char **envp)
 
   if (config.files_umask) umask(config.files_umask);
 
-  /* Let's check whether we need superuser privileges */
-  if (config.snaplen) psize = config.snaplen;
-  else config.snaplen = psize;
+  config.snaplen = psize;
 
-  if (!config.pcap_savefile) {
-    if (getuid() != 0) {
-      printf("%s\n\n", UACCTD_USAGE_HEADER);
-      printf("ERROR: You need superuser privileges to run this command.\nExiting ...\n\n");
-      exit(1);
+  /* Let's check whether we need superuser privileges */
+  if (getuid() != 0) {
+    printf("%s\n\n", UACCTD_USAGE_HEADER);
+    printf("ERROR: You need superuser privileges to run this command.\nExiting ...\n\n");
+    exit(1);
+  }
+
+  if (!config.uacctd_group) {
+    config.uacctd_group = DEFAULT_ULOG_GROUP;
+    list = plugins_list;
+    while (list) {
+      list->cfg.uacctd_group = DEFAULT_ULOG_GROUP;
+      list = list->next;
     }
   }
 
@@ -442,7 +435,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
           /* Sanitizing the aggregation method */
           if ( (list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM) ) {
-            printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+            Log(LOG_ERR, "ERROR ( %s/%s ): The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n", list->name, list->type.string);
             exit(1);
           }
           list->cfg.data_type |= PIPE_TYPE_BGP;
@@ -465,48 +458,9 @@ int main(int argc,char **argv, char **envp)
   if (config.handle_flows) init_ip_flow_handler();
   load_networks(config.networks_file, &nt, &nc);
 
-  /* If any device/savefile have been specified, choose a suitable device
-     where to listen for traffic */ 
-  if (!config.dev && !config.pcap_savefile) {
-    Log(LOG_WARNING, "WARN ( default/core ): Selecting a suitable device.\n");
-    config.dev = pcap_lookupdev(errbuf); 
-    if (!config.dev) {
-      Log(LOG_WARNING, "WARN ( default/core ): Unable to find a suitable device. Exiting.\n");
-      exit_all(1);
-    }
-    else Log(LOG_DEBUG, "DEBUG ( default/core ): device is %s\n", config.dev);
-  }
-
-  /* reading filter; if it exists, we'll take an action later */
-  if (!strlen(config_file)) config.clbuf = copy_argv(&argv[optind]);
-
-  if (config.dev && config.pcap_savefile) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'interface' (-i) and 'pcap_savefile' (-I) directives are mutually exclusive. Exiting.\n");
-    exit_all(1); 
-  }
-
-  throttle_startup:
-  if (config.dev) {
-    if ((device.dev_desc = pcap_open_live(config.dev, psize, config.promisc, 1000, errbuf)) == NULL) {
-      if (!config.if_wait) {
-        Log(LOG_ERR, "ERROR ( default/core ): pcap_open_live(): %s\n", errbuf);
-        exit_all(1);
-      }
-      else {
-        sleep(5); /* XXX: user defined ? */
-        goto throttle_startup;
-      }
-    } 
-  }
-  else if (config.pcap_savefile) {
-    if ((device.dev_desc = pcap_open_offline(config.pcap_savefile, errbuf)) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core ): pcap_open_offline(): %s\n", errbuf);
-      exit_all(1);
-    }
-  }
-
-  device.active = TRUE;
-  glob_pcapt = device.dev_desc; /* SIGINT/stats handling */ 
+/*
+  // XXX: applicable afterwards to ULOG socket?
+  //
   if (config.pipe_size) {
     int slen = sizeof(config.pipe_size), x;
 
@@ -516,54 +470,51 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_DEBUG, "DEBUG ( default/core ): PCAP buffer: obtained %d / %d bytes.\n", x, config.pipe_size);
 #endif
   }
+*/
 
-  device.link_type = pcap_datalink(device.dev_desc); 
+  device.link_type = DLT_RAW; 
   for (index = 0; _devices[index].link_type != -1; index++) {
     if (device.link_type == _devices[index].link_type)
       device.data = &_devices[index];
   }
   load_plugin_filters(device.link_type);
 
-  /* we need to solve some link constraints */
-  if (device.data == NULL) {
-    Log(LOG_ERR, "ERROR ( default/core ): data link not supported: %d\n", device.link_type); 
-    exit_all(1);
-  }
-  else Log(LOG_INFO, "OK ( default/core ): link type is: %d\n", device.link_type); 
-
-  if (device.link_type != DLT_EN10MB && device.link_type != DLT_IEEE802 && device.link_type != DLT_LINUX_SLL) {
-    list = plugins_list;
-    while (list) {
-      if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
-        Log(LOG_ERR, "ERROR ( default/core ): MAC aggregation not available for link type: %d\n", device.link_type);
-        exit_all(1);
-      }
-      list = list->next;
-    }
-  }
-
   cb_data.device = &device;
   
-  /* doing pcap stuff */
-  if (pcap_lookupnet(config.dev, &localnet, &netmask, errbuf) < 0) {
-    localnet = 0;
-    netmask = 0;
-    Log(LOG_WARNING, "WARN ( default/core ): %s\n", errbuf);
-  }
-
-  if (pcap_compile(device.dev_desc, &filter, config.clbuf, 0, netmask) < 0)
-    Log(LOG_WARNING, "WARN: %s\nWARN ( default/core ): going on without a filter\n", pcap_geterr(device.dev_desc));
-  else {
-    if (pcap_setfilter(device.dev_desc, &filter) < 0)
-      Log(LOG_WARNING, "WARN: %s\nWARN ( default/core ): going on without a filter\n", pcap_geterr(device.dev_desc));
-  }
-
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
   signal(SIGHUP, reload); /* handles reopening of syslog channel */
   signal(SIGUSR1, push_stats); /* logs various statistics via Log() calls */
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
+
+  ulog_fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_NFLOG);
+  if (ulog_fd == -1) {
+    Log(LOG_ERR, "ERROR ( default/core ): Failed to create Netlink ULOG socket\n");
+    exit_all(1);
+  }
+
+  Log(LOG_INFO, "INFO ( default/core ): Successfully connected Netlink ULOG socket\n");
+
+  ulog_buffer = malloc(config.snaplen);
+  if (ulog_buffer == NULL) {
+    Log(LOG_ERR, "ERROR ( default/core ): ULOG buffer malloc() failed\n");
+    close(ulog_fd);
+    exit_all(1);
+  }
+
+  memset(&nls, 0, sizeof(nls));
+  nls.nl_family = AF_NETLINK;
+  nls.nl_pid = getpid();
+  nls.nl_groups = config.uacctd_group;
+  alen = sizeof(nls);
+
+  if (bind(ulog_fd, (struct sockaddr *) &nls, sizeof(nls))) {
+    Log(LOG_ERR, "ERROR ( default/core ): bind() to Netlink ULOG socket failed\n");
+    close(ulog_fd);
+    exit_all(1);
+  }
+  Log(LOG_INFO, "INFO ( default/core ): Netlink ULOG: binding to group %d\n", config.uacctd_group);
 
   /* loading pre-tagging map, if any */
   if (config.pre_tag_map) {
@@ -627,37 +578,46 @@ int main(int argc,char **argv, char **envp)
   signal(SIGCHLD, handle_falling_child);
   kill(getpid(), SIGCHLD);
 
-  /* When reading packets from a savefile, things are lightning fast; we will sit 
-     here just few seconds, thus allowing plugins to complete their startup operations */ 
-  if (config.pcap_savefile) {
-    Log(LOG_INFO, "INFO ( default/core ): PCAP capture file, sleeping for 2 seconds\n");
-    sleep(2);
-  }
-
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing
      and reopening again our listening device */
-  for(;;) {
-    if (!device.active) {
-      Log(LOG_WARNING, "WARN ( default/core ): %s has become unavailable; throttling ...\n", config.dev);
-      throttle_loop:
-      sleep(5); /* XXX: user defined ? */
-      if ((device.dev_desc = pcap_open_live(config.dev, psize, config.promisc, 1000, errbuf)) == NULL)
-        goto throttle_loop;
-      pcap_setfilter(device.dev_desc, &filter);
-      device.active = TRUE;
-    }
-    pcap_loop(device.dev_desc, -1, pcap_cb, (u_char *) &cb_data);
-    pcap_close(device.dev_desc);
-
-    if (config.pcap_savefile) {
-      if (config.sf_wait) {
-	fill_pipe_buffer();
-	Log(LOG_INFO, "INFO ( default/core ): finished reading PCAP capture file\n");
-	wait(NULL);
+  for (;;) {
+    if (len == -1) {
+      if (errno != EAGAIN) {
+        /* We can't deal with permanent errors.
+         * Just sleep a bit.
+         */
+        Log(LOG_ERR, "ERROR ( default/core ): Syscall returned %d: %s. Sleeping for 1 sec.\n", errno, strerror(errno));
+        sleep(1);
       }
-      stop_all_childs();
     }
-    device.active = FALSE;
+
+    len = recvfrom(ulog_fd, ulog_buffer, config.snaplen, 0, (struct sockaddr*) &nls, &alen);
+
+    /*
+     * Read timeout or failure condition.
+     */
+    if (len < (int)sizeof(struct nlmsghdr)) continue;
+    if (alen != sizeof(nls)) continue;
+
+    nlh = (struct nlmsghdr*) ulog_buffer;
+    if ((nlh->nlmsg_flags & MSG_TRUNC) || ((size_t)len > config.snaplen)) continue;
+
+    gettimeofday(&tv, NULL);
+
+    while (NLMSG_OK(nlh, (size_t)len)) {
+      ulog_pkt = NLMSG_DATA(nlh);
+      hdr.ts = tv;
+      hdr.caplen = MIN(ulog_pkt->data_len, config.snaplen);
+      hdr.len = ulog_pkt->data_len;
+
+      pcap_cb((u_char *) &cb_data, &hdr, ulog_pkt->payload);
+
+      if (nlh->nlmsg_type == NLMSG_DONE || !(nlh->nlmsg_flags & NLM_F_MULTI)) {
+        /* Last part of the multilink message */
+        break;
+      }
+      nlh = NLMSG_NEXT(nlh, len);
+    }
   }
 }
 
