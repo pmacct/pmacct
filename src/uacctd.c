@@ -65,6 +65,7 @@ void usage_daemon(char *prog_name)
   printf("  -F  \tWrite Core Process PID into the specified file\n");
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -g  \tNetlink ULOG group\n");
+  printf("  -L  \tNetlink socket read buffer size\n");
   printf("\nMemory Plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -237,6 +238,11 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
+    case 'L':
+      strlcpy(cfg_cmdline[rows], "snaplen: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
     case 'R':
       strlcpy(cfg_cmdline[rows], "sfacctd_renormalize: true", SRVBUFLEN);
       rows++;
@@ -274,7 +280,8 @@ int main(int argc,char **argv, char **envp)
 
   if (config.files_umask) umask(config.files_umask);
 
-  config.snaplen = psize;
+  if (!config.snaplen) config.snaplen = psize;
+  if (!config.uacctd_nl_size) config.uacctd_nl_size = psize;
 
   /* Let's check whether we need superuser privileges */
   if (getuid() != 0) {
@@ -458,20 +465,6 @@ int main(int argc,char **argv, char **envp)
   if (config.handle_flows) init_ip_flow_handler();
   load_networks(config.networks_file, &nt, &nc);
 
-/*
-  // XXX: applicable afterwards to ULOG socket?
-  //
-  if (config.pipe_size) {
-    int slen = sizeof(config.pipe_size), x;
-
-#if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
-    Setsocksize(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &config.pipe_size, slen);
-    getsockopt(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
-    Log(LOG_DEBUG, "DEBUG ( default/core ): PCAP buffer: obtained %d / %d bytes.\n", x, config.pipe_size);
-#endif
-  }
-*/
-
   device.link_type = DLT_RAW; 
   for (index = 0; _devices[index].link_type != -1; index++) {
     if (device.link_type == _devices[index].link_type)
@@ -495,6 +488,14 @@ int main(int argc,char **argv, char **envp)
   }
 
   Log(LOG_INFO, "INFO ( default/core ): Successfully connected Netlink ULOG socket\n");
+
+  if (config.uacctd_nl_size > ULOG_BUFLEN) {
+    /* If configured buffer size is larger than default 4KB */
+    if (setsockopt(ulog_fd, SOL_SOCKET, SO_RCVBUF, &config.uacctd_nl_size, sizeof(config.uacctd_nl_size)))
+      Log(LOG_ERR, "ERROR ( default/core ): Failed to set Netlink receive buffer size\n");
+    else
+      Log(LOG_INFO, "INFO ( default/core ): Netlink receive buffer size set to %u\n", config.uacctd_nl_size);
+  }
 
   ulog_buffer = malloc(config.snaplen);
   if (ulog_buffer == NULL) {

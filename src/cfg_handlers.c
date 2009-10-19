@@ -2322,3 +2322,14 @@ int cfg_key_uacctd_group(char *filename, char *name, char *value_ptr)
   for (; list; list = list->next, changes++) list->cfg.uacctd_group = (1 << (value-1));
   return changes;
 }
+
+int cfg_key_uacctd_nl_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.uacctd_nl_size = value;
+  return changes;
+}

@@ -154,6 +154,7 @@ struct configuration {
   char *sfprobe_agentip;
   int sfprobe_agentsubid;
   int uacctd_group;
+  int uacctd_nl_size;
 };
 
 struct plugin_type_entry {
