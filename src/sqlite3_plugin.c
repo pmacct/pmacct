@@ -240,15 +240,17 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
-      while (idata.now > (idata.basetime + idata.timeslot)) {
-	time_t saved_basetime = idata.basetime;
+      if (config.sql_history) {
+        while (idata.now > (idata.basetime + idata.timeslot)) {
+	  time_t saved_basetime = idata.basetime;
 
-	idata.basetime += idata.timeslot;
-	if (config.sql_history == COUNT_MONTHLY)
-	  idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);
-	glob_basetime = idata.basetime;
-	idata.new_basetime = saved_basetime;
-	glob_new_basetime = saved_basetime;
+	  idata.basetime += idata.timeslot;
+	  if (config.sql_history == COUNT_MONTHLY)
+	    idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);
+	  glob_basetime = idata.basetime;
+	  idata.new_basetime = saved_basetime;
+	  glob_new_basetime = saved_basetime;
+	}
       }
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
