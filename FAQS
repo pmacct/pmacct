@@ -5,19 +5,20 @@ Q1: What is pmacct project homepage ?
 A: It is http://www.pmacct.net/ . There isn't any official mirror site. 
 
 
-Q2: 'pmacct', 'pmacctd', 'nfacctd', 'sfacctd' -- but what do they mean ?
+Q2: 'pmacct', 'pmacctd', 'nfacctd', 'sfacctd', 'uacctd' -- but what do they mean ?
 A: 'pmacct' is intended to be the name of the project; 'pmacctd' is the name of the
    libpcap-based IPv4/IPv6 accounting daemon; 'nfacctd' is the name of the NetFlow
    accounting daemon (versions supported NetFlow v1 to v9); 'sfacctd' is the name of
-   the sFlow v2/v4/v5 accounting daemon.
+   the sFlow v2/v4/v5 accounting daemon; 'uacctd' is the name of the Linux Netlink
+   ULOG-based accounting daemon.
 
 
 Q3: Does pmacct stand for Promiscuous mode IP Accounting package ?
 A: That is not entirely correct today, it was originally though. pmacct born as a
-   libpcap-based project only. Over the time it evolved to include NetFlow first and
-   sFlow shortly afterwards -- striving to maintain a consistent implementation over
-   the three, unless technical considerations prevent that to happen for specific
-   cases.  
+   libpcap-based project only. Over the time it evolved to include NetFlow first,
+   sFlow shortly afterwards and ULOG more recently - striving to maintain a consistent
+   implementation over the set, unless technical considerations prevent that to happen
+   for specific cases.  
 
 
 Q4: What are pmacct main features?

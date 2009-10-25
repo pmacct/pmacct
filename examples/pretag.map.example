@@ -20,9 +20,14 @@
 ! list of currently supported keys follow:
 !
 ! 'id'			tag assigned to a matching packet, flow or sample; its use is
-!			mutually exclusive with id2. 
+!			mutually exclusive with id2. The resulting label is written to
+!			the 'tag' field when using memory tables and 'agent_id' when
+!			using a SQL plugin. 
 ! 'id2'			tag assigned to a matching packet, flow or sample; its use is
-!			mutually exclusive with id.
+!			mutually exclusive with id. The resulting label is written to
+!			the 'tag2' field when using memory tables and 'agent_id2' when
+!			using a SQL plugin. If using a SQL plugin, read more about the
+!			'agent_id2' field in the 'sql/README.agent_id2' document. 
 ! 'ip'			IP address of the device which is originating sFlow or NetFlow
 !			datagrams (router, probe, etc.)
 ! 'in'  		Input interface 
@@ -119,6 +124,8 @@ id=32 ip=192.168.1.1 out=50 agent_id=0 sampling_rate=512
 !
 ! === JEQ example #1:
 ! - implicit 'return' defaults to false
+! - 'id' used to store input interface tags
+! - 'id2' used to store output interface tags
 !
 id=1000 ip=192.168.1.1 in=1 jeq=eval_out 
 id=1001 ip=192.168.1.1 in=2 jeq=eval_out
@@ -132,29 +139,36 @@ id2=1002 ip=192.168.1.1 out=3
 ! ===
 !
 ! === JEQ example #2:
+! - implicit 'return' defaults to false
+! - 'id' structured hierarchically to store both input and output interface tags
+!
 id=11000 ip=192.168.1.1 in=1 jeq=eval_out
 id=12000 ip=192.168.1.1 in=2 jeq=eval_out
 id=13000 ip=192.168.1.1 in=3 jeq=eval_out
 ! ... further INs
-id2=100 ip=192.168.1.1 out=1 label=eval_out stack=+
-id2=101 ip=192.168.1.1 out=2 stack=+
-id2=102 ip=192.168.1.1 out=3 stack=+
+id=100 ip=192.168.1.1 out=1 label=eval_out stack=+
+id=101 ip=192.168.1.1 out=2 stack=+
+id=102 ip=192.168.1.1 out=3 stack=+
 ! ... further OUTs 
 !
 ! ===
 !
 ! === JEQ example #3:
+! - 'return' set to true: upon matching, the packet is passed to the plugins along with its tag.
+!   The pre_tag_map flow continues by following up the JEQ.
+! - The above leads to duplicates. Hence a pre_tag_filter should be used to split packets among plugins.  
+! - 'id' used to temporarily store both input and output interface tags
+!
 id=1001 ip=192.168.1.1 in=1 jeq=eval_out return=true
 id=1002 ip=192.168.1.1 in=2 jeq=eval_out return=true
 id=1003 ip=192.168.1.1 in=3 jeq=eval_out return=true
 ! ... further INs
-id2=2001 ip=192.168.1.1 out=1 label=eval_out 
-id2=2002 ip=192.168.1.1 out=2 
-id2=2003 ip=192.168.1.1 out=3 
+id=2001 ip=192.168.1.1 out=1 label=eval_out 
+id=2002 ip=192.168.1.1 out=2 
+id=2003 ip=192.168.1.1 out=3 
 ! ... further OUTs
 !
-! perhaps associated by a pre_tag_filter configuration like:
-! pre_tag_filter[x]: 1001-1003
-! pre_tag_filter[y]: 2001-2003
+! pre_tag_filter[in]: 1001-1003
+! pre_tag_filter[out]: 2001-2003
 !
 ! ===

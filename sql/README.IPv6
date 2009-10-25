@@ -1,5 +1,5 @@
-Before reading this document, read either 'README.mysql' or 'README.pgsql' depending
-upon which DB you are currently using.
+This document doesn't replace documentation relevant to the database software you are
+using, ie. README.mysql, README.pgsql or README.sqlite3.
 
 MySQL and SQLite.
 MySQL tables define fields containing IP addresses as 15-bytes CHAR strings. Fields

@@ -1,6 +1,53 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.0rc3
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
+0.12.0rc3 -- 2x-10-2009
+  + Support for NetFlow v9 sampling via Option templates and
+    data is introduced; this is twofold: a) 'nfacctd_renormalize'
+    configuration directive is now able to renormalize NetFlow v9
+    data on-the-fly by performing Option templates management; b)
+    'nfprobe', the NetFlow probe plugin, is able to flag sampling
+    rate (either internal or external) when exporting flows to the
+    collector. 
+  + '[pm|u]acctd_ext_sampling_rate' directives are introduced to
+    support external sampling rate scenarios: packet selection is
+    performed by the underlying packect capturing framework, ie.
+    ULOG, PF_RING. Making the daemon aware of the sampling rate,
+    allows to renormalize or export such information via NetFlow
+    or sFlow.
+  + pmacctd: the IPv4/IPv6 fragment handler engine was reviewed
+    to make it sampling-friendly. The new code hooks get enabled
+    when external sampling (pmacctd_ext_sampling_rate) is defined.
+  + A new 'uacctd' daemon is added to the set; it is based on the
+    Netlink ULOG packet capturing framework; this implies it works
+    only on Linux and can be optionally enabled when compling by
+    defining the '--enable-ulog' switch. The implementation is
+    fully orthogonal with the existing feature set. Thanks very
+    much to: A.O. Prokofiev for contributing the original idea
+    and code; Stig Thormodsrud for his support and review. 
+  + The 'tag2' primitive is introduced. Its aim is to support
+    traffic matrix scenarios by giving a second field dedicated
+    to tag traffic. In a pre_tag_map this can be employed via the
+    'id2' key. See examples in the 'examples/pretag.map.example' 
+    document. SQL plugins write 'tag2' content in the 'agent_id2'
+    field. Read 'sql/README.agent_id2' document for reference. 
+  + Some new directives to control and re-define file attributes
+    written by the pmacct daemons, expecially when launched with
+    increased priviledges, are introduced: file_umask, files_uid,
+    files_gid. Files to which these apply include, ie. pidfile,
+    logfile and BGP neighbors file.
+  ! fix, bgp/bgp.c: upon reaching bgp_daemon_max_peers threshold,
+    logs were flooded by warnings even when messages were coming
+    from a previously accepted BGP neighbor. Warnings are now sent
+    only when a new BGP connection is refused.
+  ! fix, nfprobe/netflow9.c: tags (pre_tag_map, post_tag) were set
+    per pair of flows, not respecting their uni-directional nature.
+    It was generating hiding of some tags.
+  ! fix, nfprobe/netflow9.c: templates were (wrongly) not being
+    included in the count of flows sent in NetFlow v9 datagrams.
+    While this was not generating any issues with parsing flows,
+    it was originating visualization issues in Wireshark.
+
 0.12.0rc2 -- 09-09-2009
   + BGP daemon thread has been tied up with both the NetFlow and
     sFlow probe plugins, nfprobe and sfprobe, allowing to encode
