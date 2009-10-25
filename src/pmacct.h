@@ -261,7 +261,7 @@ EXT u_char *llc_handler(const struct pcap_pkthdr *, u_int, register u_char *, re
 EXT void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 #undef EXT
 
-#if (!defined __PMACCTD_C) && (!defined __UACCTD_C)
+#if (!defined __NL_C)
 #define EXT extern
 #else
 #define EXT
