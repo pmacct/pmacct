@@ -49,7 +49,10 @@ pmacct is Copyright (C) 2003-2009 by Paolo Lucente
     it was originating visualization issues in Wireshark.
   ! fix, SQL plugins: CPU hitting 100% has been determined when
     sql_history is disabled but sql_history_roundoff is defined.
-    Thanks very much to Charlie Allom for reporting the issue.
+    Thanks to Charlie Allom for reporting the issue.
+  ! fix, sfacctd.c: input and output interfaces (non-expaneded
+    format) were not correcly decoded creating issues to Pre-
+    tagging. Thanks to Jussi Sjostrom for reporting the issue.
 
 0.12.0rc2 -- 09-09-2009
   + BGP daemon thread has been tied up with both the NetFlow and
