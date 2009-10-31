@@ -703,12 +703,15 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
   }
   
   fread(buf, size, 1, f);
+  fclose(f);
+  
   ptr = strrchr(buf, ';');
   if (!ptr) {
     Log(LOG_ERR, "ERROR: missing trailing ';' in SQL query read from %s.\n", path);
     return(0); 
   } 
   else *ptr = '\0';
+  
   return (int)*ptr-(int)*buf;
 } 
 

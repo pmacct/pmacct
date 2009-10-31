@@ -852,6 +852,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
       }
     }
     t->num = index;
+    fclose(file);
   }
 }
 
