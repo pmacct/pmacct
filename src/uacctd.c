@@ -557,7 +557,7 @@ int main(int argc,char **argv, char **envp)
     cb_data.f_agent = (char *)&client;
     nfacctd_bgp_wrapper();
 
-    /* Sleep a bit to let the other thread initialize structures */
+    /* Let's give the BGP thread some advantage to create its structures */
     sleep(5);
   }
 #else

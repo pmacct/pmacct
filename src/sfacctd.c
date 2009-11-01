@@ -473,12 +473,6 @@ int main(int argc,char **argv, char **envp)
     if (rc < 0) Log(LOG_ERR, "WARN ( default/core ): Setsocksize() failed for 'plugin_pipe_size' = '%d'.\n", config.pipe_size); 
   }
 
-  rc = bind(config.sock, (struct sockaddr *) &server, slen);
-  if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( default/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.nfacctd_ip, config.nfacctd_port, errno);
-    exit(1);
-  }
-
   /* Multicast: memberships handling */
   for (idx = 0; mcast_groups[idx].family && idx < MAX_MCAST_GROUPS; idx++) {
     if (mcast_groups[idx].family == AF_INET) {
@@ -531,6 +525,9 @@ int main(int argc,char **argv, char **envp)
     else pptrs.v4.bta_table = NULL;
 
     nfacctd_bgp_wrapper();
+
+    /* Let's give the BGP thread some advantage to create its structures */
+    sleep(5);
   }
 #else
   if (config.nfacctd_bgp) {
@@ -538,6 +535,12 @@ int main(int argc,char **argv, char **envp)
     exit(1);
   }
 #endif
+
+  rc = bind(config.sock, (struct sockaddr *) &server, slen);
+  if (rc < 0) {
+    Log(LOG_ERR, "ERROR ( default/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.nfacctd_ip, config.nfacctd_port, errno);
+    exit(1);
+  }
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);
 
