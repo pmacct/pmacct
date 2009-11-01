@@ -1566,6 +1566,8 @@ void NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
   */
 
   id = 0;
+  if (tag) *tag = 0;
+  if (tag2) *tag2 = 0;
   if (sa->sa_family == AF_INET) {
     for (x = 0; x < t->ipv4_num; x++) {
       if (t->e[x].agent_ip.a.address.ipv4.s_addr == ((struct sockaddr_in *)sa)->sin_addr.s_addr) {

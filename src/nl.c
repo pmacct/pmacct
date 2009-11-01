@@ -303,6 +303,8 @@ void PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
   if (!t) return;
 
   id = 0;
+  if (tag) *tag = 0;
+  if (tag2) *tag2 = 0;
   for (x = 0; x < t->ipv4_num; x++) {
     for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
     if (id) {

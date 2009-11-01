@@ -12,9 +12,12 @@
 ! 'ip'			IP address of the device which is originating sFlow or NetFlow
 !			datagrams (router, probe, etc.)
 ! 'in'  		Input interface 
-! 'bgp_nexthop'		BGP next-hop of the flow source IP address. This value is compared
-!			against the BGP RIB of the device originating the sFlow or NetFlow
-!			datagram (see 'nfacctd_bgp' directive).
+! 'bgp_nexthop'		BGP next-hop of the flow source IP address (RPF-like). This value
+!			is compared against the BGP RIB of the device originating the sFlow
+!			or NetFlow datagram (see 'nfacctd_bgp' directive).
+! 'peer_dst_as'		First AS hop within the AS-PATH of the source IP address (RPF-like).
+!			This value is compared against the BGP RIB of the device originating
+!			the sFlow or NetFlow datagram (see 'nfacctd_bgp' directive). 
 ! 'src_mac'		Source MAC address of the flow. Requires NetFlow v9 or sFlow as
 !			NetFlow v5 lacks of such support.
 !
@@ -26,7 +29,9 @@ id=12345	ip=192.168.2.1	in=7
 
 ! A way to model a public internet exchange - in case MAC addresses are not available,
 ! ie. NetFlow v5. The catch-all entry at the end can be the AS number of the exchange.
-! Note that by using 'bgp_nexthop' for this purpose constitutes only an educated guess.
+! 'peer_dst_as' can be used instead of the BGP next-hop for the very same purpose. Note
+! that by using either 'bgp_nexthop' or 'peer_dst_as' for this purpose constitutes only
+! an educated guess.
 ! 
 id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.5
 id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.6

@@ -338,7 +338,7 @@ void dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 void vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  u_int16_t vlan_id;
+  u_int16_t vlan_id = 0;
   
   if (pptrs->vlan_ptr) {
     memcpy(&vlan_id, pptrs->vlan_ptr, 2);
@@ -400,7 +400,7 @@ void dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 void ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  u_int32_t tos;
+  u_int32_t tos = 0;
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     pdata->primitives.tos = ((struct my_iphdr *) pptrs->iph_ptr)->ip_tos;
@@ -714,8 +714,8 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t asn16;
-  u_int32_t asn32;
+  u_int16_t asn16 = 0;
+  u_int32_t asn32 = 0;
 
   switch(hdr->version) {
   case 9:
@@ -764,8 +764,8 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t asn16;
-  u_int32_t asn32;
+  u_int16_t asn16 = 0;
+  u_int32_t asn32 = 0;
 
   switch(hdr->version) {
   case 9:
@@ -1002,7 +1002,7 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int8_t tcp_flags;
+  u_int8_t tcp_flags = 0;
 
   switch(hdr->version) {
   case 9:
@@ -1024,9 +1024,9 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  time_t fstime;
-  u_int32_t t32;
-  u_int64_t t64;
+  time_t fstime = 0;
+  u_int32_t t32 = 0;
+  u_int64_t t64 = 0;
 
   switch(hdr->version) {
   case 9:
@@ -1107,9 +1107,9 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  time_t fstime;
-  u_int32_t t32;
-  u_int64_t t64;
+  time_t fstime = 0;
+  u_int32_t t32 = 0;
+  u_int64_t t64 = 0;
   
   switch(hdr->version) {
   case 9:
@@ -1190,8 +1190,8 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t t32;
-  u_int64_t t64;
+  u_int32_t t32 = 0;
+  u_int64_t t64 = 0;
 
   switch(hdr->version) {
   case 9:
@@ -1265,8 +1265,8 @@ void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t t32;
-  u_int64_t t64;
+  u_int32_t t32 = 0;
+  u_int64_t t64 = 0;
 
   switch(hdr->version) {
   case 9:
@@ -1866,7 +1866,7 @@ void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   struct xflow_status_entry_sampling *sentry;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  u_int32_t eff_srate;
+  u_int32_t eff_srate = 0;
 
   sentry = search_smp_if_status_table(entry->sampling, (sample->ds_class << 24 | sample->ds_index));
   if (sentry) { 

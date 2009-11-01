@@ -200,6 +200,23 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   return FALSE;
 }
 
+int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  as_t tmp;
+  int x = 0;
+  char *endptr;
+
+  e->peer_dst_as.neg = pt_check_neg(&value);
+
+  tmp = strtoul(value, &endptr, 10);
+  e->peer_dst_as.n = tmp;
+
+  for (x = 0; e->func[x]; x++);
+  if (config.nfacctd_bgp) e->func[x] = BPAS_bgp_peer_dst_as_handler; 
+
+  return FALSE;
+}
+
 int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct pcap_device device;
@@ -876,7 +893,7 @@ int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_info *info;
-  as_t asn;
+  as_t asn = 0;
 
   if (src_ret) {
     info = (struct bgp_info *) src_ret->info;
@@ -948,7 +965,7 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_info *info;
-  as_t asn;
+  as_t asn = 0;
 
   if (dst_ret) {
     info = (struct bgp_info *) dst_ret->info;
@@ -966,7 +983,7 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  as_t asn;
+  as_t asn = 0;
 
   if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
     asn = pptrs->bpas;
@@ -986,7 +1003,7 @@ int pretag_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_info *info;
-  as_t asn;
+  as_t asn = 0;
 
   if (dst_ret) {
     info = (struct bgp_info *) dst_ret->info;
@@ -1006,7 +1023,7 @@ int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_info *info;
-  u_int32_t local_pref;
+  u_int32_t local_pref = 0;
 
   if (dst_ret) {
     info = (struct bgp_info *) dst_ret->info;
@@ -1195,4 +1212,24 @@ int BPAS_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
 
   return (TRUE ^ entry->bgp_nexthop.neg);
+}
+
+int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+  as_t asn = 0;
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      if (info->attr->aspath && info->attr->aspath->str) {
+        asn = evaluate_first_asn(info->attr->aspath->str);
+      }
+    }
+  }
+
+  if (entry->peer_dst_as.n == asn) return (FALSE | entry->peer_dst_as.neg);
+  else return (TRUE ^ entry->peer_dst_as.neg);
 }
