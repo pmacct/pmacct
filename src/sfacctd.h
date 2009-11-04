@@ -13,6 +13,21 @@
 #define NF_AS_BGP 2 /* ignore ASN from sFlow and generate from BGP peerings */
 #endif
 
+#if (!defined NF_NET_COMPAT)
+#define NF_NET_COMPAT	0x00000000 /* Backward compatibility selection */
+#endif
+#if (!defined NF_NET_KEEP)
+#define NF_NET_KEEP	0x00000001 /* Determine IP network prefixes from NetFlow data */ 
+#endif
+#if (!defined NF_NET_NEW)
+#define NF_NET_NEW	0x00000002 /* Determine IP network prefixes from network files */
+#endif
+#if (!defined NF_NET_BGP)
+#define NF_NET_BGP	0x00000004 /* Determine IP network prefixes from BGP peerings */
+#endif
+#if (!defined NF_NET_STATIC)
+#define NF_NET_STATIC	0x00000008 /* Determine IP network prefixes from static mask */
+#endif
 
 #if (!defined NF9_FTYPE_IPV4)
 #define NF9_FTYPE_IPV4                  0

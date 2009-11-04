@@ -92,6 +92,7 @@ EXT int cfg_key_nfacctd_allow_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_time_secs(char *, char *, char *);
 EXT int cfg_key_nfacctd_time_new(char *, char *, char *);
 EXT int cfg_key_nfacctd_as_new(char *, char *, char *);
+EXT int cfg_key_nfacctd_net(char *, char *, char *);
 EXT int cfg_key_nfacctd_disable_checks(char *, char *, char *);
 EXT int cfg_key_nfacctd_mcast_groups(char *, char *, char *);
 EXT int cfg_key_nfacctd_sql_log(char *, char *, char *);

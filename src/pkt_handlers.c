@@ -29,6 +29,7 @@
 #include "sfacctd.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
+#include "addr.h"
 
 /* functions */
 void evaluate_packet_handlers()
@@ -79,6 +80,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_SUM_AS)) {
       if (config.acct_type == ACCT_PM) {
 	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = src_host_handler;
+	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = src_host_handler;
 	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_NF) {
@@ -97,6 +99,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & (COUNT_DST_AS|COUNT_SUM_AS)) {
       if (config.acct_type == ACCT_PM) {
 	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = dst_host_handler;
+	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = dst_host_handler;
 	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_NF) {
@@ -582,17 +585,20 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t src_mask = 0;
 
   switch(hdr->version) {
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len); 
+      memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
       pdata->primitives.src_ip.family = AF_INET;
       break;
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
+      memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
       pdata->primitives.src_ip.family = AF_INET6;
       break;
     }
@@ -602,10 +608,12 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     switch(hdr->aggregation) {
     case 3:
       pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v8_3 *) pptrs->f_data)->src_prefix;
+      src_mask = ((struct struct_export_v8_3 *) pptrs->f_data)->src_mask;
       pdata->primitives.src_ip.family = AF_INET;
       break;
     case 5:
       pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v8_5 *) pptrs->f_data)->src_prefix;
+      src_mask = ((struct struct_export_v8_5 *) pptrs->f_data)->src_mask;
       pdata->primitives.src_ip.family = AF_INET;
       break;
     case 7:
@@ -618,14 +626,17 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       break;
     case 11:
       pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v8_11 *) pptrs->f_data)->src_prefix;
+      src_mask = ((struct struct_export_v8_11 *) pptrs->f_data)->src_mask;
       pdata->primitives.src_ip.family = AF_INET;
       break;
     case 13:
       pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v8_13 *) pptrs->f_data)->src_prefix;
+      src_mask = ((struct struct_export_v8_13 *) pptrs->f_data)->src_mask;
       pdata->primitives.src_ip.family = AF_INET;
       break;
     case 14:
       pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v8_14 *) pptrs->f_data)->src_prefix;
+      src_mask = ((struct struct_export_v8_14 *) pptrs->f_data)->src_mask;
       pdata->primitives.src_ip.family = AF_INET;
       break;
     default:
@@ -636,8 +647,31 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     break;
   default:
     pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->srcaddr.s_addr;
+    src_mask = ((struct struct_export_v5 *) pptrs->f_data)->src_mask;
     pdata->primitives.src_ip.family = AF_INET;
     break;
+  }
+
+  if ((chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net == NF_NET_KEEP) {
+    u_int32_t maskbits[4], addrh[4];
+    u_int8_t j;
+
+    memset(maskbits, 0, 32);
+    for (j = 0; j < 4 && src_mask >= 32; j++, src_mask -= 32) maskbits[j] = 0xffffffffU;
+    if (j < 4 && src_mask) maskbits[j] = ~(0xffffffffU >> src_mask);
+
+    if (pdata->primitives.src_ip.family == AF_INET) {
+      addrh[0] = ntohl(pdata->primitives.src_ip.address.ipv4.s_addr);
+      addrh[0] &= maskbits[0];
+      pdata->primitives.src_ip.address.ipv4.s_addr = htonl(addrh[0]);
+    }
+#if defined ENABLE_IPV6
+    else if (pdata->primitives.src_ip.family == AF_INET6) {
+      memcpy(&addrh, (void *) pm_ntohl6(&pdata->primitives.src_ip.address.ipv6), IP6AddrSz);
+      for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
+      memcpy(&pdata->primitives.src_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    }
+#endif
   }
 }
 
@@ -646,17 +680,20 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t dst_mask = 0;
 
   switch(hdr->version) {
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
+      memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
+      memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
       pdata->primitives.dst_ip.family = AF_INET6;
       break;
     }
@@ -666,10 +703,12 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     switch(hdr->aggregation) {
     case 4:
       pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v8_4 *) pptrs->f_data)->dst_prefix;
+      dst_mask = ((struct struct_export_v8_4 *) pptrs->f_data)->dst_mask;
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     case 5:
       pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v8_5 *) pptrs->f_data)->dst_prefix;
+      dst_mask = ((struct struct_export_v8_5 *) pptrs->f_data)->dst_mask;
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     case 6:
@@ -686,14 +725,17 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       break;
     case 12:
       pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v8_12 *) pptrs->f_data)->dst_prefix;
+      dst_mask = ((struct struct_export_v8_12 *) pptrs->f_data)->dst_mask;
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     case 13:
       pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v8_13 *) pptrs->f_data)->dst_prefix;
+      dst_mask = ((struct struct_export_v8_13 *) pptrs->f_data)->dst_mask;
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     case 14:
       pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v8_14 *) pptrs->f_data)->dst_prefix;
+      dst_mask = ((struct struct_export_v8_14 *) pptrs->f_data)->dst_mask;
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     default:
@@ -704,8 +746,31 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     break;
   default:
     pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
+    dst_mask = ((struct struct_export_v5 *) pptrs->f_data)->dst_mask;
     pdata->primitives.dst_ip.family = AF_INET;
     break;
+  }
+
+  if ((chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net == NF_NET_KEEP) {
+    u_int32_t maskbits[4], addrh[4];
+    u_int8_t j;
+
+    memset(maskbits, 0, 32);
+    for (j = 0; j < 4 && dst_mask >= 32; j++, dst_mask -= 32) maskbits[j] = 0xffffffffU;
+    if (j < 4 && dst_mask) maskbits[j] = ~(0xffffffffU >> dst_mask);
+
+    if (pdata->primitives.dst_ip.family == AF_INET) {
+      addrh[0] = ntohl(pdata->primitives.dst_ip.address.ipv4.s_addr);
+      addrh[0] &= maskbits[0];
+      pdata->primitives.dst_ip.address.ipv4.s_addr = htonl(addrh[0]);
+    }
+#if defined ENABLE_IPV6
+    else if (pdata->primitives.dst_ip.family == AF_INET6) {
+      memcpy(&addrh, (void *) pm_ntohl6(&pdata->primitives.dst_ip.address.ipv6), IP6AddrSz);
+      for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
+      memcpy(&pdata->primitives.dst_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    }
+#endif
   }
 }
 
@@ -1772,6 +1837,7 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *addr = &sample->ipsrc;
+  u_int8_t src_mask = sample->srcMask;
 
   if (sample->gotIPV4) {
     pdata->primitives.src_ip.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
@@ -1783,6 +1849,28 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.src_ip.family = AF_INET6;
   }
 #endif
+
+  if ((chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net == NF_NET_KEEP) {
+    u_int32_t maskbits[4], addrh[4];
+    u_int8_t j;
+
+    memset(maskbits, 0, 32);
+    for (j = 0; j < 4 && src_mask >= 32; j++, src_mask -= 32) maskbits[j] = 0xffffffffU;
+    if (j < 4 && src_mask) maskbits[j] = ~(0xffffffffU >> src_mask);
+
+    if (pdata->primitives.src_ip.family == AF_INET) {
+      addrh[0] = ntohl(pdata->primitives.src_ip.address.ipv4.s_addr);
+      addrh[0] &= maskbits[0];
+      pdata->primitives.src_ip.address.ipv4.s_addr = htonl(addrh[0]);
+    }
+#if defined ENABLE_IPV6
+    else if (pdata->primitives.src_ip.family == AF_INET6) {
+      memcpy(&addrh, (void *) pm_ntohl6(&pdata->primitives.src_ip.address.ipv6), IP6AddrSz);
+      for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
+      memcpy(&pdata->primitives.src_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    }
+#endif
+  }
 }
 
 void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1790,6 +1878,7 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *addr = &sample->ipdst;
+  u_int8_t dst_mask = sample->dstMask;
 
   if (sample->gotIPV4) { 
     pdata->primitives.dst_ip.address.ipv4.s_addr = sample->dcd_dstIP.s_addr; 
@@ -1801,6 +1890,28 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.dst_ip.family = AF_INET6;
   }
 #endif
+
+  if ((chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net == NF_NET_KEEP) {
+    u_int32_t maskbits[4], addrh[4];
+    u_int8_t j;
+
+    memset(maskbits, 0, 32);
+    for (j = 0; j < 4 && dst_mask >= 32; j++, dst_mask -= 32) maskbits[j] = 0xffffffffU;
+    if (j < 4 && dst_mask) maskbits[j] = ~(0xffffffffU >> dst_mask);
+
+    if (pdata->primitives.dst_ip.family == AF_INET) {
+      addrh[0] = ntohl(pdata->primitives.dst_ip.address.ipv4.s_addr);
+      addrh[0] &= maskbits[0];
+      pdata->primitives.dst_ip.address.ipv4.s_addr = htonl(addrh[0]);
+    }
+#if defined ENABLE_IPV6
+    else if (pdata->primitives.dst_ip.family == AF_INET6) {
+      memcpy(&addrh, (void *) pm_ntohl6(&pdata->primitives.dst_ip.address.ipv6), IP6AddrSz);
+      for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
+      memcpy(&pdata->primitives.dst_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    }
+#endif
+  }
 }
 
 void SF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

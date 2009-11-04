@@ -2016,9 +2016,38 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
     value = NF_AS_NEW;
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_AS_BGP;
+  else {
+    Log(LOG_ERR, "WARN ( %s ): Invalid AS aggregation value '%s'\n", filename, value_ptr);
+    return ERR;
+  } 
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_as = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_as_new'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key '[nf|pm|sf|ua]acctd_as_new'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  if (!strcmp(value_ptr, "sflow") || !strcmp(value_ptr, "netflow"))
+    value = NF_NET_KEEP;
+  else if (!strcmp(value_ptr, "file"))
+    value = NF_NET_NEW;
+  else if (!strcmp(value_ptr, "mask"))
+    value = NF_NET_STATIC;
+  // XXX: not supported yet, it will be though
+  //else if (!strcmp(value_ptr, "bgp"))
+  //  value = NF_NET_BGP;
+  else {
+    Log(LOG_ERR, "WARN ( %s ): Invalid network aggregation value '%s'\n", filename, value_ptr);
+    return ERR;
+  } 
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_net = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key '[nf|pm|sf|ua]acctd_net'. Globalized.\n", filename);
 
   return changes;
 }

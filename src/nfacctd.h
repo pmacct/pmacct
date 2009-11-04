@@ -392,6 +392,12 @@ struct data_hdr_v9 {
 #define NF_AS_NEW 1 /* ignore ASN from NetFlow and generate from network files */ 
 #define NF_AS_BGP 2 /* ignore ASN from NetFlow and generate from BGP peerings */
 
+#define NF_NET_COMPAT	0x00000000 /* Backward compatibility selection */
+#define NF_NET_KEEP	0x00000001 /* Determine IP network prefixes from NetFlow data */
+#define NF_NET_NEW	0x00000002 /* Determine IP network prefixes from network files */
+#define NF_NET_BGP	0x00000004 /* Determine IP network prefixes from BGP peerings */
+#define NF_NET_STATIC	0x00000008 /* Determine IP network prefixes from static mask */
+
 /* NetFlow V9 stuff */
 #define NF9_TEMPLATE_FLOWSET_ID         0
 #define NF9_OPTIONS_FLOWSET_ID          1

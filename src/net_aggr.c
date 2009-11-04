@@ -421,10 +421,10 @@ void set_net_funcs(struct networks_table *nt)
 
   memset(&net_funcs, 0, sizeof(net_funcs));
 
-  if (config.networks_mask) {
+  if ((config.nfacctd_net & NF_NET_STATIC) && config.networks_mask) {
     int j, index = config.networks_mask;
 
-    memset(&nt->maskbits, 0, 4);
+    memset(nt->maskbits, 0, 32);
     for (j = 0; j < 4 && index >= 32; j++, index -= 32) nt->maskbits[j] = 0xffffffffU;
     if (j < 4 && index) nt->maskbits[j] = ~(0xffffffffU >> index);
 
@@ -449,7 +449,7 @@ void set_net_funcs(struct networks_table *nt)
     count++;
   }
 
-  if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
+  if ((config.nfacctd_net & NF_NET_NEW) && config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
     net_funcs[count] = search_src_net;
     count++;
   } 
@@ -474,7 +474,7 @@ void set_net_funcs(struct networks_table *nt)
     count++;
   }
 
-  if (config.what_to_count & (COUNT_DST_NET|COUNT_SUM_NET)) {
+  if ((config.nfacctd_net & NF_NET_NEW) && config.what_to_count & (COUNT_DST_NET|COUNT_SUM_NET)) {
     net_funcs[count] = search_dst_net;
     count++;
   }
