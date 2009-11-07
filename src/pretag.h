@@ -79,6 +79,7 @@ struct id_entry {
   pt_uint8_t engine_id;
   pt_uint32_t agent_id; /* applies to sFlow's agentSubId */
   pt_uint32_t sampling_rate; /* applies to sFlow's sampling rate */
+  pt_uint8_t direction;
   pt_uint32_t src_as;
   pt_uint32_t dst_as; 
   pt_uint32_t peer_src_as;

@@ -39,6 +39,7 @@ EXT int PT_map_filter_handler(char *, struct id_entry *, char *, struct plugin_r
 EXT int PT_map_v8agg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_agent_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_sampling_rate_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_direction_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_src_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_peer_src_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -74,6 +75,7 @@ EXT int pretag_peer_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_peer_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_local_pref_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_sampling_rate_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_direction_handler(struct packet_ptrs *, void *, void *);
 
 EXT int SF_pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_output_handler(struct packet_ptrs *, void *, void *);

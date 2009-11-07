@@ -378,6 +378,18 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
   return FALSE;
 }
 
+int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->direction.neg = pt_check_neg(&value);
+  e->direction.n = atoi(value);
+  for (x = 0; e->func[x]; x++);
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_direction_handler;
+
+  return FALSE;
+}
+
 int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
@@ -832,7 +844,7 @@ int pretag_v8agg_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (entry->v8agg.n == ((struct struct_header_v8 *)pptrs->f_header)->aggregation) return (FALSE | entry->v8agg.neg);
     else return (TRUE ^ entry->v8agg.neg);
   default:
-    return (TRUE ^ entry->v8agg.neg); 
+    return TRUE; /* this field does not exist: condition is always true */
   }
 }
 
@@ -1052,7 +1064,26 @@ int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *
     if (entry->sampling_rate.n == srate) return (FALSE | entry->sampling_rate.neg);
     else return (TRUE ^ entry->sampling_rate.neg);
   default:
-    break;
+    return TRUE; /* this field might not apply: condition is always true */
+  }
+}
+
+int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t direction = 0;
+
+  switch (hdr->version) {
+  case 9:
+    if (tpl->tpl[NF9_DIRECTION].len == 1) {
+      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
+    }
+    if (entry->direction.n == direction) return (FALSE | entry->direction.neg);
+    else return (TRUE ^ entry->direction.neg);
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
   }
 }
 

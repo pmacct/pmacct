@@ -656,7 +656,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     u_int32_t maskbits[4], addrh[4];
     u_int8_t j;
 
-    memset(maskbits, 0, 32);
+    memset(maskbits, 0,sizeof(maskbits));
     for (j = 0; j < 4 && src_mask >= 32; j++, src_mask -= 32) maskbits[j] = 0xffffffffU;
     if (j < 4 && src_mask) maskbits[j] = ~(0xffffffffU >> src_mask);
 
@@ -755,7 +755,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     u_int32_t maskbits[4], addrh[4];
     u_int8_t j;
 
-    memset(maskbits, 0, 32);
+    memset(maskbits, 0, sizeof(maskbits));
     for (j = 0; j < 4 && dst_mask >= 32; j++, dst_mask -= 32) maskbits[j] = 0xffffffffU;
     if (j < 4 && dst_mask) maskbits[j] = ~(0xffffffffU >> dst_mask);
 
@@ -1854,7 +1854,7 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     u_int32_t maskbits[4], addrh[4];
     u_int8_t j;
 
-    memset(maskbits, 0, 32);
+    memset(maskbits, 0, sizeof(maskbits));
     for (j = 0; j < 4 && src_mask >= 32; j++, src_mask -= 32) maskbits[j] = 0xffffffffU;
     if (j < 4 && src_mask) maskbits[j] = ~(0xffffffffU >> src_mask);
 
@@ -1895,7 +1895,7 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     u_int32_t maskbits[4], addrh[4];
     u_int8_t j;
 
-    memset(maskbits, 0, 32);
+    memset(maskbits, 0, sizeof(maskbits));
     for (j = 0; j < 4 && dst_mask >= 32; j++, dst_mask -= 32) maskbits[j] = 0xffffffffU;
     if (j < 4 && dst_mask) maskbits[j] = ~(0xffffffffU >> dst_mask);
 

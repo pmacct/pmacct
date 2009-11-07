@@ -424,7 +424,7 @@ void set_net_funcs(struct networks_table *nt)
   if ((config.nfacctd_net & NF_NET_STATIC) && config.networks_mask) {
     int j, index = config.networks_mask;
 
-    memset(nt->maskbits, 0, 32);
+    memset(nt->maskbits, 0, sizeof(nt->maskbits));
     for (j = 0; j < 4 && index >= 32; j++, index -= 32) nt->maskbits[j] = 0xffffffffU;
     if (j < 4 && index) nt->maskbits[j] = ~(0xffffffffU >> index);
 

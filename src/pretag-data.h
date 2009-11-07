@@ -33,6 +33,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"v8agg", PT_map_v8agg_handler},
   {"agent_id", PT_map_agent_id_handler},
   {"sampling_rate", PT_map_sampling_rate_handler},
+  {"direction", PT_map_direction_handler},
   {"src_as", PT_map_src_as_handler},
   {"dst_as", PT_map_dst_as_handler},
   {"peer_src_as", PT_map_peer_src_as_handler},
