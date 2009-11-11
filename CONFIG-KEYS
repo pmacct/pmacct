@@ -957,6 +957,15 @@ DESC:		expects positive number value which instructs how many times a default ro
 		are required (ie. the closer the router is, the most specific the route is assumed to be).
 		(default: 0)
 
+KEY:            bgp_follow_nexthop
+DESC:		expects an IP prefix, ie. 192.168.0.0/16. It follows the BGP next-hop up (using each next-
+		hop as BGP source-address for the next BGP RIB lookup), returning the last next-hop part of
+		the supplied IP prefix as value for the 'peer_ip_dst' primitive. This feature is aimed at
+		networks not running MPLS; goal being to see the routing-domain "exit-point" for traffic
+		(which is what happens with MPLS LSPs in conjunction with BGP). As a sidenote, the feature
+		is internally protected against routing loops with a non-configurable limit of 20 lookups.
+		(default: none)
+
 KEY:            bgp_neighbors_file
 DESC:		writes a list of the BGP neighbors in the established state to the specified file, one
 		per line. This gets particularly useful for automation purposes (ie. auto-discovery of

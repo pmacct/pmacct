@@ -333,6 +333,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_peer_src_as_map", cfg_key_nfacctd_bgp_peer_src_as_map},
   {"bgp_agent_map", cfg_key_nfacctd_bgp_to_agent_map},
   {"bgp_follow_default", cfg_key_nfacctd_bgp_follow_default},
+  {"bgp_follow_nexthop", cfg_key_nfacctd_bgp_follow_nexthop},
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},

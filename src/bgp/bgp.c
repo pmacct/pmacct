@@ -1508,6 +1508,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
   pptrs->bgp_src = NULL;
   pptrs->bgp_dst = NULL;
+  pptrs->bgp_peer = NULL;
+  pptrs->bgp_nexthop = NULL;
 
   if (pptrs->bta) {
     sa = &sa_local;
@@ -1614,9 +1616,118 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         }
       }
     }
+    if (config.nfacctd_bgp_follow_nexthop.family && pptrs->bgp_dst)
+      bgp_follow_nexthop_lookup(pptrs);
   }
 
   if (saved_peer) pptrs->bgp_peer = (char *) saved_peer;
+}
+
+void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
+{
+  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
+  struct bgp_peer *nh_peer, *saved_peer = NULL;
+  struct bgp_node *result_node = NULL;
+  struct bgp_info *info;
+  char *result = NULL, *saved_result = NULL;
+  int peers_idx, ttl = MAX_HOPS_FOLLOW_NH;
+  struct prefix nh, ch;
+  struct in_addr pref4;
+#if defined ENABLE_IPV6
+  struct in6_addr pref6;
+#endif
+
+  start_again:
+
+  for (nh_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
+      nh_peer = &peers[peers_idx];
+      break;
+    }
+  }
+
+  memset(&ch, 0, sizeof(ch));
+  ch.family = AF_INET;
+  ch.prefixlen = 32;
+  memcpy(&ch.u.prefix4, &nh_peer->addr.address.ipv4, 4);
+
+  if (nh_peer) {
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+      result = (char *) bgp_node_match_ipv4(nh_peer->rib[AFI_IP][SAFI_UNICAST], &pref4);
+    }
+#if defined ENABLE_IPV6
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+      result = (char *) bgp_node_match_ipv6(nh_peer->rib[AFI_IP6][SAFI_UNICAST], &pref6);
+    }
+#endif
+
+    memset(&nh, 0, sizeof(nh));
+    result_node = (struct bgp_node *) result;
+
+    if (result_node)
+      info = (struct bgp_info *) result_node->info;
+    else
+      info = NULL;
+
+    if (info && info->attr) {
+      if (info->attr->mp_nexthop.family == AF_INET) {
+	nh.family = AF_INET;
+	nh.prefixlen = 32;
+	memcpy(&nh.u.prefix4, &info->attr->mp_nexthop.address.ipv4, 4);
+
+	if (prefix_match(&config.nfacctd_bgp_follow_nexthop, &nh) && !prefix_match(&ch, &nh) && ttl > 0) { 
+          sa = &sa_local;
+          memset(sa, 0, sizeof(struct sockaddr));
+          sa->sa_family = AF_INET;
+          memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->mp_nexthop.address.ipv4, 4);
+	  saved_result = result;
+	  ttl--;
+          goto start_again;
+        }
+	else goto end;
+      }
+#if defined ENABLE_IPV6
+      else if (info->attr->mp_nexthop.family == AF_INET6 && !prefix_match(&ch, &nh)) {
+	nh.family = AF_INET6;
+	nh.prefixlen = 128;
+	memcpy(&nh.u.prefix6, &info->attr->mp_nexthop.address.ipv6, 16);
+
+	if (prefix_match(&config.nfacctd_bgp_follow_nexthop, &nh) && ttl > 0) {
+          sa = &sa_local;
+          memset(sa, 0, sizeof(struct sockaddr));
+          sa->sa_family = AF_INET6;
+          memcpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6, 16);
+	  saved_result = result;
+	  ttl--;
+          goto start_again;
+	}
+	else goto end;
+      }
+#endif
+      else {
+	nh.family = AF_INET;
+	nh.prefixlen = 32;
+	memcpy(&nh.u.prefix4, &info->attr->nexthop, 4);
+
+	if (prefix_match(&config.nfacctd_bgp_follow_nexthop, &nh) && !prefix_match(&ch, &nh) && ttl > 0) {
+          sa = &sa_local;
+          memset(sa, 0, sizeof(struct sockaddr));
+          sa->sa_family = AF_INET;
+          memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->nexthop, 4);
+	  saved_result = result;
+	  ttl--;
+          goto start_again;
+	}
+	else goto end;
+      }
+    }
+  }
+
+  end:
+
+  if (saved_result) pptrs->bgp_nexthop = saved_result; 
 }
 
 void write_neighbors_file(char *filename)

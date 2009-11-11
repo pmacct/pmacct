@@ -1613,19 +1613,29 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         }
       }
       if (chptr->aggregation & COUNT_PEER_DST_IP) {
-	if (info->attr->mp_nexthop.family == AF_INET) {
+	struct bgp_node *nh;
+	struct bgp_info *nh_info;
+
+	if (pptrs->bgp_nexthop) { 
+	  nh = (struct bgp_node *) pptrs->bgp_nexthop;
+	  nh_info = nh->info;
+	}
+	else 
+	  nh_info = info;
+
+	if (nh_info->attr->mp_nexthop.family == AF_INET) {
 	  pbgp->peer_dst_ip.family = AF_INET;
-	  memcpy(&pbgp->peer_dst_ip.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
+	  memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
 	}
 #if defined ENABLE_IPV6
-	else if (info->attr->mp_nexthop.family == AF_INET6) {
+	else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
 	  pbgp->peer_dst_ip.family = AF_INET6;
-	  memcpy(&pbgp->peer_dst_ip.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
+	  memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
 	}
 #endif
 	else {
 	  pbgp->peer_dst_ip.family = AF_INET; 
-	  pbgp->peer_dst_ip.address.ipv4.s_addr = info->attr->nexthop.s_addr;
+	  pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
 	}
       }
     }

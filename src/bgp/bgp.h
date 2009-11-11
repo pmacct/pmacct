@@ -71,6 +71,7 @@
 
 /* BGP misc */
 #define MAX_BGP_PEERS_DEFAULT 4
+#define MAX_HOPS_FOLLOW_NH 20
 
 /* Maximum BGP standard/extended community patterns supported:
    nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
@@ -176,6 +177,7 @@ EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
 EXT void bgp_srcdst_lookup(struct packet_ptrs *);
+EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
 EXT void write_neighbors_file(char *);
 
 EXT unsigned int attrhash_key_make(void *);

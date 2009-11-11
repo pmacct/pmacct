@@ -185,7 +185,8 @@ struct packet_ptrs {
   pm_id_t bta; /* bgp_to_agent */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
   char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 
-  char *bgp_peer; /* BGP peer's Router-ID */
+  char *bgp_peer; /* record BGP peer's Router-ID */
+  char *bgp_nexthop; /* record BGP next-hop in case of follow-up */
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 

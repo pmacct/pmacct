@@ -1805,6 +1805,19 @@ int cfg_key_nfacctd_bgp_follow_default(char *filename, char *name, char *value_p
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  str2prefix(value_ptr, &list->cfg.nfacctd_bgp_follow_nexthop);
+
+  for (; list; list = list->next, changes++) str2prefix(value_ptr, &list->cfg.nfacctd_bgp_follow_nexthop);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_follow_nexthop'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_neighbors_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
