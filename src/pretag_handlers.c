@@ -750,6 +750,9 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
   struct bgp_info *info;
   int ret = -1;
 
+  /* bgp_follow_nexthop hook */
+  if (pptrs->bgp_nexthop) dst_ret = (struct bgp_node *) pptrs->bgp_nexthop;
+
   if (dst_ret) {
     info = (struct bgp_info *) dst_ret->info;
     if (info && info->attr) {
