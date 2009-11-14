@@ -889,6 +889,10 @@ KEY:		bgp_daemon_max_peers
 DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon reaching of the limit,
 		no more BGP sessions can be established. Differently from routers BGP neighbors don't need to
 		be defined explicitely one-by-one rather an upper boundary to the number of neighbors applies.
+		pmacctd, uacctd daemons are limited to only two BGP peers (in a primary/backup fashion, see
+		bgp_agent_map); such hardcoded limit is imposed as the only scenarios supported in conjunction
+		with the BGP daemon are as NetFlow/sFlow probes on-board software routers and firewalls.
+		(default: 10)
 
 KEY:		bgp_daemon_msglog
 VALUES:		[true|false]
@@ -939,7 +943,10 @@ DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agent
 		ones. It is particularly aimed as a resource-savy alternative to have N agents but only a
 		restricted number of BGP peers (ie. a BGP RR), in case of simpler topologies (ie. hub-and-
 		spoke) or scenarios (ie. single-homed). It can also be viewed as a temporary workaround to
-		certain situations.
+		certain situations. pmacctd, uacctd daemons are required to use a bgp_agent_map with up to 
+		two "catch-all" entries - working in a primary/backup fashion (see agent_to_peer.map in the
+		examples section): this is because these daemons do not have a NetFlow/sFlow source address
+		to match to.
 
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can
@@ -955,16 +962,18 @@ DESC:		expects positive number value which instructs how many times a default ro
 
 		As soon as an IP prefix is matched, it is not looked up anymore in case more recursions
 		are required (ie. the closer the router is, the most specific the route is assumed to be).
-		(default: 0)
+		pmacctd, uacctd daemons are internally limited to only two BGP peers hence this feature
+		can't properly work. (default: 0)
 
 KEY:            bgp_follow_nexthop
 DESC:		expects an IP prefix, ie. 192.168.0.0/16. It follows the BGP next-hop up (using each next-
 		hop as BGP source-address for the next BGP RIB lookup), returning the last next-hop part of
-		the supplied IP prefix as value for the 'peer_ip_dst' primitive. This feature is aimed at
-		networks not running MPLS; goal being to see the routing-domain "exit-point" for traffic
-		(which is what happens with MPLS LSPs in conjunction with BGP). As a sidenote, the feature
-		is internally protected against routing loops with a non-configurable limit of 20 lookups.
-		(default: none)
+		the supplied IP prefix as value for the 'peer_ip_dst' primitive. bgp_agent_map is supported
+		at each recursion. This feature is aimed at networks not running MPLS or BGP confederations;
+		underlying target being to see the routing-domain "exit-point" (which is what easily happens
+		with MPLS LSPs in conjunction with BGP). The feature is internally protected against routing
+		loops with an hardcoded limit of 20 lookups; pmacctd, uacctd daemons are internally limited
+		to only two BGP peers hence this feature can't properly work. (default: none)
 
 KEY:            bgp_neighbors_file
 DESC:		writes a list of the BGP neighbors in the established state to the specified file, one

@@ -138,6 +138,7 @@ int main(int argc,char **argv, char **envp)
   tag_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
   bta_map_allocated = FALSE;
+  find_id_func = NF_find_id;
 
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;

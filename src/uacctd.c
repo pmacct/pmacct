@@ -132,6 +132,7 @@ int main(int argc,char **argv, char **envp)
   reload_map = FALSE;
   tag_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
+  find_id_func = PM_find_id;
 
   errflag = 0;
 

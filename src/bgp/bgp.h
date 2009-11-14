@@ -72,6 +72,7 @@
 /* BGP misc */
 #define MAX_BGP_PEERS_DEFAULT 4
 #define MAX_HOPS_FOLLOW_NH 20
+#define MAX_NH_SELF_REFERENCES 1
 
 /* Maximum BGP standard/extended community patterns supported:
    nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
