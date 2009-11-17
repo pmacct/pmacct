@@ -2051,9 +2051,8 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     value = NF_NET_NEW;
   else if (!strcmp(value_ptr, "mask"))
     value = NF_NET_STATIC;
-  // XXX: not supported yet, it will be though
-  //else if (!strcmp(value_ptr, "bgp"))
-  //  value = NF_NET_BGP;
+  else if (!strcmp(value_ptr, "bgp"))
+    value = NF_NET_BGP;
   else {
     Log(LOG_ERR, "WARN ( %s ): Invalid network aggregation value '%s'\n", filename, value_ptr);
     return ERR;

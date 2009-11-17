@@ -64,16 +64,24 @@ void evaluate_packet_handlers()
 #endif
 
     if (channels_list[index].aggregation & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
+      if (channels_list[index].plugin->cfg.nfacctd_net == NF_NET_BGP && channels_list[index].aggregation & (COUNT_SRC_NET|COUNT_SUM_NET))
+	channels_list[index].phandler[primitives] = bgp_src_net_handler;
+      else {
+        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation & (COUNT_DST_HOST|COUNT_DST_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
+      if (channels_list[index].plugin->cfg.nfacctd_net == NF_NET_BGP && channels_list[index].aggregation & (COUNT_DST_NET|COUNT_SUM_NET))
+        channels_list[index].phandler[primitives] = bgp_dst_net_handler;
+      else { 
+        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
+      }
       primitives++;
     }
     
@@ -349,6 +357,48 @@ void vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, 
   }
 }
 #endif
+
+void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_src;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (ret) {
+      memcpy(&pdata->primitives.src_ip.address.ipv4, &ret->p.u.prefix4, 4);
+      pdata->primitives.src_ip.family = AF_INET;
+    }
+  }
+#if defined ENABLE_IPV6
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (ret) {
+      memcpy(&pdata->primitives.src_ip.address.ipv6, &ret->p.u.prefix6, 16);
+      pdata->primitives.src_ip.family = AF_INET6;
+    }
+  }
+#endif
+}
+
+void bgp_dst_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (ret) {
+      memcpy(&pdata->primitives.dst_ip.address.ipv4, &ret->p.u.prefix4, 4);
+      pdata->primitives.dst_ip.family = AF_INET;
+    }
+  }
+#if defined ENABLE_IPV6
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (ret) {
+      memcpy(&pdata->primitives.dst_ip.address.ipv6, &ret->p.u.prefix6, 16);
+      pdata->primitives.dst_ip.family = AF_INET6;
+    }
+  }
+#endif
+}
 
 void src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
