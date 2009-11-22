@@ -354,7 +354,9 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_ID2;
 	}
         if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
+				       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
+				       COUNT_SRC_LOCAL_PREF)) {
           Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
           exit(1);
         }
@@ -414,10 +416,28 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-	    			       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)) {
+	    			       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
+				       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
+				       COUNT_SRC_LOCAL_PREF)) {
 	  /* Sanitizing the aggregation method */
-	  if ( (list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM) ) {
+	  if ( ((list->cfg.what_to_count & COUNT_STD_COMM) && (list->cfg.what_to_count & COUNT_EXT_COMM)) ||
+	       ((list->cfg.what_to_count & COUNT_SRC_STD_COMM) && (list->cfg.what_to_count & COUNT_SRC_EXT_COMM)) ) {
 	    printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+	    exit(1);
+	  }
+	  if ( (list->cfg.what_to_count & COUNT_SRC_STD_COMM && !config.nfacctd_bgp_src_std_comm_type) ||
+	       (list->cfg.what_to_count & COUNT_SRC_EXT_COMM && !config.nfacctd_bgp_src_ext_comm_type) ||
+	       (list->cfg.what_to_count & COUNT_SRC_AS_PATH && !config.nfacctd_bgp_src_as_path_type ) ||
+	       (list->cfg.what_to_count & COUNT_SRC_LOCAL_PREF && !config.nfacctd_bgp_src_local_pref_type ) ||
+	       (list->cfg.what_to_count & COUNT_SRC_MED && !config.nfacctd_bgp_src_med_type ) ||
+	       (list->cfg.what_to_count & COUNT_PEER_SRC_AS && !config.nfacctd_bgp_peer_as_src_type ) ) {
+            printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
+            printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
+            printf("       src_as_path     =>  bgp_src_as_path_type\n");
+            printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
+            printf("       src_ext_comm    =>  bgp_src_ext_comm_type\n");
+            printf("       src_local_pref  =>  bgp_src_local_pref_type\n");
+            printf("       src_med         =>  bgp_src_med_type\n");
 	    exit(1);
 	  }
 	  list->cfg.data_type |= PIPE_TYPE_BGP;

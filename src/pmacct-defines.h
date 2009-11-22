@@ -25,7 +25,7 @@
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:R"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:Rg:L:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:"
-#define N_PRIMITIVES 21
+#define N_PRIMITIVES 41
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
 #define PROTO_LEN 12
@@ -92,6 +92,7 @@
 #define MAP_BGP_TO_XFLOW_AGENT	101	/* bgp_to_agent_map */
 
 
+/* 41 primitives currently defined */
 #define COUNT_SRC_HOST		0x0000000000000001ULL
 #define COUNT_DST_HOST		0x0000000000000002ULL
 #define COUNT_SUM_HOST          0x0000000000000004ULL
@@ -128,6 +129,11 @@
 #define COUNT_PEER_SRC_IP	0x0000000200000000ULL
 #define COUNT_PEER_DST_IP	0x0000000400000000ULL
 #define COUNT_ID2		0x0000000800000000ULL
+#define COUNT_SRC_AS_PATH	0x0000001000000000ULL
+#define COUNT_SRC_STD_COMM	0x0000002000000000ULL
+#define COUNT_SRC_EXT_COMM	0x0000004000000000ULL
+#define COUNT_SRC_LOCAL_PREF	0x0000008000000000ULL
+#define COUNT_SRC_MED		0x0000010000000000ULL
 
 /* BYTES and PACKETS are used into templates; we let their values to
    overlap with some values we will not need into templates */ 
@@ -172,9 +178,13 @@
 #define CHLD_WARNING		0x00000001
 #define CHLD_ALERT		0x00000002
 
+/* PEER_SRC_AS_* to be renamed */
 #define PEER_SRC_AS_BGP_COMMS	0x00000001
 #define PEER_SRC_AS_BGP_ECOMMS	0x00000002
 #define PEER_SRC_AS_MAP		0x00000004
+#define BGP_SRC_PRIMITIVES_MAP	0x00000004
+#define PEER_SRC_AS_BGP		0x00000008
+#define BGP_SRC_PRIMITIVES_BGP	0x00000008
 
 typedef u_int32_t pm_class_t;
 typedef u_int32_t pm_id_t;

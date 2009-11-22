@@ -102,7 +102,9 @@ void sql_init_default_values()
   /* Dirty but allows to save some IFs, centralizes
      checks and makes later comparison statements lean */
   if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP)))
+                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
+				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
+				COUNT_SRC_LOCAL_PREF)))
     PbgpSz = 0;
 
   if ( (config.what_to_count & COUNT_CLASS ||
@@ -845,9 +847,14 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_AS_PATH) what_to_count |= COUNT_AS_PATH;
     else fakes |= FAKE_AS_PATH;
 
+    if (config.what_to_count & COUNT_SRC_AS_PATH) what_to_count |= COUNT_SRC_AS_PATH;
+
     if (config.what_to_count & COUNT_STD_COMM) what_to_count |= COUNT_STD_COMM;
     else if (config.what_to_count & COUNT_EXT_COMM) what_to_count |= COUNT_EXT_COMM;
     else fakes |= FAKE_COMMS;
+
+    if (config.what_to_count & COUNT_SRC_STD_COMM) what_to_count |= COUNT_SRC_STD_COMM;
+    else if (config.what_to_count & COUNT_SRC_EXT_COMM) what_to_count |= COUNT_SRC_EXT_COMM;
 
     if (config.what_to_count & COUNT_PEER_SRC_AS) what_to_count |= COUNT_PEER_SRC_AS;
     else fakes |= FAKE_PEER_SRC_AS;
@@ -862,6 +869,9 @@ int sql_evaluate_primitives(int primitive)
     else fakes |= FAKE_PEER_DST_IP;
 
     what_to_count |= COUNT_LOCAL_PREF|COUNT_MED;
+
+    if (config.what_to_count & COUNT_SRC_LOCAL_PREF) what_to_count |= COUNT_SRC_LOCAL_PREF;
+    if (config.what_to_count & COUNT_SRC_MED) what_to_count |= COUNT_SRC_MED;
 
     if (config.sql_table_version < 6) {
       if (config.what_to_count & COUNT_SRC_AS) what_to_count |= COUNT_SRC_AS;
@@ -1118,6 +1128,26 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
+  if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "comms_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "comms_src=\'%s\'", SPACELEFT(where[primitive].string));
+    if (what_to_count & COUNT_SRC_STD_COMM) {
+      values[primitive].type = where[primitive].type = COUNT_SRC_STD_COMM;
+      values[primitive].handler = where[primitive].handler = count_src_std_comm_handler;
+    }
+    else if (what_to_count & COUNT_SRC_EXT_COMM) {
+      values[primitive].type = where[primitive].type = COUNT_SRC_EXT_COMM;
+      values[primitive].handler = where[primitive].handler = count_src_ext_comm_handler;
+    }
+    primitive++;
+  }
+
   if (what_to_count & COUNT_AS_PATH) {
     int count_it = FALSE;
 
@@ -1140,6 +1170,20 @@ int sql_evaluate_primitives(int primitive)
       values[primitive].handler = where[primitive].handler = count_as_path_handler;
       primitive++;
     }
+  }
+
+  if (what_to_count & COUNT_SRC_AS_PATH) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "as_path_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "as_path_src=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_SRC_AS_PATH;
+    values[primitive].handler = where[primitive].handler = count_src_as_path_handler;
+    primitive++;
   }
 
   if (what_to_count & COUNT_LOCAL_PREF) {
@@ -1169,6 +1213,20 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
+  if (what_to_count & COUNT_SRC_LOCAL_PREF) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "local_pref_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "local_pref_src=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_SRC_LOCAL_PREF;
+    values[primitive].handler = where[primitive].handler = count_src_local_pref_handler;
+    primitive++;
+  }
+
   if (what_to_count & COUNT_MED) {
     int count_it = FALSE;
 
@@ -1194,6 +1252,20 @@ int sql_evaluate_primitives(int primitive)
       values[primitive].handler = where[primitive].handler = count_med_handler;
       primitive++;
     }
+  }
+
+  if (what_to_count & COUNT_SRC_MED) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "med_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "med_src=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_SRC_MED;
+    values[primitive].handler = where[primitive].handler = count_src_med_handler;
+    primitive++;
   }
 
   if (what_to_count & COUNT_PEER_SRC_AS) {

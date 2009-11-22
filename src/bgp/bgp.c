@@ -65,7 +65,7 @@ void skinny_bgp_daemon()
 #endif
   afi_t afi;
   safi_t safi;
-  int clen = sizeof(client);
+  int clen = sizeof(client), yes=1;
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
   time_t now;
@@ -110,6 +110,9 @@ void skinny_bgp_daemon()
     Log(LOG_ERR, "ERROR ( default/core/BGP ): thread socket() failed. Terminating thread.\n");
     exit_all(1);
   }
+
+  rc = Setsocksize(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): Setsocksize() failed for SO_REUSEADDR.\n");
 
   rc = bind(sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {

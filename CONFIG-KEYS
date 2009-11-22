@@ -30,7 +30,8 @@ KEY:		aggregate (-c)
 VALUES:		[src_mac, dst_mac, vlan, src_host, dst_host, src_net, dst_net, src_as, dst_as,
 		 src_port, dst_port, tos, proto, none, sum_mac, sum_host, sum_net, sum_as, 
 		 sum_port, flows, tag, tag2, class, tcpflags, std_comm, ext_comm, as_path,
-		 peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med ]
+		 peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med,
+		 src_as_path, src_std_comm, src_ext_comm, src_local_pref, src_med ]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -51,6 +52,12 @@ DESC:		aggregate captured traffic data by selecting the specified set of primiti
 		tagging engines (pre_tag_map, post_tag) are in use. 'class' enables reception
 		of L7 traffic classes when Packet/Flow Classification engine (classifiers) is
 		in use. (default: src_host).
+NOTES:		* tag2, src_as_path, src_std_comm, src_ext_comm, src_local_pref and src_med
+		  primitives are not part of any default pmacct SQL table. When considering
+		  their use, they have to be manually added to the selected SQL schema and to
+		  the indexing. Read further in the documentation of the database of choice
+		  (ie. 'sql/README.mysql') and take as reference the 'sql/README.agent_id2'
+		  document.  
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
@@ -925,7 +932,7 @@ DESC:           filters BGP standard communities against the supplied pattern. T
 
 KEY:		bgp_peer_src_as_type
 VALUES:		[ map | bgp_comms ]
-DESC:		instructs which method to use to map incoming traffic to a source peer ASN. "map" selects a
+DESC:		Defines the method to use to map incoming traffic to a source peer ASN. "map" selects a
 		map, reloadable at runtime, specified by the bgp_peer_src_as_map directive (refer to it for
 		further information); "bgp_comms" maps basing on standard BGP communities, expressed in the
 		format <ifIndex>:<ASN>, attached to the <BGP peer's source IP address>/32 prefix properly
@@ -937,6 +944,36 @@ DESC:		full pathname to a file containing source peer AS mappings. The AS can be
 		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB to
 		look up the source IP prefix). This is sufficient to model popular tecniques for both public
 		and private BGP peerings.
+
+KEY:            bgp_src_std_comm_type
+VALUES:         [ bgp ]
+DESC:		Defines the method to use to map incoming traffic to a set of standard communities. Only
+		trivial BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
+		which is often not the case, affecting their accuracy.
+
+KEY:            bgp_src_ext_comm_type
+VALUES:         [ bgp ]
+DESC:           Defines the method to use to map incoming traffic to a set of extended communities. Only
+                trivial BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
+                which is often not the case, affecting their accuracy.
+
+KEY:            bgp_src_as_path_type
+VALUES:         [ bgp ]
+DESC:           Defines the method to use to map incoming traffic to an AS-PATH. Only trivial BGP RIB
+		lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is often
+		not the case, affecting their accuracy.
+
+KEY:            bgp_src_local_pref_type
+VALUES:         [ bgp ]
+DESC:           Defines the method to use to map incoming traffic to a local preference. Only trivial BGP
+		RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is
+		often not the case, affecting their accuracy.
+
+KEY:            bgp_src_med_type
+VALUES:         [ bgp ]
+DESC:           Defines the method to use to map incoming traffic to a MED value. Only trivial BGP RIB
+                lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is often
+                not the case, affecting their accuracy.
 
 KEY:		bgp_agent_map
 DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agents to BGP peers'

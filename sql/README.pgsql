@@ -64,6 +64,15 @@ mode. Since v6 unified mode is no longer supported.
 - To understand difference between the various BGP table versions:
   * Only BGP table v1 is currently available.
 
+- Primitives not included in any default SQL table schema:
+  * Aggregation primitive => SQL table field
+  * src_std_comm => comms_src
+  * src_ext_comm => comms_src
+  * src_as_path => as_path_src
+  * src_local_pref => local_pref_src
+  * src_med => med_src
+  * tag2 => agent_id2
+
 - What is the difference between 'typed' and 'unified' modes ? 
 It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses
 and MAC addresses specified as standard CHAR strings, slower but flexible (in the sense it

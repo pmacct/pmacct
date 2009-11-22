@@ -124,7 +124,9 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS)
+                                            COUNT_AS_PATH|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_DST_AS|
+					    COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_MED|
+					    COUNT_SRC_LOCAL_PREF)
       || (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_DST_AS) && config.nfacctd_as == NF_AS_BGP)) {
       if (config.acct_type != ACCT_PM && channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
 	/* Let's basically get out of here this case - XXX: silently */
@@ -1600,6 +1602,36 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  }
 	}
       }
+      if (chptr->aggregation & COUNT_SRC_AS_PATH && config.nfacctd_bgp_src_as_path_type == BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
+	strlcpy(pbgp->src_as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
+	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
+	  pbgp->src_as_path[MAX_BGP_ASPATH-1] = '+';
+	if (config.nfacctd_bgp_aspath_radius)
+	  evaluate_bgp_aspath_radius(pbgp->src_as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+      }
+      if (chptr->aggregation & COUNT_SRC_STD_COMM && config.nfacctd_bgp_src_std_comm_type == BGP_SRC_PRIMITIVES_BGP && info->attr->community && info->attr->community->str) {
+	if (config.nfacctd_bgp_stdcomm_pattern)
+	  evaluate_comm_patterns(pbgp->src_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
+	else {
+	  strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
+	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	}
+      }
+      if (chptr->aggregation & COUNT_SRC_EXT_COMM && config.nfacctd_bgp_src_ext_comm_type == BGP_SRC_PRIMITIVES_BGP && info->attr->ecommunity && info->attr->ecommunity->str) {
+        if (config.nfacctd_bgp_extcomm_pattern)
+          evaluate_comm_patterns(pbgp->src_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
+        else {
+          strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+          if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
+            pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+        }
+      }
+      if (chptr->aggregation & COUNT_SRC_LOCAL_PREF && config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_BGP)
+	pbgp->src_local_pref = info->attr->local_pref;
+
+      if (chptr->aggregation & COUNT_SRC_MED && config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_BGP)
+	pbgp->src_med = info->attr->med;
     }
   }
 

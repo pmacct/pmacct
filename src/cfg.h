@@ -105,6 +105,11 @@ struct configuration {
   char *nfacctd_bgp_extcomm_pattern;
   char *nfacctd_bgp_stdcomm_pattern_to_asn;
   int nfacctd_bgp_peer_as_src_type;
+  int nfacctd_bgp_src_std_comm_type;
+  int nfacctd_bgp_src_ext_comm_type;
+  int nfacctd_bgp_src_as_path_type;
+  int nfacctd_bgp_src_local_pref_type;
+  int nfacctd_bgp_src_med_type;
   char *nfacctd_bgp_peer_as_src_map;
   char *nfacctd_bgp_to_agent_map;
   int nfacctd_bgp_follow_default;

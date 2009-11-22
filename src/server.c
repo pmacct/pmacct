@@ -282,10 +282,15 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 
   if (PbgpSz && s2) {
     if (w & COUNT_STD_COMM) strlcpy(d2->std_comms, s2->std_comms, MAX_BGP_STD_COMMS); 
+    if (w & COUNT_SRC_STD_COMM) strlcpy(d2->src_std_comms, s2->src_std_comms, MAX_BGP_STD_COMMS); 
     if (w & COUNT_EXT_COMM) strlcpy(d2->ext_comms, s2->ext_comms, MAX_BGP_EXT_COMMS); 
+    if (w & COUNT_SRC_EXT_COMM) strlcpy(d2->src_ext_comms, s2->src_ext_comms, MAX_BGP_EXT_COMMS); 
     if (w & COUNT_AS_PATH) strlcpy(d2->as_path, s2->as_path, MAX_BGP_ASPATH);
+    if (w & COUNT_SRC_AS_PATH) strlcpy(d2->src_as_path, s2->src_as_path, MAX_BGP_ASPATH);
     if (w & COUNT_LOCAL_PREF) d2->local_pref = s2->local_pref;
+    if (w & COUNT_SRC_LOCAL_PREF) d2->src_local_pref = s2->src_local_pref;
     if (w & COUNT_MED) d2->med = s2->med;
+    if (w & COUNT_SRC_MED) d2->src_med = s2->src_med;
     if (w & COUNT_PEER_SRC_AS) d2->peer_src_as = s2->peer_src_as;
     if (w & COUNT_PEER_DST_AS) d2->peer_dst_as = s2->peer_dst_as;
     if (w & COUNT_PEER_SRC_IP) {

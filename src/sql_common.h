@@ -208,6 +208,11 @@ EXT void count_ext_comm_handler(const struct db_cache *, const struct insert_dat
 EXT void count_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_local_pref_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_med_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_std_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_ext_comm_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_local_pref_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_src_med_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_dst_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_src_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -292,16 +297,16 @@ EXT void sql_sum_ext_comm_insert(struct pkt_data *, struct pkt_bgp_primitives *,
 #endif
 
 /* Global Variables: a simple way of gain precious speed when playing with strings */
-EXT char sql_data[LONGLONGSRVBUFLEN];
+EXT char sql_data[LARGEBUFLEN];
 EXT char lock_clause[LONGSRVBUFLEN];
 EXT char unlock_clause[LONGSRVBUFLEN];
 EXT char update_clause[LONGSRVBUFLEN];
 EXT char set_clause[LONGSRVBUFLEN];
 EXT char copy_clause[LONGSRVBUFLEN];
 EXT char insert_clause[LONGSRVBUFLEN];
-EXT char values_clause[LONGSRVBUFLEN];
+EXT char values_clause[LONGLONGSRVBUFLEN];
 EXT char *multi_values_buffer;
-EXT char where_clause[LONGSRVBUFLEN];
+EXT char where_clause[LONGLONGSRVBUFLEN];
 EXT unsigned char *pipebuf;
 EXT struct db_cache *cache;
 EXT struct db_cache **queries_queue, **pending_queries_queue;

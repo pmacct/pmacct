@@ -277,6 +277,11 @@ struct pkt_bgp_primitives {
   char as_path[MAX_BGP_ASPATH];
   u_int32_t local_pref;
   u_int32_t med;
+  char src_std_comms[MAX_BGP_STD_COMMS];
+  char src_ext_comms[MAX_BGP_EXT_COMMS];
+  char src_as_path[MAX_BGP_ASPATH];
+  u_int32_t src_local_pref;
+  u_int32_t src_med;
 };
 /* END: BGP section */
 

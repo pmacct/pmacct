@@ -62,7 +62,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | tag2 | flows | \n\t class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | tag2 | flows | \n\t class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | \n\t src_as_path | src_std_comm | src_ext_comm | src_local_pref | src_med ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -127,9 +127,13 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("SRC_AS      ");
     printf("DST_AS      "); 
     printf("BGP_COMMS                ");
+    printf("SRC_BGP_COMMS            ");
     printf("AS_PATH                  ");
-    printf("PREF   ");
-    printf("MED    ");
+    printf("SRC_AS_PATH              ");
+    printf("PREF     ");
+    printf("SRC_PREF ");
+    printf("MED     ");
+    printf("SRC_MED ");
     printf("PEER_SRC_AS ");
     printf("PEER_DST_AS ");
 #if defined ENABLE_IPV6
@@ -174,9 +178,14 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_DST_AS) printf("DST_AS      "); 
     if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
       printf("BGP_COMMS                ");
+    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
+      printf("SRC_BGP_COMMS            ");
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
-    if (what_to_count & COUNT_LOCAL_PREF) printf("PREF   ");
-    if (what_to_count & COUNT_MED) printf("MED    ");
+    if (what_to_count & COUNT_SRC_AS_PATH) printf("SRC_AS_PATH              ");
+    if (what_to_count & COUNT_LOCAL_PREF) printf("PREF     ");
+    if (what_to_count & COUNT_SRC_LOCAL_PREF) printf("SRC_PREF ");
+    if (what_to_count & COUNT_MED) printf("MED     ");
+    if (what_to_count & COUNT_SRC_MED) printf("SRC_MED ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS ");
 #if defined ENABLE_IPV6
@@ -428,21 +437,41 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_STD_COMM;
           what_to_count |= COUNT_STD_COMM;
         }
+        else if (!strcmp(count_token[count_index], "src_std_comm")) {
+          count_token_int[count_index] = COUNT_SRC_STD_COMM;
+          what_to_count |= COUNT_SRC_STD_COMM;
+        }
         else if (!strcmp(count_token[count_index], "ext_comm")) {
           count_token_int[count_index] = COUNT_EXT_COMM;
           what_to_count |= COUNT_EXT_COMM;
+        }
+        else if (!strcmp(count_token[count_index], "src_ext_comm")) {
+          count_token_int[count_index] = COUNT_SRC_EXT_COMM;
+          what_to_count |= COUNT_SRC_EXT_COMM;
         }
         else if (!strcmp(count_token[count_index], "as_path")) {
           count_token_int[count_index] = COUNT_AS_PATH;
           what_to_count |= COUNT_AS_PATH;
         }
+        else if (!strcmp(count_token[count_index], "src_as_path")) {
+          count_token_int[count_index] = COUNT_SRC_AS_PATH;
+          what_to_count |= COUNT_SRC_AS_PATH;
+        }
         else if (!strcmp(count_token[count_index], "local_pref")) {
           count_token_int[count_index] = COUNT_LOCAL_PREF;
           what_to_count |= COUNT_LOCAL_PREF;
         }
+        else if (!strcmp(count_token[count_index], "src_local_pref")) {
+          count_token_int[count_index] = COUNT_SRC_LOCAL_PREF;
+          what_to_count |= COUNT_SRC_LOCAL_PREF;
+	}
         else if (!strcmp(count_token[count_index], "med")) {
           count_token_int[count_index] = COUNT_MED;
           what_to_count |= COUNT_MED;
+        }
+        else if (!strcmp(count_token[count_index], "src_med")) {
+          count_token_int[count_index] = COUNT_SRC_MED;
+          what_to_count |= COUNT_SRC_MED;
         }
         else if (!strcmp(count_token[count_index], "peer_src_as")) {
           count_token_int[count_index] = COUNT_PEER_SRC_AS;
@@ -581,6 +610,10 @@ int main(int argc,char **argv)
   /* Sanitizing the aggregation method */ 
   if (what_to_count) {
     if (what_to_count & COUNT_STD_COMM && what_to_count & COUNT_EXT_COMM) {
+      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+      exit(1);
+    }
+    if (what_to_count & COUNT_SRC_STD_COMM && what_to_count & COUNT_SRC_EXT_COMM) {
       printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
       exit(1);
     }
@@ -843,6 +876,18 @@ int main(int argc,char **argv)
 	    }
 	  }
 	}
+        else if (!strcmp(count_token[match_string_index], "src_std_comm")) {
+          if (!strcmp(match_string_token, "0"))
+            memset(request.pbgp.src_std_comms, 0, MAX_BGP_STD_COMMS);
+          else {
+            strlcpy(request.pbgp.src_std_comms, match_string_token, MAX_BGP_STD_COMMS);
+            bgp_comm = request.pbgp.src_std_comms;
+            while (bgp_comm) {
+              bgp_comm = strchr(request.pbgp.src_std_comms, '_');
+              if (bgp_comm) *bgp_comm = ' ';
+            }
+          }
+        }
         else if (!strcmp(count_token[match_string_index], "ext_comm")) {
           if (!strcmp(match_string_token, "0"))
             memset(request.pbgp.ext_comms, 0, MAX_BGP_EXT_COMMS);
@@ -855,6 +900,18 @@ int main(int argc,char **argv)
             }
 	  }
 	}
+        else if (!strcmp(count_token[match_string_index], "src_ext_comm")) {
+          if (!strcmp(match_string_token, "0"))
+            memset(request.pbgp.src_ext_comms, 0, MAX_BGP_EXT_COMMS);
+          else {
+            strlcpy(request.pbgp.src_ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
+            bgp_comm = request.pbgp.src_ext_comms;
+            while (bgp_comm) {
+              bgp_comm = strchr(request.pbgp.src_ext_comms, '_');
+              if (bgp_comm) *bgp_comm = ' ';
+            }
+          }
+        }
         else if (!strcmp(count_token[match_string_index], "as_path")) {
 	  if (!strcmp(match_string_token, "^$"))
 	    memset(request.pbgp.as_path, 0, MAX_BGP_ASPATH);
@@ -867,16 +924,38 @@ int main(int argc,char **argv)
             }
 	  }
 	}
+        else if (!strcmp(count_token[match_string_index], "src_as_path")) {
+          if (!strcmp(match_string_token, "^$"))
+            memset(request.pbgp.src_as_path, 0, MAX_BGP_ASPATH);
+          else {
+            strlcpy(request.pbgp.src_as_path, match_string_token, MAX_BGP_ASPATH);
+            as_path = request.pbgp.src_as_path;
+            while (as_path) {
+              as_path = strchr(request.pbgp.src_as_path, '_');
+              if (as_path) *as_path = ' ';
+            }
+          }
+        }
         else if (!strcmp(count_token[match_string_index], "local_pref")) {
 	  char *endptr;
 
           request.pbgp.local_pref = strtoul(match_string_token, &endptr, 10);
 	}
+        else if (!strcmp(count_token[match_string_index], "src_local_pref")) {
+          char *endptr;
+
+          request.pbgp.src_local_pref = strtoul(match_string_token, &endptr, 10);
+        }
         else if (!strcmp(count_token[match_string_index], "med")) {
 	  char *endptr;
 
           request.pbgp.med = strtoul(match_string_token, &endptr, 10);
 	}
+        else if (!strcmp(count_token[match_string_index], "src_med")) {
+          char *endptr;
+
+          request.pbgp.src_med = strtoul(match_string_token, &endptr, 10);
+        }
         else if (!strcmp(count_token[match_string_index], "peer_src_as")) {
           char *endptr;
 
@@ -954,7 +1033,9 @@ int main(int argc,char **argv)
     }
 
     if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                         COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP))
+                         COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
+			 COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_MED|
+			 COUNT_SRC_LOCAL_PREF))
       PbgpSz = TRUE;
 
     write_stats_header(what_to_count, have_wtc);
@@ -1029,6 +1110,18 @@ int main(int argc,char **argv)
 	    printf("%-22u   ", 0);
         }
 
+	if ((!have_wtc && !(what_to_count & COUNT_SRC_EXT_COMM)) || (what_to_count & COUNT_SRC_STD_COMM)) {
+	  bgp_comm = pbgp->src_std_comms;
+	  while (bgp_comm) {
+	    bgp_comm = strchr(pbgp->src_std_comms, ' ');
+	    if (bgp_comm) *bgp_comm = '_';
+	  }
+          if (strlen(pbgp->src_std_comms))
+	    printf("%-22s   ", pbgp->src_std_comms);
+	  else
+	    printf("%-22u   ", 0);
+        }
+
         if (what_to_count & COUNT_EXT_COMM) {
           bgp_comm = pbgp->ext_comms;
           while (bgp_comm) {
@@ -1039,6 +1132,18 @@ int main(int argc,char **argv)
 	    printf("%-22s   ", pbgp->ext_comms);
 	  else
 	    printf("%-22u   ", 0);
+        }
+
+        if (what_to_count & COUNT_SRC_EXT_COMM) {
+          bgp_comm = pbgp->src_ext_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->src_ext_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+          if (strlen(pbgp->src_ext_comms))
+            printf("%-22s   ", pbgp->src_ext_comms);
+          else
+            printf("%-22u   ", 0);
         }
 
         if (!have_wtc || (what_to_count & COUNT_AS_PATH)) {
@@ -1053,12 +1158,32 @@ int main(int argc,char **argv)
 	    printf("%-22s   ", empty_aspath); 
         }
 
+        if (!have_wtc || (what_to_count & COUNT_SRC_AS_PATH)) {
+	  as_path = pbgp->src_as_path;
+	  while (as_path) {
+	    as_path = strchr(pbgp->src_as_path, ' ');
+	    if (as_path) *as_path = '_';
+	  }
+          if (strlen(pbgp->src_as_path))
+	    printf("%-22s   ", pbgp->src_as_path);
+	  else
+	    printf("%-22s   ", empty_aspath); 
+        }
+
         if (!have_wtc || (what_to_count & COUNT_LOCAL_PREF)) {
-          printf("%-5d  ", pbgp->local_pref);
+          printf("%-7d  ", pbgp->local_pref);
+        }
+
+        if (!have_wtc || (what_to_count & COUNT_SRC_LOCAL_PREF)) {
+          printf("%-7d  ", pbgp->src_local_pref);
         }
 
         if (!have_wtc || (what_to_count & COUNT_MED)) {
-          printf("%-5d  ", pbgp->med);
+          printf("%-6d  ", pbgp->med);
+        }
+
+        if (!have_wtc || (what_to_count & COUNT_SRC_MED)) {
+          printf("%-6d  ", pbgp->src_med);
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_AS)) {

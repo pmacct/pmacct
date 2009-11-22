@@ -131,13 +131,13 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	    buflen = strlen(mask);
 	    for (j = 0; j < buflen; j++) {
 	      if (!isdigit(mask[j])) {
-		Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%s'.\n", filename, mask);
+		Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%s' at line: %u.\n", filename, mask, rows);
 		goto cycle_end;
 	      }
 	    }
 	    index = atoi(mask); 
 	    if (index > 32) {
-	      Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%d'.\n", filename, index);
+	      Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%d' at line: %u.\n", filename, index, rows);
 	      goto cycle_end;
 	    }
 
@@ -811,13 +811,13 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
             buflen = strlen(mask);
             for (j = 0; j < buflen; j++) {
               if (!isdigit(mask[j])) {
-                Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%s'.\n", filename, mask);
+                Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%s' at line: %u.\n", filename, mask, rows);
                 goto cycle_end;
               }
             }
             index = atoi(mask);
             if (index > 128) {
-              Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%d'.\n", filename, index);
+              Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%d' at line: %u.\n", filename, index, rows);
               goto cycle_end;
             }
 
