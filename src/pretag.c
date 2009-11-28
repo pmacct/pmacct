@@ -82,7 +82,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     /* first stage: reading Agent ID file and arranging it in a temporary memory table */
     while (!feof(file)) {
       tot_lines++;
-      if (tmp.num >= config.pre_tag_map_entries) break; /* XXX: we shouldn't exit silently */
+      if (tmp.num >= config.pre_tag_map_entries) {
+	Log(LOG_WARNING, "WARN ( default/core ): map '%s' cut to the first %u entries. Number of entries can be configured via 'pre_tag_map_etries'.\n", filename, config.pre_tag_map_entries);
+	break;
+      }
       memset(buf, 0, SRVBUFLEN);
       if (fgets(buf, SRVBUFLEN, file)) {
         if (!iscomment(buf) && !isblankline(buf)) {

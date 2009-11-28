@@ -680,7 +680,8 @@ DESC:		full pathname to a file containing tag mappings. Enables the use of Pre-T
 KEY:		pre_tag_map_entries [GLOBAL]
 DESC:		defines the maximum number of entries the Pre-Tagging map can contain. The default value is
 		suitable for most scenarios, though tuning it could be required either to save on memory or
-		to allow for more entries. (default: 384) 
+		to allow for more entries. Refer to the specific map directives documentation in this file
+		to see which are affected by this setting. (default: 384) 
 
 KEY:		refresh_maps [GLOBAL]
 VALUES:		[true|false]
@@ -943,7 +944,8 @@ KEY:		bgp_peer_src_as_map
 DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
 		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB to
 		look up the source IP prefix). This is sufficient to model popular tecniques for both public
-		and private BGP peerings.
+		and private BGP peerings. Number of map entries (by default 384) can be modified via 
+		pre_tag_map_entries.
 
 KEY:            bgp_src_std_comm_type
 VALUES:         [ bgp ]
@@ -983,7 +985,7 @@ DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agent
 		certain situations. pmacctd, uacctd daemons are required to use a bgp_agent_map with up to 
 		two "catch-all" entries - working in a primary/backup fashion (see agent_to_peer.map in the
 		examples section): this is because these daemons do not have a NetFlow/sFlow source address
-		to match to.
+		to match to. Number of map entries (by default 384) can be modified via pre_tag_map_entries.
 
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can
