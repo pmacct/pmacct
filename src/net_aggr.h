@@ -128,8 +128,10 @@ EXT unsigned int networks_cache_hash6(void *);
 EXT struct networks_table nt;
 EXT struct networks_cache nc;
 EXT struct networks_table_entry dummy_entry;
+EXT int default_route_in_networks4_table;
 
 #if defined ENABLE_IPV6
 EXT struct networks6_table_entry dummy_entry6;
+EXT int default_route_in_networks6_table;
 #endif
 #undef EXT

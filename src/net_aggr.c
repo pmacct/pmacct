@@ -53,6 +53,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   memset(&bkt, 0, sizeof(bkt));
   memset(&tmp, 0, sizeof(tmp));
   memset(&st, 0, sizeof(st));
+  default_route_in_networks4_table = FALSE;
 
   /* backing up pre-existing table and cache */ 
   if (nt->num) {
@@ -209,7 +210,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	mdt[index].childs = eff_childs;
       }
 
-      /* 5th step: building final networks table */
+      /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num; index++) {
 	int current, next, prev[128];
 
@@ -235,13 +236,14 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
         }
       }
 
-      if (config.debug) { 
-        index = 0;
-        while (index < tmpt->num) {
+      /* 5b step: debug and default route detection */
+      index = 0;
+      while (index < tmpt->num) {
+        if (config.debug) 
 	  Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv4) AS: %x, net: %x, mask: %x\n", 
-		  filename, nt->table[index].as, nt->table[index].net, nt->table[index].mask); 
-	  index++;
-	}
+	  	  filename, nt->table[index].as, nt->table[index].net, nt->table[index].mask); 
+	if (!nt->table[index].mask) default_route_in_networks4_table = TRUE;
+	index++;
       }
 
       /* 6th step: create networks cache BUT only for the first time */
@@ -543,13 +545,13 @@ void search_src_host(struct networks_table *nt, struct networks_cache *nc, struc
   if (p->src_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->src_ip);
     if (!res) p->src_ip.address.ipv4.s_addr = 0;
-    else if (!res->net) p->src_ip.address.ipv4.s_addr = 0; /* it may have been cached */
+    else if (!res->net && !default_route_in_networks4_table) p->src_ip.address.ipv4.s_addr = 0; /* it may have been cached */
   }
 #if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->src_ip);
     if (!res6) memset(&p->src_ip.address.ipv6, 0, IP6AddrSz);
-    else if (!res6->net[0]) memset(&p->src_ip.address.ipv6, 0, IP6AddrSz); /* it may have been cached */
+    else if (!res6->net[0] && !default_route_in_networks6_table) memset(&p->src_ip.address.ipv6, 0, IP6AddrSz); /* it may have been cached */
   }
 #endif
 }
@@ -564,13 +566,13 @@ void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struc
   if (p->dst_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->dst_ip);
     if (!res) p->dst_ip.address.ipv4.s_addr = 0;
-    else if (!res->net) p->dst_ip.address.ipv4.s_addr = 0; /* it may have been cached */
+    else if (!res->net && !default_route_in_networks4_table) p->dst_ip.address.ipv4.s_addr = 0; /* it may have been cached */
   }
 #if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->dst_ip);
     if (!res6) memset(&p->dst_ip.address.ipv6, 0, IP6AddrSz);
-    else if (!res6->net[0]) memset(&p->dst_ip.address.ipv6, 0, IP6AddrSz); /* it may have been cached */
+    else if (!res6->net[0] && !default_route_in_networks6_table) memset(&p->dst_ip.address.ipv6, 0, IP6AddrSz); /* it may have been cached */
   }
 #endif
 }
@@ -591,7 +593,7 @@ void search_src_net(struct networks_table *nt, struct networks_cache *nc, struct
   else if (p->src_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->src_ip);
     if (!res6) memset(&p->src_ip.address.ipv6, 0, IP6AddrSz);
-    else memcpy(&p->src_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz); /* it may have been cached */
+    else memcpy(&p->src_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz);
   }
 #endif
 }
@@ -612,7 +614,7 @@ void search_dst_net(struct networks_table *nt, struct networks_cache *nc, struct
   else if (p->dst_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->dst_ip);
     if (!res6) memset(&p->dst_ip.address.ipv6, 0, IP6AddrSz);
-    else memcpy(&p->dst_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz); /* it may have been cached */
+    else memcpy(&p->dst_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz);
   }
 #endif
 }
@@ -734,6 +736,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   memset(&bkt, 0, sizeof(bkt));
   memset(&tmp, 0, sizeof(tmp));
   memset(&st, 0, sizeof(st));
+  default_route_in_networks6_table = FALSE;
 
   /* backing up pre-existing table and cache */
   if (nt->num6) {
@@ -900,7 +903,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         mdt[index].childs = eff_childs;
       }
 
-      /* 5th step: building final networks table */
+      /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num6; index++) {
         int current, next, prev[128];
 
@@ -926,15 +929,17 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         }
       }
 
-      if (config.debug) {
-        index = 0;
-        while (index < tmpt->num6) {
+      index = 0;
+      while (index < tmpt->num6) {
+        if (config.debug) {
           Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv6) AS: %x, net: %x:%x:%x:%x, mask: %x:%x:%x:%x\n", filename,
 	    nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1], nt->table6[index].net[2],
 	    nt->table6[index].net[3], nt->table6[index].mask[0], nt->table6[index].mask[1], nt->table6[index].mask[2],
 	    nt->table6[index].mask[3]);
-          index++;
-        }
+	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
+	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])
+	  default_route_in_networks6_table = TRUE;
+        index++;
       }
 
       /* 6th step: create networks cache BUT only for the first time */
