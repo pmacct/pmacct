@@ -582,6 +582,8 @@ void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   if (pptrs->mpls_ptr) memcpy(&pextras->mpls_top_label, pptrs->mpls_ptr, 4);
   if (pptrs->l4_proto == IPPROTO_TCP) pextras->tcp_flags = pptrs->tcp_flags;
+  if (pptrs->ifindex_in > 0)  pextras->ifindex_in  = pptrs->ifindex_in;
+  if (pptrs->ifindex_out > 0) pextras->ifindex_out = pptrs->ifindex_out;
 }
 
 #if defined (HAVE_L2)
@@ -2162,6 +2164,8 @@ void SF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_
 
   if (sample->lstk.depth) memcpy(&pextras->mpls_top_label, &sample->lstk.stack[0], 4);
   if (sample->dcd_ipProtocol == IPPROTO_TCP) pextras->tcp_flags = sample->dcd_tcpFlags;
+  if (pptrs->ifindex_in > 0)  pextras->ifindex_in  = pptrs->ifindex_in;
+  if (pptrs->ifindex_out > 0) pextras->ifindex_out = pptrs->ifindex_out;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

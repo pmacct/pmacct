@@ -928,10 +928,11 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
           memcpy(&nt->table6[current], &tmpt->table6[index], sizeof(struct networks6_table_entry));
         }
       }
-
+ 
+      /* 5b step: debug and default route detection */
       index = 0;
       while (index < tmpt->num6) {
-        if (config.debug) {
+        if (config.debug)
           Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv6) AS: %x, net: %x:%x:%x:%x, mask: %x:%x:%x:%x\n", filename,
 	    nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1], nt->table6[index].net[2],
 	    nt->table6[index].net[3], nt->table6[index].mask[0], nt->table6[index].mask[1], nt->table6[index].mask[2],

@@ -647,6 +647,16 @@ int main(int argc,char **argv, char **envp)
       hdr.caplen = MIN(ulog_pkt->data_len, config.snaplen);
       hdr.len = ulog_pkt->data_len;
 
+      if (strlen(ulog_pkt->indev_name) > 1) {
+       cb_data.ifindex_in = get_ifindex(ulog_pkt->indev_name);
+      }
+      else cb_data.ifindex_in = 0;
+
+      if (strlen(ulog_pkt->outdev_name) > 1) {
+       cb_data.ifindex_out = get_ifindex(ulog_pkt->outdev_name);
+      }
+      else cb_data.ifindex_out = 0;
+
       pcap_cb((u_char *) &cb_data, &hdr, ulog_pkt->payload);
 
       if (nlh->nlmsg_type == NLMSG_DONE || !(nlh->nlmsg_flags & NLM_F_MULTI)) {
@@ -656,6 +666,28 @@ int main(int argc,char **argv, char **envp)
       nlh = NLMSG_NEXT(nlh, len);
     }
   }
+}
+
+u_int16_t get_ifindex(char *device) 
+{
+  static int sock = -1;
+
+  if (sock < 0) {
+    sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (sock < 0) {
+      Log(LOG_ERR, "ERROR: Unable to open socket for ifindex");
+      return -1;
+    }
+  }
+  
+  struct ifreq req;
+  strcpy(req.ifr_name, device);
+  if (ioctl(sock, SIOCGIFINDEX, &req)) {
+    Log(LOG_ERR, "ERROR: Interface %s not found\n", device);
+    return -1;
+  }
+
+  return req.ifr_ifindex;
 }
 
 #else

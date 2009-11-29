@@ -106,6 +106,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   for (x = 0; e->func[x]; x++);
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_input_handler; 
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_input_handler; 
+  else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_input_handler; 
 
   return FALSE;
 }
@@ -130,6 +131,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
   for (x = 0; e->func[x]; x++);
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_output_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_output_handler;
+  else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_output_handler;
 
   return FALSE;
 }
@@ -1210,6 +1212,22 @@ int PM_pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->dst_as.n == res) return (FALSE | entry->dst_as.neg);
   else return (TRUE ^ entry->dst_as.neg);
+}
+
+int PM_pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+
+  if (entry->input.n == pptrs->ifindex_in) return (FALSE | entry->input.neg);
+  else return (TRUE ^ entry->input.neg);
+}
+
+int PM_pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+
+  if (entry->output.n == pptrs->ifindex_out) return (FALSE | entry->output.neg);
+  else return (TRUE ^ entry->output.neg);
 }
 
 pm_id_t PT_stack_sum(pm_id_t tag, pm_id_t pre)

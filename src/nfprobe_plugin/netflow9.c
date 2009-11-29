@@ -70,8 +70,12 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_L4_SRC_PORT			7
 #define NF9_IPV4_SRC_ADDR		8
 /* ... */
+#define NF9_INPUT_SNMP                  10
+/* ... */
 #define NF9_L4_DST_PORT			11
 #define NF9_IPV4_DST_ADDR		12
+/* ... */
+#define NF9_OUTPUT_SNMP                 14
 /* ... */
 #define NF9_SRC_AS                      16
 #define NF9_DST_AS                      17
@@ -135,6 +139,7 @@ struct NF9_INTERNAL_OPTIONS_TEMPLATE {
 /* softflowd data flowset types */
 struct NF9_SOFTFLOWD_DATA_COMMON {
 	u_int32_t last_switched, first_switched;
+	u_int16_t ifindex_in, ifindex_out;
 	u_int32_t bytes, packets, flows;
 	u_int16_t src_port, dst_port;
 	u_int8_t protocol, tos, tcp_flags, ipproto;
@@ -172,6 +177,24 @@ static char ftoft_buf_1[sizeof(struct NF9_SOFTFLOWD_DATA_V6)];
 
 static int nf9_pkts_until_template = -1;
 static u_int8_t send_options = FALSE;
+
+static void
+flow_to_flowset_input_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  u_int16_t rec16;
+
+  rec16 = htons(flow->ifindex[idx]);
+  memcpy(flowset, &rec16, size);
+}
+
+static void
+flow_to_flowset_output_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  u_int16_t rec16;
+
+  rec16 = htons(flow->ifindex[idx ^ 1]);
+  memcpy(flowset, &rec16, size);
+}
 
 static void
 flow_to_flowset_flows_handler(char *flowset, const struct FLOW *flow, int idx, int size)
@@ -368,6 +391,16 @@ nf9_init_template(void)
 	v4_template.r[rcount].length = htons(1);
 	v4_int_template.r[rcount].length = 1;
 	rcount++;
+        v4_template.r[rcount].type = htons(NF9_INPUT_SNMP);
+        v4_template.r[rcount].length = htons(2);
+	v4_int_template.r[rcount].handler = flow_to_flowset_input_handler;
+        v4_int_template.r[rcount].length = 2;
+        rcount++;
+        v4_template.r[rcount].type = htons(NF9_OUTPUT_SNMP);
+        v4_template.r[rcount].length = htons(2);
+	v4_int_template.r[rcount].handler = flow_to_flowset_output_handler;
+        v4_int_template.r[rcount].length = 2;
+        rcount++;
 	if (config.nfprobe_what_to_count & COUNT_FLOWS) { 
 	  v4_template.r[rcount].type = htons(NF9_FLOWS);
 	  v4_template.r[rcount].length = htons(4);
@@ -527,6 +560,16 @@ nf9_init_template(void)
 	v6_template.r[rcount].length = htons(1);
 	v6_int_template.r[rcount].length = 1;
 	rcount++;
+        v6_template.r[rcount].type = htons(NF9_INPUT_SNMP);
+        v6_template.r[rcount].length = htons(2);
+	v6_int_template.r[rcount].handler = flow_to_flowset_input_handler;
+        v6_int_template.r[rcount].length = 2;
+        rcount++;
+        v6_template.r[rcount].type = htons(NF9_OUTPUT_SNMP);
+        v6_template.r[rcount].length = htons(2);
+	v6_int_template.r[rcount].handler = flow_to_flowset_output_handler;
+        v6_int_template.r[rcount].length = 2;
+        rcount++;
 	if (config.nfprobe_what_to_count & COUNT_FLOWS) { 
 	  v6_template.r[rcount].type = htons(NF9_FLOWS);
 	  v6_template.r[rcount].length = htons(4);

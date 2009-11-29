@@ -16,6 +16,7 @@
 #define EXT extern
 #else
 #define EXT
+EXT u_int16_t get_ifindex(char *);
 #endif
 #undef EXT
 

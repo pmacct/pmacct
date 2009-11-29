@@ -309,6 +309,8 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
   flow->vlan = p->vlan_id;
   flow->mpls_label[ndx] = extras->mpls_top_label;
 #endif
+  flow->ifindex[ndx] = extras->ifindex_in;
+  flow->ifindex[ndx ^ 1] = extras->ifindex_out;
 
   return (0);
 }

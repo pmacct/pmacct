@@ -53,6 +53,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.idtable = cb_data->idt;
     pptrs.bpas_table = cb_data->bpas_table;
     pptrs.bta_table = cb_data->bta_table;
+    pptrs.ifindex_in = cb_data->ifindex_in;
+    pptrs.ifindex_out = cb_data->ifindex_out;
 
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
