@@ -331,6 +331,8 @@ void evaluate_packet_handlers()
     }
     index++;
   }
+
+  assert(primitives < N_PRIMITIVES);
 }
 
 #if defined (HAVE_L2)

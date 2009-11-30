@@ -106,7 +106,7 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_OPT_SCOPE_SYSTEM            1
 
 /* Stuff pertaining to the templates that softflowd uses */
-#define NF9_SOFTFLOWD_TEMPLATE_NRECORDS	22
+#define NF9_SOFTFLOWD_TEMPLATE_NRECORDS	30
 struct NF9_SOFTFLOWD_TEMPLATE {
 	struct NF9_TEMPLATE_FLOWSET_HEADER h;
 	struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
@@ -533,6 +533,8 @@ nf9_init_template(void)
 	v4_template.h.count = htons(rcount);
 	v4_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
+	assert(rcount < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
+
 	for (idx = 0, v4_int_template.tot_rec_len = 0; idx < rcount; idx++)
 	  v4_int_template.tot_rec_len += v4_int_template.r[idx].length;
 
@@ -701,6 +703,8 @@ nf9_init_template(void)
 	v6_template.h.template_id = htons(NF9_SOFTFLOWD_V6_TEMPLATE_ID + config.nfprobe_id);
 	v6_template.h.count = htons(rcount);
 	v6_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
+
+	assert(rcount < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
 
 	for (idx = 0, v6_int_template.tot_rec_len = 0; idx < rcount; idx++)
 	  v6_int_template.tot_rec_len += v6_int_template.r[idx].length;
