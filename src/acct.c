@@ -26,6 +26,84 @@
 #include "imt_plugin.h"
 #include "crc32.c"
 
+void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_primitives *c)
+{
+  memset(p, 0, PbgpSz);
+
+  if (c) {
+    p->peer_src_as = c->peer_src_as;
+    p->peer_dst_as = c->peer_dst_as;
+    memcpy(&p->peer_src_ip, &c->peer_src_ip, HostAddrSz);
+    memcpy(&p->peer_dst_ip, &c->peer_dst_ip, HostAddrSz);
+    if (c->std_comms) memcpy(p->std_comms, c->std_comms, MAX_BGP_STD_COMMS);
+    if (c->ext_comms) memcpy(p->ext_comms, c->ext_comms, MAX_BGP_EXT_COMMS);
+    if (c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
+    p->local_pref = c->local_pref;
+    p->med = c->med;
+    if (c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
+    if (c->src_ext_comms) memcpy(p->src_ext_comms, c->src_ext_comms, MAX_BGP_EXT_COMMS);
+    if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
+    p->src_local_pref = c->src_local_pref;
+    p->src_med = c->src_med;
+  }
+}
+
+void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p)
+{
+  if (c) {
+    c->peer_src_as = p->peer_src_as;
+    c->peer_dst_as = p->peer_dst_as;
+    memcpy(&c->peer_src_ip, &p->peer_src_ip, HostAddrSz);
+    memcpy(&c->peer_dst_ip, &p->peer_dst_ip, HostAddrSz);
+    if (strlen(p->std_comms)) {
+      if (!c->std_comms) c->std_comms = malloc(MAX_BGP_STD_COMMS);
+      memcpy(c->std_comms, p->std_comms, MAX_BGP_STD_COMMS);
+    }
+    else {
+      if (c->std_comms) free(c->std_comms);
+    }
+    if (strlen(p->ext_comms)) {
+      if (!c->ext_comms) c->ext_comms = malloc(MAX_BGP_EXT_COMMS);
+      memcpy(c->ext_comms, p->ext_comms, MAX_BGP_EXT_COMMS);
+    }
+    else {
+      if (c->ext_comms) free(c->ext_comms);
+    }
+    if (strlen(p->as_path)) {
+      if (!c->as_path) c->as_path = malloc(MAX_BGP_ASPATH);
+      memcpy(c->as_path, p->as_path, MAX_BGP_ASPATH);
+    } 
+    else {
+      if (c->as_path) free(c->as_path);
+    }
+    c->local_pref = p->local_pref;
+    c->med = p->med;
+    if (strlen(p->src_std_comms)) {
+      if (!c->src_std_comms) c->src_std_comms = malloc(MAX_BGP_STD_COMMS);
+      memcpy(c->src_std_comms, p->src_std_comms, MAX_BGP_STD_COMMS);
+    }
+    else {
+      if (c->src_std_comms) free(c->src_std_comms);
+    }
+    if (strlen(p->src_ext_comms)) {
+      if (!c->src_ext_comms) c->src_ext_comms = malloc(MAX_BGP_EXT_COMMS);
+      memcpy(c->src_ext_comms, p->src_ext_comms, MAX_BGP_EXT_COMMS);
+    } 
+    else {
+      if (c->src_ext_comms) free(c->src_ext_comms);
+    }
+    if (strlen(p->src_as_path)) {
+      if (!c->src_as_path) c->src_as_path = malloc(MAX_BGP_ASPATH);
+      memcpy(c->src_as_path, p->src_as_path, MAX_BGP_ASPATH);
+    }
+    else {
+      if (c->src_as_path) free(c->src_as_path);
+    }
+    c->src_local_pref = p->src_local_pref;
+    c->src_med = p->src_med;
+  }
+}
+
 /* functions */
 struct acc *search_accounting_structure(struct pkt_primitives *addr, struct pkt_bgp_primitives *pbgp)
 {
@@ -65,7 +143,12 @@ int compare_accounting_structure(struct acc *elem, struct pkt_primitives *data, 
 
   /* XXX: to be optimized? */
   if (PbgpSz) {
-    if (elem->pbgp) res_bgp = memcmp(elem->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+    if (elem->cbgp) {
+      struct pkt_bgp_primitives tmp_pbgp;
+
+      cache_to_pkt_bgp_primitives(&tmp_pbgp, elem->cbgp);
+      res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+    }
   }
   else res_bgp = FALSE;
 
@@ -81,6 +164,7 @@ void insert_accounting_structure(struct pkt_data *data, struct pkt_bgp_primitive
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives);
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
+  unsigned int cb_size = sizeof(struct cache_bgp_primitives);
 
   /* We are classifing packets. We have a non-zero bytes accumulator (ba)
      and a non-zero class. Before accounting ba to this class, we have to
@@ -170,9 +254,18 @@ void insert_accounting_structure(struct pkt_data *data, struct pkt_bgp_primitive
 
       /* XXX: to be optimized? */
       if (PbgpSz) {
-	if (elem_acc->pbgp) free(elem_acc->pbgp);
-	elem_acc->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
-        memcpy(elem_acc->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+	if (elem_acc->cbgp) {
+	  if (elem_acc->cbgp->std_comms) free(elem_acc->cbgp->std_comms);
+	  if (elem_acc->cbgp->ext_comms) free(elem_acc->cbgp->ext_comms);
+	  if (elem_acc->cbgp->as_path) free(elem_acc->cbgp->as_path);
+	  if (elem_acc->cbgp->src_std_comms) free(elem_acc->cbgp->src_std_comms);
+	  if (elem_acc->cbgp->src_ext_comms) free(elem_acc->cbgp->src_ext_comms);
+	  if (elem_acc->cbgp->src_as_path) free(elem_acc->cbgp->src_as_path);
+	  free(elem_acc->cbgp);
+	}
+	elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+	memset(elem_acc->cbgp, 0, cb_size);
+        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp);
       }
 
       elem_acc->packet_counter += data->pkt_num;
@@ -228,10 +321,11 @@ void insert_accounting_structure(struct pkt_data *data, struct pkt_bgp_primitive
 
       /* XXX: to be optimized? */
       if (PbgpSz) {
-        elem_acc->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
-        memcpy(elem_acc->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+        elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+        memset(elem_acc->cbgp, 0, cb_size);
+        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp);
       }
-      else elem_acc->pbgp = NULL;
+      else elem_acc->cbgp = NULL;
 
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;

@@ -440,7 +440,15 @@ void free_bgp_allocs()
 
   for (idx = 0; idx < config.buckets; idx++) {
     if (!following_chain) acc_elem = (struct acc *) elem;
-    if (acc_elem->pbgp) free(acc_elem->pbgp);
+    if (acc_elem->cbgp) {
+      if (acc_elem->cbgp->std_comms) free(acc_elem->cbgp->std_comms);
+      if (acc_elem->cbgp->ext_comms) free(acc_elem->cbgp->ext_comms);
+      if (acc_elem->cbgp->as_path) free(acc_elem->cbgp->as_path);
+      if (acc_elem->cbgp->src_std_comms) free(acc_elem->cbgp->src_std_comms);
+      if (acc_elem->cbgp->src_ext_comms) free(acc_elem->cbgp->src_ext_comms);
+      if (acc_elem->cbgp->src_as_path) free(acc_elem->cbgp->src_as_path);
+      free(acc_elem->cbgp);
+    }
     if (acc_elem->next) {
       acc_elem = acc_elem->next;
       following_chain = TRUE;

@@ -109,7 +109,12 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 	enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz);
 	/* XXX: to be optimized ? */
 	if (PbgpSz) {
-	  if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, PbgpSz);
+	  if (acc_elem->cbgp) {
+	    struct pkt_bgp_primitives tmp_pbgp;
+
+	    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
+	    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, PbgpSz);
+	  }
 	  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 	}
       } 
@@ -161,7 +166,12 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 	    enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz);
 	    /* XXX: to be optimized ? */
 	    if (PbgpSz) {
-	      if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, PbgpSz);
+	      if (acc_elem->cbgp) {
+		struct pkt_bgp_primitives tmp_pbgp;
+
+		cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
+		enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, PbgpSz);
+	      }
 	      else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 	    }
 	    if (reset_counter) {
@@ -201,7 +211,12 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 	      else {
 		enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz); /* q->type == WANT_MATCH */
 		if (PbgpSz) {
-		  if (acc_elem->pbgp) enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, PbgpSz);
+		  if (acc_elem->cbgp) {
+		    struct pkt_bgp_primitives tmp_pbgp;
+
+		    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
+		    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, PbgpSz);
+		  }
 		  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, PbgpSz);
 		}
 	      }
@@ -246,7 +261,10 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct acc *src, u_int64_t w)
 {
   struct pkt_primitives *s1 = &src->primitives;
-  struct pkt_bgp_primitives *s2 = src->pbgp;
+  struct pkt_bgp_primitives tmp_pbgp;
+  struct pkt_bgp_primitives *s2 = &tmp_pbgp;
+
+  cache_to_pkt_bgp_primitives(s2, src->cbgp);
 
   memset(d1, 0, sizeof(struct pkt_primitives));
   memset(d2, 0, sizeof(struct pkt_bgp_primitives));

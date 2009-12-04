@@ -38,7 +38,7 @@ struct acc {
   unsigned int signature;
   u_int8_t reset_flag;
   struct timeval rstamp;	/* classifiers: reset timestamp */
-  struct pkt_bgp_primitives *pbgp;
+  struct cache_bgp_primitives *cbgp;
   struct acc *next;
 };
 
@@ -92,6 +92,8 @@ struct stripped_class {
 EXT void insert_accounting_structure(struct pkt_data *, struct pkt_bgp_primitives *);
 EXT struct acc *search_accounting_structure(struct pkt_primitives *, struct pkt_bgp_primitives *);
 EXT int compare_accounting_structure(struct acc *, struct pkt_primitives *, struct pkt_bgp_primitives *);
+EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
+EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *);
 #undef EXT
 
 #if (!defined __MEMORY_C)

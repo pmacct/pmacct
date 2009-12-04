@@ -287,6 +287,24 @@ struct pkt_bgp_primitives {
   u_int32_t src_local_pref;
   u_int32_t src_med;
 };
+
+/* same as above but pointers in place of strings */
+struct cache_bgp_primitives {
+  as_t peer_src_as;
+  as_t peer_dst_as;
+  struct host_addr peer_src_ip;
+  struct host_addr peer_dst_ip;
+  char *std_comms;
+  char *ext_comms;
+  char *as_path;
+  u_int32_t local_pref;
+  u_int32_t med;
+  char *src_std_comms;
+  char *src_ext_comms;
+  char *src_as_path;
+  u_int32_t src_local_pref;
+  u_int32_t src_med;
+};
 /* END: BGP section */
 
 struct packet_ptrs_vector {
