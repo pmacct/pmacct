@@ -47,7 +47,15 @@ Inline void RetireElem(struct db_cache *Cursor)
   }
   else Cursor->prev->next = NULL;
 
-  if (Cursor->pbgp) free(Cursor->pbgp);
+  if (Cursor->cbgp) {
+    if (Cursor->cbgp->std_comms) free(Cursor->cbgp->std_comms);
+    if (Cursor->cbgp->ext_comms) free(Cursor->cbgp->ext_comms);
+    if (Cursor->cbgp->as_path) free(Cursor->cbgp->as_path);
+    if (Cursor->cbgp->src_std_comms) free(Cursor->cbgp->src_std_comms);
+    if (Cursor->cbgp->src_ext_comms) free(Cursor->cbgp->src_ext_comms);
+    if (Cursor->cbgp->src_as_path) free(Cursor->cbgp->src_as_path);
+    free(Cursor->cbgp);
+  }
   free(Cursor);
 }
 

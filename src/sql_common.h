@@ -107,7 +107,7 @@ struct db_cache {
   u_int8_t tentatives;	/* support to classifiers: tentatives remaining */
   time_t basetime;
   time_t endtime;
-  struct pkt_bgp_primitives *pbgp;
+  struct cache_bgp_primitives *cbgp;
   u_int8_t valid;
   u_int8_t prep_valid;
   unsigned int signature;

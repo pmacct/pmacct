@@ -20,6 +20,7 @@
 */
 
 #include "cfg_handlers.h"
+#include "bgp/bgp_prefix.h"
 
 /* defines */
 #define CFG_LINE_LEN(x) (SRVBUFLEN-strlen(x))

@@ -121,96 +121,96 @@ void count_dst_as_handler(const struct db_cache *cache_elem, const struct insert
 
 void count_std_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->std_comms);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->std_comms);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->std_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->std_comms);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_ext_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->ext_comms);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->ext_comms);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->ext_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->ext_comms);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_as_path_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->as_path);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->as_path);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->as_path);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->as_path);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_src_std_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_std_comms);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_std_comms);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_std_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_std_comms);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_src_ext_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_ext_comms);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_ext_comms);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_ext_comms);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_ext_comms);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_src_as_path_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_as_path);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_as_path);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_as_path);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_as_path);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_local_pref_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->local_pref);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->local_pref);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->local_pref);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->local_pref);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_src_local_pref_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_local_pref);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_local_pref);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_local_pref);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_local_pref);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_med_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->med);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->med);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->med);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->med);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_src_med_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_med);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_med);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_med);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_med);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_peer_src_as_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->peer_src_as);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->peer_src_as);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->peer_src_as);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->peer_src_as);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_peer_dst_as_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->peer_dst_as);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->peer_dst_as);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->peer_dst_as);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->peer_dst_as);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -219,7 +219,7 @@ void count_peer_src_ip_handler(const struct db_cache *cache_elem, const struct i
 {
   char ptr[INET6_ADDRSTRLEN];
 
-  addr_to_str(ptr, &cache_elem->pbgp->peer_src_ip);
+  addr_to_str(ptr, &cache_elem->cbgp->peer_src_ip);
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ptr);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ptr);
   *ptr_where += strlen(*ptr_where);
@@ -230,7 +230,7 @@ void count_peer_dst_ip_handler(const struct db_cache *cache_elem, const struct i
 {
   char ptr[INET6_ADDRSTRLEN], *indirect_ptr = ptr;
 
-  addr_to_str(ptr, &cache_elem->pbgp->peer_dst_ip);
+  addr_to_str(ptr, &cache_elem->cbgp->peer_dst_ip);
   if (!strlen(ptr)) indirect_ptr = (char *) fake_host;
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, indirect_ptr);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, indirect_ptr);

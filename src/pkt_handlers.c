@@ -30,6 +30,7 @@
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
 #include "addr.h"
+#include "bgp/bgp.h"
 
 /* functions */
 void evaluate_packet_handlers()

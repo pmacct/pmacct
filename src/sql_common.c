@@ -397,7 +397,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             Cursor->lru_prev = NULL;
             Cursor->lru_next = NULL;
             Cursor->lru_tag = PendingElem->lru_tag;
-	    if (PendingElem->pbgp) PendingElem->pbgp = NULL;
+	    if (PendingElem->cbgp) PendingElem->cbgp = NULL;
             RetireElem(PendingElem);
             queue[j] = Cursor;
           }
@@ -436,7 +436,12 @@ struct db_cache *sql_cache_search(struct pkt_primitives *data, struct pkt_bgp_pr
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, data, sizeof(struct pkt_primitives));
       if (PbgpSz) {
-	if (Cursor->pbgp) res_bgp = memcmp(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+	if (Cursor->cbgp) {
+	  struct pkt_bgp_primitives tmp_pbgp;
+
+	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
+	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+	}
       }
       else res_bgp = FALSE;
 
@@ -459,6 +464,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   unsigned long int basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
+  unsigned int cb_size = sizeof(struct cache_bgp_primitives);
 
   if (data->time_start && config.sql_history) {
     while (basetime > data->time_start) {
@@ -556,7 +562,12 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
       res_data = memcmp(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
 
       if (PbgpSz) {
-        if (Cursor->pbgp) res_bgp = memcmp(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+        if (Cursor->cbgp) {
+	  struct pkt_bgp_primitives tmp_pbgp;
+
+	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
+	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+	}
       }
       else res_bgp = FALSE;
 
@@ -588,10 +599,13 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   /* we add the new entry in the cache */
   memcpy(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
   if (PbgpSz) {
-    if (!Cursor->pbgp) Cursor->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
-    memcpy(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+    if (!Cursor->cbgp) {
+      Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+      memset(Cursor->cbgp, 0, cb_size);
+    }
+    pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp);
   }
-  else Cursor->pbgp = NULL;
+  else Cursor->cbgp = NULL;
   Cursor->packet_counter = data->pkt_num;
   Cursor->flows_counter = data->flo_num;
   Cursor->bytes_counter = data->pkt_len;

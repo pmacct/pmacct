@@ -27,6 +27,7 @@
 #include "sfacctd.h"
 #include "pretag_handlers.h"
 #include "net_aggr.h"
+#include "bgp/bgp.h"
 
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {

@@ -264,9 +264,6 @@ struct pkt_extras {
 };
 
 /* START: BGP section */
-#include "bgp/bgp.h"
-#include "bgp/bgp_aspath.h"
-#include "bgp/bgp_community.h"
 #define MAX_BGP_STD_COMMS       96
 #define MAX_BGP_EXT_COMMS       96
 #define MAX_BGP_ASPATH          128
