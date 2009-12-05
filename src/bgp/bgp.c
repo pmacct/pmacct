@@ -1794,28 +1794,28 @@ void write_neighbors_file(char *filename)
   }
 }
 
-void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p)
+void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p, u_int64_t what_to_count)
 {
   if (c) {
     c->peer_src_as = p->peer_src_as;
     c->peer_dst_as = p->peer_dst_as;
     memcpy(&c->peer_src_ip, &p->peer_src_ip, HostAddrSz);
     memcpy(&c->peer_dst_ip, &p->peer_dst_ip, HostAddrSz);
-    if (strlen(p->std_comms)) {
+    if (what_to_count & COUNT_STD_COMM) {
       if (!c->std_comms) c->std_comms = malloc(MAX_BGP_STD_COMMS);
       memcpy(c->std_comms, p->std_comms, MAX_BGP_STD_COMMS);
     }
     else {
       if (c->std_comms) free(c->std_comms);
     }
-    if (strlen(p->ext_comms)) {
+    if (what_to_count & COUNT_EXT_COMM) {
       if (!c->ext_comms) c->ext_comms = malloc(MAX_BGP_EXT_COMMS);
       memcpy(c->ext_comms, p->ext_comms, MAX_BGP_EXT_COMMS);
     }
     else {
       if (c->ext_comms) free(c->ext_comms);
     }
-    if (strlen(p->as_path)) {
+    if (what_to_count & COUNT_AS_PATH) {
       if (!c->as_path) c->as_path = malloc(MAX_BGP_ASPATH);
       memcpy(c->as_path, p->as_path, MAX_BGP_ASPATH);
     }
@@ -1824,21 +1824,21 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     }
     c->local_pref = p->local_pref;
     c->med = p->med;
-    if (strlen(p->src_std_comms)) {
+    if (what_to_count & COUNT_SRC_STD_COMM) {
       if (!c->src_std_comms) c->src_std_comms = malloc(MAX_BGP_STD_COMMS);
       memcpy(c->src_std_comms, p->src_std_comms, MAX_BGP_STD_COMMS);
     }
     else {
       if (c->src_std_comms) free(c->src_std_comms);
     }
-    if (strlen(p->src_ext_comms)) {
+    if (what_to_count & COUNT_SRC_EXT_COMM) {
       if (!c->src_ext_comms) c->src_ext_comms = malloc(MAX_BGP_EXT_COMMS);
       memcpy(c->src_ext_comms, p->src_ext_comms, MAX_BGP_EXT_COMMS);
     }
     else {
       if (c->src_ext_comms) free(c->src_ext_comms);
     }
-    if (strlen(p->src_as_path)) {
+    if (what_to_count & COUNT_SRC_AS_PATH) {
       if (!c->src_as_path) c->src_as_path = malloc(MAX_BGP_ASPATH);
       memcpy(c->src_as_path, p->src_as_path, MAX_BGP_ASPATH);
     }

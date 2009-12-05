@@ -187,7 +187,7 @@ void insert_accounting_structure(struct pkt_data *data, struct pkt_bgp_primitive
 	}
 	elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
 	memset(elem_acc->cbgp, 0, cb_size);
-        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp);
+        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
 
       elem_acc->packet_counter += data->pkt_num;
@@ -245,7 +245,7 @@ void insert_accounting_structure(struct pkt_data *data, struct pkt_bgp_primitive
       if (PbgpSz) {
         elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
         memset(elem_acc->cbgp, 0, cb_size);
-        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp);
+        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
       else elem_acc->cbgp = NULL;
 

@@ -603,7 +603,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
       Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
       memset(Cursor->cbgp, 0, cb_size);
     }
-    pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp);
+    pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
   }
   else Cursor->cbgp = NULL;
   Cursor->packet_counter = data->pkt_num;
