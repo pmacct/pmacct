@@ -157,29 +157,13 @@ void evaluate_packet_handlers()
         primitives++;
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
-          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromstd_handler;
-          primitives++;
-        }
-        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_ECOMMS) {
-          channels_list[index].phandler[primitives] = NF_bgp_peer_src_as_fromext_handler;
-          primitives++;
-        }
-        else {
+        if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS) {
-          channels_list[index].phandler[primitives] = SF_bgp_peer_src_as_fromstd_handler;
-          primitives++;
-        }
-        else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_ECOMMS) {
-          channels_list[index].phandler[primitives] = SF_bgp_peer_src_as_fromext_handler;
-          primitives++;
-        }
-        else { 
+        if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
@@ -1637,6 +1621,19 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
       if (chptr->aggregation & COUNT_SRC_MED && config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_BGP)
 	pbgp->src_med = info->attr->med;
+
+      if (chptr->aggregation & COUNT_PEER_SRC_AS && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
+        pbgp->peer_src_as = evaluate_first_asn(info->attr->aspath->str);
+
+        if (!pbgp->peer_src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+          char tmp_stdcomms[MAX_BGP_STD_COMMS];
+
+          if (info->attr->community && info->attr->community->str) {
+            evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
+            copy_stdcomm_to_asn(tmp_stdcomms, &pbgp->peer_src_as, FALSE);
+          }
+        }
+      }
     }
   }
 
@@ -1772,109 +1769,6 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
     }
   }
 }
-
-void NF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
-  struct bgp_info *info;
-  int comm_idx;
-  u_int32_t comval;
-  u_int16_t val, as, nf_ifindex;
-
-  --pdata; /* Bringing back to original place */
-
-  if (src_ret) {
-    info = (struct bgp_info *) src_ret->info;
-
-    if (info && info->attr && info->attr->community) {
-      for (comm_idx = 0; comm_idx < info->attr->community->size; comm_idx++) {
-        comval = ntohl (info->attr->community->val[comm_idx]);
-        as = (comval >> 16) & 0xFFFF;
-        val = comval & 0xFFFF;
-
-        switch(hdr->version) {
-        case 9:
-          memcpy(&nf_ifindex, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len);
-          break;
-        case 8:
-          switch(hdr->aggregation) {
-          case 1:
-            nf_ifindex = ((struct struct_export_v8_1 *) pptrs->f_data)->input;
-            break;
-          case 3:
-            nf_ifindex = ((struct struct_export_v8_3 *) pptrs->f_data)->input;
-            break;
-          case 5:
-            nf_ifindex = ((struct struct_export_v8_5 *) pptrs->f_data)->input;
-            break;
-          case 7:
-            nf_ifindex = ((struct struct_export_v8_7 *) pptrs->f_data)->input;
-            break;
-          case 8:
-            nf_ifindex = ((struct struct_export_v8_8 *) pptrs->f_data)->input;
-            break;
-          case 9:
-            nf_ifindex = ((struct struct_export_v8_9 *) pptrs->f_data)->input;
-            break;
-          case 10:
-            nf_ifindex = ((struct struct_export_v8_10 *) pptrs->f_data)->input;
-            break;
-          case 11:
-            nf_ifindex = ((struct struct_export_v8_11 *) pptrs->f_data)->input;
-            break;
-          case 13:
-            nf_ifindex = ((struct struct_export_v8_13 *) pptrs->f_data)->input;
-            break;
-          case 14:
-            nf_ifindex = ((struct struct_export_v8_14 *) pptrs->f_data)->input;
-            break;
-          default:
-            nf_ifindex = 0;
-            break;
-          }
-          break;
-        default:
-          nf_ifindex = ((struct struct_export_v5 *) pptrs->f_data)->input;
-          break;
-        }
-        if (as == ntohs(nf_ifindex)) {
-          /* FOUND: copying value */
-          pbgp->peer_src_as = val;
-          break;
-        }
-        else if (as > ntohs(nf_ifindex)) {
-          /* NOT FOUND: break here */
-          break;
-        }
-      }
-    }
-
-    if (!pbgp->peer_src_as && !pdata->primitives.src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
-      char tmp_stdcomms[MAX_BGP_STD_COMMS];
-
-      if (info->attr->community && info->attr->community->str) {
-        evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
-        copy_stdcomm_to_asn(tmp_stdcomms, &pbgp->peer_src_as, FALSE);
-      }
-    }
-  }
-}
-
-void NF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  pbgp->peer_src_as = 0;
-
-  // XXX: fill this in
-}
-
 
 void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {

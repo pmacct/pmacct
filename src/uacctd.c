@@ -569,7 +569,7 @@ int main(int argc,char **argv, char **envp)
     req.bpf_filter = TRUE;
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern, &config.nfacctd_bgp_stdcomm_pattern_to_asn);
 
-    if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+    if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
       if (config.nfacctd_bgp_peer_as_src_map) {
         load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
 	cb_data.bpas_table = (u_char *) &bpas_table;

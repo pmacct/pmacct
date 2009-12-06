@@ -1003,13 +1003,8 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   as_t asn = 0;
 
-  if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_MAP) {
+  if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
     asn = pptrs->bpas;
-  }
-  else if (config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_COMMS ||
-	   config.nfacctd_bgp_peer_as_src_type == PEER_SRC_AS_BGP_ECOMMS) {
-    /* XXX: unsupported feature */
-    asn = 0;
   }
 
   if (entry->peer_src_as.n == asn) return (FALSE | entry->peer_src_as.neg);

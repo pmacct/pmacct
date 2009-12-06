@@ -932,13 +932,11 @@ DESC:           filters BGP standard communities against the supplied pattern. T
 		Peer-AS=XXXXX, Origin-AS=YYYYY.
 
 KEY:		bgp_peer_src_as_type
-VALUES:		[ map | bgp_comms ]
+VALUES:		[ map | bgp ]
 DESC:		Defines the method to use to map incoming traffic to a source peer ASN. "map" selects a
 		map, reloadable at runtime, specified by the bgp_peer_src_as_map directive (refer to it for
-		further information); "bgp_comms" maps basing on standard BGP communities, expressed in the
-		format <ifIndex>:<ASN>, attached to the <BGP peer's source IP address>/32 prefix properly
-		re-distributed in BGP. The "map" method is adviced as being much more flexibile, scalable
-		and future-proof.
+		further information); "bgp" implements naive BGP RIB lookups. BGP lookups assume traffic is
+		symmtric, which is often not the case, affecting their accuracy.
 
 KEY:		bgp_peer_src_as_map
 DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
@@ -950,30 +948,30 @@ DESC:		full pathname to a file containing source peer AS mappings. The AS can be
 KEY:            bgp_src_std_comm_type
 VALUES:         [ bgp ]
 DESC:		Defines the method to use to map incoming traffic to a set of standard communities. Only
-		trivial BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
+		naive BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
 		which is often not the case, affecting their accuracy.
 
 KEY:            bgp_src_ext_comm_type
 VALUES:         [ bgp ]
 DESC:           Defines the method to use to map incoming traffic to a set of extended communities. Only
-                trivial BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
+                naive BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
                 which is often not the case, affecting their accuracy.
 
 KEY:            bgp_src_as_path_type
 VALUES:         [ bgp ]
-DESC:           Defines the method to use to map incoming traffic to an AS-PATH. Only trivial BGP RIB
-		lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is often
-		not the case, affecting their accuracy.
+DESC:           Defines the method to use to map incoming traffic to an AS-PATH. Only naive BGP RIB lookups
+		are currenntly supported. BGP lookups assume traffic is symmtric, which is often not the
+		case, affecting their accuracy.
 
 KEY:            bgp_src_local_pref_type
 VALUES:         [ bgp ]
-DESC:           Defines the method to use to map incoming traffic to a local preference. Only trivial BGP
+DESC:           Defines the method to use to map incoming traffic to a local preference. Only naive BGP
 		RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is
 		often not the case, affecting their accuracy.
 
 KEY:            bgp_src_med_type
 VALUES:         [ bgp ]
-DESC:           Defines the method to use to map incoming traffic to a MED value. Only trivial BGP RIB
+DESC:           Defines the method to use to map incoming traffic to a MED value. Only naive BGP RIB
                 lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is often
                 not the case, affecting their accuracy.
 
