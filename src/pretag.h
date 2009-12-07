@@ -26,6 +26,7 @@
 
 #define PRETAG_MAP_RCODE_ID  100
 #define PRETAG_MAP_RCODE_ID2 101
+#define BPAS_MAP_RCODE_BGP   102
 
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
@@ -69,6 +70,7 @@ typedef struct {
 struct id_entry {
   pm_id_t id;
   pm_id_t id2;
+  pm_id_t flags;
   pm_id_t pos;
   pt_hostaddr_t agent_ip;
   pt_hostaddr_t nexthop;

@@ -8,7 +8,9 @@
 !
 ! list of currently supported keys follow:
 !
-! 'id'			ID value to assign to a matching packet or flow
+! 'id'			ID value to assign to a matching packet or flow. Other than AS
+!			numbers, this field accepts also the 'bgp' keyword which triggers
+!			a BGP lookup and returns its result: useful to handle exceptions.
 ! 'ip'			IP address of the device which is originating sFlow or NetFlow
 !			datagrams (router, probe, etc.)
 ! 'in'  		Input interface 

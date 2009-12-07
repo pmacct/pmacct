@@ -381,7 +381,8 @@ c-1) download regular expression (RE) classifiers as-you-need them: you just nee
 
 c-2) download all the RE classifiers available: you just need to point your browser to
      http://sourceforge.net/projects/l7-filter (and take to the latest L7-protocol
-     definitions tarball).
+     definitions tarball). Pay attention to remove potential catch-all patterns which
+     might be part of the downloaded package (ie. unknown.pat and unset.pat).
 
 c-3) download shared object (SO) classifiers (written in C) as-you-need them: you need
      just to point your browser to http://www.pmacct.net/classification/ , download the
@@ -584,8 +585,8 @@ mapping to easily model private and public peerings, both bi-lateral or multi-la
 Find below how to use a map, reloadable at runtime, and its contents (for full syntax
 guide lines, please see the 'peers.map.example' file within the examples section):
 
-nfacctd_bgp_peer_src_as_type: map
-nfacctd_bgp_peer_src_as_map: /path/to/peers.map
+bgp_peer_src_as_type: map
+bgp_peer_src_as_map: /path/to/peers.map
 
 [/path/to/peers.map]
 id=12345 ip=1.2.3.4 in=10 bgp_nexthop=3.4.5.6
@@ -610,9 +611,8 @@ routing protocols, statics, directly connected, etc.). These can be private IP
 addresses or segments of the SP address space. The common factor to all of them is
 that while being present in iBGP, these prefixes can't be tracked any further due
 to the lack of attributes like AS-PATH or an ASN. To overcome this situation the
-simplest approach is to employ a nfacctd_bgp_peer_src_as_map directive, described
-previously (ie. making use of interface descriptions as a possible way to automate
-the process).
+simplest approach is to employ a bgp_peer_src_as_map directive, described previously
+(ie. making use of interface descriptions as a possible way to automate the process).
 Alterntively, the bgp_stdcomm_pattern_to_asn directive was developed to fit into
 this scenario: assuming procedures of a SP are (or can be changed) to label every
 relevant non-BGP speaking entity IP prefixes uniquely with a BGP standard community,

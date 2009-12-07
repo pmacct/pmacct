@@ -33,7 +33,10 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
 {
   struct host_addr a;
   char *endptr = NULL;
-  pm_id_t j;
+  pm_id_t j = 0;
+
+  e->id = 0;
+  e->flags = FALSE;
 
   /* If we spot a '.' within the string let's see if we are given a vaild
       IPv4 address; by default we would treat it as an unsigned integer */
@@ -49,6 +52,14 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       Log(LOG_ERR, "ERROR ( %s ): Agent ID does not appear to be a valid IPv4 address. ", filename);
       return TRUE;
     }
+  }
+  /* If we spot the word "bgp", let's check this is a BPAS map */
+  else if (!strncmp(value, "bgp", strlen("bgp"))) {
+    if (acct_type != MAP_BGP_PEER_AS_SRC) {
+      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
+      return TRUE;
+    }
+    e->flags = BPAS_MAP_RCODE_BGP;
   }
   else {
     j = strtoul(value, &endptr, 10);
@@ -1091,18 +1102,43 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 {
   struct id_entry *entry = e;
-
   pm_id_t *tid = id;
+
   *tid = entry->id;
+
+  if (!entry->id && entry->flags == BPAS_MAP_RCODE_BGP) {
+    struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+    struct bgp_info *info;
+
+    if (src_ret) {
+      info = (struct bgp_info *) src_ret->info;
+      if (info && info->attr) {
+	if (info->attr->aspath && info->attr->aspath->str) {
+	  *tid = evaluate_first_asn(info->attr->aspath->str);
+
+	  if (!(*tid) && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+	    char tmp_stdcomms[MAX_BGP_STD_COMMS];
+
+	    if (info->attr->community && info->attr->community->str) {
+	      evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
+	      copy_stdcomm_to_asn(tmp_stdcomms, (as_t *)tid, FALSE);
+	    }
+          }
+        }
+      }
+    }
+  }
+
   return PRETAG_MAP_RCODE_ID; /* cap */
 }
 
 int pretag_id2_handler(struct packet_ptrs *pptrs, void *id, void *e)
 {
   struct id_entry *entry = e;
-
   pm_id_t *tid = id;
+
   *tid = entry->id2;
+
   return PRETAG_MAP_RCODE_ID2; /* cap */
 }
 
@@ -1274,6 +1310,15 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
     if (info && info->attr) {
       if (info->attr->aspath && info->attr->aspath->str) {
         asn = evaluate_first_asn(info->attr->aspath->str);
+
+        if (!asn && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+          char tmp_stdcomms[MAX_BGP_STD_COMMS];
+
+          if (info->attr->community && info->attr->community->str) {
+            evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
+            copy_stdcomm_to_asn(tmp_stdcomms, &asn, FALSE);
+          }
+        }
       }
     }
   }

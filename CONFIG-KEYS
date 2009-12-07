@@ -940,10 +940,10 @@ DESC:		Defines the method to use to map incoming traffic to a source peer ASN. "
 
 KEY:		bgp_peer_src_as_map
 DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
-		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB to
-		look up the source IP prefix). This is sufficient to model popular tecniques for both public
-		and private BGP peerings. Number of map entries (by default 384) can be modified via 
-		pre_tag_map_entries.
+		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB
+		to look up the source IP prefix). This is sufficient to model popular tecniques for both
+		public and private BGP peerings. Number of map entries (by default 384) can be modified via 
+		pre_tag_map_entries. Sample map in 'examples/peers.map.example'.
 
 KEY:            bgp_src_std_comm_type
 VALUES:         [ bgp ]
