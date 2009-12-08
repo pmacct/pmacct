@@ -1842,6 +1842,20 @@ int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_skip_subas = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_peer_as_skip_subas'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_peer_src_as_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

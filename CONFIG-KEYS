@@ -931,6 +931,13 @@ DESC:           filters BGP standard communities against the supplied pattern. T
 		or connected redistributed in BGP. Example: BGP standard community XXXXX:YYYYY is mapped as:
 		Peer-AS=XXXXX, Origin-AS=YYYYY.
 
+KEY:		bgp_peer_as_skip_subas
+VALUES:		[true|false]
+DESC:		When determining the peer AS (source and destination), skip potential confederated sub-AS
+		and report the first ASN external to the routing domain. When enabled if no external ASNs
+		are found on the AS-PATH except the confederated sub-ASes, the first sub-AS is reported.
+		(default: false)
+
 KEY:		bgp_peer_src_as_type
 VALUES:		[ map | bgp ]
 DESC:		Defines the method to use to map incoming traffic to a source peer ASN. "map" selects a

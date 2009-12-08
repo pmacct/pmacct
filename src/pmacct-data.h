@@ -329,6 +329,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_stdcomm_pattern", cfg_key_nfacctd_bgp_stdcomm_pattern},
   {"bgp_extcomm_pattern", cfg_key_nfacctd_bgp_extcomm_pattern},
   {"bgp_stdcomm_pattern_to_asn", cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn},
+  {"bgp_peer_as_skip_subas", cfg_key_nfacctd_bgp_peer_as_skip_subas},
   {"bgp_peer_src_as_map", cfg_key_nfacctd_bgp_peer_src_as_map},
   {"bgp_peer_src_as_type", cfg_key_nfacctd_bgp_peer_src_as_type},
   {"bgp_src_std_comm_type", cfg_key_nfacctd_bgp_src_std_comm_type},

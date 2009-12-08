@@ -1471,11 +1471,20 @@ as_t evaluate_last_asn(struct aspath *as)
 
 as_t evaluate_first_asn(char *src)
 {
-  int idx, is_space = FALSE, len = strlen(src);
+  int idx, is_space = FALSE, len = strlen(src), start, sub_as, iteration;
   char *endptr, *ptr, saved;
-  u_int32_t asn;
+  as_t asn, real_first_asn;
 
-  for (idx = 0; idx < len && (src[idx] != ' ' && src[idx] != ')'); idx++);
+  start = 0;
+  iteration = 0;
+  real_first_asn = 0;
+
+  start_again:
+
+  asn = 0;
+  sub_as = FALSE;
+
+  for (idx = start; idx < len && (src[idx] != ' ' && src[idx] != ')'); idx++);
 
   /* Mangling the AS_PATH string */
   if (src[idx] == ' ' || src[idx] == ')') {
@@ -1484,13 +1493,34 @@ as_t evaluate_first_asn(char *src)
     src[idx] = '\0';
   }
 
-  if (src[0] == '(') ptr = src+1;
-  else ptr = src;
+  if (src[start] == '(') {
+    ptr = &src[start+1];
+    sub_as = TRUE;
+  }
+  else ptr = &src[start];
 
   asn = strtoul(ptr, &endptr, 10);
 
   /* Restoring mangled AS_PATH */
-  if (is_space) src[idx] = saved; 
+  if (is_space) {
+    src[idx] = saved; 
+    saved = '\0';
+    is_space = FALSE;
+  }
+
+  if (config.nfacctd_bgp_peer_as_skip_subas && sub_as) {
+    while (idx < len && (src[idx] == ' ' || src[idx] == ')')) idx++;
+
+    if (idx != len-1) { 
+      start = idx;
+      if (iteration == 0) real_first_asn = asn;
+      iteration++;
+      goto start_again;
+    }
+  }
+
+  /* skip sub-as kicks-in only when traffic is delivered to a different ASN */
+  if (real_first_asn && (!asn || sub_as)) asn = real_first_asn;
 
   return asn;
 }
