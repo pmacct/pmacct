@@ -184,9 +184,17 @@ void skinny_bgp_daemon()
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && peers[peers_check_idx].addr.address.ipv4.s_addr == peer->addr.address.ipv4.s_addr) { 
-          Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4));
-          FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
-          bgp_peer_close(&peers[peers_check_idx]);
+	  now = time(NULL);
+	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
+            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4));
+            FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
+            bgp_peer_close(&peers[peers_check_idx]);
+	  }
+	  else {
+	    Log(LOG_ERR, "ERROR ( default/core/BGP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4), (peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
+	    bgp_peer_close(peer);
+	    goto select_again;
+	  }
         }
 	else {
 	  if (peers[peers_check_idx].fd) peers_num++;
@@ -1899,5 +1907,36 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
     p->src_local_pref = c->src_local_pref;
     p->src_med = c->src_med;
+  }
+}
+
+void bgp_config_checks(struct configuration *c)
+{
+  if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+			  COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
+			  COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
+			  COUNT_SRC_LOCAL_PREF)) {
+    /* Sanitizing the aggregation method */
+    if ( ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) ||
+         ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) ) {
+      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+      exit(1);
+    }
+    if ( (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
+	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
+	 (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type ) ||
+	 (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->nfacctd_bgp_src_local_pref_type ) ||
+	 (c->what_to_count & COUNT_SRC_MED && !c->nfacctd_bgp_src_med_type ) ||
+	 (c->what_to_count & COUNT_PEER_SRC_AS && !c->nfacctd_bgp_peer_as_src_type ) ) {
+      printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
+      printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
+      printf("       src_as_path     =>  bgp_src_as_path_type\n");
+      printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
+      printf("       src_ext_comm    =>  bgp_src_ext_comm_type\n");
+      printf("       src_local_pref  =>  bgp_src_local_pref_type\n");
+      printf("       src_med         =>  bgp_src_med_type\n");
+      exit(1);
+    }
+    c->data_type |= PIPE_TYPE_BGP;
   }
 }

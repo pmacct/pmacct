@@ -1013,11 +1013,12 @@ KEY:            bgp_follow_nexthop
 DESC:		expects an IP prefix, ie. 192.168.0.0/16. It follows the BGP next-hop up (using each next-
 		hop as BGP source-address for the next BGP RIB lookup), returning the last next-hop part of
 		the supplied IP prefix as value for the 'peer_ip_dst' primitive. bgp_agent_map is supported
-		at each recursion. This feature is aimed at networks not running MPLS or BGP confederations;
-		underlying target being to see the routing-domain "exit-point" (which is what easily happens
-		with MPLS LSPs in conjunction with BGP). The feature is internally protected against routing
-		loops with an hardcoded limit of 20 lookups; pmacctd, uacctd daemons are internally limited
-		to only two BGP peers hence this feature can't properly work. (default: none)
+		at each recursion. This feature is aimed at networks not running MPLS or being based on BGP
+		confederations; underlying goal being to see the routing-domain "exit-point" (which is
+		what is easily seen with MPLS LSPs in conjunction with BGP). The feature is internally
+		protected against routing loops with an hardcoded limit of 20 lookups; pmacctd, uacctd
+		daemons are internally limited to only two BGP peers hence this feature can't properly
+		work. (default: none)
 
 KEY:            bgp_neighbors_file
 DESC:		writes a list of the BGP neighbors in the established state to the specified file, one

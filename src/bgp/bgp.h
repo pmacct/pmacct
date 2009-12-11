@@ -187,6 +187,7 @@ EXT void attrhash_init();
 
 EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
 EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *, u_int64_t);
+EXT void bgp_config_checks(struct configuration *);
 
 /* global variables */
 EXT struct bgp_peer *peers;
