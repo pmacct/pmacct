@@ -381,6 +381,13 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_ID;
 	  list->cfg.what_to_count |= COUNT_ID2;
 	}
+        if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
+                                       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
+                                       COUNT_SRC_LOCAL_PREF)) {
+          Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
+          exit(1);
+        }
 
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }

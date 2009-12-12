@@ -853,8 +853,11 @@ DESC:		defines the remote IP address/hostname and port to which NetFlow dagagram
 		The value is expected to be in the usual form 'address:port'. (default: 127.0.0.1:2100)
 
 KEY:		nfprobe_version
-VALUES:		[1,5,9]
-DESC:		version of outgoing NetFlow datagrams. Actually, NetFlow v1/v5/v9 are supported. (default: 5)
+VALUES:		[5,9]
+DESC:		version of outgoing NetFlow datagrams. NetFlow v5/v9 are supported. NetFlow v5 features a fixed
+		record structure and if not specifying an 'aggregate' directive it gets populated as much as
+		possible; NetFlow v9 features a dynamic template-based structure instead and by default it is
+		populated as: 'src_host, dst_host, src_port, dst_Port, proto, tos'. (default: 5)
 
 KEY:            nfprobe_engine
 DESC:           allows to define Engine ID and Engine Type fields. It applies only to NetFlow v5 and v9. In v9,
@@ -863,6 +866,12 @@ DESC:           allows to define Engine ID and Engine Type fields. It applies on
 		distinct probe instances running on the same box; this is also important for letting NetFlow v9
 		templates to work correctly: in fact, template IDs get automatically selected only inside single
 		daemon instances. (default: 0:0)
+
+KEY:		[ nfprobe_peer_as | sfprobe_peer_as ]
+VALUES:         [true|false]
+DESC:		includes peer-AS rather than origin-AS as part of the NetFlow/sFlow export. Requirements to
+		enable this feature are: a) one of the nfacctd_as_new/sfacctd_as_new/pmacctd_as/uacctd_as set
+		to 'bgp' and b) a fully functional BGP daemon (bgp_daemon). (default: false)
 
 KEY:		sfprobe_receiver
 DESC:           defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.

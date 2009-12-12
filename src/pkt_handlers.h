@@ -79,6 +79,7 @@ EXT void NF_nfprobe_extras_handler(struct channels_list_entry *, struct packet_p
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void nfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_peer_src_as_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data);

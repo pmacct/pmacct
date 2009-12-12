@@ -136,6 +136,9 @@ void evaluate_packet_handlers()
 	if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) { 
 	  channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
 	}
+        else if (channels_list[index].plugin->type.id == PLUGIN_ID_NFPROBE) {
+          channels_list[index].phandler[primitives] = nfprobe_bgp_ext_handler;
+        }
 	else {
           channels_list[index].phandler[primitives] = bgp_ext_handler;
 	}
@@ -1752,7 +1755,10 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
 	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
-	  payload->src_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+	  if (!chptr->plugin->cfg.nfprobe_peer_as)
+	    payload->src_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+	  else
+            payload->src_ip.address.ipv4.s_addr = evaluate_first_asn(info->attr->aspath->str);
 	}
       }
     }
@@ -1763,8 +1769,48 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
-          payload->dst_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+	  if (!chptr->plugin->cfg.nfprobe_peer_as)
+            payload->dst_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+          else
+	    payload->dst_ip.address.ipv4.s_addr = evaluate_first_asn(info->attr->aspath->str);
 	}
+      }
+    }
+  }
+}
+
+void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
+  struct bgp_info *info;
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr) {
+      if (config.nfacctd_as == NF_AS_BGP) {
+        if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
+          if (!chptr->plugin->cfg.nfprobe_peer_as)
+            pdata->primitives.src_as = evaluate_last_asn(info->attr->aspath);
+          else
+            pdata->primitives.src_as = evaluate_first_asn(info->attr->aspath->str);
+        }
+      }
+    }
+  }
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr) {
+      if (config.nfacctd_as == NF_AS_BGP) {
+        if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
+          if (!chptr->plugin->cfg.nfprobe_peer_as)
+            pdata->primitives.dst_as = evaluate_last_asn(info->attr->aspath);
+          else
+            pdata->primitives.dst_as = evaluate_first_asn(info->attr->aspath->str);
+        }
       }
     }
   }
