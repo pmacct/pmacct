@@ -315,8 +315,14 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
       // the local interface index should be filled in as the special
       // value 0x3FFFFFFF, which is defined in the sFlow spec as
       // an "internal" interface.
-      fs.input = (direction == SFL_DIRECTION_IN) ? sp->ifIndex : 0x3FFFFFFF;
-      fs.output = (direction == SFL_DIRECTION_IN) ? 0x3FFFFFFF : sp->ifIndex;
+      if (!hdr->ifindex_in && !hdr->ifindex_out) {
+        fs.input = (direction == SFL_DIRECTION_IN) ? sp->ifIndex : 0x3FFFFFFF;
+        fs.output = (direction == SFL_DIRECTION_IN) ? 0x3FFFFFFF : sp->ifIndex;
+      }
+      else {
+        fs.input = (hdr->ifindex_in) ? hdr->ifindex_in : 0x3FFFFFFF;
+        fs.output = (hdr->ifindex_out) ? hdr->ifindex_out : 0x3FFFFFFF;
+      }
       
       memset(&hdrElem, 0, sizeof(hdrElem));
 

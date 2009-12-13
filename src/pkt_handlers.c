@@ -530,8 +530,10 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
 {
   struct pkt_payload *payload = (struct pkt_payload *) *data;
   struct pkt_data tmp;
+  struct eth_header eh;
   char *buf = (char *) *data, *tmpp = (char *) &tmp;
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
+  int ethHdrLen = sizeof(struct eth_header); 
 
   if (chptr->plugin->cfg.networks_file) {
     src_host_handler(chptr, pptrs, &tmpp);
@@ -547,12 +549,25 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   payload->class = pptrs->class;
   payload->tag = pptrs->tag;
   payload->tag2 = pptrs->tag2;
+  if (pptrs->ifindex_in > 0)  payload->ifindex_in  = pptrs->ifindex_in;
+  if (pptrs->ifindex_out > 0) payload->ifindex_out = pptrs->ifindex_out;
+
+  if (!pptrs->mac_ptr) {
+    memset(&eh, 0, ethHdrLen);
+    eh.ether_type = htons(pptrs->l3_proto);
+    payload->cap_len += ethHdrLen;
+  }
 
   /* We could be capturing the entire packet; DEFAULT_PLOAD_SIZE is our cut-off point */
   if (payload->cap_len > DEFAULT_PLOAD_SIZE) payload->cap_len = DEFAULT_PLOAD_SIZE;
 
   if (space >= payload->cap_len) {
     buf += PpayloadSz;
+    if (!pptrs->mac_ptr) {
+      memcpy(buf, &eh, ethHdrLen);
+      payload->cap_len -= ethHdrLen;
+      buf += ethHdrLen;
+    }
     memcpy(buf, pptrs->packet_ptr, payload->cap_len);
     chptr->bufptr += payload->cap_len; /* don't count pkt_payload here */ 
 #if NEED_ALIGN

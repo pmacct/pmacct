@@ -254,6 +254,8 @@ struct pkt_payload {
   pm_id_t tag2;
   struct host_addr src_ip;
   struct host_addr dst_ip;
+  u_int16_t ifindex_in;
+  u_int16_t ifindex_out;
 };
 
 struct pkt_extras {
