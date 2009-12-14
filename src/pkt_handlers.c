@@ -533,7 +533,7 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   struct eth_header eh;
   char *buf = (char *) *data, *tmpp = (char *) &tmp;
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
-  int ethHdrLen = sizeof(struct eth_header); 
+  int ethHdrLen = 0;
 
   if (chptr->plugin->cfg.networks_file) {
     src_host_handler(chptr, pptrs, &tmpp);
@@ -552,10 +552,13 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   if (pptrs->ifindex_in > 0)  payload->ifindex_in  = pptrs->ifindex_in;
   if (pptrs->ifindex_out > 0) payload->ifindex_out = pptrs->ifindex_out;
 
+  /* Typically don't have L2 info under ULOG */
   if (!pptrs->mac_ptr) {
+    ethHdrLen = sizeof(struct eth_header);
     memset(&eh, 0, ethHdrLen);
     eh.ether_type = htons(pptrs->l3_proto);
     payload->cap_len += ethHdrLen;
+    payload->pkt_len += ethHdrLen;
   }
 
   /* We could be capturing the entire packet; DEFAULT_PLOAD_SIZE is our cut-off point */
@@ -565,10 +568,9 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
     buf += PpayloadSz;
     if (!pptrs->mac_ptr) {
       memcpy(buf, &eh, ethHdrLen);
-      payload->cap_len -= ethHdrLen;
       buf += ethHdrLen;
     }
-    memcpy(buf, pptrs->packet_ptr, payload->cap_len);
+    memcpy(buf, pptrs->packet_ptr, payload->cap_len-ethHdrLen);
     chptr->bufptr += payload->cap_len; /* don't count pkt_payload here */ 
 #if NEED_ALIGN
     while (chptr->bufptr % 4 != 0) chptr->bufptr++; /* Don't worry, it's harmless increasing here */
