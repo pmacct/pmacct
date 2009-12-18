@@ -130,6 +130,8 @@ EXT char * pt_check_range(char *);
 
 EXT int tag_map_allocated;
 EXT int bpas_map_allocated;
+EXT int blp_map_allocated;
+EXT int bmed_map_allocated;
 EXT int bta_map_allocated;
 EXT void (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 

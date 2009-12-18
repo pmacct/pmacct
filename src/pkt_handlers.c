@@ -156,8 +156,10 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-        channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
-        primitives++;
+	if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
+          primitives++;
+	}
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
         if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
@@ -168,6 +170,48 @@ void evaluate_packet_handlers()
       else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
         if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
+          primitives++;
+        }
+      }
+    }
+
+    if (channels_list[index].aggregation & COUNT_SRC_LOCAL_PREF) {
+      if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_src_local_pref_frommap_handler;
+          primitives++;
+        }
+      }
+      else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_src_local_pref_frommap_handler;
+          primitives++;
+        }
+      }
+      else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_src_local_pref_frommap_handler;
+          primitives++;
+        }
+      }
+    }
+
+    if (channels_list[index].aggregation & COUNT_SRC_MED) {
+      if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_src_med_frommap_handler;
+          primitives++;
+        }
+      }
+      else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_src_med_frommap_handler;
+          primitives++;
+        }
+      }
+      else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
+        if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+          channels_list[index].phandler[primitives] = bgp_src_med_frommap_handler;
           primitives++;
         }
       }
@@ -1858,6 +1902,30 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
       }
     }
   }
+}
+
+void bgp_src_local_pref_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+
+  --pdata; /* Bringing back to original place */
+
+  pbgp->src_local_pref = pptrs->blp;
+}
+
+void bgp_src_med_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+
+  --pdata; /* Bringing back to original place */
+
+  pbgp->src_med = pptrs->bmed;
 }
 
 #if defined (HAVE_L2)

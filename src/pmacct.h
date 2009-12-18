@@ -196,6 +196,8 @@ struct pcap_callback_data {
   u_char * idt; 
   u_char * bta_table;
   u_char * bpas_table; 
+  u_char * blp_table; 
+  u_char * bmed_table; 
   struct pcap_device *device;
   u_int16_t ifindex_in;
   u_int16_t ifindex_out;

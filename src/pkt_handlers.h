@@ -82,8 +82,10 @@ EXT void bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, cha
 EXT void nfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_peer_src_as_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data);
-EXT void bgp_dst_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data);
+EXT void bgp_src_local_pref_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void bgp_src_med_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void bgp_src_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void bgp_dst_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void SF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

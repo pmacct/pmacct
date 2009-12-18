@@ -980,16 +980,29 @@ DESC:           Defines the method to use to map incoming traffic to an AS-PATH.
 		case, affecting their accuracy.
 
 KEY:            bgp_src_local_pref_type
-VALUES:         [ bgp ]
+VALUES:         [ map | bgp ]
 DESC:           Defines the method to use to map incoming traffic to a local preference. Only naive BGP
 		RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is
 		often not the case, affecting their accuracy.
 
+KEY:            bgp_src_local_pref_map
+DESC:           full pathname to a file containing source local preference mappings. The LP value can be
+		mapped to one or a combination of: ifIndex, source MAC address and BGP next-hop (query
+		against the BGP RIB to look up the source IP prefix). Number of map entries (by default
+		384) can be modified via pre_tag_map_entries. Sample map in 'examples/lpref.map.example'.
+
 KEY:            bgp_src_med_type
-VALUES:         [ bgp ]
+VALUES:         [ map | bgp ]
 DESC:           Defines the method to use to map incoming traffic to a MED value. Only naive BGP RIB
                 lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is often
                 not the case, affecting their accuracy.
+
+KEY:            bgp_src_med_map
+DESC:           full pathname to a file containing source MED (Multi Exit Discriminator) mappings. The
+		MED value can be mapped to one or a combination of: ifIndex, source MAC address and BGP
+		next-hop (query against the BGP RIB to look up the source IP prefix). Number of map
+		entries (by default 384) can be modified via pre_tag_map_entries. Sample map in
+		'examples/med.map.example'.
 
 KEY:		bgp_agent_map
 DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agents to BGP peers'

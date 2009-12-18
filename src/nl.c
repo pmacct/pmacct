@@ -48,10 +48,13 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.packet_ptr = (u_char *) buf;
     pptrs.mac_ptr = 0; pptrs.vlan_ptr = 0; pptrs.mpls_ptr = 0;
     pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag = 0; pptrs.tag2 = 0;
-    pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0;
+    pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0; pptrs.blp = 0;
+    pptrs.bmed = 0;
     pptrs.f_agent = cb_data->f_agent;
     pptrs.idtable = cb_data->idt;
     pptrs.bpas_table = cb_data->bpas_table;
+    pptrs.blp_table = cb_data->blp_table;
+    pptrs.bmed_table = cb_data->bmed_table;
     pptrs.bta_table = cb_data->bta_table;
     pptrs.ifindex_in = cb_data->ifindex_in;
     pptrs.ifindex_out = cb_data->ifindex_out;
@@ -64,6 +67,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
           bgp_srcdst_lookup(&pptrs);
         }
         if (config.nfacctd_bgp_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
+        if (config.nfacctd_bgp_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);
+        if (config.nfacctd_bgp_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
         if (config.pre_tag_map) PM_find_id((struct id_table *)pptrs.idtable, &pptrs, &pptrs.tag, &pptrs.tag2);
 
         exec_plugins(&pptrs);
@@ -75,6 +80,10 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     load_networks(config.networks_file, &nt, &nc);
     if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
       load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
+    if (config.nfacctd_bgp && config.nfacctd_bgp_src_local_pref_map)
+      load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.nfacctd_bgp_src_local_pref_map, (struct id_table *)cb_data->blp_table, &req, &blp_map_allocated);
+    if (config.nfacctd_bgp && config.nfacctd_bgp_src_med_map)
+      load_id_file(MAP_BGP_SRC_MED, config.nfacctd_bgp_src_med_map, (struct id_table *)cb_data->bmed_table, &req, &bmed_map_allocated);
     if (config.nfacctd_bgp)
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
     if (config.pre_tag_map)

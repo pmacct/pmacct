@@ -112,7 +112,7 @@ void skinny_bgp_daemon()
   }
 
   rc = Setsocksize(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): Setsocksize() failed for SO_REUSEADDR.\n");
+  if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): Setsocksize() failed for SO_REUSEADDR (errno: %d).\n", errno);
 
   rc = bind(sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {

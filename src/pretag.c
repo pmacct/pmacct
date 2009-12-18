@@ -128,7 +128,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
               if (key && value) {
                 int dindex; /* dictionary index */
 
-		if (acct_type == MAP_BGP_PEER_AS_SRC) {
+		/* Processing of source BGP-related primitives kept consistent;
+		   This can indeed be split as required in future */
+		if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED) {
                   for (dindex = 0; strcmp(bpas_map_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(bpas_map_dictionary[dindex].key, key)) {
                       err = (*bpas_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
@@ -212,7 +214,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		v4_num++; tmp.num++;
 	      } 
 	    }
-	    else if (acct_type == MAP_BGP_PEER_AS_SRC) {
+	    else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED) {
               if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].flags) && tmp.e[tmp.num].agent_ip.a.family) {
                 int j;
 

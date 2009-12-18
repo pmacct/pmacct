@@ -1688,7 +1688,7 @@ int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
   if (value < 0) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp = TRUE;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1702,7 +1702,7 @@ int cfg_key_nfacctd_bgp_msglog(char *filename, char *name, char *value_ptr)
   if (value < 0) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog = TRUE;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_msglog'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1714,12 +1714,12 @@ int cfg_key_nfacctd_bgp_aspath_radius(char *filename, char *name, char *value_pt
 
   value = atoi(value_ptr);
   if (value < 1) {
-        Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_aspath_radius' has to be >= 1.\n", filename);
+        Log(LOG_ERR, "WARN ( %s ): 'bgp_aspath_radius' has to be >= 1.\n", filename);
         return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_aspath_radius = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_aspath_radius'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_aspath_radius'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1730,7 +1730,7 @@ int cfg_key_nfacctd_bgp_stdcomm_pattern(char *filename, char *name, char *value_
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_stdcomm_pattern = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_stdcomm_pattern'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_stdcomm_pattern'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1741,7 +1741,7 @@ int cfg_key_nfacctd_bgp_extcomm_pattern(char *filename, char *name, char *value_
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_extcomm_pattern = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_extcomm_pattern'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_extcomm_pattern'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1752,7 +1752,7 @@ int cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn(char *filename, char *name, char 
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_stdcomm_pattern_to_asn = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_stdcomm_pattern_to_asn'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_stdcomm_pattern_to_asn'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1764,10 +1764,10 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
 
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_peer_src_as_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_peer_src_as_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_src_type = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_peer_src_as_type'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_peer_src_as_type'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1778,10 +1778,10 @@ int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *valu
   int value, changes = 0;
 
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_src_std_comm_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_std_comm_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_std_comm_type = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_src_std_comm_type'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_std_comm_type'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1792,10 +1792,10 @@ int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *valu
   int value, changes = 0;
 
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_src_ext_comm_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_ext_comm_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_ext_comm_type = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_src_ext_comm_type'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_ext_comm_type'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1806,10 +1806,10 @@ int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value
   int value, changes = 0;
 
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_src_as_path_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_as_path_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_as_path_type = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_src_as_path_type'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_as_path_type'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1819,11 +1819,12 @@ int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *va
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_src_local_pref_type' value.\n", filename);
+  if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
+  else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_local_pref_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_local_pref_type = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_src_local_pref_type'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_local_pref_type'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1833,11 +1834,12 @@ int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'nfacctd_bgp_src_med_type' value.\n", filename);
+  if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
+  else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_med_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_med_type = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_src_med_type'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_med_type'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1856,13 +1858,35 @@ int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *filename, char *name, char *val
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_src_local_pref_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_local_pref_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_local_pref_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_peer_src_as_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_src_map = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_peer_src_as_map'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_peer_src_as_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_src_med_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_med_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_med_map'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1886,7 +1910,7 @@ int cfg_key_nfacctd_bgp_follow_default(char *filename, char *name, char *value_p
   value = atoi(value_ptr);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_follow_default = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_follow_default'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_follow_default'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1899,7 +1923,7 @@ int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_p
   str2prefix(value_ptr, &list->cfg.nfacctd_bgp_follow_nexthop);
 
   for (; list; list = list->next, changes++) str2prefix(value_ptr, &list->cfg.nfacctd_bgp_follow_nexthop);
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_follow_nexthop'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_follow_nexthop'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1927,7 +1951,7 @@ int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
   }
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_max_peers = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_max_peers'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_max_peers'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1938,7 +1962,7 @@ int cfg_key_nfacctd_bgp_ip(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_ip = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_ip'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_ip'. Globalized.\n", filename);
 
   return changes;
 }
@@ -1950,12 +1974,12 @@ int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN ( %s ): 'bgp_daemon_port' has to be in the range 0-65535.\n", filename);
     return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_port = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_bgp_port'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_port'. Globalized.\n", filename);
 
   return changes;
 }
