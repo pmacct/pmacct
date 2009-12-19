@@ -46,3 +46,7 @@ id=56789	ip=192.168.1.1 	in=7
 id=34567        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:05
 id=45678        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:06
 
+! A simple example on how to trigger BGP lookups rather than returning a fixed result.
+! This allows to handle exceptions to static mapping
+id=bgp		ip=192.168.2.1  in=7
+
