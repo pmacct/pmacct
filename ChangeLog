@@ -2,57 +2,60 @@ pmacct (Promiscuous mode IP Accounting package) v0.12.0rc4
 pmacct is Copyright (C) 2003-2009 by Paolo Lucente
 
 0.12.0rc4 -- 21-12-2009
-  + source BGP-related primitives are introduced, namely: src_as_path,
+  + BGP-related source primitives are introduced, namely: src_as_path,
     src_std_comm, src_ext_comm, src_local_pref and src_med. These add
     to peer_src_as which was already implemented. All can be resolved
-    via reverse BGP lookups peer_src_as, src_local_pref and src_med
+    via reverse BGP lookups; peer_src_as, src_local_pref and src_med
     can also be resolved via lookup maps which support checks like:
     bgp_nexthop (RPF), peer_dst_as (RPF), input interface and source
     MAC address. Many thanks to Zenon Mousmoulas and GRNET for their
     fruitful cooperation.
-  + Optimized BGP-related primitives memory structures. Memory is now
-    allocated only for primitives part of the selected aggregation
-    profile and can be different plugin by plugin.
+  + Memory structures to store BGP-related primitives have been
+    optimized. Memory is now allocated only for primitives part of
+    the selected aggregation profile ('aggregate' config directive).
   + A new 'bgp_follow_nexthop' configuration directive is introduced
     to follow the BGP next-hop up to the edge of the routing domain.
     This is particularly aimed at networks not running MPLS, where
     hop-by-hop routing is in place.
-  + bgp_peer_src_as_map, bgp_src_local_pref_map, bgp_src_med_type:
-    result of successful check(s) can now be the keyword 'bgp', ie.
-    'id=bgp' which triggers a BGP lookup. It's thought to handle
-    exceptions to static mapping.
+  + Lookup maps for BGP-related source primitives (bgp_src_med_map,
+    bgp_peer_src_as_map, bgp_src_local_pref_map): result of check(s)
+    can now be the keyword 'bgp', ie. 'id=bgp' which triggers a BGP
+    lookup. This is thought to handle exceptions to static mapping.
   + A new 'bgp_peer_as_skip_subas' configuration directive is being
-    introduced. When computing peer_src_as and peer_dst_as returns
-    the first ASN which is not part of the BGP confederation, if any. 
+    introduced. When computing peer_src_as and peer_dst_as, returns
+    the first ASN which is not part of a BGP confederation; if only
+    confederated ASNs are on the AS-Path, the first one is returned
+    instead.
   + Pre-Tagging: support has been introduced for NetFlow v9 traffic
     direction (ingress/egress). 
   + Network masks part of NetFlow/sFlow export protocols can now be
     used to compute src_net, dst_net and sum_net primitives. As a
     result a set of directives [nfacctd|sfacctd|pmacctd|uacctd]_net
-    allows to globally select the source to resolve such primitives,
+    allows to globally select the method to resolve such primitives,
     valid values being: netflow, sflow, file (networks_file), mask
     (networks_mask) and bgp (bgp_daemon).
-  + uacctd: introduced support for input/output interfaces, grasped
+  + uacctd: introduced support for input/output interfaces, fetched
     via NetLink/ULOG API; interfaces are available for Pre-Tagging,
     and inclusion in NetFlow and sFlow exports. The implementation
     is courtesy of Stig Thormodsrud.
   + nfprobe, sfprobe: new [nfprobe|sfprobe]_peer_as option to set
-    source/destination ASNs part of the NetFlow and sFlow exports
-    to the peer-AS rather than origin-AS. This feature depends on
-    a working BGP thread setup.
+    source/destination ASNs, part of the NetFlow and sFlow exports,
+    to the peer-AS rather than origin-AS. This feature depends on a
+    working BGP daemon thread setup.
   ! A few resource leaks were detected and fixed. Patch is courtesy
     of Eric Sesterhenn.
   ! bgp/bgp.c: thread concurrency was detected upon daemon startup
     under certain conditions. As a solution the BGP thread is being
-    granted a time advantage over the collector thread. 
+    granted a time advantage over the traffic collector thread. 
   ! bgp/bgp.c: fixed a security issue which could have allowed a
     malicious user to disrupt established working BGP sessions by
-    exploiting the implemented concpt of BGP session replenishment;
+    exploiting the implemented concept of BGP session replenishment;
     this has been secured by a check against the session holdtime.
     Many thanks to Erik van der Burg for spotting the issue.
   ! bgp/bgp.c: BGP listener socket now sets SO_REUSEADDR option for
     quicker turn around times while stopping/starting the daemon. 
-  ! net_aggr.c: default route (0.0.0.0/0) was considered invalid.
+  ! net_aggr.c: default route (0.0.0.0/0) was considered invalid;
+    this is now fixed.
 
 0.12.0rc3 -- 28-10-2009
   + Support for NetFlow v9 sampling via Option templates and

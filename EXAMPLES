@@ -577,13 +577,14 @@ the CONFIG-KEYS document.
 
 XIb. The source peer AS case 
 The peer_src_as primitive adds useful insight in understanding where traffic enters
-the network; unfortunately asymmetric routing compromises accuracy such information
-in NetFlow datagrams when configured with the peer-as feature (as the router simply
-performs a lookup on the source IP address in the BGP table and return its supposed
-symmetric entrance point). In this context pmacct offers a few ways to perform some
-mapping to easily model private and public peerings, both bi-lateral or multi-lateral.
-Find below how to use a map, reloadable at runtime, and its contents (for full syntax
-guide lines, please see the 'peers.map.example' file within the examples section):
+the observed routing domain; but asymmetric routing impacts accuracy delivered by
+devices configured with either NetFlow or sFlow and the peer-as feature (as it only
+performs a reverse lookup, ie. a lookup on the source IP address, in the BGP table
+hence saying where it would route such traffic). pmacct offers a few ways to perform
+some mapping to tackle this issue and easily model both private and public peerings,
+both bi-lateral or multi-lateral. Find below how to use a map, reloadable at runtime,
+and its contents (for full syntax guide lines, please see the 'peers.map.example'
+file within the examples section):
 
 bgp_peer_src_as_type: map
 bgp_peer_src_as_map: /path/to/peers.map
@@ -598,11 +599,11 @@ id=56789 ip=2.3.4.5 in=20 src_mac=00:22:33:44:55:66
 Even though all this mapping is static, it can be auto-provisioned to a good degree
 by means of external scripts running at regular intervals and, for example, querying
 relevant routers via SNMP. In this sense, the bgpPeerTable MIB is a good starting
-point.
+point. Alternatively pmacct also offers the option to perform reverse BGP lookups.
 
-NOTE: the peer_src_as primitive doesn't really apply to egress NetFlow (or egress
-sFlow) as it mainly relies on either the input ifIndex, the source MAC address, a
-reverse BGP next-hop lookup or a combination of these.
+NOTE: when mapping, the peer_src_as primitive doesn't really apply to egress NetFlow
+(or egress sFlow) as it mainly relies on either the input interface index (fIndex),
+the source MAC address, a reverse BGP next-hop lookup or a combination of these.
 
 XIc. Tracking entities on the own IP address space
 It might happen that not all entities attached to the service provider network are
@@ -760,7 +761,8 @@ XIf. BGP daemon implementation concluding notes
 The implementation supports both 4-bytes ASN and IPv6 (MP-BGP); IPv6 peers are not
 supported yet though. When storing data via SQL, BGP primitives can be freely mix-
 and-matched with other primitives (ie. L2/L3/L4) when customizing the SQL table
-(sql_optimize_clauses: true). Environments making large use of BGP Multi-Path are
-not currently supported. TCP MD5 signature for BGP messages is not supported. For
-a review of all the configurable knobs and features see the CONFIG-KEYS document. 
+(sql_optimize_clauses: true). Environments making use of BGP Multi-Path are not
+currently supported; if you are using this and would like to see it implemented,
+please get in touch. TCP MD5 signature for BGP messages is not supported. For a
+review of all the configurable knobs and features see the CONFIG-KEYS document. 
 
