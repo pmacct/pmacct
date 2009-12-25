@@ -309,6 +309,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w & COUNT_SRC_LOCAL_PREF) d2->src_local_pref = s2->src_local_pref;
     if (w & COUNT_MED) d2->med = s2->med;
     if (w & COUNT_SRC_MED) d2->src_med = s2->src_med;
+    if (w & COUNT_IS_SYMMETRIC) d2->is_symmetric = s2->is_symmetric;
     if (w & COUNT_PEER_SRC_AS) d2->peer_src_as = s2->peer_src_as;
     if (w & COUNT_PEER_DST_AS) d2->peer_dst_as = s2->peer_dst_as;
     if (w & COUNT_PEER_SRC_IP) {

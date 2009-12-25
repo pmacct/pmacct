@@ -55,7 +55,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   }
   /* If we spot the word "bgp", let's check this is a BPAS map */
   else if (!strncmp(value, "bgp", strlen("bgp"))) {
-    if (acct_type != MAP_BGP_PEER_AS_SRC && acct_type == MAP_BGP_SRC_LOCAL_PREF && acct_type == MAP_BGP_SRC_MED) {
+    if (acct_type != MAP_BGP_PEER_AS_SRC && acct_type != MAP_BGP_SRC_LOCAL_PREF && acct_type != MAP_BGP_SRC_MED) {
       Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
       return TRUE;
     }
@@ -67,6 +67,10 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
       return TRUE;
     } 
+    else if (acct_type == MAP_BGP_IS_SYMMETRIC && j > 1) {
+      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
+      return TRUE;
+    }
   }
   e->id = j; 
 

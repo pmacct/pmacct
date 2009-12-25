@@ -169,6 +169,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "src_ext_comm")) value |= COUNT_SRC_EXT_COMM;
     else if (!strcmp(count_token, "src_local_pref")) value |= COUNT_SRC_LOCAL_PREF;
     else if (!strcmp(count_token, "src_med")) value |= COUNT_SRC_MED;
+    else if (!strcmp(count_token, "is_symmetric")) value |= COUNT_IS_SYMMETRIC;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 
@@ -1887,6 +1888,17 @@ int cfg_key_nfacctd_bgp_src_med_map(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_med_map = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_med_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_is_symmetric_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_is_symmetric_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_is_symmetric_map'. Globalized.\n", filename);
 
   return changes;
 }

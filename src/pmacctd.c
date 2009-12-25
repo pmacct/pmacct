@@ -99,6 +99,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bpas_table;
   struct id_table blp_table;
   struct id_table bmed_table;
+  struct id_table biss_table;
   struct id_table bta_table;
   struct id_table idt;
   struct pcap_callback_data cb_data;
@@ -125,6 +126,7 @@ int main(int argc,char **argv, char **envp)
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;
   bmed_map_allocated = FALSE;
+  biss_map_allocated = FALSE;
   find_id_func = PM_find_id;
 
   errflag = 0;
@@ -140,6 +142,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bpas_table, 0, sizeof(bpas_table));
   memset(&blp_table, 0, sizeof(blp_table));
   memset(&bmed_table, 0, sizeof(bmed_table));
+  memset(&biss_table, 0, sizeof(biss_table));
   memset(&bta_table, 0, sizeof(bta_table));
   memset(&client, 0, sizeof(client));
   memset(&cb_data, 0, sizeof(cb_data));
@@ -386,7 +389,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 				       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				       COUNT_SRC_LOCAL_PREF)) {
+				       COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
 	  Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
 	  exit(1);
 	}
@@ -418,7 +421,7 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
                                        COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-                                       COUNT_SRC_LOCAL_PREF)) {
+                                       COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
           Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
           exit(1);
         }
@@ -640,6 +643,12 @@ int main(int argc,char **argv, char **envp)
       }
     }
     else cb_data.bmed_table = NULL;
+
+    if (config.nfacctd_bgp_is_symmetric_map) {
+      load_id_file(MAP_BGP_IS_SYMMETRIC, config.nfacctd_bgp_is_symmetric_map, &biss_table, &req, &biss_map_allocated);
+      cb_data.biss_table = (u_char *) &biss_table;
+    }
+    else cb_data.biss_table = NULL;
 
     if (config.nfacctd_bgp_to_agent_map) {
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);

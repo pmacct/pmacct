@@ -143,6 +143,7 @@ EXT int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_peer_src_as_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_local_pref_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_med_map(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_is_symmetric_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_to_agent_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_default(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_nexthop(char *, char *, char *);

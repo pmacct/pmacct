@@ -217,6 +217,13 @@ void evaluate_packet_handlers()
       }
     }
 
+    if (channels_list[index].aggregation & COUNT_IS_SYMMETRIC) {
+      if (config.nfacctd_bgp && config.nfacctd_bgp_is_symmetric_map) {
+        channels_list[index].phandler[primitives] = bgp_is_symmetric_frommap_handler;
+        primitives++;
+      }
+    }
+
     if (channels_list[index].aggregation & (COUNT_SRC_PORT|COUNT_SUM_PORT)) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_port_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_port_handler;
@@ -1926,6 +1933,18 @@ void bgp_src_med_frommap_handler(struct channels_list_entry *chptr, struct packe
   --pdata; /* Bringing back to original place */
 
   pbgp->src_med = pptrs->bmed;
+}
+
+void bgp_is_symmetric_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+
+  --pdata; /* Bringing back to original place */
+
+  pbgp->is_symmetric = pptrs->biss;
 }
 
 #if defined (HAVE_L2)

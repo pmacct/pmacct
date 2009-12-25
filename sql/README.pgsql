@@ -71,6 +71,7 @@ mode. Since v6 unified mode is no longer supported.
   * src_as_path => as_path_src
   * src_local_pref => local_pref_src
   * src_med => med_src
+  * is_symmetric => is_symmetric
   * tag2 => agent_id2
 
 - What is the difference between 'typed' and 'unified' modes ? 

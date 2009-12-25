@@ -130,7 +130,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
 		/* Processing of source BGP-related primitives kept consistent;
 		   This can indeed be split as required in future */
-		if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED) {
+		if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
+		    acct_type == MAP_BGP_SRC_MED || MAP_BGP_IS_SYMMETRIC) {
                   for (dindex = 0; strcmp(bpas_map_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(bpas_map_dictionary[dindex].key, key)) {
                       err = (*bpas_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
@@ -214,7 +215,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		v4_num++; tmp.num++;
 	      } 
 	    }
-	    else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED) {
+	    else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
+		     acct_type == MAP_BGP_SRC_MED || acct_type == MAP_BGP_IS_SYMMETRIC) {
               if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].flags) && tmp.e[tmp.num].agent_ip.a.family) {
                 int j;
 

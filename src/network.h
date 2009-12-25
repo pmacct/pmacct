@@ -175,6 +175,7 @@ struct packet_ptrs {
   u_char *bpas_table; /* ptr to bgp_peer_as_src table map */
   u_char *blp_table; /* ptr to bgp_src_local_pref table map */
   u_char *bmed_table; /* ptr to bgp_src_med table map */
+  u_char *biss_table; /* ptr to bgp_is_symmetric table map */
   u_char *bta_table; /* ptr to bgp_to_agent table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
@@ -186,6 +187,7 @@ struct packet_ptrs {
   pm_id_t bpas; /* bgp_peer_as_src */
   pm_id_t blp; /* bgp_src_local_pref */
   pm_id_t bmed; /* bgp_src_med */
+  pm_id_t biss; /* bgp_is_symmetric */
   pm_id_t bta; /* bgp_to_agent */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
   char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 
@@ -289,6 +291,7 @@ struct pkt_bgp_primitives {
   char src_as_path[MAX_BGP_ASPATH];
   u_int32_t src_local_pref;
   u_int32_t src_med;
+  u_int32_t is_symmetric;
 };
 
 /* same as above but pointers in place of strings */
@@ -307,6 +310,7 @@ struct cache_bgp_primitives {
   char *src_as_path;
   u_int32_t src_local_pref;
   u_int32_t src_med;
+  u_int32_t is_symmetric;
 };
 /* END: BGP section */
 
