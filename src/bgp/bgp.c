@@ -1885,6 +1885,7 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     }
     c->src_local_pref = p->src_local_pref;
     c->src_med = p->src_med;
+    c->is_symmetric = p->is_symmetric;
   }
 }
 
@@ -1907,6 +1908,7 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
     p->src_local_pref = c->src_local_pref;
     p->src_med = c->src_med;
+    p->is_symmetric = c->is_symmetric;
   }
 }
 

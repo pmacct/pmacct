@@ -1005,10 +1005,11 @@ DESC:           full pathname to a file containing source MED (Multi Exit Discri
 		'examples/med.map.example'.
 
 KEY:            bgp_is_symmetric_map
-DESC:           full pathname to a file defining traffic trajectories using a combination of ingress
-		ifIndex, source MAC address, BGP next-hop (query against the BGP RIB to look up the
-		source IP prefix). Number of map entries (by default 384) can be modified via
-		pre_tag_map_entries. Sample map in 'examples/is_symmetric.map.example'.
+DESC:           full pathname to a file defining for each edge device local traffic paths out of the
+		observed routing domain by using a combination of ingress ifIndex, source MAC address,
+		BGP next-hop (query against the BGP RIB to look up the source IP prefix). Number of
+		map entries (by default 384) can be modified via pre_tag_map_entries. Sample map in
+		'examples/is_symmetric.map.example'.
 
 KEY:		bgp_agent_map
 DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agents to BGP peers'

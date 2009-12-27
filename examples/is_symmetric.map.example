@@ -1,0 +1,53 @@
+! 
+! is_symmetric map - asymmetric traffic detection
+!
+! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in this same
+! directory.
+!
+! nfacctd, sfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac.
+!
+! list of currently supported keys follow:
+!
+! 'id'			ID value to assign to a matching packet or flow. The only valid
+!			value for this map is '1': underlying logics is to define via
+!			this map local traffic paths out of the routing domain at edge
+!			devices. 
+! 'ip'			IP address of the device which is originating sFlow or NetFlow
+!			datagrams (router, probe, etc.)
+! 'in'  		Input interface 
+! 'bgp_nexthop'		BGP next-hop of the flow source IP address (RPF-like). This value
+!			is compared against the BGP RIB of the device originating the sFlow
+!			or NetFlow datagram (see 'nfacctd_bgp' directive).
+! 'peer_dst_as'		First AS hop within the AS-PATH of the source IP address (RPF-like).
+!			This value is compared against the BGP RIB of the device originating
+!			the sFlow or NetFlow datagram (see 'nfacctd_bgp' directive). 
+! 'src_mac'		Source MAC address of the flow. Requires NetFlow v9 or sFlow as
+!			NetFlow v5 lacks of such support.
+!
+! A few examples follow.
+!
+! Private peering with AS12345 on router with IP address 192.168.2.1, SNMP ifIndex 7 
+!
+id=12345	ip=192.168.2.1	in=7
+
+! A way to model a public internet exchange - in case MAC addresses are not available,
+! ie. NetFlow v5. The catch-all entry at the end can be the AS number of the exchange.
+! 'peer_dst_as' can be used instead of the BGP next-hop for the very same purpose, with
+! perhaps 'peer_dst_as' being more effective in case of, say, egress NetFlow. Note that
+! by using either 'bgp_nexthop' or 'peer_dst_as' for this purpose constitutes only an
+! educated guess.
+! 
+id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.5
+id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.6
+id=56789	ip=192.168.1.1 	in=7
+
+! A way to model a public internet exchange - in case MAC addresses are available. The
+! method is exact and hence doesn't require a catch-all entry at the end.
+! 
+id=34567        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:05
+id=45678        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:06
+
+! A simple example on how to trigger BGP lookups rather than returning a fixed result.
+! This allows to handle exceptions to static mapping
+id=bgp		ip=192.168.2.1  in=7
+
