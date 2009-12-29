@@ -34,6 +34,6 @@ id=100		ip=192.168.2.1	in=7
 ! A way to model multiple services, ie. IP transit and peering, off the same interface.
 ! Realistically services should be delivered off different sub-interfaces, but still ... 
 ! 
-id=50		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.5
-id=80		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.6
+id=50		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4
+id=80		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.5
 

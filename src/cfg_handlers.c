@@ -1570,6 +1570,17 @@ int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_allow_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_allow_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_allow_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pre_tag_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

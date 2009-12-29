@@ -100,6 +100,7 @@ struct configuration {
   int nfacctd_bgp_msglog;
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
+  char *nfacctd_bgp_allow_file;
   int nfacctd_bgp_max_peers;
   int nfacctd_bgp_aspath_radius;
   char *nfacctd_bgp_stdcomm_pattern;

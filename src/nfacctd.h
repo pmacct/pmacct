@@ -527,8 +527,6 @@ EXT void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, str
 EXT void process_v7_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
 EXT void process_v8_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
 EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
-EXT void load_allow_file(char *, struct hosts_table *);
-EXT int check_allow(struct hosts_table *, struct sockaddr *);
 EXT u_int16_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
 EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);

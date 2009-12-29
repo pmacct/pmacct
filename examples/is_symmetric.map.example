@@ -26,28 +26,24 @@
 !
 ! A few examples follow.
 !
-! Private peering with AS12345 on router with IP address 192.168.2.1, SNMP ifIndex 7 
+! Private peers and upstream providers can be typically modelled as in the following
+! example - a traffic stream is defined symmetric if it enters interface 7 and would
+! be routed to 1.2.3.4 after a lookup within the BGP RIB (next-hop being reachable via
+! interface 7): 
 !
-id=12345	ip=192.168.2.1	in=7
+id=1		ip=192.168.2.1	in=7	bgp_nexthop=1.2.3.4
 
-! A way to model a public internet exchange - in case MAC addresses are not available,
-! ie. NetFlow v5. The catch-all entry at the end can be the AS number of the exchange.
-! 'peer_dst_as' can be used instead of the BGP next-hop for the very same purpose, with
-! perhaps 'peer_dst_as' being more effective in case of, say, egress NetFlow. Note that
-! by using either 'bgp_nexthop' or 'peer_dst_as' for this purpose constitutes only an
-! educated guess.
+! Public peers can be typically modelled as in the following example if MAC addresses
+! are not available through the export protocol (ie. NetFlow v5). It doesn't change
+! compared to the previous example, except there are multiple next-hops reachable via
+! the same (sub-)interface:
 ! 
-id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.5
-id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.6
-id=56789	ip=192.168.1.1 	in=7
+id=1		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4
+id=1		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.5
+id=1		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.6
 
-! A way to model a public internet exchange - in case MAC addresses are available. The
-! method is exact and hence doesn't require a catch-all entry at the end.
+! A way to model a public internet exchange - in case MAC addresses are available:
 ! 
-id=34567        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:05
-id=45678        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:06
-
-! A simple example on how to trigger BGP lookups rather than returning a fixed result.
-! This allows to handle exceptions to static mapping
-id=bgp		ip=192.168.2.1  in=7
-
+id=1		ip=192.168.1.1  in=7    bgp_nexthop=1.2.3.4	src_mac=00:01:02:03:04:05
+id=1		ip=192.168.1.1  in=7    bgp_nexthop=1.2.3.5	src_mac=00:01:02:03:04:06
+id=1		ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.6	src_mac=00:01:02:03:04:07

@@ -898,56 +898,6 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   }
 }
 
-void load_allow_file(char *filename, struct hosts_table *t)
-{
-  FILE *file;
-  char buf[SRVBUFLEN];
-  int index = 0;
-
-  if (filename) {
-    if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core ): allow file '%s' not found\n", filename);
-      exit(1);
-    }
-
-    memset(t->table, 0, sizeof(t->table)); 
-    while (!feof(file)) {
-      if (index >= MAX_MAP_ENTRIES) break; /* XXX: we shouldn't exit silently */ 
-      memset(buf, 0, SRVBUFLEN);
-      if (fgets(buf, SRVBUFLEN, file)) { 
-        if (!sanitize_buf(buf)) {
-	  if (str_to_addr(buf, &t->table[index])) index++;
-	  else Log(LOG_WARNING, "WARN ( default/core ): 'sfacctd_allow_file': Bad IP address '%s'. Ignored.\n", buf);
-        }
-      }
-    }
-    t->num = index;
-    fclose(file);
-  }
-}
-
-int check_allow(struct hosts_table *allow, struct sockaddr *sa)
-{
-  int index;
-
-  for (index = 0; index < allow->num; index++) {
-    if (((struct sockaddr *)sa)->sa_family == allow->table[index].family) {
-      if (allow->table[index].family == AF_INET) {
-        if (((struct sockaddr_in *)sa)->sin_addr.s_addr == allow->table[index].address.ipv4.s_addr)
-          return TRUE;
-      }
-#if defined ENABLE_IPV6
-      else if (allow->table[index].family == AF_INET6) {
-        if (!ip6_addr_cmp(&(((struct sockaddr_in6 *)sa)->sin6_addr), &allow->table[index].address.ipv6))
-          return TRUE;
-      }
-#endif
-    }
-  }
-  
-  return FALSE;
-}
-
 void compute_once()
 {
   struct pkt_data dummy;

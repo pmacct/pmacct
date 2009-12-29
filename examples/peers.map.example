@@ -36,8 +36,8 @@ id=12345	ip=192.168.2.1	in=7
 ! by using either 'bgp_nexthop' or 'peer_dst_as' for this purpose constitutes only an
 ! educated guess.
 ! 
-id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.5
-id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4.6
+id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4
+id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.5
 id=56789	ip=192.168.1.1 	in=7
 
 ! A way to model a public internet exchange - in case MAC addresses are available. The

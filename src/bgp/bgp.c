@@ -50,7 +50,7 @@ void nfacctd_bgp_wrapper()
 
 void skinny_bgp_daemon()
 {
-  int slen, ret, sock, rc, peers_idx;
+  int slen, ret, sock, rc, peers_idx, allowed;
   struct host_addr addr;
   struct bgp_header bhdr;
   struct bgp_peer *peer;
@@ -69,6 +69,7 @@ void skinny_bgp_daemon()
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
   time_t now;
+  struct hosts_table allow;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
@@ -78,6 +79,7 @@ void skinny_bgp_daemon()
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
+  memset(&allow, 0, sizeof(struct hosts_table));
   bgp_attr_init();
 
   /* socket creation for BGP server: IPv4 only */
@@ -145,6 +147,9 @@ void skinny_bgp_daemon()
     Log(LOG_INFO, "INFO ( default/core/BGP ): waiting for BGP data on %s:%u\n", srv_string, srv_port);
   }
 
+  /* Preparing ACL, if any */
+  if (config.nfacctd_bgp_allow_file) load_allow_file(config.nfacctd_bgp_allow_file, &allow);
+
   for (;;) {
     select_again:
     select_fd = sock;
@@ -177,6 +182,16 @@ void skinny_bgp_daemon()
 	goto select_again;
       }
       peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
+
+      /* If an ACL is defined, here we check against and enforce it */
+      if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
+      else allowed = TRUE;
+
+      if (!allowed) {
+	bgp_peer_close(peer);
+	goto select_again;
+      }
+
       FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = AF_INET;
       peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;

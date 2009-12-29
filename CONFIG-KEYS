@@ -608,8 +608,8 @@ DESC:		defines the IPv4/IPv6 address where to bind the 'nfacctd' daemon (default
 KEY:		nfacctd_allow_file [GLOBAL, NO_PMACCTD]
 DESC:		full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
 		to send NetFlow packets to 'nfacctd'. Current syntax does not implement network masks but only
-		individual IP addresses. The Allow List is intended to be small. If you really need complex,
-		network-prefixed filters, you may prefer a few firewall rules instead. (default: allow all) 
+		individual IP addresses. The Allow List is intended to be small; firewall rules should be
+		preferred to long ACLs. (default: allow all) 
 
 KEY:		nfacctd_time_secs [GLOBAL, NO_PMACCTD]
 VALUES:		[true|false]
@@ -770,8 +770,8 @@ DESC:           defines the IPv4/IPv6 address where to bind the 'sfacctd' daemon
 KEY:            sfacctd_allow_file [GLOBAL, NO_PMACCTD]
 DESC:           full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
 		to send NetFlow packets to 'sfacctd'. Current syntax does not implement network masks but only
-		individual IP addresses. The Allow List is intended to be small. If you really need complex,
-		network-prefixed filters, you may prefer a few firewall rules instead. (default: allow all)
+		individual IP addresses. The Allow List is intended to be small; firewall rules should be
+		preferred to long ACLs. (default: allow all)
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
 VALUES:		[true|false]
@@ -1053,6 +1053,12 @@ KEY:            bgp_neighbors_file
 DESC:		writes a list of the BGP neighbors in the established state to the specified file, one
 		per line. This gets particularly useful for automation purposes (ie. auto-discovery of
 		devices to poll via SNMP). (default: none)
+
+KEY:            bgp_daemon_allow_file [GLOBAL]
+DESC:           full pathname to a file containing the list of IP addresses (one for each line) allowed
+                to establish a BGP session packets to the BGP thread. Current syntax does not implement
+		network masks but only individual IP addresses. The Allow List is intended to be small;
+		firewall rules should be preferred to long ACLs. (default: allow all)
 
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)

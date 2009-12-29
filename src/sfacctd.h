@@ -263,8 +263,6 @@ struct SF_icmphdr
 #else
 #define EXT
 #endif
-EXT void load_allow_file(char *, struct hosts_table *);
-EXT int check_allow(struct hosts_table *, struct sockaddr *);
 EXT u_int16_t SF_evaluate_flow_type(struct packet_ptrs *);
 EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);
