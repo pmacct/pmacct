@@ -328,7 +328,7 @@ struct packet_ptrs_vector {
 };
 
 struct hosts_table {
-  unsigned short int num;
+  short int num;
   struct host_addr table[MAX_MAP_ENTRIES];
 };
 

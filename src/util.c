@@ -960,6 +960,10 @@ void load_allow_file(char *filename, struct hosts_table *t)
       }
     }
     t->num = index;
+
+    /* Set to -1 to distinguish between no map and empty map conditions */ 
+    if (!t->num) t->num = -1;
+
     fclose(file);
   }
 }

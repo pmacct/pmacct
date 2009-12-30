@@ -1198,7 +1198,7 @@ int main(int argc,char **argv)
         }
 
 	if (!have_wtc || (what_to_count & COUNT_IS_SYMMETRIC)) {
-	  printf("%-5d  ", pbgp->is_symmetric);
+	  printf("%-3d  ", pbgp->is_symmetric);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_AS)) {
