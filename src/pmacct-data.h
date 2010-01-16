@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -289,6 +289,8 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_conntrack_buffer_size", cfg_key_pmacctd_conntrack_buffer_size},
   {"uacctd_flow_lifetime", cfg_key_pmacctd_flow_lifetime},
   {"uacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
+  {"nfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
+  {"sfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"pre_tag_map", cfg_key_pre_tag_map},	
   {"pre_tag_map_entries", cfg_key_pre_tag_map_entries},	

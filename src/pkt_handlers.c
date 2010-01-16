@@ -275,7 +275,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
       if (config.acct_type == ACCT_PM) {
 	channels_list[index].phandler[primitives] = counters_handler;
-	if (config.sfacctd_renormalize) {
+	if (config.sfacctd_renormalize && config.ext_sampling_rate) {
 	  primitives++;
 	  channels_list[index].phandler[primitives] = counters_renormalize_handler;
 	}
@@ -286,14 +286,16 @@ void evaluate_packet_handlers()
 	else channels_list[index].phandler[primitives] = NF_counters_msecs_handler; /* default */
 	if (config.sfacctd_renormalize) {
 	  primitives++;
-	  channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
+	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  else channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
 	}
       }
       else if (config.acct_type == ACCT_SF) {
 	channels_list[index].phandler[primitives] = SF_counters_new_handler;
 	if (config.sfacctd_renormalize) {
 	  primitives++;
-	  channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
+	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  else channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
 	}
       }
       primitives++;

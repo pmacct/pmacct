@@ -754,12 +754,15 @@ KEY:            [ pmacctd_flow_lifetime | uacctd_flow_lifetime ] [GLOBAL, NO_NFA
 DESC:           defines how long a flow could remain inactive (ie. no packets belonging to such flow are received)
 		before considering it expired. The value is expected in seconds. (default: 60 secs) 
 
-KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate ] [GLOBAL, NO_NFACCTD]
+KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate nfacctd_ext_sampling_rate |
+		  sfacctd_ext_sampling_rate ] [GLOBAL]
 		flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
 		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow
 		probe plugins, if any of them is activated. External sampling might be performed by capturing
 		frameworks the daemon is linked against (ie. PF_RING, ULOG) or appliances (ie. sampled packet
-		mirroring). (default: no sampling) 
+		mirroring).
+		In nfacctd and sfacctd daemons this directive can be used to tackle corner cases, ie. sampling
+		rate reported by the NetFlow/sFlow agent is missing or not correct. (default: no sampling) 
 
 KEY:            sfacctd_port (-l) [GLOBAL, NO_PMACCTD]
 DESC:           defines the UDP port where to bind the 'sfacctd' daemon (default: 6343).

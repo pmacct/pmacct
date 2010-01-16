@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -2116,9 +2116,6 @@ int cfg_key_pmacctd_ext_sampling_rate(char *filename, char *name, char *value_pt
     Log(LOG_ERR, "WARN ( %s ): 'pmacctd_ext_sampling_rate' has to be >= 1.\n", filename);
     return ERR;
   }
-
-  /* directive supported only in ACCT_PM, ie. pmacctd */
-  if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) value = 0;
 
   for (; list; list = list->next, changes++) list->cfg.ext_sampling_rate = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'pmacctd_ext_sampling_rate'. Globalized.\n", filename);

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -335,7 +335,16 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while (list) {
     if (list->type.id != PLUGIN_ID_CORE) {  
+      /* applies to all plugins */
+      if (list->cfg.sampling_rate && config.ext_sampling_rate) {
+        Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        exit(1);
+      }
       if (list->type.id == PLUGIN_ID_NFPROBE) {
+        /* If we already renormalizing an external sampling rate,
+           we cancel the sampling information from the probe plugin */
+        if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
+
 	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
 	list->cfg.what_to_count = 0;
 #if defined (HAVE_L2)
@@ -377,6 +386,10 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
       }
       else if (list->type.id == PLUGIN_ID_SFPROBE) {
+        /* If we already renormalizing an external sampling rate,
+           we cancel the sampling information from the probe plugin */
+        if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
+
 	req.bpf_filter = TRUE;
 	list->cfg.what_to_count = COUNT_PAYLOAD;
 	if (list->cfg.classifiers_path) list->cfg.what_to_count |= COUNT_CLASS;
