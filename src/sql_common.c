@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -306,7 +306,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   /* If aggressive classification is enabled and there are still
      chances for the stream to be classified - ie. tentatives is
      non-zero - let's leave it in SQL_CACHE_INUSE state */
-  if (!exiting) {
+  if (!exiting && !config.nfacctd_sql_log) {
     if (config.sql_aggressive_classification) {
       for (j = 0, pqq_ptr = 0; j < index; j++) {
         if (!queue[j]->primitives.class && queue[j]->tentatives && (queue[j]->start_tag > (idata->now - ((STALE_M-1) * config.sql_refresh_time))) ) {
@@ -338,7 +338,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
       }
     }
   }
-  /* If exiting commit everything is still in the cache */
+  /* If exiting or logging commit everything is still in the cache */
   else {
     for (j = 0; j < index; j++) queue[j]->valid = SQL_CACHE_COMMITTED; 
   } 
