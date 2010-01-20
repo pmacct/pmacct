@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -119,7 +119,7 @@ struct configuration {
   char *nfacctd_bgp_is_symmetric_map;
   char *nfacctd_bgp_to_agent_map;
   int nfacctd_bgp_follow_default;
-  struct prefix nfacctd_bgp_follow_nexthop;
+  struct prefix nfacctd_bgp_follow_nexthop[FOLLOW_BGP_NH_ENTRIES];
   char *nfacctd_bgp_neighbors_file;
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */

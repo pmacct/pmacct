@@ -1941,11 +1941,23 @@ int cfg_key_nfacctd_bgp_follow_default(char *filename, char *name, char *value_p
 int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
+  char *count_token;
+  int changes = 0, idx = 0, valid;
 
-  str2prefix(value_ptr, &list->cfg.nfacctd_bgp_follow_nexthop);
+  trim_all_spaces(value_ptr);
 
-  for (; list; list = list->next, changes++) str2prefix(value_ptr, &list->cfg.nfacctd_bgp_follow_nexthop);
+  while ((count_token = extract_token(&value_ptr, ',')) && idx < FOLLOW_BGP_NH_ENTRIES) {
+    for (list = plugins_list; list; list = list->next) {
+      valid = str2prefix(count_token, &list->cfg.nfacctd_bgp_follow_nexthop[idx]);
+      if (!valid) {
+	Log(LOG_WARNING, "WARN ( %s ): bgp_follow_nexthop: invalid IP prefix '%s'.\n", filename, count_token);
+	break;
+      }
+    }
+    if (valid) idx++;
+  }
+
+  changes = idx;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_follow_nexthop'. Globalized.\n", filename);
 
   return changes;

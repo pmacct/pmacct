@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -1672,7 +1672,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         }
       }
     }
-    if (config.nfacctd_bgp_follow_nexthop.family && pptrs->bgp_dst)
+    if (config.nfacctd_bgp_follow_nexthop[0].family && pptrs->bgp_dst)
       bgp_follow_nexthop_lookup(pptrs);
   }
 
@@ -1687,6 +1687,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   struct bgp_info *info;
   char *result = NULL, *saved_result = NULL;
   int peers_idx, ttl = MAX_HOPS_FOLLOW_NH, self = MAX_NH_SELF_REFERENCES;
+  int nh_idx, matched = 0;
   struct prefix nh, ch;
   struct in_addr pref4;
 #if defined ENABLE_IPV6
@@ -1745,7 +1746,12 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 	nh.prefixlen = 32;
 	memcpy(&nh.u.prefix4, &info->attr->mp_nexthop.address.ipv4, 4);
 
-	if (prefix_match(&config.nfacctd_bgp_follow_nexthop, &nh) && self > 0 && ttl > 0) { 
+	for (nh_idx = 0; config.nfacctd_bgp_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
+	  matched = prefix_match(&config.nfacctd_bgp_follow_nexthop[nh_idx], &nh);
+	  if (matched) break;
+	}
+
+	if (matched && self > 0 && ttl > 0) { 
 	  if (prefix_match(&ch, &nh)) self--;
           sa = &sa_local;
           pptrs->f_agent = (char *) &sa_local;
@@ -1764,7 +1770,12 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 	nh.prefixlen = 128;
 	memcpy(&nh.u.prefix6, &info->attr->mp_nexthop.address.ipv6, 16);
 
-	if (prefix_match(&config.nfacctd_bgp_follow_nexthop, &nh) && self > 0 && ttl > 0) {
+        for (nh_idx = 0; config.nfacctd_bgp_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
+          matched = prefix_match(&config.nfacctd_bgp_follow_nexthop[nh_idx], &nh);
+          if (matched) break;
+        }
+
+	if (matched && self > 0 && ttl > 0) {
 	  if (prefix_match(&ch, &nh)) self--;
           sa = &sa_local;
           pptrs->f_agent = (char *) &sa_local;
@@ -1783,7 +1794,12 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 	nh.prefixlen = 32;
 	memcpy(&nh.u.prefix4, &info->attr->nexthop, 4);
 
-	if (prefix_match(&config.nfacctd_bgp_follow_nexthop, &nh) && self > 0 && ttl > 0) {
+        for (nh_idx = 0; config.nfacctd_bgp_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
+          matched = prefix_match(&config.nfacctd_bgp_follow_nexthop[nh_idx], &nh);
+          if (matched) break;
+        }
+
+	if (matched && self > 0 && ttl > 0) {
 	  if (prefix_match(&ch, &nh)) self--;
           sa = &sa_local;
           pptrs->f_agent = (char *) &sa_local;
