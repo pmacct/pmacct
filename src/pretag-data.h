@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -39,6 +39,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"peer_src_as", PT_map_peer_src_as_handler},
   {"peer_dst_as", PT_map_peer_dst_as_handler},
   {"local_pref", PT_map_local_pref_handler},
+  {"comms", PT_map_comms_handler},
   {"label", PT_map_label_handler},
   {"jeq", PT_map_jeq_handler},
   {"return", PT_map_return_handler},

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -549,6 +549,34 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   return TRUE;
 }
 
+int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0, idx = 0;
+  char *endptr, *token;
+
+  memset(e->comms, 0, sizeof(e->comms));
+
+  /* Negation not supported here */
+
+  while ( (token = extract_token(&value, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+    e->comms[idx] = malloc(MAX_BGP_STD_COMMS);
+    strlcpy(e->comms[idx], token, MAX_BGP_STD_COMMS);
+    trim_spaces(e->comms[idx]);
+    idx++;
+  }
+
+  for (x = 0; e->func[x]; x++);
+
+  if (config.nfacctd_as == NF_AS_BGP && e->comms[0]) {
+    e->func[x] = pretag_comms_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'comms' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+
+  return TRUE;
+}
+
 int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   strlcpy(e->label, value, MAX_LABEL_LEN); 
@@ -1062,6 +1090,26 @@ int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->local_pref.n == local_pref) return (FALSE | entry->local_pref.neg);
   else return (TRUE ^ entry->local_pref.neg);
+}
+
+int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+  char tmp_stdcomms[MAX_BGP_STD_COMMS];
+
+  memset(tmp_stdcomms, 0, sizeof(tmp_stdcomms));
+
+  if (dst_ret) {
+    info = (struct bgp_info *) dst_ret->info;
+    if (info && info->attr && info->attr->community && info->attr->community->str) {
+      evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->comms, MAX_BGP_STD_COMMS);
+    }
+  }
+
+  if (strlen(tmp_stdcomms)) return FALSE;
+  else return TRUE;
 }
 
 int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)

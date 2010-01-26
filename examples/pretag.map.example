@@ -71,6 +71,11 @@
 !			remarks hold here. Please read them above.
 ! 'local_pref'		Destination IP prefix BGP local preference attribute. This is
 !			compared against the BGP RIB of the exporting device.  
+! 'comms'		Destination IP prefix BGP standard communities; multiple elements,
+!			up to 16, can be supplied, comma-separated (no spaces allowed); the
+!			check is successful if any of the communities is matched. This is
+!			compared against the BGP RIB of the exporting device. See examples
+!			below.
 ! 'label'		Mark the rule with label's value. Labels don't need to be unique:
 !			when jumping, the first matching label wins. Label value "next"
 !			is reserved for internal use and hence not to be used in a map.
@@ -172,5 +177,25 @@ id=2003 ip=192.168.1.1 out=3
 !
 ! pre_tag_filter[in]: 1001-1003
 ! pre_tag_filter[out]: 2001-2003
+!
+! ===
+!
+! === BGP standard communities example #1
+! - check is successful if matches either 65000:1234 or 65000:2345
+!
+id=100 ip=192.168.1.1 comms=65000:1234,65000:2345
+!
+! ===
+!
+! === BGP standard communities example #2
+! - a series of checks can be piled up in order to mimic match-all
+! - underlying logics is:
+!   > tag=200 is considered a successful check;
+!   > tag=0 or tag=100 is considered unsuccessful
+!
+id=100 ip=192.168.1.1 comms=65000:1234 label=65000:1234 jeq=65000:2345
+id=100 ip=192.168.1.1 comms=65000:2345 label=65000:2345 jeq=65000:3456
+! ... further id=100 
+id=200 ip=192.168.1.1 comms=65000:3456 label=65000:3456
 !
 ! ===

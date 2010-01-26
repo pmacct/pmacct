@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -45,6 +45,7 @@ EXT int PT_map_dst_as_handler(char *, struct id_entry *, char *, struct plugin_r
 EXT int PT_map_peer_src_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_peer_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_local_pref_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_comms_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_label_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_jeq_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_return_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -74,6 +75,7 @@ EXT int pretag_bgp_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_peer_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_peer_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_local_pref_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_comms_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_sampling_rate_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_direction_handler(struct packet_ptrs *, void *, void *);
 
