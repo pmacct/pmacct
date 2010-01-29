@@ -69,8 +69,14 @@
 !			the BGP RIB of the exporting device (see 'nfacctd_bgp' directive).
 ! 'peer_dst_as'		peering destination Autonomous System Number. Same 'peer_src_as'
 !			remarks hold here. Please read them above.
+! 'src_local_pref'      Source IP prefix BGP local preference attribute. This is compared
+!			against the BGP RIB of the exporting device.
 ! 'local_pref'		Destination IP prefix BGP local preference attribute. This is
 !			compared against the BGP RIB of the exporting device.  
+! 'src_comms'           Source IP prefix BGP standard communities; multiple elements, up to
+!			16, can be supplied, comma-separated (no spaces allowed); the check
+!			is successful if any of the communities is matched. This is compared
+!			against the BGP RIB of the exporting device. See examples below.
 ! 'comms'		Destination IP prefix BGP standard communities; multiple elements,
 !			up to 16, can be supplied, comma-separated (no spaces allowed); the
 !			check is successful if any of the communities is matched. This is

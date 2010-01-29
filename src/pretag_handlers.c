@@ -526,6 +526,29 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
   return TRUE;
 }
 
+int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  u_int32_t tmp;
+  int x = 0;
+  char *endptr;
+
+  e->src_local_pref.neg = pt_check_neg(&value);
+
+  tmp = strtoul(value, &endptr, 10);
+
+  e->src_local_pref.n = tmp;
+  for (x = 0; e->func[x]; x++);
+
+  if (config.nfacctd_as == NF_AS_BGP) {
+    e->func[x] = pretag_src_local_pref_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'src_local_pref' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+
+  return TRUE;
+}
+
 int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   u_int32_t tmp;
@@ -545,6 +568,34 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   }
 
   Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+
+  return TRUE;
+}
+
+int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0, idx = 0;
+  char *endptr, *token;
+
+  memset(e->src_comms, 0, sizeof(e->src_comms));
+
+  /* Negation not supported here */
+
+  while ( (token = extract_token(&value, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+    e->src_comms[idx] = malloc(MAX_BGP_STD_COMMS);
+    strlcpy(e->src_comms[idx], token, MAX_BGP_STD_COMMS);
+    trim_spaces(e->src_comms[idx]);
+    idx++;
+  }
+
+  for (x = 0; e->func[x]; x++);
+
+  if (config.nfacctd_as == NF_AS_BGP && e->src_comms[0]) {
+    e->func[x] = pretag_src_comms_handler;
+    return FALSE;
+  }
+
+  Log(LOG_ERR, "ERROR ( %s ): 'src_comms' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
 
   return TRUE;
 }
@@ -1044,10 +1095,22 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
   as_t asn = 0;
 
   if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
     asn = pptrs->bpas;
+  }
+  else if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_BGP) {
+    if (src_ret) {
+      info = (struct bgp_info *) src_ret->info;
+      if (info && info->attr) {
+	if (info->attr->aspath && info->attr->aspath->str) {
+	  asn = evaluate_first_asn(info->attr->aspath->str);
+	}
+      }
+    }
   }
 
   if (entry->peer_src_as.n == asn) return (FALSE | entry->peer_src_as.neg);
@@ -1074,6 +1137,29 @@ int pretag_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->peer_dst_as.neg);
 }
 
+int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+  u_int32_t local_pref = 0;
+
+  if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+    local_pref = pptrs->blp;
+  }
+  else if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_BGP) {
+    if (src_ret) {
+      info = (struct bgp_info *) src_ret->info;
+      if (info && info->attr) {
+	local_pref = info->attr->local_pref;
+      }
+    }
+  }
+
+  if (entry->src_local_pref.n == local_pref) return (FALSE | entry->src_local_pref.neg);
+  else return (TRUE ^ entry->src_local_pref.neg);
+}
+
 int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -1090,6 +1176,26 @@ int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->local_pref.n == local_pref) return (FALSE | entry->local_pref.neg);
   else return (TRUE ^ entry->local_pref.neg);
+}
+
+int pretag_src_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+  char tmp_stdcomms[MAX_BGP_STD_COMMS];
+
+  memset(tmp_stdcomms, 0, sizeof(tmp_stdcomms));
+
+  if (src_ret) {
+    info = (struct bgp_info *) src_ret->info;
+    if (info && info->attr && info->attr->community && info->attr->community->str) {
+      evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->src_comms, MAX_BGP_STD_COMMS);
+    }
+  }
+
+  if (strlen(tmp_stdcomms)) return FALSE;
+  else return TRUE;
 }
 
 int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
