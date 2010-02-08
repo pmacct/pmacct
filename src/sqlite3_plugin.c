@@ -497,7 +497,7 @@ int SQLI_compose_static_queries()
     config.what_to_count |= COUNT_FLOWS;
     have_flows = TRUE;
 
-    if (config.sql_table_version < 4 && !config.sql_optimize_clauses) {
+    if ((config.sql_table_version < 4 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !config.sql_optimize_clauses) {
       Log(LOG_ERR, "ERROR ( %s/%s ): The accounting of flows requires SQL table v4. Exiting.\n", config.name, config.type);
       exit_plugin(1);
     }
