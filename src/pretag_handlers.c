@@ -674,12 +674,14 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   switch(hdr->version) {
   case 9:
-    if (tpl->tpl[NF9_INPUT_SNMP].len == 2) 
+    if (tpl->tpl[NF9_INPUT_SNMP].len == 2) { 
       if (!memcmp(&input16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
 	return (FALSE | neg);
-    else if (tpl->tpl[NF9_INPUT_SNMP].len == 4) 
+    }
+    else if (tpl->tpl[NF9_INPUT_SNMP].len == 4) { 
       if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
 	return (FALSE | neg);
+    }
     else return (TRUE ^ neg);
   case 8: 
     switch(hdr->aggregation) {
@@ -733,12 +735,14 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   switch(hdr->version) {
   case 9:
-    if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2)
+    if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2) {
       if (!memcmp(&output16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
 	return (FALSE | neg);
-    else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4)
+    }
+    else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
       if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
 	return (FALSE | neg);
+    }
     else return (TRUE ^ neg);
   case 8:
     switch(hdr->aggregation) {
