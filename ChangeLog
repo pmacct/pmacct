@@ -1,47 +1,48 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.0
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
-+ 'is_symmetric' aggregation primitive has been implemented: aimed
-  at easing detection of asymmetric traffic. It's based on rule
-  definitions supplied in a 'bgp_is_symmetric_map' map, reloadable
-  at runtime.
-+ A new 'bgp_daemon_allow_file' configuration directive allows to
-  specify IP addresses that can establish a BGP session with the
-  collector's BGP thread. Many thanks to Erik van der Burg for
-  contributing the idea.
-+ 'nfacctd_ext_sampling_rate' and 'sfacctd_ext_sampling_rate' are
-  introduced: they flag the daemon that captured traffic is being
-  sampled. Useful to tackle corner cases, ie. the sampling rate
-  reported by the NetFlow/sFlow agent is missing or incorrect.
-+ The 'bgp_follow_nexthop' feature has been extended so that extra
-  IPv4/IPv6 prefixes can be supplied. Up to 32 IP prefixes are now
-  supported and a warning message is generated whenever a supplied
-  string fails parsing.
-+ Pre-Tagging: implemented 'src_local_pref' and 'src_comms' keys.
-  These allow tagging based on source IP prefix local_pref (sourced
-  from either a map or BGP, ie. 'bgp_src_local_pref_type: map',
-  'bgp_src_local_pref_type: bgp') and standard BGP communities.
-+ Pre-Tagging: 'src_peer_as' key was extended in order to match on
-  BGP-sourced data (bgp_peer_src_as_type: bgp).
-+ Pre-Tagging: introduced 'comms' key to tag basing on up to 16
-  standard BGP communities attached to the destination IP prefix.
-  The lookup is done against the BGP RIB of the exporting router.
-  Comparisons can be done in either match-any or match-all fashion;
-  xidDocumentation and examples updated.
-! fix, util.c: load_allow_file(), empty allow file was granting a
-  connection to everybody being confused with a 'no map' condition.
-  Now this case is properly recognized and correctly translates in
-  a reject all clause.
-! fix, sql_common.c: log of NetFlow micro-flows to a SQL database
-  (nfacctd_sql_log directive) was not correctly getting committed
-  to the backend, when sql_history was disabled.
-! fix, mysql|pgsql|sqlite_plugin.c: 'flows' aggregation primitive
-  was not suitable to mix-and-match with BGP related primitives
-  (ie. peer_dst_as, etc.) due to an incorrect check. Many thanks
-  to Zenon Mousmoulas for the bug report.
-! fix, pretag_handlers.c: tagging against NetFlow v9 4-bytes in/out
-  interfaces was not working properly. Thanks to Zenon Mousmoulas
-  for reporting the issue.
+0.12.0 -- 16-02-2010
+  + 'is_symmetric' aggregation primitive has been implemented: aimed
+    at easing detection of asymmetric traffic. It's based on rule
+    definitions supplied in a 'bgp_is_symmetric_map' map, reloadable
+    at runtime.
+  + A new 'bgp_daemon_allow_file' configuration directive allows to
+    specify IP addresses that can establish a BGP session with the
+    collector's BGP thread. Many thanks to Erik van der Burg for
+    contributing the idea.
+  + 'nfacctd_ext_sampling_rate' and 'sfacctd_ext_sampling_rate' are
+    introduced: they flag the daemon that captured traffic is being
+    sampled. Useful to tackle corner cases, ie. the sampling rate
+    reported by the NetFlow/sFlow agent is missing or incorrect.
+  + The 'bgp_follow_nexthop' feature has been extended so that extra
+    IPv4/IPv6 prefixes can be supplied. Up to 32 IP prefixes are now
+    supported and a warning message is generated whenever a supplied
+    string fails parsing.
+  + Pre-Tagging: implemented 'src_local_pref' and 'src_comms' keys.
+    These allow tagging based on source IP prefix local_pref (sourced
+    from either a map or BGP, ie. 'bgp_src_local_pref_type: map',
+    'bgp_src_local_pref_type: bgp') and standard BGP communities.
+  + Pre-Tagging: 'src_peer_as' key was extended in order to match on
+    BGP-sourced data (bgp_peer_src_as_type: bgp).
+  + Pre-Tagging: introduced 'comms' key to tag basing on up to 16
+    standard BGP communities attached to the destination IP prefix.
+    The lookup is done against the BGP RIB of the exporting router.
+    Comparisons can be done in either match-any or match-all fashion;
+    xidDocumentation and examples updated.
+  ! fix, util.c: load_allow_file(), empty allow file was granting a
+    connection to everybody being confused with a 'no map' condition.
+    Now this case is properly recognized and correctly translates in
+    a reject all clause.
+  ! fix, sql_common.c: log of NetFlow micro-flows to a SQL database
+    (nfacctd_sql_log directive) was not correctly getting committed
+    to the backend, when sql_history was disabled.
+  ! fix, mysql|pgsql|sqlite_plugin.c: 'flows' aggregation primitive
+    was not suitable to mix-and-match with BGP related primitives
+    (ie. peer_dst_as, etc.) due to an incorrect check. Many thanks
+    to Zenon Mousmoulas for the bug report.
+  ! fix, pretag_handlers.c: tagging against NetFlow v9 4-bytes in/out
+    interfaces was not working properly. Thanks to Zenon Mousmoulas
+    for reporting the issue.
 
 0.12.0rc4 -- 21-12-2009
   + BGP-related source primitives are introduced, namely: src_as_path,
