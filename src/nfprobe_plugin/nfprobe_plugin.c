@@ -1008,22 +1008,35 @@ print_timeouts(struct FLOWTRACK *ft)
 static int
 connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 {
-	int s;
+	int s, ret = 0;
 	unsigned int h6;
 	unsigned char h4;
 	struct sockaddr_in *in4 = (struct sockaddr_in *)addr;
 	struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
+	struct host_addr source_ip;
+	struct sockaddr ssource_ip;
+
+	if (config.nfprobe_source_ip) {
+	  ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
+	  addr_to_sa(&ssource_ip, &source_ip, 0);
+	}
 
 	if ((s = socket(addr->ss_family, SOCK_DGRAM, 0)) == -1) {
 		fprintf(stderr, "socket() error: %s\n", 
 		    strerror(errno));
 		exit_plugin(1);
 	}
-	if (connect(s, (struct sockaddr*)addr, len) == -1) {
-		fprintf(stderr, "connect() error: %s\n",
-		    strerror(errno));
-		exit_plugin(1);
+
+	if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
+	  fprintf(stderr, "bind() error: %s\n",
+		strerror(errno));
 	}
+
+        if (connect(s, (struct sockaddr*)addr, len) == -1) {
+                fprintf(stderr, "connect() error: %s\n",
+                    strerror(errno));
+                exit_plugin(1);
+        }
 
 	switch (addr->ss_family) {
 	case AF_INET:

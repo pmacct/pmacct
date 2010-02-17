@@ -320,6 +320,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfprobe_engine", cfg_key_nfprobe_engine},
   {"nfprobe_version", cfg_key_nfprobe_version},
   {"nfprobe_peer_as", cfg_key_nfprobe_peer_as},
+  {"nfprobe_source_ip", cfg_key_nfprobe_source_ip},
   {"sfprobe_receiver", cfg_key_sfprobe_receiver},
   {"sfprobe_agentip", cfg_key_sfprobe_agentip},
   {"sfprobe_agentsubid", cfg_key_sfprobe_agentsubid},

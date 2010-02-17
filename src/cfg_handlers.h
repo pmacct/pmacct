@@ -121,6 +121,7 @@ EXT int cfg_key_nfprobe_receiver(char *, char *, char *);
 EXT int cfg_key_nfprobe_version(char *, char *, char *);
 EXT int cfg_key_nfprobe_engine(char *, char *, char *);
 EXT int cfg_key_nfprobe_peer_as(char *, char *, char *);
+EXT int cfg_key_nfprobe_source_ip(char *, char *, char *);
 EXT int cfg_key_sfprobe_receiver(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentip(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentsubid(char *, char *, char *);

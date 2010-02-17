@@ -855,6 +855,11 @@ KEY:		nfprobe_receiver
 DESC:		defines the remote IP address/hostname and port to which NetFlow dagagrams are to be exported.
 		The value is expected to be in the usual form 'address:port'. (default: 127.0.0.1:2100)
 
+KEY:            nfprobe_source_ip
+DESC:           defines the local IP address from which NetFlow dagagrams are to be exported. Only a numerical
+		IPv4/IPv6 address is expected. The supplied IP address is required to be already configured on
+		one of the interfaces. (default: IP address is selected by the OS)
+
 KEY:		nfprobe_version
 VALUES:		[5,9]
 DESC:		version of outgoing NetFlow datagrams. NetFlow v5/v9 are supported. NetFlow v5 features a fixed

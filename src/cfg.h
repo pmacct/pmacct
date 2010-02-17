@@ -164,6 +164,7 @@ struct configuration {
   int nfprobe_version;
   char *nfprobe_engine;
   int nfprobe_peer_as;
+  char *nfprobe_source_ip;
   char *sfprobe_receiver;
   char *sfprobe_agentip;
   int sfprobe_agentsubid;
