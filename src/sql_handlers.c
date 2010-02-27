@@ -118,6 +118,21 @@ void count_dst_as_handler(const struct db_cache *cache_elem, const struct insert
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_in_iface_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.ifindex_in);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.ifindex_in);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_out_iface_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.ifindex_out);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.ifindex_out);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
 
 void count_std_comm_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {

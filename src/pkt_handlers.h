@@ -52,6 +52,8 @@ EXT void counters_renormalize_handler(struct channels_list_entry *, struct packe
 EXT void id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
@@ -72,6 +74,8 @@ EXT void NF_counters_secs_handler(struct channels_list_entry *, struct packet_pt
 EXT void NF_counters_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_sfprobe_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -107,6 +111,8 @@ EXT void SF_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char
 EXT void SF_sfprobe_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

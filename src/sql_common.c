@@ -858,6 +858,9 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) what_to_count |= COUNT_DST_HOST;
     else fakes |= FAKE_DST_HOST;
 
+    if (config.what_to_count & COUNT_IN_IFACE) what_to_count |= COUNT_IN_IFACE;
+    if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
+
     if (config.what_to_count & COUNT_AS_PATH) what_to_count |= COUNT_AS_PATH;
     else fakes |= FAKE_AS_PATH;
 
@@ -1081,6 +1084,34 @@ int sql_evaluate_primitives(int primitive)
     }
     values[primitive].type = where[primitive].type = COUNT_SRC_AS;
     values[primitive].handler = where[primitive].handler = count_src_as_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_IN_IFACE) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "iface_in", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "iface_in=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_IN_IFACE;
+    values[primitive].handler = where[primitive].handler = count_in_iface_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_OUT_IFACE) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "iface_out", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "iface_out=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_OUT_IFACE;
+    values[primitive].handler = where[primitive].handler = count_out_iface_handler;
     primitive++;
   }
 

@@ -233,6 +233,8 @@ struct pkt_primitives {
   u_int16_t dst_port;
   u_int8_t tos;
   u_int8_t proto;
+  u_int32_t ifindex_in;
+  u_int32_t ifindex_out;
   pm_id_t id;
   pm_id_t id2;
   pm_class_t class;
@@ -267,8 +269,6 @@ struct pkt_payload {
 struct pkt_extras {
   u_int8_t tcp_flags;
   u_int32_t mpls_top_label;
-  u_int16_t ifindex_in;
-  u_int16_t ifindex_out;
 };
 
 /* START: BGP section */

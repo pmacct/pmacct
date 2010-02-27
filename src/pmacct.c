@@ -62,7 +62,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag | tag2 | flows | \n\t class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | \n\t src_as_path | src_std_comm | src_ext_comm | src_local_pref | src_med | is_symmetric ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | in_iface | out_iface | \n\t tag | tag2 | flows | class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | \n\t peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_ext_comm | src_local_pref | \n\t src_med | is_symmetric ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -119,6 +119,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("TAG         ");
     printf("TAG2        ");
     printf("CLASS             ");
+    printf("IN_IFACE    ");
+    printf("OUT_IFACE   ");
 #if defined HAVE_L2
     printf("SRC_MAC            ");
     printf("DST_MAC            ");
@@ -170,6 +172,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_ID) printf("TAG         ");
     if (what_to_count & COUNT_ID2) printf("TAG2        ");
     if (what_to_count & COUNT_CLASS) printf("CLASS             ");
+    if (what_to_count & COUNT_IN_IFACE) printf("IN_IFACE    ");
+    if (what_to_count & COUNT_OUT_IFACE) printf("OUT_IFACE   ");
 #if defined HAVE_L2
     if (what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) printf("SRC_MAC            "); 
     if (what_to_count & COUNT_DST_MAC) printf("DST_MAC            "); 
@@ -378,6 +382,14 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_VLAN;
 	  what_to_count |= COUNT_VLAN;
 	}
+        else if (!strcmp(count_token[count_index], "in_iface")) {
+          count_token_int[count_index] = COUNT_IN_IFACE;
+          what_to_count |= COUNT_IN_IFACE;
+        }
+        else if (!strcmp(count_token[count_index], "out_iface")) {
+          count_token_int[count_index] = COUNT_OUT_IFACE;
+          what_to_count |= COUNT_OUT_IFACE;
+        }
 	else if (!strcmp(count_token[count_index], "sum_mac")) {
 	  count_token_int[count_index] = COUNT_SUM_MAC;
 	  what_to_count |= COUNT_SUM_MAC;
@@ -770,6 +782,16 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "vlan")) {
 	  request.data.vlan_id = atoi(match_string_token);
         }
+        else if (!strcmp(count_token[match_string_index], "in_iface")) {
+          char *endptr;
+
+          request.data.ifindex_in = strtoul(match_string_token, &endptr, 10);
+        }
+        else if (!strcmp(count_token[match_string_index], "out_iface")) {
+          char *endptr;
+
+          request.data.ifindex_out = strtoul(match_string_token, &endptr, 10);
+        }
 #endif
         else if (!strcmp(count_token[match_string_index], "src_port") ||
 		 !strcmp(count_token[match_string_index], "sum_port")) { 
@@ -1084,6 +1106,14 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count & COUNT_CLASS))
           printf("%-16s  ", (acc_elem->primitives.class == 0 || acc_elem->primitives.class > ct_idx ||
 		!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);
+
+        if (!have_wtc || (what_to_count & COUNT_IN_IFACE)) {
+          printf("%-10d  ", acc_elem->primitives.ifindex_in);
+        }
+        if (!have_wtc || (what_to_count & COUNT_OUT_IFACE)) {
+          printf("%-10d  ", acc_elem->primitives.ifindex_out);
+        }
+
 #if defined (HAVE_L2)
 	if (!have_wtc || (what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC))) {
 	  etheraddr_string(acc_elem->primitives.eth_shost, ethernet_address);

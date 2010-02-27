@@ -65,14 +65,16 @@ mode. Since v6 unified mode is no longer supported.
   * Only BGP table v1 is currently available.
 
 - Primitives not included in any default SQL table schema:
-  * Aggregation primitive => SQL table field
-  * src_std_comm => comms_src
-  * src_ext_comm => comms_src
-  * src_as_path => as_path_src
-  * src_local_pref => local_pref_src
-  * src_med => med_src
-  * is_symmetric => is_symmetric
-  * tag2 => agent_id2
+  Aggregation primitive => SQL table field
+  * src_std_comm => comms_src (declared same as 'comms')
+  * src_ext_comm => comms_src (declared same as 'comms')
+  * src_as_path => as_path_src (declared same as 'as_path')
+  * src_local_pref => local_pref_src (declared same as 'local_pref')
+  * src_med => med_src (declared same as 'med')
+  * is_symmetric => is_symmetric (see README.is_symmetric)
+  * tag2 => agent_id2 (see README.agent_id2)
+  * in_iface => iface_in (see README.iface)
+  * out_iface => iface_out (see README.iface)
 
 - What is the difference between 'typed' and 'unified' modes ? 
 It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses

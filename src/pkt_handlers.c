@@ -265,10 +265,25 @@ void evaluate_packet_handlers()
       else if (config.acct_type == ACCT_SF) primitives--; /* NO flows handling for sFlow */
       primitives++;
     }
+
     if (channels_list[index].aggregation & COUNT_CLASS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = class_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_class_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_class_handler; 
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation & COUNT_IN_IFACE) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = in_iface_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_in_iface_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_iface_handler;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation & COUNT_OUT_IFACE) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = out_iface_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_out_iface_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_out_iface_handler;
       primitives++;
     }
 
@@ -642,8 +657,20 @@ void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   if (pptrs->mpls_ptr) memcpy(&pextras->mpls_top_label, pptrs->mpls_ptr, 4);
   if (pptrs->l4_proto == IPPROTO_TCP) pextras->tcp_flags = pptrs->tcp_flags;
-  if (pptrs->ifindex_in > 0)  pextras->ifindex_in  = pptrs->ifindex_in;
-  if (pptrs->ifindex_out > 0) pextras->ifindex_out = pptrs->ifindex_out;
+}
+
+void in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  if (pptrs->ifindex_in > 0)  pdata->primitives.ifindex_in  = pptrs->ifindex_in;
+}
+
+void out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  if (pptrs->ifindex_out > 0) pdata->primitives.ifindex_out = pptrs->ifindex_out;
 }
 
 #if defined (HAVE_L2)
@@ -1535,6 +1562,156 @@ void NF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_
   }
 }
 
+void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t iface16 = 0;
+  u_int32_t iface32 = 0;
+
+  switch(hdr->version) {
+  case 9:
+    if (tpl->tpl[NF9_INPUT_SNMP].len == 2) {
+      memcpy(&iface16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 2);
+      pdata->primitives.ifindex_in = ntohs(iface16);
+    }
+    else if (tpl->tpl[NF9_INPUT_SNMP].len == 4) {
+      memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 4);
+      pdata->primitives.ifindex_in = ntohl(iface32);
+    }
+    break;
+  case 8:
+    switch(hdr->aggregation) {
+    case 1:
+      iface16 = ntohs(((struct struct_export_v8_1 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 3:
+      iface16 = ntohs(((struct struct_export_v8_3 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 5:
+      iface16 = ntohs(((struct struct_export_v8_5 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 7:
+      iface16 = ntohs(((struct struct_export_v8_7 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 8:
+      iface16 = ntohs(((struct struct_export_v8_8 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 9:
+      iface16 = ntohs(((struct struct_export_v8_9 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 10:
+      iface16 = ntohs(((struct struct_export_v8_10 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 11:
+      iface16 = ntohs(((struct struct_export_v8_11 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 13:
+      iface16 = ntohs(((struct struct_export_v8_13 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    case 14:
+      iface16 = ntohs(((struct struct_export_v8_14 *) pptrs->f_data)->input);
+      pdata->primitives.ifindex_in = iface16;
+      break;
+    default:
+      pdata->primitives.ifindex_in = 0;
+      break;
+    }
+    break;
+  default:
+    iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->input);
+    pdata->primitives.ifindex_in = iface16;
+    break;
+  }
+}
+
+void NF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t iface16 = 0;
+  u_int32_t iface32 = 0;
+
+  switch(hdr->version) {
+  case 9:
+    if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2) {
+      memcpy(&iface16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 2);
+      pdata->primitives.ifindex_out = ntohs(iface16);
+    }
+    else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
+      memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 4);
+      pdata->primitives.ifindex_out = ntohl(iface32);
+    }
+    break;
+  case 8:
+    switch(hdr->aggregation) {
+    case 1:
+      iface16 = ntohs(((struct struct_export_v8_1 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 4:
+      iface16 = ntohs(((struct struct_export_v8_4 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 5:
+      iface16 = ntohs(((struct struct_export_v8_5 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 6:
+      iface16 = ntohs(((struct struct_export_v8_6 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 7:
+      iface16 = ntohs(((struct struct_export_v8_7 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 8:
+      iface16 = ntohs(((struct struct_export_v8_8 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 9:
+      iface16 = ntohs(((struct struct_export_v8_9 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 10:
+      iface16 = ntohs(((struct struct_export_v8_10 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 12:
+      iface16 = ntohs(((struct struct_export_v8_12 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 13:
+      iface16 = ntohs(((struct struct_export_v8_13 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    case 14:
+      iface16 = ntohs(((struct struct_export_v8_14 *) pptrs->f_data)->output);
+      pdata->primitives.ifindex_out = iface16;
+      break;
+    default:
+      pdata->primitives.ifindex_out = 0;
+      break;
+    }
+    break;
+  default:
+    iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->output);
+    pdata->primitives.ifindex_out = iface16;
+    break;
+  }
+}
+
 void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -2213,8 +2390,22 @@ void SF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_
 
   if (sample->lstk.depth) memcpy(&pextras->mpls_top_label, &sample->lstk.stack[0], 4);
   if (sample->dcd_ipProtocol == IPPROTO_TCP) pextras->tcp_flags = sample->dcd_tcpFlags;
-  if (pptrs->ifindex_in > 0)  pextras->ifindex_in  = pptrs->ifindex_in;
-  if (pptrs->ifindex_out > 0) pextras->ifindex_out = pptrs->ifindex_out;
+}
+
+void SF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.ifindex_in = sample->inputPort;
+}
+
+void SF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.ifindex_out = sample->outputPort;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
