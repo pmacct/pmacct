@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -62,7 +62,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_port | dst_port | tos | proto | \n\t src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | in_iface | out_iface | \n\t tag | tag2 | flows | class | std_comm | ext_comm | as_path | peer_src_ip | peer_dst_ip | \n\t peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_ext_comm | src_local_pref | \n\t src_med | is_symmetric ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | is_symmetric ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -153,6 +153,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("SRC_IP           ");
     printf("DST_IP           ");
 #endif
+    printf("SRC_MASK  ");
+    printf("DST_MASK  ");
     printf("SRC_PORT  ");
     printf("DST_PORT  ");
     printf("TCP_FLAGS  ");
@@ -210,6 +212,8 @@ void write_stats_header(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP           ");
     if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("DST_IP           ");
 #endif
+    if (what_to_count & COUNT_SRC_NMASK) printf("SRC_MASK  ");
+    if (what_to_count & COUNT_DST_NMASK) printf("DST_MASK  "); 
     if (what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) printf("SRC_PORT  ");
     if (what_to_count & COUNT_DST_PORT) printf("DST_PORT  "); 
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS  "); 
@@ -435,6 +439,14 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_SUM_PORT;
 	  what_to_count |= COUNT_SUM_PORT;
 	}
+        else if (!strcmp(count_token[count_index], "src_mask")) {
+          count_token_int[count_index] = COUNT_SRC_NMASK;
+          what_to_count |= COUNT_SRC_NMASK;
+        }
+        else if (!strcmp(count_token[count_index], "dst_mask")) {
+          count_token_int[count_index] = COUNT_DST_NMASK;
+          what_to_count |= COUNT_DST_NMASK;
+        }
         else if (!strcmp(count_token[count_index], "tag")) {
 	  count_token_int[count_index] = COUNT_ID;
 	  what_to_count |= COUNT_ID;
@@ -791,6 +803,20 @@ int main(int argc,char **argv)
           char *endptr;
 
           request.data.ifindex_out = strtoul(match_string_token, &endptr, 10);
+        }
+        else if (!strcmp(count_token[match_string_index], "src_mask")) {
+          char *endptr;
+	  u_int32_t src_mask;
+
+	  src_mask = strtoul(match_string_token, &endptr, 10);
+          request.data.src_nmask = src_mask;
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_mask")) {
+          char *endptr;
+	  u_int32_t dst_mask;
+
+          dst_mask = strtoul(match_string_token, &endptr, 10);
+	  request.data.dst_nmask = dst_mask;
         }
 #endif
         else if (!strcmp(count_token[match_string_index], "src_port") ||
@@ -1284,6 +1310,12 @@ int main(int argc,char **argv)
 	  else printf("%-15u  ", 0);
 #endif
 	}
+
+        if (!have_wtc || (what_to_count & COUNT_SRC_NMASK))
+          printf("%-3d       ", acc_elem->primitives.src_nmask);
+
+        if (!have_wtc || (what_to_count & COUNT_DST_NMASK))
+          printf("%-3d       ", acc_elem->primitives.dst_nmask);
 
 	if (!have_wtc || (what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)))
 	  printf("%-5d     ", acc_elem->primitives.src_port);

@@ -25,7 +25,7 @@
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:R"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:Rg:L:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:"
-#define N_PRIMITIVES 44
+#define N_PRIMITIVES 46
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
 #define PROTO_LEN 12
@@ -140,6 +140,8 @@
 #define COUNT_IS_SYMMETRIC      0x0000020000000000ULL
 #define COUNT_IN_IFACE		0x0000040000000000ULL
 #define COUNT_OUT_IFACE		0x0000080000000000ULL
+#define COUNT_SRC_NMASK		0x0000100000000000ULL
+#define COUNT_DST_NMASK		0x0000200000000000ULL
 
 /* BYTES and PACKETS are used into templates; we let their values to
    overlap with some values we will not need into templates */ 

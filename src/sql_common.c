@@ -861,6 +861,9 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_IN_IFACE) what_to_count |= COUNT_IN_IFACE;
     if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
 
+    if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
+    if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
+
     if (config.what_to_count & COUNT_AS_PATH) what_to_count |= COUNT_AS_PATH;
     else fakes |= FAKE_AS_PATH;
 
@@ -1112,6 +1115,34 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "iface_out=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_OUT_IFACE;
     values[primitive].handler = where[primitive].handler = count_out_iface_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_SRC_NMASK) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "mask_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "mask_src=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_SRC_NMASK;
+    values[primitive].handler = where[primitive].handler = count_src_nmask_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_DST_NMASK) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "mask_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "mask_dst=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_DST_NMASK;
+    values[primitive].handler = where[primitive].handler = count_dst_nmask_handler;
     primitive++;
   }
 

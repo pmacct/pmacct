@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -144,6 +144,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
 	    tmpt->table[eff_rows].net = ntohl(tmpt->table[eff_rows].net);
 	    tmpt->table[eff_rows].mask = (index == 32) ? 0xffffffffUL : ~(0xffffffffUL >> index);
+	    tmpt->table[eff_rows].masknum = index;
 	    tmpt->table[eff_rows].net &= tmpt->table[eff_rows].mask; /* enforcing mask on given network */
 
 	    eff_rows++;
@@ -240,8 +241,8 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       index = 0;
       while (index < tmpt->num) {
         if (config.debug) 
-	  Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv4) AS: %x, net: %x, mask: %x\n", 
-	  	  filename, nt->table[index].as, nt->table[index].net, nt->table[index].mask); 
+	  Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv4) AS: %x, net: %x, mask (bit): %x, mask (num): %x\n", 
+	  	  filename, nt->table[index].as, nt->table[index].net, nt->table[index].mask, nt->table[index].masknum); 
 	if (!nt->table[index].mask) default_route_in_networks4_table = TRUE;
 	index++;
       }
@@ -438,6 +439,14 @@ void set_net_funcs(struct networks_table *nt)
       net_funcs[count] = mask_dst_ipaddr;
       count++;
     }
+    if (config.what_to_count & COUNT_SRC_NMASK) {
+      net_funcs[count] = copy_src_mask;
+      count++;
+    }
+    if (config.what_to_count & COUNT_DST_NMASK) {
+      net_funcs[count] = copy_dst_mask;
+      count++;
+    }
   }
 
 #if defined ENABLE_IPV6
@@ -448,6 +457,11 @@ void set_net_funcs(struct networks_table *nt)
 
   if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
     net_funcs[count] = search_src_host;
+    count++;
+  }
+
+  if (config.what_to_count & COUNT_SRC_NMASK) {
+    net_funcs[count] = search_src_nmask;
     count++;
   }
 
@@ -473,6 +487,11 @@ void set_net_funcs(struct networks_table *nt)
 
   if (config.what_to_count & (COUNT_DST_HOST|COUNT_SUM_HOST)) {
     net_funcs[count] = search_dst_host;
+    count++;
+  }
+
+  if (config.what_to_count & COUNT_DST_NMASK) {
+    net_funcs[count] = search_dst_nmask;
     count++;
   }
 
@@ -533,6 +552,16 @@ void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
     memcpy(&p->dst_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
   }
 #endif
+}
+
+void copy_src_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
+{
+  p->src_nmask = config.networks_mask;
+}
+
+void copy_dst_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
+{
+  p->dst_nmask = config.networks_mask;
 }
 
 void search_src_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
@@ -615,6 +644,48 @@ void search_dst_net(struct networks_table *nt, struct networks_cache *nc, struct
     res6 = binsearch6(nt, nc, &p->dst_ip);
     if (!res6) memset(&p->dst_ip.address.ipv6, 0, IP6AddrSz);
     else memcpy(&p->dst_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz);
+  }
+#endif
+}
+
+void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
+{
+  struct networks_table_entry *res;
+#if defined ENABLE_IPV6
+  struct networks6_table_entry *res6;
+#endif
+
+  if (p->src_ip.family == AF_INET) {
+    res = binsearch(nt, nc, &p->src_ip);
+    if (!res) p->src_nmask = 0;
+    else p->src_nmask = res->masknum;
+  }
+#if defined ENABLE_IPV6
+  else if (p->src_ip.family == AF_INET6) {
+    res6 = binsearch6(nt, nc, &p->src_ip);
+    if (!res6) p->src_nmask = 0;
+    else p->src_nmask = res->masknum; 
+  }
+#endif
+}
+
+void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
+{
+  struct networks_table_entry *res;
+#if defined ENABLE_IPV6
+  struct networks6_table_entry *res6;
+#endif
+
+  if (p->dst_ip.family == AF_INET) {
+    res = binsearch(nt, nc, &p->dst_ip);
+    if (!res) p->dst_nmask = 0;
+    else p->dst_nmask = res->masknum;
+  }
+#if defined ENABLE_IPV6
+  else if (p->dst_ip.family == AF_INET6) {
+    res6 = binsearch6(nt, nc, &p->dst_ip);
+    if (!res6) p->dst_nmask = 0;
+    else p->dst_nmask = res->masknum;
   }
 #endif
 }
@@ -833,6 +904,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
             memcpy(&tmpt->table6[eff_rows].net, tmpnet, IP6AddrSz);
             memcpy(&tmpt->table6[eff_rows].mask, tmpmask, IP6AddrSz);
+            tmpt->table6[eff_rows].masknum = index;
 
 
             eff_rows++;
@@ -933,10 +1005,10 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       index = 0;
       while (index < tmpt->num6) {
         if (config.debug)
-          Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv6) AS: %x, net: %x:%x:%x:%x, mask: %x:%x:%x:%x\n", filename,
+          Log(LOG_DEBUG, "DEBUG ( %s ): (networks table IPv6) AS: %x, net: %x:%x:%x:%x, mask (bit): %x:%x:%x:%x, mask (num): %x\n", filename,
 	    nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1], nt->table6[index].net[2],
 	    nt->table6[index].net[3], nt->table6[index].mask[0], nt->table6[index].mask[1], nt->table6[index].mask[2],
-	    nt->table6[index].mask[3]);
+	    nt->table6[index].mask[3], nt->table6[index].masknum);
 	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
 	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])
 	  default_route_in_networks6_table = TRUE;

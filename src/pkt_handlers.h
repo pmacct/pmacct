@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -62,6 +62,8 @@ EXT void NF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, 
 EXT void NF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_dst_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_src_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -91,12 +93,16 @@ EXT void bgp_src_med_frommap_handler(struct channels_list_entry *, struct packet
 EXT void bgp_is_symmetric_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_src_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_dst_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void bgp_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void bgp_dst_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void SF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_dst_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_src_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

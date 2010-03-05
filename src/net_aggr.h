@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -54,6 +54,7 @@ struct networks_table {
 struct networks_table_entry {
   u_int32_t net;
   u_int32_t mask;
+  u_int8_t masknum;
   as_t as;
   struct networks_table childs_table;
 };
@@ -67,6 +68,7 @@ struct networks6_cache_entry {
 struct networks6_table_entry {
   u_int32_t net[4];
   u_int32_t mask[4];
+  u_int8_t masknum;
   as_t as;
   struct networks_table childs_table;
 };
@@ -89,10 +91,14 @@ EXT net_func net_funcs[8];
 EXT void set_net_funcs();
 EXT void mask_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void mask_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void copy_src_mask(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void copy_dst_mask(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_src_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_dst_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void search_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *);
+EXT void search_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *);
 EXT void search_src_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT void search_dst_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 EXT as_t search_pretag_src_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);

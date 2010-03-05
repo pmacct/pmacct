@@ -75,6 +75,8 @@ mode. Since v6 unified mode is no longer supported.
   * tag2 => agent_id2 (see README.agent_id2)
   * in_iface => iface_in (see README.iface)
   * out_iface => iface_out (see README.iface)
+  * src_mask => mask_src (see README.mask)
+  * dst_mask => mask_dst (see README.mask)
 
 - What is the difference between 'typed' and 'unified' modes ? 
 It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses

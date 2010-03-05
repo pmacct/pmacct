@@ -1,0 +1,20 @@
+This document doesn't replace documentation relevant to the database software you are
+using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'mask_src' and 'mask_dst' fields.
+Such fields are being introduced to support source and destination IP prefix masks.
+Values are grasped as configured in [nf|sf|pm|u]acctd_net directive: NetFlow/sFlow
+protocols, BGP, Network files (networks_file) or static (networks_mask) being valid
+data sources. The guidelines below (typically in MySQL format) are to add such
+primitives to the SQL schema:
+
+* mask_src field:
+  - "mask_src INT(1) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., mask_src, ...)" to put it in the primary key 
+
+* mask_dst field:
+  - "mask_dst INT(1) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., mask_dst, ...)" to put it in the primary key 
+
+The primitive is not declared as part of any default table version; yet will not fail
+version checks which are enabled when 'sql_optimize_clauses' feature is disabled.

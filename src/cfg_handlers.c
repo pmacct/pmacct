@@ -172,6 +172,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "is_symmetric")) value |= COUNT_IS_SYMMETRIC;
     else if (!strcmp(count_token, "in_iface")) value |= COUNT_IN_IFACE;
     else if (!strcmp(count_token, "out_iface")) value |= COUNT_OUT_IFACE;
+    else if (!strcmp(count_token, "src_mask")) value |= COUNT_SRC_NMASK;
+    else if (!strcmp(count_token, "dst_mask")) value |= COUNT_DST_NMASK;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 

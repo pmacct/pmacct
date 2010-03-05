@@ -98,8 +98,8 @@ struct struct_export_v5 {
   unsigned char tos;          	/* IP Type-of-Service */
   u_int16_t src_as;  		/* source peer/origin Autonomous System */
   u_int16_t dst_as;  		/* dst peer/origin Autonomous System */
+  unsigned char src_mask;       /* source route's mask bits */ 
   unsigned char dst_mask;       /* destination route's mask bits */
-  unsigned char src_mask;       /* source route's mask bits */
   u_int16_t pad_1;   		/* pad to word boundary */
 };
 
