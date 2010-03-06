@@ -280,8 +280,12 @@ struct pkt_payload {
   pm_id_t tag2;
   struct host_addr src_ip;
   struct host_addr dst_ip;
+  as_t src_as;
+  as_t dst_as;
   u_int16_t ifindex_in;
   u_int16_t ifindex_out;
+  u_int8_t src_nmask;
+  u_int8_t dst_nmask;
 };
 
 struct pkt_extras {

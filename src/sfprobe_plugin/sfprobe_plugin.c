@@ -253,7 +253,7 @@ static void init_agent(SflSp *sp)
 
 static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *buf)
 {
-  SFLFlow_sample_element hdrElem, classHdrElem, gatewayHdrElem, tagHdrElem;
+  SFLFlow_sample_element hdrElem, classHdrElem, gatewayHdrElem, routerHdrElem, tagHdrElem;
   SFLExtended_as_path_segment as_path_segment;
   u_int32_t frame_len, header_len;
   int direction, sampledPackets;
@@ -374,13 +374,21 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	memset(&as_path_segment, 0, sizeof(as_path_segment));
 	gatewayHdrElem.tag = SFLFLOW_EX_GATEWAY;
 	// gatewayHdrElem.flowType.gateway.src_as = htonl(hdr->src_ip.address.ipv4.s_addr);
-	gatewayHdrElem.flowType.gateway.src_as = hdr->src_ip.address.ipv4.s_addr;
+	gatewayHdrElem.flowType.gateway.src_as = hdr->src_as;
 	gatewayHdrElem.flowType.gateway.dst_as_path_segments = 1;
 	gatewayHdrElem.flowType.gateway.dst_as_path = &as_path_segment;
 	as_path_segment.type = SFLEXTENDED_AS_SET;
 	as_path_segment.length = 1;
-	as_path_segment.as.set = &hdr->dst_ip.address.ipv4.s_addr;
+	as_path_segment.as.set = &hdr->dst_as;
 	SFLADD_ELEMENT(&fs, &gatewayHdrElem);
+      }
+
+      if (config.what_to_count & (COUNT_SRC_NMASK|COUNT_DST_NMASK)) {
+	memset(&routerHdrElem, 0, sizeof(routerHdrElem));
+	routerHdrElem.tag = SFLFLOW_EX_ROUTER;
+	routerHdrElem.flowType.router.src_mask = hdr->src_nmask; 
+	routerHdrElem.flowType.router.dst_mask = hdr->dst_nmask;
+	SFLADD_ELEMENT(&fs, &routerHdrElem);
       }
 
       // submit the sample to be encoded and sent out - that's all there is to it(!)
@@ -428,6 +436,8 @@ static void process_config_options(SflSp *sp)
   _________________         sfprobe_plugin    __________________
   -----------------___________________________------------------
 */
+
+#define NF_NET_NEW      0x00000002
 
 void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
@@ -493,7 +503,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&dummy, 0, sizeof(dummy));
 
   if (config.networks_file) {
-    config.what_to_count |= (COUNT_SRC_AS|COUNT_DST_AS);
+    config.what_to_count |= (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SRC_NMASK|COUNT_DST_NMASK);
     load_networks(config.networks_file, &nt, &nc);
     set_net_funcs(&nt);
   }
@@ -564,10 +574,13 @@ read_data:
 	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives);
 
           if (config.nfacctd_as == NF_AS_NEW) {
-	    memset(&hdr->src_ip, 0, HostAddrSz);
-	    memset(&hdr->dst_ip, 0, HostAddrSz);
-	    hdr->src_ip.address.ipv4.s_addr = dummy.primitives.src_as;
-	    hdr->dst_ip.address.ipv4.s_addr = dummy.primitives.dst_as;
+	    hdr->src_as = dummy.primitives.src_as;
+	    hdr->dst_as = dummy.primitives.dst_as;
+          }
+
+          if (config.nfacctd_net == NF_NET_NEW) {
+            hdr->src_nmask = dummy.primitives.src_nmask;
+            hdr->dst_nmask = dummy.primitives.dst_nmask;
           }
 	}
 	

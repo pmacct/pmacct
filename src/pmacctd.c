@@ -422,6 +422,10 @@ int main(int argc,char **argv, char **envp)
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
         }
+        if (list->cfg.nfacctd_bgp && list->cfg.nfacctd_net == NF_NET_BGP) {
+          list->cfg.what_to_count |= COUNT_SRC_NMASK;
+          list->cfg.what_to_count |= COUNT_DST_NMASK;
+        }
 	if (list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_ID;
 	  list->cfg.what_to_count |= COUNT_ID2;

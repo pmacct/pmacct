@@ -647,11 +647,21 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
   int ethHdrLen = 0;
 
-  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW) {
+  memset(&tmp, 0, sizeof(tmp));
+
+  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW ||
+      chptr->plugin->cfg.nfacctd_net == NF_NET_NEW) {
     src_host_handler(chptr, pptrs, &tmpp);
     dst_host_handler(chptr, pptrs, &tmpp);
     memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
     memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+  }
+
+  if (chptr->plugin->cfg.nfacctd_net == NF_NET_BGP) {
+    bgp_src_nmask_handler(chptr, pptrs, &tmpp);
+    bgp_dst_nmask_handler(chptr, pptrs, &tmpp);
+    payload->src_nmask = tmp.primitives.src_nmask;
+    payload->dst_nmask = tmp.primitives.dst_nmask;
   }
 
   payload->cap_len = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
@@ -2126,9 +2136,9 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
       if (config.nfacctd_as == NF_AS_BGP) {
 	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
 	  if (!chptr->plugin->cfg.nfprobe_peer_as)
-	    payload->src_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+	    payload->src_as = evaluate_last_asn(info->attr->aspath);
 	  else
-            payload->src_ip.address.ipv4.s_addr = evaluate_first_asn(info->attr->aspath->str);
+            payload->src_as = evaluate_first_asn(info->attr->aspath->str);
 	}
       }
     }
@@ -2140,9 +2150,9 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
       if (config.nfacctd_as == NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
 	  if (!chptr->plugin->cfg.nfprobe_peer_as)
-            payload->dst_ip.address.ipv4.s_addr = evaluate_last_asn(info->attr->aspath);
+            payload->dst_as = evaluate_last_asn(info->attr->aspath);
           else
-	    payload->dst_ip.address.ipv4.s_addr = evaluate_first_asn(info->attr->aspath->str);
+	    payload->dst_as = evaluate_first_asn(info->attr->aspath->str);
 	}
       }
     }
