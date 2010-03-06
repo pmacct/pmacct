@@ -146,6 +146,7 @@ struct FLOW {
 		struct in_addr v4;
 		struct in6_addr v6;
 	} addr[2];				/* Endpoint addresses */
+	u_int8_t mask[2];			/* Network masks */
 	u_int16_t port[2];			/* Endpoint ports */
 	u_int8_t tcp_flags[2];			/* Cumulative OR of flags */
 	u_int8_t protocol;			/* Protocol */

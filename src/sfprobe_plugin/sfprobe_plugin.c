@@ -243,7 +243,9 @@ static void init_agent(SflSp *sp)
   sp->sampler = sfl_agent_getSampler(sp->agent, &dsi);
 }
 
-#define NF_AS_BGP 2
+#define NF_AS_KEEP 0
+#define NF_AS_NEW  1
+#define NF_AS_BGP  2
 /*_________________---------------------------__________________
   _________________       readPacket          __________________
   -----------------___________________________------------------
@@ -561,10 +563,12 @@ read_data:
 
 	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives);
 
-	  memset(&hdr->src_ip, 0, HostAddrSz);
-	  memset(&hdr->dst_ip, 0, HostAddrSz);
-	  hdr->src_ip.address.ipv4.s_addr = dummy.primitives.src_as;
-	  hdr->dst_ip.address.ipv4.s_addr = dummy.primitives.dst_as;
+          if (config.nfacctd_as == NF_AS_NEW) {
+	    memset(&hdr->src_ip, 0, HostAddrSz);
+	    memset(&hdr->dst_ip, 0, HostAddrSz);
+	    hdr->src_ip.address.ipv4.s_addr = dummy.primitives.src_as;
+	    hdr->dst_ip.address.ipv4.s_addr = dummy.primitives.dst_as;
+          }
 	}
 	
 	readPacket(&sp, hdr, pipebuf_ptr);

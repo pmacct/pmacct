@@ -370,6 +370,12 @@ int main(int argc,char **argv, char **envp)
 #endif
 	list->cfg.what_to_count |= COUNT_SRC_HOST;
 	list->cfg.what_to_count |= COUNT_DST_HOST;
+
+	if (list->cfg.networks_file || list->cfg.networks_mask || list->cfg.nfacctd_net) {
+	  list->cfg.what_to_count |= COUNT_SRC_NMASK;
+	  list->cfg.what_to_count |= COUNT_DST_NMASK;
+	} 
+
 	list->cfg.what_to_count |= COUNT_SRC_PORT;
 	list->cfg.what_to_count |= COUNT_DST_PORT;
 	list->cfg.what_to_count |= COUNT_IP_TOS;

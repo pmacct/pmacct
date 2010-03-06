@@ -339,6 +339,8 @@ ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   flow->af = af;
   flow->addr[ndx].v4 = p->src_ip.address.ipv4;
   flow->addr[ndx ^ 1].v4 = p->dst_ip.address.ipv4;
+  flow->mask[ndx] = p->src_nmask;
+  flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->tos[ndx] = p->tos;
   flow->protocol = p->proto;
   flow->octets[ndx] = data->pkt_len;
@@ -374,6 +376,8 @@ ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   flow->ip6_flowlabel[ndx] = 0;
   flow->addr[ndx].v6 = p->src_ip.address.ipv6; 
   flow->addr[ndx ^ 1].v6 = p->dst_ip.address.ipv6; 
+  flow->mask[ndx] = p->src_nmask;
+  flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->octets[ndx] = data->pkt_len;
   flow->packets[ndx] = data->pkt_num; 
   flow->flows[ndx] = data->flo_num;
@@ -1419,9 +1423,14 @@ read_data:
 
           for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives);
 
-	  if (((config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) && config.nfacctd_as != NF_AS_KEEP) || config.acct_type == ACCT_PM) {
+	  if (config.nfacctd_as == NF_AS_NEW) {
 	    data->primitives.src_as = dummy.primitives.src_as;
 	    data->primitives.dst_as = dummy.primitives.dst_as;
+	  }
+
+	  if (config.nfacctd_net == NF_NET_NEW) {
+	    data->primitives.src_nmask = dummy.primitives.src_nmask;
+            data->primitives.dst_nmask = dummy.primitives.dst_nmask;
 	  }
 	}
 

@@ -647,7 +647,7 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
   int ethHdrLen = 0;
 
-  if (chptr->plugin->cfg.networks_file) {
+  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW) {
     src_host_handler(chptr, pptrs, &tmpp);
     dst_host_handler(chptr, pptrs, &tmpp);
     memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
@@ -1646,8 +1646,11 @@ void NF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet
   payload->class = tmp.primitives.class;
   payload->tag = tmp.primitives.id;
   payload->tag2 = tmp.primitives.id2;
-  memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
-  memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+
+  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW) {
+    memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
+    memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+  }
 
   if (space >= payload->cap_len) {
     buf += PpayloadSz;
@@ -2494,10 +2497,12 @@ void SF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet
   char *buf = (char *) *data, *tmpp = (char *) &tmp;
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
 
-  SF_src_host_handler(chptr, pptrs, &tmpp);
-  SF_dst_host_handler(chptr, pptrs, &tmpp);
-  memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
-  memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW) {
+    SF_src_host_handler(chptr, pptrs, &tmpp);
+    SF_dst_host_handler(chptr, pptrs, &tmpp);
+    memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
+    memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
+  }
 
   payload->cap_len = sample->headerLen;
   payload->pkt_len = sample->sampledPacketSize;

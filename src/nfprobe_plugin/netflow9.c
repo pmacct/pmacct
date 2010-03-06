@@ -69,12 +69,12 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_TCP_FLAGS			6
 #define NF9_L4_SRC_PORT			7
 #define NF9_IPV4_SRC_ADDR		8
-/* ... */
+#define NF9_SRC_MASK                    9
 #define NF9_INPUT_SNMP                  10
 /* ... */
 #define NF9_L4_DST_PORT			11
 #define NF9_IPV4_DST_ADDR		12
-/* ... */
+#define NF9_DST_MASK                    13
 #define NF9_OUTPUT_SNMP                 14
 /* ... */
 #define NF9_SRC_AS                      16
@@ -106,7 +106,7 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_OPT_SCOPE_SYSTEM            1
 
 /* Stuff pertaining to the templates that softflowd uses */
-#define NF9_SOFTFLOWD_TEMPLATE_NRECORDS	30
+#define NF9_SOFTFLOWD_TEMPLATE_NRECORDS	34
 struct NF9_SOFTFLOWD_TEMPLATE {
 	struct NF9_TEMPLATE_FLOWSET_HEADER h;
 	struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
@@ -215,6 +215,18 @@ static void
 flow_to_flowset_dst_host_v4_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
   memcpy(flowset, &flow->addr[idx ^ 1].v4, size);
+}
+
+static void
+flow_to_flowset_src_nmask_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  memcpy(flowset, &flow->mask[idx], size);
+}
+
+static void
+flow_to_flowset_dst_nmask_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  memcpy(flowset, &flow->mask[idx ^ 1], size);
 }
 
 static void
@@ -422,6 +434,20 @@ nf9_init_template(void)
 	  v4_int_template.r[rcount].length = 4;
 	  rcount++;
 	}
+        if (config.nfprobe_what_to_count & COUNT_SRC_NMASK) {
+          v4_template.r[rcount].type = htons(NF9_SRC_MASK);
+          v4_template.r[rcount].length = htons(1);
+          v4_int_template.r[rcount].handler = flow_to_flowset_src_nmask_handler;
+          v4_int_template.r[rcount].length = 1;
+          rcount++;
+        }
+        if (config.nfprobe_what_to_count & COUNT_DST_NMASK) {
+          v4_template.r[rcount].type = htons(NF9_DST_MASK);
+          v4_template.r[rcount].length = htons(1);
+          v4_int_template.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
+          v4_int_template.r[rcount].length = 1;
+          rcount++;
+        }
 	if (config.nfprobe_what_to_count & COUNT_SRC_PORT) {
 	  v4_template.r[rcount].type = htons(NF9_L4_SRC_PORT);
 	  v4_template.r[rcount].length = htons(2);
@@ -593,6 +619,20 @@ nf9_init_template(void)
 	  v6_int_template.r[rcount].length = 16;
 	  rcount++;
 	}
+        if (config.nfprobe_what_to_count & COUNT_SRC_NMASK) {
+          v6_template.r[rcount].type = htons(NF9_SRC_MASK);
+          v6_template.r[rcount].length = htons(1);
+          v6_int_template.r[rcount].handler = flow_to_flowset_src_nmask_handler;
+          v6_int_template.r[rcount].length = 1;
+          rcount++;
+        }
+        if (config.nfprobe_what_to_count & COUNT_DST_NMASK) {
+          v6_template.r[rcount].type = htons(NF9_DST_MASK);
+          v6_template.r[rcount].length = htons(1);
+          v6_int_template.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
+          v6_int_template.r[rcount].length = 1;
+          rcount++;
+        }
 	if (config.nfprobe_what_to_count & (COUNT_IP_TOS)) {
 	  v6_template.r[rcount].type = htons(NF9_SRC_TOS);
 	  v6_template.r[rcount].length = htons(1);
