@@ -170,6 +170,7 @@ struct configuration {
   int sfprobe_agentsubid;
   int uacctd_group;
   int uacctd_nl_size;
+  char *tunnel0;
 };
 
 struct plugin_type_entry {

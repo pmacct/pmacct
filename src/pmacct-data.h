@@ -352,6 +352,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
+  {"tunnel_0", cfg_key_tunnel_0},
   {"", NULL},
 };
 
@@ -371,6 +372,13 @@ static struct plugin_type_entry plugin_types_list[] = {
   {PLUGIN_ID_SQLITE3,	"sqlite3",	sqlite3_plugin},
 #endif
   {PLUGIN_ID_UNKNOWN,	"",		NULL},
+};
+#endif
+
+#ifdef __NL_C
+static struct tunnel_entry tunnel_handlers_list[] = {
+  {"gtp", 	gtp_tunnel_func, 	gtp_tunnel_configurator},
+  {"", 		NULL,			NULL},
 };
 
 #endif

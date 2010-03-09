@@ -9,11 +9,12 @@ for some examples.
 
 LEGEND of flags:
 
-GLOBAL		The option does not apply to single plugins
-NO_GLOBAL	The option has to be applied to single plugins
-NO_PMACCTD	The option does not apply to 'pmacctd' 
-NO_NFACCTD	The option does not apply to 'nfacctd' (and it's very likely it will not apply to 'sfacctd' too) 
-NO_SFACCTD	The option does not apply to 'sfacctd' 
+GLOBAL		Can't be configured on individual plugins
+NO_GLOBAL	Can't be configured globally
+NO_PMACCTD	Does not apply to 'pmacctd' (it's likely it will not apply to 'sfacctd' either)
+NO_UACCTD	Does not apply to 'uacctd' 
+NO_NFACCTD	Does not apply to 'nfacctd' (it's likely it will not apply to 'sfacctd' either) 
+NO_SFACCTD	Does not apply to 'sfacctd' 
 
 
 LIST OF DIRECTIVES:
@@ -1078,4 +1079,12 @@ DESC:		Sets ULOG Netlink internal buffer size (specified in bytes). It is 4KB by
 		safely record bursts of high-speed traffic, it could be further increased. For high loads,
 		values as large as 2MB are recommended. When modifying this value, it is also recommended
 		to reflect the change to the 'snaplen' option. (default: 4096)
+
+KEY:		tunnel_0 [GLOBAL, NO_NFACCTD]
+DESC:		Defines tunnel inspection, disabled by default. The daemon will then account on tunnelled
+		data rather than on the envelope. The implementation approach is stateless. Below tunnel
+		protocols supported and related options:
+
+		GTP, GPRS tunnelling protocol. Expects as option the UDP port identifying the protocol. 
+		tunnel_0: gtp, <UDP port> 
 

@@ -2561,3 +2561,16 @@ int cfg_key_uacctd_nl_size(char *filename, char *name, char *value_ptr)
   for (; list; list = list->next, changes++) list->cfg.uacctd_nl_size = value;
   return changes;
 }
+
+int cfg_key_tunnel_0(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  trim_all_spaces(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.tunnel0 = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'tunnel_0'. Globalized.\n", filename);
+
+  return changes;
+}

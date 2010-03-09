@@ -161,9 +161,23 @@ struct my_tcphdr
     u_int16_t th_urp;           /* urgent pointer */
 };
 
+struct my_udphdr
+{
+  u_int16_t uh_sport;           /* source port */
+  u_int16_t uh_dport;           /* destination port */
+  u_int16_t uh_ulen;            /* udp length */
+  u_int16_t uh_sum;             /* udp checksum */
+};
+
 struct my_tlhdr {
    u_int16_t	src_port;	/* source and destination ports */
    u_int16_t	dst_port;
+};
+
+struct my_gtphdr {
+    u_int8_t flags;
+    u_int8_t message;
+    u_int16_t length;
 };
 
 /* typedefs */
@@ -354,3 +368,22 @@ struct hosts_table {
   struct host_addr table[MAX_MAP_ENTRIES];
 };
 
+#define TUNNEL_PROTO_STRING	16
+#define TUNNEL_REGISTRY_ENTRIES	4
+typedef int (*tunnel_func)(register struct packet_ptrs *);
+
+struct tunnel_handler {
+  tunnel_func tf;
+  u_int8_t proto;
+  u_int16_t port;
+};
+
+typedef int (*tunnel_configurator)(struct tunnel_handler *, char *);
+
+struct tunnel_entry {
+  u_char type[TUNNEL_PROTO_STRING];
+  tunnel_func tf;
+  tunnel_configurator tc;
+};
+
+struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_ENTRIES];

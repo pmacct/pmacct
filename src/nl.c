@@ -102,7 +102,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
   register unsigned char *ptr;
   register u_int16_t off = pptrs->iph_ptr-pptrs->packet_ptr, off_l4;
-  int ret = TRUE;
+  int ret = TRUE, num, is_fragment = 0;
 
   /* len: number of 32bit words forming the header */
   len = IP_HL(((struct my_iphdr *) pptrs->iph_ptr));
@@ -126,6 +126,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
       pptrs->tlh_ptr = ptr;
 
       if (((struct my_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_MF|IP_OFFMASK)) {
+	is_fragment = TRUE;
         ret = ip_fragment_handler(pptrs);
         if (!ret) {
           if (!config.ext_sampling_rate) goto quit;
@@ -179,6 +180,15 @@ int ip_handler(register struct packet_ptrs *pptrs)
     pptrs->tcp_flags = FALSE;
     if (pptrs->l4_proto == IPPROTO_TCP && off_l4+TCPFlagOff+1 <= caplen)
       pptrs->tcp_flags = ((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags;
+
+    /* tunnel handlers here */ 
+    for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[num].tf; num++) {
+      if (tunnel_registry[num].proto == pptrs->l4_proto) {
+	if (!tunnel_registry[num].port || (pptrs->tlh_ptr && tunnel_registry[num].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
+	  ret = (*tunnel_registry[num].tf)(pptrs);
+	}
+      }
+    }
   }
 
   quit:
@@ -372,4 +382,111 @@ void compute_once()
   IP6HdrSz = sizeof(struct ip6_hdr);
   IP6AddrSz = sizeof(struct in6_addr);
 #endif
+}
+
+void tunnel_registry_init()
+{
+  if (config.tunnel0) {
+    char *tun_string = config.tunnel0, *tun_type = NULL;
+    int dindex; /* tunnel handler index */
+    int ret;
+
+    tun_type = extract_token(&tun_string, ',');
+
+    for (dindex = 0; strcmp(tunnel_handlers_list[dindex].type, ""); dindex++) {
+      if (!strcmp(tunnel_handlers_list[dindex].type, tun_type)) {
+	(*tunnel_handlers_list[dindex].tc)(&tunnel_registry[0], tun_string);
+	break;
+      }
+    }
+  }
+}
+
+int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
+{
+  th->proto = IPPROTO_UDP;
+  th->port = atoi(opts);
+
+  if (th->port) {
+    th->tf = gtp_tunnel_func;
+  }
+  else {
+    th->tf = NULL;
+    Log(LOG_WARNING, "WARN ( default/core ): GTP tunnel handler not loaded due to invalid options: '%s'\n", opts);
+  }
+
+  return 0;
+}
+
+int gtp_tunnel_func(register struct packet_ptrs *pptrs)
+{
+  register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
+  struct my_gtphdr *gtp_hdr = (struct my_gtphdr *) pptrs->payload_ptr;
+  struct my_udphdr *udp_hdr = (struct my_udphdr *) pptrs->tlh_ptr;
+  u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr, gtp_len;
+  char *ptr = pptrs->payload_ptr;
+  int ret;
+
+  if (off+sizeof(struct my_gtphdr) < caplen) {
+    gtp_len = (ntohs(udp_hdr->uh_ulen)-sizeof(struct my_udphdr))-ntohs(gtp_hdr->length);
+    if (off+gtp_len < caplen) {
+      off += gtp_len;
+      ptr += gtp_len;
+
+      pptrs->iph_ptr = ptr;
+      pptrs->tlh_ptr = NULL; pptrs->payload_ptr = NULL;
+      pptrs->l4_proto = 0; pptrs->tcp_flags = 0;
+
+      /* same trick used for MPLS BoS in ll.c: let's look at the first
+	 payload byte to guess which protocol we are speaking about */
+      switch (*pptrs->iph_ptr) {
+      case 0x45:
+      case 0x46:
+      case 0x47:
+      case 0x48:
+      case 0x49:
+      case 0x4a:
+      case 0x4b:
+      case 0x4c:
+      case 0x4d:
+      case 0x4e:
+      case 0x4f:
+	ret = ip_handler(pptrs);
+	break;
+#if defined ENABLE_IPV6
+      case 0x60:
+      case 0x61:
+      case 0x62:
+      case 0x63:
+      case 0x64:
+      case 0x65:
+      case 0x66:
+      case 0x67:
+      case 0x68:
+      case 0x69:
+      case 0x6a:
+      case 0x6b:
+      case 0x6c:
+      case 0x6d:
+      case 0x6e:
+      case 0x6f:
+	ret = ip6_handler(pptrs);
+	break;
+#endif
+      default:
+        ret = FALSE;
+	break;
+      }
+    }
+    else {
+      Log(LOG_INFO, "INFO ( default/core ): short GTP packet read (%u/%u/tunnel/#1). Snaplen issue ?\n", caplen, off+gtp_len);
+      return FALSE;
+    }
+  } 
+  else {
+    Log(LOG_INFO, "INFO ( default/core ): short GTP packet read (%u/%u/tunnel/#2). Snaplen issue ?\n", caplen, off+sizeof(struct my_gtphdr));
+    return FALSE;
+  }
+
+  return ret;
 }

@@ -157,6 +157,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bta_table, 0, sizeof(bta_table));
   memset(&client, 0, sizeof(client));
   memset(&cb_data, 0, sizeof(cb_data));
+  memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   config.acct_type = ACCT_PM;
 
   rows = 0;
