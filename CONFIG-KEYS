@@ -1082,8 +1082,11 @@ DESC:		Sets ULOG Netlink internal buffer size (specified in bytes). It is 4KB by
 
 KEY:		tunnel_0 [GLOBAL, NO_NFACCTD]
 DESC:		Defines tunnel inspection, disabled by default. The daemon will then account on tunnelled
-		data rather than on the envelope. The implementation approach is stateless. Below tunnel
-		protocols supported and related options:
+		data rather than on the envelope. The implementation approach is stateless, ie. control
+		messages are not handled. Up to 4 tunnel layers are supported (ie. <tun proto>, <options>;
+		<tun proto>, <options>; ...). Up to 8 tunnel stacks will be supported (ie. configuration
+		directives tunnel_0 .. tunnel_8), to be used in a strictly sequential order. First stack
+		matched at the first layering, wins. Below tunnel protocols supported and related options:
 
 		GTP, GPRS tunnelling protocol. Expects as option the UDP port identifying the protocol. 
 		tunnel_0: gtp, <UDP port> 

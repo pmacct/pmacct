@@ -301,14 +301,15 @@ transport_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
 static int
 l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int ndx)
 {
-#if defined HAVE_L2
   struct pkt_primitives *p = &data->primitives;
 
+#if defined HAVE_L2
   memcpy(&flow->mac[ndx][0], &p->eth_shost, 6);
   memcpy(&flow->mac[ndx ^ 1][0], &p->eth_dhost, 6);
   flow->vlan = p->vlan_id;
   flow->mpls_label[ndx] = extras->mpls_top_label;
 #endif
+
   flow->ifindex[ndx] = p->ifindex_in;
   flow->ifindex[ndx ^ 1] = p->ifindex_out;
 

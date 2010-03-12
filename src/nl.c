@@ -50,6 +50,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag = 0; pptrs.tag2 = 0;
     pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0; pptrs.blp = 0;
     pptrs.bmed = 0; pptrs.biss = 0;
+    pptrs.tun_layer = 0; pptrs.tun_stack = 0;
     pptrs.f_agent = cb_data->f_agent;
     pptrs.idtable = cb_data->idt;
     pptrs.bpas_table = cb_data->bpas_table;
@@ -182,11 +183,21 @@ int ip_handler(register struct packet_ptrs *pptrs)
       pptrs->tcp_flags = ((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags;
 
     /* tunnel handlers here */ 
-    for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[num].tf; num++) {
-      if (tunnel_registry[num].proto == pptrs->l4_proto) {
-	if (!tunnel_registry[num].port || (pptrs->tlh_ptr && tunnel_registry[num].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
-	  ret = (*tunnel_registry[num].tf)(pptrs);
-	}
+    if (config.tunnel0 && !pptrs->tun_stack) {
+      for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[num][0].tf; num++) {
+        if (tunnel_registry[num][0].proto == pptrs->l4_proto) {
+	  if (!tunnel_registry[num][0].port || (pptrs->tlh_ptr && tunnel_registry[num][0].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
+	    pptrs->tun_stack = num;
+	    ret = (*tunnel_registry[num][0].tf)(pptrs);
+	  }
+        }
+      }
+    }
+    else if (pptrs->tun_stack) { 
+      if (tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].proto == pptrs->l4_proto) {
+        if (!tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port || (pptrs->tlh_ptr && tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
+          ret = (*tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].tf)(pptrs);
+        }
       }
     }
   }
@@ -387,16 +398,21 @@ void compute_once()
 void tunnel_registry_init()
 {
   if (config.tunnel0) {
-    char *tun_string = config.tunnel0, *tun_type = NULL;
-    int dindex; /* tunnel handler index */
+    char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
+    int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
     int ret;
 
-    tun_type = extract_token(&tun_string, ',');
+    while (tun_entry = extract_token(&tun_string, ';')) {
+      tun_type = extract_token(&tun_entry, ',');
 
-    for (dindex = 0; strcmp(tunnel_handlers_list[dindex].type, ""); dindex++) {
-      if (!strcmp(tunnel_handlers_list[dindex].type, tun_type)) {
-	(*tunnel_handlers_list[dindex].tc)(&tunnel_registry[0], tun_string);
-	break;
+      for (th_index = 0; strcmp(tunnel_handlers_list[th_index].type, ""); th_index++) {
+	if (!strcmp(tunnel_handlers_list[th_index].type, tun_type)) {
+	  if (tr_index < TUNNEL_REGISTRY_ENTRIES) {
+	    (*tunnel_handlers_list[th_index].tc)(&tunnel_registry[0][tr_index], tun_entry);
+	    tr_index++;
+	  }
+	  break;
+	}
       }
     }
   }
@@ -451,6 +467,7 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
       case 0x4d:
       case 0x4e:
       case 0x4f:
+	pptrs->tun_layer++;
 	ret = ip_handler(pptrs);
 	break;
 #if defined ENABLE_IPV6
@@ -470,6 +487,7 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
       case 0x6d:
       case 0x6e:
       case 0x6f:
+	pptrs->tun_layer++;
 	ret = ip6_handler(pptrs);
 	break;
 #endif

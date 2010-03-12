@@ -237,6 +237,8 @@ struct packet_ptrs {
 		      1=the packet is being distributed for the 2nd+ time */
   u_int16_t ifindex_in;  /* input ifindex; only used by ULOG for the time being */
   u_int16_t ifindex_out; /* output ifindex; only used by ULOG for the time being */
+  u_int8_t tun_stack; /* tunnelling stack */
+  u_int8_t tun_layer; /* tunnelling layer count */
 };
 
 struct host_addr {
@@ -369,7 +371,8 @@ struct hosts_table {
 };
 
 #define TUNNEL_PROTO_STRING	16
-#define TUNNEL_REGISTRY_ENTRIES	4
+#define TUNNEL_REGISTRY_STACKS	9 /* MAX + 1 */
+#define TUNNEL_REGISTRY_ENTRIES 4 
 typedef int (*tunnel_func)(register struct packet_ptrs *);
 
 struct tunnel_handler {
@@ -386,4 +389,4 @@ struct tunnel_entry {
   tunnel_configurator tc;
 };
 
-struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_ENTRIES];
+struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
