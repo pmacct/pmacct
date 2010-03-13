@@ -118,6 +118,9 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr hdr;
   struct timeval tv;
 
+  char jumbo_container[10000];
+  u_int8_t mac_len;
+
 
 
 #if defined ENABLE_IPV6
@@ -506,7 +509,11 @@ int main(int argc,char **argv, char **envp)
   if (config.handle_flows) init_ip_flow_handler();
   load_networks(config.networks_file, &nt, &nc);
 
+#if defined (HAVE_L2)
+  device.link_type = DLT_EN10MB; 
+#else
   device.link_type = DLT_RAW; 
+#endif
   for (index = 0; _devices[index].link_type != -1; index++) {
     if (device.link_type == _devices[index].link_type)
       device.data = &_devices[index];
@@ -697,7 +704,29 @@ int main(int argc,char **argv, char **envp)
       }
       else cb_data.ifindex_out = 0;
 
+#if defined (HAVE_L2)
+      if (ulog_pkt->mac_len) {
+	memcpy(jumbo_container, ulog_pkt->mac, ulog_pkt->mac_len);
+	memcpy(jumbo_container+ulog_pkt->mac_len, ulog_pkt->payload, hdr.caplen);
+      }
+      else {
+	memset(jumbo_container, 0, ETHER_HDRLEN);
+	memcpy(jumbo_container+ETHER_HDRLEN, ulog_pkt->payload, hdr.caplen);
+	switch (IP_V((struct my_iphdr *) ulog_pkt->payload)) {
+	case 4:
+	  ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IP);
+	  break;
+	case 6:
+	  ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IPV6);
+	  break;
+	}
+
+      }
+
+      pcap_cb((u_char *) &cb_data, &hdr, jumbo_container);
+#else
       pcap_cb((u_char *) &cb_data, &hdr, ulog_pkt->payload);
+#endif
 
       if (nlh->nlmsg_type == NLMSG_DONE || !(nlh->nlmsg_flags & NLM_F_MULTI)) {
         /* Last part of the multilink message */
