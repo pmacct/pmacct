@@ -1383,6 +1383,8 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   newpath = aspath_reconcile_as4(attr->aspath, as4path);
   aspath_unintern(attr->aspath);
   attr->aspath = aspath_intern(newpath);
+
+  return 0;
 }
 
 void load_comm_patterns(char **stdcomm, char **extcomm, char **stdcomm_to_asn)
