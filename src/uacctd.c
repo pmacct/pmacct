@@ -708,10 +708,16 @@ int main(int argc,char **argv, char **envp)
       if (ulog_pkt->mac_len) {
 	memcpy(jumbo_container, ulog_pkt->mac, ulog_pkt->mac_len);
 	memcpy(jumbo_container+ulog_pkt->mac_len, ulog_pkt->payload, hdr.caplen);
+	// XXX
+	hdr.caplen += ulog_pkt->mac_len;
+	hdr.len += ulog_pkt->mac_len;
       }
       else {
 	memset(jumbo_container, 0, ETHER_HDRLEN);
 	memcpy(jumbo_container+ETHER_HDRLEN, ulog_pkt->payload, hdr.caplen);
+	hdr.caplen += ETHER_HDRLEN;
+	hdr.len += ETHER_HDRLEN;
+
 	switch (IP_V((struct my_iphdr *) ulog_pkt->payload)) {
 	case 4:
 	  ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IP);
