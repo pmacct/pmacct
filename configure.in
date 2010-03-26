@@ -361,7 +361,8 @@ if test x"$PCAPLIB" != x""; then
     AC_MSG_RESULT(ok)
     PCAP_LIB_FOUND=1
     AC_MSG_CHECKING(for PF_RING library)
-    if test -r $PCAPLIB/libpfring.a -o -r libpfring.so; then
+    if test -r $PCAPLIB/libpfring.a -o -r $PCAPLIB/libpfring.so; then
+      LIBS="${LIBS} -lpcap -lpfring"
       AC_MSG_RESULT(yes)
       PFRING_LIB_FOUND=1
     else
@@ -379,6 +380,14 @@ if test x"$PCAPLIBFOUND" = x""; then
     LIBS="${LIBS} -L/usr/local/lib"
     AC_MSG_RESULT([found in /usr/local/lib])
     PCAPLIBFOUND=1
+    AC_MSG_CHECKING(for PF_RING library)
+    if test -r /usr/local/lib/libpfring.a -o -r /usr/local/lib/libpfring.so; then
+      LIBS="${LIBS} -lpcap -lpfring"
+      AC_MSG_RESULT(yes)
+      PFRING_LIB_FOUND=1
+    else
+      AC_MSG_RESULT(no)
+    fi
   else
     AC_MSG_RESULT(no)
   fi
