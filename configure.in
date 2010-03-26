@@ -360,6 +360,13 @@ if test x"$PCAPLIB" != x""; then
   if test -r $PCAPLIB/libpcap.a -o -r $PCAPLIB/libpcap.so; then
     AC_MSG_RESULT(ok)
     PCAP_LIB_FOUND=1
+    AC_MSG_CHECKING(for PF_RING library)
+    if test -r $PCAPLIB/libpfring.a -o -r libpfring.so; then
+      AC_MSG_RESULT(yes)
+      PFRING_LIB_FOUND=1
+    else
+      AC_MSG_RESULT(no)
+    fi
   else
     AC_MSG_RESULT(no)
     AC_MSG_ERROR(ERROR: unable to find pcap library in $PCAPLIB)
@@ -378,11 +385,15 @@ if test x"$PCAPLIBFOUND" = x""; then
 fi
 
 dnl Checks for libraries.
-AC_CHECK_LIB([pcap], [pcap_dispatch], [], [AC_MSG_ERROR([
-  ERROR: missing pcap library. Refer to: http://www.tcpdump.org/
-])])
+
+dnl libpcap is checked only if PF_RING is not found
+if test x"$PFRING_LIB_FOUND" = x""; then
+  AC_CHECK_LIB([pcap], [pcap_dispatch], [], [AC_MSG_ERROR([
+    ERROR: missing pcap library. Refer to: http://www.tcpdump.org/
+  ])])
 
 AC_CHECK_LIB([pcap], [pcap_setnonblock], [ AC_DEFINE(PCAP_7, 1) ], [])
+fi
 
 dnl packet capture type check; taken from libpcap.
 AC_MSG_CHECKING(packet capture type)
