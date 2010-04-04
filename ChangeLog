@@ -1,6 +1,56 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.1
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
+0.12.1 -- 07-04-2010
+  + Input/output interfaces (SNMP indexes) have now been implemented
+    natively; it's therefore not required anymore to pass through the
+    (Pre-)tag infrastructure. As a result two aggregation primitives
+    are being introduced: 'in_iface' and 'out_iface'.
+  + Support for source/destination IP prefix masks is introduced via
+    two new aggregation primitives: src_mask and dst_mask. These are
+    populated as defined by the [nf|sf|pm|u]acctd_net directive:
+    NetFlow/sFlow protocols, BGP, Network files (networks_file) or
+    static (networks_mask) being valid data sources.
+  + A generic tunnel inspection infrastructure has been developed to
+    benefit both pmacctd and uacctd daemons. Handlers are defined via
+    configuration file. Once enabled daemons will account basing upon
+    tunnelled headers rather than the envelope. Currently the only
+    supported tunnel protocol is GTP, the GPRS tunnelling protocol
+    (which can be configured as: "tunnel_0: gtp, <UDP port>"). Up to
+    8 different tunnel stacks and up to 4 tunnel layers per stack are
+    supported. First matching stack, first matching layer wins.
+  + uacctd: support for the MAC layer has been added for the Netlink/
+    ULOG Linux packet capturing framework.
+  + 'nfprobe_source_ip' feature introduced: it allows to select the
+    IPv4/IPv6 address to be used to export NetFlow datagrams to the
+    collector.
+  + nfprobe, sfprobe: network masks are now exported via NetFlow and
+    sFlow. 'pmacctd_net' and its equivalent directives define how to
+    populate src_mask and dst_mask values.
+  ! cleanup, nfprobe/sfprobe: data source for 'src_as' and 'dst_as'
+    primitives is now expected to be always explicitely defined (in
+    line with how 'src_net' and 'dst_net' primitives work). See the
+    UPGRADE doc for the (limited) backward compatibility impact.
+  ! Updated SQL documentation: sql/README.iface guides on 'in_iface'
+    and 'out_iface' primitives; sql/README.mask guides on 'src_mask'
+    and 'dst_mask' primitives; sql/README.is_symmetric guides on
+    'is_symmetric' primitive. 
+  ! fix, nfacctd.h: source and destination network masks were twisted
+    in the NetFlow v5 export structure definition. Affected releases
+    are: 0.12.0rc4 and 0.12.0.
+  ! fix, nfprobe_plugin.c: l2_to_flowrec() was missing some variable
+    declaration when the package was configured for compilation with
+    --disable-l2. Thanks to Brent Van Dussen for reporting the issue. 
+  ! fix, bgp.c: bgp_attr_munge_as4path() return code was not defined
+    for some cases. This was causing some BGP messages to be marked
+    as malformed.
+  ! fix, sfprobe: a dummy MAC layer was created whenever this was not
+    included as part of the captured packet. This behaviour has been
+    changed and header protocol is now set to 11 (IPv4) or 12 (IPv6)
+    accordingly. Thanks to Neil McKee for pointing the issue. 
+  ! workaround, building sub-system: PF_RING enabled libpcap was not
+    recognized due to missing of pcap_dispatch(). This is now fixed. 
+
 0.12.0 -- 16-02-2010
   + 'is_symmetric' aggregation primitive has been implemented: aimed
     at easing detection of asymmetric traffic. It's based on rule

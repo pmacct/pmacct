@@ -63,4 +63,15 @@ DESC:	Release 0.12 introduces support for 32-bit ASNs in pmacct; things do not
 	NetFlow v9, this shouldn't pose a problem with 3rd party implementations
 	but it's better to pay some extra attention while upgrading an existing
 	installation.
+
+TO:	>= 0.12.1
+FROM	<= 0.12.0
+TOPIC:  Data source for ASNs must be explicitely defined
+DESC:   data source for 'src_as' and 'dst_as' primitives for nfprobe and sfprobe
+        plugins is now expected to be explicitely defined via the [ pmacctd_as |
+	uacctd_as ] directive. All other plugins were already working like that.
+	In terms of backward compatibility the only case affected is getting ASN
+	values out of a Networks File: up to 0.12.0, it was sufficient to define
+	a networks_file to implicitely use it.
+
 [EOF]

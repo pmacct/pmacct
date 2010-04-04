@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
 TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
@@ -542,9 +542,9 @@ this line will do it:
 
 The following configuration fragment is alone sufficient to set up a BGP daemon which
 will bind to an IP address and will support up to a maximum number of 100 peers. Once
-the PE routers begin sending NetFlow datagrams and peer up, it should be possible to
-see the BGP-related fields, ie. src_as, dst_as, as_path, peer_as_dst, local_pref, MED,
-etc., correctly populated while querying the memory table:
+PE routers start sending NetFlow datagrams and peer up, it should be possible to see
+the BGP-related fields, ie. src_as, dst_as, as_path, peer_as_dst, local_pref, MED, etc.,
+correctly populated while querying the memory table:
 
 bgp_daemon: true
 bgp_daemon_ip: X.X.X.X
@@ -558,6 +558,8 @@ The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynam
 presents itself as part of the same Autonomous System - to ensure an iBGP relationship
 is established all the times. Also, the BGP daemon acts as a passive BGP neighbor and
 hence will never try to re-establish a fallen peering session.  
+For debugging purposes related to the BGP feed(s), the bgp_daemon_msglog configuration
+directive can be enabled in order to log UPDATE and WITHDRAW BGP events.
 
 XIa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.
@@ -601,9 +603,15 @@ by means of external scripts running at regular intervals and, for example, quer
 relevant routers via SNMP. In this sense, the bgpPeerTable MIB is a good starting
 point. Alternatively pmacct also offers the option to perform reverse BGP lookups.
 
-NOTE: when mapping, the peer_src_as primitive doesn't really apply to egress NetFlow
-(or egress sFlow) as it mainly relies on either the input interface index (fIndex),
-the source MAC address, a reverse BGP next-hop lookup or a combination of these.
+NOTES:
+* When mapping, the peer_src_as primitive doesn't really apply to egress NetFlow
+  (or egress sFlow) as it mainly relies on either the input interface index
+  (ifIndex), the source MAC address, a reverse BGP next-hop lookup or a combination
+  of these.
+* "Source" MED, local preference, communities and AS-PATH have all been dedicated an
+  aggregation primitives. Each carries its own peculiarities but the general concepts
+  highlighed in this paragraph apply to these aswell. Check CONFIG-KEYS out for the
+  src_[med|local_pref|as_path|std_comm|ext_comm]_[type|map] configuration directives.
 
 XIc. Tracking entities on the own IP address space
 It might happen that not all entities attached to the service provider network are
@@ -763,6 +771,7 @@ supported yet though. When storing data via SQL, BGP primitives can be freely mi
 and-matched with other primitives (ie. L2/L3/L4) when customizing the SQL table
 (sql_optimize_clauses: true). Environments making use of BGP Multi-Path are not
 currently supported; if you are using this and would like to see it implemented,
-please get in touch. TCP MD5 signature for BGP messages is not supported. For a
-review of all the configurable knobs and features see the CONFIG-KEYS document. 
+please get in touch. TCP MD5 signature for BGP messages is not yet supported but
+on the radar. For a review of all the configurable knobs and features see the
+CONFIG-KEYS document. 
 
