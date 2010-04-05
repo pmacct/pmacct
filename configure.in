@@ -55,6 +55,16 @@ AC_ARG_ENABLE(debug,
 	AC_MSG_RESULT(no)
 )
 
+dnl set relax level
+AC_MSG_CHECKING([whether to relax compiler optimizations])
+AC_ARG_ENABLE(relax,
+[  --enable-relax                   relax compiler optimization],
+	AC_MSG_RESULT(yes)
+        tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
+        CFLAGS="$tmp_CFLAGS",
+        AC_MSG_RESULT(no)
+)
+
 dnl os specific flags
 case "$host_os" in
   OSF*)

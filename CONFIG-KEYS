@@ -632,22 +632,23 @@ DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as' and 'dst_as'
 		the NetFlow and sFlow datagram respectively; when 'true' ('file' being an alias of 'true')
 		it instructs [nf|sf]acctd to generate ASNs by looking up source and destination IP addresses
 		against a 'networks_file' map. When 'bgp' is specified, ASNs are looked up against the BGP
-		RIB of the peer from which the NetFlow datagram was received. The assumption is: BGP Source
-		IP address equals to the sFlow/NetFlow source IP address.
+		RIB of the peer from which the NetFlow datagram was received. If not otherwise mapped via a
+		bgp_agent_map directive, the assumption is: BGP Source IP address equals to the sFlow/NetFlow
+		source IP address.
 		pmacctd and uacctd can't grasp ASNs from any protocol: 'false' (for backward compatibility),
 		'true' and 'file' expect a 'networks_file' to be defined. 'bgp' just works as described above.
 		(default: false) 
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
 VALUES:         [ netflow | sflow | mask | file | bgp ]
-DESC:		Determines the source of data to perform network aggregation. 'netflow' and 'sflow' use 
-		netmask values carried within NetFlow and sFlow protocols; valid only in conjunction with
-		nfacctd and sfacctd. 'mask' selects a defined networks_mask; 'file' selects a defined
-		networks_file; 'bgp' uses netmask values carried within BGP protocol (not yet implemented).  
-		If this directive is not specified, the daemon falls back to compatibility mode, hence
-		enabling 'mask', if a networks_mask is defined, and 'file', if a networks_file. If both
-		are defined, the outcome will be the intersection of their definitions. (default: 'mask',
-		'file')
+DESC:		Determines the source of data to perform network aggregation - directly influencing 'src_net',
+		'dst_net', 'src_mask' and 'dst_mask' primitives. 'netflow' and 'sflow' use netmask values
+		carried within NetFlow and sFlow protocols; valid only in conjunction with nfacctd and sfacctd.
+		'mask' selects a defined networks_mask; 'file' selects a defined networks_file; 'bgp' uses
+		netmask values carried within BGP protocol (not yet implemented). If this directive is not
+		specified, the daemon falls back to backward compatibility mode, hence enabling 'mask', if a
+		networks_mask is defined, and 'file', if a networks_file. If both are defined, the outcome
+		will be the intersection of their definitions. (default: 'mask', 'file')
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]
 DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are
