@@ -637,7 +637,10 @@ DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as' and 'dst_as'
 		source IP address.
 		pmacctd and uacctd can't grasp ASNs from any protocol: 'false' (for backward compatibility),
 		'true' and 'file' expect a 'networks_file' to be defined. 'bgp' just works as described above.
-		(default: false) 
+		Under nfacctd and sfacctd this feature also influences 'peer_src_ip' and 'peer_dst_ip': if
+		'false', 'true' or 'file' values are taken from NetFlow and sFlow datagrams respectively;
+		if 'bgp' values are looked up against the BGP RIB of the peer from which the NetFlow datagram
+		was received (or mapped to). (default: false) 
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
 VALUES:         [ netflow | sflow | mask | file | bgp ]
