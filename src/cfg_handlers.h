@@ -130,6 +130,7 @@ EXT int cfg_key_nfacctd_bgp_msglog(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_max_peers(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_ip(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_port(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_ip_precedence(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_allow_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_aspath_radius(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_stdcomm_pattern(char *, char *, char *);

@@ -331,6 +331,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon_max_peers", cfg_key_nfacctd_bgp_max_peers},
   {"bgp_daemon_msglog", cfg_key_nfacctd_bgp_msglog},
   {"bgp_daemon_allow_file", cfg_key_nfacctd_bgp_allow_file},
+  {"bgp_daemon_ipprec", cfg_key_nfacctd_bgp_ip_precedence},
   {"bgp_aspath_radius", cfg_key_nfacctd_bgp_aspath_radius},
   {"bgp_stdcomm_pattern", cfg_key_nfacctd_bgp_stdcomm_pattern},
   {"bgp_extcomm_pattern", cfg_key_nfacctd_bgp_extcomm_pattern},

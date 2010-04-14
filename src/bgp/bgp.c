@@ -112,6 +112,11 @@ void skinny_bgp_daemon()
     Log(LOG_ERR, "ERROR ( default/core/BGP ): thread socket() failed. Terminating thread.\n");
     exit_all(1);
   }
+  if (config.nfacctd_bgp_ipprec) {
+    int opt = config.nfacctd_bgp_ipprec << 5;
+
+    setsockopt(sock, SOL_IP, IP_TOS, &opt, sizeof(opt));
+  }
 
   rc = Setsocksize(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): Setsocksize() failed for SO_REUSEADDR (errno: %d).\n", errno);

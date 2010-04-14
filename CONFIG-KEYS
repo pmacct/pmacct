@@ -916,6 +916,9 @@ DESC:		binds the BGP daemon to a specific interface. Expects as value an IPv4 ad
 KEY:		bgp_daemon_port
 DESC:		binds the BGP daemon to a port different from the standard BGP port: 179/tcp. (default: 179)
 
+KEY:		bgp_daemon_ipprec
+DESC:		marks self-originated BGP messages with the supplied IP precedence value. (default: 0)
+
 KEY:		bgp_daemon_max_peers
 DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon reaching of the limit,
 		no more BGP sessions can be established. Differently from routers BGP neighbors don't need to
