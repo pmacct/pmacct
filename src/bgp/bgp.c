@@ -115,7 +115,8 @@ void skinny_bgp_daemon()
   if (config.nfacctd_bgp_ipprec) {
     int opt = config.nfacctd_bgp_ipprec << 5;
 
-    setsockopt(sock, SOL_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for IP_TOS (errno: %d).\n", errno);
   }
 
   rc = Setsocksize(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
