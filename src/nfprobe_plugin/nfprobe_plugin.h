@@ -152,8 +152,12 @@ struct FLOW {
 	u_int8_t protocol;			/* Protocol */
 	u_int8_t tos[2];			/* ToS/DSCP */
 
-	/* ASN stuff */
+	/* ASN/BGP stuff */
 	as_t as[2];				/* Autonomous System numbers */
+        union {
+                struct in_addr v4;
+                struct in6_addr v6;
+        } bgp_next_hop[2];
 
 	/* L2 stuff */
 	u_int8_t mac[2][6];			/* Endpoint L2/Ethernet MAC addresses */

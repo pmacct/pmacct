@@ -302,11 +302,13 @@ struct pkt_payload {
   u_int16_t ifindex_out;
   u_int8_t src_nmask;
   u_int8_t dst_nmask;
+  struct host_addr bgp_next_hop;
 };
 
 struct pkt_extras {
   u_int8_t tcp_flags;
   u_int32_t mpls_top_label;
+  struct host_addr bgp_next_hop;
 };
 
 /* START: BGP section */

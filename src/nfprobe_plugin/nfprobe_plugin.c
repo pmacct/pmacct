@@ -340,6 +340,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   flow->af = af;
   flow->addr[ndx].v4 = p->src_ip.address.ipv4;
   flow->addr[ndx ^ 1].v4 = p->dst_ip.address.ipv4;
+  flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->tos[ndx] = p->tos;
@@ -361,6 +362,18 @@ ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   // return (0);
 }
 
+static int
+ipv4_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int *isfrag, int af)
+{
+  struct pkt_primitives *p = &data->primitives;
+  int ndx;
+
+  /* Prepare to store flow in canonical format */
+  ndx = memcmp(&p->src_ip.address.ipv4, &p->dst_ip.address.ipv4, sizeof(p->src_ip.address.ipv4)) > 0 ? 1 : 0;
+
+  if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
+}
+
 #if defined ENABLE_IPV6
 /* Convert a IPv6 packet to a partial flow record (used for comparison) */
 static int
@@ -377,6 +390,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   flow->ip6_flowlabel[ndx] = 0;
   flow->addr[ndx].v6 = p->src_ip.address.ipv6; 
   flow->addr[ndx ^ 1].v6 = p->dst_ip.address.ipv6; 
+  flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->octets[ndx] = data->pkt_len;
@@ -394,6 +408,21 @@ ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   return (transport_to_flowrec(flow, data, extras, p->proto, ndx));
 
   // return (0);
+}
+
+static int
+ipv6_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int *isfrag, int af)
+{
+  struct pkt_primitives *p = &data->primitives;
+  struct in6_addr dummy_ipv6; 
+  int ndx;
+
+  /* Prepare to store flow in canonical format */
+  memset(&dummy_ipv6, 0, sizeof(dummy_ipv6));
+  ndx = memcmp(&p->src_ip.address.ipv6, &p->dst_ip.address.ipv6, sizeof(p->src_ip.address.ipv6)) > 0 ? 1 : 0;
+
+  if (!memcmp(&dummy_ipv6, &flow->bgp_next_hop[ndx].v6, sizeof(dummy_ipv6)))
+    flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
 }
 #endif 
 
@@ -561,6 +590,17 @@ process_packet(struct FLOWTRACK *ft, struct pkt_data *data, struct pkt_extras *e
     flow->flows[1] += tmp.flows[1];
     flow->tcp_flags[1] |= tmp.tcp_flags[1];
     flow->tos[1] = tmp.tos[1]; // XXX
+    /* Address family dependent items to update */
+    switch (flow->af) {
+    case AF_INET:
+      ipv4_to_flowrec_update(flow, data, extras, &frag, af);
+    break;
+#if defined ENABLE_IPV6
+    case AF_INET6:
+      ipv6_to_flowrec_update(flow, data, extras, &frag, af);
+    break;
+#endif
+    }
     if (!flow->class) flow->class = tmp.class;
     if (!flow->tag[0]) flow->tag[0] = tmp.tag[0];
     if (!flow->tag[1]) flow->tag[1] = tmp.tag[1];

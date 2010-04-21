@@ -739,6 +739,8 @@ void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_extras *pextras = (struct pkt_extras *) ++pdata;
 
+  --pdata; /* Bringing back to original place */
+
   if (pptrs->mpls_ptr) memcpy(&pextras->mpls_top_label, pptrs->mpls_ptr, 4);
   if (pptrs->l4_proto == IPPROTO_TCP) pextras->tcp_flags = pptrs->tcp_flags;
 }
@@ -1762,6 +1764,8 @@ void NF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
+  --pdata; /* Bringing back to original place */
+
   switch(hdr->version) {
   case 9:
     if (tpl->tpl[NF9_MPLS_LABEL_1].len)
@@ -2240,6 +2244,33 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
           else
 	    payload->dst_as = evaluate_first_asn(info->attr->aspath->str);
 	}
+
+	if (chptr->aggregation & COUNT_PEER_DST_IP) {
+	  struct bgp_node *nh;
+	  struct bgp_info *nh_info;
+
+          if (pptrs->bgp_nexthop) {
+            nh = (struct bgp_node *) pptrs->bgp_nexthop;
+            nh_info = nh->info;
+          }
+          else
+            nh_info = info;
+
+          if (nh_info->attr->mp_nexthop.family == AF_INET) {
+            payload->bgp_next_hop.family = AF_INET;
+            memcpy(&payload->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+          }
+#if defined ENABLE_IPV6
+          else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+            payload->bgp_next_hop.family = AF_INET6;
+            memcpy(&payload->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+          }
+#endif
+          else {
+            payload->bgp_next_hop.family = AF_INET;
+            payload->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+          }
+        }
       }
     }
   }
@@ -2248,10 +2279,13 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
 void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_extras *pextras = (struct pkt_extras *) ++pdata;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
+
+  --pdata; /* Bringing back to original place */
 
   if (src_ret) {
     info = (struct bgp_info *) src_ret->info;
@@ -2276,6 +2310,33 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
             pdata->primitives.dst_as = evaluate_last_asn(info->attr->aspath);
           else
             pdata->primitives.dst_as = evaluate_first_asn(info->attr->aspath->str);
+        }
+
+        if (chptr->aggregation & COUNT_PEER_DST_IP) {
+          struct bgp_node *nh;
+          struct bgp_info *nh_info;
+
+          if (pptrs->bgp_nexthop) {
+            nh = (struct bgp_node *) pptrs->bgp_nexthop;
+            nh_info = nh->info;
+          }
+          else
+            nh_info = info;
+
+          if (nh_info->attr->mp_nexthop.family == AF_INET) {
+            pextras->bgp_next_hop.family = AF_INET;
+            memcpy(&pextras->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+          }
+#if defined ENABLE_IPV6
+          else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+            pextras->bgp_next_hop.family = AF_INET6;
+            memcpy(&pextras->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+          }
+#endif
+          else {
+            pextras->bgp_next_hop.family = AF_INET;
+            pextras->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+          }
         }
       }
     }
@@ -2664,6 +2725,8 @@ void SF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_extras *pextras = (struct pkt_extras *) ++pdata;
   SFSample *sample = (SFSample *) pptrs->f_data;
+
+  --pdata; /* Bringing back to original place */
 
   if (sample->lstk.depth) memcpy(&pextras->mpls_top_label, &sample->lstk.stack[0], 4);
   if (sample->dcd_ipProtocol == IPPROTO_TCP) pextras->tcp_flags = sample->dcd_tcpFlags;

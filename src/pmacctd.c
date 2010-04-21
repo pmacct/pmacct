@@ -384,6 +384,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.networks_file || (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP)) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
+	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
 	}
 	if (list->cfg.nfprobe_version == 9 && list->cfg.classifiers_path) {
 	  list->cfg.what_to_count |= COUNT_CLASS; 
@@ -396,10 +397,10 @@ int main(int argc,char **argv, char **envp)
         list->cfg.what_to_count |= COUNT_IN_IFACE;
         list->cfg.what_to_count |= COUNT_OUT_IFACE;
 	if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-				       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				       COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
-	  Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
+				       COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
+				       COUNT_IS_SYMMETRIC)) {
+	  Log(LOG_ERR, "ERROR: 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
 	  exit(1);
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
@@ -422,6 +423,7 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
+          list->cfg.what_to_count |= COUNT_PEER_DST_IP;
         }
         if (list->cfg.nfacctd_bgp && list->cfg.nfacctd_net == NF_NET_BGP) {
           list->cfg.what_to_count |= COUNT_SRC_NMASK;
@@ -432,10 +434,10 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_ID2;
 	}
         if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-                                       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-                                       COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
-          Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
+                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
+				       COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
+				       COUNT_IS_SYMMETRIC)) {
+          Log(LOG_ERR, "ERROR: 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
           exit(1);
         }
 
