@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -34,6 +34,7 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   u_int16_t e8021Q, ppp;
   struct eth_header *eth_pk;
   u_int16_t etype, caplen = h->caplen, nl;
+  u_int8_t cursor = 0;
 
   if (caplen < ETHER_HDRLEN) {
     pptrs->iph_ptr = NULL;
@@ -71,10 +72,11 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
       return;
     }
     memcpy(&e8021Q, pptrs->packet_ptr+nl+2, 2);
-    pptrs->vlan_ptr = pptrs->packet_ptr + nl; 
+    if (!cursor) pptrs->vlan_ptr = pptrs->packet_ptr + nl; 
     etype = ntohs(e8021Q);
     nl += IEEE8021Q_TAGLEN;
     caplen -= IEEE8021Q_TAGLEN;
+    cursor++;
     goto recurse;
   }
 
@@ -92,11 +94,13 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
 #endif 
     nl += PPPOE_HDRLEN+PPP_TAGLEN;
     caplen -= PPPOE_HDRLEN+PPP_TAGLEN;
+    cursor = 1;
     goto recurse;
   }
 
   if (etype == ETHERTYPE_MPLS || etype == ETHERTYPE_MPLS_MULTI) {
     etype = mpls_handler(pptrs->packet_ptr + nl, &caplen, &nl, pptrs);
+    cursor = 1;
     goto recurse;
   }
 

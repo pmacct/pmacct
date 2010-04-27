@@ -472,6 +472,7 @@ void vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, 
   if (pptrs->vlan_ptr) {
     memcpy(&vlan_id, pptrs->vlan_ptr, 2);
     pdata->primitives.vlan_id = ntohs(vlan_id);
+    pdata->primitives.vlan_id = pdata->primitives.vlan_id & 0x0FFF;
   }
 }
 #endif

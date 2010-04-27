@@ -36,6 +36,7 @@
 #define ETHER_HDRLEN    	14
 #define ETHERMTU		1500
 #define IEEE8021Q_TAGLEN	4
+#define IEEE8021AH_LEN		10
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
 #define ROUTING_SEGMENT_MAX	16
@@ -69,6 +70,7 @@ struct token_header {
 #define ETHERTYPE_8021Q		0x8100          /* 802.1Q */
 #define ETHERTYPE_MPLS          0x8847		/* MPLS */
 #define ETHERTYPE_MPLS_MULTI    0x8848		/* MPLS */
+#define ETHERTYPE_8021AH        0x88A8		/* 802.1ah */
 
 /* PPP protocol definitions */
 #define PPP_HDRLEN      4       /* octets for standard ppp header */
