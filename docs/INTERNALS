@@ -1,6 +1,3 @@
-pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2006 by Paolo Lucente
-
 (poorman's) TABLE OF CONTENTS: 
 I.	Introduction
 II.	Primitives
@@ -27,23 +24,21 @@ for download at the pmacct homepage.
 
 
 II. Primitives
-Either individual packets or specific flows are identified by their header fields (which
-union gives origin to a rather large set of primitives). Aggregates are identified by a
-reduced set of primitives instead. Packets are merged into aggregates by stripping from
-the original set of primitives those not used in the reduced set and then summing their
-referred counters (bytes and packets). Additional operations involved into the merging
-process include the logical grouping of specific primitives into more general entities
-(IP addresses into network prefixes, for example) and tagging of packets.
-While looking forward, we already have a more generalized view of the primitives, which
-will enable to bind aggregation methods to arbitrary pieces of the packet but actually
-primitives already give the desired flexibility. In fact, the concept of primitive itself
-carries the idea of a simple entity that could be stacked along with other primitives to
-form complex expressions using boolean operators. But going practical, what are primitives ?
-They are atomic expressions like "src_port", "dst_host", "proto"; currently the unique
-boolean operator supported to glue expressions is "and". Hence, traffic could be aggregated
-translating a "who connects where, using which service" speech language phrase into one
-recognized by pmacct: "src_host,dst_host,dst_port,proto". Comma, because of the unique
-logical connective "and", is simply intended as a separator.
+Individual packets and specific traffic flows are identified by their header fields.
+The union of such header fields generates (a rather large) set of primitives. Traffic
+aggregates are typically identified by a reduced set of primitives instead. Packets
+or flows are merged into aggregates by defining a sub-set of primitives, by shaving
+off unused primitives from the original set and finally by summing their counters
+(ie. bytes and packets). Additional operations involved into the process can also
+include logical grouping of specific primitives into more general entities (ie. IP
+addresses into network prefixes), temporal aggregation (ie. splitting aggregates in
+time bins), tagging, sampling and filtering.
+What are primitives? They are atomic expressions ie. "src_port", "dst_host", "proto";
+currently the unique boolean operator supported to glue expressions is "and". Hence,
+traffic could be aggregated translating a "who connects where, using which service"
+speech language statement into one recognized by pmacct: "src_host,dst_host,dst_port,
+proto". Comma, because of the unique logical connective "and", is simply intended as
+a separator.
 
 
 III. The whole picture
@@ -82,29 +77,27 @@ NetFlow	   |    \	    &&				      |  						 |
 
 
 IV. Processes Vs. threads 
-pmacctd, nfacctd and sfacctd, the pmacct package daemons, rely strongly over a multi-process
-organization rather than over threads. For threads we mean what is commonly referred as
-threads of execution that share their entire address space inside a single process.
-Processes are used to encapsulate each plugin instance and, indeed, the Core Process. It 
-either captures packets via the well-known libpcap API (pmacctd) or listens for specific
-packets coming from the network (nfacctd, for example, listens for NetFlow packets); packets
-are then processed (filtered out, tagged, aggregated and bufferized) and sent to the active
-plugins. They pick and handle in some meaningful way aggregated data (struct pkt_data).
-A picture follows:
+pmacctd, nfacctd and sfacctd, the pmacct package daemons, rely over both a multi-thread
+and multi-process architecture. Processes are used to encapsulate each plugin instance
+and, indeed, the Core Process. Threads are used to encapsulate specific functions within
+each process - ie. the BGP daemon thread within the Core Process.
+The Core Process either captures packets via the well-known libpcap API (pmacctd) or
+listens for specific packets coming from the network (nfacctd, for example, listens
+for NetFlow packets); packets are then processed (parsed, filtered, sampled, tagged,
+aggregated and bufferized if required) and sent to the active plugins. Plugins in
+turn pick and handle in some meaningful way aggregated data (struct pkt_data), ie.
+writing them to a SQL database, a memory table, etc. A diagram follows:
+
 					   |===> [ pmacctd/plugin ]
 libpcap			           pipe/shm|
 ===========> [ pmacctd/core ]==============|===> [ pmacctd/plugin ]
 socket
 
-I don't like, except for specific cases (eg. big memory structures that would lead the
-pages' copy-on-write to perform horrendly), the idea of threads on UNIXes and Linux. They
-are suitable and are born in environments with expensive process spawning and weak IPC
-facilities. Moreover the task of managing critical regions in a shared address space is
-sometimes a fertile source of bugs simply because they easily know too much about each
-others' internal states. They frequently translate in adding tricky issues described in
-each good Operating Systems' textbook: a fully new range of timing dependent bugs that
-are excruciatingly difficult to even reproduce. These considerations leave untouched
-portability troubles and differences of behaviour across platforms.
+To conclude a position on threads: threads are a necessity because of the tendency
+modern CPU are built (ie. multi-core). So far pmacct limits iteself to a macro-usage
+of threads, ie. where it makes sense to save on IPC or where big memory structures
+would lead the pages' copy-on-write to perform horrendly. The rationale is that fine-
+grained multi-threading can often become a fertile source of bugs.
 
 
 V. Communications between core process and plugins
@@ -132,31 +125,31 @@ will be divided into 'plugin_buffer_size'/'plugin_pipe_size' chunks. Let's write
 few simple equations:
 
 dss = Default Segment Size
-dbs = Default Buffer Size = sizeof(struct pkt_data) ~ 40 bytes
+dbs = Default Buffer Size = sizeof(struct pkt_data)
 as = Address Size = sizeof(char *) (it depends upon the hardware architecture)
 bs = 'plugin_buffer_size' value
 ss = 'plugin_pipe_size' value
 
 	a) no 'plugin_buffer_size' and no 'plugin_pipe_size':
 	   circular queue size = (dss / as) * dbs 
-	   signallation queue size = dss
+	   signalling queue size = dss
 
 	b) 'plugin_buffer_size' defined but no 'plugin_pipe_size':
 	   circular queue size = (dss / as) * bs 
-	   signallation queue size = dss
+	   signalling queue size = dss
 
 	c) no 'plugin_buffer_size' but 'plugin_pipe_size' defined: 
   	   circular queue size = ss 
-	   signallation queue size = (ss / dbs) * as
+	   signalling queue size = (ss / dbs) * as
 
 	d) 'plugin_buffer_size' and 'plugin_pipe_size' defined:
 	   circular queue size = ss 
-	   signallation queue size = (ss / bs) * as
+	   signalling queue size = (ss / bs) * as
 	
 Intuitively, the equations above tell that if no 'plugin_pipe_size' is defined, the size
-of the circular queue is inferred by the size of the signallation queue, which is selected
+of the circular queue is inferred by the size of the signalling queue, which is selected
 by the Operating System. If 'plugin_pipe_size' is defined, the circular queue size is set
-to the supplied value and the signallation queue size is adjusted accordingly.
+to the supplied value and the signalling queue size is adjusted accordingly.
 If 'plugin_buffer_size' is not defined, it's assumed to be sizeof(struct pkt_data), which
 is the size of a single aggregate travelling through the circolar queue; 'sizeof(char *)'
 is the size of a pointer, which is architecture-dependant. 
@@ -181,7 +174,7 @@ pipe size >= average_traffic * sizeof(struct pkt_data)
            |      |==|==|==|==|==|==|==|===========|   |
 	   |					       |
 	   `-------------------------------------------'
-			OOB signallation queue
+			OOB signalling queue
 
 	
 VI. Memory table plugin
@@ -245,43 +238,52 @@ timeout expires (1s).
 
 
 VII. SQL issues and *SQL plugins
-Currently two SQL plugins are available; one allows for aggregates insertion in a MySQL
-DB, the other into a PostgreSQL DB.
 Storing aggregates into a persistent backend leaves chances for advanced operations and
 so these plugins are intended to give a wider range of features (eg. fallback mechanisms
 and backup storage methods if DB fails, counters breakdown, etc.) not available in other
 plugins. Let's firstly give a whole picture of how these SQL plugins work. As packets
 received from core process via communication channel get unpacked, they are inserted in a
-direct-mapped cache; then, at fixed time intervals (configurable via 'sql_history' key)
-cache is purged and aggregates are pushed into DB; optionally triggers may be selected for
-execution. Data to cache bucket mapping is computed via a modulo function. If bucket already
-contains valid data then a new chain is built (or traversed when it already exists); the
-first free node encountered is used; if no free nodes are found then two more chances are
-explored: if any node has been marked as stale (it happens when an allocated node is unused
-for some  consecutive timeslots) it's reused by moving it away from its old chain; if no
-free nodes are available then a new one is allocated. Stale nodes are, then, retired if
+direct-mapped cache; then, at fixed time intervals (configurable via 'sql_refresh_time'
+key) the cache scanner kicks in and purges content to the database; optionally triggers
+may be executed (sql_trigger_exec, sql_trigger_time). Data to cache bucket mapping is
+computed via a modulo function. If the selected bucket already contains valid data then
+a conflict chain is built (or traversed if it already exists); the first free node
+encountered is used; if no free nodes are found then two more chances are explored: if
+any node has been marked as stale (it happens when an allocated node is unused for some
+consecutive time-bins) it is then reused by moving it away from its old chain; if no
+free nodes are available then a new one is allocated. Stale nodes are then retired if
 they still remain unused for longer times (RETIRE_TIME**2). To speed up nodes reuse and
-retirement, an additional LRU list of nodes is also mantained. 
-As told before, aggregates are pushed into the DB at regular intervals; to speed up such
+retirement, an additional LRU list of nodes is also mantained.
+If out of memory or the maximum number of allowed elements in the cache is reached data
+is immediately written to the database so to make room for further elements. The maximum
+number of allowed elements is defined to prevent the cache to grow in memory without any
+control. Such limit is internally calculated as:
+
+  max cache elements = sql_cache_entries + ( sql_refresh_time * 100 )
+
+As said before, aggregates are pushed into the DB at regular intervals; to speed up such
 operation a queue of pending queries is built as nodes are used; this allows to avoid long
-walks through the whole cache structure.
-When current timeslot expires a new process is spawned and charged of queue processing; SQL
-queries are built and sent to the DB. Because we, at this moment, don't known if INSERT queries
-would create duplicates, an UPDATE query is launched first and only if no rows are affected,
-then an INSERT query is trapped. 'sql_dont_try_update' reverts this default behaviour and
-skips directly to INSERT queries; you must be sure there are no risks of duplicate aggregates
-to avoid data loss, when enabling this configuration directive.
-Data in the cache is never erased but simply marked as invalid; this way while correctess of
-data is still preserved, we avoid the waste of CPU cycles. 
-The number of cache buckets is tunable via the 'sql_cache_entries' configuration key; a prime 
-number is strongly advisable to ensure a better data dispersion through the cache. 
-Three notes about the above described process: (a) few time ago the concept of lazy data refresh
-deadlines has been introduced. Timeframes boundaries are checked without the auxilium of signals
-but when new data comes in. If such data arrival rate is low, data is not kept stale into the
-cache but a poll() timeout makes the wheel spin. (b) SQL plugins main loop has been kept sufficiently
-fast because of any direct interaction with the DB. It only gets data, computes modulo and handles
-both cache and queries queue. (c) cache has been thought to exploit a kind of temporal locality
-in internet flows. A picture follows:
+walks through the whole cache structure given, for various reasons (ie. classification,
+sql_startup_delay) not all elements might be eligible for purging.
+When the cache scanner kicks incurrent a new writer process is spawned and in charge of
+processing the pending elements queue; SQL statements are built and sent to the RDBMS.
+Because we, at this moment, don't known if INSERT queries would create duplicates, an
+UPDATE query is launched first and only if no rows are affected, then an INSERT query
+is trapped. 'sql_dont_try_update' twists this behaviour and skips directly to INSERT
+queries; when enabling this configuration directive, you must be sure there are no risks
+of duplicate aggregates to avoid data loss.
+Data in the cache is never erased but simply marked as invalid; this way while correctess
+of data is still preserved, we avoid the waste of CPU cycles. 
+The number of cache buckets is tunable via the 'sql_cache_entries' configuration key; a
+prime number is strongly advisable to ensure a better data dispersion through the cache. 
+Three notes about the above described process: (a) some time ago the concept of lazy data
+refresh deadlines has been introduced. Expiration of timers is checked without the aid of
+UNIX signals but when new data comes in. If such data arrival rate is low, data is not
+kept stale into the cache but a poll() timeout makes the wheel spin. (b) SQL plugins
+main loop has been purposedly kept sufficiently fast thanks to no direct interaction
+with the RDBMS: it only gets data, computes modulo and handles both cache and queries
+queue. (c) cache has been thought to exploit a kind of temporal locality in internet
+flows. A picture follows:
 
 				    |====> [ cache ] ===|
 pipe				    |			|
@@ -295,8 +297,8 @@ Now, let's keep an eye on how aggregates are structured on the DB side. Data is 
 in flat tuples, without any external references. After being not full convinced about better
 normalized solutions aimed to satifsy an abstract concept of flexibility, we've (and here come
 into play the load of mails exchanged with Wim Kerkhoff) found that simple means faster. And to
-let the wheel spin quickly is a key achievement, because pmacctd needs not only to insert new
-records but also update existing ones, putting under heavy pressure DB when placed in busy
+let the wheel spin quickly is a key achievement, because pmacct needs not only to insert new
+records but also update existing ones, putting under heavy pressure RDBMS when placed in busy
 network environments and an high number of primitives are required. 
 Now a pair of concluding practical notes: (a) default SQL table and its primary key are suitable
 for many normal usages, however unused fields will be filled by zeroes. We took this choice a long
@@ -315,6 +317,11 @@ transient cache aliasing phenomena and in fully exploiting cache benefits.
 
 
 VIII. Recovery modes
+Forewords: this chapter is left here for historical reasons; note that recovery modes support
+has been largely discontinued. Resiliency and high-availability is left to clustering of the
+RDBMS environment itself or multiple plugins, within the same collector, running in parallel
+and writing to different backends.
+
 The concept of recovery mechanism is available only in SQL plugins and is aimed to avoid data
 loss by taking a corrective action if the DB suffers an outage or simply becomes unresponsive.
 Actually, two mechanisms are supported: aggregates may be either (1) pulled into a structured

@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
 A: It is http://www.pmacct.net/ . There isn't any official mirror site. 
@@ -283,6 +283,9 @@ A: Few hints are summed below in order to improve SQL database performances. The
    * Don't rely automagically on standard indexes but enable optimal indexes based on
      clauses you (by means of reports, 3rd party tools, scripts, etc.) and pmacct use
      the most to SELECT data. Then remove every unused index.
+   * See if the dynamic table strategy offered by pmacct fits the bill: helps keeping
+     SQL tables and indexes of a manageable size by rotating SQL tables (ie. per hour,
+     day, week, etc.). See the 'sql_table_schema' configuration directive. 
    * Run all SELECT and UPDATE queries under the "EXPLAIN ANALYZE ..." method to see
      if they are actually hitting the indexes. If not, you need to build indexes that
      better fit the actual scenario.

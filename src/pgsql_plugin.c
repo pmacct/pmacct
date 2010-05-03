@@ -743,7 +743,8 @@ void PG_create_dyn_table(struct DBdesc *db, char *buf)
 
   if (!db->fail) {
     PGret = PQexec(db->desc, buf);
-    if (PQresultStatus(PGret) != PGRES_COMMAND_OK) {
+    if ((PQresultStatus(PGret) != PGRES_COMMAND_OK) && 
+	(PQresultStatus(PGret) != PGRES_TUPLES_OK)) {
       err_string = PQresultErrorMessage(PGret);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): FAILED query follows:\n%s\n", config.name, config.type, buf);
       Log(LOG_ERR, "ERROR ( %s/%s ): %s\n\n", config.name, config.type, err_string);

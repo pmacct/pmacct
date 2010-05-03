@@ -54,12 +54,11 @@ DESC:		aggregate captured traffic data by selecting the specified set of primiti
 		tagging engines (pre_tag_map, post_tag) are in use. 'class' enables reception
 		of L7 traffic classes when Packet/Flow Classification engine (classifiers) is
 		in use. (default: src_host).
-NOTES:		* tag2, src_as_path, src_std_comm, src_ext_comm, src_local_pref and src_med
-		  primitives are not part of any default pmacct SQL table. When considering
-		  their use, they have to be manually added to the selected SQL schema and to
-		  the indexing. Read further in the documentation of the database of choice
-		  (ie. 'sql/README.mysql') and take as reference the 'sql/README.agent_id2'
-		  document.  
+NOTES:		* Some primitives (ie. tag2, src_as_path, src_std_comm, src_ext_comm, src_med
+		  and src_local_pref primitives) are not part of any default SQL table schema
+		  shipped with pmacct. Always check out documentation related to the RDBMS in
+		  use (ie. 'sql/README.mysql') which will point you to extra primitive-related
+		  documentation, if required.
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
@@ -760,7 +759,7 @@ KEY:            [ pmacctd_flow_lifetime | uacctd_flow_lifetime ] [GLOBAL, NO_NFA
 DESC:           defines how long a flow could remain inactive (ie. no packets belonging to such flow are received)
 		before considering it expired. The value is expected in seconds. (default: 60 secs) 
 
-KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate nfacctd_ext_sampling_rate |
+KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampling_rate |
 		  sfacctd_ext_sampling_rate ] [GLOBAL]
 		flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
 		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow

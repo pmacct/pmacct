@@ -1,40 +1,39 @@
 PMACCTD PLUGIN WRITING HOW-TO
 
 SHORT OVERVIEW
-the plugin architecture should allow people that need some kind of
-their own backend, to write and implement it without knowing too
-much of the core functionalities of pmacctd and other plugins.
-Of course you will need to touch configure.in and Makefile.am in
-order to let your plugin compile automatically via a --enable switch. 
-Below are listed a few steps to hook your plugin in pmacctd; pmacct 
-is a project extremely open to new ideas, so if you wish to contribute
-your work, you are welcome. 
+the pmacct plugin architecture is thought to allow people that need
+their own backend to implement it without knowing too much of core
+collectors functionalities and independently by other plugins.
+Below are listed a few steps to hook your plugin in pmacct; pmacct 
+is also extremely open to new ideas, so if you wish to contribute
+your work, you are the most welcome. 
 
 - minor hacks to configure.in script following the example of what
-  has been done there for mysql plugin; you can handle in the same
-  way other requirements such as paths for header or libraries. If
-  you'll handle correctly the PLUGINS variable, you will not need
-  to touch at all the Makefile.am script. Moreover, doing a definition
-  in configure.in (ex. AC_DEFINE(WITH_MYSQL, 1)) whose existence can
-  be checked via instructions to compiler's preprocessor is an easy
-  way to propagate the user configuration choices at compilation time.
+  has been done there for mysql plugin; same goes for requirements
+  like paths to headers or libraries. By making use of the PLUGINS
+  variable, it will not be required to touch the "src/Makefile.am"
+  script. Definitions in configure.in (ie. AC_DEFINE(WITH_MYSQL, 1))
+  whose existence can be checked via compiler preprocessor is an
+  easy way to propagate user configuration choices at compilation
+  time.
 
-- [OPTIONAL] If you need commandline switches, whose values  need to
-  be passed to your plugin, you have to modify the configuration struct
-  (in cfg.h) and the getopt block in pmacctd.c . First change is needed
-  to add fields you need to carry your values; second change is needed
-  if you wish to support new commandline switches to supply your values.
+- [OPTIONAL] If the plugin needs to take configurable values, this
+  can be achieved by defining configuration handlers (pmacct-data.h,
+  cfg_handlers.h, cfg_handlers.c) and declaring config variables to
+  deliver configured values to the plugin (cfg.h, struct configuration).
+  If command-line parameters are also required, some getopt() related
+  code needs to be dealt with (pmacct-defines.h and ie. pmacctd.c,
+  nfacctd.c, sfacctd.c and uacctd.c). 
+  
+- Define the new plugin in pmacct; this can be done by adding an
+  entry to the plugin_types_list[] array (pmacct-data.h). An entry
+  consists of two fields: an id string and a pointer to a function
+  to be called. The first is the string which will be used to call
+  the plugin from within the configuration or command-line. The
+  second is effectively the entry point to the plugin.
 
-- Now, hook your plugin in pmacctd; you have to add an entry in the
-  plugin_types_list[] array in pmacct-data.h . An entry consists of
-  two fields: an id string and a pointer to a function to be called.
-  The first is the string you wish to write as an argument for '-P'
-  commandline switch or value for 'plugins' configuration key. The
-  second is the entry point for your plugin.
-
-- if you need to add configuration keys that suit your needs, you have
-  simply to add an entry in the dictionary[] array in pmacct-data.h .
-  An entry consists of two fields a key name and an handler. While the
-  first is intuitive, few words about the second field: once a key has
-  been recognized successfully by the parser, its value is handled via
-  a configuration handler (you find them in cfg_handlers.c).  
+- Develop the plugin code. One of the existing plugins can be used
+  as reference for popping data out of the circular buffer. Data
+  structures for parsing such data are defined in network.h file.
+  The basic layout for the main plugin loop can be grasped in the
+  print_plugin.c file by looking at content of the "for (;;)" loop. 
