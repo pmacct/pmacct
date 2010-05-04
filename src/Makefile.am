@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp 
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin 
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
 bin_PROGRAMS = pmacct @EXTRABIN@ 
 EXTRA_PROGRAMS = pmmyplay pmpgplay
