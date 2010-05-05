@@ -2063,8 +2063,10 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       }
       if (chptr->aggregation & COUNT_SRC_AS_PATH && config.nfacctd_bgp_src_as_path_type == BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
 	strlcpy(pbgp->src_as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
-	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
-	  pbgp->src_as_path[MAX_BGP_ASPATH-1] = '+';
+	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH) {
+	  pbgp->src_as_path[MAX_BGP_ASPATH-2] = '+';
+	  pbgp->src_as_path[MAX_BGP_ASPATH-1] = '\0';
+	}
 	if (config.nfacctd_bgp_aspath_radius)
 	  evaluate_bgp_aspath_radius(pbgp->src_as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
       }
@@ -2073,8 +2075,10 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  evaluate_comm_patterns(pbgp->src_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
 	else {
 	  strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS) {
+	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-2] = '+';
+	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '\0';
+	  }
 	}
       }
       if (chptr->aggregation & COUNT_SRC_EXT_COMM && config.nfacctd_bgp_src_ext_comm_type == BGP_SRC_PRIMITIVES_BGP && info->attr->ecommunity && info->attr->ecommunity->str) {
@@ -2082,8 +2086,10 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           evaluate_comm_patterns(pbgp->src_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
         else {
           strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-          if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-            pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+          if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS) {
+            pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-2] = '+';
+            pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '\0';
+	  }
         }
       }
       if (chptr->aggregation & COUNT_SRC_LOCAL_PREF && config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_BGP)
@@ -2115,8 +2121,10 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  evaluate_comm_patterns(pbgp->std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
 	else {
           strlcpy(pbgp->std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS)
-	    pbgp->std_comms[MAX_BGP_STD_COMMS-1] = '+';
+	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS) {
+	    pbgp->std_comms[MAX_BGP_STD_COMMS-2] = '+';
+	    pbgp->std_comms[MAX_BGP_STD_COMMS-1] = '\0';
+	  }
 	}
       }
       if (chptr->aggregation & COUNT_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
@@ -2124,14 +2132,18 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  evaluate_comm_patterns(pbgp->ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
 	else {
           strlcpy(pbgp->ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS)
-	    pbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '+';
+	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS) {
+	    pbgp->ext_comms[MAX_BGP_EXT_COMMS-2] = '+';
+	    pbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '\0';
+	  }
 	}
       }
       if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
         strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
-	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH)
-	  pbgp->as_path[MAX_BGP_ASPATH-1] = '+';
+	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH) {
+	  pbgp->as_path[MAX_BGP_ASPATH-2] = '+';
+	  pbgp->as_path[MAX_BGP_ASPATH-1] = '\0';
+	}
 	if (config.nfacctd_bgp_aspath_radius)
 	  evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
       }

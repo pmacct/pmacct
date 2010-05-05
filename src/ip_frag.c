@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -277,7 +277,7 @@ void notify_orphan_fragment(struct ip_fragment *frag)
   memcpy(&a.address.ipv4, &frag->ip_dst, 4);
   addr_to_str(dst_host, &a);
   id = ntohs(frag->ip_id);
-  Log(LOG_INFO, "Expiring orphan fragment: ip_src=%s ip_dst=%s proto=%u id=%u\n",
+  Log(LOG_DEBUG, "DEBUG ( default/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s proto=%u id=%u\n",
 		  src_host, dst_host, frag->ip_p, id);
 }
 
@@ -531,6 +531,6 @@ void notify_orphan_fragment6(struct ip6_fragment *frag)
   ip6_addr_cpy(&a.address.ipv6, &frag->dst);
   addr_to_str(dst_host, &a);
   id = ntohl(frag->id);
-  Log(LOG_INFO, "Expiring orphan fragment: ip_src=%s ip_dst=%s id=%u\n", src_host, dst_host, id);
+  Log(LOG_DEBUG, "DEBUG ( default/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s id=%u\n", src_host, dst_host, id);
 }
 #endif
