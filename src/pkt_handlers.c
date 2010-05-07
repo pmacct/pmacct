@@ -187,10 +187,7 @@ void evaluate_packet_handlers()
 					    COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF)
       || (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP) &&
 	  config.nfacctd_as == NF_AS_BGP)) {
-      if (config.acct_type != ACCT_PM && channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
-	/* Let's basically get out of here this case - XXX: silently */
-      } 
-      else if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
+      if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
 	if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) { 
 	  channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
 	}
@@ -376,8 +373,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].plugin->type.id == PLUGIN_ID_NFPROBE) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = nfprobe_extras_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_nfprobe_extras_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_nfprobe_extras_handler;
+      else primitives--; /* This case is filtered out at startup: getting out silently */
       primitives++;
     }
 
@@ -431,8 +427,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_PAYLOAD) {
       if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sfprobe_payload_handler;
-        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sfprobe_payload_handler;
-        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sfprobe_payload_handler;
+        else primitives--; /* This case is filtered out at startup: getting out silently */
       }
       primitives++;
     }
@@ -1718,70 +1713,6 @@ void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   }
 }
 
-void NF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_payload *payload = (struct pkt_payload *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_data tmp;
-  char *buf = (char *) *data, *tmpp = (char *) &tmp;
-  int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
-
-  NF_counters_msecs_handler(chptr, pptrs, &tmpp);
-  NF_class_handler(chptr, pptrs, &tmpp);
-  NF_id_handler(chptr, pptrs, &tmpp); /* XXX: conditional? */
-  NF_id2_handler(chptr, pptrs, &tmpp); /* XXX: conditional? */
-  NF_src_host_handler(chptr, pptrs, &tmpp);
-  NF_dst_host_handler(chptr, pptrs, &tmpp);
-
-  payload->cap_len = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen; /* XXX */
-  payload->pkt_len = tmp.pkt_len;
-  payload->pkt_num = tmp.pkt_num;
-  payload->time_start = tmp.time_start;
-  payload->class = tmp.primitives.class;
-  payload->tag = tmp.primitives.id;
-  payload->tag2 = tmp.primitives.id2;
-
-  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW) {
-    memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
-    memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
-  }
-
-  if (space >= payload->cap_len) {
-    buf += PpayloadSz;
-    memcpy(buf, pptrs->packet_ptr, payload->cap_len);
-    chptr->bufptr += payload->cap_len; /* don't count pkt_payload here */
-  }
-  else {
-    chptr->bufptr += space;
-    chptr->reprocess = TRUE;
-  }
-}
-
-void NF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_extras *pextras = (struct pkt_extras *) ++pdata;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-
-  --pdata; /* Bringing back to original place */
-
-  switch(hdr->version) {
-  case 9:
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len)
-      memcpy(&pextras->mpls_top_label, pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off, MIN(tpl->tpl[NF9_MPLS_LABEL_1].len, 4));
-    if ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP)
-      memcpy(&pextras->tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
-    break;
-  default:
-    pextras->mpls_top_label = 0;
-    if (((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP && hdr->version == 5)
-      pextras->tcp_flags = ((struct struct_export_v5 *) pptrs->f_data)->tcp_flags;
-    break;
-  }
-}
-
 void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -2697,52 +2628,6 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
     pbgp->peer_dst_ip.family = AF_INET6;
   }
 #endif
-}
-
-void SF_sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_payload *payload = (struct pkt_payload *) *data;
-  SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_data tmp;
-  char *buf = (char *) *data, *tmpp = (char *) &tmp;
-  int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
-
-  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW) {
-    SF_src_host_handler(chptr, pptrs, &tmpp);
-    SF_dst_host_handler(chptr, pptrs, &tmpp);
-    memcpy(&payload->src_ip, &tmp.primitives.src_ip, HostAddrSz);
-    memcpy(&payload->dst_ip, &tmp.primitives.dst_ip, HostAddrSz);
-  }
-
-  payload->cap_len = sample->headerLen;
-  payload->pkt_len = sample->sampledPacketSize;
-  payload->pkt_len = 1; 
-  payload->time_start = time(NULL); /* XXX */
-  payload->class = sample->class;
-  payload->tag = sample->tag;
-  payload->tag2 = sample->tag2;
-
-  if (space >= payload->cap_len) {
-    buf += PpayloadSz;
-    memcpy(buf, sample->header, payload->cap_len);
-    chptr->bufptr += payload->cap_len; /* don't count pkt_payload here */
-  }
-  else {
-    chptr->bufptr += space;
-    chptr->reprocess = TRUE;
-  }
-}
-
-void SF_nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_extras *pextras = (struct pkt_extras *) ++pdata;
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
-  --pdata; /* Bringing back to original place */
-
-  if (sample->lstk.depth) memcpy(&pextras->mpls_top_label, &sample->lstk.stack[0], 4);
-  if (sample->dcd_ipProtocol == IPPROTO_TCP) pextras->tcp_flags = sample->dcd_tcpFlags;
 }
 
 void SF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

@@ -49,7 +49,7 @@ void load_plugins(struct plugin_requests *req)
 
   while (list) {
     if ((*list->type.func)) {
-      if (list->cfg.data_type & (PIPE_TYPE_METADATA|PIPE_TYPE_PAYLOAD));
+      if (list->cfg.data_type & (PIPE_TYPE_METADATA|PIPE_TYPE_PAYLOAD|PIPE_TYPE_MSG));
       else {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Data type not supported: %d\n", list->name, list->type.string, list->cfg.data_type);
 	exit(1);
@@ -63,6 +63,7 @@ void load_plugins(struct plugin_requests *req)
       }
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) min_sz += PextrasSz; 
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += PbgpSz; 
+      if (list->cfg.data_type & PIPE_TYPE_MSG) min_sz += PmaxmsgSz; 
 
       /* If nothing is supplied, let's hint some working default values */
       if (list->cfg.pcap_savefile && !list->cfg.pipe_size && !list->cfg.buffer_size) {
@@ -150,6 +151,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) chptr->clean_func = pkt_payload_clean;
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) chptr->clean_func = pkt_extras_clean;
       if (list->cfg.data_type & PIPE_TYPE_BGP) chptr->clean_func = pkt_bgp_clean;
+      if (list->cfg.data_type & PIPE_TYPE_MSG) chptr->clean_func = pkt_msg_clean;
 
       /* sets nfprobe ID */
       if (list->type.id == PLUGIN_ID_NFPROBE) {
@@ -590,6 +592,13 @@ int pkt_payload_clean(void *ppayload)
   memset(ppayload, 0, PpayloadSz);
 
   return PpayloadSz;
+}
+
+int pkt_msg_clean(void *ppayload)
+{
+  memset(ppayload, 0, PmaxmsgSz);
+
+  return PmaxmsgSz;
 }
 
 int pkt_extras_clean(void *pextras)

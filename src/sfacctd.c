@@ -93,6 +93,7 @@ int main(int argc,char **argv, char **envp)
   char config_file[SRVBUFLEN];
   unsigned char sflow_packet[SFLOW_MAX_MSG_SIZE];
   int logf, rc, yes=1, allowed;
+  int data_plugins = 0, tee_plugins = 0;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table idt;
@@ -349,77 +350,14 @@ int main(int argc,char **argv, char **envp)
         Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
         exit(1);
       }
-      if (list->type.id == PLUGIN_ID_NFPROBE) {
-        /* If we already renormalizing an external sampling rate,
-           we cancel the sampling information from the probe plugin */
-        if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
 
-	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
-	list->cfg.what_to_count = 0;
-#if defined (HAVE_L2)
-	if (list->cfg.nfprobe_version == 9) {
-	  list->cfg.what_to_count |= COUNT_SRC_MAC;
-	  list->cfg.what_to_count |= COUNT_DST_MAC;
-	  list->cfg.what_to_count |= COUNT_VLAN;
-	}
-#endif
-	list->cfg.what_to_count |= COUNT_SRC_HOST;
-	list->cfg.what_to_count |= COUNT_DST_HOST;
-
-        if (list->cfg.networks_file || list->cfg.networks_mask || list->cfg.nfacctd_net) {
-          list->cfg.what_to_count |= COUNT_SRC_NMASK;
-          list->cfg.what_to_count |= COUNT_DST_NMASK;
-        }
-
-	list->cfg.what_to_count |= COUNT_SRC_PORT;
-	list->cfg.what_to_count |= COUNT_DST_PORT;
-	list->cfg.what_to_count |= COUNT_IP_TOS;
-	list->cfg.what_to_count |= COUNT_IP_PROTO;
-	if (list->cfg.networks_file || list->cfg.nfacctd_as == NF_AS_KEEP ||
-	    list->cfg.nfacctd_as == NF_AS_BGP) {
-	  list->cfg.what_to_count |= COUNT_SRC_AS;
-	  list->cfg.what_to_count |= COUNT_DST_AS;
-	}
-	if (list->cfg.nfprobe_version == 9 && list->cfg.classifiers_path)
-	  list->cfg.what_to_count |= COUNT_CLASS;
-	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map) {
-	  list->cfg.what_to_count |= COUNT_ID;
-	  list->cfg.what_to_count |= COUNT_ID2;
-	}
-        list->cfg.what_to_count |= COUNT_IN_IFACE;
-        list->cfg.what_to_count |= COUNT_OUT_IFACE;
-        if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-				       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				       COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
-          Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
-          exit(1);
-        }
-	list->cfg.what_to_count |= COUNT_COUNTERS;
-
-	list->cfg.data_type = PIPE_TYPE_METADATA;
-	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
+      if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {
+        Log(LOG_ERR, "ERROR: 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n");
+        exit(1);
       }
-      else if (list->type.id == PLUGIN_ID_SFPROBE) {
-        /* If we already renormalizing an external sampling rate,
-           we cancel the sampling information from the probe plugin */
-        if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
-
-	list->cfg.what_to_count = COUNT_PAYLOAD;
-	if (list->cfg.classifiers_path) list->cfg.what_to_count |= COUNT_CLASS;
-	if (list->cfg.pre_tag_map) {
-	  list->cfg.what_to_count |= COUNT_ID;
-	  list->cfg.what_to_count |= COUNT_ID2;
-	}
-        if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                       COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-                                       COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-                                       COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
-          Log(LOG_ERR, "ERROR: 'src_as' and 'dst_as' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
-          exit(1);
-        }
-
-	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
+      else if (list->type.id == PLUGIN_ID_TEE) {
+        tee_plugins++;
+        list->cfg.data_type = PIPE_TYPE_MSG;
       }
       else {
 	list->cfg.data_type = PIPE_TYPE_METADATA;
@@ -461,10 +399,16 @@ int main(int argc,char **argv, char **envp)
 
 	bgp_config_checks(&list->cfg);
 
+	data_plugins++;
 	list->cfg.what_to_count |= COUNT_COUNTERS;
       }
     }
     list = list->next;
+  }
+
+  if (tee_plugins && data_plugins) {
+    Log(LOG_ERR, "ERROR: 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n");
+    exit(1);
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
@@ -926,6 +870,7 @@ void compute_once()
   CounterSz = sizeof(dummy.pkt_len);
   PdataSz = sizeof(struct pkt_data);
   PpayloadSz = sizeof(struct pkt_payload);
+  PmaxmsgSz = 1550; /* XXX: make configurable? */
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);

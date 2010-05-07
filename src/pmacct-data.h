@@ -28,6 +28,7 @@
 #define PLUGIN_ID_MYSQL		5 
 #define PLUGIN_ID_PGSQL         6
 #define PLUGIN_ID_SQLITE3       7
+#define PLUGIN_ID_TEE		8
 #define PLUGIN_ID_UNKNOWN       -1
 
 /* vars */
@@ -372,6 +373,7 @@ static struct plugin_type_entry plugin_types_list[] = {
 #ifdef WITH_SQLITE3
   {PLUGIN_ID_SQLITE3,	"sqlite3",	sqlite3_plugin},
 #endif
+  {PLUGIN_ID_TEE,	"tee",		tee_plugin},
   {PLUGIN_ID_UNKNOWN,	"",		NULL},
 };
 #endif

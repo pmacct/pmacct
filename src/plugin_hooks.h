@@ -109,6 +109,7 @@ EXT void fill_pipe_buffer();
 EXT int check_shadow_status(struct packet_ptrs *, struct channels_list_entry *);
 EXT int pkt_data_clean(void *);
 EXT int pkt_payload_clean(void *);
+EXT int pkt_msg_clean(void *);
 EXT int pkt_extras_clean(void *);
 EXT int pkt_bgp_clean(void *);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
@@ -126,6 +127,7 @@ EXT void imt_plugin(int, struct configuration *, void *);
 EXT void print_plugin(int, struct configuration *, void *);
 EXT void nfprobe_plugin(int, struct configuration *, void *);
 EXT void sfprobe_plugin(int, struct configuration *, void *);
+EXT void tee_plugin(int, struct configuration *, void *);
 
 #ifdef WITH_MYSQL
 EXT void mysql_plugin(int, struct configuration *, void *);

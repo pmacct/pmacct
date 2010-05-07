@@ -354,7 +354,12 @@ int main(int argc,char **argv, char **envp)
         Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
         exit(1);
       }
-      if (list->type.id == PLUGIN_ID_NFPROBE) {
+
+      if (list->type.id == PLUGIN_ID_TEE) {
+        Log(LOG_ERR, "ERROR: 'tee' plugin not supported in 'pmacctd'.\n");
+        exit(1);
+      }
+      else if (list->type.id == PLUGIN_ID_NFPROBE) {
 	/* If we already renormalizing an external sampling rate,
 	   we cancel the sampling information from the probe plugin */
 	if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0; 
