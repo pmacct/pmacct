@@ -169,6 +169,7 @@ struct configuration {
   char *sfprobe_receiver;
   char *sfprobe_agentip;
   int sfprobe_agentsubid;
+  int tee_transparent;
   int uacctd_group;
   int uacctd_nl_size;
   char *tunnel0;

@@ -49,6 +49,17 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"", NULL}
 };
 
+const struct _map_dictionary_line tag_map_tee_dictionary[] = {
+  {"id", PT_map_id_handler},
+  {"id2", PT_map_id2_handler},
+  {"ip", PT_map_ip_handler},
+  {"label", PT_map_label_handler},
+  {"jeq", PT_map_jeq_handler},
+  {"return", PT_map_return_handler},
+  {"stack", PT_map_stack_handler},
+  {"", NULL}
+};
+
 const struct _map_dictionary_line bpas_map_dictionary[] = {
   {"id", PT_map_id_handler},
   {"ip", PT_map_ip_handler},

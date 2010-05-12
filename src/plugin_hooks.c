@@ -63,7 +63,7 @@ void load_plugins(struct plugin_requests *req)
       }
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) min_sz += PextrasSz; 
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += PbgpSz; 
-      if (list->cfg.data_type & PIPE_TYPE_MSG) min_sz += PmaxmsgSz; 
+      if (list->cfg.data_type & PIPE_TYPE_MSG) min_sz += PmsgSz; 
 
       /* If nothing is supplied, let's hint some working default values */
       if (list->cfg.pcap_savefile && !list->cfg.pipe_size && !list->cfg.buffer_size) {
@@ -596,9 +596,9 @@ int pkt_payload_clean(void *ppayload)
 
 int pkt_msg_clean(void *ppayload)
 {
-  memset(ppayload, 0, PmaxmsgSz);
+  memset(ppayload, 0, PmsgSz);
 
-  return PmaxmsgSz;
+  return PmsgSz;
 }
 
 int pkt_extras_clean(void *pextras)

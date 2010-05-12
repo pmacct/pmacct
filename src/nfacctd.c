@@ -59,7 +59,7 @@ void usage_daemon(char *prog_name)
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
-  printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | nfprobe ] \n\tActivate plugin\n"); 
+  printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | tee ] \n\tActivate plugin\n"); 
   printf("  -d  \tEnable debug\n");
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
@@ -87,7 +87,6 @@ int main(int argc,char **argv, char **envp)
   char config_file[SRVBUFLEN];
   unsigned char netflow_packet[NETFLOW_MSG_SIZE];
   int logf, rc, yes=1, allowed;
-  int data_plugins = 0, tee_plugins = 0; 
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table idt;
@@ -147,6 +146,8 @@ int main(int argc,char **argv, char **envp)
   bta_map_allocated = FALSE;
   find_id_func = NF_find_id;
 
+  data_plugins = 0;
+  tee_plugins = 0;
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;
   errflag = 0;
@@ -348,6 +349,7 @@ int main(int argc,char **argv, char **envp)
       }
       else if (list->type.id == PLUGIN_ID_TEE) {
         tee_plugins++;
+	list->cfg.what_to_count = COUNT_NONE;
 	list->cfg.data_type = PIPE_TYPE_MSG;
       }
       else {
@@ -727,6 +729,8 @@ int main(int argc,char **argv, char **envp)
 
     if (ret < 1) continue; /* we don't have enough data to decode the version */ 
 
+    pptrs.v4.f_len = ret;
+
     /* check if Hosts Allow Table is loaded; if it is, we will enforce rules */
     if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client); 
     if (!allowed) continue;
@@ -748,31 +752,36 @@ int main(int argc,char **argv, char **envp)
       reload_map = FALSE;
     }
 
-    /* We will change byte ordering in order to avoid a bunch of ntohs() calls */
-    ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
-    reset_tag_status(&pptrs);
-    reset_shadow_status(&pptrs);
+    if (data_plugins) {
+      /* We will change byte ordering in order to avoid a bunch of ntohs() calls */
+      ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+      reset_tag_status(&pptrs);
+      reset_shadow_status(&pptrs);
     
-    switch(((struct struct_header_v5 *)netflow_packet)->version) {
-    case 1:
-      process_v1_packet(netflow_packet, ret, &pptrs.v4, &req);
-      break;
-    case 5:
-      process_v5_packet(netflow_packet, ret, &pptrs.v4, &req); 
-      break;
-    case 7:
-      process_v7_packet(netflow_packet, ret, &pptrs.v4, &req);
-      break;
-    case 8:
-      process_v8_packet(netflow_packet, ret, &pptrs.v4, &req);
-      break;
-    case 9:
-      process_v9_packet(netflow_packet, ret, &pptrs, &req);
-      break;
-    default:
-      notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
-      xflow_tot_bad_datagrams++;
-      break;
+      switch(((struct struct_header_v5 *)netflow_packet)->version) {
+      case 1:
+	process_v1_packet(netflow_packet, ret, &pptrs.v4, &req);
+	break;
+      case 5:
+	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req); 
+	break;
+      case 7:
+	process_v7_packet(netflow_packet, ret, &pptrs.v4, &req);
+	break;
+      case 8:
+	process_v8_packet(netflow_packet, ret, &pptrs.v4, &req);
+	break;
+      case 9:
+	process_v9_packet(netflow_packet, ret, &pptrs, &req);
+	break;
+      default:
+	notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
+	xflow_tot_bad_datagrams++;
+	break;
+      }
+    }
+    else if (tee_plugins) {
+      process_raw_packet(netflow_packet, ret, &pptrs, &req);
     }
   }
 }
@@ -1479,6 +1488,58 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (off < len) goto process_flowset;
 }
 
+void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
+                struct plugin_requests *req)
+{
+  struct packet_ptrs *pptrs = &pptrsv->v4;
+  u_int16_t nfv;
+
+  /* basic length check against longest NetFlow header */
+  if (len < NfHdrV8Sz) {
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent);
+    xflow_tot_bad_datagrams++;
+    return;
+  } 
+
+  nfv = ntohs(((struct struct_header_v5 *)pkt)->version);
+
+  if (nfv != 1 && nfv != 5 && nfv != 7 && nfv != 8 && nfv != 9) {
+    notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent);
+    xflow_tot_bad_datagrams++;
+    return;
+  }
+
+  pptrs->f_header = pkt;
+
+  switch (nfv) {
+  case 5:
+  case 7:
+  case 8:
+    pptrs->seqno = ntohl(((struct struct_header_v5 *)pkt)->flow_sequence);
+    break;
+  case 9:
+    pptrs->seqno = ntohl(((struct struct_header_v9 *)pkt)->flow_sequence);
+    break;
+  default:
+    pptrs->seqno = 0;
+    break;
+  }
+
+  if (config.debug) {
+    struct host_addr a;
+    u_char agent_addr[50];
+    u_int16_t agent_port;
+
+    sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
+    addr_to_str(agent_addr, &a);
+
+    Log(LOG_DEBUG, "DEBUG ( default/core ): Received NetFlow packet from [%s:%u] version [%u] seqno [%u]\n", agent_addr, agent_port, nfv, pptrsv->v4.seqno);
+  }
+
+  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+  exec_plugins(pptrs);
+}
+
 void compute_once()
 {
   struct pkt_data dummy;
@@ -1486,7 +1547,7 @@ void compute_once()
   CounterSz = sizeof(dummy.pkt_len);
   PdataSz = sizeof(struct pkt_data);
   PpayloadSz = sizeof(struct pkt_payload);
-  PmaxmsgSz = 1550; /* XXX: make configurable? */
+  PmsgSz = PKT_MSG_SIZE;
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);

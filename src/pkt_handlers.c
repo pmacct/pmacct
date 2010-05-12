@@ -438,6 +438,16 @@ void evaluate_packet_handlers()
       else channels_list[index].phandler[primitives] = sampling_handler;
       primitives++;
     }
+
+    if (channels_list[index].aggregation & COUNT_NONE) {
+      if (channels_list[index].plugin->type.id == PLUGIN_ID_TEE) {
+        if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = tee_payload_handler;
+        if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = tee_payload_handler;
+        else primitives--; /* This case is filtered out at startup: getting out silently */
+      }
+      primitives++;
+    }
+
     index++;
   }
 
@@ -728,6 +738,16 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
     chptr->bufptr += space;
     chptr->reprocess = TRUE;
   }
+}
+
+void tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_msg *pmsg = (struct pkt_msg *) *data;
+
+  pmsg->seqno = pptrs->seqno;
+  pmsg->len = pptrs->f_len;
+  memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
+  memcpy(&pmsg->payload, pptrs->f_header, MIN(sizeof(pmsg->payload), pptrs->f_len));
 }
 
 void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

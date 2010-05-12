@@ -19,10 +19,24 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#if (!defined __PKT_HANDLERS_C)
+/* includes */
+#include <sys/poll.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+/* defines */
+#define DEFAULT_TEE_REFRESH_TIME 10
+
+/* prototypes */
+#if (!defined __TEE_PLUGIN_C)
 #define EXT extern
 #else
 #define EXT
 #endif
+
+EXT void Tee_exit_now(int);
+EXT void Tee_send(struct pkt_msg *, int);
+EXT int Tee_prepare_sock(struct sockaddr_storage *, socklen_t);
+EXT void Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len);
 
 #undef EXT

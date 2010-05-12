@@ -65,7 +65,7 @@ void usage_daemon(char *prog_name)
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
-  printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe ] \n\tActivate plugin\n"); 
+  printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | tee ] \n\tActivate plugin\n"); 
   printf("  -d  \tEnable debug\n");
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\ttLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
@@ -93,7 +93,6 @@ int main(int argc,char **argv, char **envp)
   char config_file[SRVBUFLEN];
   unsigned char sflow_packet[SFLOW_MAX_MSG_SIZE];
   int logf, rc, yes=1, allowed;
-  int data_plugins = 0, tee_plugins = 0;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table idt;
@@ -154,6 +153,8 @@ int main(int argc,char **argv, char **envp)
   bta_map_allocated = FALSE;
   find_id_func = SF_find_id;
 
+  data_plugins = 0;
+  tee_plugins = 0;
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;
   errflag = 0;
@@ -357,6 +358,7 @@ int main(int argc,char **argv, char **envp)
       }
       else if (list->type.id == PLUGIN_ID_TEE) {
         tee_plugins++;
+	list->cfg.what_to_count = COUNT_NONE;
         list->cfg.data_type = PIPE_TYPE_MSG;
       }
       else {
@@ -736,8 +738,8 @@ int main(int argc,char **argv, char **envp)
   for (;;) {
     // memset(&spp, 0, sizeof(spp));
     ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-    spp.rawSample = sflow_packet;
-    spp.rawSampleLen = ret;
+    spp.rawSample = pptrs.v4.f_header = sflow_packet;
+    spp.rawSampleLen = pptrs.v4.f_len = ret;
     spp.datap = (u_int32_t *) spp.rawSample;
     spp.endp = sflow_packet + spp.rawSampleLen; 
     reset_tag_status(&pptrs);
@@ -766,20 +768,25 @@ int main(int argc,char **argv, char **envp)
       reload_map = FALSE;
     }
 
-    switch(spp.datagramVersion = getData32(&spp)) {
-    case 5:
-      getAddress(&spp, &spp.agent_addr);
-      process_SFv5_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
-      break;
-    case 4:
-    case 2:
-      getAddress(&spp, &spp.agent_addr);
-      process_SFv2v4_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
-      break;
-    default:
-      notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
-      xflow_tot_bad_datagrams++;
-      break;
+    if (data_plugins) {
+      switch(spp.datagramVersion = getData32(&spp)) {
+      case 5:
+	getAddress(&spp, &spp.agent_addr);
+	process_SFv5_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
+	break;
+      case 4:
+      case 2:
+	getAddress(&spp, &spp.agent_addr);
+	process_SFv2v4_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
+	break;
+      default:
+	notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
+	xflow_tot_bad_datagrams++;
+	break;
+      }
+    }
+    else if (tee_plugins) {
+      process_SF_raw_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
     }
   }
 }
@@ -863,6 +870,44 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   }
 }
 
+void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
+                                struct plugin_requests *req, struct sockaddr *agent)
+{
+  struct packet_ptrs *pptrs = &pptrsv->v4;
+
+  switch(spp->datagramVersion = getData32(spp)) {
+  case 5:
+    getAddress(spp, &spp->agent_addr);
+    spp->agentSubId = getData32(spp);
+    pptrs->seqno = getData32(spp);
+    break;
+  case 4:
+  case 2:
+    getAddress(spp, &spp->agent_addr);
+    spp->agentSubId = 0; /* not supported */
+    pptrs->seqno = getData32(spp);
+    break;
+  default:
+    notify_malf_packet(LOG_INFO, "INFO: Discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
+    xflow_tot_bad_datagrams++;
+    return;
+  }
+
+  if (config.debug) {
+    struct host_addr a;
+    u_char agent_addr[50];
+    u_int16_t agent_port;
+
+    sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
+    addr_to_str(agent_addr, &a);
+
+    Log(LOG_DEBUG, "DEBUG ( default/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n", agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
+  }
+
+  if (config.pre_tag_map) SF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+  exec_plugins(pptrs);
+}
+
 void compute_once()
 {
   struct pkt_data dummy;
@@ -870,7 +915,7 @@ void compute_once()
   CounterSz = sizeof(dummy.pkt_len);
   PdataSz = sizeof(struct pkt_data);
   PpayloadSz = sizeof(struct pkt_payload);
-  PmaxmsgSz = 1550; /* XXX: make configurable? */
+  PmsgSz = PKT_MSG_SIZE;
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);

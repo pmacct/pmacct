@@ -241,6 +241,8 @@ struct packet_ptrs {
   u_int16_t ifindex_out; /* output ifindex; only used by ULOG for the time being */
   u_int8_t tun_stack; /* tunnelling stack */
   u_int8_t tun_layer; /* tunnelling layer count */
+  u_int32_t seqno; /* sFlow/NetFlow sequence number */
+  u_int16_t f_len; /* sFlow/NetFlow payload length */
 };
 
 struct host_addr {
@@ -311,6 +313,18 @@ struct pkt_extras {
   u_int8_t tcp_flags;
   u_int32_t mpls_top_label;
   struct host_addr bgp_next_hop;
+};
+
+#define PKT_MSG_SIZE 1550
+struct pkt_msg {
+#if defined ENABLE_IPV6
+  struct sockaddr_storage agent;
+#else
+  struct sockaddr agent;
+#endif
+  u_int32_t seqno;
+  u_int16_t len;
+  u_char payload[PKT_MSG_SIZE];
 };
 
 /* START: BGP section */

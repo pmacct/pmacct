@@ -287,7 +287,7 @@ EXT void compute_once();
 #define EXT
 #endif
 EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
-EXT int reload_map;
+EXT int reload_map, data_plugins, tee_plugins;
 EXT struct child_ctl sql_writers;
 #undef EXT
 

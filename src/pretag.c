@@ -162,13 +162,24 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   key = NULL; value = NULL;
 		}
 		else {
-                  for (dindex = 0; strcmp(tag_map_dictionary[dindex].key, ""); dindex++) {
-                    if (!strcmp(tag_map_dictionary[dindex].key, key)) {
-                      err = (*tag_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
-                      break;
+		  if (tee_plugins) {
+                    for (dindex = 0; strcmp(tag_map_tee_dictionary[dindex].key, ""); dindex++) {
+                      if (!strcmp(tag_map_tee_dictionary[dindex].key, key)) {
+                        err = (*tag_map_tee_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
+                        break;
+                      }
+                      else err = E_NOTFOUND; /* key not found */
                     }
-                    else err = E_NOTFOUND; /* key not found */
-                  }
+		  }
+		  else {
+                    for (dindex = 0; strcmp(tag_map_dictionary[dindex].key, ""); dindex++) {
+                      if (!strcmp(tag_map_dictionary[dindex].key, key)) {
+                        err = (*tag_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
+                        break;
+                      }
+                      else err = E_NOTFOUND; /* key not found */
+		    }
+		  }
                   if (err) {
                     if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s ): unknown key '%s' at line %d. Ignored.\n", filename, key, tot_lines);
                     else Log(LOG_ERR, "Line %d ignored.\n", tot_lines);

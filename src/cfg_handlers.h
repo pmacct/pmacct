@@ -125,6 +125,7 @@ EXT int cfg_key_nfprobe_source_ip(char *, char *, char *);
 EXT int cfg_key_sfprobe_receiver(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentip(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentsubid(char *, char *, char *);
+EXT int cfg_key_tee_transparent(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_msglog(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_max_peers(char *, char *, char *);

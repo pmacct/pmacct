@@ -1057,7 +1057,9 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 	unsigned int h6;
 	unsigned char h4;
 	struct sockaddr_in *in4 = (struct sockaddr_in *)addr;
+#if defined ENABLE_IPV6
 	struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
+#endif
 	struct host_addr source_ip;
 	struct sockaddr ssource_ip;
 
