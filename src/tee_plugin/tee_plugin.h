@@ -35,8 +35,10 @@
 #endif
 
 EXT void Tee_exit_now(int);
-EXT void Tee_send(struct pkt_msg *, int);
-EXT int Tee_prepare_sock(struct sockaddr_storage *, socklen_t);
-EXT void Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len);
+EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
+EXT int Tee_prepare_sock(struct sockaddr *, socklen_t);
+EXT void Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+
+EXT char tee_send_buf[65535];
 
 #undef EXT

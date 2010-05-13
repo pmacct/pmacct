@@ -1568,6 +1568,7 @@ void compute_once()
   PptrsSz = sizeof(struct packet_ptrs);
   CSSz = sizeof(struct class_st);
   HostAddrSz = sizeof(struct host_addr);
+  UDPHdrSz = sizeof(struct my_udphdr);
 
 #if defined ENABLE_IPV6
   IP6HdrSz = sizeof(struct ip6_hdr);

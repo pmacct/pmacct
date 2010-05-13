@@ -317,11 +317,7 @@ struct pkt_extras {
 
 #define PKT_MSG_SIZE 1550
 struct pkt_msg {
-#if defined ENABLE_IPV6
-  struct sockaddr_storage agent;
-#else
   struct sockaddr agent;
-#endif
   u_int32_t seqno;
   u_int16_t len;
   u_char payload[PKT_MSG_SIZE];
