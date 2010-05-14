@@ -915,7 +915,7 @@ void compute_once()
   CounterSz = sizeof(dummy.pkt_len);
   PdataSz = sizeof(struct pkt_data);
   PpayloadSz = sizeof(struct pkt_payload);
-  PmsgSz = PKT_MSG_SIZE;
+  PmsgSz = sizeof(struct pkt_msg);
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);

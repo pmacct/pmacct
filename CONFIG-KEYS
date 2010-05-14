@@ -103,14 +103,17 @@ DESC:		specifies the maximum number of bytes to capture for each packet. This di
 		increased.
 
 KEY:		plugins (-P)
-VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe ]
+VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe | tee ]
 DESC:		plugins to be enabled. SQL plugins are available only if configured and compiled.
 		'memory' enables the use of a memory table as backend; then, a client tool, 'pmacct',
 		can fetch its content; mysql, pgsql and sqlite3 enable the use of respectively MySQL,
 		PostgreSQL and SQLite 3.x tables to store data. 'print' prints aggregates to stdout
 		in a nicely formatted way. 'nfprobe' acts as a NetFlow agent and exports collected
 		data via NetFlow v1/v5/v9 datagrams to a remote collector. 'sfprobe' acts as a sFlow
-		agent and exports collected data via sFlow v5 datagrams to a remote collector.
+		agent and exports collected data via sFlow v5 datagrams to a remote collector. Both
+		'nfprobe' and 'sfprobe' apply only to 'pmacctd' and 'uacctd' daemons. 'tee' acts as
+		a replicator for NetFlow/sFlow data (also transparent); it applies to 'nfacctd' and
+		'sfacctd' daemons only.
 		Plugins can be either anonymous or named; configuration directives can be either
 		global or bounded to a specific named plugin. An anonymous plugin is declared as
 		'plugins: mysql' whereas a named plugin is declared as 'plugins: mysql[name]'. Then,
@@ -1096,4 +1099,20 @@ DESC:		Defines tunnel inspection, disabled by default. The daemon will then acco
 
 		GTP, GPRS tunnelling protocol. Expects as option the UDP port identifying the protocol. 
 		tunnel_0: gtp, <UDP port> 
+
+KEY:		tee_receiver 
+DESC:           defines remote IP address and port to which NetFlow/sFlow dagagrams are to be replicated
+		to. The value is expected to be in the usual form 'address:port'. This key is mandatory
+		for a 'tee' plugin instance and no default value is set in order to prevent loops.
+
+KEY:		tee_source_ip
+DESC:           defines the local IP address from which NetFlow/sFlow dagagrams are to be replicate from.
+		Only a numerical IPv4/IPv6 address is expected. The supplied IP address is required to be
+		already configured on one of the interfaces. Value is ignored when transparent replication
+		is enabled. (default: IP address is selected by the OS)
+
+KEY:		tee_transparent
+VALUES:         [true|false]
+DESC:		Enables transparent replication mode. It essentially spoofs the source IP address to the
+		original sender of the datagram. It requires super-user permissions. (default: false)
 

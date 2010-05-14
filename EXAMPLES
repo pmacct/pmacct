@@ -13,6 +13,7 @@ VIII.	Quickstart guide to packet/stream classifiers
 IX.	Quickstart guide to setup a NetFlow agent/probe 
 X.	Quickstart guide to setup a sFlow agent/probe 
 XI.	Quickstart guide to setup the BGP daemon
+XII.	Quickstart guide to setup a NetFlow/sFlow replicator
 
 
 I. Plugins included with pmacct distribution
@@ -775,3 +776,46 @@ please get in touch. TCP MD5 signature for BGP messages is not yet supported but
 on the radar. For a review of all the configurable knobs and features see the
 CONFIG-KEYS document. 
 
+
+XII. Quickstart guide to setup a NetFlow/sFlow replicator
+pmacct 0.12 (>= 0.12.2) includes a new 'tee' plugin which is meant to replicate
+NetFlow/sFlow data to N remote collectors. The plugin can also act transparently
+by preserving the original IP address of the datagrams.
+Setting up a replicator is very easy. All is needed is where to listen to for
+incoming packets, where to replicate them to and optionally a filtering layer,
+if required. Filtering bases on the standard pre_tag_map infrastructure; only
+coarse-grained filtering against original source IP address is possible. 
+
+nfacctd_port: 2100
+nfacctd_ip: X.X.X.X
+
+plugins: tee[a], tee[b]
+tee_receiver[a]: Y.Y.Y.Y:2100
+tee_receiver[b]: Z.Z.Z.Z:2100
+! tee_transparent: true
+
+! pre_tag_map: /path/to/pretag.map
+! pre_tag_filter[b]: 0
+
+plugin_buffer_size: 10240
+plugin_pipe_size: 1024000
+
+The pre_tag_filter in the above configuration snapshot applies only to the 'tee'
+plugin instance 'b' and filters out any NetFlow/sFlow packets marked with a non-
+zero 'id'. Plugin instance 'a' would normally receive all packets instead. An
+example of the pre_tag_map content follows:
+
+id=1 ip=A.A.A.A
+id=1 ip=B.B.B.B
+id=1 ip=C.C.C.C
+
+To enable the transparent mode, the tee_transparent should be commented out. It
+preserves the original IP address of the NetFlow/sFlow sender while replicating
+by essentially spoofing it. This feature is not global and can be freely enabled
+only on a subset of the active replicators. It requires super-user permissions
+in order to run.
+
+Concluding note: 'tee' plugin is not compatible with different plugins - within
+the same daemon instance. So if in the need of using pmacct for both collecting
+and replicating data, two separate instances must be used (intuitively with the
+replicator instance feeding the collector one).
