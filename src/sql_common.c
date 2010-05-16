@@ -351,7 +351,8 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
     /* If we are very near to our maximum writers threshold, let's resort to any configured
        recovery mechanism - SQL_CACHE_COMMITTED => SQL_CACHE_ERROR; otherwise, will proceed
        as usual */
-    if (sql_writers.active == config.sql_max_writers-1) {
+    if ((sql_writers.active == config.sql_max_writers-1) &&
+	(config.sql_backup_host || config.sql_recovery_logfile)) {
       for (j = 0; j < index; j++) {
 	if (queue[j]->valid == SQL_CACHE_COMMITTED) queue[j]->valid = SQL_CACHE_ERROR;
       }

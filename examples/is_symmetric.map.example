@@ -1,28 +1,31 @@
 ! 
 ! is_symmetric map - asymmetric traffic detection
 !
-! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in this same
-! directory.
+! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
+! this same directory.
 !
 ! nfacctd, sfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac.
 !
 ! list of currently supported keys follow:
 !
-! 'id'			ID value to assign to a matching packet or flow. The only valid
-!			value for this map is '1': underlying logics is to define via
-!			this map local traffic paths out of the routing domain at edge
-!			devices. 
-! 'ip'			IP address of the device which is originating sFlow or NetFlow
-!			datagrams (router, probe, etc.)
+! 'id'			ID value to assign to a matching packet or flow. The
+!			only valid value for this map is '1': rationale is to
+!			manually define via this map valid traffic paths out
+!			of the routing domain. 
+! 'ip'                  In nfacctd it's compared against the source IP address
+!                       of the device which is originating NetFlow packets; in
+!                       sfacctd this is compared against the AgentId field of
+!                       received sFlow samples.
 ! 'in'  		Input interface 
-! 'bgp_nexthop'		BGP next-hop of the flow source IP address (RPF-like). This value
-!			is compared against the BGP RIB of the device originating the sFlow
-!			or NetFlow datagram (see 'nfacctd_bgp' directive).
-! 'peer_dst_as'		First AS hop within the AS-PATH of the source IP address (RPF-like).
-!			This value is compared against the BGP RIB of the device originating
-!			the sFlow or NetFlow datagram (see 'nfacctd_bgp' directive). 
-! 'src_mac'		Source MAC address of the flow. Requires NetFlow v9 or sFlow as
-!			NetFlow v5 lacks of such support.
+! 'bgp_nexthop'		BGP next-hop of the flow source IP address (RPF-like).
+!			This value is compared against the corresponding BGP
+!			RIB of the exporting device.
+! 'peer_dst_as'		First AS hop within the AS-PATH of the source IP address
+!			(RPF-like). This value is compared against the BGP RIB
+!			of the exporting device (see 'bgp_daemon' configuration
+!			directive). 
+! 'src_mac'		Source MAC address of the flow. Requires NetFlow v9 or
+!			sFlow.
 !
 ! A few examples follow.
 !
