@@ -889,6 +889,10 @@ DESC:		includes peer-AS rather than origin-AS as part of the NetFlow/sFlow expor
 		enable this feature are: a) one of the nfacctd_as_new/sfacctd_as_new/pmacctd_as/uacctd_as set
 		to 'bgp' and b) a fully functional BGP daemon (bgp_daemon). (default: false)
 
+KEY:            [ nfprobe_ipprec | sfprobe_ipprec ]
+DESC:           marks self-originated NetFlow (nfprobe) and sFlow (sfprobe) messages with the supplied IP
+		precedence value. (default: 0)
+
 KEY:		sfprobe_receiver
 DESC:           defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.
 		The value is expected to be in the usual form 'address:port'. (default: 127.0.0.1:6343)

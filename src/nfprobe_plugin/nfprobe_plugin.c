@@ -171,25 +171,6 @@ expiry_compare(struct EXPIRY *a, struct EXPIRY *b)
 EXPIRY_PROTOTYPE(EXPIRIES, EXPIRY, trp, expiry_compare);
 EXPIRY_GENERATE(EXPIRIES, EXPIRY, trp, expiry_compare);
 
-#if 0
-/* Dump a packet */
-static void
-dump_packet(const u_int8_t *p, int len)
-{
-	char buf[1024], tmp[3];
-	int i;
-
-	for (*buf = '\0', i = 0; i < len; i++) {
-		snprintf(tmp, sizeof(tmp), "%02x%s", p[i], i % 2 ? " " : "");
-		if (strlcat(buf, tmp, sizeof(buf) - 4) >= sizeof(buf) - 4) {
-			strlcat(buf, "...", sizeof(buf));
-			break;
-		}
-	}
-	Log(LOG_INFO, "packet len %d: %s\n", len, buf);
-}
-#endif
-
 /* Format a time in an ISOish format */
 static const char *
 format_time(time_t t)
@@ -932,97 +913,6 @@ delete_all_flows(struct FLOWTRACK *ft)
 }
 
 /*
- * Log our current status. 
- * Includes summary counters and (in verbose mode) the list of current flows
- * and the tree of expiry events.
- */
-static int
-statistics(struct FLOWTRACK *ft, FILE *out)
-{
-	int i;
-	struct protoent *pe;
-	char proto[32];
-
-	fprintf(out, "Number of active flows: %d\n", ft->num_flows);
-	fprintf(out, "Packets processed: %llu\n", ft->total_packets);
-	fprintf(out, "Fragments: %llu\n", ft->frag_packets);
-	fprintf(out, "Ignored packets: %llu (%llu non-IP, %llu too short)\n",
-	    ft->non_ip_packets + ft->bad_packets, ft->non_ip_packets, ft->bad_packets);
-	fprintf(out, "Flows expired: %llu (%llu forced)\n", 
-	    ft->flows_expired, ft->flows_force_expired);
-	fprintf(out, "Flows exported: %llu in %llu packets (%llu failures)\n",
-	    ft->flows_exported, ft->packets_sent, ft->flows_dropped);
-
-	fprintf(out, "\n");
-
-	if (ft->flows_expired != 0) {
-		fprintf(out, "Expired flow statistics:  minimum       average       maximum\n");
-		fprintf(out, "  Flow bytes:        %12.0f  %12.0f  %12.0f\n", 
-		    ft->octets.min, ft->octets.mean, ft->octets.max);
-		fprintf(out, "  Flow packets:      %12.0f  %12.0f  %12.0f\n", 
-		    ft->packets.min, ft->packets.mean, ft->packets.max);
-		fprintf(out, "  Duration:          %12.2fs %12.2fs %12.2fs\n", 
-		    ft->duration.min, ft->duration.mean, ft->duration.max);
-
-		fprintf(out, "\n");
-		fprintf(out, "Expired flow reasons:\n");
-		fprintf(out, "       tcp = %9llu   tcp.rst = %9llu   tcp.fin = %9llu\n", 
-		    ft->expired_tcp, ft->expired_tcp_rst, ft->expired_tcp_fin);
-		fprintf(out, "       udp = %9llu      icmp = %9llu   general = %9llu\n",
-		    ft->expired_udp, ft->expired_icmp, ft->expired_general);
-		fprintf(out, "   maxlife = %9llu\n", ft->expired_maxlife);
-		fprintf(out, "  over 2Gb = %9llu\n", ft->expired_overbytes);
-		fprintf(out, "  maxflows = %9llu\n", ft->expired_maxflows);
-		fprintf(out, "   flushed = %9llu\n", ft->expired_flush);
-
-		fprintf(out, "\n");
-
-		fprintf(out, "Per-protocol statistics:     Octets      Packets   Avg Life    Max Life\n");
-		for(i = 0; i < 256; i++) {
-			if (ft->packets_pp[i]) {
-				pe = getprotobynumber(i);
-				snprintf(proto, sizeof(proto), "%s (%d)", 
-				    pe != NULL ? pe->p_name : "Unknown", i);
-				fprintf(out, 
-				    "  %17s: %14llu %12llu   %8.2fs %10.2fs\n",
-				    proto,
-				    ft->octets_pp[i], 
-				    ft->packets_pp[i],
-				    ft->duration_pp[i].mean,
-				    ft->duration_pp[i].max);
-			}
-		}
-	}
-
-	return (0);
-}
-
-static void
-dump_flows(struct FLOWTRACK *ft, FILE *out)
-{
-	struct EXPIRY *expiry;
-	time_t now;
-
-	now = time(NULL);
-
-	EXPIRY_FOREACH(expiry, EXPIRIES, &ft->expiries) {
-		fprintf(out, "ACTIVE %s\n", format_flow(expiry->flow));
-		if ((long int) expiry->expires_at - now < 0) {
-			fprintf(out, 
-			    "EXPIRY EVENT for flow %llu now%s\n",
-			    expiry->flow->flow_seq, 
-			    expiry->expires_at == 0 ? " (FORCED)": "");
-		} else {
-			fprintf(out, 
-			    "EXPIRY EVENT for flow %llu in %ld seconds\n",
-			    expiry->flow->flow_seq, 
-			    (long int) expiry->expires_at - now);
-		}
-		fprintf(out, "\n");
-	}
-}
-
-/*
  * Per-packet callback function from libpcap. Pass the packet (if it is IP)
  * sans datalink headers to process_packet.
  */
@@ -1053,71 +943,73 @@ print_timeouts(struct FLOWTRACK *ft)
 static int
 connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 {
-	int s, ret = 0;
-	unsigned int h6;
-	unsigned char h4;
-	struct sockaddr_in *in4 = (struct sockaddr_in *)addr;
+  int s, ret = 0;
+  unsigned int h6;
+  unsigned char h4;
+  struct sockaddr_in *in4 = (struct sockaddr_in *)addr;
 #if defined ENABLE_IPV6
-	struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
+  struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
 #endif
-	struct host_addr source_ip;
-	struct sockaddr ssource_ip;
+  struct host_addr source_ip;
+  struct sockaddr ssource_ip;
 
-	if (config.nfprobe_source_ip) {
-	  ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
-	  addr_to_sa(&ssource_ip, &source_ip, 0);
-	}
+  if (config.nfprobe_source_ip) {
+    ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
+    addr_to_sa(&ssource_ip, &source_ip, 0);
+  }
 
-	if ((s = socket(addr->ss_family, SOCK_DGRAM, 0)) == -1) {
-		fprintf(stderr, "socket() error: %s\n", 
-		    strerror(errno));
-		exit_plugin(1);
-	}
+  if ((s = socket(addr->ss_family, SOCK_DGRAM, 0)) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed: %s\n", config.name, config.type, strerror(errno));
+    exit_plugin(1);
+  }
 
-	if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
-	  fprintf(stderr, "bind() error: %s\n",
-		strerror(errno));
-	}
+  if (config.nfprobe_ipprec) {
+    int opt = config.nfprobe_ipprec << 5;
+    int rc;
 
-        if (connect(s, (struct sockaddr*)addr, len) == -1) {
-                fprintf(stderr, "connect() error: %s\n",
-                    strerror(errno));
-                exit_plugin(1);
-        }
+    rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
+  }
 
-	switch (addr->ss_family) {
-	case AF_INET:
-		/* Default to link-local TTL for multicast addresses */
-		if (hoplimit == -1 && IN_MULTICAST(in4->sin_addr.s_addr))
-			hoplimit = 1;
-		if (hoplimit == -1)
-			break;
-		h4 = hoplimit;
-		if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
-		    &h4, sizeof(h4)) == -1) {
-			fprintf(stderr, "setsockopt(IP_MULTICAST_TTL, "
-			    "%u): %s\n", h4, strerror(errno));
-			exit_plugin(1);
-		}
-		break;
+  if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bind() failed: %s\n", config.name, config.type, strerror(errno));
+    exit_plugin(1);
+  }
+
+  if (connect(s, (struct sockaddr*)addr, len) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): connect() failed: %s\n", config.name, config.type, strerror(errno));
+    exit_plugin(1);
+  }
+
+  switch (addr->ss_family) {
+  case AF_INET:
+    /* Default to link-local TTL for multicast addresses */
+    if (hoplimit == -1 && IN_MULTICAST(in4->sin_addr.s_addr))
+      hoplimit = 1;
+    if (hoplimit == -1)
+      break;
+    h4 = hoplimit;
+    if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &h4, sizeof(h4)) == -1) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IP_MULTICAST_TTL: %s\n", config.name, config.type, strerror(errno));
+      exit_plugin(1);
+    }
+    break;
 #if defined ENABLE_IPV6
-	case AF_INET6:
-		/* Default to link-local hoplimit for multicast addresses */
-		if (hoplimit == -1 && IN6_IS_ADDR_MULTICAST(&in6->sin6_addr))
-			hoplimit = 1;
-		if (hoplimit == -1)
-			break;
-		h6 = hoplimit;
-		if (setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
-		    &h6, sizeof(h6)) == -1) {
-			fprintf(stderr, "setsockopt(IPV6_MULTICAST_HOPS, %u): "
-			"%s\n", h6, strerror(errno));
-			exit_plugin(1);
-		}
+  case AF_INET6:
+    /* Default to link-local hoplimit for multicast addresses */
+    if (hoplimit == -1 && IN6_IS_ADDR_MULTICAST(&in6->sin6_addr))
+      hoplimit = 1;
+    if (hoplimit == -1)
+      break;
+    h6 = hoplimit;
+    if (setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &h6, sizeof(h6)) == -1) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IPV6_MULTICAST_HOPS: %s\n", config.name, config.type, strerror(errno));
+      exit_plugin(1);
+    }
 #endif
-	}
+  }
 
-	return(s);
+  return(s);
 }
 
 static void
@@ -1206,49 +1098,51 @@ handle_timeouts(struct FLOWTRACK *ft, char *to_spec)
 static void
 parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 {
-	char *orig, *host, *port;
-	struct addrinfo hints, *res;
-	int herr;
+  char *orig, *host, *port;
+  struct addrinfo hints, *res;
+  int herr;
 
-	if ((host = orig = strdup(s)) == NULL) {
-		fprintf(stderr, "Out of memory\n");
-		exit_plugin(1);
-	}
+  if ((host = orig = strdup(s)) == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), strdup() out of memory\n", config.name, config.type);
+    exit_plugin(1);
+  }
 
-	trim_spaces(host);
-	trim_spaces(orig);
+  trim_spaces(host);
+  trim_spaces(orig);
 
-	if ((port = strrchr(host, ':')) == NULL ||
-	    *(++port) == '\0' || *host == '\0') {
-		fprintf(stderr, "Invalid -n argument.\n");
-		exit_plugin(1);
-	}
-	*(port - 1) = '\0';
+  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid 'nfprobe_receiver' argument\n", config.name, config.type);
+    exit_plugin(1);
+  }
+  *(port - 1) = '\0';
 	
-	/* Accept [host]:port for numeric IPv6 addresses */
-	if (*host == '[' && *(port - 2) == ']') {
-		host++;
-		*(port - 2) = '\0';
-	}
+  /* Accept [host]:port for numeric IPv6 addresses */
+  if (*host == '[' && *(port - 2) == ']') {
+    host++;
+    *(port - 2) = '\0';
+  }
 
-	memset(&hints, '\0', sizeof(hints));
-	hints.ai_socktype = SOCK_DGRAM;
-	if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
-		fprintf(stderr, "Address lookup failed: %s\n",
-		    gai_strerror(herr));
-		exit_plugin(1);
-	}
-	if (res == NULL || res->ai_addr == NULL) {
-		fprintf(stderr, "No addresses found for [%s]:%s\n", host, port);
-		exit_plugin(1);
-	}
-	if (res->ai_addrlen > *len) {
-		Log(LOG_ERR, "ERROR ( %s/%s ): Address too long.\n", config.name, config.type);
-		exit_plugin(1);
-	}
-	memcpy(addr, res->ai_addr, res->ai_addrlen);
-	free(orig);
-	*len = res->ai_addrlen;
+  memset(&hints, '\0', sizeof(hints));
+  hints.ai_socktype = SOCK_DGRAM;
+
+  if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address lookup failed\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  if (res == NULL || res->ai_addr == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), no addresses found for [%s]:%s\n", config.name, config.type, host, port);
+    exit_plugin(1);
+  }
+
+  if (res->ai_addrlen > *len) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address too long.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  memcpy(addr, res->ai_addr, res->ai_addrlen);
+  free(orig);
+  *len = res->ai_addrlen;
 }
 
 static void

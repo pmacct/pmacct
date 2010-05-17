@@ -49,6 +49,14 @@ void sfl_agent_init(SFLAgent *agent,
     if((agent->receiverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
       sfl_agent_sysError(agent, "agent", "socket open failed");
   }
+
+  if (config.nfprobe_ipprec) {
+    int opt = config.nfprobe_ipprec << 5;
+    int rc;
+
+    rc = setsockopt(agent->receiverSocket, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
+  }
 }
 
 /*_________________---------------------------__________________
