@@ -1103,23 +1103,26 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     else if (tpl->template_type == 1) { /* Options coming */
       struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
       struct xflow_status_entry_sampling *sentry, *saved = NULL;
-      u_int8_t sampler_id = 0;
 
       while (flowoff+tpl->len <= flowsetlen) {
-	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1)
+	/* Is this option about sampling? */
+	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
+	  u_int8_t sampler_id = 0;
+
 	  memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
 
-	sentry = search_smp_id_status_table(entry->sampling, sampler_id);
-	if (!sentry) sentry = create_smp_entry_status_table(entry);
-	else saved = sentry->next;
+	  sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+	  if (!sentry) sentry = create_smp_entry_status_table(entry);
+	  else saved = sentry->next;
 
-	if (sentry) {
-	  memset(sentry, 0, sizeof(struct xflow_status_entry_sampling));
-	  if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
-	  if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
-	  sentry->sampler_id = sampler_id;
-	  sentry->sample_pool = ntohl(sentry->sample_pool);
-	  if (saved) sentry->next = saved;
+	  if (sentry) {
+	    memset(sentry, 0, sizeof(struct xflow_status_entry_sampling));
+	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	    if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+	    sentry->sampler_id = sampler_id;
+	    sentry->sample_pool = ntohl(sentry->sample_pool);
+	    if (saved) sentry->next = saved;
+	  }
 	}
 
         pkt += tpl->len;
