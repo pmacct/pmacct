@@ -321,6 +321,7 @@ struct pkt_msg {
   u_int32_t seqno;
   u_int16_t len;
   u_char payload[PKT_MSG_SIZE];
+  u_int16_t pad;
 };
 
 /* START: BGP section */
@@ -344,6 +345,7 @@ struct pkt_bgp_primitives {
   u_int32_t src_local_pref;
   u_int32_t src_med;
   u_int32_t is_symmetric;
+  u_int32_t pad;
 };
 
 /* same as above but pointers in place of strings */
