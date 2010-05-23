@@ -68,7 +68,7 @@ void usage_daemon(char *prog_name)
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -L  \tSet snapshot length\n");
-  printf("\nMemory Plugin (-P memory) options:\n");
+  printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
   printf("  -m  \tNumber of memory pools\n");
@@ -76,6 +76,9 @@ void usage_daemon(char *prog_name)
   printf("\nPostgreSQL (-P pgsql)/MySQL (-P mysql)/SQLite (-P sqlite3) plugin options:\n");
   printf("  -r  \tRefresh time (in seconds)\n");
   printf("  -v  \t[ 1 | 2 | 3 | 4 | 5 | 6 | 7 ] \n\tTable version\n");
+  printf("\nPrint plugin (-P print) plugin options:\n");
+  printf("  -r  \tRefresh time (in seconds)\n");
+  printf("  -O  \t[ formatted | csv ] \n\tOutput format\n");
   printf("\n");
   printf("  See EXAMPLES or visit http://wiki.pmacct.net/ for examples.\n");
   printf("\n");
@@ -180,6 +183,11 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break; 
+    case 'O':
+      strlcpy(cfg_cmdline[rows], "print_output: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
     case 'N':
       strlcpy(cfg_cmdline[rows], "promisc: false", SRVBUFLEN);
       rows++;

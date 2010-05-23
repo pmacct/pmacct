@@ -1484,6 +1484,34 @@ int cfg_key_print_markers(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_print_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  if (!strcmp(value_ptr, "formatted"))
+    value = PRINT_OUTPUT_FORMATTED;
+  else if (!strcmp(value_ptr, "csv"))
+    value = PRINT_OUTPUT_CSV;
+  else {
+    Log(LOG_WARNING, "WARN ( %s ): Invalid print output value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_output = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_post_tag(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

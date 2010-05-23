@@ -20,10 +20,10 @@
 */
 
 /* defines */
-#define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:R"
-#define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:R"
-#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:wWL:R"
-#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:Rg:L:"
+#define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:R"
+#define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:R"
+#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:wWL:R"
+#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:Rg:L:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:"
 #define N_PRIMITIVES 46
 #define N_FUNCS 10 
@@ -189,6 +189,9 @@
 
 #define BGP_SRC_PRIMITIVES_MAP	0x00000001
 #define BGP_SRC_PRIMITIVES_BGP	0x00000002
+
+#define PRINT_OUTPUT_FORMATTED	0x00000001
+#define PRINT_OUTPUT_CSV	0x00000002
 
 typedef u_int32_t pm_class_t;
 typedef u_int32_t pm_id_t;

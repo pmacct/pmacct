@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -74,6 +74,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.print_refresh_time)
     config.print_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
 
+  if (!config.print_output)
+    config.print_output = PRINT_OUTPUT_FORMATTED;
+
   timeout = config.print_refresh_time*1000;
 
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -139,7 +142,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
 
-  P_write_stats_header();
+  if (config.print_output == PRINT_OUTPUT_FORMATTED)
+    P_write_stats_header_formatted();
+  else if (config.print_output == PRINT_OUTPUT_CSV)
+    P_write_stats_header_csv();
 
   /* plugin main loop */
   for(;;) {
@@ -457,79 +463,136 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     if (!queue[j]->bytes_counter && !queue[j]->packet_counter && !queue[j]->flow_counter)
       continue;
 
-    printf("%-10u  ", data->id);
-    printf("%-10u  ", data->id2);
-    printf("%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+    if (config.print_output == PRINT_OUTPUT_FORMATTED) {
+      printf("%-10u  ", data->id);
+      printf("%-10u  ", data->id2);
+      printf("%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 #if defined (HAVE_L2)
-    etheraddr_string(data->eth_shost, src_mac);
-    printf("%-17s  ", src_mac);
-    etheraddr_string(data->eth_dhost, dst_mac);
-    printf("%-17s  ", dst_mac);
-    printf("%-5d  ", data->vlan_id); 
+      etheraddr_string(data->eth_shost, src_mac);
+      printf("%-17s  ", src_mac);
+      etheraddr_string(data->eth_dhost, dst_mac);
+      printf("%-17s  ", dst_mac);
+      printf("%-5d  ", data->vlan_id); 
 #endif
-    printf("%-10d  ", data->src_as); 
-    printf("%-10d  ", data->dst_as); 
-    printf("%-22s   ", pbgp->std_comms);
+      printf("%-10d  ", data->src_as); 
+      printf("%-10d  ", data->dst_as); 
+      printf("%-22s   ", pbgp->std_comms);
 
-    as_path = pbgp->as_path;
-    while (as_path) {
-      as_path = strchr(pbgp->as_path, ' ');
-      if (as_path) *as_path = '_';
-    }
-    if (strlen(pbgp->as_path))
-      printf("%-22s   ", pbgp->as_path);
-    else
-      printf("%-22s   ", empty_aspath);
+      as_path = pbgp->as_path;
+      while (as_path) {
+	as_path = strchr(pbgp->as_path, ' ');
+	if (as_path) *as_path = '_';
+      }
+      if (strlen(pbgp->as_path))
+	printf("%-22s   ", pbgp->as_path);
+      else
+	printf("%-22s   ", empty_aspath);
 
-    printf("%-5d  ", pbgp->local_pref);
-    printf("%-5d  ", pbgp->med);
-    printf("%-10d  ", pbgp->peer_src_as);
-    printf("%-10d  ", pbgp->peer_dst_as);
-    addr_to_str(ip_address, &pbgp->peer_src_ip);
+      printf("%-5d  ", pbgp->local_pref);
+      printf("%-5d  ", pbgp->med);
+      printf("%-10d  ", pbgp->peer_src_as);
+      printf("%-10d  ", pbgp->peer_dst_as);
+      addr_to_str(ip_address, &pbgp->peer_src_ip);
 #if defined ENABLE_IPV6
-    printf("%-45s  ", ip_address);
+      printf("%-45s  ", ip_address);
 #else
-    printf("%-15s  ", ip_address);
+      printf("%-15s  ", ip_address);
 #endif
-    addr_to_str(ip_address, &pbgp->peer_dst_ip);
+      addr_to_str(ip_address, &pbgp->peer_dst_ip);
 #if defined ENABLE_IPV6
-    printf("%-45s  ", ip_address);
+      printf("%-45s  ", ip_address);
 #else
-    printf("%-15s  ", ip_address);
+      printf("%-15s  ", ip_address);
 #endif
 
-    addr_to_str(src_host, &data->src_ip);
+      addr_to_str(src_host, &data->src_ip);
 #if defined ENABLE_IPV6
-    printf("%-45s  ", src_host);
+      printf("%-45s  ", src_host);
 #else
-    printf("%-15s  ", src_host);
+      printf("%-15s  ", src_host);
 #endif
-    addr_to_str(dst_host, &data->dst_ip);
+      addr_to_str(dst_host, &data->dst_ip);
 #if defined ENABLE_IPV6
-    printf("%-45s  ", dst_host);
+      printf("%-45s  ", dst_host);
 #else
-    printf("%-15s  ", dst_host);
+      printf("%-15s  ", dst_host);
 #endif
-    printf("%-5d     ", data->src_port);
-    printf("%-5d     ", data->dst_port);
-    printf("%-3d        ", queue[j]->tcp_flags);
-    printf("%-10s  ", _protocols[data->proto].name);
-    printf("%-3d    ", data->tos);
+      printf("%-5d     ", data->src_port);
+      printf("%-5d     ", data->dst_port);
+      printf("%-3d        ", queue[j]->tcp_flags);
+      printf("%-10s  ", _protocols[data->proto].name);
+      printf("%-3d    ", data->tos);
 #if defined HAVE_64BIT_COUNTERS
-    printf("%-20llu  ", queue[j]->packet_counter);
-    printf("%-20llu  ", queue[j]->flow_counter);
-    printf("%llu\n", queue[j]->bytes_counter);
+      printf("%-20llu  ", queue[j]->packet_counter);
+      printf("%-20llu  ", queue[j]->flow_counter);
+      printf("%llu\n", queue[j]->bytes_counter);
 #else
-    printf("%-10lu  ", queue[j]->packet_counter);
-    printf("%-10lu  ", queue[j]->flow_counter);
-    printf("%lu\n", queue[j]->bytes_counter);
+      printf("%-10lu  ", queue[j]->packet_counter);
+      printf("%-10lu  ", queue[j]->flow_counter);
+      printf("%lu\n", queue[j]->bytes_counter);
 #endif
+    }
+    else if (config.print_output == PRINT_OUTPUT_CSV) {
+      printf("%u,", data->id);
+      printf("%u,", data->id2);
+      printf("%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+#if defined (HAVE_L2)
+      etheraddr_string(data->eth_shost, src_mac);
+      printf("%s,", src_mac);
+      etheraddr_string(data->eth_dhost, dst_mac);
+      printf("%s,", dst_mac);
+      printf("%d,", data->vlan_id); 
+#endif
+      printf("%d,", data->src_as); 
+      printf("%d,", data->dst_as); 
+      printf("%s,", pbgp->std_comms);
+
+      as_path = pbgp->as_path;
+      while (as_path) {
+	as_path = strchr(pbgp->as_path, ' ');
+	if (as_path) *as_path = '_';
+      }
+      if (strlen(pbgp->as_path))
+	printf("%s,", pbgp->as_path);
+      else
+	printf("%s,", empty_aspath);
+
+      printf("%d,", pbgp->local_pref);
+      printf("%d,", pbgp->med);
+      printf("%d,", pbgp->peer_src_as);
+      printf("%d,", pbgp->peer_dst_as);
+
+      addr_to_str(ip_address, &pbgp->peer_src_ip);
+      printf("%s,", ip_address);
+      addr_to_str(ip_address, &pbgp->peer_dst_ip);
+      printf("%s,", ip_address);
+
+      addr_to_str(src_host, &data->src_ip);
+      printf("%s,", src_host);
+      addr_to_str(dst_host, &data->dst_ip);
+      printf("%s,", dst_host);
+
+      printf("%d,", data->src_port);
+      printf("%d,", data->dst_port);
+      printf("%d,", queue[j]->tcp_flags);
+      printf("%s,", _protocols[data->proto].name);
+      printf("%d,", data->tos);
+#if defined HAVE_64BIT_COUNTERS
+      printf("%llu,", queue[j]->packet_counter);
+      printf("%llu,", queue[j]->flow_counter);
+      printf("%llu\n", queue[j]->bytes_counter);
+#else
+      printf("%lu,", queue[j]->packet_counter);
+      printf("%lu,", queue[j]->flow_counter);
+      printf("%lu\n", queue[j]->bytes_counter);
+#endif
+    }
   }
 
   if (config.print_markers) printf("--END--\n");
 }
 
-void P_write_stats_header()
+void P_write_stats_header_formatted()
 {
   printf("TAG         ");
   printf("TAG2        ");
@@ -570,6 +633,38 @@ void P_write_stats_header()
   printf("FLOWS       ");
   printf("BYTES\n");
 #endif
+}
+
+void P_write_stats_header_csv()
+{
+  printf("TAG,");
+  printf("TAG2,");
+  printf("CLASS,");
+#if defined HAVE_L2
+  printf("SRC_MAC,");
+  printf("DST_MAC,");
+  printf("VLAN,");
+#endif
+  printf("SRC_AS,");
+  printf("DST_AS,");
+  printf("BGP_COMMS,");
+  printf("AS_PATH,");
+  printf("PREF,");
+  printf("MED,");
+  printf("PEER_SRC_AS,");
+  printf("PEER_DST_AS,");
+  printf("PEER_SRC_IP,");
+  printf("PEER_DST_IP,");
+  printf("SRC_IP,");
+  printf("DST_IP,");
+  printf("SRC_PORT,");
+  printf("DST_PORT,");
+  printf("TCP_FLAGS,");
+  printf("PROTOCOL,");
+  printf("TOS,");
+  printf("PACKETS,");
+  printf("FLOWS,");
+  printf("BYTES\n");
 }
 
 void P_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)

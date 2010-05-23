@@ -86,6 +86,7 @@ EXT int cfg_key_refresh_maps(char *, char *, char *);
 EXT int cfg_key_print_refresh_time(char *, char *, char *);
 EXT int cfg_key_print_cache_entries(char *, char *, char *);
 EXT int cfg_key_print_markers(char *, char *, char *);
+EXT int cfg_key_print_output(char *, char *, char *);
 EXT int cfg_key_nfacctd_port(char *, char *, char *);
 EXT int cfg_key_nfacctd_ip(char *, char *, char *);
 EXT int cfg_key_nfacctd_allow_file(char *, char *, char *);

@@ -267,6 +267,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_refresh_time", cfg_key_print_refresh_time},
   {"print_cache_entries", cfg_key_print_cache_entries},
   {"print_markers", cfg_key_print_markers},
+  {"print_output", cfg_key_print_output},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
   {"nfacctd_allow_file", cfg_key_nfacctd_allow_file},

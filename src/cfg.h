@@ -87,6 +87,7 @@ struct configuration {
   int print_refresh_time;
   int print_cache_entries;
   int print_markers;
+  int print_output;
   int nfacctd_port;
   char *nfacctd_ip;
   char *nfacctd_allow_file;
