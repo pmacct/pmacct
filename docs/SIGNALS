@@ -62,3 +62,11 @@ SIGUSR1:        ignored;
 SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
                 maps to be reloaded;
 SIGINT:         causes the process to exit gracefully;
+
+Tee process:
+SIGPIPE:        ignored;
+SIGCHLD:        ignored;
+SIGHUP:         inherited by Core Process;
+SIGUSR1:        ignored;
+SIGUSR2:        ignored;
+SIGINT:         causes the process to exit gracefully;

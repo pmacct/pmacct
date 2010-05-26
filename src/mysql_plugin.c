@@ -626,9 +626,11 @@ void MY_create_dyn_table(struct DBdesc *db, char *buf)
 {
   if (!db->fail) {
     if (mysql_query(db->desc, buf)) {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): FAILED query follows:\n%s\n", config.name, config.type, buf);
-      MY_get_errmsg(db);
-      sql_db_errmsg(db);
+      if (mysql_errno(db->desc) != 1050 /* ER_TABLE_EXISTS_ERROR */) {
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): FAILED query follows:\n%s\n", config.name, config.type, buf);
+        MY_get_errmsg(db);
+        sql_db_errmsg(db);
+      }
     }
   }
 }

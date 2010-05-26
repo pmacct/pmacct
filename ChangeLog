@@ -1,5 +1,44 @@
-pmacct (Promiscuous mode IP Accounting package) v0.12.1
+pmacct (Promiscuous mode IP Accounting package) v0.12.2
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+
+0.12.2 -- 27-05-2010
+  + A new 'tee' plugin is introduced bringing both NetFlow and sFlow
+    replication capabilities to pmacct. It supports transparent mode
+    (tee_transparent), coarse-grained filtering capabilities via the
+    Pre-Tagging infrastructure. Quickstart guide is included as part
+    of the EXAMPLES file (chapter XII).
+  + nfprobe, sfprobe: introduced support for export of the BGP next-hop 
+    information. Source data selection for BGP next-hop is being linked
+    to [pmacctd_as|uacctd_as] configuration directive. Hence it must be
+    set to 'bgp' in order for this feature to work.
+  + nfprobe, sfprobe, BGP daemon: new set of features (nfprobe_ipprec,
+    sfprobe_ipprec, bgp_daemon_ipprec) allows to mark self-originated
+    sFlow, NetFlow and BGP datagrams with the supplied IP precedence
+    value.
+  + peer_src_ip (IP address of the NetFlow emitter, agent ID of the
+    sFlow emitter) and peer_dst_ip (BGP next-hop) can now be filled
+    from NetFlow/sFlow protocols data other than BGP. To activate the
+    feature nfacctd_as_new/sfacctd_as_new have to be 'false' (default
+    value), 'true' or 'file'.
+  + print plugin: introduced support for Comma-Separated Values (CSV)
+    output in addition to formatted-text. A new print_output feature
+    allows to switch between the two.  
+  + pmacctd: improved 802.1ad support. While recursing, outer VLAN is
+    always reported as value of the 'vlan' primitive.
+  ! fix, pmacctd: 802.1p was kept integral part of the 'vlan' value.
+    Now a 0x0FFF mask is applied in order to return only the VLAN ID.
+  ! fix, pkt_handlers.c: added trailing '\0' symbol when truncating
+    AS-PATH and BGP community strings due to length constraints.
+  ! fix, sql_common.c: maximum SQL writers warning message was never
+    reached unless a recovery method is specifited. Thanks to Sergio
+   Charpinel Jr for reporting the issue.
+  ! fix, MySQL and PostgreSQL plugins: PGRES_TUPLES_OK (PostgreSQL)
+    and errno 1050 (MySQL) are now considered valid return codes when
+    dynamic tables are involved (ie. sql_table_schema). Thanks to
+    Sergio Charpinel Jr for his support.
+  ! fix, BGP daemon: pkt_bgp_primitives struct has been explicitely
+    64-bit aligned. Mis-alignment was causing crashes when buffering
+    was enabled (plugin_buffer_size). Verified on Solaris/sparc.
 
 0.12.1 -- 07-04-2010
   + Input/output interfaces (SNMP indexes) have now been implemented
