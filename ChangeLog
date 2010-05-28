@@ -1,4 +1,4 @@
-pmacct (Promiscuous mode IP Accounting package) v0.12.2
+pmacct (Promiscuous mode IP Accounting package) v0.12.3
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
 0.12.2 -- 27-05-2010
@@ -31,7 +31,7 @@ pmacct is Copyright (C) 2003-2010 by Paolo Lucente
     AS-PATH and BGP community strings due to length constraints.
   ! fix, sql_common.c: maximum SQL writers warning message was never
     reached unless a recovery method is specifited. Thanks to Sergio
-   Charpinel Jr for reporting the issue.
+    Charpinel Jr for reporting the issue.
   ! fix, MySQL and PostgreSQL plugins: PGRES_TUPLES_OK (PostgreSQL)
     and errno 1050 (MySQL) are now considered valid return codes when
     dynamic tables are involved (ie. sql_table_schema). Thanks to
