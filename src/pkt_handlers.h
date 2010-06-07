@@ -40,6 +40,7 @@ EXT void evaluate_packet_handlers();
 EXT void src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -61,6 +62,7 @@ EXT void nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void NF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -100,6 +102,7 @@ EXT void bgp_dst_nmask_handler(struct channels_list_entry *, struct packet_ptrs 
 EXT void SF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

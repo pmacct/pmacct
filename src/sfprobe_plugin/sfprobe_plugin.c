@@ -253,7 +253,7 @@ static void init_agent(SflSp *sp)
 
 static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *buf)
 {
-  SFLFlow_sample_element hdrElem, classHdrElem, gatewayHdrElem, routerHdrElem, tagHdrElem;
+  SFLFlow_sample_element hdrElem, classHdrElem, gatewayHdrElem, routerHdrElem, tagHdrElem, switchHdrElem;
   SFLExtended_as_path_segment as_path_segment;
   u_int32_t frame_len, header_len;
   int direction, sampledPackets, ethHdrLen;
@@ -435,6 +435,14 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	routerHdrElem.flowType.router.src_mask = hdr->src_nmask; 
 	routerHdrElem.flowType.router.dst_mask = hdr->dst_nmask;
 	SFLADD_ELEMENT(&fs, &routerHdrElem);
+      }
+
+      if (config.what_to_count & (COUNT_VLAN|COUNT_COS)) {
+        memset(&switchHdrElem, 0, sizeof(switchHdrElem));
+        switchHdrElem.tag = SFLFLOW_EX_SWITCH;
+        switchHdrElem.flowType.sw.src_vlan = hdr->vlan;
+        switchHdrElem.flowType.sw.src_priority = hdr->priority;
+        SFLADD_ELEMENT(&fs, &switchHdrElem);
       }
 
       // submit the sample to be encoded and sent out - that's all there is to it(!)

@@ -260,6 +260,7 @@ struct pkt_primitives {
   u_int8_t eth_dhost[ETH_ADDR_LEN];
   u_int8_t eth_shost[ETH_ADDR_LEN];
   u_int16_t vlan_id;
+  u_int8_t cos;
 #endif
   struct host_addr src_ip;
   struct host_addr dst_ip;
@@ -306,6 +307,8 @@ struct pkt_payload {
   u_int16_t ifindex_out;
   u_int8_t src_nmask;
   u_int8_t dst_nmask;
+  u_int16_t vlan;
+  u_int8_t priority;
   struct host_addr bgp_next_hop;
 };
 

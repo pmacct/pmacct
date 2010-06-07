@@ -55,7 +55,7 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified UDP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | none ] \n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | none ] \n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
@@ -1153,8 +1153,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_mac(pptrs);
 	    reset_ip4(pptrs);
 
-            memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-            memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
+            memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+            memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
 	    ((struct my_iphdr *)pptrs->iph_ptr)->ip_vhl = 0x45;
             memcpy(&((struct my_iphdr *)pptrs->iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
             memcpy(&((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
@@ -1187,8 +1187,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (req->bpf_filter) {
 	    reset_mac(&pptrsv->v6);
 	    reset_ip6(&pptrsv->v6);
-	    memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-	    memcpy(pptrsv->v6.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
+	    memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+	    memcpy(pptrsv->v6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
 	    ((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
             memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_src, pkt+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
             memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_dst, pkt+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
@@ -1222,9 +1222,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_mac_vlan(&pptrsv->vlan4); 
 	    reset_ip4(&pptrsv->vlan4);
 
-	    memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-	    memcpy(pptrsv->vlan4.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
-	    memcpy(pptrsv->vlan4.vlan_ptr, pkt+tpl->tpl[NF9_SRC_VLAN].off, tpl->tpl[NF9_SRC_VLAN].len);
+	    memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+	    memcpy(pptrsv->vlan4.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+	    memcpy(pptrsv->vlan4.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
 	    ((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_vhl = 0x45;
 	    memcpy(&((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
 	    memcpy(&((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
@@ -1258,9 +1258,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_mac_vlan(&pptrsv->vlan6);
 	    reset_ip6(&pptrsv->vlan6);
 
-	    memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-	    memcpy(pptrsv->vlan6.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
-	    memcpy(pptrsv->vlan6.vlan_ptr, pkt+tpl->tpl[NF9_SRC_VLAN].off, tpl->tpl[NF9_SRC_VLAN].len);
+	    memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+	    memcpy(pptrsv->vlan6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+	    memcpy(pptrsv->vlan6.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
 	    ((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
 	    memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_src, pkt+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
 	    memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_dst, pkt+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
@@ -1296,8 +1296,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
             /* XXX: fix caplen */
             reset_mac(&pptrsv->mpls4);
-            memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-            memcpy(pptrsv->mpls4.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
+            memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+            memcpy(pptrsv->mpls4.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
 
 	    for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
 	      memset(ptr, 0, 4);
@@ -1343,8 +1343,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	    /* XXX: fix caplen */
 	    reset_mac(&pptrsv->mpls6);
-	    memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-	    memcpy(pptrsv->mpls6.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
+	    memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+	    memcpy(pptrsv->mpls6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
             for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
 	      memset(ptr, 0, 4);
 	      memcpy(ptr, pkt+tpl->tpl[idx].off, tpl->tpl[idx].len);
@@ -1389,9 +1389,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	    /* XXX: fix caplen */
 	    reset_mac_vlan(&pptrsv->vlanmpls4);
-	    memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-	    memcpy(pptrsv->vlanmpls4.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
-	    memcpy(pptrsv->vlanmpls4.vlan_ptr, pkt+tpl->tpl[NF9_SRC_VLAN].off, tpl->tpl[NF9_SRC_VLAN].len);
+	    memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+	    memcpy(pptrsv->vlanmpls4.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+	    memcpy(pptrsv->vlanmpls4.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
 
 	    for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
 	      memset(ptr, 0, 4);
@@ -1437,9 +1437,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
             /* XXX: fix caplen */
 	    reset_mac_vlan(&pptrsv->vlanmpls6);
-	    memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_SRC_MAC].off, tpl->tpl[NF9_SRC_MAC].len);
-	    memcpy(pptrsv->vlanmpls6.mac_ptr, pkt+tpl->tpl[NF9_DST_MAC].off, tpl->tpl[NF9_DST_MAC].len);
-	    memcpy(pptrsv->vlanmpls6.vlan_ptr, pkt+tpl->tpl[NF9_SRC_VLAN].off, tpl->tpl[NF9_SRC_VLAN].len);
+	    memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
+	    memcpy(pptrsv->vlanmpls6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+	    memcpy(pptrsv->vlanmpls6.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
 	    for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
 	      memset(ptr, 0, 4);
 	      memcpy(ptr, pkt+tpl->tpl[idx].off, tpl->tpl[idx].len);
@@ -1592,7 +1592,7 @@ u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_
 {
   u_int8_t ret=0;
 
-  if (tpl->tpl[NF9_SRC_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_SRC_VLAN].off) > 0) ret += NF9_FTYPE_VLAN; 
+  if (tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ret += NF9_FTYPE_VLAN; 
   if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
   if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4 || tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
   else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6 || tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_IPV6;

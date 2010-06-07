@@ -91,8 +91,8 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_FLOW_SAMPLER_MODE           49
 #define NF9_FLOW_SAMPLER_INTERVAL       50
 #define NF9_SRC_MAC                     56
-#define NF9_DST_MAC                     57
-#define NF9_SRC_VLAN                    58
+#define NF9_DST_MAC                     80
+#define NF9_SRC_VLAN                    243
 /* ... */
 #define NF9_IP_PROTOCOL_VERSION		60
 /* ... */
@@ -314,10 +314,7 @@ flow_to_flowset_dst_mac_handler(char *flowset, const struct FLOW *flow, int idx,
 static void
 flow_to_flowset_vlan_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  u_int16_t rec16;
-
-  rec16 = htons(flow->vlan);
-  memcpy(flowset, &rec16, size);
+  memcpy(flowset, &flow->vlan, size);
 }
 
 static void
@@ -541,6 +538,7 @@ nf9_init_template(void)
 	  v4_int_template.r[rcount].length = 2;
 	  rcount++;
 	}
+/*
 	if (config.nfprobe_what_to_count & COUNT_VLAN) {
 	  v4_template.r[rcount].type = htons(NF9_MPLS_LABEL_1);
 	  v4_template.r[rcount].length = htons(3);
@@ -548,6 +546,7 @@ nf9_init_template(void)
 	  v4_int_template.r[rcount].length = 3;
 	  rcount++;
 	}
+*/
 	if (config.nfprobe_what_to_count & COUNT_CLASS) {
 	  v4_template.r[rcount].type = htons(NF9_CUST_CLASS);
 	  v4_template.r[rcount].length = htons(16);
@@ -733,6 +732,7 @@ nf9_init_template(void)
 	  v6_int_template.r[rcount].length = 2;
 	  rcount++;
 	}
+/*
         if (config.nfprobe_what_to_count & COUNT_VLAN) {
 	  v6_template.r[rcount].type = htons(NF9_MPLS_LABEL_1);
 	  v6_template.r[rcount].length = htons(3);
@@ -740,6 +740,7 @@ nf9_init_template(void)
 	  v6_int_template.r[rcount].length = 3;
 	  rcount++;
 	}
+*/
         if (config.nfprobe_what_to_count & COUNT_CLASS) {
 	  v6_template.r[rcount].type = htons(NF9_CUST_CLASS);
 	  v6_template.r[rcount].length = htons(16);

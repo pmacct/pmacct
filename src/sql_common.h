@@ -199,6 +199,7 @@ struct sqlfunc_cb_registry {
 EXT void count_src_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_vlan_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_cos_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

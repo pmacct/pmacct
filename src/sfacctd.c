@@ -61,7 +61,7 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified UDP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | none] \n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | none ] \n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
@@ -1022,7 +1022,8 @@ void decodeLinkLayer(SFSample *sample)
     /* |   pri  | c |         vlan-id        | */
     /*  ------------------------------------- */
     /* [priority = 3bits] [Canonical Format Flag = 1bit] [vlan-id = 12 bits] */
-    sample->in_vlan = vlan;
+    if (!sample->in_vlan && !sample->out_vlan) sample->in_vlan = vlan;
+    if (!sample->in_priority && !sample->out_priority) sample->in_priority = priority;
     sample->eth_type = (ptr[0] << 8) + ptr[1];
 
     ptr += 2;

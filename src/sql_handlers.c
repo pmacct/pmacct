@@ -78,6 +78,14 @@ void count_vlan_handler(const struct db_cache *cache_elem, const struct insert_d
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
+
+void count_cos_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.cos);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.cos);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
 #endif
 
 void count_src_host_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)

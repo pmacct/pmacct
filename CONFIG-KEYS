@@ -28,7 +28,7 @@ VALUES:		[true|false]
 DESC:		daemonizes the process (default: false).
 
 KEY:		aggregate (-c)
-VALUES:		[src_mac, dst_mac, vlan, src_host, dst_host, src_net, dst_net, src_mask,
+VALUES:		[src_mac, dst_mac, vlan, cos, src_host, dst_host, src_net, dst_net, src_mask,
 		 dst_mask, src_as, dst_as, src_port, dst_port, tos, proto, none, sum_mac,
 		 sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, class, tcpflags,
 		 in_iface, out_iface, std_comm, ext_comm, as_path, peer_src_ip, peer_dst_ip,

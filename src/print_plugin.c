@@ -473,6 +473,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       etheraddr_string(data->eth_dhost, dst_mac);
       printf("%-17s  ", dst_mac);
       printf("%-5d  ", data->vlan_id); 
+      printf("%-2d  ", data->cos); 
 #endif
       printf("%-10d  ", data->src_as); 
       printf("%-10d  ", data->dst_as); 
@@ -542,6 +543,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       etheraddr_string(data->eth_dhost, dst_mac);
       printf("%s,", dst_mac);
       printf("%d,", data->vlan_id); 
+      printf("%d,", data->cos); 
 #endif
       printf("%d,", data->src_as); 
       printf("%d,", data->dst_as); 
@@ -601,6 +603,7 @@ void P_write_stats_header_formatted()
   printf("SRC_MAC            ");
   printf("DST_MAC            ");
   printf("VLAN   ");
+  printf("COS ");
 #endif
   printf("SRC_AS      ");
   printf("DST_AS      ");
@@ -644,6 +647,7 @@ void P_write_stats_header_csv()
   printf("SRC_MAC,");
   printf("DST_MAC,");
   printf("VLAN,");
+  printf("COS,");
 #endif
   printf("SRC_AS,");
   printf("DST_AS,");

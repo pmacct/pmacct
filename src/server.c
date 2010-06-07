@@ -273,6 +273,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_SRC_MAC) memcpy(d1->eth_shost, s1->eth_shost, ETH_ADDR_LEN); 
   if (w & COUNT_DST_MAC) memcpy(d1->eth_dhost, s1->eth_dhost, ETH_ADDR_LEN); 
   if (w & COUNT_VLAN) d1->vlan_id = s1->vlan_id; 
+  if (w & COUNT_COS) d1->cos = s1->cos; 
 #endif
   if (w & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
     if (s1->src_ip.family == AF_INET) d1->src_ip.address.ipv4.s_addr = s1->src_ip.address.ipv4.s_addr; 

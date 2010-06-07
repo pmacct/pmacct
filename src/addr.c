@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -326,11 +326,9 @@ u_int64_t pm_ntohll(u_int64_t addr)
 {
 #if defined IM_LITTLE_ENDIAN
   static u_int64_t buf;
-  register u_int32_t *x = (u_int32_t *)(void *) &addr;
-  register u_int32_t *y = (u_int32_t *)(void *) &buf;
 
-  y[0] = ntohl(x[1]);
-  y[1] = ntohl(x[0]);
+  buf = ((u_int64_t) ntohl(addr & 0xFFFFFFFFLLU)) << 32;
+  buf |= ntohl((addr & 0xFFFFFFFF00000000LLU) >> 32);
 
   return buf;
 #else

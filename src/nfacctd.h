@@ -438,10 +438,9 @@ struct data_hdr_v9 {
 #define NF9_ENGINE_TYPE                 38
 #define NF9_ENGINE_ID                   39
 /* ... */
-#define NF9_SRC_MAC                     56
-#define NF9_DST_MAC                     57
-#define NF9_SRC_VLAN                    58
-#define NF9_DST_VLAN                    59
+#define NF9_IN_SRC_MAC                  56
+#define NF9_OUT_DST_MAC                 57
+/* ... */
 #define NF9_IP_PROTOCOL_VERSION         60
 #define NF9_DIRECTION                   61
 #define NF9_IPV6_NEXT_HOP		62
@@ -457,10 +456,16 @@ struct data_hdr_v9 {
 #define NF9_MPLS_LABEL_8		77
 #define NF9_MPLS_LABEL_9		78
 #define NF9_MPLS_LABEL_10		79
+#define NF9_IN_DST_MAC			80 
+#define NF9_OUT_SRC_MAC			81 
 /* ... */
 #define NF9_CUST_CLASS			200
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
+/* ... */
+#define NF9_IN_VLAN			243
+/* ... */
+#define NF9_OUT_VLAN			254
 
 #define NF9_FTYPE_IPV4			0
 #define NF9_FTYPE_IPV6			1

@@ -1012,6 +1012,20 @@ int sql_evaluate_primitives(int primitive)
       primitive++;
     }
   }
+
+  if (what_to_count & COUNT_COS) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "cos", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "cos=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_COS;
+    values[primitive].handler = where[primitive].handler = count_cos_handler;
+    primitive++;
+  }
 #endif
 
   if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {

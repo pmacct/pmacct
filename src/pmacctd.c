@@ -53,7 +53,7 @@ void usage_daemon(char *prog_name)
   printf("\nGeneral options:\n");
   printf("  -h  \tShow this page\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t proto | tos | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | none ] \n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t proto | tos | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | none ] \n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -N  \tDisable promiscuous mode\n");
   printf("  -n  \tPath to a file containing Network definitions\n");
@@ -453,6 +453,11 @@ int main(int argc,char **argv, char **envp)
           Log(LOG_ERR, "ERROR: 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
           exit(1);
         }
+
+#if defined (HAVE_L2)
+        list->cfg.what_to_count |= COUNT_VLAN;
+        list->cfg.what_to_count |= COUNT_COS;
+#endif
 
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }

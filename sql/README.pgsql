@@ -77,6 +77,7 @@ mode. Since v6 unified mode is no longer supported.
   * out_iface => iface_out (see README.iface)
   * src_mask => mask_src (see README.mask)
   * dst_mask => mask_dst (see README.mask)
+  * cos => cos (see README.cos)
 
 - What is the difference between 'typed' and 'unified' modes ? 
 It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses

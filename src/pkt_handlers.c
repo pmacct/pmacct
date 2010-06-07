@@ -62,6 +62,13 @@ void evaluate_packet_handlers()
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vlan_handler;
       primitives++;
     }
+
+    if (channels_list[index].aggregation & COUNT_COS) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = cos_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_cos_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_cos_handler;
+      primitives++;
+    }
 #endif
 
     if (channels_list[index].aggregation & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
@@ -480,6 +487,18 @@ void vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, 
     pdata->primitives.vlan_id = pdata->primitives.vlan_id & 0x0FFF;
   }
 }
+
+void cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  u_int16_t cos = 0;
+
+  if (pptrs->vlan_ptr) {
+    memcpy(&cos, pptrs->vlan_ptr, 2);
+    cos = ntohs(cos);
+    pdata->primitives.cos = cos >> 13;
+  }
+}
 #endif
 
 void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -709,6 +728,14 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   payload->tag2 = pptrs->tag2;
   if (pptrs->ifindex_in > 0)  payload->ifindex_in  = pptrs->ifindex_in;
   if (pptrs->ifindex_out > 0) payload->ifindex_out = pptrs->ifindex_out;
+  if (pptrs->vlan_ptr) {
+    u_int16_t vlan_id = 0;
+
+    memcpy(&vlan_id, pptrs->vlan_ptr, 2);
+    vlan_id = ntohs(vlan_id);
+    payload->vlan = vlan_id & 0x0FFF;
+    payload->priority = vlan_id >> 13;
+  }
 
   /* Typically don't have L2 info under ULOG */
   if (!pptrs->mac_ptr) {
@@ -784,7 +811,7 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_SRC_MAC].off, MIN(tpl->tpl[NF9_SRC_MAC].len, 6));
+    memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
     break;
   default:
     break;
@@ -799,7 +826,7 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_DST_MAC].off, MIN(tpl->tpl[NF9_DST_MAC].len, 6));
+    memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
     break;
   default:
     break;
@@ -814,12 +841,16 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_SRC_VLAN].off, MIN(tpl->tpl[NF9_SRC_VLAN].len, 2));
+    memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
     pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
     break;
   default:
     break;
   }
+}
+
+void NF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
 }
 #endif
 
@@ -2393,6 +2424,14 @@ void SF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   SFSample *sample = (SFSample *) pptrs->f_data;
   
   pdata->primitives.vlan_id = sample->in_vlan;
+}
+
+void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.cos = sample->in_priority;
 }
 #endif
 
