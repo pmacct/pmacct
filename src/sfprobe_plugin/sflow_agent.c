@@ -57,6 +57,13 @@ void sfl_agent_init(SFLAgent *agent,
     rc = setsockopt(agent->receiverSocket, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
   }
+
+  if (config.pipe_size) {
+    int rc;
+
+    rc = Setsocksize(agent->receiverSocket, SOL_SOCKET, SO_SNDBUF, &config.pipe_size, sizeof(config.pipe_size));
+    if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for SOL_SNDBUF: %s\n", config.name, config.type, strerror(errno));
+  }
 }
 
 /*_________________---------------------------__________________

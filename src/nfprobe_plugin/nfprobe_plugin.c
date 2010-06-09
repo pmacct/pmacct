@@ -971,6 +971,13 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
   }
 
+  if (config.pipe_size) {
+    int rc;
+
+    rc = Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.pipe_size, sizeof(config.pipe_size));
+    if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for SOL_SNDBUF: %s\n", config.name, config.type, strerror(errno));
+  }
+
   if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): bind() failed: %s\n", config.name, config.type, strerror(errno));
     exit_plugin(1);

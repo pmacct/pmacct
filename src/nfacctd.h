@@ -402,7 +402,7 @@ struct data_hdr_v9 {
 #define NF9_TEMPLATE_FLOWSET_ID         0
 #define NF9_OPTIONS_FLOWSET_ID          1
 #define NF9_MIN_RECORD_FLOWSET_ID       256
-#define NF9_MAX_DEFINED_FIELD		210
+#define NF9_MAX_DEFINED_FIELD		256
 
 /* Flowset record types the we care about */
 #define NF9_IN_BYTES			1
