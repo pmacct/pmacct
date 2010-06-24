@@ -70,6 +70,7 @@ void skinny_bgp_daemon()
   u_int32_t remote_as4 = 0;
   time_t now;
   struct hosts_table allow;
+  struct bgp_md5_table bgp_md5;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
@@ -155,6 +156,37 @@ void skinny_bgp_daemon()
 
   /* Preparing ACL, if any */
   if (config.nfacctd_bgp_allow_file) load_allow_file(config.nfacctd_bgp_allow_file, &allow);
+
+  /* Preparing MD5 keys, if any */
+  if (config.nfacctd_bgp_md5_file) load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
+
+  // XXX: TCP MD5 socket test
+  if (bgp_md5.num) {
+    struct my_tcp_md5sig md5sig;
+    int keylen, idx = 0;
+
+    while (idx < bgp_md5.num) {
+      struct sockaddr_storage ss_md5sig;
+      int ss_md5sig_len;
+
+      memset(&md5sig, 0, sizeof(md5sig));
+      memset(&ss_md5sig, 0, sizeof(ss_md5sig));
+
+      ss_md5sig_len = addr_to_sa((struct sockaddr *)&ss_md5sig, &bgp_md5.table[idx].addr, 0);
+      memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);
+
+      keylen = strlen(bgp_md5.table[idx].key);
+      if (keylen) {
+        md5sig.tcpm_keylen = keylen;
+        memcpy(md5sig.tcpm_key, &bgp_md5.table[idx].key, keylen);
+      }
+
+      rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
+      if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for TCP_MD5SIG (errno: %d).\n", errno);
+
+      idx++;
+    }
+  }
 
   for (;;) {
     select_again:

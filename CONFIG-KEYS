@@ -1085,8 +1085,13 @@ DESC:		writes a list of the BGP neighbors in the established state to the specif
 KEY:            bgp_daemon_allow_file [GLOBAL]
 DESC:           full pathname to a file containing the list of IP addresses (one for each line) allowed
                 to establish a BGP session packets to the BGP thread. Current syntax does not implement
-		network masks but only individual IP addresses. The Allow List is intended to be small;
-		firewall rules should be preferred to long ACLs. (default: allow all)
+		network masks but only individual IP addresses. (default: allow all)
+
+KEY:            bgp_daemon_md5_file [GLOBAL]
+DESC:           full pathname to a file containing the BGP peers (IP address only, one for each line)
+		and their corresponding MD5 passwords in CSV format (ie. 10.15.0.1, arealsmartpwd).
+		BGP peers not making use of a MD5 password should not be listed. The maximum number
+		of peers supported is 8192. The map is not reloadable at runtime. (default: no password)
 
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)

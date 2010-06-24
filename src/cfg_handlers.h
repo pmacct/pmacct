@@ -154,6 +154,7 @@ EXT int cfg_key_nfacctd_bgp_to_agent_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_default(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_nexthop(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_neighbors_file(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_md5_file(char *, char *, char *);
 EXT int cfg_key_uacctd_group(char *, char *, char *);
 EXT int cfg_key_uacctd_nl_size(char *, char *, char *);
 EXT int cfg_key_tunnel_0(char *, char *, char *);

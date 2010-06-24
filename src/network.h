@@ -163,6 +163,24 @@ struct my_tcphdr
     u_int16_t th_urp;           /* urgent pointer */
 };
 
+/* For TCP_MD5SIG socket option.  */
+#ifndef TCP_MD5SIG_MAXKEYLEN 
+#define TCP_MD5SIG_MAXKEYLEN    80
+#endif
+
+#ifndef TCP_MD5SIG
+#define TCP_MD5SIG       14
+#endif
+
+struct my_tcp_md5sig
+{
+  struct sockaddr_storage tcpm_addr;            /* Address associated.  */
+  u_int16_t     __tcpm_pad1;                    /* Zero.  */
+  u_int16_t     tcpm_keylen;                    /* Key length.  */
+  u_int32_t     __tcpm_pad2;                    /* Zero.  */
+  u_int8_t      tcpm_key[TCP_MD5SIG_MAXKEYLEN]; /* Key (binary).  */
+};
+
 struct my_udphdr
 {
   u_int16_t uh_sport;           /* source port */
@@ -387,6 +405,16 @@ struct packet_ptrs_vector {
 struct hosts_table {
   short int num;
   struct host_addr table[MAX_MAP_ENTRIES];
+};
+
+struct bgp_md5_table_entry {
+  struct host_addr addr;
+  char key[TCP_MD5SIG_MAXKEYLEN];
+};
+
+struct bgp_md5_table {
+  short int num;
+  struct bgp_md5_table_entry table[BGP_MD5_MAP_ENTRIES];
 };
 
 #define TUNNEL_PROTO_STRING	16

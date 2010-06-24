@@ -74,6 +74,7 @@ EXT void copy_stdcomm_to_asn(char *, as_t *, int);
 EXT void *Malloc(unsigned int);
 EXT void load_allow_file(char *, struct hosts_table *);
 EXT int check_allow(struct hosts_table *, struct sockaddr *);
+EXT void load_bgp_md5_file(char *, struct bgp_md5_table *);
 
 EXT unsigned int str_to_addr(const char *, struct host_addr *);
 

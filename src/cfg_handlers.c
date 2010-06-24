@@ -250,7 +250,7 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 	trim_all_spaces(value_ptr);
 
 	list->cfg.ptf.num = 0;
-	while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_MAP_ENTRIES/4) {
+	while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
 	  neg = pt_check_neg(&count_token);
 	  range_ptr = pt_check_range(count_token); 
 	  value = strtoul(count_token, &endptr_v, 10);
@@ -296,7 +296,7 @@ int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
         trim_all_spaces(value_ptr);
 
         list->cfg.pt2f.num = 0;
-        while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_MAP_ENTRIES/4) {
+        while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
           neg = pt_check_neg(&count_token);
           range_ptr = pt_check_range(count_token);
           value = strtoul(count_token, &endptr_v, 10);
@@ -1610,6 +1610,17 @@ int cfg_key_nfacctd_bgp_allow_file(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_allow_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_allow_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_md5_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_md5_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_md5_file'. Globalized.\n", filename);
 
   return changes;
 }
