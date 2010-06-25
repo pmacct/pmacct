@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -176,8 +176,12 @@ void push_stats()
 void reload_maps()
 {
   reload_map = FALSE;
+  reload_map_bgp_thread = FALSE;
 
-  if (config.refresh_maps) reload_map = TRUE; 
+  if (config.refresh_maps) {
+    reload_map = TRUE; 
+    reload_map_bgp_thread = TRUE;
+  }
   
   signal(SIGUSR2, reload_maps);
 }

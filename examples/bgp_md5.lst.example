@@ -1,0 +1,8 @@
+!
+! Sample BGP MD5 map; enabled by 'bgp_daemon_md5_file' key.
+!
+! Format supported: <BGP peer>, <MD5 key>
+!
+192.168.1.1, arealsmartpwd
+192.168.1.2, TestTest
+! ...

@@ -77,6 +77,7 @@ void skinny_bgp_daemon()
   int select_fd, select_num;
 
   /* initial cleanups */
+  reload_map_bgp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
@@ -158,34 +159,9 @@ void skinny_bgp_daemon()
   if (config.nfacctd_bgp_allow_file) load_allow_file(config.nfacctd_bgp_allow_file, &allow);
 
   /* Preparing MD5 keys, if any */
-  if (config.nfacctd_bgp_md5_file) load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
-
-  // XXX: TCP MD5 socket test
-  if (bgp_md5.num) {
-    struct my_tcp_md5sig md5sig;
-    int keylen, idx = 0;
-
-    while (idx < bgp_md5.num) {
-      struct sockaddr_storage ss_md5sig;
-      int ss_md5sig_len;
-
-      memset(&md5sig, 0, sizeof(md5sig));
-      memset(&ss_md5sig, 0, sizeof(ss_md5sig));
-
-      ss_md5sig_len = addr_to_sa((struct sockaddr *)&ss_md5sig, &bgp_md5.table[idx].addr, 0);
-      memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);
-
-      keylen = strlen(bgp_md5.table[idx].key);
-      if (keylen) {
-        md5sig.tcpm_keylen = keylen;
-        memcpy(md5sig.tcpm_key, &bgp_md5.table[idx].key, keylen);
-      }
-
-      rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
-      if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for TCP_MD5SIG (errno: %d).\n", errno);
-
-      idx++;
-    }
+  if (config.nfacctd_bgp_md5_file) {
+    load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
+    if (bgp_md5.num) process_bgp_md5_file(sock, &bgp_md5);
   }
 
   for (;;) {
@@ -197,6 +173,16 @@ void skinny_bgp_daemon()
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
     select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
     if (select_num < 0) goto select_again;
+
+    if (reload_map_bgp_thread) {
+      if (config.nfacctd_bgp_md5_file) {
+	unload_bgp_md5_file(&bgp_md5);
+	if (bgp_md5.num) process_bgp_md5_file(sock, &bgp_md5); // process unload
+	load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
+	if (bgp_md5.num) process_bgp_md5_file(sock, &bgp_md5); // process load
+      }
+      reload_map_bgp_thread = FALSE;
+    }
 
     /* New connection is coming in */ 
     if (FD_ISSET(sock, &read_descs)) {
@@ -2011,5 +1997,31 @@ void bgp_config_checks(struct configuration *c)
       exit(1);
     }
     c->data_type |= PIPE_TYPE_BGP;
+  }
+}
+
+void process_bgp_md5_file(int sock, struct bgp_md5_table *bgp_md5)
+{
+  struct my_tcp_md5sig md5sig;
+  struct sockaddr_storage ss_md5sig;
+  int rc, keylen, idx = 0, ss_md5sig_len;
+
+  while (idx < bgp_md5->num) {
+    memset(&md5sig, 0, sizeof(md5sig));
+    memset(&ss_md5sig, 0, sizeof(ss_md5sig));
+
+    ss_md5sig_len = addr_to_sa((struct sockaddr *)&ss_md5sig, &bgp_md5->table[idx].addr, 0);
+    memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);
+
+    keylen = strlen(bgp_md5->table[idx].key);
+    if (keylen) {
+      md5sig.tcpm_keylen = keylen;
+      memcpy(md5sig.tcpm_key, &bgp_md5->table[idx].key, keylen);
+    }
+
+    rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
+    if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for TCP_MD5SIG (errno: %d).\n", errno);
+
+    idx++;
   }
 }

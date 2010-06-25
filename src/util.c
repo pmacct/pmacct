@@ -1014,6 +1014,16 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
   }
 }
 
+void unload_bgp_md5_file(struct bgp_md5_table *t)
+{
+  int index = 0;
+
+  while (index < t->num) {
+    memset(t->table[index].key, 0, TCP_MD5SIG_MAXKEYLEN);
+    index++;
+  }
+}
+
 int check_allow(struct hosts_table *allow, struct sockaddr *sa)
 {
   int index;

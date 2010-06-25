@@ -180,6 +180,7 @@ EXT as_t evaluate_first_asn(char *);
 EXT void bgp_srcdst_lookup(struct packet_ptrs *);
 EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
 EXT void write_neighbors_file(char *);
+EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(void *, void *);
