@@ -11,7 +11,7 @@ SIGUSR1:        returns various statistics via either console or syslog; the sys
 		'syslog'). It works for all pmacctd/nfacctd/sfacctd;
 SIGUSR2:	if 'refresh_maps' configuration directive is enabled it causes Core Process-based
 		maps to be reloaded (ie. Pre-Tagging, BGP source peer ASN, NetFlow/sFlow agent to
-		BGP peer);
+		BGP peer, BGP MD5, etc.);
 SIGINT:		ignored if the daemon is started in background; otherwise the signal is propagated
 		to each running plugin (which is in turn gracefully terminated);
 SIGTERM:	not handled (which means it follows the default behaviour for the OS) if the daemon

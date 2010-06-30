@@ -664,7 +664,7 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
 	update.nlri = pkt;
 	update.length = update_len;
   }
-	
+
   if (withdraw.length) bgp_nlri_parse(peer, NULL, &withdraw);
 
   /* NLRI parsing */
@@ -673,22 +673,22 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
 	
   if (mp_update.length
 	  && mp_update.afi == AFI_IP
-	  && mp_update.safi == SAFI_UNICAST)
+	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL))
 	bgp_nlri_parse(peer, &attr, &mp_update);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP
-	  && mp_withdraw.safi == SAFI_UNICAST)
+	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL))
 	bgp_nlri_parse (peer, NULL, &mp_withdraw);
 
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
-	  && mp_update.safi == SAFI_UNICAST)
+	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL))
 	bgp_nlri_parse(peer, &attr, &mp_update);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP6
-	  && mp_withdraw.safi == SAFI_UNICAST)
+	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL))
 	bgp_nlri_parse (peer, NULL, &mp_withdraw);
 
   /* Receipt of End-of-RIB can be processed here; being a silent
@@ -960,6 +960,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 {
   u_char *pnt;
   u_char *lim;
+  u_char safi;
   struct prefix p;
   int psize, end;
   int ret;
@@ -969,6 +970,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
   pnt = info->nlri;
   lim = pnt + info->length;
   end = info->length;
+  safi = info->safi;
 
   for (; pnt < lim; pnt += psize) {
 
@@ -977,22 +979,37 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	/* Fetch prefix length and cross-check */
 	p.prefixlen = *pnt++; end--;
 	p.family = bgp_afi2family (info->afi);
-	
-	if ((info->afi == AFI_IP && p.prefixlen > 32) || (info->afi == AFI_IP6 && p.prefixlen > 128)) return -1;
 
-	psize = ((p.prefixlen+7)/8);
-	if (psize > end) return -1;
+	if (info->safi == SAFI_UNICAST) { 
+	  if ((info->afi == AFI_IP && p.prefixlen > 32) || (info->afi == AFI_IP6 && p.prefixlen > 128)) return -1;
 
-	/* Fetch prefix from NLRI packet. */
-	memcpy(&p.u.prefix, pnt, psize);
+	  psize = ((p.prefixlen+7)/8);
+	  if (psize > end) return -1;
 
-	// XXX: check address correctnesss now that we have it?
+	  /* Fetch prefix from NLRI packet. */
+	  memcpy(&p.u.prefix, pnt, psize);
+
+	  // XXX: check address correctnesss now that we have it?
+	}
+	else if (info->safi == SAFI_MPLS_LABEL) { /* rfc3107 labeled unicast */
+	  if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) return -1;
+
+          psize = ((p.prefixlen+7)/8);
+          if (psize > end) return -1;
+
+          /* Fetch prefix from NLRI packet, drop the 3 bytes label. */
+          memcpy(&p.u.prefix, pnt+3, (psize-3));
+	  p.prefixlen -= 24;
+
+	  /* As we trash the label anyway, let's rewrite the SAFI as plain unicast */
+	  safi = SAFI_UNICAST;
+	}
 	
     /* Let's do our job now! */
 	if (attr)
-	  ret = bgp_process_update(peer, &p, attr, info->afi, info->safi);
+	  ret = bgp_process_update(peer, &p, attr, info->afi, safi);
 	else
-	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, info->safi);
+	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi);
   }
 
   return 0;
@@ -1117,7 +1134,8 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	comm = ri->attr->community ? ri->attr->community->str : empty;
 	ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n", inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s %u/%u] w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n",
+		inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
   }
 
   /* Withdraw specified route from routing table. */

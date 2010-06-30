@@ -976,7 +976,7 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core ): BGP MD5 file '%s' not found\n", filename);
+      Log(LOG_ERR, "ERROR ( default/core/BGP ): BGP MD5 file '%s' not found\n", filename);
       exit(1);
     }
 
@@ -1001,7 +1001,7 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
 	  }
 
           if (ret > 0 && len > 0) index++;
-          else Log(LOG_WARNING, "WARN ( default/core ): 'bgp_daemon_md5_file': line '%s' ignored.\n", buf);
+          else Log(LOG_WARNING, "WARN ( default/core/BGP ): 'bgp_daemon_md5_file': line '%s' ignored.\n", buf);
         }
       }
     }
