@@ -895,6 +895,7 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 	    break;
 #if defined ENABLE_IPV6
 	  case 16:
+	  case 32:
 	    attr->mp_nexthop.family = AF_INET6;
 	    memcpy(&attr->mp_nexthop.address.ipv6, ptr, 16); 
 	    break;

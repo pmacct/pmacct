@@ -1092,7 +1092,7 @@ DESC:           full pathname to a file containing the BGP peers (IP address onl
 		and their corresponding MD5 passwords in CSV format (ie. 10.15.0.1, arealsmartpwd).
 		BGP peers not making use of a MD5 password should not be listed. The maximum number
 		of peers supported is 8192. For a sample map look in: 'examples/bgp_md5.lst.example'
-		(default: no password)
+		The feature was tested working against a 2.6.32 Linux kernel. (default: no password)
 
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)
