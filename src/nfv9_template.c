@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -104,6 +104,8 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   if (prevptr) prevptr->next = ptr;
   else tpl_cache.c[modulo] = ptr;
 
+  log_template_v9(ptr, pptrs); 
+
   return ptr;
 }
 
@@ -135,6 +137,37 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
     count--;
     field++;
   }
+
+  log_template_v9(tpl, pptrs); 
+}
+
+void log_template_v9(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+{
+  struct host_addr a;
+  u_char agent_addr[50];
+  u_int16_t agent_port, count, size;
+
+  sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
+  addr_to_str(agent_addr, &a);
+
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 agent         : %s:%u\n", agent_addr, ntohl(((struct struct_header_v9 *)pptrs->f_header)->source_id));
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template type : %s\n", ( tpl->template_type == 0 ) ? "flow" : "options");
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template ID   : %u\n", ntohs(tpl->template_id));
+  Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
+  Log(LOG_DEBUG, "DEBUG ( default/core ): |     field type     | offset |  size  |\n");
+
+  for (count = 0, size = 0; count < NF9_MAX_DEFINED_FIELD; size += tpl->tpl[count].len, count++) {
+    if (tpl->tpl[count].len) {
+      if (count <= MAX_TPL_DESC_LIST) 
+	Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18s | %6u | %6u |\n", tpl_desc_list[count], tpl->tpl[count].off, tpl->tpl[count].len);
+      else
+	Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18u | %6u | %6u |\n", count, tpl->tpl[count].off, tpl->tpl[count].len);
+    }
+  }
+  
+  Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 record size : %u\n", size);
+  Log(LOG_DEBUG, "DEBUG ( default/core ): \n");
 }
 
 struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *hdr, struct packet_ptrs *pptrs)
@@ -182,6 +215,8 @@ struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_
   if (prevptr) prevptr->next = ptr;
   else tpl_cache.c[modulo] = ptr;
 
+  log_template_v9(ptr, pptrs); 
+
   return ptr;
 }
 
@@ -214,4 +249,6 @@ void refresh_opt_template_v9(struct options_template_hdr_v9 *hdr, struct templat
     count--;
     field++;
   }
+
+  log_template_v9(tpl, pptrs); 
 }

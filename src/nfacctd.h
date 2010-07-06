@@ -492,6 +492,70 @@ struct data_hdr_v9 {
 #define NF9_OPT_SCOPE_CACHE		4
 #define NF9_OPT_SCOPE_TPL		5
 
+#define MAX_TPL_DESC_LIST 81
+static char *tpl_desc_list[] = {
+  "",
+  "bytes",
+  "packets",
+  "flows",
+  "L4 protocol",
+  "tos",
+  "tcp flags",
+  "L4 src port",
+  "IPv4 src addr",
+  "IPv4 src mask",
+  "input snmp",
+  "L4 dst port",
+  "IPv4 dst addr",
+  "IPv4 dst mask",
+  "output snmp",
+  "IPv4 next hop",
+  "src as",
+  "dst as",
+  "BGP IPv4 next hop",
+  "", "",
+  "last switched",
+  "first switched",
+  "", "", "", "",
+  "IPv6 src addr",
+  "IPv6 dst addr",
+  "IPv6 src mask",
+  "IPv6 dst mask",
+  "",
+  "icmp type", 
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "",
+  "sampler ID",
+  "sampler mode",
+  "sampler interval",
+  "", "", "", "",
+  "",
+  "in src mac",
+  "out dst mac",
+  "", "",
+  "ip version",
+  "direction",
+  "IPv6 next hop",
+  "IPv6 BGP next hop",
+  "",
+  "", "", "", "",
+  "",
+  "mpls label 1",
+  "mpls label 2",
+  "mpls label 3",
+  "mpls label 4",
+  "mpls label 5",
+  "mpls label 6",
+  "mpls label 7",
+  "mpls label 8",
+  "mpls label 9",
+  "mpls label 10",
+  "in dst mac",
+  "out src mac"
+};
+
 /* Ordered Template field */
 struct otpl_field {
   u_int16_t off;
@@ -557,6 +621,7 @@ EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_in
 EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *);
 EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
+EXT void log_template_v9(struct template_cache_entry *, struct packet_ptrs *);
 EXT struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_opt_template_v9(struct options_template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
 #undef EXT
