@@ -392,6 +392,11 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_COS;
           what_to_count |= COUNT_COS;
         }
+	else if (!strcmp(count_token[count_index], "sum_mac")) {
+	  count_token_int[count_index] = COUNT_SUM_MAC;
+	  what_to_count |= COUNT_SUM_MAC;
+	}
+#endif 
         else if (!strcmp(count_token[count_index], "in_iface")) {
           count_token_int[count_index] = COUNT_IN_IFACE;
           what_to_count |= COUNT_IN_IFACE;
@@ -400,11 +405,6 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_OUT_IFACE;
           what_to_count |= COUNT_OUT_IFACE;
         }
-	else if (!strcmp(count_token[count_index], "sum_mac")) {
-	  count_token_int[count_index] = COUNT_SUM_MAC;
-	  what_to_count |= COUNT_SUM_MAC;
-	}
-#endif 
         else if (!strcmp(count_token[count_index], "tos")) {
 	  count_token_int[count_index] = COUNT_IP_TOS;
 	  what_to_count |= COUNT_IP_TOS;
@@ -803,6 +803,7 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "cos")) {
           request.data.cos = atoi(match_string_token);
         }
+#endif
 
         else if (!strcmp(count_token[match_string_index], "in_iface")) {
           char *endptr;
@@ -814,6 +815,7 @@ int main(int argc,char **argv)
 
           request.data.ifindex_out = strtoul(match_string_token, &endptr, 10);
         }
+
         else if (!strcmp(count_token[match_string_index], "src_mask")) {
           char *endptr;
 	  u_int32_t src_mask;
@@ -828,7 +830,7 @@ int main(int argc,char **argv)
           dst_mask = strtoul(match_string_token, &endptr, 10);
 	  request.data.dst_nmask = dst_mask;
         }
-#endif
+
         else if (!strcmp(count_token[match_string_index], "src_port") ||
 		 !strcmp(count_token[match_string_index], "sum_port")) { 
           request.data.src_port = atoi(match_string_token);
