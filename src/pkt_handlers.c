@@ -1056,7 +1056,16 @@ void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.src_nmask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      memcpy(&pdata->primitives.src_nmask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
+      break;
+    }
+#if defined ENABLE_IPV6
+    if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      memcpy(&pdata->primitives.src_nmask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
+      break;
+    }
+#endif
     break;
   case 8:
     switch(hdr->aggregation) {
@@ -1094,7 +1103,16 @@ void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.dst_nmask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      memcpy(&pdata->primitives.dst_nmask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+      break;
+    }
+#if defined ENABLE_IPV6
+    if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      memcpy(&pdata->primitives.dst_nmask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
+      break;
+    }
+#endif
     break;
   case 8:
     switch(hdr->aggregation) {
