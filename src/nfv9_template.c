@@ -158,7 +158,7 @@ void log_template_v9(struct template_cache_entry *tpl, struct packet_ptrs *pptrs
 
   for (count = 0, size = 0; count < NF9_MAX_DEFINED_FIELD; size += tpl->tpl[count].len, count++) {
     if (tpl->tpl[count].len) {
-      if (count <= MAX_TPL_DESC_LIST) 
+      if (count <= MAX_TPL_DESC_LIST && strlen(tpl_desc_list[count])) 
 	Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18s | %6u | %6u |\n", tpl_desc_list[count], tpl->tpl[count].off, tpl->tpl[count].len);
       else
 	Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18u | %6u | %6u |\n", count, tpl->tpl[count].off, tpl->tpl[count].len);
