@@ -98,6 +98,8 @@ mode. Since v6 unified mode is no longer supported.
   * dst_as => as_dst (BIGINT NOT NULL DEFAULT 0)
   * src_host => ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * dst_host => ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * src_net => ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * dst_net => ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * src_port => src_port (INT NOT NULL DEFAULT 0)
   * dst_port => dst_port (INT NOT NULL DEFAULT 0)
   * tcpflags => tcp_flags (SMALLINT NOT NULL DEFAULT 0)

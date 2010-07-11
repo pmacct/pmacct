@@ -1743,7 +1743,7 @@ int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp = TRUE;
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon'. Globalized.\n", filename);
 
   return changes;
@@ -1757,7 +1757,7 @@ int cfg_key_nfacctd_bgp_msglog(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog = TRUE;
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog'. Globalized.\n", filename);
 
   return changes;
@@ -2088,7 +2088,7 @@ int cfg_key_pmacctd_force_frag_handling(char *filename, char *name, char *value_
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.handle_fragments = TRUE;
+  for (; list; list = list->next, changes++) list->cfg.handle_fragments = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'pmacctd_force_frag_handling'. Globalized.\n", filename);
 
   return changes;

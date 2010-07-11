@@ -89,6 +89,8 @@ Similarly, BGP tables:
   * dst_as => as_dst (INT(8) NOT NULL DEFAULT 0)
   * src_host => ip_src (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * dst_host => ip_dst (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * src_net => ip_src (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * dst_net => ip_dst (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * src_port => src_port (INT(4) NOT NULL DEFAULT 0)
   * dst_port => dst_port (INT(4) NOT NULL DEFAULT 0)
   * tcpflags => tcp_flags (INT(2) NOT NULL DEFAULT 0)

@@ -88,6 +88,8 @@ Similarly, BGP tables:
   * dst_as => as_dst (INT(4) UNSIGNED NOT NULL)
   * src_host => ip_src (CHAR(15) NOT NULL, see README.IPv6)
   * dst_host => ip_dst (CHAR(15) NOT NULL, see README.IPv6)
+  * src_net => ip_src (CHAR(15) NOT NULL, see README.IPv6)
+  * dst_net => ip_dst (CHAR(15) NOT NULL, see README.IPv6)
   * src_port => src_port (INT(2) UNSIGNED NOT NULL)
   * dst_port => dst_port (INT(2) UNSIGNED NOT NULL)
   * tcpflags => tcp_flags (INT(4) UNSIGNED NOT NULL)
