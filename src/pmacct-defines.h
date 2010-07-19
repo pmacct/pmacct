@@ -195,6 +195,11 @@
 #define PRINT_OUTPUT_FORMATTED	0x00000001
 #define PRINT_OUTPUT_CSV	0x00000002
 
+#define DIRECTION_IN		0x00000001
+#define DIRECTION_OUT		0x00000002
+#define DIRECTION_TAG		0x00000004
+#define DIRECTION_TAG2		0x00000008
+
 typedef u_int32_t pm_class_t;
 typedef u_int32_t pm_id_t;
 

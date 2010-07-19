@@ -53,9 +53,7 @@ typedef struct _SflSp {
 
   struct in_addr interfaceIP;
   struct in6_addr interfaceIP6;
-  char interfaceMAC[6];
   char pad[2];
-  int gotInterfaceMAC;
 
   SFLAgent *agent;
   SFLSampler *sampler;
@@ -290,11 +288,27 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 			     pkt_len,
 			     cap_len);
 
-  // test the src mac address to know the direction.  Anything with src = interfaceMAC
-  // will be counted as output, and everything else can be counted as input.  (There may
-  // be a way to get this info from the pcap library,  but I don't know the incantation.
-  // (If you know how to do that, please let me know).
-  direction = memcmp(sp->interfaceMAC, local_buf + 6, 6) ? SFL_DIRECTION_IN : SFL_DIRECTION_OUT;
+  /* Let's fill sample direction in - and default to ingress */
+  direction = 0;
+
+  if (config.nfprobe_direction) {
+    switch (config.nfprobe_direction) {
+    case DIRECTION_IN:
+      direction = SFL_DIRECTION_IN;
+      break;
+    case DIRECTION_OUT:
+      direction = SFL_DIRECTION_OUT;
+      break;
+    case DIRECTION_TAG:
+      if (hdr->tag == 1) direction = SFL_DIRECTION_IN;
+      else if (hdr->tag == 2) direction = SFL_DIRECTION_OUT;
+      break;
+    case DIRECTION_TAG2:
+      if (hdr->tag2 == 1) direction = SFL_DIRECTION_IN;
+      else if (hdr->tag2 == 2) direction = SFL_DIRECTION_OUT;
+      break;
+    }
+  }
 
   // maintain some counters in software - just to ease portability
   sp->bytes[direction] += pkt_len;
@@ -334,7 +348,7 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
       // an "internal" interface.
       if (!hdr->ifindex_in && !hdr->ifindex_out) {
         fs.input = (direction == SFL_DIRECTION_IN) ? sp->ifIndex : 0x3FFFFFFF;
-        fs.output = (direction == SFL_DIRECTION_IN) ? 0x3FFFFFFF : sp->ifIndex;
+        fs.output = (direction == SFL_DIRECTION_OUT) ? sp->ifIndex : 0x3FFFFFFF;
       }
       else {
         fs.input = (hdr->ifindex_in) ? hdr->ifindex_in : 0x3FFFFFFF;
@@ -440,8 +454,14 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
       if (config.what_to_count & (COUNT_VLAN|COUNT_COS)) {
         memset(&switchHdrElem, 0, sizeof(switchHdrElem));
         switchHdrElem.tag = SFLFLOW_EX_SWITCH;
-        switchHdrElem.flowType.sw.src_vlan = hdr->vlan;
-        switchHdrElem.flowType.sw.src_priority = hdr->priority;
+	if (direction == SFL_DIRECTION_IN) {
+          switchHdrElem.flowType.sw.src_vlan = hdr->vlan;
+          switchHdrElem.flowType.sw.src_priority = hdr->priority;
+	}
+	else if (direction == SFL_DIRECTION_OUT) {
+          switchHdrElem.flowType.sw.dst_vlan = hdr->vlan;
+          switchHdrElem.flowType.sw.dst_priority = hdr->priority;
+	}
         SFLADD_ELEMENT(&fs, &switchHdrElem);
       }
 
@@ -476,9 +496,8 @@ static void parse_receiver(char *string, struct in_addr *addr, u_int32_t *port)
 
 static void process_config_options(SflSp *sp)
 {
-  // sp->ifIndex = atoi(optarg);
-  // sp->ifSpeed = strtoll(optarg, NULL, 0);
-  
+  if (config.nfprobe_ifindex) sp->ifIndex = config.nfprobe_ifindex;
+  if (config.sfprobe_ifspeed) sp->ifSpeed = config.sfprobe_ifspeed;
   if (config.sfprobe_agentip) sp->agentIP.s_addr = Name_to_IP(config.sfprobe_agentip);
   if (config.sfprobe_agentsubid) sp->agentSubId = config.sfprobe_agentsubid;
   if (config.sfprobe_receiver) parse_receiver(config.sfprobe_receiver, &sp->collectorIP, &sp->collectorPort);
@@ -537,9 +556,6 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   setDefaults(&sp);
   process_config_options(&sp);
-
-  // remember if we got a mac address, so we can use it to infer direction
-  // sp.gotInterfaceMAC = ((getDevFlags & GETDEV_FOUND_MAC) != 0);
 
   // create the agent and sampler objects
   init_agent(&sp);

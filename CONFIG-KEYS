@@ -897,6 +897,20 @@ KEY:            [ nfprobe_ipprec | sfprobe_ipprec ]
 DESC:           marks self-originated NetFlow (nfprobe) and sFlow (sfprobe) messages with the supplied IP
 		precedence value. (default: 0)
 
+KEY:            [ nfprobe_direction | sfprobe_direction ]
+VALUES:		[in,out,tag,tag2]
+DESC:           defines traffic direction. Can be statically defined via 'in' and 'out' keywords. It can also
+		be dynamically determined via lookup to either 'tag' or 'tag2' values. Tag value of 1 will be
+		mapped to 'in' direction, whereas tag value of 2 will be mapped to 'out'. The idea underlying
+		tag lookups is that pre_tag_map supports, among the other features, 'filter' matching against
+		a supplied tcpdump-like filter expression; doing so against L2 primitives (ie. source or
+		destination MAC addresses) allows to dynamically determine traffic direction (default: none)
+
+KEY:            [ nfprobe_ifindex | sfprobe_ifindex ]
+DESC:           statically associates an interface index (ifIndex) to a given nfprobe or sfprobe plugin. This
+		definition will be always overridden when the ifIndex can be determined dynamically (ie. via
+		ULOG). 
+
 KEY:		sfprobe_receiver
 DESC:           defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.
 		The value is expected to be in the usual form 'address:port'. (default: 127.0.0.1:6343)
@@ -906,6 +920,9 @@ DESC:		sets the value of agentIp field inside the sFlow datagram header.
 
 KEY:		sfprobe_agentsubid
 DESC:		sets the value of agentSubId field inside the sFlow datagram header.
+
+KEY:            sfprobe_ifspeed
+DESC:           statically associates an interface speed to a given sfprobe plugin. (default: 100000000)
 
 KEY:		bgp_daemon
 VALUES:		[true|false]

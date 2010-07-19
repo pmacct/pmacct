@@ -169,9 +169,12 @@ struct configuration {
   int nfprobe_peer_as;
   char *nfprobe_source_ip;
   int nfprobe_ipprec;
+  int nfprobe_direction;
+  u_int32_t nfprobe_ifindex;
   char *sfprobe_receiver;
   char *sfprobe_agentip;
   int sfprobe_agentsubid;
+  u_int64_t sfprobe_ifspeed;
   int tee_transparent;
   int uacctd_group;
   int uacctd_nl_size;

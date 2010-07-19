@@ -2525,6 +2525,66 @@ int cfg_key_nfprobe_ip_precedence(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfprobe_direction(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  if (!strcmp(value_ptr, "tag"))
+    value = DIRECTION_TAG;
+  else if (!strcmp(value_ptr, "tag2"))
+    value = DIRECTION_TAG2;
+  else if (!strcmp(value_ptr, "in"))
+    value = DIRECTION_IN;
+  else if (!strcmp(value_ptr, "out"))
+    value = DIRECTION_OUT;
+  else {
+    Log(LOG_ERR, "WARN ( %s ): Invalid direction value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  if (!name) {
+    Log(LOG_ERR, "ERROR ( %s ): nfprobe_direction and sfprobe_direction cannot be global. Not loaded.\n", filename);
+    changes++;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfprobe_direction = value;
+	changes++;
+	break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_nfprobe_ifindex(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  u_int32_t value;
+
+  value = strtol(value_ptr, NULL, 0);
+
+  if (!name) {
+    Log(LOG_ERR, "ERROR ( %s ): nfprobe_ifindex and sfprobe_ifindex cannot be global. Not loaded.\n", filename);
+    changes++;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+	list->cfg.nfprobe_ifindex = value;
+	changes++;
+	break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sfprobe_receiver(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2581,6 +2641,28 @@ int cfg_key_sfprobe_agentsubid(char *filename, char *name, char *value_ptr)
         list->cfg.sfprobe_agentsubid = value;
         changes++;
         break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_sfprobe_ifspeed(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  u_int64_t value;
+
+  value = strtoll(value_ptr, NULL, 0);
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sfprobe_ifspeed = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+	list->cfg.sfprobe_ifspeed = value;
+	changes++;
+	break;
       }
     }
   }

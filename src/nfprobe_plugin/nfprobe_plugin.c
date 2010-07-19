@@ -283,6 +283,24 @@ static int
 l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int ndx)
 {
   struct pkt_primitives *p = &data->primitives;
+  int direction = 0;
+
+  if (config.nfprobe_direction) {
+    switch (config.nfprobe_direction) {
+    case DIRECTION_IN:
+    case DIRECTION_OUT:
+      direction = config.nfprobe_direction;
+      break;
+    case DIRECTION_TAG:
+      if (p->id == 1) direction = DIRECTION_IN;
+      else if (p->id == 2) direction = DIRECTION_OUT;
+      break;
+    case DIRECTION_TAG2:
+      if (p->id2 == 1) direction = DIRECTION_IN;
+      else if (p->id2 == 2) direction = DIRECTION_OUT;
+      break;
+    }
+  }
 
 #if defined HAVE_L2
   memcpy(&flow->mac[ndx][0], &p->eth_shost, 6);
@@ -291,8 +309,14 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
   flow->mpls_label[ndx] = extras->mpls_top_label;
 #endif
 
-  flow->ifindex[ndx] = p->ifindex_in;
-  flow->ifindex[ndx ^ 1] = p->ifindex_out;
+  if (!p->ifindex_in && !p->ifindex_out) {
+    flow->ifindex[ndx] = (direction == DIRECTION_IN) ? config.nfprobe_ifindex : 0;
+    flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? config.nfprobe_ifindex : 0;
+  }
+  else {
+    flow->ifindex[ndx] = p->ifindex_in;
+    flow->ifindex[ndx ^ 1] = p->ifindex_out;
+  }
 
   return (0);
 }
