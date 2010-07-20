@@ -27,6 +27,7 @@ typedef struct _SflSp {
   int verbose;
   char *device;
   u_int32_t ifIndex;
+  int ifIndex_Type;
   int ifType;
   u_int64_t ifSpeed;
   int ifDirection;
@@ -103,6 +104,7 @@ static void setDefaults(SflSp *sp)
 {
   sp->device = NULL;
   sp->ifIndex = 1;
+  sp->ifIndex_Type = IFINDEX_STATIC;
   sp->ifType = 6; // ethernet_csmacd 
   sp->ifSpeed = 100000000L;  // assume 100 MBit
   sp->ifDirection = 1; // assume full duplex 
@@ -340,15 +342,23 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
       SFL_FLOW_SAMPLE_TYPE fs;
       memset(&fs, 0, sizeof(fs));
 
-      // Since we are an end host, we are not switching or routing
-      // this packet.  On a switch or router this is just like a
-      // packet going to or from the management agent.  That means
-      // the local interface index should be filled in as the special
-      // value 0x3FFFFFFF, which is defined in the sFlow spec as
-      // an "internal" interface.
       if (!hdr->ifindex_in && !hdr->ifindex_out) {
-        fs.input = (direction == SFL_DIRECTION_IN) ? sp->ifIndex : 0x3FFFFFFF;
-        fs.output = (direction == SFL_DIRECTION_OUT) ? sp->ifIndex : 0x3FFFFFFF;
+	if (sp->ifIndex_Type) {
+	  switch (sp->ifIndex_Type) {
+	  case IFINDEX_STATIC:
+            fs.input = (direction == SFL_DIRECTION_IN) ? sp->ifIndex : 0x3FFFFFFF;
+            fs.output = (direction == SFL_DIRECTION_OUT) ? sp->ifIndex : 0x3FFFFFFF;
+	    break;
+	  case IFINDEX_TAG:
+	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag : 0x3FFFFFFF;
+	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag : 0x3FFFFFFF;
+	    break;
+	  case IFINDEX_TAG2:
+	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag2 : 0x3FFFFFFF;
+	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag2 : 0x3FFFFFFF;
+	    break;
+	  }
+	}
       }
       else {
         fs.input = (hdr->ifindex_in) ? hdr->ifindex_in : 0x3FFFFFFF;
@@ -496,6 +506,7 @@ static void parse_receiver(char *string, struct in_addr *addr, u_int32_t *port)
 
 static void process_config_options(SflSp *sp)
 {
+  if (config.nfprobe_ifindex_type) sp->ifIndex_Type = config.nfprobe_ifindex_type;
   if (config.nfprobe_ifindex) sp->ifIndex = config.nfprobe_ifindex;
   if (config.sfprobe_ifspeed) sp->ifSpeed = config.sfprobe_ifspeed;
   if (config.sfprobe_agentip) sp->agentIP.s_addr = Name_to_IP(config.sfprobe_agentip);

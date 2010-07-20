@@ -310,8 +310,25 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
 #endif
 
   if (!p->ifindex_in && !p->ifindex_out) {
-    flow->ifindex[ndx] = (direction == DIRECTION_IN) ? config.nfprobe_ifindex : 0;
-    flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? config.nfprobe_ifindex : 0;
+    if (config.nfprobe_ifindex) {
+      switch (config.nfprobe_ifindex) {
+      case IFINDEX_STATIC:
+        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? config.nfprobe_ifindex : 0;
+        flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? config.nfprobe_ifindex : 0;
+        break;
+      case IFINDEX_TAG:
+        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->id : 0;
+	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->id : 0;
+	break;
+      case IFINDEX_TAG2:
+        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->id2 : 0;
+	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->id2 : 0;
+        break;
+      default:
+        flow->ifindex[ndx] = 0;
+	flow->ifindex[ndx ^ 1] = 0;
+      }
+    }
   }
   else {
     flow->ifindex[ndx] = p->ifindex_in;

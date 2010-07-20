@@ -2539,7 +2539,7 @@ int cfg_key_nfprobe_direction(char *filename, char *name, char *value_ptr)
   else if (!strcmp(value_ptr, "out"))
     value = DIRECTION_OUT;
   else {
-    Log(LOG_ERR, "WARN ( %s ): Invalid direction value '%s'\n", filename, value_ptr);
+    Log(LOG_ERR, "WARN ( %s ): Invalid nfprobe_direction or sfprobe_direction value '%s'\n", filename, value_ptr);
     return ERR;
   }
 
@@ -2563,10 +2563,19 @@ int cfg_key_nfprobe_direction(char *filename, char *name, char *value_ptr)
 int cfg_key_nfprobe_ifindex(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-  u_int32_t value;
+  int changes = 0, value2 = 0;
+  u_int32_t value = 0;
 
-  value = strtol(value_ptr, NULL, 0);
+  if (!strcmp(value_ptr, "tag"))
+    value2 = IFINDEX_TAG;
+  else if (!strcmp(value_ptr, "tag2"))
+    value2 = IFINDEX_TAG2;
+  else if (value = strtol(value_ptr, NULL, 0))
+    value2 = IFINDEX_STATIC;
+  else {
+    Log(LOG_ERR, "WARN ( %s ): Invalid nfprobe_ifindex or sfprobe_ifindex value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
 
   if (!name) {
     Log(LOG_ERR, "ERROR ( %s ): nfprobe_ifindex and sfprobe_ifindex cannot be global. Not loaded.\n", filename);
@@ -2576,6 +2585,7 @@ int cfg_key_nfprobe_ifindex(char *filename, char *name, char *value_ptr)
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
 	list->cfg.nfprobe_ifindex = value;
+	list->cfg.nfprobe_ifindex_type = value2;
 	changes++;
 	break;
       }

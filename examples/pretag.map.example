@@ -229,3 +229,26 @@ id=100 ip=192.168.1.1 comms=65000:2345 label=65000:2345 jeq=65000:3456
 id=200 ip=192.168.1.1 comms=65000:3456 label=65000:3456
 !
 ! ===
+!
+! === sfprobe/nfprobe: determining semi-dynamically direction and ifindex 
+! - Two steps approach:
+!   > determine direction first (1=in, 2=out)
+!   > then short circuit it to return an ifindex value
+! - Configuration would look like the following fragment:
+!   ...
+!   nfprobe_direction: tag
+!   nfprobe_ifindex: tag2
+!   ...
+!
+id=1 filter='ether dst 00:11:22:33:44:55' jeq=fivefive
+id=1 filter='ether dst 00:11:22:33:44:66' jeq=sixsix
+id=1 filter='ether dst 00:11:22:33:44:77' jeq=sevenseven
+id=2 filter='ether src 00:11:22:33:44:55' jeq=fivefive
+id=2 filter='ether src 00:11:22:33:44:66' jeq=sixsix
+id=2 filter='ether src 00:11:22:33:44:77' jeq=sevenseven
+!
+id2=5 label=fivefive
+id2=6 label=sixsix
+id2=7 label=sevenseven
+! 
+! ===

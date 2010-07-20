@@ -904,12 +904,17 @@ DESC:           defines traffic direction. Can be statically defined via 'in' an
 		mapped to 'in' direction, whereas tag value of 2 will be mapped to 'out'. The idea underlying
 		tag lookups is that pre_tag_map supports, among the other features, 'filter' matching against
 		a supplied tcpdump-like filter expression; doing so against L2 primitives (ie. source or
-		destination MAC addresses) allows to dynamically determine traffic direction (default: none)
+		destination MAC addresses) allows to dynamically determine traffic direction (see example at
+		'examples/pretag.map.example') (default: none)
 
 KEY:            [ nfprobe_ifindex | sfprobe_ifindex ]
-DESC:           statically associates an interface index (ifIndex) to a given nfprobe or sfprobe plugin. This
-		definition will be always overridden when the ifIndex can be determined dynamically (ie. via
-		ULOG). 
+VALUES:		[tag,tag2,<1-4294967295>]
+DESC:           associates an interface index (ifIndex) to a given nfprobe or sfprobe plugin. This is meant as
+		an add-on to [ns]probe_direction directive, ie. when multiplexing mirrored traffic from different
+		sources on the same interface (ie. split by VLAN). Can be statically defined via a 32-bit integer
+		or semi-dynamically determined via lookup to either 'tag' or 'tag2' values (read full elaboration
+		on [ns]probe_direction directive). This definition will be also always overridden whenever the
+		ifIndex can be determined dynamically (ie. via ULOG framework).
 
 KEY:		sfprobe_receiver
 DESC:           defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.

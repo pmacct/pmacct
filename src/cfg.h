@@ -171,6 +171,7 @@ struct configuration {
   int nfprobe_ipprec;
   int nfprobe_direction;
   u_int32_t nfprobe_ifindex;
+  int nfprobe_ifindex_type;
   char *sfprobe_receiver;
   char *sfprobe_agentip;
   int sfprobe_agentsubid;

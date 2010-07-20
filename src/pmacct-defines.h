@@ -200,6 +200,10 @@
 #define DIRECTION_TAG		0x00000004
 #define DIRECTION_TAG2		0x00000008
 
+#define IFINDEX_STATIC		0x00000001
+#define IFINDEX_TAG		0x00000002
+#define IFINDEX_TAG2		0x00000004
+
 typedef u_int32_t pm_class_t;
 typedef u_int32_t pm_id_t;
 
