@@ -352,10 +352,12 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	  case IFINDEX_TAG:
 	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag : 0x3FFFFFFF;
 	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag : 0x3FFFFFFF;
+	    sp->ifIndex = hdr->tag;
 	    break;
 	  case IFINDEX_TAG2:
 	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag2 : 0x3FFFFFFF;
 	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag2 : 0x3FFFFFFF;
+	    sp->ifIndex = hdr->tag2;
 	    break;
 	  }
 	}
