@@ -23,10 +23,21 @@
 #include "net_aggr.h"
 #include "ports_aggr.h"
 
+#define SFL_DIRECTION_IN 0
+#define SFL_DIRECTION_OUT 1
+#define SFL_MAX_INTERFACES 4096
+
+typedef struct _SflSp_counters {
+  u_int32_t ifIndex;
+  u_int32_t frames[2];
+  u_int64_t bytes[2];
+  u_int32_t multicasts[2];
+  u_int32_t broadcasts[2];
+} SflSp_counters;
+
 typedef struct _SflSp {
   int verbose;
   char *device;
-  u_int32_t ifIndex;
   int ifIndex_Type;
   int ifType;
   u_int64_t ifSpeed;
@@ -41,13 +52,7 @@ typedef struct _SflSp {
   int batch;
   pcap_t *pcap;
 
-  // counters for each direction
-#define SFL_DIRECTION_IN 0
-#define SFL_DIRECTION_OUT 1
-  u_int32_t frames[2];
-  u_int64_t bytes[2];
-  u_int32_t multicasts[2];
-  u_int32_t broadcasts[2];
+  SflSp_counters counters[SFL_MAX_INTERFACES]; 
 
   struct in_addr agentIP;
   u_int32_t agentSubId;
@@ -103,7 +108,7 @@ u_long getMyIPAddress()
 static void setDefaults(SflSp *sp)
 {
   sp->device = NULL;
-  sp->ifIndex = 1;
+  sp->counters[0].ifIndex = 1;
   sp->ifIndex_Type = IFINDEX_STATIC;
   sp->ifType = 6; // ethernet_csmacd 
   sp->ifSpeed = 100000000L;  // assume 100 MBit
@@ -143,33 +148,36 @@ static void agentCB_error(void *magic, SFLAgent *agent, char *msg)
 void agentCB_getCounters(void *magic, SFLPoller *poller, SFL_COUNTERS_SAMPLE_TYPE *cs)
 {
   SflSp *sp = (SflSp *)magic;
+  int idx = 0;
 
   // build a counters sample
-  SFLCounters_sample_element genElem;
-  memset(&genElem, 0, sizeof(genElem));
-  genElem.tag = SFLCOUNTERS_GENERIC;
-  // don't need to set the length here (set by the encoder)
-  genElem.counterBlock.generic.ifIndex = sp->ifIndex;
-  genElem.counterBlock.generic.ifType = sp->ifType;
-  genElem.counterBlock.generic.ifSpeed = sp->ifSpeed;
-  genElem.counterBlock.generic.ifDirection = sp->ifDirection;
-  genElem.counterBlock.generic.ifStatus = 0x03; // adminStatus = up, operStatus = up
-  genElem.counterBlock.generic.ifPromiscuousMode = sp->promiscuous;
-  // these counters would normally be a snapshot the hardware interface counters - the
-  // same ones that the SNMP agent uses to answer SNMP requests to the ifTable.  To ease
-  // the portability of this program, however, I am just using some counters that were
-  // added up in software:
-  genElem.counterBlock.generic.ifInOctets = sp->bytes[SFL_DIRECTION_IN];
-  genElem.counterBlock.generic.ifInUcastPkts = sp->frames[SFL_DIRECTION_IN];
-  genElem.counterBlock.generic.ifInMulticastPkts = sp->multicasts[SFL_DIRECTION_IN];
-  genElem.counterBlock.generic.ifInBroadcastPkts = sp->broadcasts[SFL_DIRECTION_IN];
-  genElem.counterBlock.generic.ifOutOctets = sp->bytes[SFL_DIRECTION_OUT];
-  genElem.counterBlock.generic.ifOutUcastPkts = sp->frames[SFL_DIRECTION_OUT];
-  genElem.counterBlock.generic.ifOutMulticastPkts = sp->multicasts[SFL_DIRECTION_OUT];
-  genElem.counterBlock.generic.ifOutBroadcastPkts = sp->broadcasts[SFL_DIRECTION_OUT];
+  for (idx = 0; idx < SFL_MAX_INTERFACES && sp->counters[idx].ifIndex; idx++) { 
+    SFLCounters_sample_element genElem;
+    memset(&genElem, 0, sizeof(genElem));
+    genElem.tag = SFLCOUNTERS_GENERIC;
+    // don't need to set the length here (set by the encoder)
+    genElem.counterBlock.generic.ifIndex = sp->counters[idx].ifIndex;
+    genElem.counterBlock.generic.ifType = sp->ifType;
+    genElem.counterBlock.generic.ifSpeed = sp->ifSpeed;
+    genElem.counterBlock.generic.ifDirection = sp->ifDirection;
+    genElem.counterBlock.generic.ifStatus = 0x03; // adminStatus = up, operStatus = up
+    genElem.counterBlock.generic.ifPromiscuousMode = sp->promiscuous;
+    // these counters would normally be a snapshot the hardware interface counters - the
+    // same ones that the SNMP agent uses to answer SNMP requests to the ifTable.  To ease
+    // the portability of this program, however, I am just using some counters that were
+    // added up in software:
+    genElem.counterBlock.generic.ifInOctets = sp->counters[idx].bytes[SFL_DIRECTION_IN];
+    genElem.counterBlock.generic.ifInUcastPkts = sp->counters[idx].frames[SFL_DIRECTION_IN];
+    genElem.counterBlock.generic.ifInMulticastPkts = sp->counters[idx].multicasts[SFL_DIRECTION_IN];
+    genElem.counterBlock.generic.ifInBroadcastPkts = sp->counters[idx].broadcasts[SFL_DIRECTION_IN];
+    genElem.counterBlock.generic.ifOutOctets = sp->counters[idx].bytes[SFL_DIRECTION_OUT];
+    genElem.counterBlock.generic.ifOutUcastPkts = sp->counters[idx].frames[SFL_DIRECTION_OUT];
+    genElem.counterBlock.generic.ifOutMulticastPkts = sp->counters[idx].multicasts[SFL_DIRECTION_OUT];
+    genElem.counterBlock.generic.ifOutBroadcastPkts = sp->counters[idx].broadcasts[SFL_DIRECTION_OUT];
 
-  // add this counter block to the counter sample that we are building
-  SFLADD_ELEMENT(cs, &genElem);
+    // add this counter block to the counter sample that we are building
+    SFLADD_ELEMENT(cs, &genElem);
+  }
 
   // pass these counters down to be encoded and included with the next sFlow datagram
   sfl_poller_writeCountersSample(poller, cs);
@@ -256,7 +264,7 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
   SFLFlow_sample_element hdrElem, classHdrElem, gatewayHdrElem, routerHdrElem, tagHdrElem, switchHdrElem;
   SFLExtended_as_path_segment as_path_segment;
   u_int32_t frame_len, header_len;
-  int direction, sampledPackets, ethHdrLen;
+  int direction, sampledPackets, ethHdrLen, idx;
   struct eth_header dummy_eh;
   u_int16_t ethType = 0, cap_len = hdr->cap_len, pkt_len = hdr->pkt_len;
   unsigned char *local_buf = (unsigned char *) buf;
@@ -312,18 +320,55 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
     }
   }
 
+  // Let's determine the ifIndex
+  if (!hdr->ifindex_in && !hdr->ifindex_out) {
+    if (sp->ifIndex_Type) {
+      switch (sp->ifIndex_Type) {
+      case IFINDEX_TAG:
+        for (idx = 0; idx < SFL_MAX_INTERFACES; idx++) {
+          if (sp->counters[idx].ifIndex == hdr->tag || idx == (SFL_MAX_INTERFACES-1)) break;
+	  else if (sp->counters[idx].ifIndex == 0) {
+	    sp->counters[idx].ifIndex = hdr->tag;
+	    break;
+	  }
+	}
+        break;
+      case IFINDEX_TAG2:
+        for (idx = 0; idx < SFL_MAX_INTERFACES; idx++) {
+	  if (sp->counters[idx].ifIndex == hdr->tag2 || idx == (SFL_MAX_INTERFACES-1)) break;
+	  else if (sp->counters[idx].ifIndex == 0) {
+	    sp->counters[idx].ifIndex = hdr->tag2;
+	    break;
+	  }
+        }
+        break;
+      }
+    }
+  }
+  else {
+    u_int32_t ifIndex = (direction == SFL_DIRECTION_IN) ? hdr->ifindex_in : hdr->ifindex_out;
+
+    for (idx = 0; idx < SFL_MAX_INTERFACES; idx++) {
+      if (sp->counters[idx].ifIndex == ifIndex || idx == (SFL_MAX_INTERFACES-1)) break;
+      else if (sp->counters[idx].ifIndex == 0) {
+        sp->counters[idx].ifIndex = ifIndex;
+        break;
+      }
+    }
+  }
+
   // maintain some counters in software - just to ease portability
-  sp->bytes[direction] += pkt_len;
+  sp->counters[idx].bytes[direction] += pkt_len;
   if (local_buf[0] & 0x01) {
     if(local_buf[0] == 0xff &&
        local_buf[1] == 0xff &&
        local_buf[2] == 0xff &&
        local_buf[3] == 0xff &&
        local_buf[4] == 0xff &&
-       local_buf[5] == 0xff) sp->broadcasts[direction]++;
-    else sp->multicasts[direction]++;
+       local_buf[5] == 0xff) sp->counters[idx].broadcasts[direction]++;
+    else sp->counters[idx].multicasts[direction]++;
   }
-  else sp->frames[direction]++;
+  else sp->counters[idx].frames[direction]++;
 
   // OLD: test to see if we want to sample this packet
   {
@@ -346,18 +391,16 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	if (sp->ifIndex_Type) {
 	  switch (sp->ifIndex_Type) {
 	  case IFINDEX_STATIC:
-            fs.input = (direction == SFL_DIRECTION_IN) ? sp->ifIndex : 0x3FFFFFFF;
-            fs.output = (direction == SFL_DIRECTION_OUT) ? sp->ifIndex : 0x3FFFFFFF;
+            fs.input = (direction == SFL_DIRECTION_IN) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
+            fs.output = (direction == SFL_DIRECTION_OUT) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
 	    break;
 	  case IFINDEX_TAG:
 	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag : 0x3FFFFFFF;
 	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag : 0x3FFFFFFF;
-	    sp->ifIndex = hdr->tag;
 	    break;
 	  case IFINDEX_TAG2:
 	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag2 : 0x3FFFFFFF;
 	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag2 : 0x3FFFFFFF;
-	    sp->ifIndex = hdr->tag2;
 	    break;
 	  }
 	}
@@ -509,7 +552,7 @@ static void parse_receiver(char *string, struct in_addr *addr, u_int32_t *port)
 static void process_config_options(SflSp *sp)
 {
   if (config.nfprobe_ifindex_type) sp->ifIndex_Type = config.nfprobe_ifindex_type;
-  if (config.nfprobe_ifindex) sp->ifIndex = config.nfprobe_ifindex;
+  if (config.nfprobe_ifindex) sp->counters[0].ifIndex = config.nfprobe_ifindex;
   if (config.sfprobe_ifspeed) sp->ifSpeed = config.sfprobe_ifspeed;
   if (config.sfprobe_agentip) sp->agentIP.s_addr = Name_to_IP(config.sfprobe_agentip);
   if (config.sfprobe_agentsubid) sp->agentSubId = config.sfprobe_agentsubid;
