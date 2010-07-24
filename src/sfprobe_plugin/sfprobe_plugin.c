@@ -147,36 +147,40 @@ static void agentCB_error(void *magic, SFLAgent *agent, char *msg)
 
 void agentCB_getCounters(void *magic, SFLPoller *poller, SFL_COUNTERS_SAMPLE_TYPE *cs)
 {
+  SFLCounters_sample_element genElem[SFL_MAX_INTERFACES];
   SflSp *sp = (SflSp *)magic;
   int idx = 0;
 
-  // build a counters sample
-  for (idx = 0; idx < SFL_MAX_INTERFACES && sp->counters[idx].ifIndex; idx++) { 
-    SFLCounters_sample_element genElem;
-    memset(&genElem, 0, sizeof(genElem));
-    genElem.tag = SFLCOUNTERS_GENERIC;
-    // don't need to set the length here (set by the encoder)
-    genElem.counterBlock.generic.ifIndex = sp->counters[idx].ifIndex;
-    genElem.counterBlock.generic.ifType = sp->ifType;
-    genElem.counterBlock.generic.ifSpeed = sp->ifSpeed;
-    genElem.counterBlock.generic.ifDirection = sp->ifDirection;
-    genElem.counterBlock.generic.ifStatus = 0x03; // adminStatus = up, operStatus = up
-    genElem.counterBlock.generic.ifPromiscuousMode = sp->promiscuous;
-    // these counters would normally be a snapshot the hardware interface counters - the
-    // same ones that the SNMP agent uses to answer SNMP requests to the ifTable.  To ease
-    // the portability of this program, however, I am just using some counters that were
-    // added up in software:
-    genElem.counterBlock.generic.ifInOctets = sp->counters[idx].bytes[SFL_DIRECTION_IN];
-    genElem.counterBlock.generic.ifInUcastPkts = sp->counters[idx].frames[SFL_DIRECTION_IN];
-    genElem.counterBlock.generic.ifInMulticastPkts = sp->counters[idx].multicasts[SFL_DIRECTION_IN];
-    genElem.counterBlock.generic.ifInBroadcastPkts = sp->counters[idx].broadcasts[SFL_DIRECTION_IN];
-    genElem.counterBlock.generic.ifOutOctets = sp->counters[idx].bytes[SFL_DIRECTION_OUT];
-    genElem.counterBlock.generic.ifOutUcastPkts = sp->counters[idx].frames[SFL_DIRECTION_OUT];
-    genElem.counterBlock.generic.ifOutMulticastPkts = sp->counters[idx].multicasts[SFL_DIRECTION_OUT];
-    genElem.counterBlock.generic.ifOutBroadcastPkts = sp->counters[idx].broadcasts[SFL_DIRECTION_OUT];
+  memset(&genElem, 0, sizeof(genElem));
 
-    // add this counter block to the counter sample that we are building
-    SFLADD_ELEMENT(cs, &genElem);
+  // build a counters sample
+  for (idx = 0; idx < SFL_MAX_INTERFACES && sp->counters[idx].ifIndex; idx++) {
+    if (sp->counters[idx].frames[SFL_DIRECTION_IN] ||
+        sp->counters[idx].frames[SFL_DIRECTION_OUT]) {
+      genElem[idx].tag = SFLCOUNTERS_GENERIC;
+      // don't need to set the length here (set by the encoder)
+      genElem[idx].counterBlock.generic.ifIndex = sp->counters[idx].ifIndex;
+      genElem[idx].counterBlock.generic.ifType = sp->ifType;
+      genElem[idx].counterBlock.generic.ifSpeed = sp->ifSpeed;
+      genElem[idx].counterBlock.generic.ifDirection = sp->ifDirection;
+      genElem[idx].counterBlock.generic.ifStatus = 0x03; // adminStatus = up, operStatus = up
+      genElem[idx].counterBlock.generic.ifPromiscuousMode = sp->promiscuous;
+      // these counters would normally be a snapshot the hardware interface counters - the
+      // same ones that the SNMP agent uses to answer SNMP requests to the ifTable.  To ease
+      // the portability of this program, however, I am just using some counters that were
+      // added up in software:
+      genElem[idx].counterBlock.generic.ifInOctets = sp->counters[idx].bytes[SFL_DIRECTION_IN];
+      genElem[idx].counterBlock.generic.ifInUcastPkts = sp->counters[idx].frames[SFL_DIRECTION_IN];
+      genElem[idx].counterBlock.generic.ifInMulticastPkts = sp->counters[idx].multicasts[SFL_DIRECTION_IN];
+      genElem[idx].counterBlock.generic.ifInBroadcastPkts = sp->counters[idx].broadcasts[SFL_DIRECTION_IN];
+      genElem[idx].counterBlock.generic.ifOutOctets = sp->counters[idx].bytes[SFL_DIRECTION_OUT];
+      genElem[idx].counterBlock.generic.ifOutUcastPkts = sp->counters[idx].frames[SFL_DIRECTION_OUT];
+      genElem[idx].counterBlock.generic.ifOutMulticastPkts = sp->counters[idx].multicasts[SFL_DIRECTION_OUT];
+      genElem[idx].counterBlock.generic.ifOutBroadcastPkts = sp->counters[idx].broadcasts[SFL_DIRECTION_OUT];
+
+      // add this counter block to the counter sample that we are building
+      SFLADD_ELEMENT(cs, &genElem[idx]);
+    }
   }
 
   // pass these counters down to be encoded and included with the next sFlow datagram

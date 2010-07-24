@@ -310,8 +310,8 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
 #endif
 
   if (!p->ifindex_in && !p->ifindex_out) {
-    if (config.nfprobe_ifindex) {
-      switch (config.nfprobe_ifindex) {
+    if (config.nfprobe_ifindex_type) {
+      switch (config.nfprobe_ifindex_type) {
       case IFINDEX_STATIC:
         flow->ifindex[ndx] = (direction == DIRECTION_IN) ? config.nfprobe_ifindex : 0;
         flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? config.nfprobe_ifindex : 0;

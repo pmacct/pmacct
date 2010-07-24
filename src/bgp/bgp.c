@@ -194,6 +194,7 @@ void skinny_bgp_daemon()
           bgp_peer_init(peer);
           break;
         }
+	/* XXX: replenish sessions with expired keepalives */
       }
 
       if (!peer) {
@@ -231,6 +232,7 @@ void skinny_bgp_daemon()
 	  }
 	  else {
 	    Log(LOG_ERR, "ERROR ( default/core/BGP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4), (peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
+	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer);
 	    goto select_again;
 	  }
