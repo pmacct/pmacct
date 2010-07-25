@@ -407,7 +407,7 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_CLASS; 
 	  config.handle_flows = TRUE;
 	}
-	if (list->cfg.nfprobe_version == 9 && list->cfg.pre_tag_map) {
+	if (list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_ID;
 	  list->cfg.what_to_count |= COUNT_ID2;
 	}

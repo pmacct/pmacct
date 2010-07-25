@@ -374,29 +374,17 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
   }
   else sp->counters[idx].frames[direction]++;
 
-  // OLD: test to see if we want to sample this packet
-  {
-    sampledPackets = hdr->pkt_num;
-    sp->sampler->samplePool += hdr->sample_pool;
+  if (config.ext_sampling_rate || sfl_sampler_takeSample(sp->sampler)) {
+    // Yes. Build a flow sample and send it off...
+    SFL_FLOW_SAMPLE_TYPE fs;
+    memset(&fs, 0, sizeof(fs));
 
-    /* In case of flows (ie. hdr->pkt_num > 1) we have now computed how
-       many packets to sample; let's cheat counters */
-    if (sampledPackets > 1) {
-      pkt_len = pkt_len / hdr->pkt_num; 
-      hdr->pkt_num = 1;
-    }
-
-    while (sampledPackets > 0) { 
-      // Yes. Build a flow sample and send it off...
-      SFL_FLOW_SAMPLE_TYPE fs;
-      memset(&fs, 0, sizeof(fs));
-
-      if (!hdr->ifindex_in && !hdr->ifindex_out) {
+    if (!hdr->ifindex_in && !hdr->ifindex_out) {
 	if (sp->ifIndex_Type) {
 	  switch (sp->ifIndex_Type) {
 	  case IFINDEX_STATIC:
-            fs.input = (direction == SFL_DIRECTION_IN) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
-            fs.output = (direction == SFL_DIRECTION_OUT) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
+          fs.input = (direction == SFL_DIRECTION_IN) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
+          fs.output = (direction == SFL_DIRECTION_OUT) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
 	    break;
 	  case IFINDEX_TAG:
 	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag : 0x3FFFFFFF;
@@ -408,70 +396,70 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	    break;
 	  }
 	}
-      }
-      else {
-        fs.input = (hdr->ifindex_in) ? hdr->ifindex_in : 0x3FFFFFFF;
-        fs.output = (hdr->ifindex_out) ? hdr->ifindex_out : 0x3FFFFFFF;
-      }
-      
-      memset(&hdrElem, 0, sizeof(hdrElem));
+    }
+    else {
+      fs.input = (hdr->ifindex_in) ? hdr->ifindex_in : 0x3FFFFFFF;
+      fs.output = (hdr->ifindex_out) ? hdr->ifindex_out : 0x3FFFFFFF;
+    }
+    
+    memset(&hdrElem, 0, sizeof(hdrElem));
 
-      hdrElem.tag = SFLFLOW_HEADER;
+    hdrElem.tag = SFLFLOW_HEADER;
 
-      if (!ethType) hdrElem.flowType.header.header_protocol = SFLHEADER_ETHERNET_ISO8023;
-      else {
-        switch (ntohs(ethType)) {
-        case ETHERTYPE_IP:
-          hdrElem.flowType.header.header_protocol = SFLHEADER_IPv4;
-          break;
-        case ETHERTYPE_IPV6:
-          hdrElem.flowType.header.header_protocol = SFLHEADER_IPv6; 
-          break;
+    if (!ethType) hdrElem.flowType.header.header_protocol = SFLHEADER_ETHERNET_ISO8023;
+    else {
+      switch (ntohs(ethType)) {
+      case ETHERTYPE_IP:
+        hdrElem.flowType.header.header_protocol = SFLHEADER_IPv4;
+        break;
+      case ETHERTYPE_IPV6:
+        hdrElem.flowType.header.header_protocol = SFLHEADER_IPv6; 
+        break;
 	default:
 	  hdrElem.flowType.header.header_protocol = SFLHEADER_ETHERNET_ISO8023;
 	  break;
-        }
       }
-    
-      // the FCS trailing bytes should be counted in the frame_length
-      // but they should also be recorded in the "stripped" field.
-      // assume that libpcap is not giving us the FCS
-      frame_len = pkt_len;
-      if (config.acct_type == ACCT_PM) {
-        u_int32_t FCS_bytes = 4;
-        hdrElem.flowType.header.frame_length = frame_len + FCS_bytes;
-        hdrElem.flowType.header.stripped = FCS_bytes;
-      }
-      else hdrElem.flowType.header.frame_length = frame_len;
+    }
+  
+    // the FCS trailing bytes should be counted in the frame_length
+    // but they should also be recorded in the "stripped" field.
+    // assume that libpcap is not giving us the FCS
+    frame_len = pkt_len;
+    if (config.acct_type == ACCT_PM) {
+      u_int32_t FCS_bytes = 4;
+      hdrElem.flowType.header.frame_length = frame_len + FCS_bytes;
+      hdrElem.flowType.header.stripped = FCS_bytes;
+    }
+    else hdrElem.flowType.header.frame_length = frame_len;
 
-      header_len = cap_len;
-      if (header_len > frame_len) header_len = frame_len;
-      if (header_len > sp->snaplen) header_len = sp->snaplen;
-      hdrElem.flowType.header.header_length = header_len;
-      hdrElem.flowType.header.header_bytes = (u_int8_t *)local_buf;
-      SFLADD_ELEMENT(&fs, &hdrElem);
+    header_len = cap_len;
+    if (header_len > frame_len) header_len = frame_len;
+    if (header_len > sp->snaplen) header_len = sp->snaplen;
+    hdrElem.flowType.header.header_length = header_len;
+    hdrElem.flowType.header.header_bytes = (u_int8_t *)local_buf;
+    SFLADD_ELEMENT(&fs, &hdrElem);
 
-      if (config.what_to_count & COUNT_CLASS) {
+    if (config.what_to_count & COUNT_CLASS) {
 	memset(&classHdrElem, 0, sizeof(classHdrElem));
 	classHdrElem.tag = SFLFLOW_EX_CLASS;
 	classHdrElem.flowType.class.class = hdr->class;
 	SFLADD_ELEMENT(&fs, &classHdrElem);
-      }
+    }
 
-      if (config.what_to_count & (COUNT_ID|COUNT_ID2)) {
-        memset(&tagHdrElem, 0, sizeof(tagHdrElem));
-        tagHdrElem.tag = SFLFLOW_EX_TAG;
-        tagHdrElem.flowType.tag.tag = hdr->tag;
-        tagHdrElem.flowType.tag.tag2 = hdr->tag2;
-        SFLADD_ELEMENT(&fs, &tagHdrElem);
-      }
+    if (config.what_to_count & (COUNT_ID|COUNT_ID2)) {
+      memset(&tagHdrElem, 0, sizeof(tagHdrElem));
+      tagHdrElem.tag = SFLFLOW_EX_TAG;
+      tagHdrElem.flowType.tag.tag = hdr->tag;
+      tagHdrElem.flowType.tag.tag2 = hdr->tag2;
+      SFLADD_ELEMENT(&fs, &tagHdrElem);
+    }
 
-      /*
-         Extended gateway is meant to have a broad range of
-         informations; we will fill in only infos pertaining
+    /*
+       Extended gateway is meant to have a broad range of
+       informations; we will fill in only infos pertaining
 	 to src and dst ASNs
-      */
-      if (config.networks_file || config.nfacctd_as == NF_AS_BGP) {
+    */
+    if (config.networks_file || config.nfacctd_as == NF_AS_BGP) {
 	memset(&gatewayHdrElem, 0, sizeof(gatewayHdrElem));
 	memset(&as_path_segment, 0, sizeof(as_path_segment));
 	gatewayHdrElem.tag = SFLFLOW_EX_GATEWAY;
@@ -483,52 +471,49 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	as_path_segment.length = 1;
 	as_path_segment.as.set = &hdr->dst_as;
 	if (config.what_to_count & COUNT_PEER_DST_IP) {
-          switch (hdr->bgp_next_hop.family) {
-          case AF_INET:
-            gatewayHdrElem.flowType.gateway.nexthop.type = SFLADDRESSTYPE_IP_V4;
-            memcpy(&gatewayHdrElem.flowType.gateway.nexthop.address.ip_v4, &hdr->bgp_next_hop.address.ipv4, 4);
-            break;
+        switch (hdr->bgp_next_hop.family) {
+        case AF_INET:
+          gatewayHdrElem.flowType.gateway.nexthop.type = SFLADDRESSTYPE_IP_V4;
+          memcpy(&gatewayHdrElem.flowType.gateway.nexthop.address.ip_v4, &hdr->bgp_next_hop.address.ipv4, 4);
+          break;
 #if defined ENABLE_IPV6
-          case AF_INET6:
-            gatewayHdrElem.flowType.gateway.nexthop.type = SFLADDRESSTYPE_IP_V6;
-            memcpy(&gatewayHdrElem.flowType.gateway.nexthop.address.ip_v6, &hdr->bgp_next_hop.address.ipv6, 16);
-            break;
+        case AF_INET6:
+          gatewayHdrElem.flowType.gateway.nexthop.type = SFLADDRESSTYPE_IP_V6;
+          memcpy(&gatewayHdrElem.flowType.gateway.nexthop.address.ip_v6, &hdr->bgp_next_hop.address.ipv6, 16);
+          break;
 #endif
-          default:
-            memset(&gatewayHdrElem.flowType.gateway.nexthop, 0, sizeof(routerHdrElem.flowType.router.nexthop));
-            break;
-          }
+        default:
+          memset(&gatewayHdrElem.flowType.gateway.nexthop, 0, sizeof(routerHdrElem.flowType.router.nexthop));
+          break;
+        }
 	}
 	SFLADD_ELEMENT(&fs, &gatewayHdrElem);
-      }
+    }
 
-      if (config.what_to_count & (COUNT_SRC_NMASK|COUNT_DST_NMASK)) {
+    if (config.what_to_count & (COUNT_SRC_NMASK|COUNT_DST_NMASK)) {
 	memset(&routerHdrElem, 0, sizeof(routerHdrElem));
 	routerHdrElem.tag = SFLFLOW_EX_ROUTER;
 	routerHdrElem.flowType.router.src_mask = hdr->src_nmask; 
 	routerHdrElem.flowType.router.dst_mask = hdr->dst_nmask;
 	SFLADD_ELEMENT(&fs, &routerHdrElem);
-      }
+    }
 
-      if (config.what_to_count & (COUNT_VLAN|COUNT_COS)) {
-        memset(&switchHdrElem, 0, sizeof(switchHdrElem));
-        switchHdrElem.tag = SFLFLOW_EX_SWITCH;
+    if (config.what_to_count & (COUNT_VLAN|COUNT_COS)) {
+      memset(&switchHdrElem, 0, sizeof(switchHdrElem));
+      switchHdrElem.tag = SFLFLOW_EX_SWITCH;
 	if (direction == SFL_DIRECTION_IN) {
-          switchHdrElem.flowType.sw.src_vlan = hdr->vlan;
-          switchHdrElem.flowType.sw.src_priority = hdr->priority;
+        switchHdrElem.flowType.sw.src_vlan = hdr->vlan;
+        switchHdrElem.flowType.sw.src_priority = hdr->priority;
 	}
 	else if (direction == SFL_DIRECTION_OUT) {
-          switchHdrElem.flowType.sw.dst_vlan = hdr->vlan;
-          switchHdrElem.flowType.sw.dst_priority = hdr->priority;
+        switchHdrElem.flowType.sw.dst_vlan = hdr->vlan;
+        switchHdrElem.flowType.sw.dst_priority = hdr->priority;
 	}
-        SFLADD_ELEMENT(&fs, &switchHdrElem);
-      }
-
-      // submit the sample to be encoded and sent out - that's all there is to it(!)
-      sfl_sampler_writeFlowSample(sp->sampler, &fs);
-
-      sampledPackets--;
+      SFLADD_ELEMENT(&fs, &switchHdrElem);
     }
+
+    // submit the sample to be encoded and sent out - that's all there is to it(!)
+    sfl_sampler_writeFlowSample(sp->sampler, &fs);
   }
 }
 

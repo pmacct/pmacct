@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -97,7 +97,7 @@ extern struct channels_list_entry channels_list[MAX_N_PLUGINS];
 EXT void load_plugins(struct plugin_requests *);
 EXT void exec_plugins(struct packet_ptrs *pptrs);
 EXT void load_plugin_filters(int);
-EXT struct channels_list_entry *insert_pipe_channel(struct configuration *, int); 
+EXT struct channels_list_entry *insert_pipe_channel(int, struct configuration *, int); 
 EXT void delete_pipe_channel(int);
 EXT void sort_pipe_channels();
 EXT void init_pipe_channels();

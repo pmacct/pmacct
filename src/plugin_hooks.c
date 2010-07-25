@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -134,7 +134,7 @@ void load_plugins(struct plugin_requests *req)
 
       list->cfg.name = list->name;
       list->cfg.type = list->type.string;
-      chptr = insert_pipe_channel(&list->cfg, list->pipe[1]);
+      chptr = insert_pipe_channel(list->type.id, &list->cfg, list->pipe[1]);
       if (!chptr) {
 	Log(LOG_ERR, "ERROR: Unable to setup a new Core Process <-> Plugin channel.\nExiting.\n"); 
 	exit_all(1);
@@ -266,7 +266,7 @@ reprocess:
   }
 }
 
-struct channels_list_entry *insert_pipe_channel(struct configuration *cfg, int pipe)
+struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configuration *cfg, int pipe)
 {
   struct channels_list_entry *chptr; 
   int index = 0, x;  
@@ -280,7 +280,7 @@ struct channels_list_entry *insert_pipe_channel(struct configuration *cfg, int p
       chptr->agg_filter.num = (int *) &cfg->bpfp_a_num; 
       chptr->bufsize = cfg->buffer_size;
       chptr->id = cfg->post_tag;
-      if (cfg->sampling_rate) {
+      if (cfg->sampling_rate && plugin_type != PLUGIN_ID_SFPROBE) { /* sfprobe cares for itself */
 	chptr->s.rate = cfg->sampling_rate;
 
 	if (cfg->acct_type == ACCT_NF) chptr->s.sf = &take_simple_systematic_skip;

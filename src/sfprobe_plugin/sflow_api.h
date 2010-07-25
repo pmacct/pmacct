@@ -261,7 +261,7 @@ void sfl_poller_resetCountersSeqNo(SFLPoller *poller);
   
 /* software sampling: call this with every packet - returns non-zero if the packet
    should be sampled (in which case you then call sfl_sampler_writeFlowSample()) */
-int sfl_sampler_takeSample(SFLSampler *sampler, u_int32_t);
+int sfl_sampler_takeSample(SFLSampler *sampler);
 
 /* call this to set a maximum samples-per-second threshold. If the sampler reaches this
    threshold it will automatically back off the sampling rate. A value of 0 disables the

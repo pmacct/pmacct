@@ -158,12 +158,34 @@ inline static u_int32_t nextRandomSkip(u_int32_t mean)
   -----------------___________________________------------------
 */
 
+int sfl_sampler_takeSample(SFLSampler *sampler)
+{
+  if (sampler->skip == 0) {
+    /* first time - seed the random number generator */
+    srandom(SFL_DS_INDEX(sampler->dsi));
+    sampler->skip = nextRandomSkip(sampler->sFlowFsPacketSamplingRate);
+  }
+
+  // increment the samplePool
+  sampler->samplePool++;
+
+  if (--sampler->skip == 0) {
+    /* reached zero. Set the next skip and return true. */
+    sampler->skip = nextRandomSkip(sampler->sFlowFsPacketSamplingRate);
+    return 1;
+  }
+
+  return 0;
+}
+
+/*
 int sfl_sampler_takeSample(SFLSampler *sampler, u_int32_t pkts)
 {
   sampler->samplePool++;
 
   return pkts;
 }
+*/
 
 /*
 int sfl_sampler_takeSample(SFLSampler *sampler, u_int32_t pkts)
@@ -190,26 +212,5 @@ run_again:
   }
   
   return sampledPkts;
-}
-*/
-
-/*
-int sfl_sampler_takeSample(SFLSampler *sampler, u_int32_t pkts)
-{
-  if(sampler->skip == 0) {
-    // first time - seed the random number generator 
-    srandom(SFL_DS_INDEX(sampler->dsi));
-    sampler->skip = nextRandomSkip(sampler->sFlowFsPacketSamplingRate);
-  }
-
-  // increment the samplePool
-  sampler->samplePool++;
-
-  if(--sampler->skip == 0) {
-    // reached zero. Set the next skip and return true. 
-    sampler->skip = nextRandomSkip(sampler->sFlowFsPacketSamplingRate);
-    return 1;
-  }
-  return 0;
 }
 */
