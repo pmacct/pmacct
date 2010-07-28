@@ -1137,7 +1137,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	comm = ri->attr->community ? ri->attr->community->str : empty;
 	ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s %u/%u] w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n",
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n",
 		inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
   }
 

@@ -1,6 +1,53 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.3
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
+0.12.3 -- 28-07-2010
+  + 'cos' aggregation primitive has been implemented providing support
+    for 802.1p priority. Collection is supported via sFlow, libpcap and
+    ULOG; export is supported via sFlow. 
+  + BGP daemon: TCP MD5 signature implemented. New 'bgp_daemon_md5_file'
+    configuration directive is being added for the purpose of defining
+    peers and their respective MD5 keys, one per line, in CSV format. 
+    The map is reloadable at runtime: existing MD5 keys are removed via
+    setsockopt(), new ones are installed as per the newly supplied map.
+    Sample map added in 'examples/bgp_md5.lst.example'.
+  + BGP daemon: added support for RFC3107 (SAFI=4 label information) to
+    enable receipt of labeled IPv4/IPv6 unicast prefixes. 
+  + nfprobe, sfprobe: introduced the concept of traffic direction. As a
+    result, [ns]fprobe_direction and [ns]fprobe_ifindex configuration
+    directives have been implemented. 
+  + [ns]fprobe_direction defines traffic direction. It can be statically
+    defined via 'in' or 'out' keywords; values can also be dynamically
+    determined through a pre_tag_map (1=input, 2=output) by means of 
+    'tag' and 'tag2' keywords.
+  + [ns]fprobe_ifindex either statically associate an interface index
+    (ifIndex) to a given [ns]fprobe plugin or semi-dynamically via
+    lookups against a pre_tag_map by means of 'tag' and 'tag2' keywords.
+  + sfprobe: sfprobe_ifspeed configuration directive is introduced and
+    aimed at statically associating an interface speed to an sfprobe
+    plugin. 
+  + sfprobe: Switch Extension Header support added. Enabler for this
+    development was support for 'cos' and in/out direction. Whereas
+    VLAN information was already supported as an aggregation primitive.
+  + sfprobe: added support for Counter Samples for multiple interfaces. 
+    Sampling function has been brought to the plugin so that Counter
+    Samples can be populated with real bytes/packets traffic levels.
+  ! nfprobe, sfprobe: send buffer size is now aligned to plugin_pipe_size,
+    if specified, providing a way to tune buffers in case of sustained
+    exports.
+  ! fix, addr.c: pm_ntohll() and pm_htonll() routines rewritten. These
+    are aimed at changing byte ordering of 64-bit variables.
+  ! fix, BGP daemon: support for IPv6 global address/link-local address
+    next-hops as part of MP_REACH_NLRI parsing.
+  ! fix, cfg_handlers.c: bgp_daemon and bgp_daemon_msglog parsing was
+    not correct, ie. enabled if specified as 'false'. Thanks to Brent
+    Van Dussen for reporting the issue.
+  ! fix, bgp.c: found a CPU hog issue caused by missing cleanup of the
+    select() descriptors vector. 
+  ! fix, pmacct.c: in_iface/out_iface did erroneously fall inside a
+    section protected by the "--disable-l2" switch. Thanks to Brent
+    Van Dussen for reporting the issue.
+
 0.12.2 -- 27-05-2010
   + A new 'tee' plugin is introduced bringing both NetFlow and sFlow
     replication capabilities to pmacct. It supports transparent mode
