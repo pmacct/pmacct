@@ -2442,6 +2442,7 @@ void SF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   SFSample *sample = (SFSample *) pptrs->f_data;
   
   pdata->primitives.vlan_id = sample->in_vlan;
+  if (!pdata->primitives.vlan_id) pdata->primitives.vlan_id = sample->out_vlan;
 }
 
 void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2450,6 +2451,7 @@ void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.cos = sample->in_priority;
+  if (!pdata->primitives.cos) pdata->primitives.cos = sample->out_priority;
 }
 #endif
 
