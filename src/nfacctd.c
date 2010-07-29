@@ -1594,8 +1594,12 @@ u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_
 
   if (tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ret += NF9_FTYPE_VLAN; 
   if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
-  if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4 || tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
-  else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6 || tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_IPV6;
+
+  /* Explicit IP protocol definition first; a bit of heuristics as fallback */
+  if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4);
+  else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) ret += NF9_FTYPE_IPV6;
+  else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
+  else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_IPV6;
 
   return ret;
 }
