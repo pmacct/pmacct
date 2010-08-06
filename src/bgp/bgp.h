@@ -201,6 +201,7 @@ EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 EXT struct bgp_comm_range peer_src_as_ifrange; 
 EXT struct bgp_comm_range peer_src_as_asrange; 
+EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 
 #undef EXT
 #endif 
