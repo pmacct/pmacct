@@ -1390,13 +1390,6 @@ void bgp_peer_init(struct bgp_peer *peer)
   peer->buf.len = BGP_MAX_PACKET_SIZE;
   peer->buf.base = malloc(peer->buf.len);
   memset(peer->buf.base, 0, peer->buf.len);
-
-  /* Let's initialize clean RIBs once again */
-  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      peer->rib[afi][safi] = bgp_table_init(afi, safi);
-    }
-  }
 }
 
 void bgp_peer_close(struct bgp_peer *peer)
@@ -1408,13 +1401,6 @@ void bgp_peer_close(struct bgp_peer *peer)
   peer->fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));
-
-  /* Let's fully invalidate current RIBs first */
-  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      bgp_table_finish(&peer->rib[afi][safi]);
-    }
-  }
 
   free(peer->buf.base);
 
@@ -1605,7 +1591,7 @@ as_t evaluate_first_asn(char *src)
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
-  struct bgp_peer *peer, *saved_peer = NULL;
+  struct bgp_peer *peer;
   struct bgp_node *default_node, *result;
   struct bgp_info *info;
   struct prefix default_prefix;
@@ -1618,8 +1604,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
   pptrs->bgp_src = NULL;
   pptrs->bgp_dst = NULL;
+  pptrs->bgp_src_info = NULL;
+  pptrs->bgp_dst_info = NULL;
   pptrs->bgp_peer = NULL;
-  pptrs->bgp_nexthop = NULL;
+  pptrs->bgp_nexthop_info = NULL;
 
   if (pptrs->bta) {
     sa = &sa_local;
@@ -1640,17 +1628,61 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
   if (peer) {
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
-      if (!pptrs->bgp_src) pptrs->bgp_src = (char *) bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref4);
-      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-      if (!pptrs->bgp_dst) pptrs->bgp_dst = (char *) bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref4);
+      if (!pptrs->bgp_src) {
+        memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+	pptrs->bgp_src = (char *) bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref4);
+      }
+      if (!pptrs->bgp_src_info && pptrs->bgp_src) {
+	result = (struct bgp_node *) pptrs->bgp_src;	
+	for (info = result->info; info; info = info->next) {
+	  if (info->peer == peer) {
+	    pptrs->bgp_src_info = (char *) info;
+	    break;
+	  }
+	}
+      }
+      if (!pptrs->bgp_dst) {
+	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+	pptrs->bgp_dst = (char *) bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref4);
+      }
+      if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
+	result = (struct bgp_node *) pptrs->bgp_dst;
+        for (info = result->info; info; info = info->next) {
+          if (info->peer == peer) {
+            pptrs->bgp_dst_info = (char *) info;
+            break;
+          }
+        }
+      }
     }
 #if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-      if (!pptrs->bgp_src) pptrs->bgp_src = (char *) bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &pref6);
-      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-      if (!pptrs->bgp_dst) pptrs->bgp_dst = (char *) bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      if (!pptrs->bgp_src) {
+        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+	pptrs->bgp_src = (char *) bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      }
+      if (!pptrs->bgp_src_info && pptrs->bgp_src) {
+	result = (struct bgp_node *) pptrs->bgp_src;
+        for (info = result->info; info; info = info->next) {
+          if (info->peer == peer) {
+            pptrs->bgp_src_info = (char *) info;
+            break;
+          }
+        }
+      }
+      if (!pptrs->bgp_dst) {
+        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+	pptrs->bgp_dst = (char *) bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      }
+      if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
+	result = (struct bgp_node *) pptrs->bgp_dst; 
+        for (info = result->info; info; info = info->next) {
+          if (info->peer == peer) {
+            pptrs->bgp_dst_info = (char *) info;
+            break;
+          }
+        }
+      }
     }
 #endif
 
@@ -1665,12 +1697,14 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         if (result && prefix_match(&result->p, &default_prefix)) {
 	  default_node = result;
 	  pptrs->bgp_src = NULL;
+	  pptrs->bgp_src_info = NULL;
         }
 
         result = (struct bgp_node *) pptrs->bgp_dst;
         if (result && prefix_match(&result->p, &default_prefix)) {
 	  default_node = result;
 	  pptrs->bgp_dst = NULL;
+	  pptrs->bgp_dst_info = NULL;
         }
       }
 #if defined ENABLE_IPV6
@@ -1681,23 +1715,25 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         result = (struct bgp_node *) pptrs->bgp_src;
         if (result && prefix_match(&result->p, &default_prefix)) {
           default_node = result;
+          info = result->info;
           pptrs->bgp_src = NULL;
+          pptrs->bgp_src_info = NULL;
         }
 
         result = (struct bgp_node *) pptrs->bgp_dst;
         if (result && prefix_match(&result->p, &default_prefix)) {
           default_node = result;
+          info = result->info;
           pptrs->bgp_dst = NULL;
+          pptrs->bgp_dst_info = NULL;
         }
       }
 #endif
       
       if (!pptrs->bgp_src || !pptrs->bgp_dst) {
 	follow_default--;
-	if (!saved_peer) saved_peer = peer;
 
         if (default_node) {
-	  info = (struct bgp_info *) default_node->info;
           if (info && info->attr) {
             if (info->attr->mp_nexthop.family == AF_INET) {
               sa = &sa_local;
@@ -1729,17 +1765,15 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     if (config.nfacctd_bgp_follow_nexthop[0].family && pptrs->bgp_dst)
       bgp_follow_nexthop_lookup(pptrs);
   }
-
-  if (saved_peer) pptrs->bgp_peer = (char *) saved_peer;
 }
 
 void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
-  struct bgp_peer *nh_peer, *saved_peer = NULL;
+  struct bgp_peer *nh_peer;
   struct bgp_node *result_node = NULL;
   struct bgp_info *info;
-  char *result = NULL, *saved_result = NULL;
+  char *result = NULL, *saved_info = NULL;
   int peers_idx, ttl = MAX_HOPS_FOLLOW_NH, self = MAX_NH_SELF_REFERENCES;
   int nh_idx, matched = 0;
   struct prefix nh, ch;
@@ -1775,24 +1809,28 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     ch.prefixlen = 32;
     memcpy(&ch.u.prefix4, &nh_peer->addr.address.ipv4, 4);
 
-    if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-      result = (char *) bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref4);
-    }
+    if (!result) {
+      if (pptrs->l3_proto == ETHERTYPE_IP) {
+        memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+        result = (char *) bgp_node_match_ipv4(rib[AFI_IP][SAFI_UNICAST], &pref4);
+      }
 #if defined ENABLE_IPV6
-    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-      result = (char *) bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &pref6);
-    }
+      else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+        result = (char *) bgp_node_match_ipv6(rib[AFI_IP6][SAFI_UNICAST], &pref6);
+      }
 #endif
+    }
 
     memset(&nh, 0, sizeof(nh));
     result_node = (struct bgp_node *) result;
 
-    if (result_node)
-      info = (struct bgp_info *) result_node->info;
-    else
-      info = NULL;
+    if (result_node) {
+      for (info = result_node->info; info; info = info->next) {
+        if (info->peer == nh_peer) break;
+      }
+    }
+    else info = NULL;
 
     if (info && info->attr) {
       if (info->attr->mp_nexthop.family == AF_INET) {
@@ -1812,7 +1850,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
           memset(sa, 0, sizeof(struct sockaddr));
           sa->sa_family = AF_INET;
           memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->mp_nexthop.address.ipv4, 4);
-	  saved_result = result;
+	  saved_info = (char *) info;
 	  ttl--;
           goto start_again;
         }
@@ -1836,7 +1874,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
           memset(sa, 0, sizeof(struct sockaddr));
           sa->sa_family = AF_INET6;
           memcpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6, 16);
-	  saved_result = result;
+	  saved_info = (char *) info;
 	  ttl--;
           goto start_again;
 	}
@@ -1860,7 +1898,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
           memset(sa, 0, sizeof(struct sockaddr));
           sa->sa_family = AF_INET;
           memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->nexthop, 4);
-	  saved_result = result;
+	  saved_info = (char *) info;
 	  ttl--;
           goto start_again;
 	}
@@ -1871,7 +1909,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 
   end:
 
-  if (saved_result) pptrs->bgp_nexthop = saved_result; 
+  if (saved_info) pptrs->bgp_nexthop_info = saved_info; 
   pptrs->f_agent = saved_agent;
 }
 

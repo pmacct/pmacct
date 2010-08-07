@@ -101,7 +101,6 @@ struct bgp_peer {
   u_int8_t cap_mp;
   char *cap_4as;
   u_int16_t msglen;
-  struct bgp_table *rib[AFI_MAX][SAFI_MAX];
   struct bgp_peer_buf buf;
 };
 

@@ -2045,9 +2045,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   --pdata; /* Bringing back to original place */
 
   if (src_ret) {
-    for (info = src_ret->info; info; info = info->next) {
-      if (info->peer == peer) break;
-    }
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
 	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
@@ -2116,9 +2114,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   }
 
   if (dst_ret) {
-    for (info = dst_ret->info; info; info = info->next) {
-      if (info->peer == peer) break;
-    }
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
 	if (config.nfacctd_bgp_stdcomm_pattern)
@@ -2182,17 +2178,13 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           }
         }
       }
-      // XXX
       if (chptr->aggregation & COUNT_PEER_DST_IP) {
-	struct bgp_node *nh;
 	struct bgp_info *nh_info;
 
 	if (config.nfacctd_as == NF_AS_BGP) {
-	  if (pptrs->bgp_nexthop) { 
-	    nh = (struct bgp_node *) pptrs->bgp_nexthop;
-	    nh_info = nh->info;
-	  }
-	  else 
+	  if (pptrs->bgp_nexthop_info)
+	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
+	  else
 	    nh_info = info;
 
 	  if (nh_info->attr->mp_nexthop.family == AF_INET) {
@@ -2216,7 +2208,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
   if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) {
     if (config.nfacctd_as == NF_AS_BGP) {
-      if (!pptrs->bta) memcpy(&pbgp->peer_src_ip, &peer->addr, sizeof(struct host_addr)); 
+      if (!pptrs->bta && !config.nfacctd_bgp_follow_default) memcpy(&pbgp->peer_src_ip, &peer->addr, sizeof(struct host_addr)); 
       else {
         struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 
@@ -2239,9 +2231,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   struct bgp_info *info;
 
   if (src_ret) {
-    for (info = src_ret->info; info; info = info->next) {
-      if (info->peer == peer) break;
-    }
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
 	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
@@ -2255,9 +2245,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   }
 
   if (dst_ret) {
-    for (info = dst_ret->info; info; info = info->next) {
-      if (info->peer == peer) break;
-    }
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
@@ -2267,17 +2255,13 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
 	    payload->dst_as = evaluate_first_asn(info->attr->aspath->str);
 	}
 
-	// XXX
 	if (chptr->aggregation & COUNT_PEER_DST_IP) {
-	  struct bgp_node *nh;
-	  struct bgp_info *nh_info;
+          struct bgp_info *nh_info;
 
-          if (pptrs->bgp_nexthop) {
-            nh = (struct bgp_node *) pptrs->bgp_nexthop;
-            nh_info = nh->info;
-          }
+          if (pptrs->bgp_nexthop_info)
+	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
           else
-            nh_info = info;
+	    nh_info = info;
 
           if (nh_info->attr->mp_nexthop.family == AF_INET) {
             payload->bgp_next_hop.family = AF_INET;
@@ -2311,9 +2295,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   --pdata; /* Bringing back to original place */
 
   if (src_ret) {
-    for (info = src_ret->info; info; info = info->next) {
-      if (info->peer == peer) break;
-    }
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
         if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
@@ -2327,9 +2309,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   }
 
   if (dst_ret) {
-    for (info = dst_ret->info; info; info = info->next) {
-      if (info->peer == peer) break;
-    }
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (config.nfacctd_as == NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
@@ -2339,17 +2319,13 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
             pdata->primitives.dst_as = evaluate_first_asn(info->attr->aspath->str);
         }
 
-	// XXX
         if (chptr->aggregation & COUNT_PEER_DST_IP) {
-          struct bgp_node *nh;
           struct bgp_info *nh_info;
 
-          if (pptrs->bgp_nexthop) {
-            nh = (struct bgp_node *) pptrs->bgp_nexthop;
-            nh_info = nh->info;
-          }
+          if (pptrs->bgp_nexthop_info)
+	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
           else
-            nh_info = info;
+	    nh_info = info;
 
           if (nh_info->attr->mp_nexthop.family == AF_INET) {
             pextras->bgp_next_hop.family = AF_INET;
@@ -2389,9 +2365,7 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
     if (src_ret) {
       char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
-      for (info = src_ret->info; info; info = info->next) {
-        if (info->peer == peer) break;
-      }
+      info = (struct bgp_info *) pptrs->bgp_src_info;
 
       if (info && info->attr && info->attr->community && info->attr->community->str) {
         evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);

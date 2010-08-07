@@ -848,14 +848,16 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   int ret = -1;
 
-  /* bgp_follow_nexthop hook */
-  if (pptrs->bgp_nexthop) dst_ret = (struct bgp_node *) pptrs->bgp_nexthop;
-
   if (dst_ret) {
-    info = (struct bgp_info *) dst_ret->info;
+    if (pptrs->bgp_nexthop_info)
+      info = (struct bgp_info *) pptrs->bgp_nexthop_info;
+    else
+      info = (struct bgp_info *) pptrs->bgp_dst_info;
+
     if (info && info->attr) {
       if (info->attr->mp_nexthop.family == AF_INET) {
         ret = memcmp(&entry->bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
@@ -1008,11 +1010,12 @@ int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
   if (src_ret) {
-    info = (struct bgp_info *) src_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (info->attr->aspath) {
         asn = evaluate_last_asn(info->attr->aspath);
@@ -1080,11 +1083,12 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
   if (dst_ret) {
-    info = (struct bgp_info *) dst_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (info->attr->aspath) {
         asn = evaluate_last_asn(info->attr->aspath);
@@ -1100,6 +1104,7 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
@@ -1108,7 +1113,7 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
   else if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
-      info = (struct bgp_info *) src_ret->info;
+      info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
 	if (info->attr->aspath && info->attr->aspath->str) {
 	  asn = evaluate_first_asn(info->attr->aspath->str);
@@ -1125,11 +1130,12 @@ int pretag_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
   if (dst_ret) {
-    info = (struct bgp_info *) dst_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (info->attr->aspath && info->attr->aspath->str) {
         asn = evaluate_first_asn(info->attr->aspath->str);
@@ -1145,6 +1151,7 @@ int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void 
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   u_int32_t local_pref = 0;
 
@@ -1153,7 +1160,7 @@ int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void 
   }
   else if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
-      info = (struct bgp_info *) src_ret->info;
+      info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
 	local_pref = info->attr->local_pref;
       }
@@ -1168,11 +1175,12 @@ int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   u_int32_t local_pref = 0;
 
   if (dst_ret) {
-    info = (struct bgp_info *) dst_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       local_pref = info->attr->local_pref;
     }
@@ -1186,13 +1194,14 @@ int pretag_src_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
   memset(tmp_stdcomms, 0, sizeof(tmp_stdcomms));
 
   if (src_ret) {
-    info = (struct bgp_info *) src_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr && info->attr->community && info->attr->community->str) {
       evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->src_comms, MAX_BGP_STD_COMMS);
     }
@@ -1206,13 +1215,14 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
   memset(tmp_stdcomms, 0, sizeof(tmp_stdcomms));
 
   if (dst_ret) {
-    info = (struct bgp_info *) dst_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr && info->attr->community && info->attr->community->str) {
       evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->comms, MAX_BGP_STD_COMMS);
     }
@@ -1270,10 +1280,12 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 
   if (!entry->id && entry->flags == BPAS_MAP_RCODE_BGP) {
     struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+    struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
     struct bgp_info *info;
 
     if (src_ret) {
-      info = (struct bgp_info *) src_ret->info;
+      info = (struct bgp_info *) pptrs->bgp_src_info;
+
       if (info && info->attr) {
 	if (info->attr->aspath && info->attr->aspath->str) {
 	  *tid = evaluate_first_asn(info->attr->aspath->str);
@@ -1433,10 +1445,11 @@ int BPAS_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (src_ret) {
-    info = (struct bgp_info *) src_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (entry->bgp_nexthop.a.family == AF_INET) {
 	if (info->attr->mp_nexthop.family == AF_INET) {
@@ -1464,11 +1477,12 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
   if (src_ret) {
-    info = (struct bgp_info *) src_ret->info;
+    info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (info->attr->aspath && info->attr->aspath->str) {
         asn = evaluate_first_asn(info->attr->aspath->str);
