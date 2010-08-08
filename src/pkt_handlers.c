@@ -2187,19 +2187,21 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  else
 	    nh_info = info;
 
-	  if (nh_info->attr->mp_nexthop.family == AF_INET) {
-	    pbgp->peer_dst_ip.family = AF_INET;
-	    memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
-	  }
+	  if (nh_info && nh_info->attr) {
+	    if (nh_info->attr->mp_nexthop.family == AF_INET) {
+	      pbgp->peer_dst_ip.family = AF_INET;
+	      memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+	    }
 #if defined ENABLE_IPV6
-	  else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
-	    pbgp->peer_dst_ip.family = AF_INET6;
-	    memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
-	  }
+	    else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+	      pbgp->peer_dst_ip.family = AF_INET6;
+	      memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+	    }
 #endif
-	  else {
-	    pbgp->peer_dst_ip.family = AF_INET; 
-	    pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+	    else {
+	      pbgp->peer_dst_ip.family = AF_INET; 
+	      pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+	    }
 	  }
 	}
       }
@@ -2263,20 +2265,22 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
           else
 	    nh_info = info;
 
-          if (nh_info->attr->mp_nexthop.family == AF_INET) {
-            payload->bgp_next_hop.family = AF_INET;
-            memcpy(&payload->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
-          }
+	  if (nh_info && nh_info->attr) {
+            if (nh_info->attr->mp_nexthop.family == AF_INET) {
+              payload->bgp_next_hop.family = AF_INET;
+              memcpy(&payload->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+            }
 #if defined ENABLE_IPV6
-          else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
-            payload->bgp_next_hop.family = AF_INET6;
-            memcpy(&payload->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
-          }
+            else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+              payload->bgp_next_hop.family = AF_INET6;
+              memcpy(&payload->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+            }
 #endif
-          else {
-            payload->bgp_next_hop.family = AF_INET;
-            payload->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
-          }
+            else {
+              payload->bgp_next_hop.family = AF_INET;
+              payload->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+            }
+	  }
         }
       }
     }
@@ -2327,20 +2331,22 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
           else
 	    nh_info = info;
 
-          if (nh_info->attr->mp_nexthop.family == AF_INET) {
-            pextras->bgp_next_hop.family = AF_INET;
-            memcpy(&pextras->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
-          }
+	  if (nh_info && nh_info->attr) {
+            if (nh_info->attr->mp_nexthop.family == AF_INET) {
+              pextras->bgp_next_hop.family = AF_INET;
+              memcpy(&pextras->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+            }
 #if defined ENABLE_IPV6
-          else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
-            pextras->bgp_next_hop.family = AF_INET6;
-            memcpy(&pextras->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
-          }
+            else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+              pextras->bgp_next_hop.family = AF_INET6;
+              memcpy(&pextras->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+            }
 #endif
-          else {
-            pextras->bgp_next_hop.family = AF_INET;
-            pextras->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
-          }
+            else {
+              pextras->bgp_next_hop.family = AF_INET;
+              pextras->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+            }
+	  }
         }
       }
     }

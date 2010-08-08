@@ -258,33 +258,36 @@ bgp_unlock_node (struct bgp_node *node)
 
 /* Find matched prefix. */
 struct bgp_node *
-bgp_node_match (const struct bgp_table *table, struct prefix *p)
+bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer *peer)
 {
   struct bgp_node *node;
   struct bgp_node *matched;
+  struct bgp_info *info;
 
   matched = NULL;
   node = table->top;
 
   /* Walk down tree.  If there is matched route then store it to
      matched. */
-  while (node && node->p.prefixlen <= p->prefixlen && 
-	 prefix_match (&node->p, p))
-    {
-      if (node->info)
+  while (node && node->p.prefixlen <= p->prefixlen && prefix_match(&node->p, p)) {
+    for (info = node->info; info; info = info->next) {
+      if (info->peer == peer) {
 	matched = node;
-      node = node->link[check_bit(&p->u.prefix, node->p.prefixlen)];
+        break;
+      }
     }
 
+    node = node->link[check_bit(&p->u.prefix, node->p.prefixlen)];
+  }
+
   /* If matched route found, return it. */
-  if (matched)
-    return bgp_lock_node (matched);
+  if (matched) return bgp_lock_node (matched);
 
   return NULL;
 }
 
 struct bgp_node *
-bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr)
+bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr, struct bgp_peer *peer)
 {
   struct prefix_ipv4 p;
 
@@ -293,12 +296,12 @@ bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr)
   p.prefixlen = IPV4_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return bgp_node_match (table, (struct prefix *) &p);
+  return bgp_node_match (table, (struct prefix *) &p, peer);
 }
 
 #ifdef ENABLE_IPV6
 struct bgp_node *
-bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr)
+bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struct bgp_peer *peer)
 {
   struct prefix_ipv6 p;
 
@@ -307,7 +310,7 @@ bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr)
   p.prefixlen = IPV6_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return bgp_node_match (table, (struct prefix *) &p);
+  return bgp_node_match (table, (struct prefix *) &p, peer);
 }
 #endif /* ENABLE_IPV6 */
 
