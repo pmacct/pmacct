@@ -624,7 +624,9 @@ EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_in
 EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *);
 EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
-EXT void log_template_v9(struct template_cache_entry *, struct packet_ptrs *);
+EXT void log_template_v9_header(struct template_cache_entry *, struct packet_ptrs *);
+EXT void log_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 
+EXT void log_template_v9_footer(u_int16_t);
 EXT struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_opt_template_v9(struct options_template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
 #undef EXT
