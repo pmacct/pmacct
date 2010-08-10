@@ -21,6 +21,8 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #ifndef _BGP_TABLE_H_
 #define _BGP_TABLE_H_
 
+#define DEFAULT_BGP_INFO_HASH 13
+
 /* AFI and SAFI type. */
 typedef u_int16_t afi_t;
 typedef u_int8_t safi_t;
@@ -57,7 +59,7 @@ struct bgp_node
 #define l_left   link[0]
 #define l_right  link[1]
 
-  void *info;
+  void *info[DEFAULT_BGP_INFO_HASH];
 
   unsigned int lock;
 /*
@@ -123,7 +125,6 @@ EXT struct bgp_node *bgp_table_top (const struct bgp_table *const);
 EXT struct bgp_node *bgp_route_next (struct bgp_node *);
 EXT struct bgp_node *bgp_route_next_until (struct bgp_node *, struct bgp_node *);
 EXT struct bgp_node *bgp_node_get (struct bgp_table *const, struct prefix *);
-EXT struct bgp_node *bgp_node_lookup (const struct bgp_table *const, struct prefix *);
 EXT struct bgp_node *bgp_lock_node (struct bgp_node *node);
 EXT struct bgp_node *bgp_node_match (const struct bgp_table *, struct prefix *, struct bgp_peer *);
 EXT struct bgp_node *bgp_node_match_ipv4 (const struct bgp_table *, struct in_addr *, struct bgp_peer *);

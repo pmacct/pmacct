@@ -1030,11 +1030,12 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   struct bgp_node *route;
   struct bgp_info *ri, *new;
   struct bgp_attr *attr_new;
+  u_int32_t modulo = peer->fd % DEFAULT_BGP_INFO_HASH;
 
   route = bgp_node_get(rib[afi][safi], p);
 
   /* Check previously received route. */
-  for (ri = route->info; ri; ri = ri->next)
+  for (ri = route->info[modulo]; ri; ri = ri->next)
 	if (ri->peer == peer && ri->type == afi && ri->sub_type == safi)
 	  break;
 
@@ -1072,7 +1073,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   new->uptime = time(NULL);
 
   /* Register new BGP information. */
-  bgp_info_add(route, new);
+  bgp_info_add(route, new, modulo);
 
   /* route_node_get lock */
   bgp_unlock_node(route);
@@ -1123,12 +1124,13 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 {
   struct bgp_node *route;
   struct bgp_info *ri;
+  u_int32_t modulo = peer->fd % DEFAULT_BGP_INFO_HASH;
 
   /* Lookup node. */
   route = bgp_node_get(rib[afi][safi], p);
 
   /* Lookup withdrawn route. */
-  for (ri = route->info; ri; ri = ri->next)
+  for (ri = route->info[modulo]; ri; ri = ri->next)
 	if (ri->peer == peer && ri->type == afi && ri->sub_type == safi)
 	  break;
 
@@ -1149,7 +1151,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   }
 
   /* Withdraw specified route from routing table. */
-  if (ri) bgp_info_delete(route, ri); 
+  if (ri) bgp_info_delete(route, ri, modulo); 
 
   /* Unlock bgp_node_get() lock. */
   bgp_unlock_node(route);
@@ -1180,31 +1182,31 @@ struct bgp_info *bgp_info_new()
   return new;
 }
 
-void bgp_info_add(struct bgp_node *rn, struct bgp_info *ri)
+void bgp_info_add(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
   struct bgp_info *top;
 
-  top = rn->info;
+  top = rn->info[modulo];
 
-  ri->next = rn->info;
+  ri->next = rn->info[modulo];
   ri->prev = NULL;
   if (top)
 	top->prev = ri;
-  rn->info = ri;
+  rn->info[modulo] = ri;
 
   ri->lock++;
   bgp_lock_node(rn);
   ri->peer->lock++;
 }
 
-void bgp_info_delete(struct bgp_node *rn, struct bgp_info *ri)
+void bgp_info_delete(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
   if (ri->next)
 	ri->next->prev = ri->prev;
   if (ri->prev)
 	ri->prev->next = ri->next;
   else
-	rn->info = ri->next;
+	rn->info[modulo] = ri->next;
 
   assert (ri->lock > 0);
 
@@ -1601,6 +1603,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
+  u_int32_t modulo;
 
   pptrs->bgp_src = NULL;
   pptrs->bgp_dst = NULL;
@@ -1627,6 +1630,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   }
 
   if (peer) {
+    modulo = peer->fd % DEFAULT_BGP_INFO_HASH; 
+
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
@@ -1634,7 +1639,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;	
-	for (info = result->info; info; info = info->next) {
+	for (info = result->info[modulo]; info; info = info->next) {
 	  if (info->peer == peer) {
 	    pptrs->bgp_src_info = (char *) info;
 	    break;
@@ -1647,7 +1652,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst;
-        for (info = result->info; info; info = info->next) {
+        for (info = result->info[modulo]; info; info = info->next) {
           if (info->peer == peer) {
             pptrs->bgp_dst_info = (char *) info;
             break;
@@ -1663,7 +1668,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;
-        for (info = result->info; info; info = info->next) {
+        for (info = result->info[modulo]; info; info = info->next) {
           if (info->peer == peer) {
             pptrs->bgp_src_info = (char *) info;
             break;
@@ -1676,7 +1681,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst; 
-        for (info = result->info; info; info = info->next) {
+        for (info = result->info[modulo]; info; info = info->next) {
           if (info->peer == peer) {
             pptrs->bgp_dst_info = (char *) info;
             break;
@@ -1715,7 +1720,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         result = (struct bgp_node *) pptrs->bgp_src;
         if (result && prefix_match(&result->p, &default_prefix)) {
           default_node = result;
-          info = result->info;
+          info = result->info[modulo];
           pptrs->bgp_src = NULL;
           pptrs->bgp_src_info = NULL;
         }
@@ -1723,7 +1728,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         result = (struct bgp_node *) pptrs->bgp_dst;
         if (result && prefix_match(&result->p, &default_prefix)) {
           default_node = result;
-          info = result->info;
+          info = result->info[modulo];
           pptrs->bgp_dst = NULL;
           pptrs->bgp_dst_info = NULL;
         }
@@ -1783,6 +1788,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 #endif
   char *saved_agent = pptrs->f_agent;
   pm_id_t bta;
+  u_int32_t modulo;
 
   start_again:
 
@@ -1804,6 +1810,8 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   }
 
   if (nh_peer) {
+    modulo = nh_peer->fd % DEFAULT_BGP_INFO_HASH;
+
     memset(&ch, 0, sizeof(ch));
     ch.family = AF_INET;
     ch.prefixlen = 32;
@@ -1826,7 +1834,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     result_node = (struct bgp_node *) result;
 
     if (result_node) {
-      for (info = result_node->info; info; info = info->next) {
+      for (info = result_node->info[modulo]; info; info = info->next) {
         if (info->peer == nh_peer) break;
       }
     }
