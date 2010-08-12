@@ -59,7 +59,7 @@ struct bgp_node
 #define l_left   link[0]
 #define l_right  link[1]
 
-  void *info[DEFAULT_BGP_INFO_HASH];
+  void **info;
 
   unsigned int lock;
 /*

@@ -109,6 +109,8 @@ void skinny_bgp_daemon()
   peers = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
+  if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
+
   sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (sock < 0) {
     Log(LOG_ERR, "ERROR ( default/core/BGP ): thread socket() failed. Terminating thread.\n");
@@ -1030,7 +1032,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   struct bgp_node *route;
   struct bgp_info *ri, *new;
   struct bgp_attr *attr_new;
-  u_int32_t modulo = peer->fd % DEFAULT_BGP_INFO_HASH;
+  u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
 
   route = bgp_node_get(rib[afi][safi], p);
 
@@ -1124,7 +1126,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 {
   struct bgp_node *route;
   struct bgp_info *ri;
-  u_int32_t modulo = peer->fd % DEFAULT_BGP_INFO_HASH;
+  u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
 
   /* Lookup node. */
   route = bgp_node_get(rib[afi][safi], p);
@@ -1630,7 +1632,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   }
 
   if (peer) {
-    modulo = peer->fd % DEFAULT_BGP_INFO_HASH; 
+    modulo = peer->fd % config.bgp_table_peer_buckets; 
 
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
@@ -1810,7 +1812,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   }
 
   if (nh_peer) {
-    modulo = nh_peer->fd % DEFAULT_BGP_INFO_HASH;
+    modulo = nh_peer->fd % config.bgp_table_peer_buckets;
 
     memset(&ch, 0, sizeof(ch));
     ch.family = AF_INET;

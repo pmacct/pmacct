@@ -58,6 +58,10 @@ bgp_node_create ()
 
   rn = (struct bgp_node *) malloc (sizeof (struct bgp_node));
   memset (rn, 0, sizeof (struct bgp_node));
+
+  rn->info = (void **) malloc(sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
+  memset (rn->info, 0, sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
+
   return rn;
 }
 
@@ -79,6 +83,7 @@ bgp_node_set (struct bgp_table *table, struct prefix *prefix)
 static void
 bgp_node_free (struct bgp_node *node)
 {
+  free (node->info);
   free (node);
 }
 
@@ -90,7 +95,7 @@ bgp_node_free_aggressive (struct bgp_node *node)
   struct bgp_info *ri, *next;
   u_int32_t ri_idx;
 
-  for (ri_idx = 0; ri_idx < DEFAULT_BGP_INFO_HASH; ri_idx++) {
+  for (ri_idx = 0; ri_idx < config.bgp_table_peer_buckets; ri_idx++) {
     for (ri = node->info[ri_idx]; ri; ri = next) {
       if (config.nfacctd_bgp_msglog) {
         char empty[] = "";
@@ -112,6 +117,7 @@ bgp_node_free_aggressive (struct bgp_node *node)
     }
   }
 
+  free (node->info);
   free (node);
 }
 
@@ -266,7 +272,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   struct bgp_node *node;
   struct bgp_node *matched;
   struct bgp_info *info;
-  u_int32_t modulo = peer->fd % DEFAULT_BGP_INFO_HASH;
+  u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
 
   matched = NULL;
   node = table->top;
@@ -384,7 +390,7 @@ bgp_node_delete (struct bgp_node *node)
   u_int32_t ri_idx;
 
   assert (node->lock == 0);
-  for (ri_idx = 0; ri_idx < DEFAULT_BGP_INFO_HASH; ri_idx++)
+  for (ri_idx = 0; ri_idx < config.bgp_table_peer_buckets; ri_idx++)
     assert (node->info[ri_idx] == NULL);
 
   if (node->l_left && node->l_right)

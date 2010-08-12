@@ -124,6 +124,7 @@ struct configuration {
   struct prefix nfacctd_bgp_follow_nexthop[FOLLOW_BGP_NH_ENTRIES];
   char *nfacctd_bgp_neighbors_file;
   char *nfacctd_bgp_md5_file;
+  int bgp_table_peer_buckets;
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */
   char *pcap_savefile;

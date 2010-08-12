@@ -1116,6 +1116,17 @@ DESC:           full pathname to a file containing the BGP peers (IP address onl
 		of peers supported is 8192. For a sample map look in: 'examples/bgp_md5.lst.example'
 		The feature was tested working against a 2.6.32 Linux kernel. (default: no password)
 
+KEY:		bgp_table_peer_buckets [GLOBAL]
+VALUES:		[ 1-1000 ]
+DESC:		From version 0.12.4, a shared BGP RIB is worked out from announcements sent by all BGP
+		peers. Routing information related to BGP prefixes is kept per-peer in order to simulate
+		a multi-RIB environment and is internally structured as an hash with conflict chains.
+		This parameter sets the number of buckets of such hash structure; the value is directly
+		related to the number of actual BGP peers, is best set to a prime number and the default
+		value proved to work fine up to aprox 100 BGP peers in lab. More buckets means better CPU
+		usage but increased memory footprint - and vice-versa. The advice is to keep the value to
+		the closest prime number to 1/10 of the actual number of BGP peers. (default: 13)
+
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)
 
