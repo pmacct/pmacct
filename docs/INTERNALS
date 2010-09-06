@@ -10,6 +10,7 @@ VIII.	Recovery modes
 IX.	pmacctd flows counter implementation
 X.	Classifier and connection tracking engines
 XI.	Jumps and flow diversions in Pre-Tagging infrastructure
+XII.	BGP daemon thread dimensioning
 
 
 I. Introduction
@@ -438,4 +439,47 @@ somewhat limiting in some scenarios, ie. the need to account internal data to bo
 and the receiver: this time you would need a 1-to-2 relationship. In this context, being able
 to handle 1-to-2 relationships becomes a requirement when sampling comes into play as any
 single sample is required to be assigned to both parties in order for the algorithms to work
-correctly. Relationships 1-to->1 are precisely the aim for jeq, stack and return keys. 
+correctly. Relationships 1-to-1 are precisely the aim for jeq, stack and return keys. 
+
+
+XII. BGP daemon thread dimensioning
+Memory structure of the BGP daemon thread can be broken down in three modules: IP prefixes, BGP  
+information and BGP attributes. Up to version 0.12.3 the multi-RIB nature of the BGP daemon was
+achieved separating IP prefixes and BGP information on a per active BGP peer basis, while BGP
+attributes were shared among all the peers. From a logical point these structures were relating
+each other as follows: IP prefix -(1:1)-> BGP information -(N:1)-> BGP attributes.
+Version 0.12.4 sees introduction of a memory model by which also IP prefixes are being shared
+among the BGP peers - leading to consistent memory savings whenever multiple BGP peers export
+full tables due to the almost total overlap of information. In this new model, structures are
+relating each other as follows: IP prefix -(1:N)-> BGP information -(N:1)-> BGP attributes. The
+longest match nature of IP lookups required to raise BGP peer awareness of the lookup algorithm
+in order to fully support the newly established 1:N relation.
+Following are some calculations that can ease memory dimensioning in order to support a certain
+number of peers, num(B), each exporting the same full-routing table, T, which consists of num(P)
+number of prefixes. The shared base of BGP attributes, A, is estimated in roughly 200MB. The BGP
+information base, I, is also calculated. 
+
+sz(P) = 16  (size of an IP prefix) 
+sz(Tn) = 48 (size of routing table node)
+sz(In) = 48 (size of BGP information base node)
+sz(THn) = 8 (size of routing table hash node)
+T = num(P) * (sz(Tn) +  sz(P) + (sz(THn) * bgp_table_peer_buckets))
+I = num(B) * num(P) * sz(In)
+RIB = T + I + A
+
+Sizes are based on worse-case scenario, ie. 64-bit executable with support for IPv6 compiled in.
+num(P) is a way to simplify calculations while retaining good accuracy; whereas higher precision
+can be achieved by using union(P), which is the union of all prefixes exported by all BGP peers. 
+bgp_table_peer_buckets is set by default to 13 and is adviceable to keep its value to 1/10 of the
+expected number of BGP peers; increasing such ratio improves lookup performances at the expense
+of more sustained memory usage.
+As an example, let's imagine a scenario where 500 BGP peers export the same 500K IPv4 routes and
+50K IPv6 routes and bgp_table_peer_buckets is set to a value of 50:
+
+T = (500K+50K) * (48 + 16 + (8 * 50)) = 256MB 
+I = 500 * (500K+50K) * 48 = 13.2GB
+A = ~200MB
+RIB = 256MB + 13.2GB + 200MB = ~13.7GB 
+
+Still, this example assumes a 64-bit executable. For an educated guess on how 32-bit executables
+would look like, it's sufficient to divide by half output of the sz() functions presented above. 
