@@ -82,34 +82,9 @@ struct bgp_info
   struct bgp_info *prev;
   struct bgp_peer *peer;
   struct bgp_attr *attr;
-  time_t uptime;
-  unsigned int lock;
-
-  /* BGP information status.  */
-/*
-  u_int16_t flags;
-#define BGP_INFO_IGP_CHANGED    (1 << 0)
-#define BGP_INFO_DAMPED         (1 << 1)
-#define BGP_INFO_HISTORY        (1 << 2)
-#define BGP_INFO_SELECTED       (1 << 3)
-#define BGP_INFO_VALID          (1 << 4)
-#define BGP_INFO_ATTR_CHANGED   (1 << 5)
-#define BGP_INFO_DMED_CHECK     (1 << 6)
-#define BGP_INFO_DMED_SELECTED  (1 << 7)
-#define BGP_INFO_STALE          (1 << 8)
-#define BGP_INFO_REMOVED        (1 << 9)
-#define BGP_INFO_COUNTED    (1 << 10)
-*/
 
   u_char type;
   u_char sub_type;
-  u_char valid;
-
-  /* MPLS label.  */
-// u_char tag[3];
-
-  /* AS-Pathlimit TTL */
-  u_char ttl;
 };
 
 /* Prototypes */

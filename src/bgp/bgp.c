@@ -1044,8 +1044,6 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   attr_new = bgp_attr_intern(attr);
 
   if (ri) {
-	ri->uptime = time(NULL);
-
 	/* Received same information */
 	if (attrhash_cmp(ri->attr, attr_new)) {
 	  bgp_unlock_node (route);
@@ -1072,7 +1070,6 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   new->sub_type = safi;
   new->peer = peer;
   new->attr = attr_new;
-  new->uptime = time(NULL);
 
   /* Register new BGP information. */
   bgp_info_add(route, new, modulo);
@@ -1196,7 +1193,7 @@ void bgp_info_add(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 	top->prev = ri;
   rn->info[modulo] = ri;
 
-  ri->lock++;
+  // ri->lock++;
   bgp_lock_node(rn);
   ri->peer->lock++;
 }
@@ -1210,10 +1207,10 @@ void bgp_info_delete(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
   else
 	rn->info[modulo] = ri->next;
 
-  assert (ri->lock > 0);
+  // assert (ri->lock > 0);
 
-  ri->lock--;
-  if (ri->lock == 0) bgp_info_free(ri);
+  // ri->lock--;
+  // if (ri->lock == 0) bgp_info_free(ri);
 
   bgp_unlock_node(rn);
 }
