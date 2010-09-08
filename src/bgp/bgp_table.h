@@ -83,8 +83,8 @@ struct bgp_info
   struct bgp_peer *peer;
   struct bgp_attr *attr;
 
-  u_char type;
-  u_char sub_type;
+//  u_char type;
+//  u_char sub_type;
 };
 
 /* Prototypes */

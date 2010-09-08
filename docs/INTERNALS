@@ -477,9 +477,9 @@ As an example, let's imagine a scenario where 500 BGP peers export the same 500K
 50K IPv6 routes and bgp_table_peer_buckets is set to a value of 50:
 
 T = (500K+50K) * (48 + 16 + (8 * 50)) = 256MB 
-I = 500 * (500K+50K) * 34 = 9.35GB
+I = 500 * (500K+50K) * 32 = 8.8GB
 A = ~200MB
-RIB = 256MB + 9.35GB + 200MB = ~9.8GB 
+RIB = 256MB + 8.8GB + 200MB = ~9.26GB 
 
 Still, this example assumes a 64-bit executable. For an educated guess on how 32-bit executables
 would look like, it's sufficient to divide by half output of the sz() functions presented above. 
