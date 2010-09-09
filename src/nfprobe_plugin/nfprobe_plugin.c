@@ -300,6 +300,15 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
       else if (p->id2 == 2) direction = DIRECTION_OUT;
       break;
     }
+
+    if (direction == DIRECTION_IN) {
+      flow->direction[ndx] = DIRECTION_IN;
+      flow->direction[ndx ^ 1] = 0;
+    }
+    else if (direction == DIRECTION_OUT) {
+      flow->direction[ndx] = 0;
+      flow->direction[ndx ^ 1] = DIRECTION_OUT;
+    }
   }
 
 #if defined HAVE_L2
@@ -336,6 +345,33 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
   }
 
   return (0);
+}
+
+static int
+l2_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int ndx)
+{
+  struct pkt_primitives *p = &data->primitives;
+  int direction = 0;
+
+  if (config.nfprobe_direction) {
+    switch (config.nfprobe_direction) {
+    case DIRECTION_TAG:
+      if (p->id == 1) direction = DIRECTION_IN;
+      else if (p->id == 2) direction = DIRECTION_OUT;
+      break;
+    case DIRECTION_TAG2:
+      if (p->id2 == 1) direction = DIRECTION_IN;
+      else if (p->id2 == 2) direction = DIRECTION_OUT;
+      break;
+    }
+
+    if (direction == DIRECTION_IN) {
+      if (!flow->direction[ndx]) flow->direction[ndx] = DIRECTION_IN;
+    }
+    else if (direction == DIRECTION_OUT) {
+      if (!flow->direction[ndx ^ 1]) flow->direction[ndx ^ 1] = DIRECTION_OUT;
+    }
+  }
 }
 
 static int
@@ -394,6 +430,8 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extr
   ndx = memcmp(&p->src_ip.address.ipv4, &p->dst_ip.address.ipv4, sizeof(p->src_ip.address.ipv4)) > 0 ? 1 : 0;
 
   if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
+
+  l2_to_flowrec_update(flow, data, extras, ndx);
 }
 
 #if defined ENABLE_IPV6
@@ -445,6 +483,8 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extr
 
   if (!memcmp(&dummy_ipv6, &flow->bgp_next_hop[ndx].v6, sizeof(dummy_ipv6)))
     flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
+
+  l2_to_flowrec_update(flow, data, extras, ndx);
 }
 #endif 
 

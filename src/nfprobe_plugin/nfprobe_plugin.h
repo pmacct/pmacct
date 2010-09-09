@@ -141,6 +141,7 @@ struct FLOW {
 
 	/* Flow identity (all are in network byte order) */
 	int af;					/* Address family of flow */
+	u_int8_t direction[2];			/* Flow direction */
 	u_int32_t ip6_flowlabel[2];		/* IPv6 Flowlabel */
 	union {
 		struct in_addr v4;

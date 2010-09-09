@@ -428,6 +428,8 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_LAST_SWITCHED               21
 #define NF9_FIRST_SWITCHED              22
+#define NF9_OUT_BYTES			23
+#define NF9_OUT_PACKETS			24
 /* ... */
 #define NF9_IPV6_SRC_ADDR               27
 #define NF9_IPV6_DST_ADDR               28

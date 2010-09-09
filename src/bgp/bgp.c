@@ -1037,10 +1037,9 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   route = bgp_node_get(rib[afi][safi], p);
 
   /* Check previously received route. */
-  for (ri = route->info[modulo]; ri; ri = ri->next)
-	// if (ri->peer == peer && ri->type == afi && ri->sub_type == safi)
-	if (ri->peer == peer)
-	  break;
+  for (ri = route->info[modulo]; ri; ri = ri->next) {
+    if (ri->peer == peer) break;
+  }
 
   attr_new = bgp_attr_intern(attr);
 
@@ -1067,8 +1066,6 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
   /* Make new BGP info. */
   new = bgp_info_new();
-//  new->type = afi;
-//  new->sub_type = safi;
   new->peer = peer;
   new->attr = attr_new;
 
@@ -1130,10 +1127,9 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   route = bgp_node_get(rib[afi][safi], p);
 
   /* Lookup withdrawn route. */
-  for (ri = route->info[modulo]; ri; ri = ri->next)
-	if (ri->peer == peer)
-	// if (ri->peer == peer && ri->type == afi && ri->sub_type == safi)
-	  break;
+  for (ri = route->info[modulo]; ri; ri = ri->next) {
+    if (ri->peer == peer) break;
+  }
 
   if (ri && config.nfacctd_bgp_msglog) {
 	char empty[] = "";
@@ -1209,10 +1205,7 @@ void bgp_info_delete(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
   else
 	rn->info[modulo] = ri->next;
 
-  // assert (ri->lock > 0);
-
-  // ri->lock--;
-  // if (ri->lock == 0) bgp_info_free(ri);
+  bgp_info_free(ri);
 
   bgp_unlock_node(rn);
 }

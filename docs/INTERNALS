@@ -461,7 +461,7 @@ information base, I, is also calculated.
 
 sz(P) = 16  (size of an IP prefix) 
 sz(Tn) = 48 (size of routing table node)
-sz(In) = 34 (size of BGP information base node)
+sz(In) = 32 (size of BGP information base node)
 sz(THn) = 8 (size of routing table hash node)
 T = num(P) * (sz(Tn) +  sz(P) + (sz(THn) * bgp_table_peer_buckets))
 I = num(B) * num(P) * sz(In)
