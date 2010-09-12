@@ -93,6 +93,9 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_FLOW_SAMPLER_MODE           49
 #define NF9_FLOW_SAMPLER_INTERVAL       50
 #define NF9_SRC_MAC                     56
+/* ... */
+#define NF9_DIRECTION                   61
+/* ... */
 #define NF9_DST_MAC                     80
 #define NF9_SRC_VLAN                    243
 /* ... */
@@ -111,7 +114,7 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_OPT_SCOPE_SYSTEM            1
 
 /* Stuff pertaining to the templates that softflowd uses */
-#define NF9_SOFTFLOWD_TEMPLATE_NRECORDS	34
+#define NF9_SOFTFLOWD_TEMPLATE_NRECORDS	35
 struct NF9_SOFTFLOWD_TEMPLATE {
 	struct NF9_TEMPLATE_FLOWSET_HEADER h;
 	struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
@@ -147,7 +150,8 @@ struct NF9_SOFTFLOWD_DATA_COMMON {
 	u_int16_t ifindex_in, ifindex_out;
 	u_int32_t bytes, packets, flows;
 	u_int16_t src_port, dst_port;
-	u_int8_t protocol, tos, tcp_flags, ipproto;
+	u_int8_t direction, protocol, tos;
+	u_int8_t tcp_flags, ipproto;
 	as_t src_as, dst_as;
 	u_int8_t src_mac[6], dst_mac[6];
 	u_int16_t vlan;
@@ -200,6 +204,16 @@ flow_to_flowset_output_handler(char *flowset, const struct FLOW *flow, int idx, 
 
   rec16 = htons(flow->ifindex[idx ^ 1]);
   memcpy(flowset, &rec16, size);
+}
+
+static void
+flow_to_flowset_direction_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  u_int8_t rec8;
+
+  rec8 = flow->direction[idx] ? (flow->direction[idx]-1) : 0;
+
+  memcpy(flowset, &rec8, size);
 }
 
 static void
@@ -428,6 +442,11 @@ nf9_init_template(void)
 	v4_int_template.r[rcount].handler = flow_to_flowset_output_handler;
         v4_int_template.r[rcount].length = 2;
         rcount++;
+        v4_template.r[rcount].type = htons(NF9_DIRECTION);
+        v4_template.r[rcount].length = htons(1);
+        v4_int_template.r[rcount].handler = flow_to_flowset_direction_handler;
+        v4_int_template.r[rcount].length = 1;
+        rcount++;
 	if (config.nfprobe_what_to_count & COUNT_FLOWS) { 
 	  v4_template.r[rcount].type = htons(NF9_FLOWS);
 	  v4_template.r[rcount].length = htons(4);
@@ -621,6 +640,11 @@ nf9_init_template(void)
         v6_template.r[rcount].length = htons(2);
 	v6_int_template.r[rcount].handler = flow_to_flowset_output_handler;
         v6_int_template.r[rcount].length = 2;
+        rcount++;
+        v6_template.r[rcount].type = htons(NF9_DIRECTION);
+        v6_template.r[rcount].length = htons(1);
+        v6_int_template.r[rcount].handler = flow_to_flowset_direction_handler;
+        v6_int_template.r[rcount].length = 1;
         rcount++;
 	if (config.nfprobe_what_to_count & COUNT_FLOWS) { 
 	  v6_template.r[rcount].type = htons(NF9_FLOWS);

@@ -306,8 +306,8 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
       flow->direction[ndx ^ 1] = 0;
     }
     else if (direction == DIRECTION_OUT) {
-      flow->direction[ndx] = 0;
-      flow->direction[ndx ^ 1] = DIRECTION_OUT;
+      flow->direction[ndx] = DIRECTION_OUT;
+      flow->direction[ndx ^ 1] = 0;
     }
   }
 
@@ -369,7 +369,7 @@ l2_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
       if (!flow->direction[ndx]) flow->direction[ndx] = DIRECTION_IN;
     }
     else if (direction == DIRECTION_OUT) {
-      if (!flow->direction[ndx ^ 1]) flow->direction[ndx ^ 1] = DIRECTION_OUT;
+      if (!flow->direction[ndx]) flow->direction[ndx] = DIRECTION_OUT;
     }
   }
 }
