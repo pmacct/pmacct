@@ -1,5 +1,33 @@
-pmacct (Promiscuous mode IP Accounting package) v0.12.3
+pmacct (Promiscuous mode IP Accounting package) v0.12.4
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+
+0.12.4 -- 30-09-2010
+  + BGP daemon: a new memory model is introduced by which IP prefixes
+    are being shared among the BGP peers RIBs - leading to consistent
+    memory savings whenever multiple BGP peers export full tables due
+    to the almost total overlap of information. Longest match nature
+    of IP lookups required to raise BGP peer awareness of the lookup
+    algorithm. Updated INTERNALS document to support estimation of the
+    memory footprint of the daemon.
+  + BGP daemon: a new bgp_table_peer_buckets configuration directive
+    is introduced: per-peer routing information is attached to IP
+    prefixes and now hashed onto buckets with conflict chains. This
+    parameter sets the number of buckets of such hash structure; the
+    value is directly related to the number of expected BGP peers,
+    should never exceed such amount and is best set to 1/10 of the
+    expected number of peers.
+  + nfprobe: support has been added to export direction field (NetFlow
+    v9 field type #61); its value, 0=ingress 1=egress, is determined
+    via nfprobe_direction configuration directive.
+  + nfacctd: introduced support for Cisco ASA bytes counter, NetFlow v9
+    field type #85. Thanks to Ralf Reinartz for his support. 
+  ! nfacctd: improved flow recognition heuristics for cases in which
+    IPv4/IPv6/input/output data are combined within the same NetFlow
+    v9 template. Thanks to Carsten Schoene for his support.
+  ! fix, BGP daemon: bgp_nexthop_followup was not working correctly if
+    pointed to a non-existing next-hop.
+  ! fix, nfv9_template.c: ignoring unsupported NetFlow v9 field types;
+    improved template logging. Thanks to Ralf Reinartz for his support.
 
 0.12.3 -- 28-07-2010
   + 'cos' aggregation primitive has been implemented providing support
