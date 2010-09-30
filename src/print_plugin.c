@@ -467,16 +467,18 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       printf("%-10u  ", data->id);
       printf("%-10u  ", data->id2);
       printf("%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      printf("%-10u  ", data->ifindex_in);
+      printf("%-10u  ", data->ifindex_out);
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
       printf("%-17s  ", src_mac);
       etheraddr_string(data->eth_dhost, dst_mac);
       printf("%-17s  ", dst_mac);
-      printf("%-5d  ", data->vlan_id); 
-      printf("%-2d  ", data->cos); 
+      printf("%-5u  ", data->vlan_id); 
+      printf("%-2u  ", data->cos); 
 #endif
-      printf("%-10d  ", data->src_as); 
-      printf("%-10d  ", data->dst_as); 
+      printf("%-10u  ", data->src_as); 
+      printf("%-10u  ", data->dst_as); 
       printf("%-22s   ", pbgp->std_comms);
 
       as_path = pbgp->as_path;
@@ -489,10 +491,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       else
 	printf("%-22s   ", empty_aspath);
 
-      printf("%-5d  ", pbgp->local_pref);
-      printf("%-5d  ", pbgp->med);
-      printf("%-10d  ", pbgp->peer_src_as);
-      printf("%-10d  ", pbgp->peer_dst_as);
+      printf("%-5u  ", pbgp->local_pref);
+      printf("%-5u  ", pbgp->med);
+      printf("%-10u  ", pbgp->peer_src_as);
+      printf("%-10u  ", pbgp->peer_dst_as);
       addr_to_str(ip_address, &pbgp->peer_src_ip);
 #if defined ENABLE_IPV6
       printf("%-45s  ", ip_address);
@@ -518,11 +520,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #else
       printf("%-15s  ", dst_host);
 #endif
-      printf("%-5d     ", data->src_port);
-      printf("%-5d     ", data->dst_port);
-      printf("%-3d        ", queue[j]->tcp_flags);
+      printf("%-3u       ", data->src_nmask);
+      printf("%-3u       ", data->dst_nmask);
+      printf("%-5u     ", data->src_port);
+      printf("%-5u     ", data->dst_port);
+      printf("%-3u        ", queue[j]->tcp_flags);
       printf("%-10s  ", _protocols[data->proto].name);
-      printf("%-3d    ", data->tos);
+      printf("%-3u    ", data->tos);
 #if defined HAVE_64BIT_COUNTERS
       printf("%-20llu  ", queue[j]->packet_counter);
       printf("%-20llu  ", queue[j]->flow_counter);
@@ -537,16 +541,18 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       printf("%u,", data->id);
       printf("%u,", data->id2);
       printf("%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      printf("%u,", data->ifindex_in);
+      printf("%u,", data->ifindex_out);
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
       printf("%s,", src_mac);
       etheraddr_string(data->eth_dhost, dst_mac);
       printf("%s,", dst_mac);
-      printf("%d,", data->vlan_id); 
-      printf("%d,", data->cos); 
+      printf("%u,", data->vlan_id); 
+      printf("%u,", data->cos); 
 #endif
-      printf("%d,", data->src_as); 
-      printf("%d,", data->dst_as); 
+      printf("%u,", data->src_as); 
+      printf("%u,", data->dst_as); 
       printf("%s,", pbgp->std_comms);
 
       as_path = pbgp->as_path;
@@ -559,10 +565,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       else
 	printf("%s,", empty_aspath);
 
-      printf("%d,", pbgp->local_pref);
-      printf("%d,", pbgp->med);
-      printf("%d,", pbgp->peer_src_as);
-      printf("%d,", pbgp->peer_dst_as);
+      printf("%u,", pbgp->local_pref);
+      printf("%u,", pbgp->med);
+      printf("%u,", pbgp->peer_src_as);
+      printf("%u,", pbgp->peer_dst_as);
 
       addr_to_str(ip_address, &pbgp->peer_src_ip);
       printf("%s,", ip_address);
@@ -574,11 +580,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       addr_to_str(dst_host, &data->dst_ip);
       printf("%s,", dst_host);
 
-      printf("%d,", data->src_port);
-      printf("%d,", data->dst_port);
-      printf("%d,", queue[j]->tcp_flags);
+      printf("%u,", data->src_nmask);
+      printf("%u,", data->dst_nmask);
+      printf("%u,", data->src_port);
+      printf("%u,", data->dst_port);
+      printf("%u,", queue[j]->tcp_flags);
       printf("%s,", _protocols[data->proto].name);
-      printf("%d,", data->tos);
+      printf("%u,", data->tos);
 #if defined HAVE_64BIT_COUNTERS
       printf("%llu,", queue[j]->packet_counter);
       printf("%llu,", queue[j]->flow_counter);
@@ -599,6 +607,8 @@ void P_write_stats_header_formatted()
   printf("TAG         ");
   printf("TAG2        ");
   printf("CLASS             ");
+  printf("IN_IFACE    ");
+  printf("OUT_IFACE   ");
 #if defined HAVE_L2
   printf("SRC_MAC            ");
   printf("DST_MAC            ");
@@ -622,6 +632,8 @@ void P_write_stats_header_formatted()
   printf("SRC_IP           ");
   printf("DST_IP           ");
 #endif
+  printf("SRC_MASK  ");
+  printf("DST_MASK  ");
   printf("SRC_PORT  ");
   printf("DST_PORT  ");
   printf("TCP_FLAGS  ");
