@@ -875,6 +875,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
         Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp_v5->tos);
         Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, exp_v5->srcport);
         Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp_v5->dstport);
+	Assign8(((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, exp_v5->tcp_flags);
       }
       /* Let's copy some relevant field */
       pptrs->l4_proto = exp_v5->prot;
@@ -928,6 +929,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
         Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp_v7->tos);
         Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, exp_v7->srcport);
         Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp_v7->dstport);
+        Assign8(((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, exp_v7->tcp_flags);
       }
       /* Let's copy some relevant field */
       pptrs->l4_proto = exp_v7->prot;
@@ -1162,6 +1164,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             memcpy(&((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
             memcpy(&((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
             memcpy(&((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrs->l4_proto = 0;
@@ -1196,6 +1199,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    /* XXX: class ID ? */
             memcpy(&((struct my_tlhdr *)pptrsv->v6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
             memcpy(&((struct my_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrs->v6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrsv->v6.l4_proto = 0;
@@ -1232,6 +1236,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlan4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrsv->vlan4.l4_proto = 0;
@@ -1268,6 +1273,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    /* XXX: class ID ? */
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlan6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrsv->vlan6.l4_proto = 0;
@@ -1315,6 +1321,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             memcpy(&((struct my_iphdr *)pptrsv->mpls4.iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
             memcpy(&((struct my_tlhdr *)pptrsv->mpls4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
             memcpy(&((struct my_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
           }
 	  /* Let's copy some relevant field */
 	  pptrsv->mpls4.l4_proto = 0;
@@ -1361,6 +1368,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    /* XXX: class ID ? */
 	    memcpy(&((struct my_tlhdr *)pptrsv->mpls6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrsv->mpls6.l4_proto = 0;
@@ -1409,6 +1417,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrsv->vlanmpls4.l4_proto = 0;
@@ -1456,6 +1465,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    /* XXX: class ID ? */
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
+            memcpy(&((struct my_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
 	  /* Let's copy some relevant field */
 	  pptrsv->vlanmpls6.l4_proto = 0;
