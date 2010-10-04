@@ -1146,10 +1146,10 @@ int main(int argc,char **argv)
 		!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);
 
         if (!have_wtc || (what_to_count & COUNT_IN_IFACE)) {
-          printf("%-10d  ", acc_elem->primitives.ifindex_in);
+          printf("%-10u  ", acc_elem->primitives.ifindex_in);
         }
         if (!have_wtc || (what_to_count & COUNT_OUT_IFACE)) {
-          printf("%-10d  ", acc_elem->primitives.ifindex_out);
+          printf("%-10u  ", acc_elem->primitives.ifindex_out);
         }
 
 #if defined (HAVE_L2)
@@ -1164,19 +1164,19 @@ int main(int argc,char **argv)
 	} 
 
 	if (!have_wtc || (what_to_count & COUNT_VLAN)) {
-          printf("%-5d  ", acc_elem->primitives.vlan_id);
+          printf("%-5u  ", acc_elem->primitives.vlan_id);
         }
 
         if (!have_wtc || (what_to_count & COUNT_COS)) {
-          printf("%-2d  ", acc_elem->primitives.cos);
+          printf("%-2u  ", acc_elem->primitives.cos);
         }
 #endif
 	if (!have_wtc || (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS))) {
-          printf("%-10d  ", acc_elem->primitives.src_as);
+          printf("%-10u  ", acc_elem->primitives.src_as);
         }
 
 	if (!have_wtc || (what_to_count & COUNT_DST_AS)) {
-          printf("%-10d  ", acc_elem->primitives.dst_as);
+          printf("%-10u  ", acc_elem->primitives.dst_as);
         }
 
 	/* Slightly special "!have_wtc" handling due to standard and
@@ -1254,31 +1254,31 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count & COUNT_LOCAL_PREF)) {
-          printf("%-7d  ", pbgp->local_pref);
+          printf("%-7u  ", pbgp->local_pref);
         }
 
         if (!have_wtc || (what_to_count & COUNT_SRC_LOCAL_PREF)) {
-          printf("%-7d  ", pbgp->src_local_pref);
+          printf("%-7u  ", pbgp->src_local_pref);
         }
 
         if (!have_wtc || (what_to_count & COUNT_MED)) {
-          printf("%-6d  ", pbgp->med);
+          printf("%-6u  ", pbgp->med);
         }
 
         if (!have_wtc || (what_to_count & COUNT_SRC_MED)) {
-          printf("%-6d  ", pbgp->src_med);
+          printf("%-6u  ", pbgp->src_med);
         }
 
 	if (!have_wtc || (what_to_count & COUNT_IS_SYMMETRIC)) {
-	  printf("%-3d  ", pbgp->is_symmetric);
+	  printf("%-3u  ", pbgp->is_symmetric);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_AS)) {
-          printf("%-10d  ", pbgp->peer_src_as);
+          printf("%-10u  ", pbgp->peer_src_as);
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_DST_AS)) {
-          printf("%-10d  ", pbgp->peer_dst_as);
+          printf("%-10u  ", pbgp->peer_dst_as);
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_IP)) {
@@ -1328,28 +1328,28 @@ int main(int argc,char **argv)
 	}
 
         if (!have_wtc || (what_to_count & COUNT_SRC_NMASK))
-          printf("%-3d       ", acc_elem->primitives.src_nmask);
+          printf("%-3u       ", acc_elem->primitives.src_nmask);
 
         if (!have_wtc || (what_to_count & COUNT_DST_NMASK))
-          printf("%-3d       ", acc_elem->primitives.dst_nmask);
+          printf("%-3u       ", acc_elem->primitives.dst_nmask);
 
 	if (!have_wtc || (what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)))
-	  printf("%-5d     ", acc_elem->primitives.src_port);
+	  printf("%-5u     ", acc_elem->primitives.src_port);
 
 	if (!have_wtc || (what_to_count & COUNT_DST_PORT))
-	  printf("%-5d     ", acc_elem->primitives.dst_port);
+	  printf("%-5u     ", acc_elem->primitives.dst_port);
 
 	if (!have_wtc || (what_to_count & COUNT_TCPFLAGS))
-	  printf("%-6d     ", acc_elem->tcp_flags);
+	  printf("%-6u     ", acc_elem->tcp_flags);
 
 	if (!have_wtc || (what_to_count & COUNT_IP_PROTO)) {
 	  if (acc_elem->primitives.proto < protocols_number)
 	    printf("%-10s  ", _protocols[acc_elem->primitives.proto].name);
-	  else printf("%-3d  ", acc_elem->primitives.proto);
+	  else printf("%-3u  ", acc_elem->primitives.proto);
 	}
 
 	if (!have_wtc || (what_to_count & COUNT_IP_TOS))
-	  printf("%-3d    ", acc_elem->primitives.tos); 
+	  printf("%-3u    ", acc_elem->primitives.tos); 
 
 #if defined HAVE_64BIT_COUNTERS
 	printf("%-20llu  ", acc_elem->pkt_num);

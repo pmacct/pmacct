@@ -388,10 +388,7 @@ int main(int argc,char **argv, char **envp)
           if (!list->cfg.nfacctd_net) {
             if (list->cfg.networks_file) list->cfg.nfacctd_net |= NF_NET_NEW;
             if (list->cfg.networks_mask) list->cfg.nfacctd_net |= NF_NET_STATIC;
-            if (!list->cfg.nfacctd_net) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'sfacctd_net', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
-              exit(1);
-            }
+            if (!list->cfg.nfacctd_net) list->cfg.nfacctd_net = NF_NET_KEEP;
           }
           else {
             if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) ||
