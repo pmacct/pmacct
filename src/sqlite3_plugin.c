@@ -640,6 +640,7 @@ void SQLI_init_default_values(struct insert_data *idata)
   if (!config.sql_db) config.sql_db = sqlite3_db;
   if (!config.sql_table) {
     if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = sqlite3_table_bgp;
+    else if (config.sql_table_version == 8) config.sql_table = sqlite3_table_v8;
     else if (config.sql_table_version == 7) config.sql_table = sqlite3_table_v7;
     else if (config.sql_table_version == 6) config.sql_table = sqlite3_table_v6;
     else if (config.sql_table_version == 5) config.sql_table = sqlite3_table_v5;

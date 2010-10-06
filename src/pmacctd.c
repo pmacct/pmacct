@@ -75,7 +75,7 @@ void usage_daemon(char *prog_name)
   printf("  -s  \tMemory pool size\n");
   printf("\nPostgreSQL (-P pgsql)/MySQL (-P mysql)/SQLite (-P sqlite3) plugin options:\n");
   printf("  -r  \tRefresh time (in seconds)\n");
-  printf("  -v  \t[ 1 | 2 | 3 | 4 | 5 | 6 | 7 ] \n\tTable version\n");
+  printf("  -v  \t[ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ] \n\tTable version\n");
   printf("\nPrint plugin (-P print) plugin options:\n");
   printf("  -r  \tRefresh time (in seconds)\n");
   printf("  -O  \t[ formatted | csv ] \n\tOutput format\n");

@@ -92,7 +92,9 @@ Similarly, BGP tables:
   * src_net => ip_src (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * dst_net => ip_dst (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * src_port => src_port (INT(4) NOT NULL DEFAULT 0)
+    - src_port => port_src (INT(4) NOT NULL DEFAULT 0, if sql_table_version: 8)
   * dst_port => dst_port (INT(4) NOT NULL DEFAULT 0)
+    - dst_port => port_dst (INT(4) NOT NULL DEFAULT 0, if sql_table_version: 8)
   * tcpflags => tcp_flags (INT(2) NOT NULL DEFAULT 0)
   * proto => ip_proto (INT(2) NOT NULL DEFAULT 0)
   * tos => tos (INT(4) NOT NULL DEFAULT 0)
@@ -107,10 +109,10 @@ NOTE: mind to specify EVERYTIME which SQL table version you
 intend to adhere to by using either of the following rules:
 
 When using commandline options:
-  * -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+  * -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ]
 
 When using configuration directives:
-  * sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+  * sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ]
   * sql_table_type: [ bgp ]
 
 NOTE: specifying a non-documented SQL table profile will result

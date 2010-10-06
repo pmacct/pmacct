@@ -323,7 +323,7 @@ DESC:		full pathname to a file containing a SQL table schema. It allows to creat
 		closed in a 'ring' fashion (e.g., the days of the week) but 'open' (e.g., current date).  
 
 KEY:		sql_table_version (-v)
-VALUES		[ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
+VALUES		[ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ]
 DESC:		defines the version of the SQL table. SQL table versioning was introduced to achieve two
 		goals: a) make tables work out-of-the-box for the SQL beginners, smaller installations
 		and quick try-outs; and in this context b) to allow introduction of new features over

@@ -808,6 +808,7 @@ void PG_init_default_values(struct insert_data *idata)
 
     if (typed) {
       if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = pgsql_table_bgp;
+      else if (config.sql_table_version == 8) config.sql_table = pgsql_table_v8;
       else if (config.sql_table_version == 7) config.sql_table = pgsql_table_v7;
       else if (config.sql_table_version == 6) config.sql_table = pgsql_table_v6; 
       else if (config.sql_table_version == 5) {
@@ -832,6 +833,10 @@ void PG_init_default_values(struct insert_data *idata)
       }
     }
     else {
+      if (config.sql_table_version == 8) {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Unified data are no longer supported. Switching to typed data.\n", config.name, config.type);
+        config.sql_table = pgsql_table_v8;
+      }
       if (config.sql_table_version == 7) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): Unified data are no longer supported. Switching to typed data.\n", config.name, config.type);
 	config.sql_table = pgsql_table_v7;

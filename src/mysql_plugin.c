@@ -668,6 +668,7 @@ void MY_init_default_values(struct insert_data *idata)
   if (!config.sql_passwd) config.sql_passwd = mysql_pwd;
   if (!config.sql_table) {
     if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = mysql_table_bgp;
+    else if (config.sql_table_version == 8) config.sql_table = mysql_table_v8;
     else if (config.sql_table_version == 7) config.sql_table = mysql_table_v7;
     else if (config.sql_table_version == 6) config.sql_table = mysql_table_v6;
     else if (config.sql_table_version == 5) config.sql_table = mysql_table_v5;
