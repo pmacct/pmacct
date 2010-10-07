@@ -1894,8 +1894,8 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
     outp = getData32(sample);
     sample->inputPortFormat = inp >> 30;
     sample->outputPortFormat = outp >> 30;
-    sample->inputPort = inp & 0x3fffffff;
-    sample->outputPort = outp & 0x3fffffff;
+    sample->inputPort = inp; // skip 0x3fffffff mask
+    sample->outputPort = outp; // skip 0x3fffffff mask
   }
 
   num_elements = getData32(sample);
