@@ -499,8 +499,8 @@ struct data_hdr_v9 {
 #define MAX_TPL_DESC_LIST 81
 static char *tpl_desc_list[] = {
   "",
-  "bytes",
-  "packets",
+  "in bytes",
+  "in packets",
   "flows",
   "L4 protocol",
   "tos",
@@ -520,7 +520,9 @@ static char *tpl_desc_list[] = {
   "", "",
   "last switched",
   "first switched",
-  "", "", "", "",
+  "out bytes",
+  "out packets",
+  "", "",
   "IPv6 src addr",
   "IPv6 dst addr",
   "IPv6 src mask",

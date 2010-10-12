@@ -92,23 +92,28 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_FLOW_SAMPLER_ID             48
 #define NF9_FLOW_SAMPLER_MODE           49
 #define NF9_FLOW_SAMPLER_INTERVAL       50
-#define NF9_SRC_MAC                     56
-/* ... */
-#define NF9_DIRECTION                   61
-/* ... */
-#define NF9_DST_MAC                     80
-#define NF9_SRC_VLAN                    243
+#define NF9_IN_SRC_MAC                  56 //
+#define NF9_OUT_DST_MAC                 57
 /* ... */
 #define NF9_IP_PROTOCOL_VERSION		60
+#define NF9_DIRECTION                   61
 /* ... */
 #define NF9_BGP_IPV6_NEXT_HOP           63
 /* ... */
 #define NF9_MPLS_LABEL_1                70
+/* ... */
+#define NF9_IN_DST_MAC                  80 //
+#define NF9_OUT_SRC_MAC                 81
+/* ... */
 /* CUSTOM TYPES START HERE */
 #define NF9_CUST_CLASS			200
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
 /* CUSTOM TYPES END HERE */
+/* ... */
+#define NF9_SRC_VLAN                    243
+/* ... */
+#define NF9_DST_VLAN                    254
 
 /* OPTION SCOPES */
 #define NF9_OPT_SCOPE_SYSTEM            1
@@ -178,8 +183,12 @@ struct NF9_SOFTFLOWD_DATA_V6 {
 
 static struct NF9_SOFTFLOWD_TEMPLATE v4_template;
 static struct NF9_INTERNAL_TEMPLATE v4_int_template;
+static struct NF9_SOFTFLOWD_TEMPLATE v4_template_out;
+static struct NF9_INTERNAL_TEMPLATE v4_int_template_out;
 static struct NF9_SOFTFLOWD_TEMPLATE v6_template;
 static struct NF9_INTERNAL_TEMPLATE v6_int_template;
+static struct NF9_SOFTFLOWD_TEMPLATE v6_template_out;
+static struct NF9_INTERNAL_TEMPLATE v6_int_template_out;
 static struct NF9_OPTIONS_TEMPLATE options_template;
 static struct NF9_INTERNAL_OPTIONS_TEMPLATE options_int_template;
 static char ftoft_buf_0[sizeof(struct NF9_SOFTFLOWD_DATA_V6)];
@@ -398,60 +407,84 @@ nf9_init_template(void)
 	  config.nfprobe_what_to_count |= COUNT_IP_PROTO;
 	  config.nfprobe_what_to_count |= COUNT_IP_TOS;
 	}
-/*
-	if ( ! ( config.nfprobe_what_to_count & COUNT_SRC_HOST && 
-	  config.nfprobe_what_to_count & COUNT_DST_HOST && 
-	  config.nfprobe_what_to_count & COUNT_SRC_PORT && 
-	  config.nfprobe_what_to_count & COUNT_DST_PORT && 
-	  config.nfprobe_what_to_count & COUNT_IP_PROTO && 
-	  config.nfprobe_what_to_count & COUNT_IP_TOS ) ) 
-	  config.nfprobe_what_to_count |= COUNT_FLOWS;
-*/
 	
 	rcount = 0;
 	bzero(&v4_template, sizeof(v4_template));
 	bzero(&v4_int_template, sizeof(v4_int_template));
+	bzero(&v4_template_out, sizeof(v4_template_out));
+	bzero(&v4_int_template_out, sizeof(v4_int_template_out));
 
 	v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
 	v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].length = 4;
+	v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED);
+	v4_template_out.r[rcount].length = htons(4);
+	v4_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED);
 	v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].length = 4;
+        v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED);
+        v4_template_out.r[rcount].length = htons(4);
+        v4_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v4_template.r[rcount].type = htons(NF9_IN_BYTES);
 	v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].length = 4;
+        v4_template_out.r[rcount].type = htons(NF9_OUT_BYTES);
+        v4_template_out.r[rcount].length = htons(4);
+        v4_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v4_template.r[rcount].type = htons(NF9_IN_PACKETS);
 	v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].length = 4;
+        v4_template_out.r[rcount].type = htons(NF9_OUT_PACKETS);
+        v4_template_out.r[rcount].length = htons(4);
+        v4_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v4_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v4_template.r[rcount].length = htons(1);
 	v4_int_template.r[rcount].length = 1;
+        v4_template_out.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
+        v4_template_out.r[rcount].length = htons(1);
+        v4_int_template_out.r[rcount].length = 1;
 	rcount++;
         v4_template.r[rcount].type = htons(NF9_INPUT_SNMP);
         v4_template.r[rcount].length = htons(2);
 	v4_int_template.r[rcount].handler = flow_to_flowset_input_handler;
         v4_int_template.r[rcount].length = 2;
+        v4_template_out.r[rcount].type = htons(NF9_INPUT_SNMP);
+        v4_template_out.r[rcount].length = htons(2);
+        v4_int_template_out.r[rcount].handler = flow_to_flowset_input_handler;
+        v4_int_template_out.r[rcount].length = 2;
         rcount++;
         v4_template.r[rcount].type = htons(NF9_OUTPUT_SNMP);
         v4_template.r[rcount].length = htons(2);
 	v4_int_template.r[rcount].handler = flow_to_flowset_output_handler;
         v4_int_template.r[rcount].length = 2;
+        v4_template_out.r[rcount].type = htons(NF9_OUTPUT_SNMP);
+        v4_template_out.r[rcount].length = htons(2);
+        v4_int_template_out.r[rcount].handler = flow_to_flowset_output_handler;
+        v4_int_template_out.r[rcount].length = 2;
         rcount++;
         v4_template.r[rcount].type = htons(NF9_DIRECTION);
         v4_template.r[rcount].length = htons(1);
         v4_int_template.r[rcount].handler = flow_to_flowset_direction_handler;
         v4_int_template.r[rcount].length = 1;
+        v4_template_out.r[rcount].type = htons(NF9_DIRECTION);
+        v4_template_out.r[rcount].length = htons(1);
+        v4_int_template_out.r[rcount].handler = flow_to_flowset_direction_handler;
+        v4_int_template_out.r[rcount].length = 1;
         rcount++;
 	if (config.nfprobe_what_to_count & COUNT_FLOWS) { 
 	  v4_template.r[rcount].type = htons(NF9_FLOWS);
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_flows_handler;
 	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_FLOWS);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_flows_handler;
+          v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_HOST) { 
@@ -459,6 +492,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_src_host_v4_handler;
 	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_IPV4_SRC_ADDR);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_src_host_v4_handler;
+          v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_HOST) {
@@ -466,6 +503,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_dst_host_v4_handler;
 	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_IPV4_DST_ADDR);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_dst_host_v4_handler;
+          v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
         if (config.nfprobe_what_to_count & COUNT_PEER_DST_IP) {
@@ -473,6 +514,10 @@ nf9_init_template(void)
           v4_template.r[rcount].length = htons(4);
           v4_int_template.r[rcount].handler = flow_to_flowset_bgp_next_hop_v4_handler;
           v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_BGP_IPV4_NEXT_HOP);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_bgp_next_hop_v4_handler;
+          v4_int_template_out.r[rcount].length = 4;
           rcount++;
         }
         if (config.nfprobe_what_to_count & COUNT_SRC_NMASK) {
@@ -480,6 +525,10 @@ nf9_init_template(void)
           v4_template.r[rcount].length = htons(1);
           v4_int_template.r[rcount].handler = flow_to_flowset_src_nmask_handler;
           v4_int_template.r[rcount].length = 1;
+          v4_template_out.r[rcount].type = htons(NF9_SRC_MASK);
+          v4_template_out.r[rcount].length = htons(1);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_src_nmask_handler;
+          v4_int_template_out.r[rcount].length = 1;
           rcount++;
         }
         if (config.nfprobe_what_to_count & COUNT_DST_NMASK) {
@@ -487,6 +536,10 @@ nf9_init_template(void)
           v4_template.r[rcount].length = htons(1);
           v4_int_template.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
           v4_int_template.r[rcount].length = 1;
+          v4_template_out.r[rcount].type = htons(NF9_DST_MASK);
+          v4_template_out.r[rcount].length = htons(1);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
+          v4_int_template_out.r[rcount].length = 1;
           rcount++;
         }
 	if (config.nfprobe_what_to_count & COUNT_SRC_PORT) {
@@ -494,6 +547,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(2);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_src_port_handler;
 	  v4_int_template.r[rcount].length = 2;
+          v4_template_out.r[rcount].type = htons(NF9_L4_SRC_PORT);
+          v4_template_out.r[rcount].length = htons(2);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_src_port_handler;
+          v4_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_PORT) {
@@ -501,6 +558,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(2);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_dst_port_handler;
 	  v4_int_template.r[rcount].length = 2;
+          v4_template_out.r[rcount].type = htons(NF9_L4_DST_PORT);
+          v4_template_out.r[rcount].length = htons(2);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_dst_port_handler;
+          v4_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & (COUNT_IP_TOS)) {
@@ -508,6 +569,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(1);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_ip_tos_handler;
 	  v4_int_template.r[rcount].length = 1;
+          v4_template_out.r[rcount].type = htons(NF9_SRC_TOS);
+          v4_template_out.r[rcount].length = htons(1);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_ip_tos_handler;
+          v4_int_template_out.r[rcount].length = 1;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT)) {
@@ -515,6 +580,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(1);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_tcp_flags_handler;
 	  v4_int_template.r[rcount].length = 1;
+          v4_template_out.r[rcount].type = htons(NF9_TCP_FLAGS);
+          v4_template_out.r[rcount].length = htons(1);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_tcp_flags_handler;
+          v4_int_template_out.r[rcount].length = 1;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_IP_PROTO) {
@@ -522,6 +591,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(1);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_ip_proto_handler;
 	  v4_int_template.r[rcount].length = 1;
+          v4_template_out.r[rcount].type = htons(NF9_IN_PROTOCOL);
+          v4_template_out.r[rcount].length = htons(1);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_ip_proto_handler;
+          v4_int_template_out.r[rcount].length = 1;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_AS) {
@@ -529,6 +602,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_src_as_handler;
 	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_SRC_AS);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_src_as_handler;
+          v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_AS) {
@@ -536,20 +613,32 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_dst_as_handler;
 	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_DST_AS);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_dst_as_handler;
+          v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_MAC) {
-	  v4_template.r[rcount].type = htons(NF9_SRC_MAC);
+	  v4_template.r[rcount].type = htons(NF9_IN_SRC_MAC);
 	  v4_template.r[rcount].length = htons(6);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_src_mac_handler;
 	  v4_int_template.r[rcount].length = 6;
+          v4_template_out.r[rcount].type = htons(NF9_OUT_SRC_MAC);
+          v4_template_out.r[rcount].length = htons(6);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_src_mac_handler;
+          v4_int_template_out.r[rcount].length = 6;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_MAC) {
-	  v4_template.r[rcount].type = htons(NF9_DST_MAC);
+	  v4_template.r[rcount].type = htons(NF9_IN_DST_MAC);
 	  v4_template.r[rcount].length = htons(6);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_dst_mac_handler;
 	  v4_int_template.r[rcount].length = 6;
+          v4_template_out.r[rcount].type = htons(NF9_OUT_DST_MAC);
+          v4_template_out.r[rcount].length = htons(6);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_dst_mac_handler;
+          v4_int_template_out.r[rcount].length = 6;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_VLAN) {
@@ -557,22 +646,21 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(2);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_vlan_handler;
 	  v4_int_template.r[rcount].length = 2;
+          v4_template_out.r[rcount].type = htons(NF9_DST_VLAN);
+          v4_template_out.r[rcount].length = htons(2);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_vlan_handler;
+          v4_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
-/*
-	if (config.nfprobe_what_to_count & COUNT_VLAN) {
-	  v4_template.r[rcount].type = htons(NF9_MPLS_LABEL_1);
-	  v4_template.r[rcount].length = htons(3);
-	  v4_int_template.r[rcount].handler = flow_to_flowset_mpls_handler;
-	  v4_int_template.r[rcount].length = 3;
-	  rcount++;
-	}
-*/
 	if (config.nfprobe_what_to_count & COUNT_CLASS) {
 	  v4_template.r[rcount].type = htons(NF9_CUST_CLASS);
 	  v4_template.r[rcount].length = htons(16);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_class_handler;
 	  v4_int_template.r[rcount].length = 16;
+          v4_template_out.r[rcount].type = htons(NF9_CUST_CLASS);
+          v4_template_out.r[rcount].length = htons(16);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_class_handler;
+          v4_int_template_out.r[rcount].length = 16;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_ID) {
@@ -580,6 +668,10 @@ nf9_init_template(void)
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_tag_handler;
 	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_CUST_TAG);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_tag_handler;
+          v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
         if (config.nfprobe_what_to_count & COUNT_ID2) {
@@ -587,6 +679,10 @@ nf9_init_template(void)
           v4_template.r[rcount].length = htons(4);
           v4_int_template.r[rcount].handler = flow_to_flowset_tag2_handler;
           v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_CUST_TAG2);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_tag2_handler;
+          v4_int_template_out.r[rcount].length = 4;
           rcount++;
         }
         if (config.sampling_rate || config.ext_sampling_rate) {
@@ -594,6 +690,10 @@ nf9_init_template(void)
           v4_template.r[rcount].length = htons(1);
           v4_int_template.r[rcount].handler = flow_to_flowset_sampler_id_handler;
           v4_int_template.r[rcount].length = 1;
+          v4_template_out.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
+          v4_template_out.r[rcount].length = htons(1);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_sampler_id_handler;
+          v4_int_template_out.r[rcount].length = 1;
           rcount++;
         }
 	v4_template.h.c.flowset_id = htons(0);
@@ -602,55 +702,96 @@ nf9_init_template(void)
 	v4_template.h.count = htons(rcount);
 	v4_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
+        v4_template_out.h.c.flowset_id = htons(0);
+        v4_template_out.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
+        v4_template_out.h.template_id = htons(NF9_SOFTFLOWD_V4_TEMPLATE_ID + config.nfprobe_id + 1);
+        v4_template_out.h.count = htons(rcount);
+        v4_template_out.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
+
 	assert(rcount < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
 
-	for (idx = 0, v4_int_template.tot_rec_len = 0; idx < rcount; idx++)
+	for (idx = 0, v4_int_template.tot_rec_len = 0; idx < rcount; idx++) {
 	  v4_int_template.tot_rec_len += v4_int_template.r[idx].length;
+	  v4_int_template_out.tot_rec_len += v4_int_template_out.r[idx].length;
+	}
 
 	rcount = 0;
 	bzero(&v6_template, sizeof(v6_template));
 	bzero(&v6_int_template, sizeof(v6_int_template));
+        bzero(&v6_template_out, sizeof(v6_template_out));
+        bzero(&v6_int_template_out, sizeof(v6_int_template_out));
 
 	v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
 	v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].length = 4;
+        v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED);
+        v6_template_out.r[rcount].length = htons(4);
+        v6_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED);
 	v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].length = 4;
+        v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED);
+        v6_template_out.r[rcount].length = htons(4);
+        v6_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v6_template.r[rcount].type = htons(NF9_IN_BYTES);
 	v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].length = 4;
+        v6_template_out.r[rcount].type = htons(NF9_OUT_BYTES);
+        v6_template_out.r[rcount].length = htons(4);
+        v6_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v6_template.r[rcount].type = htons(NF9_IN_PACKETS);
 	v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].length = 4;
+        v6_template_out.r[rcount].type = htons(NF9_OUT_PACKETS);
+        v6_template_out.r[rcount].length = htons(4);
+        v6_int_template_out.r[rcount].length = 4;
 	rcount++;
 	v6_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v6_template.r[rcount].length = htons(1);
 	v6_int_template.r[rcount].length = 1;
+        v6_template_out.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
+        v6_template_out.r[rcount].length = htons(1);
+        v6_int_template_out.r[rcount].length = 1;
 	rcount++;
         v6_template.r[rcount].type = htons(NF9_INPUT_SNMP);
         v6_template.r[rcount].length = htons(2);
 	v6_int_template.r[rcount].handler = flow_to_flowset_input_handler;
         v6_int_template.r[rcount].length = 2;
+        v6_template_out.r[rcount].type = htons(NF9_INPUT_SNMP);
+        v6_template_out.r[rcount].length = htons(2);
+        v6_int_template_out.r[rcount].handler = flow_to_flowset_input_handler;
+        v6_int_template_out.r[rcount].length = 2;
         rcount++;
         v6_template.r[rcount].type = htons(NF9_OUTPUT_SNMP);
         v6_template.r[rcount].length = htons(2);
 	v6_int_template.r[rcount].handler = flow_to_flowset_output_handler;
         v6_int_template.r[rcount].length = 2;
+        v6_template_out.r[rcount].type = htons(NF9_OUTPUT_SNMP);
+        v6_template_out.r[rcount].length = htons(2);
+        v6_int_template_out.r[rcount].handler = flow_to_flowset_output_handler;
+        v6_int_template_out.r[rcount].length = 2;
         rcount++;
         v6_template.r[rcount].type = htons(NF9_DIRECTION);
         v6_template.r[rcount].length = htons(1);
         v6_int_template.r[rcount].handler = flow_to_flowset_direction_handler;
         v6_int_template.r[rcount].length = 1;
+        v6_template_out.r[rcount].type = htons(NF9_DIRECTION);
+        v6_template_out.r[rcount].length = htons(1);
+        v6_int_template_out.r[rcount].handler = flow_to_flowset_direction_handler;
+        v6_int_template_out.r[rcount].length = 1;
         rcount++;
 	if (config.nfprobe_what_to_count & COUNT_FLOWS) { 
 	  v6_template.r[rcount].type = htons(NF9_FLOWS);
 	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_flows_handler;
 	  v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_FLOWS);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_flows_handler;
+          v6_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_HOST) { 
@@ -658,6 +799,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(16);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_src_host_v6_handler;
 	  v6_int_template.r[rcount].length = 16;
+          v6_template_out.r[rcount].type = htons(NF9_IPV6_SRC_ADDR);
+          v6_template_out.r[rcount].length = htons(16);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_src_host_v6_handler;
+          v6_int_template_out.r[rcount].length = 16;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_HOST) {
@@ -665,6 +810,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(16);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_dst_host_v6_handler;
 	  v6_int_template.r[rcount].length = 16;
+          v6_template_out.r[rcount].type = htons(NF9_IPV6_DST_ADDR);
+          v6_template_out.r[rcount].length = htons(16);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_dst_host_v6_handler;
+          v6_int_template_out.r[rcount].length = 16;
 	  rcount++;
 	}
         if (config.nfprobe_what_to_count & COUNT_PEER_DST_IP) {
@@ -672,6 +821,10 @@ nf9_init_template(void)
           v6_template.r[rcount].length = htons(16);
           v6_int_template.r[rcount].handler = flow_to_flowset_bgp_next_hop_v6_handler;
           v6_int_template.r[rcount].length = 16;
+          v6_template_out.r[rcount].type = htons(NF9_BGP_IPV6_NEXT_HOP);
+          v6_template_out.r[rcount].length = htons(16);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_bgp_next_hop_v6_handler;
+          v6_int_template_out.r[rcount].length = 16;
           rcount++;
         }
         if (config.nfprobe_what_to_count & COUNT_SRC_NMASK) {
@@ -679,6 +832,10 @@ nf9_init_template(void)
           v6_template.r[rcount].length = htons(1);
           v6_int_template.r[rcount].handler = flow_to_flowset_src_nmask_handler;
           v6_int_template.r[rcount].length = 1;
+          v6_template_out.r[rcount].type = htons(NF9_SRC_MASK);
+          v6_template_out.r[rcount].length = htons(1);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_src_nmask_handler;
+          v6_int_template_out.r[rcount].length = 1;
           rcount++;
         }
         if (config.nfprobe_what_to_count & COUNT_DST_NMASK) {
@@ -686,6 +843,10 @@ nf9_init_template(void)
           v6_template.r[rcount].length = htons(1);
           v6_int_template.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
           v6_int_template.r[rcount].length = 1;
+          v6_template_out.r[rcount].type = htons(NF9_DST_MASK);
+          v6_template_out.r[rcount].length = htons(1);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
+          v6_int_template_out.r[rcount].length = 1;
           rcount++;
         }
 	if (config.nfprobe_what_to_count & (COUNT_IP_TOS)) {
@@ -693,6 +854,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(1);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_ip_tos_handler;
 	  v6_int_template.r[rcount].length = 1;
+          v6_template_out.r[rcount].type = htons(NF9_SRC_TOS);
+          v6_template_out.r[rcount].length = htons(1);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_ip_tos_handler;
+          v6_int_template_out.r[rcount].length = 1;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_PORT) {
@@ -700,6 +865,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(2);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_src_port_handler;
 	  v6_int_template.r[rcount].length = 2;
+          v6_template_out.r[rcount].type = htons(NF9_L4_SRC_PORT);
+          v6_template_out.r[rcount].length = htons(2);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_src_port_handler;
+          v6_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_PORT) {
@@ -707,6 +876,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(2);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_dst_port_handler;
 	  v6_int_template.r[rcount].length = 2;
+          v6_template_out.r[rcount].type = htons(NF9_L4_DST_PORT);
+          v6_template_out.r[rcount].length = htons(2);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_dst_port_handler;
+          v6_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT)) {
@@ -714,6 +887,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(1);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_tcp_flags_handler;
 	  v6_int_template.r[rcount].length = 1;
+          v6_template_out.r[rcount].type = htons(NF9_TCP_FLAGS);
+          v6_template_out.r[rcount].length = htons(1);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_tcp_flags_handler;
+          v6_int_template_out.r[rcount].length = 1;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_IP_PROTO) {
@@ -721,6 +898,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(1);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_ip_proto_handler;
 	  v6_int_template.r[rcount].length = 1;
+          v6_template_out.r[rcount].type = htons(NF9_IN_PROTOCOL);
+          v6_template_out.r[rcount].length = htons(1);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_ip_proto_handler;
+          v6_int_template_out.r[rcount].length = 1;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_AS) {
@@ -728,6 +909,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_src_as_handler;
 	  v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_SRC_AS);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_src_as_handler;
+          v6_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_AS) {
@@ -735,20 +920,32 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_dst_as_handler;
 	  v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_DST_AS);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_dst_as_handler;
+          v6_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_SRC_MAC) {
-	  v6_template.r[rcount].type = htons(NF9_SRC_MAC);
+	  v6_template.r[rcount].type = htons(NF9_IN_SRC_MAC);
 	  v6_template.r[rcount].length = htons(6);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_src_mac_handler;
 	  v6_int_template.r[rcount].length = 6;
+          v6_template_out.r[rcount].type = htons(NF9_OUT_SRC_MAC);
+          v6_template_out.r[rcount].length = htons(6);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_src_mac_handler;
+          v6_int_template_out.r[rcount].length = 6;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_DST_MAC) {
-	  v6_template.r[rcount].type = htons(NF9_DST_MAC);
+	  v6_template.r[rcount].type = htons(NF9_IN_DST_MAC);
 	  v6_template.r[rcount].length = htons(6);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_dst_mac_handler;
 	  v6_int_template.r[rcount].length = 6;
+          v6_template_out.r[rcount].type = htons(NF9_OUT_DST_MAC);
+          v6_template_out.r[rcount].length = htons(6);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_dst_mac_handler;
+          v6_int_template_out.r[rcount].length = 6;
 	  rcount++;
 	}
 	if (config.nfprobe_what_to_count & COUNT_VLAN) {
@@ -756,22 +953,21 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(2);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_vlan_handler;
 	  v6_int_template.r[rcount].length = 2;
+          v6_template_out.r[rcount].type = htons(NF9_DST_VLAN);
+          v6_template_out.r[rcount].length = htons(2);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_vlan_handler;
+          v6_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
-/*
-        if (config.nfprobe_what_to_count & COUNT_VLAN) {
-	  v6_template.r[rcount].type = htons(NF9_MPLS_LABEL_1);
-	  v6_template.r[rcount].length = htons(3);
-	  v6_int_template.r[rcount].handler = flow_to_flowset_mpls_handler;
-	  v6_int_template.r[rcount].length = 3;
-	  rcount++;
-	}
-*/
         if (config.nfprobe_what_to_count & COUNT_CLASS) {
 	  v6_template.r[rcount].type = htons(NF9_CUST_CLASS);
 	  v6_template.r[rcount].length = htons(16);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_class_handler;
 	  v6_int_template.r[rcount].length = 16;
+          v6_template_out.r[rcount].type = htons(NF9_CUST_CLASS);
+          v6_template_out.r[rcount].length = htons(16);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_class_handler;
+          v6_int_template_out.r[rcount].length = 16;
 	  rcount++;
 	}
         if (config.nfprobe_what_to_count & COUNT_ID) {
@@ -779,6 +975,10 @@ nf9_init_template(void)
 	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_tag_handler;
 	  v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_CUST_TAG);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_tag_handler;
+          v6_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
         if (config.nfprobe_what_to_count & COUNT_ID2) {
@@ -786,6 +986,10 @@ nf9_init_template(void)
           v6_template.r[rcount].length = htons(4);
           v6_int_template.r[rcount].handler = flow_to_flowset_tag2_handler;
           v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_CUST_TAG2);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_tag2_handler;
+          v6_int_template_out.r[rcount].length = 4;
           rcount++;
         }
         if (config.sampling_rate || config.ext_sampling_rate) {
@@ -793,6 +997,10 @@ nf9_init_template(void)
           v6_template.r[rcount].length = htons(1);
           v6_int_template.r[rcount].handler = flow_to_flowset_sampler_id_handler;
           v6_int_template.r[rcount].length = 1;
+          v6_template_out.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
+          v6_template_out.r[rcount].length = htons(1);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_sampler_id_handler;
+          v6_int_template_out.r[rcount].length = 1;
           rcount++;
         }
 	v6_template.h.c.flowset_id = htons(0);
@@ -801,10 +1009,18 @@ nf9_init_template(void)
 	v6_template.h.count = htons(rcount);
 	v6_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
+        v6_template_out.h.c.flowset_id = htons(0);
+        v6_template_out.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
+        v6_template_out.h.template_id = htons(NF9_SOFTFLOWD_V6_TEMPLATE_ID + config.nfprobe_id + 1);
+        v6_template_out.h.count = htons(rcount);
+        v6_template_out.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
+
 	assert(rcount < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
 
-	for (idx = 0, v6_int_template.tot_rec_len = 0; idx < rcount; idx++)
+	for (idx = 0, v6_int_template.tot_rec_len = 0; idx < rcount; idx++) {
 	  v6_int_template.tot_rec_len += v6_int_template.r[idx].length;
+	  v6_int_template_out.tot_rec_len += v6_int_template_out.r[idx].length;
+	}
 }
 
 static void
@@ -1024,9 +1240,15 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			memcpy(packet + offset, &v4_template, v4_template.tot_len);
 			offset += v4_template.tot_len;
 			nf9->flows++;
+                        memcpy(packet + offset, &v4_template_out, v4_template_out.tot_len);
+                        offset += v4_template_out.tot_len;
+                        nf9->flows++;
 			memcpy(packet + offset, &v6_template, v6_template.tot_len);
 			offset += v6_template.tot_len; 
 			nf9->flows++;
+                        memcpy(packet + offset, &v6_template_out, v6_template_out.tot_len);
+                        offset += v6_template_out.tot_len;
+                        nf9->flows++;
 			if (config.sampling_rate || config.ext_sampling_rate) {
                           memcpy(packet + offset, &options_template, options_template.tot_len);
                           offset += options_template.tot_len;
