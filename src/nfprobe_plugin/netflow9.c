@@ -1061,85 +1061,151 @@ nf9_init_options_template(void)
 
 static int
 nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
-    const struct timeval *system_boot_time, u_int *len_used)
+    const struct timeval *system_boot_time, u_int *len_used, int direction)
 {
 	u_int freclen, ret_len, nflows, idx;
 	u_int32_t rec32;
 	u_int8_t rec8;
 	char *ftoft_ptr_0 = ftoft_buf_0;
 	char *ftoft_ptr_1 = ftoft_buf_1;
+	int flow_direction[2];
 
 	bzero(ftoft_buf_0, sizeof(ftoft_buf_0));
 	bzero(ftoft_buf_1, sizeof(ftoft_buf_1));
 	*len_used = nflows = ret_len = 0;
+	flow_direction[0] = (flow->direction[0] == DIRECTION_UNKNOWN) ? DIRECTION_IN : flow->direction[0];
+	flow_direction[1] = (flow->direction[1] == DIRECTION_UNKNOWN) ? DIRECTION_IN : flow->direction[1];
+	
+	if (direction == flow_direction[0]) {
+	  rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
+	  memcpy(ftoft_ptr_0, &rec32, 4);
+	  ftoft_ptr_0 += 4;
 
-	rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
-	memcpy(ftoft_ptr_0, &rec32, 4);
-	memcpy(ftoft_ptr_1, &rec32, 4);
-	ftoft_ptr_0 += 4;
-	ftoft_ptr_1 += 4;
-	
-	rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
-	memcpy(ftoft_ptr_0, &rec32, 4);
-	memcpy(ftoft_ptr_1, &rec32, 4);
-	ftoft_ptr_0 += 4;
-	ftoft_ptr_1 += 4;
-	
-	rec32 = htonl(flow->octets[0]);
-	memcpy(ftoft_ptr_0, &rec32, 4);
-	rec32 = htonl(flow->octets[1]);
-	memcpy(ftoft_ptr_1, &rec32, 4);
-	ftoft_ptr_0 += 4;
-	ftoft_ptr_1 += 4;
-	
-	rec32 = htonl(flow->packets[0]);
-	memcpy(ftoft_ptr_0, &rec32, 4);
-	rec32 = htonl(flow->packets[1]);
-	memcpy(ftoft_ptr_1, &rec32, 4);
-	ftoft_ptr_0 += 4;
-	ftoft_ptr_1 += 4;
+	  rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
+	  memcpy(ftoft_ptr_0, &rec32, 4);
+	  ftoft_ptr_0 += 4;
 
-	switch (flow->af) {
-	case AF_INET:
-		rec8 = 4;
-		memcpy(ftoft_ptr_0, &rec8, 1);
-		memcpy(ftoft_ptr_1, &rec8, 1);
-		ftoft_ptr_0 += 1;
-		ftoft_ptr_1 += 1;
-		for (idx = 5; v4_int_template.r[idx].length; idx++) { 
-		  v4_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template.r[idx].length);
-		  v4_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template.r[idx].length);
-		  ftoft_ptr_0 += v4_int_template.r[idx].length;
-		  ftoft_ptr_1 += v4_int_template.r[idx].length;
+	  rec32 = htonl(flow->octets[0]);
+	  memcpy(ftoft_ptr_0, &rec32, 4);
+	  ftoft_ptr_0 += 4;
+
+	  rec32 = htonl(flow->packets[0]);
+  	  memcpy(ftoft_ptr_0, &rec32, 4);
+	  ftoft_ptr_0 += 4;
+
+          switch (flow->af) {
+          case AF_INET:
+                rec8 = 4;
+                memcpy(ftoft_ptr_0, &rec8, 1);
+                ftoft_ptr_0 += 1;
+		if (flow_direction[0] == DIRECTION_IN) {
+                  for (idx = 5; v4_int_template.r[idx].length; idx++) {
+                    v4_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template.r[idx].length);
+                    ftoft_ptr_0 += v4_int_template.r[idx].length;
+                  }
+                  freclen = v4_int_template.tot_rec_len;
 		}
-		freclen = v4_int_template.tot_rec_len;
-		break;
-	case AF_INET6:
-		rec8 = 6;
-		memcpy(ftoft_ptr_0, &rec8, 1);
-		memcpy(ftoft_ptr_1, &rec8, 1);
-		ftoft_ptr_0 += 1;
-		ftoft_ptr_1 += 1;
-		for (idx = 5; v6_int_template.r[idx].length; idx++) {
-		  v6_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template.r[idx].length);
-		  v6_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template.r[idx].length);
-		  ftoft_ptr_0 += v6_int_template.r[idx].length;
-		  ftoft_ptr_1 += v6_int_template.r[idx].length;
+		else if (flow_direction[0] == DIRECTION_OUT) {
+                  for (idx = 5; v4_int_template_out.r[idx].length; idx++) {
+                    v4_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template_out.r[idx].length);
+                    ftoft_ptr_0 += v4_int_template_out.r[idx].length;
+                  }
+                  freclen = v4_int_template_out.tot_rec_len;
 		}
-		freclen = v6_int_template.tot_rec_len; 
-		break;
-	default:
-		return (-1);
+                break;
+          case AF_INET6:
+                rec8 = 6;
+                memcpy(ftoft_ptr_0, &rec8, 1);
+                ftoft_ptr_0 += 1;
+		if (flow_direction[0] == DIRECTION_IN) {
+                  for (idx = 5; v6_int_template.r[idx].length; idx++) {
+                    v6_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template.r[idx].length);
+                    ftoft_ptr_0 += v6_int_template.r[idx].length;
+                  }
+                  freclen = v6_int_template.tot_rec_len;
+		}
+		else if (flow_direction[0] == DIRECTION_OUT) {
+                  for (idx = 5; v6_int_template_out.r[idx].length; idx++) {
+                    v6_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template_out.r[idx].length);
+                    ftoft_ptr_0 += v6_int_template_out.r[idx].length;
+                  }
+                  freclen = v6_int_template_out.tot_rec_len;
+		}
+                break;
+          default:
+                return (-1);
+          }
 	}
 
-	if (flow->octets[0] > 0) {
+	if (direction == flow_direction[1]) {
+	  rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
+	  memcpy(ftoft_ptr_1, &rec32, 4);
+	  ftoft_ptr_1 += 4;
+	
+	  rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
+	  memcpy(ftoft_ptr_1, &rec32, 4);
+	  ftoft_ptr_1 += 4;
+
+	  rec32 = htonl(flow->octets[1]);
+	  memcpy(ftoft_ptr_1, &rec32, 4);
+	  ftoft_ptr_1 += 4;
+
+	  rec32 = htonl(flow->packets[1]);
+	  memcpy(ftoft_ptr_1, &rec32, 4);
+	  ftoft_ptr_1 += 4;
+
+          switch (flow->af) {
+          case AF_INET:
+                rec8 = 4;
+                memcpy(ftoft_ptr_1, &rec8, 1);
+                ftoft_ptr_1 += 1;
+		if (flow_direction[1] == DIRECTION_IN) {
+                  for (idx = 5; v4_int_template.r[idx].length; idx++) {
+                    v4_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template.r[idx].length);
+                    ftoft_ptr_1 += v4_int_template.r[idx].length;
+                  }
+                  freclen = v4_int_template.tot_rec_len;
+		}
+		else if (flow_direction[1] == DIRECTION_OUT) {
+                  for (idx = 5; v4_int_template_out.r[idx].length; idx++) {
+                    v4_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template_out.r[idx].length);
+                    ftoft_ptr_1 += v4_int_template_out.r[idx].length;
+                  }
+                  freclen = v4_int_template_out.tot_rec_len;
+		}
+                break;
+          case AF_INET6:
+                rec8 = 6;
+                memcpy(ftoft_ptr_1, &rec8, 1);
+                ftoft_ptr_1 += 1;
+		if (flow_direction[1] == DIRECTION_IN) {
+                  for (idx = 5; v6_int_template.r[idx].length; idx++) {
+                    v6_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template.r[idx].length);
+                    ftoft_ptr_1 += v6_int_template.r[idx].length;
+                  }
+                  freclen = v6_int_template.tot_rec_len;
+		}
+		else if (flow_direction[1] == DIRECTION_OUT) {
+                  for (idx = 5; v6_int_template_out.r[idx].length; idx++) {
+                    v6_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template_out.r[idx].length);
+                    ftoft_ptr_1 += v6_int_template_out.r[idx].length;
+                  }
+                  freclen = v6_int_template_out.tot_rec_len;
+		}
+                break;
+          default:
+                return (-1);
+          }
+	}
+
+	if (flow->octets[0] > 0 && direction == flow_direction[0]) {
 		if (ret_len + freclen > len)
 			return (-1);
 		memcpy(packet + ret_len, ftoft_buf_0, freclen);
 		ret_len += freclen;
 		nflows++;
 	}
-	if (flow->octets[1] > 0) {
+	if (flow->octets[1] > 0 && direction == flow_direction[1]) {
 		if (ret_len + freclen > len)
 			return (-1);
 		memcpy(packet + ret_len, ftoft_buf_1, freclen);
@@ -1203,6 +1269,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 	struct NF9_DATA_FLOWSET_HEADER *dh;
 	struct timeval now;
 	u_int offset, last_af, j, num_packets, inc, last_valid;
+	int direction, new_direction;
 	socklen_t errsz;
 	int err, r, i;
 	u_char packet[NF9_SOFTFLOWD_MAX_PACKET_SIZE];
@@ -1216,8 +1283,11 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		nf9_pkts_until_template = 0;
 	}		
 
-	last_valid = num_packets = 0;
-	for (j = 0; j < num_flows;) {
+	num_packets = 0;
+	for (direction = DIRECTION_IN; direction <= DIRECTION_OUT; direction++) {
+	  last_valid = 0; new_direction = TRUE;
+
+	  for (j = 0; j < num_flows;) {
 		bzero(packet, sizeof(packet));
 		nf9 = (struct NF9_HEADER *)packet;
 
@@ -1225,7 +1295,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		nf9->flows = 0; /* Filled as we go, htons at end */
 		nf9->uptime_ms = htonl(timeval_sub_ms(&now, system_boot_time));
 		nf9->time_sec = htonl(time(NULL));
-		// nf9->package_sequence = htonl(*flows_exported + j);
 		nf9->package_sequence = htonl(++(*flows_exported));
 
 		nf9->source_id = 0;
@@ -1261,7 +1330,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		dh = NULL;
 		last_af = 0;
 		for (i = 0; i + j < num_flows; i++) {
-			if (dh == NULL || flows[i + j]->af != last_af) {
+			if (dh == NULL || flows[i + j]->af != last_af || new_direction) {
 				if (dh != NULL) {
 					if (offset % 4 != 0) {
 						/* Pad to multiple of 4 */
@@ -1280,16 +1349,25 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 				    (packet + offset);
 				if (send_options) {
 				  dh->c.flowset_id = options_template.h.template_id;
-				  last_af = 0;
+				  last_af = 0; new_direction = TRUE;
 				}
 				else {
-				  dh->c.flowset_id =
-				    (flows[i + j]->af == AF_INET) ?
-				    v4_template.h.template_id : 
-				    v6_template.h.template_id;
+				  if (flows[i + j]->af == AF_INET) {
+				    if (direction == DIRECTION_IN)
+				      dh->c.flowset_id = v4_template.h.template_id;
+				    else if (direction == DIRECTION_OUT)
+				      dh->c.flowset_id = v4_template_out.h.template_id;
+				  }
+				  else if (flows[i + j]->af == AF_INET6) {
+				    if (direction == DIRECTION_IN)
+				      dh->c.flowset_id = v6_template.h.template_id;
+				    else if (direction == DIRECTION_OUT)
+				      dh->c.flowset_id = v6_template_out.h.template_id;
+				  }
 				  last_af = flows[i + j]->af;
 				}
 				last_valid = offset;
+				new_direction = FALSE;
 				dh->c.length = sizeof(*dh); /* Filled as we go */
 				offset += sizeof(*dh);
 			}
@@ -1299,28 +1377,30 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                             sizeof(packet) - offset, system_boot_time, &inc);
 			else 
 			  r = nf_flow_to_flowset(flows[i + j], packet + offset,
-			    sizeof(packet) - offset, system_boot_time, &inc);
+			    sizeof(packet) - offset, system_boot_time, &inc, direction);
 			if (r <= 0) {
 				/* yank off data header, if we had to go back */
 				if (last_valid)
-					offset = last_valid;
-				break;
+				  offset = last_valid;
+				if (r < 0) break;
 			}
-			offset += inc;
-			dh->c.length += inc;
-			nf9->flows += r;
-			last_valid = 0; /* Don't clobber this header now */
-			if (verbose_flag) {
+			else {
+			  offset += inc;
+			  dh->c.length += inc;
+			  nf9->flows += r;
+			  last_valid = 0; /* Don't clobber this header now */
+			  if (verbose_flag) {
 				Log(LOG_DEBUG, "Flow %d/%d: "
 				    "r %d offset %d type %04x len %d(0x%04x) "
-				    "flows %d\n", r, i, j, offset, 
+				    "flows %d\n", j, i, r, offset, 
 				    dh->c.flowset_id, dh->c.length, 
 				    dh->c.length, nf9->flows);
-			}
+			  }
 
-			if (send_options) {
-			  send_options = FALSE;
-			  i--;
+			  if (send_options) {
+			    send_options = FALSE;
+			    i--;
+			  }
 			}
 		}
 		/* Don't finish header if it has already been done */
@@ -1333,19 +1413,22 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			/* Finalise last header */
 			dh->c.length = htons(dh->c.length);
 		}
-		nf9->flows = htons(nf9->flows);
+		if (nf9->flows > 0) {
+		  nf9->flows = htons(nf9->flows);
 
-		if (verbose_flag)
+		  if (verbose_flag)
 			Log(LOG_DEBUG, "Sending flow packet len = %d\n", offset);
-		errsz = sizeof(err);
-		/* Clear ICMP errors */
-		getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); 
-		if (send(nfsock, packet, (size_t)offset, 0) == -1)
+		  errsz = sizeof(err);
+		  /* Clear ICMP errors */
+		  getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); 
+		  if (send(nfsock, packet, (size_t)offset, 0) == -1)
 			return (-1);
-		num_packets++;
-		nf9_pkts_until_template--;
+		  num_packets++;
+		  nf9_pkts_until_template--;
+		}
 
 		j += i;
+	  }
 	}
 
 	// *flows_exported += j;
