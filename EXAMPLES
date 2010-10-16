@@ -481,8 +481,45 @@ router bgp Y
    2) embed flow classification informations in NetFlow v9 datagrams by uncommenting
    'classifiers' and 'snaplen' lines, reading for further information the section of
    this document about stream classification and finally adding the 'class' key to the
-   'aggregate' directive; 3) add L2 (MAC addresses, VLANs) information to NetFlow v9
-   flowsets.
+   'aggregate' directive; 3) add direction (ingress, egress) awareness to measured IP
+   traffic flows. Direction can be inferred either statically (in, out) or dinamically
+   (tag, tag2) via nfprobe_direction directive. Let's look at a dynamic example using
+   tag2; first, add the following lines to the daemon configuration:
+
+nfprobe_direction: tag2
+pre_tag_map: /path/to/pretag.map
+
+   then edit the tag map as follows. A return value of '1' means ingress while '2' is
+   translated to egress. It is possible to employ L2 and/or L3 addresses to recognize
+   flow directions. The 'id2' primitive (tag2) will be used to carry the return value:
+
+id=1 filter='dst host XXX.XXX.XXX.XXX'
+id=2 filter='src host XXX.XXX.XXX.XXX'
+
+id=1 filter='ether src XX:XX:XX:XX:XX:XX'
+id=2 filter='ether dst XX:XX:XX:XX:XX:XX'
+
+   Indeed in such a case, the 'id' primitive (tag) can be leveraged to other uses (ie.
+   filter sub-set of the traffic for flow export); 4) add interface (input, output)
+   awareness to measured IP traffic flowsi - in addition to direction awareness, as
+   just discussed. Interface can be inferred either statically (<1-4294967295>) or
+   dynamically (tag, tag2) via nfprobe_ifindex directive. Let's look at a dynamic
+   example using tag; first add the following lines to the daemon configuration:
+
+nfprobe_direction: tag
+pre_tag_map: /path/to/pretag.map 
+
+   then edit the tag map as follows. It is possible to employ L2 and/or L3 addresses
+   to recognize flow directions. The 'id' primitive (tag) will be used to carry the
+   return value:
+
+id=100 filter='dst host XXX.XXX.XXX.XXX'
+id=100 filter='src host XXX.XXX.XXX.XXX'
+id=200 filter='dst host YYY.YYY.YYY.YYY'
+id=200 filter='src host YYY.YYY.YYY.YYY'
+
+id=200 filter='ether src YY:YY:YY:YY:YY:YY'
+id=200 filter='ether dst YY:YY:YY:YY:YY:YY'
 
 c) build NetFlow collector configuration, using nfacctd:
 !

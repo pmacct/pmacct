@@ -808,10 +808,17 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
+    if (tpl->tpl[NF9_DIRECTION].len == 1)
+      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
+
+    if (!direction)
+      memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
+    else
+      memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_OUT_SRC_MAC].off, MIN(tpl->tpl[NF9_OUT_SRC_MAC].len, 6));
     break;
   default:
     break;
@@ -823,10 +830,17 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
+    if (tpl->tpl[NF9_DIRECTION].len == 1)
+      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
+
+    if (!direction)
+      memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
+    else
+      memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_OUT_DST_MAC].off, MIN(tpl->tpl[NF9_OUT_DST_MAC].len, 6));
     break;
   default:
     break;
@@ -838,10 +852,18 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 9:
-    memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+    if (tpl->tpl[NF9_DIRECTION].len == 1)
+      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
+
+    if (!direction)
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+    else
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off, MIN(tpl->tpl[NF9_OUT_VLAN].len, 2));
+
     pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
     break;
   default:
