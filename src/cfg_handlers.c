@@ -2278,8 +2278,16 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     return ERR;
   } 
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_net = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key '[nf|pm|sf|ua]acctd_net'. Globalized.\n", filename);
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfacctd_net = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_net = value;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
