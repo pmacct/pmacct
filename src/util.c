@@ -169,15 +169,24 @@ char *copy_argv(register char **argv)
 
 void trim_spaces(char *buf)
 {
+  char *tmp_buf;
   int i, len;
 
   len = strlen(buf);
+
+  tmp_buf = (char *)malloc(len + 1);
+  if (tmp_buf == NULL) {
+    Log(LOG_ERR, "ERROR: trim_spaces: malloc()\n");
+    return;
+  }
    
   /* trimming spaces at beginning of the string */
   for (i = 0; i <= len; i++) {
     if (!isspace(buf[i])) {
-      if (i != 0)
-        strlcpy(buf, &buf[i], len+1-i);
+      if (i != 0) { 
+        strlcpy(tmp_buf, &buf[i], len+1-i);
+        strlcpy(buf, tmp_buf, len+1-i);
+      }
       break;
     } 
   }
@@ -188,13 +197,22 @@ void trim_spaces(char *buf)
       buf[i] = '\0';
     else break;
   }
+
+  free(tmp_buf);
 }
 
 void trim_all_spaces(char *buf)
 {
+  char *tmp_buf;
   int i = 0, len, quotes = FALSE;
 
   len = strlen(buf);
+
+  tmp_buf = (char *)malloc(len + 1);
+  if (tmp_buf == NULL) {
+    Log(LOG_ERR, "ERROR: trim_all_spaces: malloc()\n");
+    return;
+  }
 
   /* trimming all spaces */
   while (i <= len) {
@@ -203,29 +221,41 @@ void trim_all_spaces(char *buf)
       else if (quotes) quotes = FALSE;
     }
     if (isspace(buf[i]) && !quotes) {
-      strlcpy(&buf[i], &buf[i+1], len);
+      strlcpy(tmp_buf, &buf[i+1], len);
+      strlcpy(&buf[i], tmp_buf, len);
       len--;
     }
     else i++;
   }
+
+  free(tmp_buf);
 }
 
 void strip_quotes(char *buf)
 {
-  char *ptr;
+  char *ptr, *tmp_buf;
   int i = 0, len;
 
-  ptr = buf;
   len = strlen(buf);
 
-  /* stripping all quote marks */
+  tmp_buf = (char *)malloc(len + 1);
+  if (tmp_buf == NULL) {
+    Log(LOG_ERR, "ERROR: strip_quotes: malloc()\n");
+    return;
+  }
+  ptr = buf;
+
+  /* stripping all quote marks using a temporary buffer to avoid string corruption by strcpy() */
   while (i <= len) {
     if (ptr[i] == '\'') {
-      strcpy(&buf[i], &ptr[i+1]);
+      strcpy(tmp_buf, &ptr[i+1]);
+      strcpy(&buf[i], tmp_buf);
       len--;
     }
     else i++;
   }
+
+  free(tmp_buf);
 }
 
 int isblankline(char *line)
