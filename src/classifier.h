@@ -5,7 +5,6 @@
 /* defines */
 #define MAX_FN_LEN 256
 #define MAX_SUBDIRS 128
-#define MAX_PROTOCOL_LEN 16 
 #define MAX_CLASSIFIERS 256
 #define MAX_PATTERN_LEN 2048
 #define DEFAULT_TENTATIVES 5 
@@ -44,7 +43,7 @@ struct pkt_classifier {
 /* prototypes */
 EXT void init_classifiers(char *);
 EXT void evaluate_classifiers(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-EXT pm_class_t NF_evaluate_classifiers(char *);
+EXT pm_class_t SF_evaluate_classifiers(char *);
 EXT int parse_pattern_file(char *, struct pkt_classifier *);
 EXT int parse_shared_object(char *, struct pkt_classifier *);
 EXT int dot_pat(char *);

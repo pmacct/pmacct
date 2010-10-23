@@ -490,6 +490,11 @@ struct data_hdr_v9 {
 #define NF9_FLOW_SAMPLER_MODE		49
 #define NF9_FLOW_SAMPLER_INTERVAL	50
 
+/* Classification */
+#define NF9_APPLICATION_DESC		94
+#define NF9_APPLICATION_ID		95
+#define NF9_APPLICATION_NAME		96
+
 #define NF9_OPT_SCOPE_SYSTEM		1
 #define NF9_OPT_SCOPE_IF		2
 #define NF9_OPT_SCOPE_LC		3
@@ -565,6 +570,45 @@ static char *tpl_desc_list[] = {
   "out src mac"
 };
 
+#define MAX_OPT_TPL_DESC_LIST 100
+static char *opt_tpl_desc_list[] = {
+  "",
+  "scope", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "sampler ID",
+  "sampler algorithm", "sampler interval", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "", "", "sampler name",
+  "", "", "",
+  "", "", "",
+  "", "", "",
+  "app desc", "app id", "app name",
+  "", "", "",
+  ""
+};
+
 /* Ordered Template field */
 struct otpl_field {
   u_int16_t off;
@@ -631,6 +675,7 @@ EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs 
 EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
 EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
 EXT void log_template_v9_header(struct template_cache_entry *, struct packet_ptrs *);
+EXT void log_opt_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 
 EXT void log_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 
 EXT void log_template_v9_footer(u_int16_t);
 EXT struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *, struct packet_ptrs *);

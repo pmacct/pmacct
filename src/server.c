@@ -244,7 +244,8 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 
     /* XXX: we should try using pmct_get_max_entries() */
     q->num = config.classifier_table_num;
-    if (!q->num && config.classifiers_path) q->num = MAX_CLASSIFIERS;
+    // if (!q->num && config.classifiers_path) q->num = MAX_CLASSIFIERS;
+    if (!q->num && class) q->num = MAX_CLASSIFIERS;
 
     while (idx < q->num) {
       enQueue_elem(sd, &rb, &class[idx], sizeof(struct stripped_class), sizeof(struct stripped_class));

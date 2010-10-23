@@ -1594,7 +1594,7 @@ void readExtendedClass(SFSample *sample)
     memcpy(bufptr, &ret, 4);
     bufptr += 4;
 
-    sample->class = NF_evaluate_classifiers(buf);
+    sample->class = SF_evaluate_classifiers(buf);
   }
   else skipBytes(sample, MAX_PROTOCOL_LEN);
 }

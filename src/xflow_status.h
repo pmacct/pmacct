@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -41,6 +41,14 @@ struct xflow_status_entry_sampling
   struct xflow_status_entry_sampling *next;
 };
 
+struct xflow_status_entry_class
+{
+  pm_class_t class_id;				/* NetFlow v9: classfier ID field */
+  pm_class_t class_int_id;			/* NetFlow v9: internal classfier ID field */
+  char class_name[MAX_PROTOCOL_LEN];		/* NetFlow v9: classfier name field */
+  struct xflow_status_entry_class *next;
+};
+
 struct xflow_status_entry
 {
   struct host_addr agent_addr;  /* xFlow agent IP address */
@@ -52,6 +60,7 @@ struct xflow_status_entry
   u_int16_t inc;		/* increment, NetFlow v5: required by flow sequence number */
   struct xflow_status_entry_counters counters;
   struct xflow_status_entry_sampling *sampling;
+  struct xflow_status_entry_class *class;
   struct xflow_status_entry *next;
 };
 
@@ -69,11 +78,14 @@ EXT void print_status_table(time_t, int);
 EXT struct xflow_status_entry_sampling *search_smp_if_status_table(struct xflow_status_entry_sampling *, u_int32_t);
 EXT struct xflow_status_entry_sampling *search_smp_id_status_table(struct xflow_status_entry_sampling *, u_int8_t);
 EXT struct xflow_status_entry_sampling *create_smp_entry_status_table(struct xflow_status_entry *);
+EXT struct xflow_status_entry_class *search_class_id_status_table(struct xflow_status_entry_class *, pm_class_t);
+EXT struct xflow_status_entry_class *create_class_entry_status_table(struct xflow_status_entry *);
+EXT pm_class_t NF_evaluate_classifier(struct xflow_status_entry_class *, pm_class_t *);
 
 EXT struct xflow_status_entry *xflow_status_table[XFLOW_STATUS_TABLE_SZ];
 EXT u_int32_t xflow_status_table_entries;
 EXT u_int8_t xflow_status_table_error;
 EXT u_int32_t xflow_tot_bad_datagrams;
-EXT u_int8_t smp_entry_status_table_memerr;
+EXT u_int8_t smp_entry_status_table_memerr, class_entry_status_table_memerr;
 EXT void set_vector_f_status(struct packet_ptrs_vector *);
 #undef EXT

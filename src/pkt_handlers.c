@@ -1990,7 +1990,7 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
   switch(hdr->version) {
   case 9:
-    if (tpl->tpl[NF9_CUST_CLASS].len) { 
+    if (tpl->tpl[NF9_APPLICATION_ID].len) { 
       pdata->primitives.class = pptrs->class; 
       pdata->cst.ba = 0; 
       pdata->cst.pa = 0; 

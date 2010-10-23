@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -64,6 +64,10 @@ void init_classifiers(char *path)
   class = map_shared(0, sizeof(struct pkt_classifier)*max, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
   memset(class, 0, sizeof(struct pkt_classifier)*max);
 
+  /* valid case for nfacctd; NULL path checks are performed
+     in daemons requiring it - ie. pmacctd, uacctd, etc. */
+  if (!path) return;
+
   entries = pm_scandir(path, &namelist, 0, pm_alphasort);
   if (entries > 0) {
     while (n < entries) {
@@ -102,16 +106,16 @@ void init_classifiers(char *path)
   }
 }
 
-pm_class_t NF_evaluate_classifiers(char *string)
+pm_class_t SF_evaluate_classifiers(char *string)
 {
   int j = 0, max = pmct_get_num_entries();
 
   while (class[j].id && j < max) {
-    if ( !strcmp(class[j].protocol, string) ) return class[j].id; 
+    if ( !strcmp(class[j].protocol, string) ) return class[j].id;
     j++;
   }
 
-  return 0; 
+  return 0;
 }
 
 void evaluate_classifiers(struct packet_ptrs *pptrs, struct ip_flow_common *fp, unsigned int idx)
@@ -631,10 +635,12 @@ void pmct_unregister(pm_class_t id)
 
 pm_class_t pmct_find_first_free()
 {
-  int idx = 0, num = pmct_get_num_entries(); 
+  int ret, idx = 0, num = pmct_get_num_entries(); 
 
   while (idx < num) {
-    if ( pmct_isfree(idx+1) ) return idx+1;
+    ret = pmct_isfree(idx+1);
+    if (ret > 0) return idx+1;
+    else if (ret < 0) return 0;
     idx++;
   }
 
@@ -643,11 +649,13 @@ pm_class_t pmct_find_first_free()
 
 pm_class_t pmct_find_last_free()
 {
-  int idx = pmct_get_num_entries(); 
+  int ret, idx = pmct_get_num_entries(); 
 
   idx--;
   while (idx) {
-    if ( pmct_isfree(idx+1) ) return idx+1;
+    ret = pmct_isfree(idx+1);
+    if (ret > 0) return idx+1;
+    else if (ret < 0) return 0;
     idx--;
   }
 
@@ -657,6 +665,8 @@ pm_class_t pmct_find_last_free()
 int pmct_isfree(pm_class_t id)
 {
   int max = pmct_get_num_entries();
+
+  if (!class) return -1;
 
   if (id && id <= max) {
     if (!class[id-1].id) return 1;

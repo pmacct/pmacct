@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -20,7 +20,6 @@
 */
 
 /* defines */
-#define MAX_PROTOCOL_LEN 16 /* same as classifier.h */
 #define CONNTRACK_GENERIC_LIFETIME 20 
 #define DEFAULT_CONNTRACK_BUFFER_SIZE 8192000 /* 8 Mb */
 #define MAX_CONNTRACKS 256

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -223,6 +223,58 @@ create_smp_entry_status_table(struct xflow_status_entry *entry)
   }
 
   return new;
+}
+
+struct xflow_status_entry_class *
+search_class_id_status_table(struct xflow_status_entry_class *centry, pm_class_t class_id)
+{
+  while (centry) {
+    if (centry->class_id == class_id) return centry;
+    centry = centry->next;
+  }
+
+  return NULL;
+}
+
+struct xflow_status_entry_class *
+create_class_entry_status_table(struct xflow_status_entry *entry)
+{
+  struct xflow_status_entry_class *centry = entry->class, *new = NULL;
+
+  if (centry) {
+    while (centry->next) centry = centry->next;
+  }
+
+  if (xflow_status_table_entries < XFLOW_STATUS_TABLE_MAX_ENTRIES) {
+    new = malloc(sizeof(struct xflow_status_entry_class));
+    if (!new) {
+      if (class_entry_status_table_memerr) {
+        Log(LOG_ERR, "ERROR: unable to allocate more entries into the xflow classification table.\n");
+        class_entry_status_table_memerr = FALSE;
+      }
+    }
+    else {
+      if (!entry->class) entry->class = new;
+      if (centry) centry->next = new;
+      new->next = FALSE;
+      class_entry_status_table_memerr = TRUE;
+      xflow_status_table_entries++;
+    }
+  }
+
+  return new;
+}
+
+pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_class_t *class_id)
+{
+  struct xflow_status_entry_class *centry;
+
+  centry = search_class_id_status_table(entry, *class_id);
+  if (centry) {
+    return centry->class_int_id;
+  }
+
+  return 0;
 }
 
 void set_vector_f_status(struct packet_ptrs_vector *pptrsv)

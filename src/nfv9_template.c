@@ -179,6 +179,14 @@ void log_template_v9_field(u_int16_t type, u_int16_t off, u_int16_t len)
     Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18u | %6u | %6u |\n", type, off, len);
 }
 
+void log_opt_template_v9_field(u_int16_t type, u_int16_t off, u_int16_t len)
+{
+  if (type <= MAX_OPT_TPL_DESC_LIST && strlen(opt_tpl_desc_list[type]))
+    Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18s | %6u | %6u |\n", opt_tpl_desc_list[type], off, len);
+  else
+    Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18u | %6u | %6u |\n", type, off, len);
+}
+
 void log_template_v9_footer(u_int16_t size)
 {
   Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
@@ -223,7 +231,7 @@ struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_
   field = (struct template_field_v9 *)tpl;
   while (count) {
     type = ntohs(field->type);
-    log_template_v9_field(type, ptr->len, ntohs(field->len));
+    log_opt_template_v9_field(type, ptr->len, ntohs(field->len));
     if (type < NF9_MAX_DEFINED_FIELD) { 
       ptr->tpl[type].off = ptr->len;
       ptr->tpl[type].len = ntohs(field->len);
@@ -268,7 +276,7 @@ void refresh_opt_template_v9(struct options_template_hdr_v9 *hdr, struct templat
   field = (struct template_field_v9 *)ptr;
   while (count) {
     type = ntohs(field->type);
-    log_template_v9_field(type, tpl->len, ntohs(field->len));
+    log_opt_template_v9_field(type, tpl->len, ntohs(field->len));
     if (type < NF9_MAX_DEFINED_FIELD) {
       tpl->tpl[type].off = tpl->len;
       tpl->tpl[type].len = ntohs(field->len);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -26,7 +26,6 @@
 #define MEMORY_POOL_SIZE 8192
 #define MAX_HOSTS 32771 
 #define MAX_QUERIES 4096
-#define MAX_PROTOCOL_LEN 16 /* same as classifier.h */
 
 /* Structures */
 struct acc {
