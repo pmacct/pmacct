@@ -169,6 +169,7 @@ struct configuration {
   char *nfprobe_engine;
   int nfprobe_peer_as;
   char *nfprobe_source_ip;
+  struct host_addr nfprobe_source_ha;
   int nfprobe_ipprec;
   int nfprobe_direction;
   u_int32_t nfprobe_ifindex;

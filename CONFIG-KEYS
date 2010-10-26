@@ -871,7 +871,8 @@ DESC:		defines the remote IP address/hostname and port to which NetFlow dagagram
 KEY:            nfprobe_source_ip
 DESC:           defines the local IP address from which NetFlow dagagrams are to be exported. Only a numerical
 		IPv4/IPv6 address is expected. The supplied IP address is required to be already configured on
-		one of the interfaces. (default: IP address is selected by the OS)
+		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9
+		option scoping. (default: IP address is selected by the OS)
 
 KEY:		nfprobe_version
 VALUES:		[5,9]

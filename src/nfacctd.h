@@ -463,7 +463,6 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_FLOW_BYTES			85 
 /* ... */
-#define NF9_CUST_CLASS			200
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
 /* ... */

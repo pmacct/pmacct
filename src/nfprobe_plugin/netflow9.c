@@ -110,7 +110,6 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_FLOW_APPLICATION_NAME	96
 /* ... */
 /* CUSTOM TYPES START HERE */
-#define NF9_CUST_CLASS			200
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
 /* CUSTOM TYPES END HERE */
@@ -1033,15 +1032,27 @@ nf9_init_template(void)
 static void
 nf9_init_options_template(void)
 {
-	int rcount, idx;
+	int rcount, idx, slen = 0;
+
+	switch (config.nfprobe_source_ha.family) {
+	case AF_INET:
+	  slen = 4;
+	  break;
+	case AF_INET6:
+	  slen = 16;
+	  break;
+	default:
+	  slen = 4;
+	  break;
+	}
 
         rcount = 0;
         bzero(&sampling_option_template, sizeof(sampling_option_template));
         bzero(&sampling_option_int_template, sizeof(sampling_option_int_template));
-
+ 
         sampling_option_template.r[rcount].type = htons(NF9_OPT_SCOPE_SYSTEM);
-        sampling_option_template.r[rcount].length = htons(4);
-        sampling_option_int_template.r[rcount].length = 4;
+        sampling_option_template.r[rcount].length = htons(slen);
+        sampling_option_int_template.r[rcount].length = slen;
         rcount++;
         sampling_option_template.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
         sampling_option_template.r[rcount].length = htons(1);
@@ -1262,8 +1273,22 @@ nf_sampling_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
         *len_used = nflows = ret_len = 0;
 
         /* NF9_OPT_SCOPE_SYSTEM */
-        memset(ftoft_ptr_0, 0, 4);
-        ftoft_ptr_0 += 4;
+        switch (config.nfprobe_source_ha.family) {
+        case AF_INET:
+          memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv4, 4);
+          ftoft_ptr_0 += 4;
+          break;
+#if defined ENABLE_IPV6
+        case AF_INET6:
+          memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv6, 16);
+          ftoft_ptr_0 += 16;
+          break;
+#endif
+        default:
+          memset(ftoft_ptr_0, 0, 4);
+          ftoft_ptr_0 += 4;
+          break;
+	}
 
         rec8 = 1; /* NF9_FLOW_SAMPLER_ID */ 
         memcpy(ftoft_ptr_0, &rec8, 1);
@@ -1303,8 +1328,22 @@ nf_class_option_to_flowset(u_int idx, u_char *packet, u_int len, const struct ti
         *len_used = nflows = ret_len = 0;
 
         /* NF9_OPT_SCOPE_SYSTEM */
-        memset(ftoft_ptr_0, 0, 4);
-        ftoft_ptr_0 += 4;
+        switch (config.nfprobe_source_ha.family) {
+        case AF_INET:
+          memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv4, 4);
+          ftoft_ptr_0 += 4;
+          break;
+#if defined ENABLE_IPV6
+        case AF_INET6:
+          memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv6, 16);
+          ftoft_ptr_0 += 16;
+          break;
+#endif
+        default:
+          memset(ftoft_ptr_0, 0, 4);
+          ftoft_ptr_0 += 4;
+          break;
+        }
 
         /* NF9_FLOW_APPLICATION_ID */
         memcpy(ftoft_ptr_0, &class[idx].id, 4);
@@ -1495,11 +1534,8 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			  nf9->flows += r;
 			  last_valid = 0; /* Don't clobber this header now */
 			  if (verbose_flag) {
-				Log(LOG_DEBUG, "Flow %d/%d: "
-				    "r %d offset %d type %04x len %d(0x%04x) "
-				    "flows %d\n", flow_j, flow_i, r, offset, 
-				    dh->c.flowset_id, dh->c.length, 
-				    dh->c.length, nf9->flows);
+			    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Building NetFlow v9 packet: offset = %d, template ID = %d, total len = %d, # elements = %d\n", 
+				 config.name, config.type, offset, ntohs(dh->c.flowset_id), dh->c.length, nf9->flows);
 			  }
 
 			  if (send_options) {
@@ -1526,7 +1562,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		  nf9->flows = htons(nf9->flows);
 
 		  if (verbose_flag)
-			Log(LOG_DEBUG, "Sending flow packet len = %d\n", offset);
+		    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow v9 packet: len = %d\n", config.name, config.type, offset);
 		  errsz = sizeof(err);
 		  /* Clear ICMP errors */
 		  getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); 

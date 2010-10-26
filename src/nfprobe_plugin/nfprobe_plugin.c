@@ -1031,12 +1031,11 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 #if defined ENABLE_IPV6
   struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
 #endif
-  struct host_addr source_ip;
   struct sockaddr ssource_ip;
 
   if (config.nfprobe_source_ip) {
-    ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
-    addr_to_sa(&ssource_ip, &source_ip, 0);
+    ret = str_to_addr(config.nfprobe_source_ip, &config.nfprobe_source_ha);
+    addr_to_sa(&ssource_ip, &config.nfprobe_source_ha, 0);
   }
 
   if ((s = socket(addr->ss_family, SOCK_DGRAM, 0)) == -1) {
@@ -1289,7 +1288,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "Netflow Probe Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
-  Log(LOG_INFO, "INFO ( %s/%s ): NetFlow probe plugin is based on softflowd 0.9.7 software, Copyright 2002 Damien Miller <djm@mindrot.org> All rights reserved.\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): NetFlow probe plugin is originally based on softflowd 0.9.7 software, Copyright 2002 Damien Miller <djm@mindrot.org> All rights reserved.\n",
 		  config.name, config.type);
 
   reload_map = FALSE;

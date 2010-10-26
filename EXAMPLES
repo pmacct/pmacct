@@ -447,8 +447,6 @@ nfprobe_version: 9
 ! nfprobe_timeouts: tcp=120:maxlife=3600
 !
 ! networks_file: /path/to/networks.lst
-! classifiers: /path/to/classifiers/
-! snaplen: 700
 !...
 
    This is a basic working configuration. Additional features include: 1) generate ASNs
@@ -478,10 +476,16 @@ router bgp Y
  neighbor 127.0.0.1 update-source X.X.X.X
 !
 
-   2) embed flow classification informations in NetFlow v9 datagrams by uncommenting
-   'classifiers' and 'snaplen' lines, reading for further information the section of
-   this document about stream classification and finally adding the 'class' key to the
-   'aggregate' directive; 3) add direction (ingress, egress) awareness to measured IP
+   2) encode flow classification information in NetFlow v9 like Cisco does with its
+   NBAR/NetFlow v9 tie-up. This can be done by introducing the 'class' primitive to
+   the afore mentioned 'aggregate' and add the extra configuration directives:
+
+aggregate: class, src_host, dst_host, src_port, dst_port, proto, tos
+classifiers: /path/to/classifiers/
+snaplen: 700
+
+   Further information on this topic can be found in the section of this document about
+   stream classification; 3) add direction (ingress, egress) awareness to measured IP
    traffic flows. Direction can be inferred either statically (in, out) or dinamically
    (tag, tag2) via nfprobe_direction directive. Let's look at a dynamic example using
    tag2; first, add the following lines to the daemon configuration:

@@ -140,7 +140,10 @@ void sql_init_default_values()
     /* PbgpSz is non-zero if at least one of the BGP-related
        primitives is enabled. This helps putting ASNs in the
        right field */
-    if (PbgpSz) config.sql_table_version += SQL_TABLE_VERSION_BGP;
+    if (PbgpSz) {
+      config.sql_table_version += SQL_TABLE_VERSION_BGP;
+      Log(LOG_INFO, "INFO ( %s/%s ): sql_table_type set to 'bgp' (aggregate includes one or more BGP primitives).\n", config.name, config.type);
+    }
   }
 
   qq_ptr = 0; 
