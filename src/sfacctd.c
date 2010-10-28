@@ -1990,8 +1990,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   u_int16_t dcd_sport = htons(sample->dcd_sport), dcd_dport = htons(sample->dcd_dport);
   u_int8_t dcd_ipProtocol = sample->dcd_ipProtocol, dcd_ipTos = sample->dcd_ipTos;
   u_int8_t dcd_tcpFlags = sample->dcd_tcpFlags;
-  u_int16_t in_vlan = htons(sample->in_vlan);
+  u_int16_t vlan = htons(sample->in_vlan);
   u_int16_t flow_type;
+
+  /* check for out_vlan */
+  if (!vlan && sample->out_vlan) vlan = htons(sample->out_vlan); 
 
   /*
      We consider packets if:
@@ -2066,7 +2069,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
         memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
         memcpy(pptrsv->vlan4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlan4.vlan_ptr, &in_vlan, 2); 
+        memcpy(pptrsv->vlan4.vlan_ptr, &vlan, 2); 
 	((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_vhl = 0x45;
         memcpy(&((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
         memcpy(&((struct my_iphdr *)pptrsv->vlan4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
@@ -2095,7 +2098,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
         memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
         memcpy(pptrsv->vlan6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlan6.vlan_ptr, &in_vlan, 2); 
+        memcpy(pptrsv->vlan6.vlan_ptr, &vlan, 2); 
 	((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
         memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz); 
         memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
@@ -2209,7 +2212,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         reset_mac_vlan(&pptrsv->vlanmpls4);
         memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
         memcpy(pptrsv->vlanmpls4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlanmpls4.vlan_ptr, &in_vlan, 2); 
+        memcpy(pptrsv->vlanmpls4.vlan_ptr, &vlan, 2); 
 
 	for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
 	  label = sample->lstk.stack[idx];
@@ -2251,7 +2254,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         reset_mac_vlan(&pptrsv->vlanmpls6);
         memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
         memcpy(pptrsv->vlanmpls6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlanmpls6.vlan_ptr, &in_vlan, 2); 
+        memcpy(pptrsv->vlanmpls6.vlan_ptr, &vlan, 2); 
 
 	for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
 	  label = sample->lstk.stack[idx];
@@ -2375,7 +2378,7 @@ u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
   SFSample *sample = (SFSample *)pptrs->f_data;
   u_int8_t ret = 0;
 
-  if (sample->in_vlan) ret += NF9_FTYPE_VLAN;
+  if (sample->in_vlan || sample->out_vlan) ret += NF9_FTYPE_VLAN;
   if (sample->lstk.depth > 0) ret += NF9_FTYPE_MPLS;
   if (sample->gotIPV4); 
   else if (sample->gotIPV6) ret += NF9_FTYPE_IPV6;
