@@ -886,15 +886,27 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
-      memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
+      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].len) {
+        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].len, 4));
+        src_mask = 32; /* no xlate mask field exists atm */
+      }
+      else {
+        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
+        memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
+      }
       pdata->primitives.src_ip.family = AF_INET;
       break;
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
-      memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
+      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_IPV6_SRC_ADDR].len) {
+        memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV6_SRC_ADDR].len, 16));
+        src_mask = 128;
+      }
+      else {
+        memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
+        memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
+      }
       pdata->primitives.src_ip.family = AF_INET6;
       break;
     }
@@ -981,15 +993,27 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
-      memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].len, 4));
+        dst_mask = 32; /* no xlate mask field exists atm */
+      }
+      else {
+        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+        memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+      }
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
-      memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
+      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_IPV6_DST_ADDR].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV6_DST_ADDR].len, 16));
+        dst_mask = 128;
+      }
+      else {
+        memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+        memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
+      }
       pdata->primitives.dst_ip.family = AF_INET6;
       break;
     }
@@ -1326,7 +1350,11 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 9:
     if (((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_UDP) ||
         ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP)) {
-      memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
+      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_L4_SRC_PORT].len)
+	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_XLATE_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_XLATE_L4_SRC_PORT].len, 2));
+      else 
+	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
+
       pdata->primitives.src_port = ntohs(pdata->primitives.src_port);
     }
     else pdata->primitives.src_port = 0;
@@ -1378,7 +1406,11 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 9:
     if (((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_UDP) ||
         ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP)) {
-      memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
+      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_L4_DST_PORT].len)
+	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_XLATE_L4_DST_PORT].off, MIN(tpl->tpl[NF9_XLATE_L4_DST_PORT].len, 2));
+      else
+	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
+
       pdata->primitives.dst_port = ntohs(pdata->primitives.dst_port);
     }
     else pdata->primitives.dst_port = 0;
@@ -1563,12 +1595,25 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       pdata->pkt_num = pm_ntohll(t64);
     }
     
-    memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
-    pdata->time_start = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-      ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
-    memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
-    pdata->time_end = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-      ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+    if (tpl->tpl[NF9_FIRST_SWITCHED].len || tpl->tpl[NF9_LAST_SWITCHED].len) {
+      memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
+      pdata->time_start = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
+        ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+      memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
+      pdata->time_end = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
+        ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+    }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len || tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_MSEC].off, tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len);
+      pdata->time_start = pm_ntohll(t64)/1000;
+
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_MSEC].off, tpl->tpl[NF9_LAST_SWITCHED_MSEC].len);
+      pdata->time_end = pm_ntohll(t64)/1000;
+    }
+    else if (tpl->tpl[NF9_OBSERVATION_TIME_MSEC].len) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OBSERVATION_TIME_MSEC].off, tpl->tpl[NF9_OBSERVATION_TIME_MSEC].len);
+      pdata->time_start = pm_ntohll(t64)/1000;
+    }
     break;
   case 8:
     switch(hdr->aggregation) {

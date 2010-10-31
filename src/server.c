@@ -105,7 +105,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
     q->what_to_count = config.what_to_count; 
     for (idx = 0; idx < config.buckets; idx++) {
       if (!following_chain) acc_elem = (struct acc *) elem;
-      if (acc_elem->packet_counter && !acc_elem->reset_flag) {
+      if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
 	enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz);
 	/* XXX: to be optimized ? */
 	if (PbgpSz) {
@@ -142,7 +142,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 
       do {
         if (following_chain) acc_elem = acc_elem->next;
-        if (acc_elem->packet_counter && !acc_elem->reset_flag) bd.howmany++;
+        if (acc_elem->bytes_counter && !acc_elem->reset_flag) bd.howmany++;
         bd.num = idx; /* we need to avoid this redundancy */
         following_chain = TRUE;
       } while (acc_elem->next != NULL);
@@ -162,7 +162,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
       if (request.what_to_count == config.what_to_count) { 
         acc_elem = search_accounting_structure(&request.data, &request.pbgp);
         if (acc_elem) { 
-	  if (acc_elem->packet_counter && !acc_elem->reset_flag) {
+	  if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
 	    enQueue_elem(sd, &rb, acc_elem, PdataSz, PdataSz+PbgpSz);
 	    /* XXX: to be optimized ? */
 	    if (PbgpSz) {
@@ -203,7 +203,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 
         for (idx = 0; idx < config.buckets; idx++) {
           if (!following_chain) acc_elem = (struct acc *) elem;
-	  if (acc_elem->packet_counter && !acc_elem->reset_flag) {
+	  if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
 	    mask_elem(&tbuf, &bbuf, acc_elem, request.what_to_count); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives))) {

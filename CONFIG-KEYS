@@ -50,7 +50,7 @@ DESC:		aggregate captured traffic data by selecting the specified set of primiti
 		sum_<primitive> are compound primitives which join together both inbound and
 		outbound traffic into a single aggregate. The 'none' primitive allows to make
 		an unique aggregate which accounts for the grand total of traffic flowing
-		through a specific interface. 'tag' and 'tag2' enable reception of tags when
+		through a specific interface. 'tag' and 'tag2' enable generation of tags when
 		tagging engines (pre_tag_map, post_tag) are in use. 'class' enables reception
 		of L7 traffic classes when Packet/Flow Classification engine (classifiers) is
 		in use. (default: src_host).
@@ -1165,3 +1165,9 @@ VALUES:         [true|false]
 DESC:		Enables transparent replication mode. It essentially spoofs the source IP address to the
 		original sender of the datagram. It requires super-user permissions. (default: false)
 
+KEY:            [ xlate_src | xlate_dst ]
+VALUES:         [true|false]
+DESC:           Copies NAT L3/L4 field values in place of the original ones (ie. src_host, src_port,
+		src_net, dst_host, dst_port, dst_net) when available; alternatively it falls back to
+		original values. At time of writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have
+		support for this. (default: false)

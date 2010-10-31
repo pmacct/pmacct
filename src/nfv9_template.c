@@ -97,6 +97,25 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   while (count) {
     type = ntohs(field->type);
     log_template_v9_field(type, ptr->len, ntohs(field->len));
+
+    /* Cisco ASA hack */
+    switch (type) {
+    case NF9_ASA_XLATE_IPV4_SRC_ADDR:
+      type = NF9_XLATE_IPV4_SRC_ADDR;
+      break;
+    case NF9_ASA_XLATE_IPV4_DST_ADDR:
+      type = NF9_XLATE_IPV4_DST_ADDR;
+      break;
+    case NF9_ASA_XLATE_L4_SRC_PORT:
+      type = NF9_XLATE_L4_SRC_PORT;
+      break;
+    case NF9_ASA_XLATE_L4_DST_PORT:
+      type = NF9_XLATE_L4_DST_PORT;
+      break;
+    default:
+      break;
+    }
+
     if (type < NF9_MAX_DEFINED_FIELD) {
       ptr->tpl[type].off = ptr->len; 
       ptr->tpl[type].len = ntohs(field->len);
@@ -141,6 +160,25 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
   while (count) {
     type = ntohs(field->type);
     log_template_v9_field(type, tpl->len, ntohs(field->len));
+
+    /* Cisco ASA hack */
+    switch (type) {
+    case NF9_ASA_XLATE_IPV4_SRC_ADDR:
+      type = NF9_XLATE_IPV4_SRC_ADDR;
+      break;
+    case NF9_ASA_XLATE_IPV4_DST_ADDR:
+      type = NF9_XLATE_IPV4_DST_ADDR;
+      break;
+    case NF9_ASA_XLATE_L4_SRC_PORT:
+      type = NF9_XLATE_L4_SRC_PORT;
+      break;
+    case NF9_ASA_XLATE_L4_DST_PORT:
+      type = NF9_XLATE_L4_DST_PORT;
+      break;
+    default:
+      break;
+    }
+
     if (type < NF9_MAX_DEFINED_FIELD) {
       tpl->tpl[type].off = tpl->len;
       tpl->tpl[type].len = ntohs(field->len);

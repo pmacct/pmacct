@@ -430,8 +430,6 @@ run_again:
     *pkt_len = ( *pkt_len / *pkt_num ) * smp->sampled_pkts;
     *pkt_num = smp->sampled_pkts;
   }
-
-  // printf("RATE: %d, COUNTER: %d, PACKETS %d, SAMPLED_PACKETS: %d, SAMPLE_POOL: %d\n", smp->rate, smp->counter, *pkt_num, smp->sampled_pkts, *sample_pool);
 }
 
 /* simple random algorithm */

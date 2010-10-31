@@ -182,6 +182,8 @@ struct configuration {
   int uacctd_group;
   int uacctd_nl_size;
   char *tunnel0;
+  int xlate_src;
+  int xlate_dst;
 };
 
 struct plugin_type_entry {

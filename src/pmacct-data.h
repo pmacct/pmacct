@@ -368,6 +368,8 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"tunnel_0", cfg_key_tunnel_0},
+  {"xlate_src", cfg_key_xlate_src},
+  {"xlate_dst", cfg_key_xlate_dst},
   {"", NULL},
 };
 
