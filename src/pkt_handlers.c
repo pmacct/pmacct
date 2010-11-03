@@ -1345,15 +1345,22 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t l4_proto = 0;
   
   switch(hdr->version) {
   case 9:
-    if (((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_UDP) ||
-        ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP)) {
+    if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
+      memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
+
+    if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) { 
       if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_L4_SRC_PORT].len)
 	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_XLATE_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_XLATE_L4_SRC_PORT].len, 2));
-      else 
+      else if (tpl->tpl[NF9_L4_SRC_PORT].len) 
 	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
+      else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_SRC_PORT].len) 
+	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_UDP_SRC_PORT].off, MIN(tpl->tpl[NF9_UDP_SRC_PORT].len, 2));
+      else if (l4_proto == IPPROTO_TCP && tpl->tpl[NF9_TCP_SRC_PORT].len) 
+	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_TCP_SRC_PORT].off, MIN(tpl->tpl[NF9_TCP_SRC_PORT].len, 2));
 
       pdata->primitives.src_port = ntohs(pdata->primitives.src_port);
     }
@@ -1401,15 +1408,22 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t l4_proto = 0;
 
   switch(hdr->version) {
   case 9:
-    if (((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_UDP) ||
-        ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP)) {
+    if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
+      memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
+
+    if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
       if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_L4_DST_PORT].len)
 	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_XLATE_L4_DST_PORT].off, MIN(tpl->tpl[NF9_XLATE_L4_DST_PORT].len, 2));
-      else
+      else if (tpl->tpl[NF9_L4_DST_PORT].len)
 	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
+      else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_DST_PORT].len)
+        memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_UDP_DST_PORT].off, MIN(tpl->tpl[NF9_UDP_DST_PORT].len, 2));
+      else if (l4_proto == IPPROTO_TCP && tpl->tpl[NF9_TCP_DST_PORT].len)
+        memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_TCP_DST_PORT].off, MIN(tpl->tpl[NF9_TCP_DST_PORT].len, 2));
 
       pdata->primitives.dst_port = ntohs(pdata->primitives.dst_port);
     }
@@ -1566,33 +1580,58 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
   time_t fstime = 0;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
+  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 9:
-    if (tpl->tpl[NF9_IN_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_IN_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_FLOW_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
+    if (tpl->tpl[NF9_DIRECTION].len == 1)
+      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
 
-    if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
+    if (!direction) {
+      if (tpl->tpl[NF9_IN_BYTES].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
+        pdata->pkt_len = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_IN_BYTES].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 8);
+        pdata->pkt_len = pm_ntohll(t64);
+      }
+      else if (tpl->tpl[NF9_FLOW_BYTES].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 4);
+        pdata->pkt_len = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
+        pdata->pkt_len = pm_ntohll(t64);
+      }
+
+      if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
+        pdata->pkt_num = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
+        pdata->pkt_num = pm_ntohll(t64);
+      }
     }
-    else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
+    else {
+      if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
+        pdata->pkt_len = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
+        pdata->pkt_len = pm_ntohll(t64);
+      }
+
+      if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
+        pdata->pkt_num = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
+        pdata->pkt_num = pm_ntohll(t64);
+      }
     }
     
     if (tpl->tpl[NF9_FIRST_SWITCHED].len || tpl->tpl[NF9_LAST_SWITCHED].len) {

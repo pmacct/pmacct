@@ -468,6 +468,11 @@
 	#define NF9_FIRST_SWITCHED_MSEC		152
 	#define NF9_LAST_SWITCHED_MSEC		153
 	/* ... */
+	#define NF9_UDP_SRC_PORT                180
+	#define NF9_UDP_DST_PORT                181
+	#define NF9_TCP_SRC_PORT                182
+	#define NF9_TCP_DST_PORT                183
+	/* ... */
 	#define NF9_CUST_TAG			201
 	#define NF9_CUST_TAG2			202
 	/* ... */
