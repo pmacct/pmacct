@@ -8,7 +8,7 @@
 !
 ! list of currently supported keys follow:
 !
-! 'id'			IP address of the BGP peer
+! 'id'			IPv4 address or router ID of the BGP peer
 ! 'ip'                  In nfacctd it's compared against the source IP address
 !                       of the device which is originating NetFlow packets; in
 !                       sfacctd this is compared against the AgentId field of

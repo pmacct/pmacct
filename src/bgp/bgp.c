@@ -85,6 +85,15 @@ void skinny_bgp_daemon()
   bgp_attr_init();
 
   /* socket creation for BGP server: IPv4 only */
+#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+  if (!config.nfacctd_bgp_ip) {
+    struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
+
+    sa6->sin6_family = AF_INET6;
+    sa6->sin6_port = htons(config.nfacctd_bgp_port);
+    slen = sizeof(struct sockaddr_in6);
+  }
+#else
   if (!config.nfacctd_bgp_ip) {
     struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
 
@@ -93,11 +102,12 @@ void skinny_bgp_daemon()
     sa4->sin_port = htons(config.nfacctd_bgp_port);
     slen = sizeof(struct sockaddr_in);
   }
+#endif
   else {
     trim_spaces(config.nfacctd_bgp_ip);
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
-    if (!ret || addr.family != AF_INET) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_ip' value is not a valid IPv4 address. Terminating thread.\n");
+    if (!ret) {
+      Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n");
       exit_all(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bgp_port);
@@ -227,12 +237,15 @@ void skinny_bgp_daemon()
       }
 
       FD_SET(peer->fd, &bkp_read_descs);
-      peer->addr.family = AF_INET;
-      peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+      peer->addr.family = ((struct sockaddr *)&client)->sa_family;
+      if (peer->addr.family == AF_INET) peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+#if defined ENABLE_IPV6
+      else if (peer->addr.family == AF_INET6) memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
+#endif
 
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
-	if (peers_idx != peers_check_idx && peers[peers_check_idx].addr.address.ipv4.s_addr == peer->addr.address.ipv4.s_addr) { 
+	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
 	  now = time(NULL);
 	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
             Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4));
@@ -599,8 +612,16 @@ int bgp_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
   bopen_reply->bgpo_optlen = cp_msglen;
   bopen_reply->bgpo_len = htons(BGP_MIN_OPEN_MSG_SIZE + bopen_reply->bgpo_optlen);
 
-  if (config.nfacctd_bgp_ip) my_id = config.nfacctd_bgp_ip;
-  str_to_addr(my_id, &my_id_addr);
+  if (config.nfacctd_bgp_ip) {
+    my_id = config.nfacctd_bgp_ip;
+    str_to_addr(my_id, &my_id_addr);
+    if (my_id_addr.family != AF_INET) {
+      my_id = my_id_static;
+      str_to_addr(my_id, &my_id_addr);
+    }
+  }
+  else str_to_addr(my_id, &my_id_addr);
+
   bopen_reply->bgpo_id = my_id_addr.address.ipv4.s_addr;
 
   memcpy(msg+BGP_MIN_OPEN_MSG_SIZE, cp_msg, cp_msglen);
@@ -1616,7 +1637,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   start_again:
 
   for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
       peer = &peers[peers_idx];
       pptrs->bgp_peer = (char *) &peers[peers_idx];
       break;
@@ -1797,7 +1818,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   }
 
   for (nh_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-    if (!sa_addr_cmp(sa, &peers[peers_idx].addr)) {
+    if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
       nh_peer = &peers[peers_idx];
       break;
     }

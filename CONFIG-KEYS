@@ -1063,14 +1063,15 @@ DESC:           full pathname to a file defining for each edge device local traf
 		'examples/is_symmetric.map.example'.
 
 KEY:		bgp_agent_map
-DESC:		full pathname to a file to map source IP addresses of NetFlow/sFlow agents to BGP peers'
-		ones. It is particularly aimed as a resource-savy alternative to have N agents but only a
-		restricted number of BGP peers (ie. a BGP RR), in case of simpler topologies (ie. hub-and-
-		spoke) or scenarios (ie. single-homed). It can also be viewed as a temporary workaround to
-		certain situations. pmacctd, uacctd daemons are required to use a bgp_agent_map with up to 
-		two "catch-all" entries - working in a primary/backup fashion (see agent_to_peer.map in the
-		examples section): this is because these daemons do not have a NetFlow/sFlow source address
-		to match to. Number of map entries (by default 384) can be modified via pre_tag_map_entries.
+DESC:		full pathname to a file to map source IP address of NetFlow agents and AgentID of sFlow
+		agents to source IP address or Router ID of BGP peers. This is particularly aimed as a
+		resource-savy alternative to have N agents but only a restricted number of BGP peers (ie.
+		a BGP RR), in case of simpler topologies (ie. hub-and- spoke) or scenarios (ie. single-
+		homed). It can also be viewed as a temporary workaround to certain situations. pmacctd,
+		uacctd daemons are required to use a bgp_agent_map with up to two "catch-all" entries -
+		working in a primary/backup fashion (see agent_to_peer.map in the examples section):
+		this is because these daemons do not have a NetFlow/sFlow source address to match to.
+		Number of map entries (by default 384) can be modified via pre_tag_map_entries.
 
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can
