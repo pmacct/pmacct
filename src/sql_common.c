@@ -2122,13 +2122,13 @@ FILE *sql_file_open(const char *path, const char *mode, const struct insert_data
 void sql_create_table(struct DBdesc *db, struct insert_data *idata)
 {
   struct tm *nowtm;
-  char buf[LONGLONGSRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
+  char buf[LARGEBUFLEN], tmpbuf[LARGEBUFLEN];
   int ret;
 
-  ret = read_SQLquery_from_file(config.sql_table_schema, tmpbuf, LONGLONGSRVBUFLEN);
+  ret = read_SQLquery_from_file(config.sql_table_schema, tmpbuf, LARGEBUFLEN);
   if (ret) {
     nowtm = localtime(&idata->basetime);
-    strftime(buf, LONGLONGSRVBUFLEN, tmpbuf, nowtm);
+    strftime(buf, LARGEBUFLEN, tmpbuf, nowtm);
     (*sqlfunc_cbr.create_table)(db, buf);
   }
 }
