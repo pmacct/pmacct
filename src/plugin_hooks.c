@@ -551,13 +551,13 @@ void load_plugin_filters(int link_type)
       /* compiling aggregation filter if needed */
       if (list->cfg.a_filter) {
 	pcap_t *dev_desc;
-	bpf_u_int32 localnet, netmask;  /* pcap library stuff */
+	bpf_u_int32 localnet, netmask = 0;  /* pcap library stuff */
 	char errbuf[PCAP_ERRBUF_SIZE], *count_token;
 	int idx = 0;
 
 	dev_desc = pcap_open_dead(link_type, 128); /* 128 bytes should be long enough */
 
-	pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
+	if (config.dev) pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
 
 	list->cfg.bpfp_a_table[idx] = malloc(sizeof(struct bpf_program));
 	while ( (count_token = extract_token(&list->cfg.a_filter, ',')) && idx < AGG_FILTER_ENTRIES ) {

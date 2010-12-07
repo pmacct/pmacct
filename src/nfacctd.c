@@ -1105,8 +1105,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     }
     else if (tpl->template_type == 1) { /* Options coming */
       struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
-      struct xflow_status_entry_sampling *sentry, *ssaved = NULL;
-      struct xflow_status_entry_class *centry, *csaved = NULL;
+      struct xflow_status_entry_sampling *sentry = NULL, *ssaved = NULL;
+      struct xflow_status_entry_class *centry = NULL, *csaved = NULL;
 
       while (flowoff+tpl->len <= flowsetlen) {
 	/* Is this option about sampling? */
@@ -1115,7 +1115,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
 
-	  sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id);
 	  if (!sentry) sentry = create_smp_entry_status_table(entry);
 	  else ssaved = sentry->next;
 
@@ -1134,7 +1134,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  memcpy(&class_id, pkt+tpl->tpl[NF9_APPLICATION_ID].off, 4);
 
-          centry = search_class_id_status_table(entry->class, class_id);
+          if (entry) centry = search_class_id_status_table(entry->class, class_id);
           if (!centry) {
 	    centry = create_class_entry_status_table(entry);
 	    class_int_id = pmct_find_first_free();
@@ -1206,7 +1206,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrs->class = NF_evaluate_classifiers(entry->class, pptrs->f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrs->class = NF_evaluate_classifiers(entry->class, pptrs->f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
@@ -1251,7 +1251,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->v6.class = NF_evaluate_classifiers(entry->class, pptrsv->v6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->v6.class = NF_evaluate_classifiers(entry->class, pptrsv->v6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->v6);
@@ -1298,7 +1298,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->vlan4.class = NF_evaluate_classifiers(entry->class, pptrsv->vlan4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->vlan4.class = NF_evaluate_classifiers(entry->class, pptrsv->vlan4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  } 
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan4);
@@ -1345,7 +1345,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->vlan6.class = NF_evaluate_classifiers(entry->class, pptrsv->vlan6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->vlan6.class = NF_evaluate_classifiers(entry->class, pptrsv->vlan6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan6);
@@ -1402,7 +1402,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->mpls4.class = NF_evaluate_classifiers(entry->class, pptrsv->mpls4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->mpls4.class = NF_evaluate_classifiers(entry->class, pptrsv->mpls4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls4);
@@ -1458,7 +1458,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->mpls6.class = NF_evaluate_classifiers(entry->class, pptrsv->mpls6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->mpls6.class = NF_evaluate_classifiers(entry->class, pptrsv->mpls6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls6);
@@ -1517,7 +1517,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->vlanmpls4.class = NF_evaluate_classifiers(entry->class, pptrsv->vlanmpls4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->vlanmpls4.class = NF_evaluate_classifiers(entry->class, pptrsv->vlanmpls4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls4);
@@ -1575,7 +1575,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
 	    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
 
-	    pptrsv->vlanmpls6.class = NF_evaluate_classifiers(entry->class, pptrsv->vlanmpls6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
+	    if (entry) pptrsv->vlanmpls6.class = NF_evaluate_classifiers(entry->class, pptrsv->vlanmpls6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls6);
