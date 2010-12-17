@@ -2133,7 +2133,7 @@ void NF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
 void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
-  struct xflow_status_entry_sampling *sentry;
+  struct xflow_status_entry_sampling *sentry = NULL;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
@@ -2144,7 +2144,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   switch (hdr->version) {
   case 9:
     memcpy(&sampler_id, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, MIN(tpl->tpl[NF9_FLOW_SAMPLER_ID].len, 1));
-    sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+    if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id);
     if (sentry) {
       pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
       pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;
@@ -2741,12 +2741,12 @@ void SF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
 void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
-  struct xflow_status_entry_sampling *sentry;
+  struct xflow_status_entry_sampling *sentry = NULL;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t eff_srate = 0;
 
-  sentry = search_smp_if_status_table(entry->sampling, (sample->ds_class << 24 | sample->ds_index));
+  if (entry) sentry = search_smp_if_status_table(entry->sampling, (sample->ds_class << 24 | sample->ds_index));
   if (sentry) { 
     /* flow sequence number is strictly increasing; however we need a) to avoid
        a division-by-zero by checking the last value and the new one and b) to
@@ -2769,7 +2769,7 @@ void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
     }
   }
   else {
-    sentry = create_smp_entry_status_table(entry);
+    if (entry) sentry = create_smp_entry_status_table(entry);
     if (sentry) {
       sentry->interface = (sample->ds_class << 24 | sample->ds_index);
       sentry->sample_pool = sample->samplePool;
