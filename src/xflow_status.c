@@ -46,11 +46,12 @@ u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
 
 struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t aux1, int hash, int num_entries)
 {
-  struct xflow_status_entry *entry = xflow_status_table[hash];
+  struct xflow_status_entry *entry = xflow_status_table[hash], *saved = NULL;
   u_int16_t port;
 
   cycle_again:
   if (entry) {
+    saved = entry;
     if (!sa_addr_cmp(sa, &entry->agent_addr) && aux1 == entry->aux1); /* FOUND IT: we are finished */
     else {
       entry = entry->next;
@@ -67,7 +68,8 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
 	entry->aux1 = aux1;
 	entry->seqno = 0;
 	entry->next = FALSE;
-	if (!xflow_status_table[hash]) xflow_status_table[hash] = entry;
+        if (!saved) xflow_status_table[hash] = entry;
+        else saved->next = entry;
 	xflow_status_table_error = TRUE;
 	xflow_status_table_entries++;
       }

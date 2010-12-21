@@ -58,6 +58,7 @@ struct xflow_status_entry
                                    NetFlow v9: Source ID
                                    sFlow v5: agentSubID */
   u_int16_t inc;		/* increment, NetFlow v5: required by flow sequence number */
+  u_int32_t peer_idx;           /* last known BGP peer index */
   struct xflow_status_entry_counters counters;
   struct xflow_status_entry_sampling *sampling;
   struct xflow_status_entry_class *class;

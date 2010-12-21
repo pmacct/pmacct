@@ -1608,6 +1608,7 @@ as_t evaluate_first_asn(char *src)
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
+  struct xflow_status_entry *xs_entry = (struct xflow_status_entry *) pptrs->f_status;
   struct bgp_peer *peer;
   struct bgp_node *default_node, *result;
   struct bgp_info *info;
@@ -1636,11 +1637,25 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
   start_again:
 
-  for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-    if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
-      peer = &peers[peers_idx];
-      pptrs->bgp_peer = (char *) &peers[peers_idx];
-      break;
+  if (xs_entry && xs_entry->peer_idx) {
+    if (!sa_addr_cmp(sa, &peers[xs_entry->peer_idx].addr) || !sa_addr_cmp(sa, &peers[xs_entry->peer_idx].id)) {
+      peer = &peers[xs_entry->peer_idx];
+      pptrs->bgp_peer = (char *) &peers[xs_entry->peer_idx];
+    }
+    /* If no match then let's invalidate the entry */
+    else {
+      xs_entry->peer_idx = 0;
+      peer = NULL;
+    }
+  }
+  else {
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+      if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
+        peer = &peers[peers_idx];
+        pptrs->bgp_peer = (char *) &peers[peers_idx];
+        if (xs_entry) xs_entry->peer_idx = peers_idx;
+        break;
+      }
     }
   }
 
