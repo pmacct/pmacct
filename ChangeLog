@@ -1,6 +1,69 @@
 pmacct (Promiscuous mode IP Accounting package) v0.12.5
 pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 
+0.12.5 -- 28-12-2010
+  + nfacctd: introduced support for NAT L3/L4 field values via xlate_src
+    and xlate_dst configuration directives. Implementation follows IPFIX
+    standard for IPv4 and IPv6 (field types 225, 226, 227, 228, 281 and
+    282).
+  + nfacctd: Cisco ASA NetFlow v9 NSEL field types 40001, 40002, 40003,
+    40004 and IPFIX/Cisco ASA NetFlow v9 NSEL msecs absolute timestamps
+    field types 152, 153 and 323 have been added.
+  + nfacctd: introduced support for 'new' TCP/UDP source/destination ports
+    (field types 180, 181, 182, 183), as per IPFIX standard, basing on the
+    L4 protocol value (if any is specified as part of the export; otherwise
+    assume L4 is not TCP/UDP). 
+  + nfacctd, nfprobe: introduced support for application classification
+    via NetFlow v9 field type #95 (application ID) and application name
+    table option. This feature aligns with Cisco NBAR-NetFlow v9
+    integration feature.
+  + nfacctd: introduced support for egress bytes and packet counters (field
+    types 23, 24) basing on the direction value (if any is specified as
+    part of the export; otherwise assume ingress as per RFC3954).
+  + nfprobe: egress IPv4/IPv6 NetFlow v9 templates have been introduced;
+    compatibility with Cisco (no use of OUT_BYTES, OUT_OUT_PACKETS) taken
+    into account.
+  + nfacctd: added support for egress datalink NetFlow v9 fields basing
+    on direction field.
+  + nfacctd, sfacctd: aggregate_filter can now filter against TCP flags;
+    also, [ns]facctd_net directive can now be specified per-plugin.
+  + BGP daemon: introduced support for IPv6 transport of BGP messaging.
+  + BGP daemon: BGP peer information is now linked into the status table
+    for caching purposes. This optimization results in good CPU savings
+    in bigger deployments.
+  ! fix, nfacctd, sfacctd: daemons were crashing on OpenBSD platform upon
+    setting an aggregate_filter configuration directive. Patch is courtesy
+    of Manuel Pata.
+  ! fix, xflow_status.c: status entries were not properly linked to the
+    hash conflict chain resulting in a memory leak. However the maximum
+    number of table entries set by default was preventing the structure
+    to grow undefinitely.
+  ! fix, sql_common.c: increased buffer size available for sql_table_schema
+    from 1KB to 8KB. Thanks to Michiel Muhlenbaumer his support. 
+  ! fix, bgp_agent_map has been improved to allow mapping of NetFlow/sFlow
+    agents making use of IPv6 transport to either a) IPv4 transport address
+    of BGP sessions or b) 32-bit BGP Router IDs. Mapping to IPv6 addresses
+    is however not (yet) possible.
+  ! fix, nfprobe: encoding of NetFlow v9 option scope has been improved;
+    nfprobe source IPv4/IPv6 address, if specified via nfprobe_source_ip
+    directive, is now being written.
+  ! fix, util.c: string copies in trim_spaces(), trim_all_spaces() and
+    strip_quotes() have been rewritten more safely. Patch is courtesy of
+    Dmitry Koplovich.
+  ! fix, sfacctd: interface format is now merged back into interface value
+    fields so to ease keeping track of discards (and discard reasons) and
+    multicast fanout.
+  ! fix, MySQL, SQLite3 plugins: sql table version 8 issued to provide
+    common naming convention when mapping primitives to database fields
+    among the supported RDBMS base. Thanks to Chris Wilson for his support.
+  ! fix, pmacct client: numeric variables output converted to unsigned
+    from signed.
+  ! fix, nfacctd_net, sfacctd_net: default value changed from null (and
+    related error message) to 'netflow' for nfacctd_net and 'sflow' for
+    sfacctd_net.
+  ! fix, nfacctd, sfacctd: aggregate_filter was not catching L2 primitives
+    (VLAN, MAC addresses) when performing egress measurements.  
+
 0.12.4 -- 01-10-2010
   + BGP daemon: a new memory model is introduced by which IP prefixes
     are being shared among the BGP peers RIBs - leading to consistent
