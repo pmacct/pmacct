@@ -999,11 +999,11 @@ DESC:		When determining the peer AS (source and destination), skip potential con
 		(default: false)
 
 KEY:		bgp_peer_src_as_type
-VALUES:		[ map | bgp ]
+VALUES:		[ netflow | sflow | map | bgp ]
 DESC:		Defines the method to use to map incoming traffic to a source peer ASN. "map" selects a
 		map, reloadable at runtime, specified by the bgp_peer_src_as_map directive (refer to it for
 		further information); "bgp" implements naive BGP RIB lookups. BGP lookups assume traffic is
-		symmtric, which is often not the case, affecting their accuracy.
+		symmtric, which is often not the case, affecting their accuracy. (default: netflow, sflow)
 
 KEY:		bgp_peer_src_as_map
 DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or

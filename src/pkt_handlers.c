@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -189,11 +189,53 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation & COUNT_AS_PATH) {
+      if (config.acct_type == ACCT_SF) {
+        if (config.nfacctd_as == NF_AS_KEEP) {
+          channels_list[index].phandler[primitives] = SF_as_path_handler;
+          primitives++;
+        }
+      }
+    }
+
+    if (channels_list[index].aggregation & COUNT_PEER_DST_AS) {
+      if (config.acct_type == ACCT_NF) {
+        if (config.nfacctd_as == NF_AS_KEEP) {
+	  channels_list[index].phandler[primitives] = NF_dst_as_handler; /* AS and peer-AS encoded in the same field  so far */
+	  primitives++;
+	}
+      }
+      else if (config.acct_type == ACCT_SF) {
+        if (config.nfacctd_as == NF_AS_KEEP) {
+          channels_list[index].phandler[primitives] = SF_peer_dst_as_handler;
+          primitives++;
+        }
+      }
+    }
+
+    if (channels_list[index].aggregation & COUNT_LOCAL_PREF) {
+      if (config.acct_type == ACCT_SF) {
+        if (config.nfacctd_as == NF_AS_KEEP) {
+          channels_list[index].phandler[primitives] = SF_local_pref_handler;
+          primitives++;
+        }
+      }
+    }
+
+    if (channels_list[index].aggregation & COUNT_STD_COMM) {
+      if (config.acct_type == ACCT_SF) {
+        if (config.nfacctd_as == NF_AS_KEEP) {
+          channels_list[index].phandler[primitives] = SF_std_comms_handler;
+          primitives++;
+        }
+      }
+    }
+
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-                                            COUNT_AS_PATH|COUNT_PEER_DST_AS| COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
-					    COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF)
-      || (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP) &&
-	  config.nfacctd_as == NF_AS_BGP)) {
+                                            COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
+					    COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
+					    COUNT_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_SRC_AS) &&
+	config.nfacctd_as == NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
 	if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) { 
 	  channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
@@ -223,17 +265,25 @@ void evaluate_packet_handlers()
           primitives++;
 	}
       }
-      else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+      else if (config.acct_type == ACCT_NF) {
+	if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
+          primitives++;
+        }
+        else if (config.nfacctd_as == NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_KEEP) {
+          channels_list[index].phandler[primitives] = NF_src_as_handler; /* AS and peer-AS encoded in the same field  so far */
           primitives++;
         }
       }
-      else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+      else if (config.acct_type == ACCT_SF) {
+	if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
+	else if (config.nfacctd_as == NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_KEEP) {
+          channels_list[index].phandler[primitives] = SF_peer_src_as_handler;
+          primitives++;
+	}
       }
     }
 
@@ -2795,6 +2845,66 @@ void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.dst_as = sample->dst_as;
+}
+
+void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
+
+  if (sample->dst_as_path_len) {
+    strlcpy(pbgp->as_path, sample->dst_as_path, MAX_BGP_ASPATH);
+
+    if (config.nfacctd_bgp_aspath_radius)
+      evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+  }
+}
+
+void SF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
+
+  pbgp->peer_src_as = sample->src_peer_as;
+}
+
+void SF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
+
+  pbgp->peer_dst_as = sample->dst_peer_as;
+}
+
+void SF_local_pref_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
+
+  pbgp->local_pref = sample->localpref;
+}
+
+void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
+
+  if (sample->communities_len) strlcpy(pbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS); 
 }
 
 void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

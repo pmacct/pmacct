@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -1340,7 +1340,7 @@ void readExtendedGateway_v2(SFSample *sample)
   sample->dst_as_path_len = getData32(sample);
   /* just point at the dst_as_path array */
   if(sample->dst_as_path_len > 0) {
-    sample->dst_as_path = sample->datap;
+    // sample->dst_as_path = sample->datap;
     /* and skip over it in the input */
     skipBytes(sample, sample->dst_as_path_len * 4);
     // fill in the dst and dst_peer fields too
@@ -1358,8 +1358,8 @@ void readExtendedGateway_v2(SFSample *sample)
 
 void readExtendedGateway(SFSample *sample)
 {
-  u_int32_t segments;
-  int seg;
+  int len_tot, len_asn, len_comm, idx;
+  char asn_str[MAX_BGP_ASPATH], comm_str[MAX_BGP_STD_COMMS], space[] = " ";
   char buf[51];
 
   if(sample->datagramVersion >= 5) getAddress(sample, &sample->bgp_nextHop);
@@ -1367,9 +1367,9 @@ void readExtendedGateway(SFSample *sample)
   sample->my_as = getData32(sample);
   sample->src_as = getData32(sample);
   sample->src_peer_as = getData32(sample);
-  segments = getData32(sample);
-  if (segments > 0) {
-    for (seg = 0; seg < segments; seg++) {
+  sample->dst_as_path_len = getData32(sample);
+  if (sample->dst_as_path_len > 0) {
+    for (idx = 0, len_tot = 0; idx < sample->dst_as_path_len; idx++) {
       u_int32_t seg_type;
       u_int32_t seg_len;
       int i;
@@ -1381,21 +1381,69 @@ void readExtendedGateway(SFSample *sample)
 	u_int32_t asNumber;
 
 	asNumber = getData32(sample);
+	snprintf(asn_str, MAX_BGP_ASPATH-1, "%u", asNumber);
+        len_asn = strlen(asn_str);
+        len_tot += len_asn;
+
+        if (len_tot < MAX_BGP_ASPATH) {
+          strncat(sample->dst_as_path, asn_str, len_asn);
+        }
+        else {
+          sample->dst_as_path[MAX_BGP_ASPATH-2] = '+';
+          sample->dst_as_path[MAX_BGP_ASPATH-1] = '\0';
+        }
+
 	/* mark the first one as the dst_peer_as */
-	if(i == 0 && seg == 0) sample->dst_peer_as = asNumber;
-	/* make sure the AS sets are in parentheses */
+	if(i == 0 && idx == 0) sample->dst_peer_as = asNumber;
+
 	/* mark the last one as the dst_as */
-	if(seg == (segments - 1) && i == (seg_len - 1)) sample->dst_as = asNumber;
+	if (idx == (sample->dst_as_path_len - 1) && i == (seg_len - 1)) sample->dst_as = asNumber;
+	else strncat(sample->dst_as_path, space, 1); 
       }
     }
   }
 
   sample->communities_len = getData32(sample);
   /* just point at the communities array */
-  if(sample->communities_len > 0) sample->communities = sample->datap;
-  /* and skip over it in the input */
-  skipBytes(sample, sample->communities_len * 4);
- 
+  if (sample->communities_len > 0) {
+    for (idx = 0, len_tot = 0; idx < sample->communities_len; idx++) {
+      u_int32_t comm, as, val;
+
+      comm = getData32(sample);
+      switch (comm) {
+      case COMMUNITY_INTERNET:
+        strcpy(comm_str, "internet");
+        break;
+      case COMMUNITY_NO_EXPORT:
+        strcpy(comm_str, "no-export");
+        break;
+      case COMMUNITY_NO_ADVERTISE:
+        strcpy (comm_str, "no-advertise");
+        break;
+      case COMMUNITY_LOCAL_AS:
+        strcpy (comm_str, "local-AS");
+        break;
+      default:
+        as = (comm >> 16) & 0xFFFF;
+        val = comm & 0xFFFF;
+        sprintf(comm_str, "%d:%d", as, val);
+        break;
+      }
+      len_comm = strlen(comm_str);
+      len_tot += len_comm;
+
+      if (len_tot < MAX_BGP_STD_COMMS) {
+        strncat(sample->comms, comm_str, len_comm);
+      }
+      else {
+        sample->comms[MAX_BGP_STD_COMMS-2] = '+';
+        sample->comms[MAX_BGP_STD_COMMS-1] = '\0';
+      }
+
+      if (idx < (sample->communities_len - 1)) strncat(sample->comms, space, 1);
+    }
+  }
+
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
   sample->localpref = getData32(sample);
 }

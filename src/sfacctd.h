@@ -163,16 +163,15 @@ typedef struct _SFSample {
   u_int32_t my_as;
   u_int32_t src_as;
   u_int32_t src_peer_as;
+
   u_int32_t dst_as_path_len;
-  u_int32_t *dst_as_path;
-  /* note: version 4 dst as path segments just get printed, not stored here, however
-   * the dst_peer and dst_as are filled in, since those are used for netflow encoding
-   */
+  char dst_as_path[MAX_BGP_ASPATH];
+
   u_int32_t dst_peer_as;
   u_int32_t dst_as;
 
   u_int32_t communities_len;
-  u_int32_t *communities;
+  char comms[MAX_BGP_STD_COMMS];
   u_int32_t localpref;
 
   /* user id */

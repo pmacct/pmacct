@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -2090,7 +2090,8 @@ void bgp_config_checks(struct configuration *c)
 	 (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type ) ||
 	 (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->nfacctd_bgp_src_local_pref_type ) ||
 	 (c->what_to_count & COUNT_SRC_MED && !c->nfacctd_bgp_src_med_type ) ||
-	 (c->what_to_count & COUNT_PEER_SRC_AS && !c->nfacctd_bgp_peer_as_src_type ) ) {
+	 (c->what_to_count & COUNT_PEER_SRC_AS && !c->nfacctd_bgp_peer_as_src_type &&
+	  (config.acct_type != ACCT_SF && config.acct_type != ACCT_NF)) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
       printf("       src_as_path     =>  bgp_src_as_path_type\n");

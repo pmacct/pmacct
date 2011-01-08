@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -190,6 +190,7 @@
 #define CHLD_WARNING		0x00000001
 #define CHLD_ALERT		0x00000002
 
+#define BGP_SRC_PRIMITIVES_KEEP	0x00000000
 #define BGP_SRC_PRIMITIVES_MAP	0x00000001
 #define BGP_SRC_PRIMITIVES_BGP	0x00000002
 

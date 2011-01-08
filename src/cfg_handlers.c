@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -1818,7 +1818,9 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
+  if (!strncmp(value_ptr, "netflow", strlen("netflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
+  else if (!strncmp(value_ptr, "sflow", strlen("sflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
+  else if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_peer_src_as_type' value.\n", filename);
 

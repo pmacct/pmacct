@@ -126,6 +126,11 @@ EXT void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *
 EXT void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_as_path_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_peer_src_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_peer_dst_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_local_pref_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_std_comms_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void ptag_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void ptag_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
