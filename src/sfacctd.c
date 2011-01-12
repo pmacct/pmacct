@@ -777,11 +777,49 @@ int main(int argc,char **argv, char **envp)
       switch(spp.datagramVersion = getData32(&spp)) {
       case 5:
 	getAddress(&spp, &spp.agent_addr);
+
+	/* We trash the source IP address from f_agent */
+	if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V4) {
+	  struct sockaddr *sa = (struct sockaddr *) &client;
+	  struct sockaddr_in *sa4 = (struct sockaddr_in *) &client;
+
+	  sa->sa_family = AF_INET;
+	  sa4->sin_addr.s_addr = spp.agent_addr.address.ip_v4.s_addr;
+	}
+#if defined ENABLE_IPV6
+	else if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V6) {
+	  struct sockaddr *sa = (struct sockaddr *) &client;
+	  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &client;
+
+	  sa->sa_family = AF_INET6;
+	  ip6_addr_cpy(&sa6->sin6_addr, &spp.agent_addr.address.ip_v6);
+	}
+#endif
+
 	process_SFv5_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
 	break;
       case 4:
       case 2:
 	getAddress(&spp, &spp.agent_addr);
+
+        /* We trash the source IP address from f_agent */
+        if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V4) {
+          struct sockaddr *sa = (struct sockaddr *) &client;
+          struct sockaddr_in *sa4 = (struct sockaddr_in *) &client;
+
+          sa->sa_family = AF_INET;
+          sa4->sin_addr.s_addr = spp.agent_addr.address.ip_v4.s_addr;
+        }
+#if defined ENABLE_IPV6
+        else if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V6) {
+          struct sockaddr *sa = (struct sockaddr *) &client;
+          struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &client;
+
+          sa->sa_family = AF_INET6;
+          ip6_addr_cpy(&sa6->sin6_addr, &spp.agent_addr.address.ip_v6);
+        }
+#endif
+
 	process_SFv2v4_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
 	break;
       default:
