@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -772,8 +772,10 @@ int main(int argc,char **argv, char **envp)
       case 8:
 	process_v8_packet(netflow_packet, ret, &pptrs.v4, &req);
 	break;
+      /* NetFlow v9 + IPFIX */
       case 9:
-	process_v9_packet(netflow_packet, ret, &pptrs, &req);
+      case 10:
+	process_v9_packet(netflow_packet, ret, &pptrs, &req, ((struct struct_header_v5 *)netflow_packet)->version);
 	break;
       default:
 	notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
@@ -993,30 +995,43 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 }
 
 void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
-		struct plugin_requests *req)
+		struct plugin_requests *req, u_int16_t version)
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
+  struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
   struct template_hdr_v9 *template_hdr;
   struct options_template_hdr_v9 *opt_template_hdr;
   struct template_cache_entry *tpl;
   struct data_hdr_v9 *data_hdr;
   struct packet_ptrs *pptrs = &pptrsv->v4;
-  u_int16_t fid, off = 0, flowoff, flowsetlen, flow_type, direction; 
+  u_int16_t fid, off = 0, flowoff, flowsetlen, flow_type, direction, FlowSeqInc = 0; 
+  u_int32_t HdrSz = 0, SourceId = 0, FlowSeq = 0;
 
-  if (len < NfHdrV9Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v9 packet", (struct sockaddr *) pptrsv->v4.f_agent);
+  if (version == 9) {
+    HdrSz = NfHdrV9Sz; 
+    SourceId = ntohl(hdr_v9->source_id);
+    FlowSeq = ntohl(hdr_v9->flow_sequence);
+  }
+  else if (version == 10) {
+    HdrSz = IpFixHdrSz; 
+    SourceId = ntohl(hdr_v10->source_id);
+    FlowSeq = ntohl(hdr_v10->flow_sequence);
+  }
+
+  if (len < HdrSz) {
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     return;
   }
   pptrs->f_header = pkt;
-  pkt += NfHdrV9Sz;
-  off += NfHdrV9Sz; 
-  pptrsv->v4.f_status = nfv9_check_status(pptrs);
+  pkt += HdrSz;
+  off += HdrSz; 
+  pptrsv->v4.f_status = nfv9_check_status(pptrs, SourceId, FlowSeq);
   set_vector_f_status(pptrsv);
 
   process_flowset:
   if (off+NfDataHdrV9Sz >= len) { 
-    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset; incomplete NetFlow v9 packet",
+    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset; incomplete NetFlow v9/IPFIX packet",
 		    (struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     return;
@@ -1024,7 +1039,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   data_hdr = (struct data_hdr_v9 *)pkt;
   fid = ntohs(data_hdr->flow_id);
-  if (fid == 0) { /* template */ 
+  if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
 
     flowoff = 0;
@@ -1035,22 +1050,22 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     while (flowoff < flowsetlen) {
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) { 
-        notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset; incomplete NetFlow v9 packet",
+        notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset; incomplete NetFlow v9/IPFIX packet",
 		        (struct sockaddr *) pptrsv->v4.f_agent);
         xflow_tot_bad_datagrams++;
         return;
       }
 
-      handle_template_v9(template_hdr, pptrs, fid);
+      handle_template_v9(template_hdr, pptrs, fid, SourceId);
 
       tpl_ptr += sizeof(struct template_hdr_v9)+ntohs(template_hdr->num)*sizeof(struct template_field_v9); 
       flowoff += sizeof(struct template_hdr_v9)+ntohs(template_hdr->num)*sizeof(struct template_field_v9); 
-    }    
+    }
 
     pkt += flowsetlen; 
     off += flowsetlen; 
   }
-  else if (fid == 1) { /* options template */
+  else if (fid == 1 || fid == 3) { /* options template: 1 NetFlow v9, 3 IPFIX */
     unsigned char *tpl_ptr = pkt;
 
     flowoff = 0;
@@ -1061,14 +1076,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     while (flowoff < flowsetlen) {
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) {
-        notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset; incomplete NetFlow v9 packet",
+        notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset; incomplete NetFlow v9/IPFIX packet",
                         (struct sockaddr *) pptrsv->v4.f_agent);
         xflow_tot_bad_datagrams++;
         return;
       }
 
-      handle_template_v9((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid);
+      handle_template_v9((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId);
 
+      /* Increment is not precise for NetFlow v9 but will work */
       tpl_ptr += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9));
       flowoff += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9)); 
     }
@@ -1079,7 +1095,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   else if (fid >= 256) { /* data */
     flowsetlen = ntohs(data_hdr->flow_len);
     if (off+flowsetlen > len) { 
-      notify_malf_packet(LOG_INFO, "INFO: unable to read next Data Flowset (incomplete NetFlow v9 packet)",
+      notify_malf_packet(LOG_INFO, "INFO: unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
 		      (struct sockaddr *) pptrsv->v4.f_agent);
       xflow_tot_bad_datagrams++;
       return;
@@ -1089,7 +1105,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     pkt += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
 
-    tpl = find_template_v9(data_hdr->flow_id, pptrs);
+    tpl = find_template_v9(data_hdr->flow_id, pptrs, fid, SourceId);
     if (!tpl) {
       struct host_addr a;
       u_char agent_addr[50];
@@ -1098,8 +1114,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
       addr_to_str(agent_addr, &a);
 
-      Log(LOG_DEBUG, "DEBUG ( default/core ): Discarded NetFlow V9 packet (R: unknown template %u [%s:%u])\n", fid,
-		agent_addr, ntohl(((struct struct_header_v9 *)pptrs->f_header)->source_id)); 
+      Log(LOG_DEBUG, "DEBUG ( default/core ): Discarded NetFlow v9/IPFIX packet (R: unknown template %u [%s:%u])\n", fid,
+		agent_addr, SourceId);
       pkt += flowsetlen-NfDataHdrV9Sz;
       off += flowsetlen;
     }
@@ -1163,6 +1179,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
         pkt += tpl->len;
         flowoff += tpl->len;
+
+        FlowSeqInc++;
       }
 
       pkt += flowsetlen-flowoff; /* handling padding */
@@ -1593,6 +1611,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
         pkt += tpl->len;
         flowoff += tpl->len;
+
+	FlowSeqInc++;
       }
 
       pkt += flowsetlen-flowoff; /* handling padding */
@@ -1611,6 +1631,13 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   }
 
   if (off < len) goto process_flowset;
+
+  /* Set IPFIX Sequence number increment */
+  if (version == 10) {
+    struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrsv->v4.f_status;
+
+    entry->inc = FlowSeqInc;
+  }
 }
 
 void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
@@ -1645,6 +1672,8 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   case 9:
     pptrs->seqno = ntohl(((struct struct_header_v9 *)pkt)->flow_sequence);
     break;
+  case 10:
+    /* XXX: IPFIX to be worked out */
   default:
     pptrs->seqno = 0;
     break;
@@ -1694,6 +1723,7 @@ void compute_once()
   CSSz = sizeof(struct class_st);
   HostAddrSz = sizeof(struct host_addr);
   UDPHdrSz = sizeof(struct my_udphdr);
+  IpFixHdrSz = sizeof(struct struct_header_ipfix); 
 
 #if defined ENABLE_IPV6
   IP6HdrSz = sizeof(struct ip6_hdr);
@@ -1869,18 +1899,16 @@ char *nfv578_check_status(struct packet_ptrs *pptrs)
   return (char *) entry;
 }
 
-char *nfv9_check_status(struct packet_ptrs *pptrs)
+char *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t seq)
 {
-  struct struct_header_v9 *hdr = (struct struct_header_v9 *) pptrs->f_header;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
-  u_int32_t aux1 = ntohl(hdr->source_id);
-  int hash = hash_status_table(aux1, sa, XFLOW_STATUS_TABLE_SZ);
+  int hash = hash_status_table(sid, sa, XFLOW_STATUS_TABLE_SZ);
   struct xflow_status_entry *entry = NULL;
   
   if (hash >= 0) {
-    entry = search_status_table(sa, aux1, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(sa, sid, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
-      update_status_table(entry, ntohl(hdr->flow_sequence));
+      update_status_table(entry, seq);
       entry->inc = 1;
     }
   }

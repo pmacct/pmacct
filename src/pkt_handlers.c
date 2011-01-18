@@ -861,6 +861,7 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   u_int8_t direction = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DIRECTION].len == 1)
       memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
@@ -883,6 +884,7 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   u_int8_t direction = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DIRECTION].len == 1)
       memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
@@ -905,6 +907,7 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   u_int8_t direction = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DIRECTION].len == 1)
       memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
@@ -934,6 +937,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   u_int8_t src_mask = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].len) {
@@ -1041,6 +1045,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   u_int8_t dst_mask = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].len) {
@@ -1151,6 +1156,7 @@ void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       memcpy(&pdata->primitives.src_nmask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
@@ -1198,6 +1204,7 @@ void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       memcpy(&pdata->primitives.dst_nmask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
@@ -1247,6 +1254,7 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   u_int32_t asn32 = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_SRC_AS].len == 2) {
       memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 2);
@@ -1297,6 +1305,7 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   u_int32_t asn32 = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DST_AS].len == 2) {
       memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 2); 
@@ -1370,6 +1379,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   --pdata; /* Bringing back to original place */
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len, 4));
@@ -1398,6 +1408,7 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   u_int8_t l4_proto = 0;
   
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
@@ -1461,6 +1472,7 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   u_int8_t l4_proto = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
@@ -1522,6 +1534,7 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     memcpy(&pdata->primitives.tos, pptrs->f_data+tpl->tpl[NF9_SRC_TOS].off, MIN(tpl->tpl[NF9_SRC_TOS].len, 1));
     break;
@@ -1572,6 +1585,7 @@ void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     memcpy(&pdata->primitives.proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, MIN(tpl->tpl[NF9_L4_PROTOCOL].len, 1));
     break;
@@ -1608,6 +1622,7 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   u_int8_t tcp_flags = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP) {
       memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, MIN(tpl->tpl[NF9_TCP_FLAGS].len, 1));
@@ -1633,6 +1648,7 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
   u_int8_t direction = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DIRECTION].len == 1)
       memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
@@ -1663,6 +1679,14 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
         memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
         pdata->pkt_num = pm_ntohll(t64);
       }
+      else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
+        pdata->pkt_num = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
+        pdata->pkt_num = pm_ntohll(t64);
+      }
     }
     else {
       if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
@@ -1684,7 +1708,7 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       }
     }
     
-    if (tpl->tpl[NF9_FIRST_SWITCHED].len || tpl->tpl[NF9_LAST_SWITCHED].len) {
+    if ((tpl->tpl[NF9_FIRST_SWITCHED].len || tpl->tpl[NF9_LAST_SWITCHED].len) && hdr->version == 9) {
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
       pdata->time_start = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
@@ -1692,7 +1716,7 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       pdata->time_end = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
-    else if (tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len || tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len) {
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len || tpl->tpl[NF9_LAST_SWITCHED_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_MSEC].off, tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len);
       pdata->time_start = pm_ntohll(t64)/1000;
 
@@ -1702,6 +1726,21 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
     else if (tpl->tpl[NF9_OBSERVATION_TIME_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OBSERVATION_TIME_MSEC].off, tpl->tpl[NF9_OBSERVATION_TIME_MSEC].len);
       pdata->time_start = pm_ntohll(t64)/1000;
+    }
+    /* sec handling here: msec vs sec restricted up to NetFlow v8 */
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_SEC].len == 4 || tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
+      pdata->time_start = ntohl(t32);
+
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_SEC].off, tpl->tpl[NF9_LAST_SWITCHED_SEC].len);
+      pdata->time_end = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_SEC].len == 8 || tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
+      pdata->time_start = pm_ntohll(t64);
+
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_SEC].off, tpl->tpl[NF9_LAST_SWITCHED_SEC].len);
+      pdata->time_end = pm_ntohll(t64);
     }
     break;
   case 8:
@@ -1788,6 +1827,14 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
       pdata->pkt_num = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
+    }
 
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
     pdata->time_start = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
@@ -1853,6 +1900,7 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
   u_int64_t t64 = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_IN_BYTES].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
@@ -1877,6 +1925,14 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
     }
     else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
       pdata->pkt_num = pm_ntohll(t64);
     }
 
@@ -1937,6 +1993,7 @@ void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   u_int64_t t64 = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_FLOWS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOWS].off, 4);
@@ -1974,6 +2031,7 @@ void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   u_int32_t iface32 = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_INPUT_SNMP].len == 2) {
       memcpy(&iface16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 2);
@@ -2047,6 +2105,7 @@ void NF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   u_int32_t iface32 = 0;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2) {
       memcpy(&iface16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 2);
@@ -2123,6 +2182,7 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   time_t fstime;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_APPLICATION_ID].len) { 
       pdata->primitives.class = pptrs->class; 
@@ -2130,7 +2190,7 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
       pdata->cst.pa = 0; 
       pdata->cst.fa = 0; 
 
-      if (tpl->tpl[NF9_FIRST_SWITCHED].len) {
+      if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 9) {
         memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
         pdata->cst.stamp.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
            ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
@@ -2151,6 +2211,7 @@ void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_CUST_TAG].len) {
       memcpy(&pdata->primitives.id, pptrs->f_data+tpl->tpl[NF9_CUST_TAG].off, tpl->tpl[NF9_CUST_TAG].len);
@@ -2169,6 +2230,7 @@ void NF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_CUST_TAG2].len) {
       memcpy(&pdata->primitives.id2, pptrs->f_data+tpl->tpl[NF9_CUST_TAG2].off, tpl->tpl[NF9_CUST_TAG2].len);
@@ -2192,6 +2254,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   u_int8_t sampler_id = 0;
 
   switch (hdr->version) {
+  case 10:
   case 9:
     memcpy(&sampler_id, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, MIN(tpl->tpl[NF9_FLOW_SAMPLER_ID].len, 1));
     if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id);

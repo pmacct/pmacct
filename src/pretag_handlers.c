@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -885,6 +885,14 @@ int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_char value[4];
 
   switch(hdr->version) {
+  case 10:
+  {
+    struct struct_header_ipfix *hdr = (struct struct_header_ipfix *) pptrs->f_header;
+
+    memcpy(value, &hdr->source_id, 4);
+    if (entry->engine_type.n == (u_int8_t)value[2]) return (FALSE | entry->engine_type.neg);
+    else return (TRUE ^ entry->engine_type.neg);
+  }
   case 9:
   {
     struct struct_header_v9 *hdr = (struct struct_header_v9 *) pptrs->f_header;
@@ -912,6 +920,14 @@ int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_char value[4];
 
   switch(hdr->version) {
+  case 10:
+  {
+    struct struct_header_ipfix *hdr = (struct struct_header_ipfix *) pptrs->f_header;
+
+    memcpy(value, &hdr->source_id, 4);
+    if (entry->engine_id.n == (u_int8_t)value[3]) return (FALSE | entry->engine_id.neg);
+    else return (TRUE ^ entry->engine_id.neg);
+  }
   case 9:
   {
     struct struct_header_v9 *hdr = (struct struct_header_v9 *) pptrs->f_header;
@@ -1237,7 +1253,6 @@ int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
-  struct struct_header_v9 *hdr9 = (struct struct_header_v9 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0;
 

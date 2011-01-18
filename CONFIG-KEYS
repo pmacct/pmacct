@@ -622,7 +622,8 @@ DESC:		full pathname to a file containing the list of IPv4/IPv6 addresses (one f
 KEY:		nfacctd_time_secs [GLOBAL, NO_PMACCTD]
 VALUES:		[true|false]
 DESC:		makes 'nfacctd' expect times included in NetFlow header to be in seconds rather than msecs. This
-		seems to be quite a common case. (default: false; times are expected in msecs)
+		knob makes sense for NetFlow up to v8 - as in NetFlow v9 and IPFIX different fields are reserved
+		for secs and msecs timestamps, increasing collector awareness. (default: false)
 
 KEY:		nfacctd_time_new [GLOBAL, NO_PMACCTD]
 VALUES:		[true|false]

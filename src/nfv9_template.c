@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -27,23 +27,25 @@
 #include "nfacctd.h"
 #include "pmacct-data.h"
 
-void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t type)
+void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
   struct template_cache_entry *tpl;
 
-  if (type == 0) {
-    if (tpl = find_template_v9(hdr->template_id, pptrs))
-      refresh_template_v9(hdr, tpl, pptrs);
-    else insert_template_v9(hdr, pptrs);
+  /* 0 NetFlow v9, 2 IPFIX */
+  if (tpl_type == 0 || tpl_type == 2) {
+    if (tpl = find_template_v9(hdr->template_id, pptrs, tpl_type, sid))
+      refresh_template_v9(hdr, tpl, pptrs, tpl_type, sid);
+    else insert_template_v9(hdr, pptrs, tpl_type, sid);
   }
-  else if (type == 1) {
-    if (tpl = find_template_v9(hdr->template_id, pptrs))
-      refresh_opt_template_v9((struct options_template_hdr_v9 *)hdr, tpl, pptrs);
-    else insert_opt_template_v9((struct options_template_hdr_v9 *)hdr, pptrs);
+  /* 1 NetFlow v9, 3 IPFIX */
+  else if (tpl_type == 1 || tpl_type == 3) {
+    if (tpl = find_template_v9(hdr->template_id, pptrs, tpl_type, sid))
+      refresh_opt_template_v9(hdr, tpl, pptrs, tpl_type, sid);
+    else insert_opt_template_v9(hdr, pptrs, tpl_type, sid);
   }
 }
 
-struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *pptrs)
+struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
   struct template_cache_entry *ptr;
   u_int16_t modulo = (ntohs(id)%tpl_cache.num);
@@ -52,7 +54,7 @@ struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *
 
   while (ptr) {
     if ((ptr->template_id == id) && (!sa_addr_cmp((struct sockaddr *)pptrs->f_agent, &ptr->agent)) &&
-	(ptr->source_id == ((struct struct_header_v9 *)pptrs->f_header)->source_id))
+	(ptr->source_id == sid))
       return ptr;
     else ptr = ptr->next;
   }
@@ -60,7 +62,7 @@ struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *
   return NULL;
 }
 
-struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs)
+struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
@@ -83,12 +85,12 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
 
   memset(ptr, 0, sizeof(struct template_cache_entry));
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &ptr->agent, &port);
-  ptr->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
+  ptr->source_id = sid;
   ptr->template_id = hdr->template_id;
   ptr->template_type = 0;
   ptr->num = num;
 
-  log_template_v9_header(ptr, pptrs);
+  log_template_v9_header(ptr, pptrs, tpl_type, sid);
 
   count = num;
   tpl = (u_char *) hdr;
@@ -135,7 +137,7 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   return ptr;
 }
 
-void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
   struct template_cache_entry *next;
   struct template_field_v9 *field;
@@ -145,13 +147,13 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
   next = tpl->next;
   memset(tpl, 0, sizeof(struct template_cache_entry));
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
-  tpl->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
+  tpl->source_id = sid;
   tpl->template_id = hdr->template_id;
   tpl->template_type = 0;
   tpl->num = num;
   tpl->next = next;
 
-  log_template_v9_header(tpl, pptrs);
+  log_template_v9_header(tpl, pptrs, tpl_type, sid);
 
   count = num;
   ptr = (u_char *) hdr;
@@ -193,7 +195,7 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
   log_template_v9_footer(tpl->len);
 }
 
-void log_template_v9_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+void log_template_v9_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
   struct host_addr a;
   u_char agent_addr[50];
@@ -202,8 +204,8 @@ void log_template_v9_header(struct template_cache_entry *tpl, struct packet_ptrs
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
   addr_to_str(agent_addr, &a);
 
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 agent         : %s:%u\n", agent_addr, ntohl(((struct struct_header_v9 *)pptrs->f_header)->source_id));
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template type : %s\n", ( tpl->template_type == 0 ) ? "flow" : "options");
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 agent         : %s:%u\n", agent_addr, sid);
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template type : %s\n", ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
   Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template ID   : %u\n", ntohs(tpl->template_id));
   Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
   Log(LOG_DEBUG, "DEBUG ( default/core ): |     field type     | offset |  size  |\n");
@@ -232,14 +234,29 @@ void log_template_v9_footer(u_int16_t size)
   Log(LOG_DEBUG, "DEBUG ( default/core ): \n");
 }
 
-struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *hdr, struct packet_ptrs *pptrs)
+struct template_cache_entry *insert_opt_template_v9(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
+  struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
+  struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
-  u_int16_t modulo = (ntohs(hdr->template_id)%tpl_cache.num), count;
-  u_int16_t slen = ntohs(hdr->scope_len), olen = ntohs(hdr->option_len);
-  u_int16_t type, port;
+  u_int16_t modulo, count, slen, olen, type, port, tid;
   u_char *tpl;
+
+  /* NetFlow v9 */
+  if (tpl_type == 1) {
+    modulo = ntohs(hdr_v9->template_id)%tpl_cache.num;
+    tid = hdr_v9->template_id;
+    slen = ntohs(hdr_v9->scope_len)/sizeof(struct template_field_v9);
+    olen = ntohs(hdr_v9->option_len)/sizeof(struct template_field_v9);
+  }
+  /* IPFIX */
+  else if (tpl_type == 3) {
+    modulo = ntohs(hdr_v10->template_id)%tpl_cache.num;
+    tid = hdr_v10->template_id;
+    slen = ntohs(hdr_v10->scope_count);
+    olen = ntohs(hdr_v10->option_count)-slen;
+  }
 
   ptr = tpl_cache.c[modulo];
 
@@ -256,12 +273,12 @@ struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_
 
   memset(ptr, 0, sizeof(struct template_cache_entry));
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &ptr->agent, &port);
-  ptr->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
-  ptr->template_id = hdr->template_id;
+  ptr->source_id = sid; 
+  ptr->template_id = tid;
   ptr->template_type = 1;
-  ptr->num = (olen+slen)/sizeof(struct template_field_v9);
+  ptr->num = olen+slen;
 
-  log_template_v9_header(ptr, pptrs);
+  log_template_v9_header(ptr, pptrs, tpl_type, sid);
 
   count = ptr->num;
   tpl = (u_char *) hdr;
@@ -289,24 +306,38 @@ struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_
   return ptr;
 }
 
-void refresh_opt_template_v9(struct options_template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+void refresh_opt_template_v9(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
+  struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
+  struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
   struct template_cache_entry *next;
   struct template_field_v9 *field;
-  u_int16_t slen = ntohs(hdr->scope_len), olen = ntohs(hdr->option_len);
-  u_int16_t count, type, port;
+  u_int16_t slen, olen, count, type, port, tid;
   u_char *ptr;
+
+  /* NetFlow v9 */
+  if (tpl_type == 1) {
+    tid = hdr_v9->template_id;
+    slen = ntohs(hdr_v9->scope_len)/sizeof(struct template_field_v9);
+    olen = ntohs(hdr_v9->option_len)/sizeof(struct template_field_v9);
+  }
+  /* IPFIX */
+  else if (tpl_type == 3) {
+    tid = hdr_v10->template_id;
+    slen = ntohs(hdr_v10->scope_count);
+    olen = ntohs(hdr_v10->option_count)-slen;
+  }
 
   next = tpl->next;
   memset(tpl, 0, sizeof(struct template_cache_entry));
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
-  tpl->source_id = ((struct struct_header_v9 *)pptrs->f_header)->source_id;
-  tpl->template_id = hdr->template_id;
+  tpl->source_id = sid;
+  tpl->template_id = tid;
   tpl->template_type = 1;
-  tpl->num = (olen+slen)/sizeof(struct template_field_v9);
+  tpl->num = olen+slen;
   tpl->next = next;
 
-  log_template_v9_header(tpl, pptrs);  
+  log_template_v9_header(tpl, pptrs, tpl_type, sid);  
 
   count = tpl->num;
   ptr = (u_char *) hdr;

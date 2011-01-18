@@ -60,6 +60,14 @@
 	  u_int32_t source_id;		/* Source id */
 	};
 
+        struct struct_header_ipfix {
+          u_int16_t version;            /* version = 10 */
+          u_int16_t len;                /* Total length of the IPFIX Message */
+          u_int32_t unix_secs;          /* Current seconds since 0000 UTC 1970 */
+          u_int32_t flow_sequence;      /* Sequence number of total flows seen */
+          u_int32_t source_id;          /* Source id */
+        };
+
 	/* NetFlow Export version 1 */
 	struct struct_export_v1 {
 	  struct in_addr srcaddr;	/* Source IP Address */
@@ -357,6 +365,13 @@
 	  u_int16_t option_len;
 	};
 
+	/* IPFIX: option field count and scope field count apparently inverted compared to NetFlow v9 */
+	struct options_template_hdr_ipfix {
+	  u_int16_t template_id;
+	  u_int16_t option_count;
+	  u_int16_t scope_count;
+	};
+
 	struct data_hdr_v9 {
 	  u_int16_t flow_id; /* == 0: template; == 1: options template; >= 256: data */
 	  u_int16_t flow_len;
@@ -462,6 +477,10 @@
 	#define NF9_OUT_SRC_MAC			81 
 	/* ... */
 	#define NF9_FLOW_BYTES			85 
+	#define NF9_FLOW_PACKETS		86 
+	/* ... */
+	#define NF9_EXPORTER_IPV4_ADDRESS	130
+	#define NF9_EXPORTER_IPV6_ADDRESS	131
 	/* ... */
 	#define NF9_FIRST_SWITCHED_SEC		150
 	#define NF9_LAST_SWITCHED_SEC		151
@@ -673,7 +692,7 @@
 	EXT void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
 	EXT void process_v7_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
 	EXT void process_v8_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
-	EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
+	EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t);
 	EXT void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
 	EXT u_int16_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
 	EXT u_int16_t NF_evaluate_direction(struct template_cache_entry *, struct packet_ptrs *);
@@ -685,7 +704,7 @@ EXT void notify_malf_packet(short int, char *, struct sockaddr *);
 EXT void NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
 EXT char *nfv578_check_status(struct packet_ptrs *);
-EXT char *nfv9_check_status(struct packet_ptrs *);
+EXT char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t);
 
 EXT struct template_cache tpl_cache;
 EXT struct v8_handler_entry v8_handlers[15];
@@ -696,15 +715,15 @@ EXT struct v8_handler_entry v8_handlers[15];
 #else
 #define EXT
 #endif
-EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t);
-EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *);
-EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *);
-EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
-EXT void log_template_v9_header(struct template_cache_entry *, struct packet_ptrs *);
+EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT void log_template_v9_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
 EXT void log_opt_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 
 EXT void log_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 
 EXT void log_template_v9_footer(u_int16_t);
-EXT struct template_cache_entry *insert_opt_template_v9(struct options_template_hdr_v9 *, struct packet_ptrs *);
-EXT void refresh_opt_template_v9(struct options_template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *);
+EXT struct template_cache_entry *insert_opt_template_v9(void *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT void refresh_opt_template_v9(void *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
 #undef EXT
 
