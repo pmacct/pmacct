@@ -16,6 +16,7 @@
 !                       of the device which is originating NetFlow packets; in
 !                       sfacctd this is compared against the AgentId field of
 !                       received sFlow samples.
+! 'in'                  Input interface
 ! 'bgp_nexthop'         BGP next-hop of the flow source IP address (RPF-like).
 !                       This value is compared against the corresponding BGP
 !                       RIB of the exporting device.
