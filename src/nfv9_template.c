@@ -27,15 +27,17 @@
 #include "nfacctd.h"
 #include "pmacct-data.h"
 
-void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
 {
   struct template_cache_entry *tpl;
+
+  if (pens) *pens = FALSE;
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
     if (tpl = find_template_v9(hdr->template_id, pptrs, tpl_type, sid))
-      refresh_template_v9(hdr, tpl, pptrs, tpl_type, sid);
-    else insert_template_v9(hdr, pptrs, tpl_type, sid);
+      refresh_template_v9(hdr, tpl, pptrs, tpl_type, sid, pens);
+    else insert_template_v9(hdr, pptrs, tpl_type, sid, pens);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
@@ -62,12 +64,13 @@ struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *
   return NULL;
 }
 
-struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
 {
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
   u_int16_t modulo = (ntohs(hdr->template_id)%tpl_cache.num), count;
   u_int16_t num = ntohs(hdr->num), type, port;
+  u_int8_t ipfix_ebit;
   u_char *tpl;
 
   ptr = tpl_cache.c[modulo];
@@ -97,7 +100,13 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   tpl += NfTplHdrV9Sz;
   field = (struct template_field_v9 *)tpl;
   while (count) {
+    ipfix_ebit = FALSE;
     type = ntohs(field->type);
+    if (type & IPFIX_TPL_EBIT) {
+      ipfix_ebit = TRUE;
+      type ^= IPFIX_TPL_EBIT;
+      if (pens) (*pens)++;
+    }
     log_template_v9_field(type, ptr->len, ntohs(field->len));
 
     /* Cisco ASA hack */
@@ -126,6 +135,7 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
     else ptr->len += ntohs(field->len);
 
     count--;
+    if (ipfix_ebit) field++; /* skip 32-bits ahead */ 
     field++;
   }
 
@@ -137,11 +147,12 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   return ptr;
 }
 
-void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
 {
   struct template_cache_entry *next;
   struct template_field_v9 *field;
   u_int16_t count, num = ntohs(hdr->num), type, port;
+  u_int8_t ipfix_ebit;
   u_char *ptr;
 
   next = tpl->next;
@@ -160,7 +171,13 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
   ptr += NfTplHdrV9Sz;
   field = (struct template_field_v9 *)ptr;
   while (count) {
+    ipfix_ebit = FALSE;
     type = ntohs(field->type);
+    if (type & IPFIX_TPL_EBIT) {
+      ipfix_ebit = TRUE;
+      type ^= IPFIX_TPL_EBIT;
+      if (pens) (*pens)++;
+    }
     log_template_v9_field(type, tpl->len, ntohs(field->len));
 
     /* Cisco ASA hack */
@@ -189,6 +206,7 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
     else tpl->len += ntohs(field->len);
 
     count--;
+    if (ipfix_ebit) field++; /* skip 32-bits ahead */
     field++;
   }
 

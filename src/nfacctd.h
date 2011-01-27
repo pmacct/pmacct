@@ -413,6 +413,8 @@
 	#define NF_NET_BGP	0x00000004 /* Determine IP network prefixes from BGP peerings */
 	#define NF_NET_STATIC	0x00000008 /* Determine IP network prefixes from static mask */
 
+	#define IPFIX_TPL_EBIT  0x8000 /* IPFIX telmplate enterprise bit */
+
 	/* NetFlow V9 stuff */
 	#define NF9_TEMPLATE_FLOWSET_ID         0
 	#define NF9_OPTIONS_FLOWSET_ID          1
@@ -715,10 +717,10 @@ EXT struct v8_handler_entry v8_handlers[15];
 #else
 #define EXT
 #endif
-EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
 EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *, u_int16_t, u_int32_t);
-EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t);
-EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
+EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
 EXT void log_template_v9_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
 EXT void log_opt_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 
 EXT void log_template_v9_field(u_int16_t, u_int16_t, u_int16_t); 

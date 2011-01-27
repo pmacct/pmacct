@@ -1041,6 +1041,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   fid = ntohs(data_hdr->flow_id);
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
+    u_int16_t pens = 0;
 
     flowoff = 0;
     tpl_ptr += NfDataHdrV9Sz;
@@ -1056,10 +1057,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         return;
       }
 
-      handle_template_v9(template_hdr, pptrs, fid, SourceId);
+      handle_template_v9(template_hdr, pptrs, fid, SourceId, &pens);
 
-      tpl_ptr += sizeof(struct template_hdr_v9)+ntohs(template_hdr->num)*sizeof(struct template_field_v9); 
-      flowoff += sizeof(struct template_hdr_v9)+ntohs(template_hdr->num)*sizeof(struct template_field_v9); 
+      tpl_ptr += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
+      flowoff += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
     }
 
     pkt += flowsetlen; 
@@ -1082,7 +1083,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         return;
       }
 
-      handle_template_v9((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId);
+      handle_template_v9((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL);
 
       /* Increment is not precise for NetFlow v9 but will work */
       tpl_ptr += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9));
