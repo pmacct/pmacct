@@ -24,8 +24,8 @@
 !			(RPF-like). This value is compared against the BGP RIB
 !			of the exporting device (see 'bgp_daemon' configuration
 !			directive). 
-! 'src_mac'		Source MAC address of the flow. Requires NetFlow v9 or
-!			sFlow.
+! 'src_mac'		Source MAC address of the flow. Requires NetFlow v9,
+!			IPFIX or sFlow.
 !
 ! A few examples follow.
 !

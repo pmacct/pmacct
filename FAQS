@@ -8,9 +8,9 @@ A: It is http://www.pmacct.net/ . There isn't any official mirror site.
 Q2: 'pmacct', 'pmacctd', 'nfacctd', 'sfacctd', 'uacctd' -- but what do they mean ?
 A: 'pmacct' is intended to be the name of the project; 'pmacctd' is the name of the
    libpcap-based IPv4/IPv6 accounting daemon; 'nfacctd' is the name of the NetFlow
-   accounting daemon (versions supported NetFlow v1 to v9); 'sfacctd' is the name of
-   the sFlow v2/v4/v5 accounting daemon; 'uacctd' is the name of the Linux Netlink
-   ULOG-based accounting daemon.
+   (versions supported NetFlow v1 to v9) and IPFIX accounting daemon; 'sfacctd' is
+   the name of the sFlow v2/v4/v5 accounting daemon; 'uacctd' is the name of the
+   Linux Netlink ULOG-based accounting daemon.
 
 
 Q3: Does pmacct stand for Promiscuous mode IP Accounting package ?
@@ -23,10 +23,10 @@ A: That is not entirely correct today, it was originally though. pmacct born as 
 
 Q4: What are pmacct main features?
 A: pmacct can collect, replicate and export network data. Collect in memory tables or
-   open-source SQL databases (MySQL, PostgreSQL, SQLite 3.x). Export speaking sFlow v5
-   and NetFlow v1/v5/v9. pmacct is able to perform data aggregation; it can also filter,
-   sample, renormalize, tag, classify at L7. With release 0.12 pmacct integrates a BGP
-   BGP daemon within its NetFlow and sFlow collectors aimed at increasing visibility
+   open-source SQL databases (MySQL, PostgreSQL, SQLite 3.x). Export speaking sFlow v5,
+   NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform data aggregation; it can also
+   filter, sample, renormalize, tag, classify at L7. With release 0.12 pmacct integrates
+   a BGP daemon within its NetFlow and sFlow collectors aimed at increasing visibility
    into the network traffic.
 
 

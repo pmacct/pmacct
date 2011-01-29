@@ -376,7 +376,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
 	list->cfg.what_to_count = 0;
 #if defined (HAVE_L2)
-	if (list->cfg.nfprobe_version == 9) {
+	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
 	  list->cfg.what_to_count |= COUNT_SRC_MAC;
 	  list->cfg.what_to_count |= COUNT_DST_MAC;
 	  list->cfg.what_to_count |= COUNT_VLAN;
@@ -399,7 +399,7 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
 	}
-	if (list->cfg.nfprobe_version == 9 && list->cfg.classifiers_path) {
+	if ((list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) && list->cfg.classifiers_path) {
 	  list->cfg.what_to_count |= COUNT_CLASS; 
 	  config.handle_flows = TRUE;
 	}

@@ -218,13 +218,17 @@ void log_template_v9_header(struct template_cache_entry *tpl, struct packet_ptrs
   struct host_addr a;
   u_char agent_addr[50];
   u_int16_t agent_port, count, size;
+  u_int8_t nf_version = 0;
 
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
   addr_to_str(agent_addr, &a);
 
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 agent         : %s:%u\n", agent_addr, sid);
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template type : %s\n", ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 template ID   : %u\n", ntohs(tpl->template_id));
+  if (tpl_type == 0 || tpl_type == 1) nf_version = 9;
+  else if (tpl_type == 2 || tpl_type == 3) nf_version = 10;
+
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u agent         : %s:%u\n", nf_version, agent_addr, sid);
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template type : %s\n", nf_version, ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template ID   : %u\n", nf_version, ntohs(tpl->template_id));
   Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
   Log(LOG_DEBUG, "DEBUG ( default/core ): |     field type     | offset |  size  |\n");
 }
@@ -248,7 +252,7 @@ void log_opt_template_v9_field(u_int16_t type, u_int16_t off, u_int16_t len)
 void log_template_v9_footer(u_int16_t size)
 {
   Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV9 record size : %u\n", size);
+  Log(LOG_DEBUG, "DEBUG ( default/core ): Netflow V9/IPFIX record size : %u\n", size);
   Log(LOG_DEBUG, "DEBUG ( default/core ): \n");
 }
 

@@ -109,10 +109,10 @@ DESC:		plugins to be enabled. SQL plugins are available only if configured and c
 		can fetch its content; mysql, pgsql and sqlite3 enable the use of respectively MySQL,
 		PostgreSQL and SQLite 3.x tables to store data. 'print' prints aggregates to stdout
 		in a nicely formatted way. 'nfprobe' acts as a NetFlow agent and exports collected
-		data via NetFlow v1/v5/v9 datagrams to a remote collector. 'sfprobe' acts as a sFlow
-		agent and exports collected data via sFlow v5 datagrams to a remote collector. Both
-		'nfprobe' and 'sfprobe' apply only to 'pmacctd' and 'uacctd' daemons. 'tee' acts as
-		a replicator for NetFlow/sFlow data (also transparent); it applies to 'nfacctd' and
+		data via NetFlow v1/v5/v9 and IPFIX datagrams to a remote collector. 'sfprobe' acts
+		as a sFlow agent and exports collected data via sFlow v5 datagrams to a remote collector.
+		Both 'nfprobe' and 'sfprobe' apply only to 'pmacctd' and 'uacctd' daemons. 'tee' acts
+		as a replicator for NetFlow/sFlow data (also transparent); it applies to 'nfacctd' and
 		'sfacctd' daemons only.
 		Plugins can be either anonymous or named; configuration directives can be either
 		global or bounded to a specific named plugin. An anonymous plugin is declared as
@@ -872,23 +872,24 @@ DESC:		defines the remote IP address/hostname and port to which NetFlow dagagram
 KEY:            nfprobe_source_ip
 DESC:           defines the local IP address from which NetFlow dagagrams are to be exported. Only a numerical
 		IPv4/IPv6 address is expected. The supplied IP address is required to be already configured on
-		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9
-		option scoping. (default: IP address is selected by the OS)
+		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9 and
+		IPFIX option scoping. (default: IP address is selected by the OS)
 
 KEY:		nfprobe_version
-VALUES:		[5,9]
-DESC:		version of outgoing NetFlow datagrams. NetFlow v5/v9 are supported. NetFlow v5 features a fixed
-		record structure and if not specifying an 'aggregate' directive it gets populated as much as
-		possible; NetFlow v9 features a dynamic template-based structure instead and by default it is
-		populated as: 'src_host, dst_host, src_port, dst_Port, proto, tos'. (default: 5)
+VALUES:		[5,9,10]
+DESC:		version of outgoing NetFlow datagrams. NetFlow v5/v9 and IPFIX (v10) are supported. NetFlow v5
+		features a fixed record structure and if not specifying an 'aggregate' directive it gets
+		populated as much as possible; NetFlow v9 and IPFIX feature a dynamic template-based structure
+		instead and by default it is populated as: 'src_host, dst_host, src_port, dst_Port, proto, tos'.
+		(default: 5)
 
 KEY:            nfprobe_engine
-DESC:           allows to define Engine ID and Engine Type fields. It applies only to NetFlow v5 and v9. In v9,
-		the supplied value fills last two bytes of SourceID field. Expects two non-negative numbers, up
-		to 255 each and separated by the ":" symbol. It also allows a collector to distinguish between
-		distinct probe instances running on the same box; this is also important for letting NetFlow v9
-		templates to work correctly: in fact, template IDs get automatically selected only inside single
-		daemon instances. (default: 0:0)
+DESC:           allows to define Engine ID and Engine Type fields. It applies only to NetFlow v5/v9 and IPFIX.
+		In NetFlow v9/IPFIX, the supplied value fills last two bytes of SourceID field. Expects two
+		non-negative numbers, up to 255 each and separated by the ":" symbol. It also allows a collector
+		to distinguish between distinct probe instances running on the same box; this is also important
+		for letting NetFlow v9/IPFIX templates to work correctly: in fact, template IDs get automatically
+		selected only inside single daemon instances. (default: 0:0)
 
 KEY:		[ nfprobe_peer_as | sfprobe_peer_as ]
 VALUES:         [true|false]

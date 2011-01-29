@@ -67,10 +67,10 @@
 !			apply.
 ! 'sampling_rate'       In sFlow v2/v4/v5 this is compared against the sampling
 !			rate field; it also works against NetFlow v5. NetFlow v9
-!			is unsupported instead.
-! 'direction'		In NetFlow v9 it is compared against the direction (61)
-!			field, which only valid values are 0 (ingress) and 1
-!			(egress) flow.
+!			and IPFIX are unsupported instead.
+! 'direction'		In NetFlow v9 and IPFIX this is compared against the
+!			direction (61) field, which only valid values are 0
+!			(ingress) and 1 (egress) flow.
 ! 'src_as'		source Autonomous System Number. Whether BGP daemon is
 !			not enabled in pmacctd it works only against a Networks
 !			map (see 'networks_file' directive); in nfacctd and

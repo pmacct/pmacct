@@ -5,10 +5,10 @@ pmacctd		libpcap-based accounting daemon; it captures packets from an
 		stored in memory tables or a PostgreSQL/MySQL/SQLite database,
 		exported via NetFlow or sFlow protocols.
 nfacctd		NetFlow accounting daemon; it listens for NetFlow packets
-		v1/v5/v7/v8/v9 on one or more interfaces (IPv4 and IPv6);
-		statistics can be printed to stdout, stored in memory tables
-		or a PostgreSQL/MySQL/SQLite database, replicated to other
-		collectors.
+		v1/v5/v7/v8/v9 and IPFIX on one or more interfaces (IPv4 and
+		IPv6); statistics can be printed to stdout, stored in memory
+		tables or a PostgreSQL/MySQL/SQLite database, replicated to
+		other collectors.
 sfacctd         sFlow accounting daemon; it listens for sFlow packets v2,
                 v4 and v5 on one or more interfaces (both IPv4 and IPv6);
                 statistics can be printed to stdout, stored in memory tables

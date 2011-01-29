@@ -38,6 +38,11 @@ struct NF9_HEADER {
 	u_int32_t uptime_ms, time_sec;
 	u_int32_t package_sequence, source_id;
 } __packed;
+struct IPFIX_HEADER {
+        u_int16_t version, len;
+        u_int32_t time_sec;
+        u_int32_t package_sequence, source_id;
+} __packed;
 struct NF9_FLOWSET_HEADER_COMMON {
 	u_int16_t flowset_id, length;
 } __packed;
@@ -58,6 +63,8 @@ struct NF9_DATA_FLOWSET_HEADER {
 } __packed;
 #define NF9_TEMPLATE_FLOWSET_ID		0
 #define NF9_OPTIONS_FLOWSET_ID		1
+#define IPFIX_TEMPLATE_FLOWSET_ID	2
+#define IPFIX_OPTIONS_FLOWSET_ID	3
 #define NF9_MIN_RECORD_FLOWSET_ID	256
 
 /* Flowset record types the we care about */
@@ -108,6 +115,8 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_FLOW_APPLICATION_DESC	94
 #define NF9_FLOW_APPLICATION_ID		95
 #define NF9_FLOW_APPLICATION_NAME	96
+/* ... */
+#define NF9_FLOW_EXPORTER		144
 /* ... */
 /* CUSTOM TYPES START HERE */
 #define NF9_CUST_TAG			201
@@ -391,7 +400,7 @@ flow_to_flowset_sampler_id_handler(char *flowset, const struct FLOW *flow, int i
 static void
 nf9_init_template(void)
 {
-	int rcount, idx; 
+	int rcount, idx, flowset_id = 0; 
 
 	/* Let's enforce some defaults; if we are launched without an
 	 * aggregation, then let's choose one. If we don't have one or
@@ -411,6 +420,9 @@ nf9_init_template(void)
 	bzero(&v4_int_template, sizeof(v4_int_template));
 	bzero(&v4_template_out, sizeof(v4_template_out));
 	bzero(&v4_int_template_out, sizeof(v4_int_template_out));
+
+	if (config.nfprobe_version == 9) flowset_id = NF9_TEMPLATE_FLOWSET_ID;
+	else if (config.nfprobe_version == 10) flowset_id = IPFIX_TEMPLATE_FLOWSET_ID;
 
 	v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
 	v4_template.r[rcount].length = htons(4);
@@ -698,13 +710,13 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 4;
           rcount++;
         }
-	v4_template.h.c.flowset_id = htons(0);
+	v4_template.h.c.flowset_id = htons(flowset_id);
 	v4_template.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
 	v4_template.h.template_id = htons(NF9_SOFTFLOWD_V4_TEMPLATE_ID + config.nfprobe_id);
 	v4_template.h.count = htons(rcount);
 	v4_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
-        v4_template_out.h.c.flowset_id = htons(0);
+        v4_template_out.h.c.flowset_id = htons(flowset_id);
         v4_template_out.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
         v4_template_out.h.template_id = htons(NF9_SOFTFLOWD_V4_TEMPLATE_ID + config.nfprobe_id + 1);
         v4_template_out.h.count = htons(rcount);
@@ -1009,13 +1021,13 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 4;
           rcount++;
         }
-	v6_template.h.c.flowset_id = htons(0);
+	v6_template.h.c.flowset_id = htons(flowset_id);
 	v6_template.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
 	v6_template.h.template_id = htons(NF9_SOFTFLOWD_V6_TEMPLATE_ID + config.nfprobe_id);
 	v6_template.h.count = htons(rcount);
 	v6_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
-        v6_template_out.h.c.flowset_id = htons(0);
+        v6_template_out.h.c.flowset_id = htons(flowset_id);
         v6_template_out.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
         v6_template_out.h.template_id = htons(NF9_SOFTFLOWD_V6_TEMPLATE_ID + config.nfprobe_id + 1);
         v6_template_out.h.count = htons(rcount);
@@ -1032,7 +1044,7 @@ nf9_init_template(void)
 static void
 nf9_init_options_template(void)
 {
-	int rcount, idx, slen = 0;
+	int rcount, idx, slen = 0, flowset_id = 0, scope = 0;
 
 	switch (config.nfprobe_source_ha.family) {
 	case AF_INET:
@@ -1049,8 +1061,17 @@ nf9_init_options_template(void)
         rcount = 0;
         bzero(&sampling_option_template, sizeof(sampling_option_template));
         bzero(&sampling_option_int_template, sizeof(sampling_option_int_template));
+
+        if (config.nfprobe_version == 9) {
+	  flowset_id = NF9_OPTIONS_FLOWSET_ID;
+	  scope = NF9_OPT_SCOPE_SYSTEM;
+	}
+        else if (config.nfprobe_version == 10) {
+	  flowset_id = IPFIX_OPTIONS_FLOWSET_ID;
+	  scope = NF9_FLOW_EXPORTER;
+	}
  
-        sampling_option_template.r[rcount].type = htons(NF9_OPT_SCOPE_SYSTEM);
+        sampling_option_template.r[rcount].type = htons(scope);
         sampling_option_template.r[rcount].length = htons(slen);
         sampling_option_int_template.r[rcount].length = slen;
         rcount++;
@@ -1066,11 +1087,17 @@ nf9_init_options_template(void)
         sampling_option_template.r[rcount].length = htons(4);
         sampling_option_int_template.r[rcount].length = 4;
         rcount++;
-        sampling_option_template.h.c.flowset_id = htons(1);
+        sampling_option_template.h.c.flowset_id = htons(flowset_id);
         sampling_option_template.h.c.length = htons( sizeof(struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
         sampling_option_template.h.template_id = htons(NF9_OPTIONS_TEMPLATE_ID + config.nfprobe_id );
-        sampling_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
-        sampling_option_template.h.option_len = htons(12); /* NF9_FLOW_SAMPLER_ID + NF9_FLOW_SAMPLER_MODE + NF9_FLOW_SAMPLER_INTERVAL */
+        if (config.nfprobe_version == 9) {
+          sampling_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
+          sampling_option_template.h.option_len = htons(12); /* NF9_FLOW_SAMPLER_ID + NF9_FLOW_SAMPLER_MODE + NF9_FLOW_SAMPLER_INTERVAL */
+	}
+	else if (config.nfprobe_version == 10) {
+          sampling_option_template.h.scope_len = htons(3+1); /* IPFIX twist: NF9_FLOW_SAMPLER_ID + NF9_FLOW_SAMPLER_MODE + NF9_FLOW_SAMPLER_INTERVAL + NF9_OPT_SCOPE_SYSTEM */ 
+          sampling_option_template.h.option_len = htons(1); /* IPFIX twist: NF9_OPT_SCOPE_SYSTEM */ 
+	}
         sampling_option_template.tot_len = sizeof(struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
         for (idx = 0, sampling_option_int_template.tot_rec_len = 0; idx < rcount; idx++)
@@ -1080,7 +1107,7 @@ nf9_init_options_template(void)
         bzero(&class_option_template, sizeof(class_option_template));
         bzero(&class_option_int_template, sizeof(class_option_int_template));
 
-        class_option_template.r[rcount].type = htons(NF9_OPT_SCOPE_SYSTEM);
+        class_option_template.r[rcount].type = htons(scope);
         class_option_template.r[rcount].length = htons(4);
         class_option_int_template.r[rcount].length = 4;
         rcount++;
@@ -1092,11 +1119,17 @@ nf9_init_options_template(void)
         class_option_template.r[rcount].length = htons(16);
         class_option_int_template.r[rcount].length = 16;
         rcount++;
-        class_option_template.h.c.flowset_id = htons(1);
+        class_option_template.h.c.flowset_id = htons(flowset_id);
         class_option_template.h.c.length = htons( sizeof(struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
         class_option_template.h.template_id = htons(NF9_OPTIONS_TEMPLATE_ID + 1 + config.nfprobe_id );
-        class_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
-        class_option_template.h.option_len = htons(8); /* NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME */
+	if (config.nfprobe_version == 9) {
+          class_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
+          class_option_template.h.option_len = htons(8); /* NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME */
+	}
+	else if (config.nfprobe_version == 10) {
+          class_option_template.h.scope_len = htons(2+1); /* IPFIX twist: NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME + NF9_OPT_SCOPE_SYSTEM */
+          class_option_template.h.option_len = htons(1); /* IPFIX twist: NF9_OPT_SCOPE_SYSTEM */ 
+	}
         class_option_template.tot_len = sizeof(struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
 
         for (idx = 0, class_option_int_template.tot_rec_len = 0; idx < rcount; idx++)
@@ -1377,6 +1410,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
     int verbose_flag, u_int8_t engine_type, u_int8_t engine_id)
 {
 	struct NF9_HEADER *nf9;
+	struct IPFIX_HEADER *nf10;
 	struct NF9_DATA_FLOWSET_HEADER *dh;
 	struct timeval now;
 	u_int offset, last_af, flow_j, num_packets, inc, last_valid;
@@ -1403,50 +1437,80 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 
 	  for (flow_j = 0, class_j = 0; flow_j < num_flows;) {
 		bzero(packet, sizeof(packet));
-		nf9 = (struct NF9_HEADER *)packet;
+		if (config.nfprobe_version == 9) {
+		  nf9 = (struct NF9_HEADER *)packet;
 
-		nf9->version = htons(9);
-		nf9->flows = 0; /* Filled as we go, htons at end */
-		nf9->uptime_ms = htonl(timeval_sub_ms(&now, system_boot_time));
-		nf9->time_sec = htonl(time(NULL));
-		nf9->package_sequence = htonl(++(*flows_exported));
+		  nf9->version = htons(9);
+		  nf9->flows = 0; /* Filled as we go, htons at end */
+		  nf9->uptime_ms = htonl(timeval_sub_ms(&now, system_boot_time));
+		  nf9->time_sec = htonl(time(NULL));
+		  nf9->package_sequence = htonl(++(*flows_exported));
 
-		nf9->source_id = 0;
-		sid_ptr = (u_int8_t *) &nf9->source_id;
-		sid_ptr[2] = engine_type; 
-		sid_ptr[3] = engine_id; 
+		  nf9->source_id = 0;
+		  sid_ptr = (u_int8_t *) &nf9->source_id;
+		  sid_ptr[2] = engine_type; 
+		  sid_ptr[3] = engine_id; 
 
-		offset = sizeof(*nf9);
+		  offset = sizeof(*nf9);
+		}
+		else if (config.nfprobe_version == 10) {
+                  nf10 = (struct IPFIX_HEADER *)packet;
+
+                  nf10->version = htons(10);
+                  nf10->len = 0; /* Filled as we go, htons at end */
+                  nf10->time_sec = htonl(time(NULL));
+                  nf10->package_sequence = htonl(++(*flows_exported));
+
+                  nf10->source_id = 0;
+                  sid_ptr = (u_int8_t *) &nf10->source_id;
+                  sid_ptr[2] = engine_type;
+                  sid_ptr[3] = engine_id;
+
+                  offset = sizeof(*nf10);
+		}
 
 		/* Refresh template headers if we need to */
 		if (nf9_pkts_until_template <= 0) {
+			u_int16_t flows = 0, tot_len = 0;
+
 			memcpy(packet + offset, &v4_template, v4_template.tot_len);
 			offset += v4_template.tot_len;
-			nf9->flows++;
+			flows++;
+			tot_len += v4_template.tot_len;
                         memcpy(packet + offset, &v4_template_out, v4_template_out.tot_len);
                         offset += v4_template_out.tot_len;
-                        nf9->flows++;
+                        flows++;
+			tot_len += v4_template_out.tot_len;
 			memcpy(packet + offset, &v6_template, v6_template.tot_len);
 			offset += v6_template.tot_len; 
-			nf9->flows++;
+			flows++;
+			/*XXX: shall v6 templates be issued only if v6 is enabled? */
+			tot_len += v6_template.tot_len; 
                         memcpy(packet + offset, &v6_template_out, v6_template_out.tot_len);
                         offset += v6_template_out.tot_len;
-                        nf9->flows++;
+                        flows++;
+			tot_len += v6_template_out.tot_len; 
 			if (config.sampling_rate || config.ext_sampling_rate) {
                           memcpy(packet + offset, &sampling_option_template, sampling_option_template.tot_len);
                           offset += sampling_option_template.tot_len;
-			  nf9->flows++;
+			  flows++;
+			  tot_len += sampling_option_template.tot_len; 
 			  send_options = TRUE;
 			  send_sampling_option = TRUE;
 			}
 			if (config.nfprobe_what_to_count & COUNT_CLASS) {
                           memcpy(packet + offset, &class_option_template, class_option_template.tot_len);
                           offset += class_option_template.tot_len;
-                          nf9->flows++;
+                          flows++;
+			  tot_len += class_option_template.tot_len;
+			  send_options = TRUE;
 			  send_options = TRUE;
                           send_class_option = TRUE;
 			}
 			nf9_pkts_until_template = NF9_DEFAULT_TEMPLATE_INTERVAL;
+
+			if (config.nfprobe_version == 9) nf9->flows = flows;
+			else if (config.nfprobe_version == 10) nf10->len = tot_len; 
 		}
 
 		dh = NULL;
@@ -1531,11 +1595,20 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			else {
 			  offset += inc;
 			  dh->c.length += inc;
-			  nf9->flows += r;
+
+			  if (config.nfprobe_version == 9) nf9->flows += r;
+			  else if (config.nfprobe_version == 10) nf10->len += inc;
+
 			  last_valid = 0; /* Don't clobber this header now */
 			  if (verbose_flag) {
-			    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Building NetFlow v9 packet: offset = %d, template ID = %d, total len = %d, # elements = %d\n", 
+			    if (config.nfprobe_version == 9) {
+			      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Building NetFlow v9 packet: offset = %d, template ID = %d, total len = %d, # elements = %d\n", 
 				 config.name, config.type, offset, ntohs(dh->c.flowset_id), dh->c.length, nf9->flows);
+			    }
+			    else if (config.nfprobe_version == 10) {
+                              Log(LOG_DEBUG, "DEBUG ( %s/%s ): Building IPFIX packet: offset = %d, template ID = %d, total len = %d, len = %d\n",
+                                 config.name, config.type, offset, ntohs(dh->c.flowset_id), dh->c.length, nf10->len);
+			    }
 			  }
 
 			  if (send_options) {
@@ -1558,11 +1631,12 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			/* Finalise last header */
 			dh->c.length = htons(dh->c.length);
 		}
-		if (nf9->flows > 0) {
+		if (nf9->flows > 0 || nf10->len > 0) {
 		  nf9->flows = htons(nf9->flows);
+		  nf10->len = htons(nf10->len);
 
 		  if (verbose_flag)
-		    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow v9 packet: len = %d\n", config.name, config.type, offset);
+		    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow v9/IPFIX packet: len = %d\n", config.name, config.type, offset);
 		  errsz = sizeof(err);
 		  /* Clear ICMP errors */
 		  getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); 
