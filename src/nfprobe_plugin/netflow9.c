@@ -1457,7 +1457,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                   nf10 = (struct IPFIX_HEADER *)packet;
 
                   nf10->version = htons(10);
-                  nf10->len = 0; /* Filled as we go, htons at end */
+                  nf10->len = 0;
                   nf10->time_sec = htonl(time(NULL));
                   nf10->package_sequence = htonl(++(*flows_exported));
 
@@ -1510,7 +1510,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			nf9_pkts_until_template = NF9_DEFAULT_TEMPLATE_INTERVAL;
 
 			if (config.nfprobe_version == 9) nf9->flows = flows;
-			else if (config.nfprobe_version == 10) nf10->len = tot_len; 
 		}
 
 		dh = NULL;
@@ -1597,7 +1596,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			  dh->c.length += inc;
 
 			  if (config.nfprobe_version == 9) nf9->flows += r;
-			  else if (config.nfprobe_version == 10) nf10->len += inc;
 
 			  last_valid = 0; /* Don't clobber this header now */
 			  if (verbose_flag) {
@@ -1606,8 +1604,8 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 				 config.name, config.type, offset, ntohs(dh->c.flowset_id), dh->c.length, nf9->flows);
 			    }
 			    else if (config.nfprobe_version == 10) {
-                              Log(LOG_DEBUG, "DEBUG ( %s/%s ): Building IPFIX packet: offset = %d, template ID = %d, total len = %d, len = %d\n",
-                                 config.name, config.type, offset, ntohs(dh->c.flowset_id), dh->c.length, nf10->len);
+                              Log(LOG_DEBUG, "DEBUG ( %s/%s ): Building IPFIX packet: offset = %d, template ID = %d, total len = %d\n",
+                                 config.name, config.type, offset, ntohs(dh->c.flowset_id), dh->c.length);
 			    }
 			  }
 
@@ -1631,9 +1629,11 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			/* Finalise last header */
 			dh->c.length = htons(dh->c.length);
 		}
-		if (nf9->flows > 0 || nf10->len > 0) {
-		  nf9->flows = htons(nf9->flows);
-		  nf10->len = htons(nf10->len);
+		if ((config.nfprobe_version == 9 && nf9->flows > 0) ||
+		    (config.nfprobe_version == 10 && offset > 20)) { /* 20: IPFIX header + IPFIX Flowset header */ 
+
+		  if (config.nfprobe_version == 9) nf9->flows = htons(nf9->flows);
+		  else if (config.nfprobe_version == 10) nf10->len = htons(offset);
 
 		  if (verbose_flag)
 		    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow v9/IPFIX packet: len = %d\n", config.name, config.type, offset);
