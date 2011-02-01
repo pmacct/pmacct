@@ -1656,7 +1656,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 
   nfv = ntohs(((struct struct_header_v5 *)pkt)->version);
 
-  if (nfv != 1 && nfv != 5 && nfv != 7 && nfv != 8 && nfv != 9) {
+  if (nfv != 1 && nfv != 5 && nfv != 7 && nfv != 8 && nfv != 9 && nfv != 10) {
     notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent);
     xflow_tot_bad_datagrams++;
     return;
@@ -1674,7 +1674,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     pptrs->seqno = ntohl(((struct struct_header_v9 *)pkt)->flow_sequence);
     break;
   case 10:
-    /* XXX: IPFIX to be worked out */
+    pptrs->seqno = ntohl(((struct struct_header_ipfix *)pkt)->flow_sequence);
   default:
     pptrs->seqno = 0;
     break;
