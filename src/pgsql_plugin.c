@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -101,6 +101,19 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     idata.now = time(NULL);
     now = idata.now;
+
+    if (config.sql_history) {
+      while (idata.now > (idata.basetime + idata.timeslot)) {
+        time_t saved_basetime = idata.basetime;
+
+        idata.basetime += idata.timeslot;
+        if (config.sql_history == COUNT_MONTHLY)
+          idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);
+        glob_basetime = idata.basetime;
+        idata.new_basetime = saved_basetime;
+        glob_new_basetime = saved_basetime;
+      }
+    }
 
     switch (ret) {
     case 0: /* poll(): timeout */
@@ -243,18 +256,6 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
-      if (config.sql_history) {
-        while (idata.now > (idata.basetime + idata.timeslot)) {
-	  time_t saved_basetime = idata.basetime;
-
-	  idata.basetime += idata.timeslot;
-	  if (config.sql_history == COUNT_MONTHLY)
-	    idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);
-	  glob_basetime = idata.basetime;
-	  idata.new_basetime = saved_basetime;
-	  glob_new_basetime = saved_basetime;
-	}
-      }
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
 	for (num = 0; net_funcs[num]; num++)
