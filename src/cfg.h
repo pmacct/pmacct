@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -84,6 +84,7 @@ struct configuration {
   int sql_aggressive_classification;
   char *sql_locking_style;
   int sql_use_copy;
+  char *sql_delimiter;
   int print_refresh_time;
   int print_cache_entries;
   int print_markers;

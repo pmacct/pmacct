@@ -1254,6 +1254,31 @@ int cfg_key_sql_use_copy(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sql_delimiter(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  /* delimiter is only one character */
+  if (strlen(value_ptr) != 1) {
+    Log(LOG_WARNING, "WARN ( %s ): 'sql_delimiter' length has to be 1.\n", filename);
+    return ERR; 
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_delimiter = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sql_delimiter = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_plugin_pipe_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -76,6 +76,7 @@ EXT int cfg_key_sql_multi_values(char *, char *, char *);
 EXT int cfg_key_sql_aggressive_classification(char *, char *, char *);
 EXT int cfg_key_sql_locking_style(char *, char *, char *);
 EXT int cfg_key_sql_use_copy(char *, char *, char *);
+EXT int cfg_key_sql_delimiter(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_buffer_size(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);

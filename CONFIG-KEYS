@@ -468,6 +468,11 @@ DESC:		instructs the plugin to build non-UPDATE SQL queries using COPY (in place
 		directive requires 'sql_dont_try_update' to be set to true. It applies to PostgreSQL plugin
 		only. (default: false)
 
+KEY:		sql_delimiter
+DESC:		If sql_use_copy is true, uses the supplied character as delimiter. This is thought in cases
+		where the default delimiter is part of any of the supplied strings to be inserted into the
+		database. (default: ',')
+
 KEY:		sql_multi_values
 DESC:		enables the use of multi-values INSERT statements. The value of the directive is intended
 		to be the size (in bytes) of the multi-values buffer. The directive applies only to MySQL

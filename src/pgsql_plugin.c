@@ -287,9 +287,15 @@ int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct in
 {
   PGresult *ret;
   char *ptr_values, *ptr_where;
+  char default_delim[] = ",", delim_buf[SRVBUFLEN];
   int num=0, have_flows=0;
 
   if (config.what_to_count & COUNT_FLOWS) have_flows = TRUE;
+
+  if (!config.sql_delimiter)
+    snprintf(delim_buf, SRVBUFLEN, "%s", default_delim);
+  else
+    snprintf(delim_buf, SRVBUFLEN, "%s", config.sql_delimiter);
 
   /* constructing SQL query */
   ptr_where = where_clause;
@@ -304,11 +310,17 @@ int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct in
   }
 
 #if defined HAVE_64BIT_COUNTERS
-  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ",%llu,%llu,%llu\n", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
-  else snprintf(ptr_values, SPACELEFT(values_clause), ",%llu,%llu\n", cache_elem->packet_counter, cache_elem->bytes_counter);
+  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%llu%s%llu%s%llu\n", delim_buf, cache_elem->packet_counter,
+											delim_buf, cache_elem->bytes_counter,
+											delim_buf, cache_elem->flows_counter);
+  else snprintf(ptr_values, SPACELEFT(values_clause), "%s%llu%s%llu\n", delim_buf, cache_elem->packet_counter,
+									delim_buf, cache_elem->bytes_counter);
 #else
-  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ",%lu,%lu,%lu\n", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
-  else snprintf(ptr_values, SPACELEFT(values_clause), ",%lu,%lu\n", cache_elem->packet_counter, cache_elem->bytes_counter);
+  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%lu%s%lu%s%lu\n", delim_buf, cache_elem->packet_counter,
+											delim_buf, cache_elem->bytes_counter,
+											delim_buf, cache_elem->flows_counter);
+  else snprintf(ptr_values, SPACELEFT(values_clause), "%s%lu%s%lu\n", delim_buf, cache_elem->packet_counter,
+									delim_buf, cache_elem->bytes_counter);
 #endif
   strncpy(sql_data, values_clause, sizeof(sql_data));
   
@@ -524,12 +536,23 @@ int PG_evaluate_history(int primitive)
     strncat(copy_clause, "stamp_updated, stamp_inserted", SPACELEFT(copy_clause));
     strncat(insert_clause, "stamp_updated, stamp_inserted", SPACELEFT(insert_clause));
     if (config.sql_use_copy) {
+      char default_delim[] = ",", delim_buf[SRVBUFLEN];
+
+      if (!config.sql_delimiter || !config.sql_use_copy)
+        snprintf(delim_buf, SRVBUFLEN, "%s ", default_delim);
+      else
+        snprintf(delim_buf, SRVBUFLEN, "%s ", config.sql_delimiter);
+
       if (!config.sql_history_since_epoch) { 
-	strncat(values[primitive].string, "%s, %s", SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
         values[primitive].handler = where[primitive].handler = count_copy_timestamp_handler;
       }
       else {
-	strncat(values[primitive].string, "%u, %u", SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
         values[primitive].handler = where[primitive].handler = count_timestamp_handler;
       }
     }
@@ -551,6 +574,7 @@ int PG_evaluate_history(int primitive)
 int PG_compose_static_queries()
 {
   int primitives=0, set_primitives=0, have_flows=0, lock=0;
+  char default_delim[] = ",", delim_buf[SRVBUFLEN];
 
   if (config.what_to_count & COUNT_FLOWS || (config.sql_table_version >= 4 &&
                                              config.sql_table_version < SQL_TABLE_VERSION_BGP &&
@@ -574,7 +598,12 @@ int PG_compose_static_queries()
 
   strncat(copy_clause, ", packets, bytes", SPACELEFT(copy_clause));
   if (have_flows) strncat(copy_clause, ", flows", SPACELEFT(copy_clause));
-  strncat(copy_clause, ") FROM STDIN DELIMITER \',\'", SPACELEFT(copy_clause));
+
+  if (!config.sql_delimiter || !config.sql_use_copy)
+    snprintf(delim_buf, SRVBUFLEN, ") FROM STDIN DELIMITER \'%s\'", default_delim);
+  else
+    snprintf(delim_buf, SRVBUFLEN, ") FROM STDIN DELIMITER \'%s\'", config.sql_delimiter);
+  strncat(copy_clause, delim_buf, SPACELEFT(copy_clause));
 
   strncat(insert_clause, ", packets, bytes", SPACELEFT(insert_clause));
   if (have_flows) strncat(insert_clause, ", flows", SPACELEFT(insert_clause));
