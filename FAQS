@@ -23,11 +23,11 @@ A: That is not entirely correct today, it was originally though. pmacct born as 
 
 Q4: What are pmacct main features?
 A: pmacct can collect, replicate and export network data. Collect in memory tables or
-   open-source SQL databases (MySQL, PostgreSQL, SQLite 3.x). Export speaking sFlow v5,
-   NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform data aggregation; it can also
-   filter, sample, renormalize, tag, classify at L7. With release 0.12 pmacct integrates
-   a BGP daemon within its NetFlow and sFlow collectors aimed at increasing visibility
-   into the network traffic.
+   open-source SQL databases (MySQL, PostgreSQL, SQLite 3.x, BerkeleyDB 5.x via SQLite
+   API). Export speaking sFlow v5, NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform
+   data aggregation; it can also filter, sample, renormalize, tag, classify at L7. With
+   release 0.12 pmacct integrates a BGP daemon within its NetFlow and sFlow collectors
+   aimed at increasing visibility into the network traffic.
 
 
 Q5: Does any of the pmacct daemons logs to flat files?

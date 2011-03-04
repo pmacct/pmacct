@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 
 TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
@@ -7,13 +7,14 @@ II.	Configuring pmacct for compilation
 III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
-VI.	Running the pmacct client (pmacct)
-VII.	Running the logfile players (pmmyplay/pmpgplay) 
-VIII.	Quickstart guide to packet/stream classifiers
-IX.	Quickstart guide to setup a NetFlow agent/probe 
-X.	Quickstart guide to setup a sFlow agent/probe 
-XI.	Quickstart guide to setup the BGP daemon
-XII.	Quickstart guide to setup a NetFlow/sFlow replicator
+VI.	Running the ULOG-based daemon (uacctd)
+VII.	Running the pmacct client (pmacct)
+VIII.	Running the logfile players (pmmyplay/pmpgplay) 
+IX.	Quickstart guide to packet/stream classifiers
+X.	Quickstart guide to setup a NetFlow agent/probe 
+XI.	Quickstart guide to setup a sFlow agent/probe 
+XII.	Quickstart guide to setup the BGP daemon
+XIII.	Quickstart guide to setup a NetFlow/sFlow replicator
 
 
 I. Plugins included with pmacct distribution
@@ -25,7 +26,8 @@ plugins. Here is a list of plugins included within the official pmacct distribut
 	   like GNUplot, MRTG, RRDtool or a Net-SNMP server
 'mysql':   a working MySQL installation can be used for data storage
 'pgsql':   a working PostgreSQL installation can be used for data storage
-'sqlite3': a working SQLite 3.x installation can be used for data storage
+'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite API)
+           installation can be used for data storage
 'print':   data are printed at regular intervals to the standard output
 
 
@@ -283,7 +285,48 @@ sql_history_roundoff: mh
 sql_table_version: 4
 ! ...
 
-VI. Running the pmacct client (pmacct)
+VI. Running the ULOG-based daemon (uacctd)
+All examples about pmacctd are also valid for uacctd with the exception of directives
+that apply exclusively to libpcap. If you've skipped examples in section 'IV', please
+read them before continuing. All configuration keys available are in the CONFIG-KEYS
+document.
+
+The Linux ULOG infrastructure requires a couple parameters in order to work properly.
+These are the ULOG multicast group (uacctd_group) to which captured packets have to be
+sent to and the Netlink buffer size (uacctd_nl_size). The default buffer settings (4KB)
+typically works OK for small environments. If the uacctd user is not already familiar
+with the iptables ULOG target, it is adviceable to start with a tutorial, like the one
+at the following URL ("6.5.15. ULOG target" section):
+
+http://www.faqs.org/docs/iptables/targets.html
+
+Apart from determining how and what traffic to capture with iptables, which is topic
+outside the scope of this document, the most relevant point is the "--ulog-nlgroup"
+iptables setting has to match with the "uacctd_group" uacctd one. 
+
+A couple examples follow:
+
+Run uacctd reading configuration from a specified file.
+shell> uacctd -f uacctd.conf
+
+Daemonize the process; aggregate data by sum_host (by host, summing inbound + outbound
+traffic); write to a local MySQL server. Listen on ULOG multicast group #5. Let's make
+pmacct divide data into historical time-bins of 5 minutes. Let's disable UPDATE queries
+and hence align refresh time with the timeslot length. Finally, let's make use of a SQL
+table, version 4:
+!
+uacctd_group: 5
+daemonize: true
+plugins: mysql
+aggregate: sum_host
+sql_refresh_time: 300
+sql_history: 5m
+sql_history_roundoff: mh
+sql_table_version: 4
+sql_dont_try_update: true
+! ...
+
+VII. Running the pmacct client (pmacct)
 The pmacct client is used to retrieve data from memory tables. Requests and answers
 are exchanged via a pipe file: authorization is strictly connected to permissions on
 the pipe file. Note: while writing queries commandline, it may happen to write chars
@@ -335,7 +378,7 @@ shell> pmacct -c src_host,dst_host -N "10.0.0.10,10.0.0.1;10.0.0.9,10.0.0.1;10.0
 shell> pmacct -c src_host,dst_host -N "file:/home/paolo/queries.list"
 
 
-VII. Running the logfile players (pmmyplay and pmpgplay)
+VIII. Running the logfile players (pmmyplay and pmpgplay)
 For brevity, examples in this section will revolve around "pmmyplay" tool but the same
 are applicable to "pmpgplay". Currently, two different methods are supported as failover
 action when the RDBMS fails: logfiles or backup DB. While planning for a recovery method,
@@ -360,7 +403,7 @@ Play all elements until the end of file, starting from element number six:
 shell> pmmyplay -o 6 -f /tmp/pmacct-recovery.dat -p ohwhatanicepwrd
 
 
-VIII. Quickstart guide to packet classifiers
+IX. Quickstart guide to packet classifiers
 pmacct 0.10.0 sees the introduction of a packet classification feature. The approach
 is fully extensible: classification patterns are based over regular expressions (RE),
 must be placed into a common directory and have a .pat file extension. Patterns for
@@ -427,7 +470,7 @@ e) Ok, we are done! Fire the pmacct collector daemon:
    values; get the time to take a read about them in the CONFIG-KEYS document.
 
 
-IX. Quickstart guide to setup a NetFlow agent/probe
+X. Quickstart guide to setup a NetFlow agent/probe
 pmacct 0.11.0 sees the introduction of traffic data export capabilities, through both
 NetFlow and sFlow protocols. While NetFlow v5 is fixed by nature, v9 adds flexibility
 by allowing to transport custom informations (for example, L7-classification tags to a
@@ -541,7 +584,7 @@ d) Ok, we are done ! Now fire both daemons:
    shell b> nfacctd -f /path/to/configuration/nfacctd-memory.conf
 
 
-X. Quickstart guide to setup a sFlow agent/probe
+XI. Quickstart guide to setup a sFlow agent/probe
 pmacct 0.11.0 sees the introduction of traffic data export capabilities via sFlow; such
 protocol is quite different from NetFlow: in short, it works by exporting portions of
 sampled packets rather than building uni-directional flows as it happens in NetFlow;
@@ -565,7 +608,7 @@ sfprobe_receiver: 1.2.3.4:6343
 !...
 
 
-XI. Quickstart guide to setup the BGP daemon
+XII. Quickstart guide to setup the BGP daemon
 pmacct 0.12.0 integrates a BGP daemon feature to nfacctd and sfacctd, respectively the
 NetFlow and sFlow collectors. Such daemon is run as a thread within the collector's
 core process. The idea is to receive both (ingress) NetFlow (or sFlow) traffic samples
@@ -603,7 +646,7 @@ hence will never try to re-establish a fallen peering session.
 For debugging purposes related to the BGP feed(s), the bgp_daemon_msglog configuration
 directive can be enabled in order to log UPDATE and WITHDRAW BGP events.
 
-XIa. Limiting AS-PATH and BGP community attributes length
+XIIa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.
 Sometimes only a small portion of their content is relevant to the accounting task and
 hence a filtering layer was developed to take special care of these attributes. The
@@ -619,7 +662,7 @@ bgp_stdcomm_pattern: 12345:
 A detailed description of these configuration directives is, as usual, included in
 the CONFIG-KEYS document. 
 
-XIb. The source peer AS case 
+XIIb. The source peer AS case 
 The peer_src_as primitive adds useful insight in understanding where traffic enters
 the observed routing domain; but asymmetric routing impacts accuracy delivered by
 devices configured with either NetFlow or sFlow and the peer-as feature (as it only
@@ -655,7 +698,7 @@ NOTES:
   highlighed in this paragraph apply to these aswell. Check CONFIG-KEYS out for the
   src_[med|local_pref|as_path|std_comm|ext_comm]_[type|map] configuration directives.
 
-XIc. Tracking entities on the own IP address space
+XIIc. Tracking entities on the own IP address space
 It might happen that not all entities attached to the service provider network are
 speaking BGP but rather they get IP prefixes redistributed into iBGP (different
 routing protocols, statics, directly connected, etc.). These can be private IP
@@ -671,7 +714,7 @@ this directive allows to map the community to a peer AS/origin AS couple as per 
 following example: XXXXX:YYYYY => Peer-AS=XXXXX, Origin-AS=YYYYY. 
 
 
-XId. Preparing the router to BGP peer 
+XIId. Preparing the router to BGP peer 
 Once the collector is configured and started up the remaining step is to let routers
 to export traffic samples to the collector and BGP peer with it. Configuring the same
 source IP address across both NetFlow and BGP features allows the pmacct collector to
@@ -720,7 +763,7 @@ protocols bgp {
     }
 }
 
-XIe. A working configuration example writing to a MySQL database
+XIIe. A working configuration example writing to a MySQL database
 The following setup is a realistic example for a MPLS-enabled IP carrier network
 divided in multiple BGP clusters. Samples are aggregated in a way which is suitable
 to get an overview of traffic trajectories, collecting much information where these
@@ -807,7 +850,7 @@ create table acct_bgp_1hr (
         INDEX ...
 ) TYPE=MyISAM AUTO_INCREMENT=1;
 
-XIf. BGP daemon implementation concluding notes
+XIIf. BGP daemon implementation concluding notes
 The implementation supports both 4-bytes ASN and IPv6 (MP-BGP); IPv6 peers are not
 supported yet though. When storing data via SQL, BGP primitives can be freely mix-
 and-matched with other primitives (ie. L2/L3/L4) when customizing the SQL table
@@ -818,7 +861,7 @@ on the radar. For a review of all the configurable knobs and features see the
 CONFIG-KEYS document. 
 
 
-XII. Quickstart guide to setup a NetFlow/sFlow replicator
+XIII. Quickstart guide to setup a NetFlow/sFlow replicator
 pmacct 0.12 (>= 0.12.2) includes a new 'tee' plugin which is meant to replicate
 NetFlow/sFlow data to N remote collectors. The plugin can also act transparently
 by preserving the original IP address of the datagrams.

@@ -107,19 +107,17 @@ VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe | tee ]
 DESC:		plugins to be enabled. SQL plugins are available only if configured and compiled.
 		'memory' enables the use of a memory table as backend; then, a client tool, 'pmacct',
 		can fetch its content; mysql, pgsql and sqlite3 enable the use of respectively MySQL,
-		PostgreSQL and SQLite 3.x tables to store data. 'print' prints aggregates to stdout
-		in a nicely formatted way. 'nfprobe' acts as a NetFlow agent and exports collected
-		data via NetFlow v1/v5/v9 and IPFIX datagrams to a remote collector. 'sfprobe' acts
-		as a sFlow agent and exports collected data via sFlow v5 datagrams to a remote collector.
-		Both 'nfprobe' and 'sfprobe' apply only to 'pmacctd' and 'uacctd' daemons. 'tee' acts
-		as a replicator for NetFlow/sFlow data (also transparent); it applies to 'nfacctd' and
-		'sfacctd' daemons only.
-		Plugins can be either anonymous or named; configuration directives can be either
-		global or bounded to a specific named plugin. An anonymous plugin is declared as
-		'plugins: mysql' whereas a named plugin is declared as 'plugins: mysql[name]'. Then,
-		directives can be bound to such named plugin as: 'directive[name]: value'.
-		Note that currently 'nfprobe' and 'sfprobe' are intended to work only as agents which
-		collect, process and export data and not as transparent reflectors. (default: memory) 
+		PostgreSQL and SQLite 3.x (or BerkeleyDB 5.x with the SQLite API compiled-in) tables
+		to store data. 'print' prints aggregates to stdout in a nicely formatted way. 'nfprobe'
+		acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v1/v5/v9 and IPFIX
+		datagrams to a remote collector. 'sfprobe' acts as a sFlow agent and exports collected
+		data via sFlow v5 datagrams to a remote collector. Both 'nfprobe' and 'sfprobe' apply
+		only to 'pmacctd' and 'uacctd' daemons. 'tee' acts as a replicator for NetFlow/IPFIX/
+		sFlow data (also transparent); it applies to 'nfacctd' and 'sfacctd' daemons only.
+		Plugins can be either anonymous or named; configuration directives can be either global
+		or bound to a specific named plugin. An anonymous plugin is declared as 'plugins: mysql'
+		whereas a named plugin is declared as 'plugins: mysql[name]'. Then, directives can be
+		bound to such named plugin as: 'directive[name]: value'. (default: memory) 
 
 KEY:		plugin_pipe_size
 DESC:		Core process and active plugins are encapsulated into different OS processes.
