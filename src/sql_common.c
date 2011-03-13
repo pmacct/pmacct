@@ -2069,7 +2069,7 @@ FILE *sql_file_open(const char *path, const char *mode, const struct insert_data
       else {
         struct tm *nowtm;
 
-        nowtm = localtime(&idata->basetime);
+        nowtm = localtime(&idata->new_basetime);
         strftime(lh.sql_table, DEF_HDR_FIELD_LEN, config.sql_table, nowtm);
       }
       strlcpy(lh.sql_user, config.sql_user, DEF_HDR_FIELD_LEN);
@@ -2134,7 +2134,7 @@ void sql_create_table(struct DBdesc *db, struct insert_data *idata)
 
   ret = read_SQLquery_from_file(config.sql_table_schema, tmpbuf, LARGEBUFLEN);
   if (ret) {
-    nowtm = localtime(&idata->basetime);
+    nowtm = localtime(&idata->new_basetime);
     strftime(buf, LARGEBUFLEN, tmpbuf, nowtm);
     (*sqlfunc_cbr.create_table)(db, buf);
   }

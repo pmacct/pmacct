@@ -421,10 +421,12 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   /* We check for variable substitution in SQL table */ 
   if (idata->dyn_table) {
     char tmpbuf[LONGLONGSRVBUFLEN];
+    time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
 
-    strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &idata->basetime);
-    strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &idata->basetime);
-    strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &idata->basetime);
+    strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
+    strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
+    strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
+
     if (config.sql_table_schema && idata->new_basetime) sql_create_table(bed.p, idata);
   }
   // strncat(update_clause, set_clause, SPACELEFT(update_clause));

@@ -281,11 +281,16 @@ DESC:           defines the SQL table to use. Dynamic tables are supported throu
 
 		%Y	The year as a decimal number including the century.
 
-		Time-related variables REQUIRE 'sql_history' to be in place in order to work correctly
-		(refer also to their entry in this document for further information). Moreover, if the
-		'sql_table_schema' directive is not specified, tables are expected to be already in place.
-		Let's proceed with an example to split accounted data among multiple tables basing on
-		the day of the week:
+		Time-related variables require 'sql_history' to be specified in order to work correctly
+		(see 'sql_history' entry in this in this document for further information) and that the
+		'sql_refresh_time' setting is aligned with the 'sql_history', ie.:
+
+			sql_history: 5m
+			sql_refresh_time: 300
+
+		Furthermore, if the 'sql_table_schema' directive is not specified, tables are expected
+		to be already in place. This is an example on how to split accounted data among multiple
+		tables basing on the day of the week:
 
 			sql_history: 1h
 			sql_history_roundoff: h
@@ -297,9 +302,7 @@ DESC:           defines the SQL table to use. Dynamic tables are supported throu
 		midnight: this behaviour is ensured by the use of the 'sql_history_roundoff' directive. 
 
 		The maximum table name length is 64 characters. The maximum number of variables it may
-		contain is 8. It's also useful to notice that selecting a 'sql_history' value which is
-		divisible by 'sql_refresh_time' helps in a more precise split of the entries among the
-		tables. 
+		contain is 8.
 
 KEY:		sql_table_schema
 DESC:		full pathname to a file containing a SQL table schema. It allows to create the SQL table
