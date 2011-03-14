@@ -401,47 +401,58 @@ void skinny_bgp_daemon()
  				   * some we are forced to support (ie. MP-BGP or 4-bytes AS support)
  				   */
 				  if (opt_type == BGP_OPTION_CAPABILITY) {
+				    char *optcap_ptr;
+				    int optcap_len;
+
 				    bgp_open_cap_ptr = ptr;
 				    ptr += 2;
-				    len -=2;
+				    len -= 2;
+				    optcap_ptr = ptr;
+				    optcap_len = len;
 
-				    cap_type = (u_int8_t) ptr[0];
-				    if (cap_type == BGP_CAPABILITY_MULTIPROTOCOL) {
-					  char *cap_ptr = ptr+2;
-					  struct capability_mp_data cap_data;
+				    while (optcap_len > 0) {
+				      u_int8_t cap_len = optcap_ptr[1];
+				      u_int8_t cap_type = optcap_ptr[0];
+				     
+				      if (cap_type == BGP_CAPABILITY_MULTIPROTOCOL) {
+				  	char *cap_ptr = optcap_ptr+2;
+				  	struct capability_mp_data cap_data;
+
+				  	memcpy(&cap_data, cap_ptr, sizeof(cap_data));
+					  
+				  	Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+						cap_type, ntohs(cap_data.afi), cap_data.safi);
+				  	peer->cap_mp = TRUE;
+				  	memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
+				  	bgp_open_cap_reply_ptr += opt_len+2;
+				      }
+				      else if (cap_type == BGP_CAPABILITY_4_OCTET_AS_NUMBER) {
+					char *cap_ptr = optcap_ptr+2;
+					u_int32_t as4_ptr;
+
+				   	if (cap_len == CAPABILITY_CODE_AS4_LEN) {
+					  struct capability_as4 cap_data;
 
 					  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
-					  
-					  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
-							cap_type, ntohs(cap_data.afi), cap_data.safi);
-					  peer->cap_mp = TRUE;
+
+					  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
+					    cap_type, ntohl(cap_data.as4));
+					  memcpy(&as4_ptr, cap_ptr, 4);
+					  remote_as4 = ntohl(as4_ptr);
 					  memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
+					  peer->cap_4as = bgp_open_cap_reply_ptr+4;
 					  bgp_open_cap_reply_ptr += opt_len+2;
-				    }
-				    else if (cap_type == BGP_CAPABILITY_4_OCTET_AS_NUMBER) {
-					  u_int32_t as4_ptr;
-					  u_int8_t cap_len = ptr[1];
-					  char *cap_ptr = ptr+2;
+					}
+					else {
+					  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
+					  FD_CLR(peer->fd, &bkp_read_descs);
+					  bgp_peer_close(peer);
+					  goto select_again;
+					}
+				      }
 
-				   	  if (cap_len == CAPABILITY_CODE_AS4_LEN && cap_len == (opt_len-2)) {
-						struct capability_as4 cap_data;
-
-						memcpy(&cap_data, cap_ptr, sizeof(cap_data));
-
-						Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
-							cap_type, ntohl(cap_data.as4));
-						memcpy(&as4_ptr, cap_ptr, 4);
-						remote_as4 = ntohl(as4_ptr);
-						memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
-						peer->cap_4as = bgp_open_cap_reply_ptr+4;
-						bgp_open_cap_reply_ptr += opt_len+2;
-					  }
-					  else {
-					    Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
-						FD_CLR(peer->fd, &bkp_read_descs);
-						bgp_peer_close(peer);
-						goto select_again;
-					  }
+				      optcap_ptr += cap_len+2;
+				      optcap_len -= cap_len+2;
 				    }
 				  }
 				  else {
