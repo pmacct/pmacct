@@ -1,6 +1,42 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.0rc1
 pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 
+0.14.0rc1 -- 31-03-2011
+  + IPFIX (IETF IP Flow Information Export protocol) replication and
+    collector capabilities have been introduced as part of nfacctd, the
+    NetFlow accounting daemon of the pmacct package. 
+  + nfprobe plugin: initial IPFIX export implementation. This is called
+    via a 'nfprobe_version: 10' configuration directive. pmacctd, the
+    promiscuous mode accounting daemon, and uacctd, the ULOG accounting
+    daemon, both part of the pmacct package are now supported.
+  + Oracle's BrekeleyDB 11gR2 offers a perfect combination of technologies
+    by including an SQL API that is fully compatible with SQLite. As a
+    result pmacct now opens to BerkeleyDB 5.x via its SQLite3 plugin.
+  + sfacctd: BGP-related traffic primitives (AS Path, local preference,
+    communities, etc.) are now read from sFlow Extended Gateway object if
+    sfacctd_as_new is set to false (default).
+  + nfacctd, sfacctd: source and destination peer ASNs are now read from
+    NetFlow or sFlow data if [ns]facctd_as_new is set to false (default). 
+  + nfacctd: introduced support for NetFlow v9/IPFIX source and destination
+    peer ASN field types 128 and 129. The support is enabled at runtime by
+    setting to 'false' (default) the 'nfacctd_as_new' directive. 
+  + sfacctd: f_agent now points sFlow Agent ID instead of source IP address;
+    among the other things, this allows to compare BGP source IP address/BGP
+    Router-ID against the sFlow Agent ID.
+  + PostgreSQL plugin: 'sql_delimiter' config directive being introduced:
+    if sql_use_copy is true, uses the supplied character as delimiter.Useful
+    in cases where the default delimiter is part of any of the supplied
+    strings.
+  ! fix, MySQL/PostgreSQL/SQLite3 plugins: insert of data into the database
+    can get arbitrarily delayed under low traffic conditions. Many Thanks
+    to Elisa Jasinska and Brent Van Dussen for their great support in solving
+    the issue. 
+  ! fix, BGP daemon: multiple BGP capabilities per capability announcement
+    were not supported - breaking compliancy with RFC5492. The issue was
+    only verified against a OpenBGPd speaker. Patch is courtesy of Manuel
+    Guesdon.
+  ! fix, initial effort made to document uacctd, the ULOG accounting daemon
+
 0.12.5 -- 28-12-2010
   + nfacctd: introduced support for NAT L3/L4 field values via xlate_src
     and xlate_dst configuration directives. Implementation follows IPFIX

@@ -641,13 +641,14 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp ]
-DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as' and 'dst_as' from data within
-		the NetFlow and sFlow datagram respectively; when 'true' ('file' being an alias of 'true')
-		it instructs [nf|sf]acctd to generate ASNs by looking up source and destination IP addresses
-		against a 'networks_file' map. When 'bgp' is specified, ASNs are looked up against the BGP
-		RIB of the peer from which the NetFlow datagram was received. If not otherwise mapped via a
-		bgp_agent_map directive, the assumption is: BGP Source IP address equals to the sFlow/NetFlow
-		source IP address.
+DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as', 'dst_as', 'peer_src_as' and
+		'peer_dst_as' from data within the NetFlow and sFlow datagram respectively; when 'true' ('file'
+		being an alias of 'true') it instructs [nf|sf]acctd to generate 'src_as' aand 'dst_as' (only!
+		ie. no peer-AS) ASNs by looking up source and destination IP addresses against a 'networks_file'
+		map. When 'bgp' is specified, ASNs are looked up against the BGP RIB of the peer from which the
+		NetFlow datagram was received. If not otherwise mapped via a bgp_agent_map directive, it is
+		assumed that: either BGP Source IP address or BGP RouterID equals to the sFlow/NetFlow source
+		IP address.
 		pmacctd and uacctd can't grasp ASNs from any protocol: 'false' (for backward compatibility),
 		'true' and 'file' expect a 'networks_file' to be defined. 'bgp' just works as described above.
 		Under nfacctd and sfacctd this feature also influences 'peer_src_ip' and 'peer_dst_ip': if

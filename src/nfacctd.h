@@ -481,6 +481,8 @@
 	#define NF9_FLOW_BYTES			85 
 	#define NF9_FLOW_PACKETS		86 
 	/* ... */
+	#define NF9_PEER_SRC_AS			128
+	#define NF9_PEER_DST_AS			129
 	#define NF9_EXPORTER_IPV4_ADDRESS	130
 	#define NF9_EXPORTER_IPV6_ADDRESS	131
 	/* ... */
