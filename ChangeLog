@@ -27,6 +27,9 @@ pmacct is Copyright (C) 2003-2011 by Paolo Lucente
     if sql_use_copy is true, uses the supplied character as delimiter.Useful
     in cases where the default delimiter is part of any of the supplied
     strings.
+  + pmacct client: introduced support for Comma-Separated Values (CSV) output
+    in addition to formatted-text. A -O commandline switch allows to enable
+    the feature.
   ! fix, MySQL/PostgreSQL/SQLite3 plugins: insert of data into the database
     can get arbitrarily delayed under low traffic conditions. Many Thanks
     to Elisa Jasinska and Brent Van Dussen for their great support in solving
