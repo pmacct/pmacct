@@ -385,7 +385,7 @@ int build_query_client(char *path_ptr)
   if (rc < 0) {
     if (errno == ECONNREFUSED) {
       printf("INFO: Connection refused while trying to connect to '%s'\n\n", path_ptr);
-      exit(0);
+      exit(1);
     }
     else {
       printf("ERROR: Unable to connect to '%s'\n\n", path_ptr);
