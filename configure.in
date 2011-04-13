@@ -22,10 +22,10 @@ AC_PROG_RANLIB
 dnl initial checks; tweakings to CFLAGS and LDFLAGS
 dnl see final checks for tweakings to LIBS
 if test "x$ac_cv_prog_gcc" = xyes ; then
-  CFLAGS="-O2"
+  CFLAGS="-O2 ${CFLAGS}"
   case "$host_os" in
     IRIX*)
-      CFLAGS="-mabi=n32 -fno-builtins ${CFLAGS}"
+      CFLAGS="-mabi=n32 -fno-builtins"
       LDFLAGS="-mabi=n32 -Wl,-rpath,/usr/lib32 ${LDFLAGS}"
       ;;
   esac
@@ -36,7 +36,7 @@ else
       LDFLAGS="-n32 -L/usr/lib32 -L/usr/freeware/lib32 ${LDFLAGS}"
       ;;
     OSF*)
-      CFLAGS="-O -assume noaligned_objects"
+      CFLAGS="-O -assume noaligned_objects ${CFLAGS}"
       ;;
   esac
 fi
