@@ -319,9 +319,15 @@ void skinny_bgp_daemon()
 
 	  peer->buf.len += peer->buf.truncated_len+peer->msglen;
 	  newptr = malloc(peer->buf.len);
-	  memcpy(newptr, peer->buf.base, peer->buf.truncated_len);
-	  free(peer->buf.base);
-	  peer->buf.base = newptr;
+	  if (newptr) {
+	    memcpy(newptr, peer->buf.base, peer->buf.truncated_len);
+	    free(peer->buf.base);
+	    peer->buf.base = newptr;
+	  }
+          else {
+            Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (newptr). Exiting ..\n");
+            exit_all(1);
+          }
 	}
 	memcpy(peer->buf.base+peer->buf.truncated_len, bgp_packet, peer->msglen);
 	peer->msglen += peer->buf.truncated_len;
@@ -345,10 +351,23 @@ void skinny_bgp_daemon()
 	/* BGP payload fragmentation check */
 	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr.bgpo_len)) {
 	  peer->buf.truncated_len = peer->msglen;
-	  if (bgp_packet_ptr != peer->buf.base)
-	    memcpy(peer->buf.base, bgp_packet_ptr, peer->buf.truncated_len);
-	    // goto bgp_recv;
-	    goto select_again;
+	  if (bgp_packet_ptr != peer->buf.base) {
+	    char *aux_buf;
+
+	    aux_buf = malloc(peer->buf.truncated_len);
+	    if (aux_buf) {
+	      memcpy(aux_buf, bgp_packet_ptr, peer->buf.truncated_len);
+	      memcpy(peer->buf.base, aux_buf, peer->buf.truncated_len);
+	      free(aux_buf);
+	    }
+	    else {
+              Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (aux_buf). Exiting ..\n");
+	      exit_all(1);
+	    } 
+	  }
+
+	  // goto bgp_recv;
+	  goto select_again;
 	  }
 
 	  if (!bgp_marker_check(&bhdr, BGP_MARKER_SIZE)) {
