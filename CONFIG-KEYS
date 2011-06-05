@@ -301,6 +301,10 @@ DESC:           defines the SQL table to use. Dynamic tables are supported throu
 		the 'acct_v4_1' table, and so on. The switch between the tables will happen each day at
 		midnight: this behaviour is ensured by the use of the 'sql_history_roundoff' directive. 
 
+		Ideally sql_refresh_time and sql_history values should be aligned for the dynamic tables
+		to work; sql_refresh_time with a value smaller than sql_history is also supported; whereas
+		the feature does not support values of sql_refresh_time greater than sql_history.
+
 		The maximum table name length is 64 characters. The maximum number of variables it may
 		contain is 8.
 

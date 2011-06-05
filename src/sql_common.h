@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -279,7 +279,7 @@ EXT int sql_query(struct BE_descs *, struct db_cache *, struct insert_data *);
 EXT void sql_exit_gracefully(int);
 EXT int sql_evaluate_primitives(int);
 EXT FILE *sql_file_open(const char *, const char *, const struct insert_data *);
-EXT void sql_create_table(struct DBdesc *, struct insert_data *);
+EXT void sql_create_table(struct DBdesc *, time_t *);
 EXT void sql_invalidate_shadow_entries(struct db_cache *[], int *);
 EXT int sql_select_locking_style(char *);
 EXT int sql_compose_static_set(int); 

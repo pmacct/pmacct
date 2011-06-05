@@ -2000,7 +2000,11 @@ int sql_query(struct BE_descs *bed, struct db_cache *elem, struct insert_data *i
     if (!bed->b->fail) {
       if (!bed->b->connected) {
         (*sqlfunc_cbr.connect)(bed->b, config.sql_backup_host);
-        if (config.sql_table_schema && idata->new_basetime) sql_create_table(bed->b, idata);
+        if (config.sql_table_schema) {
+	  time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
+
+	  sql_create_table(bed->b, &stamp);
+	}
         (*sqlfunc_cbr.lock)(bed->b);
       }
       if (!bed->b->fail) {
@@ -2126,7 +2130,7 @@ FILE *sql_file_open(const char *path, const char *mode, const struct insert_data
   return NULL;
 }
 
-void sql_create_table(struct DBdesc *db, struct insert_data *idata)
+void sql_create_table(struct DBdesc *db, time_t *basetime)
 {
   struct tm *nowtm;
   char buf[LARGEBUFLEN], tmpbuf[LARGEBUFLEN];
@@ -2134,7 +2138,7 @@ void sql_create_table(struct DBdesc *db, struct insert_data *idata)
 
   ret = read_SQLquery_from_file(config.sql_table_schema, tmpbuf, LARGEBUFLEN);
   if (ret) {
-    nowtm = localtime(&idata->new_basetime);
+    nowtm = localtime(basetime);
     strftime(buf, LARGEBUFLEN, tmpbuf, nowtm);
     (*sqlfunc_cbr.create_table)(db, buf);
   }

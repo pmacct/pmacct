@@ -440,7 +440,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
-    if (config.sql_table_schema && idata->new_basetime) sql_create_table(bed.p, idata);
+    if (config.sql_table_schema) sql_create_table(bed.p, &stamp);
   }
 
   if (idata->locks == PM_LOCK_EXCLUSIVE) (*sqlfunc_cbr.lock)(bed.p); 

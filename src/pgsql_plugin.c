@@ -445,7 +445,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
 
-    if (config.sql_table_schema && idata->new_basetime) sql_create_table(bed.p, idata); 
+    if (config.sql_table_schema) sql_create_table(bed.p, &stamp); 
   }
   // strncat(update_clause, set_clause, SPACELEFT(update_clause));
 
