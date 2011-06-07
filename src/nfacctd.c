@@ -1127,10 +1127,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       while (flowoff+tpl->len <= flowsetlen) {
 	/* Is this option about sampling? */
-	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
+	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1 || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
 	  u_int8_t sampler_id = 0;
 
-	  memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
+	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id);
 	  if (!sentry) sentry = create_smp_entry_status_table(entry);
