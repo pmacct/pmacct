@@ -68,6 +68,7 @@ void usage_daemon(char *prog_name)
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -L  \tSet snapshot length\n");
+  printf("  -u  \tLeave IP protocols in numerical format\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -186,6 +187,10 @@ int main(int argc,char **argv, char **envp)
     case 'O':
       strlcpy(cfg_cmdline[rows], "print_output: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'u':
+      strlcpy(cfg_cmdline[rows], "print_num_protos: true", SRVBUFLEN);
       rows++;
       break;
     case 'N':

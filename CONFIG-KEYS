@@ -617,6 +617,11 @@ VALUES:		[ formatted | csv ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
 		comma-separated values format, suitable for injection into 3rd party tools. (default: formatted)
 
+KEY:            [ print_num_protos | sql_num_protos ]
+VALUES:         [true|false]
+DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
+		or left numerical. The default is to look protocol names up. (default: false)
+
 KEY:		nfacctd_port (-l) [GLOBAL, NO_PMACCTD]
 DESC:		defines the UDP port where to bind the 'nfacctd' daemon (default: 2100). 
 

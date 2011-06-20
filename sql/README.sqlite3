@@ -96,7 +96,8 @@ Similarly, BGP tables:
   * dst_port => dst_port (INT(4) NOT NULL DEFAULT 0)
     - dst_port => port_dst (INT(4) NOT NULL DEFAULT 0, if sql_table_version: 8)
   * tcpflags => tcp_flags (INT(2) NOT NULL DEFAULT 0)
-  * proto => ip_proto (INT(2) NOT NULL DEFAULT 0)
+  * proto => ip_proto (CHAR(6) NOT NULL DEFAULT ' ')
+    - proto => ip_proto (INT(2) DEFAULT 0, if sql_num_protos: true)
   * tos => tos (INT(4) NOT NULL DEFAULT 0)
 
 - Counters and time reference need always to be defined as part of the SQL schema:

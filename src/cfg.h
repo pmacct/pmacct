@@ -51,6 +51,7 @@ struct configuration {
   int flow_hashsz;
   int conntrack_bufsz;
   int flow_lifetime;
+  int num_protos;
   char *imt_plugin_path;
   char *imt_plugin_passwd;
   char *sql_db;

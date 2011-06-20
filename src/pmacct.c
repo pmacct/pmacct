@@ -72,6 +72,7 @@ void usage_client(char *prog)
   printf("  -C\tShow classifiers table\n");
   printf("  -p\t[file] \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -O\tShow output in CSV format (applies to -M and -s)\n");
+  printf("  -u\tLeave IP protocols in numerical format\n");
   printf("\n");
   printf("  See EXAMPLES file in the distribution for examples\n");
   printf("\n");
@@ -426,7 +427,7 @@ int main(int argc,char **argv)
   extern int optind, opterr, optopt;
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
-  int want_output;
+  int want_output, want_ipproto_num;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   u_int64_t what_to_count, have_wtc;
   u_int32_t tmpnum;
@@ -453,6 +454,7 @@ int main(int argc,char **argv)
   want_all_fields = FALSE;
   want_reset = FALSE;
   want_class_table = FALSE;
+  want_ipproto_num = FALSE;
   which_counter = FALSE;
   topN_counter = FALSE;
   sum_counters = FALSE;
@@ -720,6 +722,9 @@ int main(int argc,char **argv)
     case 'O':
       want_output = PRINT_OUTPUT_CSV;
       break;
+    case 'u':
+      want_ipproto_num = TRUE;
+      break;
     default:
       printf("ERROR: parameter %c unknown! \n  Exiting...\n\n", cp);
       usage_client(argv[0]);
@@ -972,18 +977,27 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "proto")) {
 	  int proto;
 
-	  for (index = 0; _protocols[index].number != -1; index++) { 
-	    if (!strcmp(_protocols[index].name, match_string_token)) {
-	      proto = _protocols[index].number;
-	      break;
+	  if (!want_ipproto_num) {
+	    for (index = 0; _protocols[index].number != -1; index++) { 
+	      if (!strcmp(_protocols[index].name, match_string_token)) {
+	        proto = _protocols[index].number;
+	        break;
+	      }
+	    }
+	    if (proto <= 0) {
+	      proto = atoi(match_string_token);
+	      if ((proto <= 0) || (proto > 255)) {
+	        printf("ERROR: invalid protocol: '%s'\n", match_string_token);
+	        exit(1);
+	      }
 	    }
 	  }
-	  if (proto <= 0) {
-	    proto = atoi(match_string_token);
-	    if ((proto <= 0) || (proto > 255)) {
-	      printf("ERROR: invalid protocol: '%s'\n", match_string_token);
-	      exit(1);
-	    }
+	  else {
+	    proto = atoi(match_string_token); 
+            if ((proto <= 0) || (proto > 255)) {
+              printf("ERROR: invalid protocol: '%s'\n", match_string_token);
+              exit(1);
+            }
 	  }
 	  request.data.proto = proto;
         }
@@ -1583,12 +1597,12 @@ int main(int argc,char **argv)
 	}
 
 	if (!have_wtc || (what_to_count & COUNT_IP_PROTO)) {
-	  if (acc_elem->primitives.proto < protocols_number) {
+	  if (acc_elem->primitives.proto < protocols_number && !want_ipproto_num) {
 	    if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10s  ", _protocols[acc_elem->primitives.proto].name);
 	    else if (want_output == PRINT_OUTPUT_CSV) printf("%s,", _protocols[acc_elem->primitives.proto].name);
 	  }
 	  else {
-	    if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-3u  ", acc_elem->primitives.proto);
+	    if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10u  ", acc_elem->primitives.proto);
 	    else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.proto);
 	  }
 	}

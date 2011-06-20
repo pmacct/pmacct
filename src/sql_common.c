@@ -1622,7 +1622,7 @@ int sql_evaluate_primitives(int primitive)
         strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
       }
       strncat(insert_clause, "ip_proto", SPACELEFT(insert_clause));
-      if (!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) {
+      if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && !config.num_protos) {
         strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
         strncat(where[primitive].string, "ip_proto=\'%s\'", SPACELEFT(where[primitive].string));
         values[primitive].handler = where[primitive].handler = MY_count_ip_proto_handler;

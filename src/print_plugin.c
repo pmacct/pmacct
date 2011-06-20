@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -525,7 +525,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       printf("%-5u     ", data->src_port);
       printf("%-5u     ", data->dst_port);
       printf("%-3u        ", queue[j]->tcp_flags);
-      printf("%-10s  ", _protocols[data->proto].name);
+
+      if (!config.num_protos) printf("%-10s  ", _protocols[data->proto].name);
+      else  printf("%-10d  ", _protocols[data->proto].number);
+
       printf("%-3u    ", data->tos);
 #if defined HAVE_64BIT_COUNTERS
       printf("%-20llu  ", queue[j]->packet_counter);
@@ -585,7 +588,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       printf("%u,", data->src_port);
       printf("%u,", data->dst_port);
       printf("%u,", queue[j]->tcp_flags);
-      printf("%s,", _protocols[data->proto].name);
+
+      if (!config.num_protos) printf("%s,", _protocols[data->proto].name);
+      else printf("%d,", _protocols[data->proto].number);
+
       printf("%u,", data->tos);
 #if defined HAVE_64BIT_COUNTERS
       printf("%llu,", queue[j]->packet_counter);
