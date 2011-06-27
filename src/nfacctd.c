@@ -1126,18 +1126,22 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       off += flowsetlen;
     }
     else if (tpl->template_type == 1) { /* Options coming */
-      struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
-      struct xflow_status_entry_sampling *sentry = NULL, *ssaved = NULL;
-      struct xflow_status_entry_class *centry = NULL, *csaved = NULL;
+      struct xflow_status_entry *entry;
+      struct xflow_status_entry_sampling *sentry, *ssaved;
+      struct xflow_status_entry_class *centry, *csaved;
 
       while (flowoff+tpl->len <= flowsetlen) {
+	entry = (struct xflow_status_entry *) pptrs->f_status;
+	sentry = NULL, ssaved = NULL;
+	centry = NULL, csaved = NULL;
+
 	/* Is this option about sampling? */
 	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1 || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
 	  u_int8_t sampler_id = 0;
 
 	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
 
-	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
 	  if (!sentry) sentry = create_smp_entry_status_table(entry);
 	  else ssaved = sentry->next;
 

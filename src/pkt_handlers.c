@@ -2323,7 +2323,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   case 9:
     if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len) {
       memcpy(&sampler_id, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, MIN(tpl->tpl[NF9_FLOW_SAMPLER_ID].len, 1));
-      if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id);
+      if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, TRUE);
       if (sentry) {
         pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
         pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;
