@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -839,9 +839,39 @@ void reset_shadow_status(struct packet_ptrs_vector *pptrsv)
 #endif
 }
 
+void reset_renormalize_status(struct packet_ptrs_vector *pptrsv)
+{
+  pptrsv->v4.renormalized = FALSE;
+  pptrsv->vlan4.renormalized = FALSE;
+  pptrsv->mpls4.renormalized  = FALSE;
+  pptrsv->vlanmpls4.renormalized = FALSE;
+
+#if defined ENABLE_IPV6
+  pptrsv->v6.renormalized = FALSE;
+  pptrsv->vlan6.renormalized = FALSE;
+  pptrsv->mpls6.renormalized = FALSE;
+  pptrsv->vlanmpls6.renormalized = FALSE;
+#endif
+}
+
 void set_shadow_status(struct packet_ptrs *pptrs)
 {
   pptrs->shadow = TRUE;
+}
+
+void set_sampling_table(struct packet_ptrs_vector *pptrsv, u_char *t)
+{
+  pptrsv->v4.sampling_table = t;
+  pptrsv->vlan4.sampling_table = t;
+  pptrsv->mpls4.sampling_table = t;
+  pptrsv->vlanmpls4.sampling_table = t;
+
+#if defined ENABLE_IPV6
+  pptrsv->v6.sampling_table = t;
+  pptrsv->vlan6.sampling_table = t;
+  pptrsv->mpls6.sampling_table = t;
+  pptrsv->vlanmpls6.sampling_table = t;
+#endif
 }
 
 struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *pptrs)

@@ -763,3 +763,12 @@ int main(int argc,char **argv, char **envp)
     device.active = FALSE;
   }
 }
+
+/* Dummy objects here - ugly to see but well portable */
+void NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
+}
+
+void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
+}

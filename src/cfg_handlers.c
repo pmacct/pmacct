@@ -1611,6 +1611,17 @@ int cfg_key_sampling_rate(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sampling_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sampling_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sampling_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_port(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

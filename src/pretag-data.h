@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -73,5 +73,13 @@ const struct _map_dictionary_line bpas_map_dictionary[] = {
 const struct _map_dictionary_line bta_map_dictionary[] = {
   {"id", PT_map_id_handler},
   {"ip", PT_map_ip_handler},
+  {"", NULL}
+};
+
+const struct _map_dictionary_line sampling_map_dictionary[] = {
+  {"id", PT_map_id_handler},
+  {"ip", PT_map_ip_handler},
+  {"in", PT_map_input_handler},
+  {"out", PT_map_output_handler},
   {"", NULL}
 };

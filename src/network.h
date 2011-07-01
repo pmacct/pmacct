@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -248,6 +248,7 @@ struct packet_ptrs {
   u_char *bmed_table; /* ptr to bgp_src_med table map */
   u_char *biss_table; /* ptr to bgp_is_symmetric table map */
   u_char *bta_table; /* ptr to bgp_to_agent table map */
+  u_char *sampling_table; /* ptr to sampling_map table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
   u_int16_t l3_proto; /* layer-3 protocol: IPv4, IPv6 */
@@ -260,6 +261,7 @@ struct packet_ptrs {
   pm_id_t bmed; /* bgp_src_med */
   pm_id_t biss; /* bgp_is_symmetric */
   pm_id_t bta; /* bgp_to_agent */
+  pm_id_t st; /* sampling_map */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
   char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 
   char *bgp_src_info; /* pointer to bgp_info structure for source prefix, if any */  
@@ -284,6 +286,7 @@ struct packet_ptrs {
   u_int8_t tun_layer; /* tunnelling layer count */
   u_int32_t seqno; /* sFlow/NetFlow sequence number */
   u_int16_t f_len; /* sFlow/NetFlow payload length */
+  u_int8_t renormalized; /* Is it renormalized yet ? */
 };
 
 struct host_addr {

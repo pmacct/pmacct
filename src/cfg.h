@@ -156,6 +156,7 @@ struct configuration {
   pm_id_t post_tag;
   int ext_sampling_rate;
   int sampling_rate;
+  char *sampling_map;
   char *syslog;
   int debug;
   int snaplen;

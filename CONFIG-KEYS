@@ -753,6 +753,15 @@ DESC:		enables packet sampling. It expects a number which is the mean ratio of p
 		methods). Finally, note that this 'sampling_rate' directive can be renormalized by using the 
 		'usrf' action of the 'sql_preprocess' layer. (default: no sampling)
 
+KEY:            sampling_map [GLOBAL, NO_PMACCTD, NO_UACCTD]
+DESC:           full pathname to a file containing traffic sampling mappings. It is mainly meant to be used
+		in conjunction with nfacctd and sfacctd for the purpose of fine-grained reporting of sampling
+		rates circumventing bugs and issues in router operating systems. Renormalization must be
+		enabled (nfacctd_renormalize or sfacctd_renormalize set to true) in order for the feature to
+		work. If a specific router is not defined in the map, the sampling rate advertised by the
+		router itself is applied. Take a look to the examples/ sub-tree 'sampling.map.example' for all
+		supported keys and detailed examples.
+
 KEY:		[ pmacctd_force_frag_handling | uacctd_force_frag_handling ] [GLOBAL, NO_NFACCTD]
 VALUES:		[true|false]
 DESC:		forces 'pmacctd' to join together IPv4/IPv6 fragments: 'pmacctd' does this only whether any of

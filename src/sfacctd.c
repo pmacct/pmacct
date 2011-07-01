@@ -105,6 +105,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
+  struct id_table sampling_table;
   u_int32_t idx;
   u_int16_t ret;
   SFSample spp;
@@ -180,6 +181,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bmed_table, 0, sizeof(bmed_table));
   memset(&biss_table, 0, sizeof(biss_table));
   memset(&bta_table, 0, sizeof(bta_table));
+  memset(&sampling_table, 0, sizeof(sampling_table));
   config.acct_type = ACCT_SF;
 
   rows = 0;
@@ -508,6 +510,12 @@ int main(int argc,char **argv, char **envp)
   }
   else pptrs.v4.idtable = NULL;
 
+  if (config.sampling_map) {
+    load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
+    set_sampling_table(&pptrs, (u_char *) &sampling_table);
+  }
+  else set_sampling_table(&pptrs, NULL);
+
 #if defined ENABLE_THREADS
   /* starting the BGP thread */
   if (config.nfacctd_bgp) {
@@ -754,6 +762,7 @@ int main(int argc,char **argv, char **envp)
     spp.endp = sflow_packet + spp.rawSampleLen; 
     reset_tag_status(&pptrs);
     reset_shadow_status(&pptrs);
+    reset_renormalize_status(&pptrs);
 
     // if (ret < SFLOW_MIN_MSG_SIZE) continue; 
 
@@ -775,6 +784,10 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
       if (config.pre_tag_map)
         load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
+      if (config.sampling_map) {
+        load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
+        set_sampling_table(&pptrs, (u_char *) &sampling_table);
+      }
       reload_map = FALSE;
     }
 
@@ -2537,4 +2550,9 @@ char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
   }
 
   return (char *) entry;
+}
+
+/* Dummy objects here - ugly to see but well portable */
+void NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
 }

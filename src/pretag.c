@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -161,6 +161,21 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
 		}
+		else if (acct_type == MAP_SAMPLING) {
+                  for (dindex = 0; strcmp(sampling_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(sampling_map_dictionary[dindex].key, key)) {
+                      err = (*sampling_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+                  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s ): unknown key '%s' at line %d. Ignored.\n", filename, key, tot_lines);
+                    else Log(LOG_ERR, "Line %d ignored.\n", tot_lines);
+                    break;
+                  }
+                  key = NULL; value = NULL;
+		}
 		else {
 		  if (tee_plugins) {
                     for (dindex = 0; strcmp(tag_map_tee_dictionary[dindex].key, ""); dindex++) {
@@ -243,6 +258,21 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                 Log(LOG_ERR, "ERROR ( %s ): required key missing at line: %d. Required keys are: 'id', 'ip'.\n", filename, tot_lines);
 	    }
             else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
+              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                int j;
+
+                for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                tmp.e[tmp.num].func[j] = pretag_id_handler;
+                if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+#if defined ENABLE_IPV6
+                else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+#endif
+                tmp.num++;
+              }
+              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                Log(LOG_ERR, "ERROR ( %s ): required key missing at line: %d. Required keys are: 'id', 'ip'.\n", filename, tot_lines);
+            }
+            else if (acct_type == MAP_SAMPLING) {
               if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
                 int j;
 

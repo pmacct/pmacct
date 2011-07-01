@@ -1,0 +1,32 @@
+! 
+! Sampling map -- given at least a router IP, returns a sampling rate
+!
+! File syntax is key-based. Position of keys inside the same row (rule) is not
+! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full
+! match wins (like in firewall rules). Negative values mean negations (ie. match
+! data NOT entering interface 2: 'in=-2'); 'id' and 'ip' keys don't support
+! negative values.
+!
+! nfacctd: valid keys: id, ip, in, out
+!
+! sfacctd: valid keys: id, ip, in, out
+!
+! list of currently supported keys follows:
+!
+! 'id'			sampling rate assigned to a matching packet, flow or sample.
+!			The result is used to renormalize packet and bytes count if
+!			either of sfacctd_renormalize or nfacctd_renormalize config
+!			directive is set to true.
+! 'ip'			In nfacctd this is compared against the source IP address of
+!			the device which is originating NetFlow packets; in sfacctd
+!			this is compared against the AgentId field of received sFlow
+!			samples.
+! 'in'  		Input interface 
+! 'out' 		Output interface 
+!
+!
+! Examples:
+!
+id=1024		ip=192.168.1.1
+id=2048		ip=192.168.2.1 	in=5
+id=4096		ip=192.168.3.1 	out=3

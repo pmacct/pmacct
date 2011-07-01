@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -137,6 +137,7 @@ EXT int blp_map_allocated;
 EXT int bmed_map_allocated;
 EXT int biss_map_allocated;
 EXT int bta_map_allocated;
+EXT int sampling_map_allocated;
 EXT void (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
 #undef EXT

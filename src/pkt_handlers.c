@@ -421,6 +421,13 @@ void evaluate_packet_handlers()
 	if (config.sfacctd_renormalize) {
 	  primitives++;
 	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  else if (config.sampling_map) {
+	    channels_list[index].phandler[primitives] = NF_counters_map_renormalize_handler;
+
+	    /* Fallback to advertised sampling rate if needed */
+	    primitives++;
+	    channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
+	  }
 	  else channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
 	}
       }
@@ -429,6 +436,13 @@ void evaluate_packet_handlers()
 	if (config.sfacctd_renormalize) {
 	  primitives++;
 	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  else if (config.sampling_map) {
+	    channels_list[index].phandler[primitives] = SF_counters_map_renormalize_handler;
+
+            /* Fallback to advertised sampling rate if needed */
+            primitives++;
+            channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
+	  }
 	  else channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
 	}
       }
@@ -718,8 +732,12 @@ void counters_renormalize_handler(struct channels_list_entry *chptr, struct pack
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
+  if (pptrs->renormalized) return;
+
   pdata->pkt_len = pdata->pkt_len*config.ext_sampling_rate;
   pdata->pkt_num = pdata->pkt_num*config.ext_sampling_rate; 
+
+  pptrs->renormalized = TRUE;
 }
 
 void id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2318,6 +2336,8 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   u_int16_t srate = 0, is_sampled = 0;
   u_int8_t sampler_id = 0;
 
+  if (pptrs->renormalized) return;
+
   switch (hdr->version) {
   case 10:
   case 9:
@@ -2327,6 +2347,8 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
       if (sentry) {
         pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
         pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;
+
+	pptrs->renormalized = TRUE;
       }
     }
     break;
@@ -2339,10 +2361,28 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
     if (srate) {
       pdata->pkt_len = pdata->pkt_len * srate;
       pdata->pkt_num = pdata->pkt_num * srate;
+
+      pptrs->renormalized = TRUE;
     }
     break;
   default:
     break;
+  }
+}
+
+void NF_counters_map_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  if (pptrs->renormalized) return;
+
+  NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+
+  if (pptrs->st) {
+    pdata->pkt_len = pdata->pkt_len * pptrs->st;
+    pdata->pkt_num = pdata->pkt_num * pptrs->st;
+
+    pptrs->renormalized = TRUE;
   }
 }
 
@@ -2926,6 +2966,8 @@ void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t eff_srate = 0;
 
+  if (pptrs->renormalized) return;
+
   if (entry) sentry = search_smp_if_status_table(entry->sampling, (sample->ds_class << 24 | sample->ds_index));
   if (sentry) { 
     /* flow sequence number is strictly increasing; however we need a) to avoid
@@ -2959,6 +3001,24 @@ void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 
   pdata->pkt_len = pdata->pkt_len * sample->meanSkipCount;
   pdata->pkt_num = pdata->pkt_num * sample->meanSkipCount;
+
+  pptrs->renormalized = TRUE;
+}
+
+void SF_counters_map_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  if (pptrs->renormalized) return;
+
+  SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+
+  if (pptrs->st) {
+    pdata->pkt_len = pdata->pkt_len * pptrs->st;
+    pdata->pkt_num = pdata->pkt_num * pptrs->st;
+
+    pptrs->renormalized = TRUE;
+  }
 }
 
 void SF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

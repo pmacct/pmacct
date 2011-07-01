@@ -96,6 +96,7 @@
 #define MAP_BGP_SRC_LOCAL_PREF	102	/* bgp_src_local_pref_map */
 #define MAP_BGP_SRC_MED		103	/* bgp_src_med_map */
 #define MAP_BGP_IS_SYMMETRIC    104	/* bgp_is_symmetric_map */
+#define MAP_SAMPLING		105	/* sampling_map */
 
 /* 47 primitives currently defined */
 #define COUNT_SRC_HOST		0x0000000000000001ULL

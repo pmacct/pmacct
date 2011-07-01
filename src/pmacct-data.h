@@ -303,6 +303,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pre_tag2_filter", cfg_key_pre_tag2_filter},
   {"post_tag", cfg_key_post_tag},
   {"sampling_rate", cfg_key_sampling_rate},
+  {"sampling_map", cfg_key_sampling_map},	
   {"sfacctd_port", cfg_key_nfacctd_port},
   {"sfacctd_ip", cfg_key_nfacctd_ip},
   {"sfacctd_allow_file", cfg_key_nfacctd_allow_file},
