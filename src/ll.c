@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -118,7 +118,7 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
 
   if (*caplen < 4) {
     pptrs->iph_ptr = NULL;
-    return;
+    return 0;
   }
 
   do {
