@@ -52,6 +52,7 @@ struct configuration {
   int conntrack_bufsz;
   int flow_lifetime;
   int num_protos;
+  int num_hosts;
   char *imt_plugin_path;
   char *imt_plugin_passwd;
   char *sql_db;

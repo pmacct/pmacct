@@ -622,6 +622,15 @@ VALUES:         [true|false]
 DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
 		or left numerical. The default is to look protocol names up. (default: false)
 
+KEY:            sql_num_hosts
+VALUES:         [true|false]
+DESC:           Defines whether IP addresses should be left numerical (in network bytes ordering) or converted
+		into human-readable strings. Applies to MySQL and SQLite plugins only and assumes the INET_NTOA()
+		function is defined in the RDBMS (which for MySQL is always the case, while for SQLite it is not
+		by default). Since INET_NTOA() is used, unless redefined to some custom-made variant, this feature
+		works for IPv4 addresses only. Default setting is to convert IP addresses into strings. (default:
+		false)
+
 KEY:		nfacctd_port (-l) [GLOBAL, NO_PMACCTD]
 DESC:		defines the UDP port where to bind the 'nfacctd' daemon (default: 2100). 
 
