@@ -67,7 +67,7 @@ EXT void exit_all(int);
 EXT void exit_plugin(int);
 EXT void reset_tag_status(struct packet_ptrs_vector *);
 EXT void reset_shadow_status(struct packet_ptrs_vector *);
-EXT void reset_renormalize_status(struct packet_ptrs_vector *);
+EXT void reset_renormalize_status(struct packet_ptrs *);
 EXT void set_sampling_table(struct packet_ptrs_vector *, u_char *);
 EXT void set_shadow_status(struct packet_ptrs *);
 EXT FILE *open_logfile(char *);

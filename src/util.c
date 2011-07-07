@@ -839,19 +839,9 @@ void reset_shadow_status(struct packet_ptrs_vector *pptrsv)
 #endif
 }
 
-void reset_renormalize_status(struct packet_ptrs_vector *pptrsv)
+void reset_renormalize_status(struct packet_ptrs *pptrs)
 {
-  pptrsv->v4.renormalized = FALSE;
-  pptrsv->vlan4.renormalized = FALSE;
-  pptrsv->mpls4.renormalized  = FALSE;
-  pptrsv->vlanmpls4.renormalized = FALSE;
-
-#if defined ENABLE_IPV6
-  pptrsv->v6.renormalized = FALSE;
-  pptrsv->vlan6.renormalized = FALSE;
-  pptrsv->mpls6.renormalized = FALSE;
-  pptrsv->vlanmpls6.renormalized = FALSE;
-#endif
+  pptrs->renormalized = FALSE;
 }
 
 void set_shadow_status(struct packet_ptrs *pptrs)

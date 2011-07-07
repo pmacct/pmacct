@@ -775,7 +775,6 @@ int main(int argc,char **argv, char **envp)
       ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
       reset_tag_status(&pptrs);
       reset_shadow_status(&pptrs);
-      reset_renormalize_status(&pptrs);
     
       switch(((struct struct_header_v5 *)netflow_packet)->version) {
       case 1:
@@ -847,6 +846,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
       if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, pptrs, &pptrs->biss, NULL);
       if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+      reset_renormalize_status(pptrs);
       exec_plugins(pptrs);
       exp_v1++;           
       count--;             
@@ -901,6 +901,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
       if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, pptrs, &pptrs->biss, NULL);
       if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+      reset_renormalize_status(pptrs);
       exec_plugins(pptrs);
       exp_v5++;
       count--;
@@ -955,6 +956,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
       if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, pptrs, &pptrs->biss, NULL);
       if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+      reset_renormalize_status(pptrs);
       exec_plugins(pptrs);
       exp_v7++;
       count--;
@@ -1000,6 +1002,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
       if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, pptrs, &pptrs->biss, NULL);
       if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+      reset_renormalize_status(pptrs);
       exec_plugins(pptrs);
       exp_v8 += v8_handlers[hdr_v8->aggregation].exp_size;
       count--;
@@ -1256,6 +1259,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, pptrs, &pptrs->biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
+	  reset_renormalize_status(pptrs);
           exec_plugins(pptrs);
 	  break;
 #if defined ENABLE_IPV6
@@ -1301,6 +1305,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->v6, &pptrsv->v6.biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6, &pptrsv->v6.tag, &pptrsv->v6.tag2);
+	  reset_renormalize_status(&pptrsv->v6);
           exec_plugins(&pptrsv->v6);
 	  break;
 #endif
@@ -1348,6 +1353,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->vlan4, &pptrsv->vlan4.biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4, &pptrsv->vlan4.tag, &pptrsv->vlan4.tag2);
+	  reset_renormalize_status(&pptrsv->vlan4);
 	  exec_plugins(&pptrsv->vlan4);
 	  break;
 #if defined ENABLE_IPV6
@@ -1395,6 +1401,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->vlan6, &pptrsv->vlan6.biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6, &pptrsv->vlan6.tag, &pptrsv->vlan6.tag2);
+	  reset_renormalize_status(&pptrsv->vlan6);
 	  exec_plugins(&pptrsv->vlan6);
 	  break;
 #endif
@@ -1452,6 +1459,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->mpls4, &pptrsv->mpls4.biss, NULL);
           if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4, &pptrsv->mpls4.tag, &pptrsv->mpls4.tag2);
+	  reset_renormalize_status(&pptrsv->mpls4);
           exec_plugins(&pptrsv->mpls4);
           break;
 #if defined ENABLE_IPV6
@@ -1508,6 +1516,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->mpls6, &pptrsv->mpls6.biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6, &pptrsv->mpls6.tag, &pptrsv->mpls6.tag2);
+	  reset_renormalize_status(&pptrsv->mpls6);
 	  exec_plugins(&pptrsv->mpls6);
 	  break;
 #endif
@@ -1567,6 +1576,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.tag, &pptrsv->vlanmpls4.tag2);
+	  reset_renormalize_status(&pptrsv->vlanmpls4);
 	  exec_plugins(&pptrsv->vlanmpls4);
 	  break;
 #if defined ENABLE_IPV6
@@ -1625,6 +1635,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
 	  if (config.nfacctd_bgp_is_symmetric_map) NF_find_id((struct id_table *)pptrs->biss_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.biss, NULL);
 	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.tag, &pptrsv->vlanmpls6.tag2);
+	  reset_renormalize_status(&pptrsv->vlanmpls6);
 	  exec_plugins(&pptrsv->vlanmpls6);
 	  break;
 #endif
@@ -1854,6 +1865,7 @@ void NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 
           if (t->e[x].jeq.ptr) {
 	    if (t->e[x].ret) {
+	      reset_renormalize_status(pptrs);
               exec_plugins(pptrs);
               set_shadow_status(pptrs);
 	      *tag = 0;
@@ -1885,6 +1897,7 @@ void NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 
 	  if (t->e[x].jeq.ptr) {
 	    if (t->e[x].ret) {
+	      reset_renormalize_status(pptrs);
 	      exec_plugins(pptrs);
 	      set_shadow_status(pptrs);
 	      *tag = 0;
