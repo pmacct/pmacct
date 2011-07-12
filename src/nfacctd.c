@@ -768,6 +768,7 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
         set_sampling_table(&pptrs, (u_char *) &sampling_table);
       }
+      reload_map = FALSE;
     }
 
     if (data_plugins) {
