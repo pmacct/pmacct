@@ -1153,10 +1153,18 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	centry = NULL, csaved = NULL;
 
 	/* Is this option about sampling? */
-	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1 || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
-	  u_int8_t sampler_id = 0;
+	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
+	  u_int8_t t8 = 0;
+	  u_int16_t sampler_id = 0, t16 = 0;
 
-	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
+	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
+	    memcpy(&t8, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
+	    sampler_id = t8;
+	  }
+	  else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 2) {
+	    memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 2);
+	    sampler_id = ntohs(t16);
+	  }
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
 	  if (!sentry) sentry = create_smp_entry_status_table(entry);

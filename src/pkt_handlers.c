@@ -2334,7 +2334,9 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0, is_sampled = 0;
-  u_int8_t sampler_id = 0;
+  u_int16_t sampler_id = 0, t16 = 0;
+  u_int32_t sample_pool = 0, t32 = 0;
+  u_int8_t t8 = 0;
 
   if (pptrs->renormalized) return;
 
@@ -2342,7 +2344,14 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   case 10:
   case 9:
     if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len) {
-      memcpy(&sampler_id, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, MIN(tpl->tpl[NF9_FLOW_SAMPLER_ID].len, 1));
+      if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
+        memcpy(&t8, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
+        sampler_id = t8;
+      }
+      else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 2) {
+        memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 2);
+        sampler_id = ntohs(t16);
+      }
       if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, TRUE);
       if (sentry) {
         pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
@@ -2350,6 +2359,17 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 
 	pptrs->renormalized = TRUE;
       }
+    }
+    /* SAMPLING_INTERVAL part of the NetFlow v9/IPFIX record seems to be reality, ie. FlowMon by Invea-Tech */
+    else if (tpl->tpl[NF9_SAMPLING_INTERVAL].len || tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len) {
+      if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+      if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+
+      sample_pool = ntohl(t32);
+      pdata->pkt_len = pdata->pkt_len * sample_pool;
+      pdata->pkt_num = pdata->pkt_num * sample_pool;
+
+      pptrs->renormalized = TRUE;
     }
     break;
   case 5:
