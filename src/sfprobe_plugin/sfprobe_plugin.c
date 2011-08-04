@@ -255,9 +255,6 @@ static void init_agent(SflSp *sp)
   sp->sampler = sfl_agent_getSampler(sp->agent, &dsi);
 }
 
-#define NF_AS_KEEP 0
-#define NF_AS_NEW  1
-#define NF_AS_BGP  2
 /*_________________---------------------------__________________
   _________________       readPacket          __________________
   -----------------___________________________------------------

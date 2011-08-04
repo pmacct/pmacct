@@ -658,21 +658,21 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 		(default: false) 
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
-VALUES:		[ false | (true|file) | bgp ]
+VALUES:		[ false | (true|file) | bgp | fallback ]
 DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as', 'dst_as', 'peer_src_as' and
 		'peer_dst_as' from data within the NetFlow and sFlow datagram respectively; when 'true' ('file'
 		being an alias of 'true') it instructs [nf|sf]acctd to generate 'src_as' aand 'dst_as' (only!
 		ie. no peer-AS) ASNs by looking up source and destination IP addresses against a 'networks_file'
 		map. When 'bgp' is specified, ASNs are looked up against the BGP RIB of the peer from which the
-		NetFlow datagram was received. If not otherwise mapped via a bgp_agent_map directive, it is
-		assumed that: either BGP Source IP address or BGP RouterID equals to the sFlow/NetFlow source
-		IP address.
-		pmacctd and uacctd can't grasp ASNs from any protocol: 'false' (for backward compatibility),
-		'true' and 'file' expect a 'networks_file' to be defined. 'bgp' just works as described above.
-		Under nfacctd and sfacctd this feature also influences 'peer_src_ip' and 'peer_dst_ip': if
-		'false', 'true' or 'file' values are taken from NetFlow and sFlow datagrams respectively;
-		if 'bgp' values are looked up against the BGP RIB of the peer from which the NetFlow datagram
-		was received (or mapped to). (default: false) 
+		NetFlow datagram was received (see also bgp_agent_map directive). When 'fallback' is specified,
+		lookup is done against BGP first and, if not successful, against NetFlow/sFlow protocols.
+		As pmacctd and uacctd do not have an export protocol to look up ASNs against 'false' (maintained
+		for backward compatibility), 'true' and 'file' expect a 'networks_file' to be defined; 'bgp' just
+		works as described for [nf|sf]acctd; 'fallback' is mapped back to 'bgp' for the reason explained
+		above, no export protocol lookup available. Under nfacctd and sfacctd this feature also influences
+		'peer_src_ip' and 'peer_dst_ip': if 'false', 'true' or 'file' values are taken from NetFlow and
+		sFlow datagrams respectively; if 'bgp' values are looked up against the BGP RIB of the peer from
+		which the NetFlow datagram was received (or mapped to). (default: false) 
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ]
 VALUES:         [ netflow | sflow | mask | file | bgp ]

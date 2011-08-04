@@ -119,10 +119,16 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   }
   
   e->input.n = strtoul(value, &endptr, 10);
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IN_IFACE) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'input' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_input_handler; 
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_input_handler; 
   else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_input_handler; 
+  if (e->func[x]) e->func_type[x] = PRETAG_IN_IFACE;
 
   return FALSE;
 }
@@ -144,10 +150,16 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
   }
 
   e->output.n = strtoul(value, &endptr, 10);
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_OUT_IFACE) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'output' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_output_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_output_handler;
   else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_output_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_OUT_IFACE;
 
   return FALSE;
 }
@@ -163,16 +175,22 @@ int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, stru
     return TRUE;
   }
 
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_NEXTHOP) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'nexthop' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_nexthop_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_nexthop_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_NEXTHOP;
 
   return FALSE;
 }
 
 int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  int x = 0;
+  int x = 0, have_bgp = 0;
 
   e->bgp_nexthop.neg = pt_check_neg(&value);
 
@@ -181,20 +199,32 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
     return TRUE;
   }
 
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_BGP_NEXTHOP) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'bgp_nexthop' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_NF) {
-    e->func[x] = pretag_bgp_nexthop_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_SF) {
-    e->func[x] = SF_pretag_bgp_nexthop_handler;
-    return FALSE;
-  }
-  else if (config.nfacctd_as == NF_AS_BGP) {
+  if (config.nfacctd_as & NF_AS_BGP) {
     e->func[x] = pretag_bgp_bgp_nexthop_handler;
+    have_bgp = TRUE;
+    e->func_type[x] = PRETAG_BGP_NEXTHOP;
+    x++;
+  }
+
+  if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_NF) {
+    e->func[x] = pretag_bgp_nexthop_handler;
+    e->func_type[x] = PRETAG_BGP_NEXTHOP;
     return FALSE;
   }
+  else if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_SF) {
+    e->func[x] = SF_pretag_bgp_nexthop_handler;
+    e->func_type[x] = PRETAG_BGP_NEXTHOP;
+    return FALSE;
+  }
+
+  if (have_bgp) return FALSE;
 
   Log(LOG_ERR, "ERROR ( %s ): 'bgp_nexthop' is not supported when a 'networks_file' is specified or by the 'pmacctd' daemon. ", filename);
 
@@ -285,8 +315,15 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
     return TRUE;
   }
   e->engine_type.n = j; 
-  for (x = 0; e->func[x]; x++);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_ENGINE_TYPE) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'engine_type' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_engine_type_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_ENGINE_TYPE;
 
   return FALSE;
 }
@@ -312,8 +349,16 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
     return TRUE;
   }
   e->engine_id.n = j;
-  for (x = 0; e->func[x]; x++);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_ENGINE_ID) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'bgp_nexthop' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_engine_id_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_ENGINE_ID;
 
   return FALSE;
 }
@@ -338,8 +383,16 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   }
 
   pcap_close(device.dev_desc);
-  for (x = 0; e->func[x]; x++);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_FILTER) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'filter' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
   e->func[x] = pretag_filter_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_FILTER;
   req->bpf_filter = TRUE;
   return FALSE;
 }
@@ -365,8 +418,16 @@ int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct
     return TRUE;
   }
   e->v8agg.n = tmp; 
-  for (x = 0; e->func[x]; x++);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_NFV8_AGG) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'v8agg' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_v8agg_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_NFV8_AGG;
 
   return FALSE;
 }
@@ -377,8 +438,14 @@ int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, str
 
   e->agent_id.neg = pt_check_neg(&value);
   e->agent_id.n = atoi(value);
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SF_AGENTID) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'agent_id' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_agent_id_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_SF_AGENTID;
 
   return FALSE;
 }
@@ -389,9 +456,15 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
 
   e->sampling_rate.neg = pt_check_neg(&value);
   e->sampling_rate.n = atoi(value);
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SAMPLING_RATE) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'sampling_rate' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_sampling_rate_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sampling_rate_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_SAMPLING_RATE;
 
   return FALSE;
 }
@@ -402,8 +475,14 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
 
   e->direction.neg = pt_check_neg(&value);
   e->direction.n = atoi(value);
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_DIRECTION) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'direction' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_direction_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_DIRECTION;
 
   return FALSE;
 }
@@ -411,7 +490,7 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
 int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
-  int x = 0;
+  int x = 0, have_bgp = 0;
   char *endptr;
 
   e->src_as.neg = pt_check_neg(&value);
@@ -419,25 +498,38 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
   tmp = strtoul(value, &endptr, 10);
 
   e->src_as.n = tmp;
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_AS) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_as' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if ((config.nfacctd_as == NF_AS_NEW || config.acct_type == ACCT_PM) && config.networks_file) {
+  if (config.nfacctd_as & NF_AS_BGP) {
+    e->func[x] = pretag_bgp_src_as_handler;
+    e->func_type[x] = PRETAG_SRC_AS; 
+    have_bgp = TRUE;
+    x++;
+  }
+
+  if ((config.nfacctd_as & NF_AS_NEW || config.acct_type == ACCT_PM) && config.networks_file) {
     req->bpf_filter = TRUE;
     e->func[x] = PM_pretag_src_as_handler;
+    e->func_type[x] = PRETAG_SRC_AS; 
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_NF) {
+  else if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_NF) {
     e->func[x] = pretag_src_as_handler;
+    e->func_type[x] = PRETAG_SRC_AS; 
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_SF) {
+  else if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_SF) {
     e->func[x] = SF_pretag_src_as_handler;
+    e->func_type[x] = PRETAG_SRC_AS; 
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_BGP) {
-    e->func[x] = pretag_bgp_src_as_handler;
-    return FALSE;
-  }
+
+  if (have_bgp) return FALSE;
 
   Log(LOG_ERR, "ERROR ( %s ): 'src_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
 
@@ -447,7 +539,7 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
 int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
-  int x = 0;
+  int x = 0, have_bgp = 0;
   char *endptr;
 
   e->dst_as.neg = pt_check_neg(&value);
@@ -455,25 +547,38 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
   tmp = strtoul(value, &endptr, 10);
 
   e->dst_as.n = tmp;
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_DST_AS) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'dst_as' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if ((config.nfacctd_as == NF_AS_NEW || config.acct_type == ACCT_PM) && config.networks_file) {
+  if (config.nfacctd_as & NF_AS_BGP) {
+    e->func[x] = pretag_bgp_dst_as_handler;
+    e->func_type[x] = PRETAG_DST_AS; 
+    have_bgp = TRUE;
+    x++;
+  }
+
+  if ((config.nfacctd_as & NF_AS_NEW || config.acct_type == ACCT_PM) && config.networks_file) {
     req->bpf_filter = TRUE;
     e->func[x] = PM_pretag_dst_as_handler;
+    e->func_type[x] = PRETAG_DST_AS; 
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_NF) {
+  else if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_NF) {
     e->func[x] = pretag_dst_as_handler;
+    e->func_type[x] = PRETAG_DST_AS; 
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_KEEP && config.acct_type == ACCT_SF) {
+  else if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_SF) {
     e->func[x] = SF_pretag_dst_as_handler;
+    e->func_type[x] = PRETAG_DST_AS; 
     return FALSE;
   }
-  else if (config.nfacctd_as == NF_AS_BGP) {
-    e->func[x] = pretag_bgp_dst_as_handler;
-    return FALSE;
-  }
+
+  if (have_bgp) return FALSE;
 
   Log(LOG_ERR, "ERROR ( %s ): 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
 
@@ -491,14 +596,20 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
   tmp = strtoul(value, &endptr, 10);
 
   e->peer_src_as.n = tmp;
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_PEER_SRC_AS) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'peer_src_as' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_BGP) {
+  if (config.nfacctd_as & NF_AS_BGP) {
     e->func[x] = pretag_peer_src_as_handler;
+    e->func_type[x] = PRETAG_PEER_SRC_AS; 
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -514,14 +625,20 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
   tmp = strtoul(value, &endptr, 10);
 
   e->peer_dst_as.n = tmp;
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_PEER_DST_AS) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'peer_dst_as' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_BGP) {
+  if (config.nfacctd_as & NF_AS_BGP) {
     e->func[x] = pretag_peer_dst_as_handler;
+    e->func_type[x] = PRETAG_PEER_DST_AS; 
     return FALSE;
   } 
 
-  Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -537,14 +654,20 @@ int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *valu
   tmp = strtoul(value, &endptr, 10);
 
   e->src_local_pref.n = tmp;
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_LOCAL_PREF) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_local_pref' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_BGP) {
+  if (config.nfacctd_as & NF_AS_BGP) {
     e->func[x] = pretag_src_local_pref_handler;
+    e->func_type[x] = PRETAG_SRC_LOCAL_PREF;
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_local_pref' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'src_local_pref' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -560,14 +683,20 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   tmp = strtoul(value, &endptr, 10);
 
   e->local_pref.n = tmp;
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_LOCAL_PREF) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'local_pref' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_BGP) {
+  if (config.nfacctd_as & NF_AS_BGP) {
     e->func[x] = pretag_local_pref_handler;
+    e->func_type[x] = PRETAG_LOCAL_PREF;
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -588,14 +717,20 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
     idx++;
   }
 
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_STD_COMM) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_comms' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_BGP && e->src_comms[0]) {
+  if (config.nfacctd_as & NF_AS_BGP && e->src_comms[0]) {
     e->func[x] = pretag_src_comms_handler;
+    e->func_type[x] = PRETAG_SRC_STD_COMM;
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_comms' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'src_comms' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -616,14 +751,20 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
     idx++;
   }
 
-  for (x = 0; e->func[x]; x++);
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_STD_COMM) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'comms' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
 
-  if (config.nfacctd_as == NF_AS_BGP && e->comms[0]) {
+  if (config.nfacctd_as & NF_AS_BGP && e->comms[0]) {
     e->func[x] = pretag_comms_handler;
+    e->func_type[x] = PRETAG_STD_COMM;
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'comms' requires 'nfacctd_as_new: bgp' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'comms' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -822,6 +963,8 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
+  if (entry->last_matched == PRETAG_BGP_NEXTHOP) return FALSE;
+
   switch(hdr->version) {
   case 9:
     if (entry->bgp_nexthop.a.family == AF_INET) {
@@ -873,7 +1016,11 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
     }
   }
 
-  if (!ret) return (FALSE | entry->bgp_nexthop.neg);
+  if (!ret) {
+    entry->last_matched = PRETAG_BGP_NEXTHOP;
+    return (FALSE | entry->bgp_nexthop.neg);
+  }
+  else if (config.nfacctd_as & NF_AS_KEEP) return FALSE;
   else return (TRUE ^ entry->bgp_nexthop.neg);
 }
 
@@ -978,6 +1125,8 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
 
+  if (entry->last_matched == PRETAG_SRC_AS) return FALSE;
+
   switch(hdr->version) {
   case 9:
     if (tpl->tpl[NF9_SRC_AS].len == 2) {
@@ -1039,7 +1188,11 @@ int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
   }
 
-  if (entry->src_as.n == asn) return (FALSE | entry->src_as.neg);
+  if (entry->src_as.n == asn) {
+    entry->last_matched = PRETAG_SRC_AS;
+    return (FALSE | entry->src_as.neg);
+  }
+  else if (config.nfacctd_as & NF_AS_KEEP) return FALSE; 
   else return (TRUE ^ entry->src_as.neg);
 }
 
@@ -1050,6 +1203,8 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
+
+  if (entry->last_matched == PRETAG_DST_AS) return FALSE;
 
   switch(hdr->version) {
   case 9:
@@ -1112,7 +1267,11 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
   }
 
-  if (entry->dst_as.n == asn) return (FALSE | entry->dst_as.neg);
+  if (entry->dst_as.n == asn) {
+    entry->last_matched = PRETAG_DST_AS;
+    return (FALSE | entry->dst_as.neg);
+  }
+  else if (config.nfacctd_as & NF_AS_KEEP) return FALSE;
   else return (TRUE ^ entry->dst_as.neg);
 }
 
@@ -1127,7 +1286,7 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
     asn = pptrs->bpas;
   }
-  else if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_BGP) {
+  else if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
       info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
@@ -1174,7 +1333,7 @@ int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void 
   if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
     local_pref = pptrs->blp;
   }
-  else if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_BGP) {
+  else if (config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
       info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
@@ -1370,6 +1529,9 @@ int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void 
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (config.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return FALSE;
+
   if (entry->bgp_nexthop.a.family == AF_INET) {
     if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, &sample->bgp_nextHop.address.ip_v4, 4)) return (FALSE | entry->bgp_nexthop.neg);
   }
@@ -1404,6 +1566,9 @@ int SF_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (config.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return FALSE;
+
   if (entry->src_as.n == sample->src_as) return (FALSE | entry->src_as.neg);
   else return (TRUE ^ entry->src_as.neg);
 }
@@ -1412,6 +1577,9 @@ int SF_pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (config.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return FALSE;
 
   if (entry->dst_as.n == sample->dst_as) return (FALSE | entry->dst_as.neg);
   else return (TRUE ^ entry->dst_as.neg);

@@ -303,6 +303,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while(list) {
     list->cfg.acct_type = ACCT_PM;
+    set_default_preferences(&list->cfg);
     if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
     list = list->next;

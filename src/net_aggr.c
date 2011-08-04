@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -69,9 +69,9 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   if (filename) {
     if ((file = fopen(filename,"r")) == NULL) {
       if (((config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) && (config.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS)) &&
-	  (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && (config.nfacctd_as == NF_AS_KEEP || config.nfacctd_as == NF_AS_BGP))
+	  (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && (config.nfacctd_as & NF_AS_KEEP || config.nfacctd_as & NF_AS_BGP))
 	  || (config.acct_type == ACCT_PM && (config.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS)) &&
-	  (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && config.nfacctd_as == NF_AS_BGP))
+	  (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && config.nfacctd_as & NF_AS_BGP))
 	return;
 
       Log(LOG_ERR, "ERROR: network file '%s' not found\n", filename);
@@ -472,8 +472,8 @@ void set_net_funcs(struct networks_table *nt)
 
   if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) {
     if (((config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) &&
-	(config.nfacctd_as == NF_AS_KEEP || config.nfacctd_as == NF_AS_BGP))
-	|| (config.acct_type == ACCT_PM && config.nfacctd_as == NF_AS_BGP));
+	(config.nfacctd_as & NF_AS_KEEP || config.nfacctd_as & NF_AS_BGP))
+	|| (config.acct_type == ACCT_PM && config.nfacctd_as & NF_AS_BGP));
     else {
       net_funcs[count] = search_src_as;
       count++;
@@ -502,8 +502,8 @@ void set_net_funcs(struct networks_table *nt)
 
   if (config.what_to_count & (COUNT_DST_AS|COUNT_SUM_AS)) {
     if (((config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) &&
-	(config.nfacctd_as == NF_AS_KEEP || config.nfacctd_as == NF_AS_BGP))
-	|| (config.acct_type == ACCT_PM && config.nfacctd_as == NF_AS_BGP));
+	(config.nfacctd_as & NF_AS_KEEP || config.nfacctd_as & NF_AS_BGP))
+	|| (config.acct_type == ACCT_PM && config.nfacctd_as & NF_AS_BGP));
     else {
       net_funcs[count] = search_dst_as;
       count++;
@@ -823,9 +823,9 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   if (filename) {
     if ((file = fopen(filename,"r")) == NULL) {
       if (((config.acct_type == ACCT_NF) && (config.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS)) &&
-          (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && (config.nfacctd_as == NF_AS_KEEP || config.nfacctd_as == NF_AS_BGP))
+          (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && (config.nfacctd_as & NF_AS_KEEP || config.nfacctd_as & NF_AS_BGP))
           || (config.acct_type == ACCT_PM && (config.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS)) &&
-          (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && config.nfacctd_as == NF_AS_BGP))
+          (!(config.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET))) && config.nfacctd_as & NF_AS_BGP))
         return;
 
       Log(LOG_ERR, "ERROR: network file '%s' not found\n", filename);

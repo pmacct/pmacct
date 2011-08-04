@@ -1902,6 +1902,10 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   else if (!strncmp(value_ptr, "sflow", strlen("sflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
   else if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
+  else if (!strncmp(value_ptr, "fallback", strlen("fallback"))) {
+    value = BGP_SRC_PRIMITIVES_KEEP;
+    value |= BGP_SRC_PRIMITIVES_BGP;
+  }
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_peer_src_as_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_src_type = value;
@@ -2331,6 +2335,13 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
     value = NF_AS_NEW;
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_AS_BGP;
+  else if (!strcmp(value_ptr, "fallback")) {
+    if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) { 
+      value = NF_AS_KEEP;
+      value |= NF_AS_BGP;
+    }
+    else value = NF_AS_BGP; /* NF_AS_KEEP does not apply to ACCT_PM and ACCT_UL */
+  }
   else {
     Log(LOG_ERR, "WARN ( %s ): Invalid AS aggregation value '%s'\n", filename, value_ptr);
     return ERR;

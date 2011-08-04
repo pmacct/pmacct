@@ -403,16 +403,6 @@
 	#define NF_TIME_SECS 1 /* times are in secs */ 
 	#define NF_TIME_NEW 2 /* ignore netflow engine times and generate new ones */ 
 
-	#define NF_AS_KEEP 0 /* Keep AS numbers in NetFlow packets */
-	#define NF_AS_NEW 1 /* ignore ASN from NetFlow and generate from network files */ 
-	#define NF_AS_BGP 2 /* ignore ASN from NetFlow and generate from BGP peerings */
-
-	#define NF_NET_COMPAT	0x00000000 /* Backward compatibility selection */
-	#define NF_NET_KEEP	0x00000001 /* Determine IP network prefixes from NetFlow data */
-	#define NF_NET_NEW	0x00000002 /* Determine IP network prefixes from network files */
-	#define NF_NET_BGP	0x00000004 /* Determine IP network prefixes from BGP peerings */
-	#define NF_NET_STATIC	0x00000008 /* Determine IP network prefixes from static mask */
-
 	#define IPFIX_TPL_EBIT  0x8000 /* IPFIX telmplate enterprise bit */
 
 	/* NetFlow V9 stuff */

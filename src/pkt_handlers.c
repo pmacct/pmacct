@@ -120,41 +120,41 @@ void evaluate_packet_handlers()
       }
       primitives++;
     }
-    
+
     if (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_SUM_AS)) {
       if (config.acct_type == ACCT_PM) {
-	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = src_host_handler;
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = src_host_handler;
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = src_host_handler;
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = src_host_handler;
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_src_as_handler;
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = NF_src_host_handler;
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_src_as_handler;
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_src_host_handler;
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_src_as_handler;
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = SF_src_host_handler;
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_src_as_handler;
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_src_host_handler;
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       primitives++;
     }
 
     if (channels_list[index].aggregation & (COUNT_DST_AS|COUNT_SUM_AS)) {
       if (config.acct_type == ACCT_PM) {
-	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = dst_host_handler;
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = dst_host_handler;
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = dst_host_handler;
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = dst_host_handler;
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_dst_as_handler; 
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = NF_dst_host_handler;
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_dst_as_handler; 
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_dst_host_handler;
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_SF) {
-	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_dst_as_handler;
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = SF_dst_host_handler;
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_dst_as_handler;
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_dst_host_handler;
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       primitives++;
     }
@@ -162,14 +162,14 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_PEER_SRC_IP) {
       if (config.acct_type == ACCT_PM) primitives--;
       else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler;
-	else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler; 
-	else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler;
+	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler; 
+	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler;
-        else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler; 
-        else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler;
+        else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler; 
+        else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       primitives++;
     }
@@ -177,21 +177,21 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_PEER_DST_IP) {
       if (config.acct_type == ACCT_PM) primitives--;
       else if (config.acct_type == ACCT_NF) {
-        if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
-        else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
-        else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
+        else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
+        else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler;
-        else if (config.nfacctd_as == NF_AS_NEW) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler; 
-        else if (config.nfacctd_as == NF_AS_BGP) primitives--; /* This is handled elsewhere */
+        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler;
+        else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler; 
+        else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
       }
       primitives++;
     }
 
     if (channels_list[index].aggregation & COUNT_AS_PATH) {
       if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_as_path_handler;
           primitives++;
         }
@@ -200,13 +200,13 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_NF) {
-        if (config.nfacctd_as == NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
           channels_list[index].phandler[primitives] = NF_peer_src_as_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
           channels_list[index].phandler[primitives] = SF_peer_src_as_handler;
           primitives++;
         }
@@ -215,13 +215,13 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_DST_AS) {
       if (config.acct_type == ACCT_NF) {
-        if (config.nfacctd_as == NF_AS_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP) {
 	  channels_list[index].phandler[primitives] = NF_peer_dst_as_handler;
 	  primitives++;
 	}
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_peer_dst_as_handler;
           primitives++;
         }
@@ -230,7 +230,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_LOCAL_PREF) {
       if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_local_pref_handler;
           primitives++;
         }
@@ -239,7 +239,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_STD_COMM) {
       if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as == NF_AS_KEEP) {
+        if (config.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_std_comms_handler;
           primitives++;
         }
@@ -248,19 +248,19 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
-					    COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
-					    COUNT_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_SRC_AS) &&
-	config.nfacctd_as == NF_AS_BGP) {
+                                            COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
+                                            COUNT_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_SRC_AS) &&
+        config.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-	if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) { 
-	  channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
-	}
+        if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
+          channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
+        }
         else if (channels_list[index].plugin->type.id == PLUGIN_ID_NFPROBE) {
           channels_list[index].phandler[primitives] = nfprobe_bgp_ext_handler;
         }
-	else {
+        else {
           channels_list[index].phandler[primitives] = bgp_ext_handler;
-	}
+        }
         primitives++;
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
@@ -275,19 +275,19 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-	if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+	if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
 	}
       }
       else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+	if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_SF) {
-	if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+	if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_peer_src_as_frommap_handler;
           primitives++;
         }
@@ -296,19 +296,19 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_SRC_LOCAL_PREF) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+        if (config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_src_local_pref_frommap_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+        if (config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_src_local_pref_frommap_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+        if (config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_src_local_pref_frommap_handler;
           primitives++;
         }
@@ -317,19 +317,19 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_SRC_MED) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+        if (config.nfacctd_bgp_src_med_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_src_med_frommap_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_NF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+        if (config.nfacctd_bgp_src_med_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_src_med_frommap_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_SF && config.nfacctd_bgp) {
-        if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+        if (config.nfacctd_bgp_src_med_type & BGP_SRC_PRIMITIVES_MAP) {
           channels_list[index].phandler[primitives] = bgp_src_med_frommap_handler;
           primitives++;
         }
@@ -779,7 +779,7 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
 
   memset(&tmp, 0, sizeof(tmp));
 
-  if (chptr->plugin->cfg.nfacctd_as == NF_AS_NEW ||
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_NEW ||
       chptr->plugin->cfg.nfacctd_net == NF_NET_NEW) {
     src_host_handler(chptr, pptrs, &tmpp);
     dst_host_handler(chptr, pptrs, &tmpp);
@@ -1278,6 +1278,9 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return; 
+
   switch(hdr->version) {
   case 10:
   case 9:
@@ -1328,6 +1331,9 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
 
   switch(hdr->version) {
   case 10:
@@ -1383,6 +1389,9 @@ void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return;
+
   switch (hdr->version) {
   case 10:
   case 9:
@@ -1412,6 +1421,9 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+
   switch (hdr->version) {
   case 10:
   case 9:
@@ -1440,6 +1452,9 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_peer) return;
+
   if (sa->sa_family == AF_INET) {
     pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
     pbgp->peer_src_ip.family = AF_INET;
@@ -1460,6 +1475,9 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
 
   --pdata; /* Bringing back to original place */
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
 
   switch(hdr->version) {
   case 10:
@@ -2420,7 +2438,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   if (src_ret) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
-      if (config.nfacctd_as == NF_AS_BGP) {
+      if (config.nfacctd_as & NF_AS_BGP) {
 	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
 	  pdata->primitives.src_as = evaluate_last_asn(info->attr->aspath);
 
@@ -2434,7 +2452,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  }
 	}
       }
-      if (chptr->aggregation & COUNT_SRC_AS_PATH && config.nfacctd_bgp_src_as_path_type == BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
+      if (chptr->aggregation & COUNT_SRC_AS_PATH && config.nfacctd_bgp_src_as_path_type & BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
 	strlcpy(pbgp->src_as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
 	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH) {
 	  pbgp->src_as_path[MAX_BGP_ASPATH-2] = '+';
@@ -2443,7 +2461,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	if (config.nfacctd_bgp_aspath_radius)
 	  evaluate_bgp_aspath_radius(pbgp->src_as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
       }
-      if (chptr->aggregation & COUNT_SRC_STD_COMM && config.nfacctd_bgp_src_std_comm_type == BGP_SRC_PRIMITIVES_BGP && info->attr->community && info->attr->community->str) {
+      if (chptr->aggregation & COUNT_SRC_STD_COMM && config.nfacctd_bgp_src_std_comm_type & BGP_SRC_PRIMITIVES_BGP && info->attr->community && info->attr->community->str) {
 	if (config.nfacctd_bgp_stdcomm_pattern)
 	  evaluate_comm_patterns(pbgp->src_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
 	else {
@@ -2454,7 +2472,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  }
 	}
       }
-      if (chptr->aggregation & COUNT_SRC_EXT_COMM && config.nfacctd_bgp_src_ext_comm_type == BGP_SRC_PRIMITIVES_BGP && info->attr->ecommunity && info->attr->ecommunity->str) {
+      if (chptr->aggregation & COUNT_SRC_EXT_COMM && config.nfacctd_bgp_src_ext_comm_type & BGP_SRC_PRIMITIVES_BGP && info->attr->ecommunity && info->attr->ecommunity->str) {
         if (config.nfacctd_bgp_extcomm_pattern)
           evaluate_comm_patterns(pbgp->src_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
         else {
@@ -2465,13 +2483,13 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  }
         }
       }
-      if (chptr->aggregation & COUNT_SRC_LOCAL_PREF && config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_BGP)
+      if (chptr->aggregation & COUNT_SRC_LOCAL_PREF && config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP)
 	pbgp->src_local_pref = info->attr->local_pref;
 
-      if (chptr->aggregation & COUNT_SRC_MED && config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_BGP)
+      if (chptr->aggregation & COUNT_SRC_MED && config.nfacctd_bgp_src_med_type & BGP_SRC_PRIMITIVES_BGP)
 	pbgp->src_med = info->attr->med;
 
-      if (chptr->aggregation & COUNT_PEER_SRC_AS && config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
+      if (chptr->aggregation & COUNT_PEER_SRC_AS && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
         pbgp->peer_src_as = evaluate_first_asn(info->attr->aspath->str);
 
         if (!pbgp->peer_src_as && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
@@ -2520,7 +2538,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	if (config.nfacctd_bgp_aspath_radius)
 	  evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
       }
-      if (config.nfacctd_as == NF_AS_BGP) {
+      if (config.nfacctd_as & NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
           pdata->primitives.dst_as = evaluate_last_asn(info->attr->aspath);
 
@@ -2554,7 +2572,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       if (chptr->aggregation & COUNT_PEER_DST_IP) {
 	struct bgp_info *nh_info;
 
-	if (config.nfacctd_as == NF_AS_BGP) {
+	if (config.nfacctd_as & NF_AS_BGP) {
 	  if (pptrs->bgp_nexthop_info)
 	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
 	  else
@@ -2582,7 +2600,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   }
 
   if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) {
-    if (config.nfacctd_as == NF_AS_BGP) {
+    if (config.nfacctd_as & NF_AS_BGP) {
       if (!pptrs->bta && !config.nfacctd_bgp_follow_default) memcpy(&pbgp->peer_src_ip, &peer->addr, sizeof(struct host_addr)); 
       else {
         struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
@@ -2608,7 +2626,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   if (src_ret) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
-      if (config.nfacctd_as == NF_AS_BGP) {
+      if (config.nfacctd_as & NF_AS_BGP) {
 	if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
 	  if (!chptr->plugin->cfg.nfprobe_peer_as)
 	    payload->src_as = evaluate_last_asn(info->attr->aspath);
@@ -2622,7 +2640,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   if (dst_ret) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
-      if (config.nfacctd_as == NF_AS_BGP) {
+      if (config.nfacctd_as & NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
 	  if (!chptr->plugin->cfg.nfprobe_peer_as)
             payload->dst_as = evaluate_last_asn(info->attr->aspath);
@@ -2674,7 +2692,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   if (src_ret) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
-      if (config.nfacctd_as == NF_AS_BGP) {
+      if (config.nfacctd_as & NF_AS_BGP) {
         if (chptr->aggregation & COUNT_SRC_AS && info->attr->aspath) {
           if (!chptr->plugin->cfg.nfprobe_peer_as)
             pdata->primitives.src_as = evaluate_last_asn(info->attr->aspath);
@@ -2688,7 +2706,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   if (dst_ret) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
-      if (config.nfacctd_as == NF_AS_BGP) {
+      if (config.nfacctd_as & NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
           if (!chptr->plugin->cfg.nfprobe_peer_as)
             pdata->primitives.dst_as = evaluate_last_asn(info->attr->aspath);
@@ -3045,6 +3063,9 @@ void SF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return;
   
   pdata->primitives.src_as = sample->src_as;
 }
@@ -3053,6 +3074,9 @@ void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
 
   pdata->primitives.dst_as = sample->dst_as;
 }
@@ -3064,6 +3088,9 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
 
   --pdata; /* Bringing back to original place */
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
 
   if (sample->dst_as_path_len) {
     strlcpy(pbgp->as_path, sample->dst_as_path, MAX_BGP_ASPATH);
@@ -3081,6 +3108,9 @@ void SF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return;
+
   pbgp->peer_src_as = sample->src_peer_as;
 }
 
@@ -3091,6 +3121,9 @@ void SF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
 
   --pdata; /* Bringing back to original place */
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
 
   pbgp->peer_dst_as = sample->dst_peer_as;
 }
@@ -3103,6 +3136,9 @@ void SF_local_pref_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
   --pdata; /* Bringing back to original place */
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+
   pbgp->local_pref = sample->localpref;
 }
 
@@ -3114,6 +3150,9 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
   --pdata; /* Bringing back to original place */
 
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+
   if (sample->communities_len) strlcpy(pbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS); 
 }
 
@@ -3124,6 +3163,9 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   --pdata; /* Bringing back to original place */
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_peer) return;
 
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_src_ip.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
@@ -3144,6 +3186,9 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   --pdata; /* Bringing back to original place */
+
+  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
+  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
 
   if (sample->bgp_nextHop.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_dst_ip.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;

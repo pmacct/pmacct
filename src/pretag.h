@@ -20,9 +20,29 @@
 */
 
 /* Pre-Tag map stuff */
-#define N_MAP_HANDLERS 10 
+#define N_MAP_HANDLERS 16
 #define MAX_LABEL_LEN 32
 #define MAX_PRETAG_MAP_ENTRIES 384 
+
+#define PRETAG_IN_IFACE		0x00000001
+#define PRETAG_OUT_IFACE	0x00000002
+#define PRETAG_NEXTHOP		0x00000004
+#define PRETAG_BGP_NEXTHOP	0x00000008
+#define PRETAG_ENGINE_TYPE	0x00000010
+#define PRETAG_ENGINE_ID	0x00000020
+#define PRETAG_FILTER		0x00000040
+#define PRETAG_NFV8_AGG		0x00000080
+#define PRETAG_SF_AGENTID	0x00000100
+#define PRETAG_SAMPLING_RATE	0x00000200
+#define PRETAG_DIRECTION	0x00000400
+#define PRETAG_SRC_AS		0x00000800
+#define PRETAG_DST_AS		0x00001000
+#define PRETAG_PEER_SRC_AS	0x00002000
+#define PRETAG_PEER_DST_AS	0x00004000
+#define PRETAG_SRC_LOCAL_PREF	0x00008000
+#define PRETAG_LOCAL_PREF	0x00010000
+#define PRETAG_SRC_STD_COMM	0x00020000
+#define PRETAG_STD_COMM		0x00040000
 
 #define PRETAG_MAP_RCODE_ID  100
 #define PRETAG_MAP_RCODE_ID2 101
@@ -93,10 +113,12 @@ struct id_entry {
   struct bpf_program filter;
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];
+  u_int32_t func_type[N_MAP_HANDLERS];
   char label[MAX_LABEL_LEN];
   pt_jeq_t jeq;
   u_int8_t ret;
   pt_stack_t stack;
+  u_int32_t last_matched;
 };
 
 struct id_table {
