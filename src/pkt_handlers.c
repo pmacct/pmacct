@@ -2380,10 +2380,24 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
     }
     /* SAMPLING_INTERVAL part of the NetFlow v9/IPFIX record seems to be reality, ie. FlowMon by Invea-Tech */
     else if (tpl->tpl[NF9_SAMPLING_INTERVAL].len || tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len) {
-      if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
-      if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+      if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 2) {
+	memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 2);
+	sample_pool = ntohs(t16);
+      }
+      else if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
+	memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	sample_pool = ntohl(t32);
+      }
 
-      sample_pool = ntohl(t32);
+      if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 2) {
+	memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 2);
+	sample_pool = ntohs(t16);
+      }
+      else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) {
+	memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+        sample_pool = ntohl(t32);
+      }
+
       pdata->pkt_len = pdata->pkt_len * sample_pool;
       pdata->pkt_num = pdata->pkt_num * sample_pool;
 
