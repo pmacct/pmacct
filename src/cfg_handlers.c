@@ -2366,6 +2366,13 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     value = NF_NET_STATIC;
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_NET_BGP;
+  else if (!strcmp(value_ptr, "fallback")) {
+    if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
+      value = NF_NET_KEEP;
+      value |= NF_NET_BGP;
+    }
+    else value = NF_NET_BGP;
+  }
   else {
     Log(LOG_ERR, "WARN ( %s ): Invalid network aggregation value '%s'\n", filename, value_ptr);
     return ERR;
