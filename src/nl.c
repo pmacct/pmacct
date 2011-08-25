@@ -62,8 +62,6 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.ifindex_out = cb_data->ifindex_out;
     pptrs.f_status = NULL;
 
-    reset_fallback_status(&pptrs);
-
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {

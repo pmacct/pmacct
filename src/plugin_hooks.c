@@ -209,6 +209,7 @@ reprocess:
       bptr = channels_list[index].rg.ptr+ChBufHdrSz+channels_list[index].bufptr; 
       size = (*channels_list[index].clean_func)(bptr);
       savedptr = channels_list[index].bufptr;
+      reset_fallback_status(pptrs);
       
       while (channels_list[index].phandler[num]) {
         (*channels_list[index].phandler[num])(&channels_list[index], pptrs, &bptr);
