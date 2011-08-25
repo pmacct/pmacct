@@ -1,6 +1,54 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.0rc2
 pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 
+0.14.0rc2 -- 26-08-2011
+  + sampling_map feature is introduced, allowing definition of static traffic
+    sampling mappings. Content of the map is reloadable at runtime. If a
+    specific router is not defined in the map, the sampling rate advertised
+    by the router itself, if any, is applied.
+  + nfacctd: introduced support for 16 bits SAMPLER_IDs in NetFlow v9/IPFIX;
+    this appears to be the standard length with IOS-XR.
+  + nfacctd: introduced support for (FLOW)_SAMPLING_INTERVAL fields as part
+    of the NetFlow v9/IPFIX data record. This case is not prevented by the
+    RFC although such information is typically exported as part of options.
+    It appears some probes, ie. FlowMon by Invea-Tech, are getting down this
+    way.
+  + nfacctd, sfacctd: nfacctd_as_new and sfacctd_as_new got a new 'fallback'
+    option; when specified, lookup of BGP-related primitives is done against
+    BGP first and, if not successful, against the export protocol.
+  + nfacctd, sfacctd: nfacctd_net and sfacctd_net got a new 'fallback' option
+    that when specified looks up network-related primitives (prefixes, masks)
+    against BGP first and, if not successful, against the export protocol. It
+    gets useful for resolving prefixes advertised only in the IGP.
+  + sql_num_hosts feature is being introduced: defines, in MySQL and SQLite
+    plugins, whether IP addresses should be left numerical (in network bytes
+    ordering) or converted into strings. For backward compatibility, default
+    is to convert them into strings.
+  + print_num_protos and sql_num_protos configuration directives have been
+    introduced to allow to handle IP protocols (ie. tcp, udp) in numerical
+    format. The default, backward compatible, is to look protocol names up.
+    The feature is built against all plugins and can also be activated via
+    the '-u' commandline switch.
+  ! fix, nfacctd: NetFlow v9/IPFIX sampling option parsing now doesn't rely
+    anymore solely on finding a SamplerID field; as an alternative, presence
+    of a sampling interval field is also checked. Also a workaround is being
+    introduced for sampled NetFlow v9 & C7600: if samplerID within a data
+    record is defined and set to zero and no match was possible, then the
+    last samplerID defined is returned.
+  ! nfacctd: (FLOW)_SAMPLING_INTERVAL fields as part of the NetFlow v9/IPFIX
+    data record are now supported also 16-bits long (in addition to 32-bits).
+  ! fix, SQL plugins: sql_create_table() timestamp has been aligned with SQL
+    queries (insert, update, lock); furthermore sql_create_table() is invoked
+    every sql_refresh_time instead of every sql_history. Docs updated. Thanks
+    to Luis Galan for having reported the issue.
+  ! fix, pmacct client: error code when connection is refused on UNIX socket
+    was 0; it has been changed to 1 to reflect the error condition. Thanks
+    to Mateusz Viste for reporting the issue.
+  ! fix, building system: CFLAGS were not always honoured. Patch is courtesy
+    of Etienne Champetier
+  ! fix, ll.c: empty return value was causing compiler with certain flags to
+    complain about the issue. Patch is courtesy of Ryan Steinmetz.
+
 0.14.0rc1 -- 31-03-2011
   + IPFIX (IETF IP Flow Information Export protocol) replication and
     collector capabilities have been introduced as part of nfacctd, the

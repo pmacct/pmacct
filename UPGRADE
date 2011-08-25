@@ -7,6 +7,22 @@ over the time.
 However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
+
+TO:	>= 0.14.0rc2
+FROM:	<= 0.14.0rc1
+TOPIC:	NetFlow v9 sampling
+DESC:	Support for sampling in NetFlow v9 and IPFIX is elegant from an architecture
+	point of view - but complex if compared to NetFlow v5 and sFlow for example.
+	Such increased complexity lacking of proper framing by means of a supportive
+	RFC exposes to bizzarre and creative implementations by vendors. 0.14.0rc2
+	introduces fixes and workarounds to its sampled NetFlow v9 support in an
+	effort to tackle specific but popular platforms among operators - and which
+	can result in breaking some backward compatibility in this sense. 0.14.0rc2
+	introduces a sampling_map feature, which although not rocket science from a
+	concept point of view, it helps supporting sampled NetFlow v9 in heterogeneous
+	network hardware environments at the cost of an extra static setting to care
+	about; on the other hand it's also true sampling rates are often uniform and
+	seldomly redefined in a production network. 
  
 TO:	>= 0.8.3 
 FROM:	<= 0.8.2 
