@@ -112,7 +112,7 @@ int main(int argc,char **argv, char **envp)
   int errflag, cp; 
 
   /* ULOG stuff */
-  int ulog_fd;
+  int ulog_fd, one = 1;
   struct nlmsghdr *nlh;
   struct sockaddr_nl nls;
   ulog_packet_msg_t *ulog_pkt;
@@ -563,6 +563,10 @@ int main(int argc,char **argv, char **envp)
 
   Log(LOG_INFO, "INFO ( default/core ): Successfully connected Netlink ULOG socket\n");
 
+  /* Turn off netlink errors from overrun. */
+  if (setsockopt(ulog_fd, SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, sizeof(one)))
+    Log(LOG_ERR, "ERROR ( default/core ): Failed to turn off netlink ENOBUFS\n");
+
   if (config.uacctd_nl_size > ULOG_BUFLEN) {
     /* If configured buffer size is larger than default 4KB */
     if (setsockopt(ulog_fd, SOL_SOCKET, SO_RCVBUF, &config.uacctd_nl_size, sizeof(config.uacctd_nl_size)))
@@ -769,7 +773,7 @@ int main(int argc,char **argv, char **envp)
   }
 }
 
-u_int16_t get_ifindex(char *device) 
+unsigned int get_ifindex(char *device) 
 {
   static int sock = -1;
 
