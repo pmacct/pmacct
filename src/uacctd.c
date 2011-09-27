@@ -795,6 +795,54 @@ unsigned int get_ifindex(char *device)
   return req.ifr_ifindex;
 }
 
+unsigned int hash_ifname(char *name)
+{
+  unsigned hash = 0;
+
+  while (*name)
+    hash = 33 * hash + *name++;
+
+  return (hash & IFCACHE_HASHSIZ-1);
+}
+
+/* Cache name to ifindex mapping */
+unsigned int cache_ifindex(char *device, unsigned long now)
+{
+  struct ifname_cache *ifc, **top;
+  unsigned int ifindex;
+
+  top = &hash_heads[hash_ifname(device)];
+  while ( (ifc = *top) != NULL) {
+    if (strncmp(device, ifc->name, IFNAMSIZ)) {
+      top = &ifc->next;
+      continue;
+    }
+
+    /* prune old entry to deal with hotplug */
+    if ((long)(now - ifc->tstamp) > IFCACHE_LIFETIME) {
+      *top = ifc->next;
+      free(ifc);
+      break;
+    }
+
+    return ifc->index;
+  }
+
+  ifindex = get_ifindex(device);
+  if (ifindex) {
+    ifc = malloc(sizeof(struct ifname_cache));
+    if (ifc) {
+      ifc->index = ifindex;
+      strncpy(ifc->name, device, IFNAMSIZ);
+      ifc->tstamp = now;
+      ifc->next = *top;
+      *top = ifc;
+    }
+  }
+
+  return ifindex;
+}
+
 #else
 
 int main(int argc,char **argv, char **envp)
