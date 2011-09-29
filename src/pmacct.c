@@ -1683,7 +1683,7 @@ int main(int argc,char **argv)
 	pcnt += acc_elem->pkt_num;
 	fcnt += acc_elem->flo_num;
 	bcnt += acc_elem->pkt_len;
-	num_counters += acc_elem->time_start; /* XXX: this field is used here to count how much entries we are accumulating */
+	num_counters += acc_elem->time_start.tv_sec; /* XXX: this field is used here to count how much entries we are accumulating */
       }
       else {
 #if defined HAVE_64BIT_COUNTERS
@@ -1692,13 +1692,13 @@ int main(int argc,char **argv)
 	/* print packets */
 	else if (which_counter == 1) printf("%llu\n", acc_elem->pkt_num); 
 	/* print packets+bytes+flows+num */
-	else if (which_counter == 2) printf("%llu %llu %llu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start);
+	else if (which_counter == 2) printf("%llu %llu %llu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec);
 	/* print flows */
 	else if (which_counter == 3) printf("%llu\n", acc_elem->flo_num);
 #else
         if (which_counter == 0) printf("%lu\n", acc_elem->pkt_len); 
         else if (which_counter == 1) printf("%lu\n", acc_elem->pkt_num); 
-        else if (which_counter == 2) printf("%lu %lu %lu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start); 
+        else if (which_counter == 2) printf("%lu %lu %lu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec); 
         else if (which_counter == 3) printf("%lu\n", acc_elem->flo_num); 
 #endif
       }

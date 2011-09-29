@@ -470,15 +470,15 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
 
-  if (data->time_start && config.sql_history) {
-    while (basetime > data->time_start) {
+  if (data->time_start.tv_sec && config.sql_history) {
+    while (basetime > data->time_start.tv_sec) {
       if (config.sql_history != COUNT_MONTHLY) basetime -= timeslot;
       else {
         timeslot = calc_monthly_timeslot(basetime, config.sql_history_howmany, SUB);
         basetime -= timeslot;
       }
     }
-    while ((basetime+timeslot) < data->time_start) {
+    while ((basetime+timeslot) < data->time_start.tv_sec) {
       if (config.sql_history != COUNT_MONTHLY) basetime += timeslot;
       else {
         basetime += timeslot;
@@ -626,8 +626,8 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
     Cursor->endtime = 0;
   }
   else {
-    Cursor->basetime = data->time_start;
-    Cursor->endtime = data->time_end;
+    Cursor->basetime = data->time_start.tv_sec;
+    Cursor->endtime = data->time_end.tv_sec;
   }
   Cursor->start_tag = idata->now;
   Cursor->lru_tag = idata->now;

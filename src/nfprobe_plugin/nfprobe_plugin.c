@@ -1004,8 +1004,8 @@ static void flow_cb(u_char *user_data, struct pkt_data *data, struct pkt_extras 
   struct CB_CTXT *cb_ctxt = (struct CB_CTXT *)user_data;
   struct timeval tv;
 
-  tv.tv_sec = data->time_start;
-  tv.tv_usec = 0; /* XXX */ 
+  tv.tv_sec = data->time_start.tv_sec;
+  tv.tv_usec = data->time_start.tv_usec; 
   if (process_packet(cb_ctxt->ft, data, extras, &tv) == PP_MALLOC_FAIL) cb_ctxt->fatal = 1;
 }
 

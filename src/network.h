@@ -329,8 +329,8 @@ struct pkt_data {
   pm_counter_t pkt_num;
   pm_counter_t flo_num;
   u_int32_t tcp_flags; /* XXX */
-  u_int32_t time_start;
-  u_int32_t time_end;
+  struct timeval time_start;
+  struct timeval time_end;
   struct class_st cst;
 };
 

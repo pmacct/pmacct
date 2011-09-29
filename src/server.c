@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -359,5 +359,5 @@ void Accumulate_Counters(struct pkt_data *abuf, struct acc *elem)
   abuf->pkt_len += elem->bytes_counter;
   abuf->pkt_num += elem->packet_counter;
   abuf->flo_num += elem->flow_counter;
-  abuf->time_start++; /* XXX: this unused field works as counter of how much entries we are accumulating */
+  abuf->time_start.tv_sec++; /* XXX: this unused field works as counter of how much entries we are accumulating */
 }
