@@ -611,7 +611,7 @@ int main(int argc,char **argv, char **envp)
   cb_data.device = &device;
   
   /* doing pcap stuff */
-  if (pcap_lookupnet(config.dev, &localnet, &netmask, errbuf) < 0) {
+  if (!config.dev || pcap_lookupnet(config.dev, &localnet, &netmask, errbuf) < 0) {
     localnet = 0;
     netmask = 0;
     Log(LOG_WARNING, "WARN ( default/core ): %s\n", errbuf);

@@ -176,6 +176,9 @@ static const struct _protocols_struct _protocols[] = {
 
 #if defined __PMACCTD_C || defined __UACCTD_C
 static struct _devices_struct _devices[] = {
+#if defined DLT_LOOP
+  {null_handler, DLT_LOOP},
+#endif
   {null_handler, DLT_NULL},
   {eth_handler, DLT_EN10MB},
   {ppp_handler, DLT_PPP},
