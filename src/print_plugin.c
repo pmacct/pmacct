@@ -478,8 +478,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%-10u  ", data->id);
       fprintf(f, "%-10u  ", data->id2);
       fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-      fprintf(f, "%-10u  ", data->ifindex_in);
-      fprintf(f, "%-10u  ", data->ifindex_out);
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
       fprintf(f, "%-17s  ", src_mac);
@@ -558,8 +556,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%u,", data->id);
       fprintf(f, "%u,", data->id2);
       fprintf(f, "%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-      fprintf(f, "%u,", data->ifindex_in);
-      fprintf(f, "%u,", data->ifindex_out);
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
       fprintf(f, "%s,", src_mac);
@@ -632,8 +628,6 @@ void P_write_stats_header_formatted(FILE *f)
   fprintf(f, "TAG         ");
   fprintf(f, "TAG2        ");
   fprintf(f, "CLASS             ");
-  fprintf(f, "IN_IFACE    ");
-  fprintf(f, "OUT_IFACE   ");
 #if defined HAVE_L2
   fprintf(f, "SRC_MAC            ");
   fprintf(f, "DST_MAC            ");
@@ -702,6 +696,8 @@ void P_write_stats_header_csv(FILE *f)
   fprintf(f, "OUT_IFACE,");
   fprintf(f, "SRC_IP,");
   fprintf(f, "DST_IP,");
+  fprintf(f, "SRC_MASK,");
+  fprintf(f, "DST_MASK,");
   fprintf(f, "SRC_PORT,");
   fprintf(f, "DST_PORT,");
   fprintf(f, "TCP_FLAGS,");

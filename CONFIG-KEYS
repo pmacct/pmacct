@@ -2,16 +2,21 @@ SUPPORTED CONFIGURATION KEYS
 Both configuration directives and commandline switches are listed below. 
 A configuration consists of key/value pairs, separated by the ':' char.
 Starting a line with the '!' symbol, makes the whole line to be ignored
-by the interpreter, making it a comment.
-Please refer also to the EXAMPLES document and the 'examples/' sub-tree
-for some examples.
+by the interpreter, making it a comment. Please refer also to the EXAMPLES
+document and the 'examples/' sub-tree for some examples.
+
+Directives are sometimes grouped, like sql_table and print_output_file:
+this is to stress if multiple plugins are running as part of the same
+daemon instance, such directives must be casted to the plugin they refer
+to - in order to prevent undesired inheritance effects. In other words,
+grouped directives share the same field in the configuration structure.
 
 
 LEGEND of flags:
 
 GLOBAL		Can't be configured on individual plugins
 NO_GLOBAL	Can't be configured globally
-NO_PMACCTD	Does not apply to 'pmacctd' (it's likely it will not apply to 'sfacctd' either)
+NO_PMACCTD	Does not apply to 'pmacctd' (it's likely it will not apply to 'uacctd' either)
 NO_UACCTD	Does not apply to 'uacctd' 
 NO_NFACCTD	Does not apply to 'nfacctd' (it's likely it will not apply to 'sfacctd' either) 
 NO_SFACCTD	Does not apply to 'sfacctd' 
@@ -638,17 +643,19 @@ DESC:           Defines whether IP addresses should be left numerical (in networ
 		works for IPv4 addresses only. Default setting is to convert IP addresses into strings. (default:
 		false)
 
-KEY:		nfacctd_port (-l) [GLOBAL, NO_PMACCTD]
-DESC:		defines the UDP port where to bind the 'nfacctd' daemon (default: 2100). 
+KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD]
+DESC:		defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons
+		(default: nfacctd_port: 2100, sfacctd_port: 6343). 
 
-KEY:		nfacctd_ip (-L) [GLOBAL, NO_PMACCTD]
-DESC:		defines the IPv4/IPv6 address where to bind the 'nfacctd' daemon (default: all interfaces).
+KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD]
+DESC:		defines the IPv4/IPv6 address where to bind the nfacctd (nfacctd_ip) and sfacctd (sfacctd_ip)
+		daemons (default: all interfaces).
 
-KEY:		nfacctd_allow_file [GLOBAL, NO_PMACCTD]
+KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, NO_PMACCTD]
 DESC:		full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
-		to send NetFlow packets to 'nfacctd'. Current syntax does not implement network masks but only
-		individual IP addresses. The Allow List is intended to be small; firewall rules should be
-		preferred to long ACLs. (default: allow all) 
+		to send packets to the daemon. Current syntax does not implement network masks but individual
+		IP addresses only. The Allow List is intended to be small; firewall rules should be preferred
+		to long ACLs. (default: allow all) 
 
 KEY:		nfacctd_time_secs [GLOBAL, NO_PMACCTD]
 VALUES:		[true|false]
@@ -820,18 +827,6 @@ KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampl
 		mirroring).
 		In nfacctd and sfacctd daemons this directive can be used to tackle corner cases, ie. sampling
 		rate reported by the NetFlow/sFlow agent is missing or not correct. (default: no sampling) 
-
-KEY:            sfacctd_port (-l) [GLOBAL, NO_PMACCTD]
-DESC:           defines the UDP port where to bind the 'sfacctd' daemon (default: 6343).
-
-KEY:            sfacctd_ip (-L) [GLOBAL, NO_PMACCTD]
-DESC:           defines the IPv4/IPv6 address where to bind the 'sfacctd' daemon (default: all interfaces).
-
-KEY:            sfacctd_allow_file [GLOBAL, NO_PMACCTD]
-DESC:           full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
-		to send NetFlow packets to 'sfacctd'. Current syntax does not implement network masks but only
-		individual IP addresses. The Allow List is intended to be small; firewall rules should be
-		preferred to long ACLs. (default: allow all)
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
 VALUES:		[true|false]
@@ -1211,9 +1206,14 @@ VALUES:         [true|false]
 DESC:		Enables transparent replication mode. It essentially spoofs the source IP address to the
 		original sender of the datagram. It requires super-user permissions. (default: false)
 
-KEY:            [ xlate_src | xlate_dst ]
+KEY:            xlate_src
 VALUES:         [true|false]
 DESC:           Copies NAT L3/L4 field values in place of the original ones (ie. src_host, src_port,
-		src_net, dst_host, dst_port, dst_net) when available; alternatively it falls back to
-		original values. At time of writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have
-		support for this. (default: false)
+		src_net) when available; alternatively it falls back to original values. At time of
+		writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have support for this (default: false)
+
+KEY:            xlate_dst
+VALUES:         [true|false]
+DESC:           Copies NAT L3/L4 field values in place of the original ones (ie. dst_host, dst_port,
+                dst_net) when available; alternatively it falls back to original values. At time of
+                writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have support for this (default: false)
