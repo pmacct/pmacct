@@ -91,6 +91,7 @@ struct configuration {
   int print_cache_entries;
   int print_markers;
   int print_output;
+  char *print_output_file;
   int nfacctd_port;
   char *nfacctd_ip;
   char *nfacctd_allow_file;

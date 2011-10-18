@@ -61,8 +61,8 @@ struct chained_cache *P_cache_search(struct pkt_primitives *, struct pkt_bgp_pri
 void P_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *);
 void P_cache_flush(struct chained_cache *[], int);
 void P_cache_purge(struct chained_cache *[], int);
-void P_write_stats_header_formatted();
-void P_write_stats_header_csv();
+void P_write_stats_header_formatted(FILE *);
+void P_write_stats_header_csv(FILE *);
 void P_exit_now(int);
 
 /* global vars */

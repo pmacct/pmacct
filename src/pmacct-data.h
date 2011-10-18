@@ -275,6 +275,8 @@ static const struct _dictionary_line dictionary[] = {
   {"print_markers", cfg_key_print_markers},
   {"print_output", cfg_key_print_output},
   {"print_num_protos", cfg_key_num_protos},
+  {"print_time_roundoff", cfg_key_sql_history_roundoff},
+  {"print_output_file", cfg_key_sql_table},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
   {"nfacctd_allow_file", cfg_key_nfacctd_allow_file},

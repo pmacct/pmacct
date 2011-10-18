@@ -72,6 +72,7 @@ EXT void set_sampling_table(struct packet_ptrs_vector *, u_char *);
 EXT void set_shadow_status(struct packet_ptrs *);
 EXT void set_default_preferences(struct configuration *);
 EXT FILE *open_logfile(char *);
+EXT FILE *open_print_output_file(char *, time_t);
 EXT void evaluate_bgp_aspath_radius(char *, int, int);
 EXT void copy_stdcomm_to_asn(char *, as_t *, int);
 EXT void *Malloc(unsigned int);

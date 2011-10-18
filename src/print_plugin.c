@@ -142,10 +142,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
 
-  if (config.print_output == PRINT_OUTPUT_FORMATTED)
-    P_write_stats_header_formatted();
-  else if (config.print_output == PRINT_OUTPUT_CSV)
-    P_write_stats_header_csv();
+  if (!config.sql_table && config.print_output == PRINT_OUTPUT_FORMATTED)
+    P_write_stats_header_formatted(stdout);
+  else if (!config.sql_table && config.print_output == PRINT_OUTPUT_CSV)
+    P_write_stats_header_csv(stdout);
 
   /* plugin main loop */
   for(;;) {
@@ -448,11 +448,22 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives empty_pbgp;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char *as_path, empty_aspath[] = "^$";
+  FILE *f = NULL;
   int j;
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
 
-  if (config.print_markers) printf("--START (%u+%u)--\n", refresh_deadline-config.print_refresh_time,
+  if (config.sql_table) {
+    f = open_print_output_file(config.sql_table, refresh_deadline-config.print_refresh_time);
+
+    if (config.print_output == PRINT_OUTPUT_FORMATTED)
+      P_write_stats_header_formatted(f);
+    else if (config.print_output == PRINT_OUTPUT_CSV)
+      P_write_stats_header_csv(f);
+  }
+  else f = stdout; /* write to standard output */
+
+  if (config.print_markers) fprintf(f, "--START (%u+%u)--\n", refresh_deadline-config.print_refresh_time,
 		  			config.print_refresh_time);
 
   for (j = 0; j < index; j++) {
@@ -464,22 +475,22 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       continue;
 
     if (config.print_output == PRINT_OUTPUT_FORMATTED) {
-      printf("%-10u  ", data->id);
-      printf("%-10u  ", data->id2);
-      printf("%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-      printf("%-10u  ", data->ifindex_in);
-      printf("%-10u  ", data->ifindex_out);
+      fprintf(f, "%-10u  ", data->id);
+      fprintf(f, "%-10u  ", data->id2);
+      fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      fprintf(f, "%-10u  ", data->ifindex_in);
+      fprintf(f, "%-10u  ", data->ifindex_out);
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
-      printf("%-17s  ", src_mac);
+      fprintf(f, "%-17s  ", src_mac);
       etheraddr_string(data->eth_dhost, dst_mac);
-      printf("%-17s  ", dst_mac);
-      printf("%-5u  ", data->vlan_id); 
-      printf("%-2u  ", data->cos); 
+      fprintf(f, "%-17s  ", dst_mac);
+      fprintf(f, "%-5u  ", data->vlan_id); 
+      fprintf(f, "%-2u  ", data->cos); 
 #endif
-      printf("%-10u  ", data->src_as); 
-      printf("%-10u  ", data->dst_as); 
-      printf("%-22s   ", pbgp->std_comms);
+      fprintf(f, "%-10u  ", data->src_as); 
+      fprintf(f, "%-10u  ", data->dst_as); 
+      fprintf(f, "%-22s   ", pbgp->std_comms);
 
       as_path = pbgp->as_path;
       while (as_path) {
@@ -487,76 +498,79 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	if (as_path) *as_path = '_';
       }
       if (strlen(pbgp->as_path))
-	printf("%-22s   ", pbgp->as_path);
+	fprintf(f, "%-22s   ", pbgp->as_path);
       else
-	printf("%-22s   ", empty_aspath);
+	fprintf(f, "%-22s   ", empty_aspath);
 
-      printf("%-5u  ", pbgp->local_pref);
-      printf("%-5u  ", pbgp->med);
-      printf("%-10u  ", pbgp->peer_src_as);
-      printf("%-10u  ", pbgp->peer_dst_as);
+      fprintf(f, "%-5u  ", pbgp->local_pref);
+      fprintf(f, "%-5u  ", pbgp->med);
+      fprintf(f, "%-10u  ", pbgp->peer_src_as);
+      fprintf(f, "%-10u  ", pbgp->peer_dst_as);
       addr_to_str(ip_address, &pbgp->peer_src_ip);
 #if defined ENABLE_IPV6
-      printf("%-45s  ", ip_address);
+      fprintf(f, "%-45s  ", ip_address);
 #else
-      printf("%-15s  ", ip_address);
+      fprintf(f, "%-15s  ", ip_address);
 #endif
       addr_to_str(ip_address, &pbgp->peer_dst_ip);
 #if defined ENABLE_IPV6
-      printf("%-45s  ", ip_address);
+      fprintf(f, "%-45s  ", ip_address);
 #else
-      printf("%-15s  ", ip_address);
+      fprintf(f, "%-15s  ", ip_address);
 #endif
+
+      fprintf(f, "%-10u  ", data->ifindex_in);
+      fprintf(f, "%-10u  ", data->ifindex_out);
 
       addr_to_str(src_host, &data->src_ip);
 #if defined ENABLE_IPV6
-      printf("%-45s  ", src_host);
+      fprintf(f, "%-45s  ", src_host);
 #else
-      printf("%-15s  ", src_host);
+      fprintf(f, "%-15s  ", src_host);
 #endif
       addr_to_str(dst_host, &data->dst_ip);
 #if defined ENABLE_IPV6
-      printf("%-45s  ", dst_host);
+      fprintf(f, "%-45s  ", dst_host);
 #else
-      printf("%-15s  ", dst_host);
+      fprintf(f, "%-15s  ", dst_host);
 #endif
-      printf("%-3u       ", data->src_nmask);
-      printf("%-3u       ", data->dst_nmask);
-      printf("%-5u     ", data->src_port);
-      printf("%-5u     ", data->dst_port);
-      printf("%-3u        ", queue[j]->tcp_flags);
+      fprintf(f, "%-3u       ", data->src_nmask);
+      fprintf(f, "%-3u       ", data->dst_nmask);
+      fprintf(f, "%-5u     ", data->src_port);
+      fprintf(f, "%-5u     ", data->dst_port);
+      fprintf(f, "%-3u        ", queue[j]->tcp_flags);
 
-      if (!config.num_protos) printf("%-10s  ", _protocols[data->proto].name);
-      else  printf("%-10d  ", _protocols[data->proto].number);
+      if (!config.num_protos) fprintf(f, "%-10s  ", _protocols[data->proto].name);
+      else  fprintf(f, "%-10d  ", _protocols[data->proto].number);
 
-      printf("%-3u    ", data->tos);
+      fprintf(f, "%-3u    ", data->tos);
 #if defined HAVE_64BIT_COUNTERS
-      printf("%-20llu  ", queue[j]->packet_counter);
-      printf("%-20llu  ", queue[j]->flow_counter);
-      printf("%llu\n", queue[j]->bytes_counter);
+      fprintf(f, "%-20llu  ", queue[j]->packet_counter);
+      fprintf(f, "%-20llu  ", queue[j]->flow_counter);
+      fprintf(f, "%llu\n", queue[j]->bytes_counter);
 #else
-      printf("%-10lu  ", queue[j]->packet_counter);
-      printf("%-10lu  ", queue[j]->flow_counter);
-      printf("%lu\n", queue[j]->bytes_counter);
+      fprintf(f, "%-10lu  ", queue[j]->packet_counter);
+      fprintf(f, "%-10lu  ", queue[j]->flow_counter);
+      fprintf(f, "%lu\n", queue[j]->bytes_counter);
 #endif
     }
     else if (config.print_output == PRINT_OUTPUT_CSV) {
-      printf("%u,", data->id);
-      printf("%u,", data->id2);
-      printf("%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-      printf("%u,", data->ifindex_in);
-      printf("%u,", data->ifindex_out);
+      fprintf(f, "%u,", data->id);
+      fprintf(f, "%u,", data->id2);
+      fprintf(f, "%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      fprintf(f, "%u,", data->ifindex_in);
+      fprintf(f, "%u,", data->ifindex_out);
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
-      printf("%s,", src_mac);
+      fprintf(f, "%s,", src_mac);
       etheraddr_string(data->eth_dhost, dst_mac);
-      printf("%s,", dst_mac);
-      printf("%u,", data->vlan_id); 
-      printf("%u,", data->cos); 
+      fprintf(f, "%s,", dst_mac);
+      fprintf(f, "%u,", data->vlan_id); 
+      fprintf(f, "%u,", data->cos); 
 #endif
-      printf("%u,", data->src_as); 
-      printf("%u,", data->dst_as); 
-      printf("%s,", pbgp->std_comms);
+      fprintf(f, "%u,", data->src_as); 
+      fprintf(f, "%u,", data->dst_as); 
+      fprintf(f, "%s,", pbgp->std_comms);
 
       as_path = pbgp->as_path;
       while (as_path) {
@@ -564,129 +578,138 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	if (as_path) *as_path = '_';
       }
       if (strlen(pbgp->as_path))
-	printf("%s,", pbgp->as_path);
+	fprintf(f, "%s,", pbgp->as_path);
       else
-	printf("%s,", empty_aspath);
+	fprintf(f, "%s,", empty_aspath);
 
-      printf("%u,", pbgp->local_pref);
-      printf("%u,", pbgp->med);
-      printf("%u,", pbgp->peer_src_as);
-      printf("%u,", pbgp->peer_dst_as);
+      fprintf(f, "%u,", pbgp->local_pref);
+      fprintf(f, "%u,", pbgp->med);
+      fprintf(f, "%u,", pbgp->peer_src_as);
+      fprintf(f, "%u,", pbgp->peer_dst_as);
 
       addr_to_str(ip_address, &pbgp->peer_src_ip);
-      printf("%s,", ip_address);
+      fprintf(f, "%s,", ip_address);
       addr_to_str(ip_address, &pbgp->peer_dst_ip);
-      printf("%s,", ip_address);
+      fprintf(f, "%s,", ip_address);
+
+      fprintf(f, "%u,", data->ifindex_in);
+      fprintf(f, "%u,", data->ifindex_out);
 
       addr_to_str(src_host, &data->src_ip);
-      printf("%s,", src_host);
+      fprintf(f, "%s,", src_host);
       addr_to_str(dst_host, &data->dst_ip);
-      printf("%s,", dst_host);
+      fprintf(f, "%s,", dst_host);
 
-      printf("%u,", data->src_nmask);
-      printf("%u,", data->dst_nmask);
-      printf("%u,", data->src_port);
-      printf("%u,", data->dst_port);
-      printf("%u,", queue[j]->tcp_flags);
+      fprintf(f, "%u,", data->src_nmask);
+      fprintf(f, "%u,", data->dst_nmask);
+      fprintf(f, "%u,", data->src_port);
+      fprintf(f, "%u,", data->dst_port);
+      fprintf(f, "%u,", queue[j]->tcp_flags);
 
-      if (!config.num_protos) printf("%s,", _protocols[data->proto].name);
-      else printf("%d,", _protocols[data->proto].number);
+      if (!config.num_protos) fprintf(f, "%s,", _protocols[data->proto].name);
+      else fprintf(f, "%d,", _protocols[data->proto].number);
 
-      printf("%u,", data->tos);
+      fprintf(f, "%u,", data->tos);
 #if defined HAVE_64BIT_COUNTERS
-      printf("%llu,", queue[j]->packet_counter);
-      printf("%llu,", queue[j]->flow_counter);
-      printf("%llu\n", queue[j]->bytes_counter);
+      fprintf(f, "%llu,", queue[j]->packet_counter);
+      fprintf(f, "%llu,", queue[j]->flow_counter);
+      fprintf(f, "%llu\n", queue[j]->bytes_counter);
 #else
-      printf("%lu,", queue[j]->packet_counter);
-      printf("%lu,", queue[j]->flow_counter);
-      printf("%lu\n", queue[j]->bytes_counter);
+      fprintf(f, "%lu,", queue[j]->packet_counter);
+      fprintf(f, "%lu,", queue[j]->flow_counter);
+      fprintf(f, "%lu\n", queue[j]->bytes_counter);
 #endif
     }
   }
 
-  if (config.print_markers) printf("--END--\n");
+  if (config.print_markers) fprintf(f, "--END--\n");
+
+  if (config.sql_table) fclose(f);
 }
 
-void P_write_stats_header_formatted()
+void P_write_stats_header_formatted(FILE *f)
 {
-  printf("TAG         ");
-  printf("TAG2        ");
-  printf("CLASS             ");
-  printf("IN_IFACE    ");
-  printf("OUT_IFACE   ");
+  fprintf(f, "TAG         ");
+  fprintf(f, "TAG2        ");
+  fprintf(f, "CLASS             ");
+  fprintf(f, "IN_IFACE    ");
+  fprintf(f, "OUT_IFACE   ");
 #if defined HAVE_L2
-  printf("SRC_MAC            ");
-  printf("DST_MAC            ");
-  printf("VLAN   ");
-  printf("COS ");
+  fprintf(f, "SRC_MAC            ");
+  fprintf(f, "DST_MAC            ");
+  fprintf(f, "VLAN   ");
+  fprintf(f, "COS ");
 #endif
-  printf("SRC_AS      ");
-  printf("DST_AS      ");
-  printf("BGP_COMMS                ");
-  printf("AS_PATH                  ");
-  printf("PREF   ");
-  printf("MED    ");
-  printf("PEER_SRC_AS ");
-  printf("PEER_DST_AS ");
-  printf("PEER_SRC_IP      ");
-  printf("PEER_DST_IP      ");
+  fprintf(f, "SRC_AS      ");
+  fprintf(f, "DST_AS      ");
+  fprintf(f, "BGP_COMMS                ");
+  fprintf(f, "AS_PATH                  ");
+  fprintf(f, "PREF   ");
+  fprintf(f, "MED    ");
+  fprintf(f, "PEER_SRC_AS ");
+  fprintf(f, "PEER_DST_AS ");
+  fprintf(f, "PEER_SRC_IP      ");
+  fprintf(f, "PEER_DST_IP      ");
+  fprintf(f, "IN_IFACE    ");
+  fprintf(f, "OUT_IFACE   ");
 #if defined ENABLE_IPV6
-  printf("SRC_IP                                         ");
-  printf("DST_IP                                         ");
+  fprintf(f, "SRC_IP                                         ");
+  fprintf(f, "DST_IP                                         ");
 #else
-  printf("SRC_IP           ");
-  printf("DST_IP           ");
+  fprintf(f, "SRC_IP           ");
+  fprintf(f, "DST_IP           ");
 #endif
-  printf("SRC_MASK  ");
-  printf("DST_MASK  ");
-  printf("SRC_PORT  ");
-  printf("DST_PORT  ");
-  printf("TCP_FLAGS  ");
-  printf("PROTOCOL    ");
-  printf("TOS    ");
+  fprintf(f, "SRC_MASK  ");
+  fprintf(f, "DST_MASK  ");
+  fprintf(f, "SRC_PORT  ");
+  fprintf(f, "DST_PORT  ");
+  fprintf(f, "TCP_FLAGS  ");
+  fprintf(f, "PROTOCOL    ");
+  fprintf(f, "TOS    ");
 #if defined HAVE_64BIT_COUNTERS
-  printf("PACKETS               ");
-  printf("FLOWS                 ");
-  printf("BYTES\n");
+  fprintf(f, "PACKETS               ");
+  fprintf(f, "FLOWS                 ");
+  fprintf(f, "BYTES\n");
 #else
-  printf("PACKETS     ");
-  printf("FLOWS       ");
-  printf("BYTES\n");
+  fprintf(f, "PACKETS     ");
+  fprintf(f, "FLOWS       ");
+  fprintf(f, "BYTES\n");
 #endif
 }
 
-void P_write_stats_header_csv()
+void P_write_stats_header_csv(FILE *f)
 {
-  printf("TAG,");
-  printf("TAG2,");
-  printf("CLASS,");
+  fprintf(f, "TAG,");
+  fprintf(f, "TAG2,");
+  fprintf(f, "CLASS,");
 #if defined HAVE_L2
-  printf("SRC_MAC,");
-  printf("DST_MAC,");
-  printf("VLAN,");
-  printf("COS,");
+  fprintf(f, "SRC_MAC,");
+  fprintf(f, "DST_MAC,");
+  fprintf(f, "VLAN,");
+  fprintf(f, "COS,");
 #endif
-  printf("SRC_AS,");
-  printf("DST_AS,");
-  printf("BGP_COMMS,");
-  printf("AS_PATH,");
-  printf("PREF,");
-  printf("MED,");
-  printf("PEER_SRC_AS,");
-  printf("PEER_DST_AS,");
-  printf("PEER_SRC_IP,");
-  printf("PEER_DST_IP,");
-  printf("SRC_IP,");
-  printf("DST_IP,");
-  printf("SRC_PORT,");
-  printf("DST_PORT,");
-  printf("TCP_FLAGS,");
-  printf("PROTOCOL,");
-  printf("TOS,");
-  printf("PACKETS,");
-  printf("FLOWS,");
-  printf("BYTES\n");
+  fprintf(f, "SRC_AS,");
+  fprintf(f, "DST_AS,");
+  fprintf(f, "BGP_COMMS,");
+  fprintf(f, "AS_PATH,");
+  fprintf(f, "PREF,");
+  fprintf(f, "MED,");
+  fprintf(f, "PEER_SRC_AS,");
+  fprintf(f, "PEER_DST_AS,");
+  fprintf(f, "PEER_SRC_IP,");
+  fprintf(f, "PEER_DST_IP,");
+  fprintf(f, "IN_IFACE,");
+  fprintf(f, "OUT_IFACE,");
+  fprintf(f, "SRC_IP,");
+  fprintf(f, "DST_IP,");
+  fprintf(f, "SRC_PORT,");
+  fprintf(f, "DST_PORT,");
+  fprintf(f, "TCP_FLAGS,");
+  fprintf(f, "PROTOCOL,");
+  fprintf(f, "TOS,");
+  fprintf(f, "PACKETS,");
+  fprintf(f, "FLOWS,");
+  fprintf(f, "BYTES\n");
 }
 
 void P_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)

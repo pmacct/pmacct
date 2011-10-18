@@ -258,10 +258,11 @@ DESC:		defines the SQL database to use. Remember that when using the SQLite3 plu
 		directive refers to the full path to the database file (default: 'pmacct', SQLite 3.x
 		default: '/tmp/pmacct.db'). 
 
-KEY:            sql_table
-DESC:           defines the SQL table to use. Dynamic tables are supported through the use of some
-		variables. Variables are computed when data is purged into the DB. The list of supported 
-		variables follows:
+KEY:            [ sql_table | print_output_file ]
+DESC:           In SQL plugins this defines the SQL table to use (sql_table); in print plugin it defines
+		the file to write to (print_output_file). Dynamic names are supported through the use of
+		variables, which are computed at the moment when data is purged to the backend. The list
+		of supported variables follows: 
 
 		%d	The day of the month as a decimal number (range 01 to 31).
 
@@ -281,6 +282,7 @@ DESC:           defines the SQL table to use. Dynamic tables are supported throu
 
 		%Y	The year as a decimal number including the century.
 
+		SQL plugins notes:
 		Time-related variables require 'sql_history' to be specified in order to work correctly
 		(see 'sql_history' entry in this in this document for further information) and that the
 		'sql_refresh_time' setting is aligned with the 'sql_history', ie.:
@@ -305,6 +307,10 @@ DESC:           defines the SQL table to use. Dynamic tables are supported throu
 		to work; sql_refresh_time with a value smaller than sql_history is also supported; whereas
 		the feature does not support values of sql_refresh_time greater than sql_history.
 
+		Print plugin notes:
+		If a non-dynamic filename is selected, content is overwritten to the existing one. 
+
+		Common notes:
 		The maximum table name length is 64 characters. The maximum number of variables it may
 		contain is 8.
 
@@ -396,9 +402,10 @@ DESC:		enables historical accounting by dividing accounted data into configurabl
 		is close to time slots in a RRD file. Examples of valid values are: '5m' - five minutes,
 		'1h' - one hour, '4h' - four hours, '1d' - one day, '1w' - one week, '1M' - one month).
 
-KEY:		sql_history_roundoff
+KEY:		[ sql_history_roundoff | print_time_roundoff ]
 VALUES		[m,h,d,w,M]
-DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M).
+DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
+		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).
 		Suppose you go with 'sql_history: 1h', 'sql_history_roundoff: m' and it's 6:34pm. Rounding
 		off minutes gives you an hourly timeslot (1h) starting at 6:00pm; so, subsequent ones will
 		start at 7:00pm, 8:00pm, etc. Now, you go with 'sql_history: 5m', 'sql_history_roundoff: m'
