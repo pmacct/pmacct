@@ -449,7 +449,8 @@
 	/* ... */
 	#define NF9_IN_SRC_MAC                  56
 	#define NF9_OUT_DST_MAC                 57
-	/* ... */
+        #define NF9_IN_VLAN                     58
+        #define NF9_OUT_VLAN                    59
 	#define NF9_IP_PROTOCOL_VERSION         60
 	#define NF9_DIRECTION                   61
 	#define NF9_IPV6_NEXT_HOP		62
@@ -493,10 +494,6 @@
 	#define NF9_XLATE_IPV4_DST_ADDR		226
 	#define NF9_XLATE_L4_SRC_PORT		227
 	#define NF9_XLATE_L4_DST_PORT		228
-	/* ... */
-	#define NF9_IN_VLAN			243
-	/* ... */
-	#define NF9_OUT_VLAN			254
 	/* ... */
         #define NF9_XLATE_IPV6_SRC_ADDR         281
         #define NF9_XLATE_IPV6_DST_ADDR         282

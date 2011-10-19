@@ -101,7 +101,8 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_FLOW_SAMPLER_INTERVAL       50
 #define NF9_IN_SRC_MAC                  56 //
 #define NF9_OUT_DST_MAC                 57
-/* ... */
+#define NF9_SRC_VLAN                    58
+#define NF9_DST_VLAN                    59
 #define NF9_IP_PROTOCOL_VERSION		60
 #define NF9_DIRECTION                   61
 /* ... */
@@ -122,10 +123,6 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
 /* CUSTOM TYPES END HERE */
-/* ... */
-#define NF9_SRC_VLAN                    243
-/* ... */
-#define NF9_DST_VLAN                    254
 
 /* OPTION SCOPES */
 #define NF9_OPT_SCOPE_SYSTEM            1
