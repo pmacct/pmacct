@@ -328,11 +328,11 @@ int main(int argc,char **argv, char **envp)
   if (config.daemon) {
     list = plugins_list;
     while (list) {
-      if (!strcmp(list->type.string, "print")) printf("WARN: Daemonizing. Hmm, bye bye screen.\n");
+      if (!strcmp(list->type.string, "print")) printf("WARN ( default/core ): Daemonizing. Hmm, bye bye screen.\n");
       list = list->next;
     }
     if (debug || config.debug)
-      printf("WARN: debug is enabled; forking in background. Console logging will get lost.\n"); 
+      printf("WARN ( default/core ): debug is enabled; forking in background. Console logging will get lost.\n"); 
     daemonize();
   }
 
@@ -341,7 +341,7 @@ int main(int argc,char **argv, char **envp)
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
       config.syslog = NULL;
-      Log(LOG_WARNING, "WARN ( default/core ): specified syslog facility is not supported; logging to console.\n");
+      printf("WARN ( default/core ): specified syslog facility is not supported; logging to console.\n");
     }
     else openlog(NULL, LOG_PID, logf);
     Log(LOG_INFO, "INFO ( default/core ): Start logging ...\n");
