@@ -50,12 +50,15 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0; 
 
-  /* XXX: glue */
   memcpy(&config, cfgptr, sizeof(struct configuration));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "SQLite3 Plugin", config.name);
   memset(&idata, 0, sizeof(idata));
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
+  if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_logfile(config.logfile);
+  }
 
   sql_set_signals();
   sql_init_default_values();

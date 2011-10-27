@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -151,6 +151,10 @@ void reload()
     }
     openlog(NULL, LOG_PID, logf);
     Log(LOG_INFO, "INFO: Start logging ...\n");
+  }
+  else if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_logfile(config.logfile);
   }
 
   signal(SIGHUP, reload);

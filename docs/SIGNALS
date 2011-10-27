@@ -5,7 +5,7 @@ that pmacct core says goodbye when its last child dies or is terminated.
 
 pmacctd/nfacctd/sfacctd Core process:
 SIGCHLD:	used to handle gracefully his loved child processes;
-SIGHUP:         causes the reopening of connection with syslog daemon;
+SIGHUP:         reopens the logging infrastructure. Works with both syslog and logfiles
 SIGUSR1:        returns various statistics via either console or syslog; the syslog level reserved
 		for such purpose is NOTICE; the facility is selected through configuration (ie key
 		'syslog'). It works for all pmacctd/nfacctd/sfacctd;
@@ -41,6 +41,15 @@ SIGPIPE:        ignored;
 SIGCHLD:	ignored; 
 SIGHUP:         inherited by Core Process; 
 SIGUSR1:	ignored;
+SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
+                maps to be reloaded;
+SIGINT:         causes the process to exit gracefully;
+
+Print process:
+SIGPIPE:        ignored;
+SIGCHLD:        ignored;
+SIGHUP:         inherited by Core Process;
+SIGUSR1:        ignored;
 SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
                 maps to be reloaded;
 SIGINT:         causes the process to exit gracefully;

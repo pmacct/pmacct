@@ -367,24 +367,10 @@ FILE *open_logfile(char *filename)
   if (config.files_gid) group = config.files_gid;
 
   file = fopen(filename, "a"); 
-  if (file) {
-    chown(filename, owner, group);
-    if (file_lock(fileno(file))) {
-      Log(LOG_ALERT, "ALERT: Unable to obtain lock for logfile '%s'.\n", filename);
-      file = NULL;
-    }
-  }
+  if (file) chown(filename, owner, group); 
   else {
-    Log(LOG_ERR, "ERROR: Unable to open logfile '%s'\n", filename);
+    printf("ERROR: Unable to open logfile '%s'\n", filename);
     file = NULL;
-  }
-
-  if (file) {
-    now = time(NULL);
-    tmnow = localtime(&now);
-    strftime(timebuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S" , tmnow);
-    fprintf(file, "\n\n=== Start logging: %s ===\n\n", timebuf); 
-    fflush(file);
   }
 
   return file;

@@ -57,6 +57,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "Print Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
+  if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_logfile(config.logfile);
+  }
 
   reload_map = FALSE;
 

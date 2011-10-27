@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -55,11 +55,14 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int cLen, num, sd, sd2;
   char *dataptr;
 
-  /* XXX: glue */
   memcpy(&config, cfgptr, sizeof(struct configuration));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "IMT Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
+  if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_logfile(config.logfile);
+  }
 
   reload_map = FALSE;
   status->wakeup = TRUE;

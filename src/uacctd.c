@@ -365,16 +365,16 @@ int main(int argc,char **argv, char **envp)
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
       if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
-        Log(LOG_ERR, "ERROR: Packet sampling and classification are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( default/core ): Packet sampling and classification are mutual exclusive.\n");
         exit(1);
       }
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
-        Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( default/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n");
         exit(1);
       }
 
       if (list->type.id == PLUGIN_ID_TEE) {
-        Log(LOG_ERR, "ERROR: 'tee' plugin not supported in 'uacctd'.\n");
+        Log(LOG_ERR, "ERROR ( default/core ): 'tee' plugin not supported in 'uacctd'.\n");
         exit(1);
       }
       else if (list->type.id == PLUGIN_ID_NFPROBE) {
@@ -423,7 +423,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
                                        COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
                                        COUNT_IS_SYMMETRIC)) {
-          Log(LOG_ERR, "ERROR: 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
+          Log(LOG_ERR, "ERROR ( default/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
           exit(1);
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
@@ -460,7 +460,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
                                        COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
                                        COUNT_IS_SYMMETRIC)) {
-          Log(LOG_ERR, "ERROR: 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
+          Log(LOG_ERR, "ERROR ( default/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
           exit(1);
         }
 

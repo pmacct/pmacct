@@ -364,12 +364,12 @@ int main(int argc,char **argv, char **envp)
     if (list->type.id != PLUGIN_ID_CORE) {  
       /* applies to all plugins */
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
-        Log(LOG_ERR, "ERROR: Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( default/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n");
         exit(1);
       }
 
       if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {
-        Log(LOG_ERR, "ERROR: 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n");
+        Log(LOG_ERR, "ERROR ( default/core ): 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n");
         exit(1);
       }
       else if (list->type.id == PLUGIN_ID_TEE) {
