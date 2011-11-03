@@ -1419,7 +1419,7 @@ int main(int argc,char **argv)
 	  }
 	  else {
 	    if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-22s   ", empty_aspath); 
-	    else if (want_output == PRINT_OUTPUT_CSV) printf("%s,", empty_aspath); 
+	    else if (want_output == PRINT_OUTPUT_CSV) printf("%s,", pbgp->as_path); 
 	  }
         }
 

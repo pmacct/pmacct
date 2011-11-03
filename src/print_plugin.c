@@ -451,7 +451,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char *as_path, empty_aspath[] = "^$";
+  char *as_path, *bgp_comm, empty_aspath[] = "^$";
   FILE *f = NULL;
   int j;
 
@@ -492,7 +492,17 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #endif
       fprintf(f, "%-10u  ", data->src_as); 
       fprintf(f, "%-10u  ", data->dst_as); 
-      fprintf(f, "%-22s   ", pbgp->std_comms);
+
+      bgp_comm = pbgp->std_comms;
+      while (bgp_comm) {
+        bgp_comm = strchr(pbgp->std_comms, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
+
+      if (strlen(pbgp->std_comms)) 
+        fprintf(f, "%-22s   ", pbgp->std_comms);
+      else
+	fprintf(f, "%-22u   ", 0);
 
       as_path = pbgp->as_path;
       while (as_path) {
@@ -570,17 +580,24 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #endif
       fprintf(f, "%u,", data->src_as); 
       fprintf(f, "%u,", data->dst_as); 
-      fprintf(f, "%s,", pbgp->std_comms);
+
+      bgp_comm = pbgp->std_comms;
+      while (bgp_comm) {
+        bgp_comm = strchr(pbgp->std_comms, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
+
+      if (strlen(pbgp->std_comms)) 
+        fprintf(f, "%s,", pbgp->std_comms);
+      else
+        fprintf(f, "%u,", 0);
 
       as_path = pbgp->as_path;
       while (as_path) {
 	as_path = strchr(pbgp->as_path, ' ');
 	if (as_path) *as_path = '_';
       }
-      if (strlen(pbgp->as_path))
-	fprintf(f, "%s,", pbgp->as_path);
-      else
-	fprintf(f, "%s,", empty_aspath);
+      fprintf(f, "%s,", pbgp->as_path);
 
       fprintf(f, "%u,", pbgp->local_pref);
       fprintf(f, "%u,", pbgp->med);
