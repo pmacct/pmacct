@@ -642,6 +642,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   if (config.print_markers) fprintf(f, "--END--\n");
 
   if (config.sql_table) fclose(f);
+
+  if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
 
 void P_write_stats_header_formatted(FILE *f)
@@ -798,4 +800,22 @@ void P_exit_now(int signum)
 
   wait(NULL);
   exit_plugin(0);
+}
+
+int P_trigger_exec(char *filename)
+{
+  char *args[1];
+  int pid;
+
+  memset(args, 0, sizeof(args));
+
+  switch (pid = vfork()) {
+  case -1:
+    return -1;
+  case 0:
+    execv(filename, args);
+    exit(0);
+  }
+
+  return 0;
 }

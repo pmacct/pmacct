@@ -498,12 +498,14 @@ DESC:		enables the use of multi-values INSERT statements. The value of the direc
 		to check the size of this pmacct buffer against the size of the corresponding MySQL buffer
 		(max_allowed_packet). (default: none) 
 
-KEY:		sql_trigger_exec
+KEY:		[ sql_trigger_exec | print_trigger_exec ]
 DESC:		defines the executable to be launched at fixed time intervals to post-process aggregates;
-		intervals are specified by the 'sql_trigger_time' directive; if no interval is supplied,
-		'sql_refresh_time' value is used instead: this will result in a trigger being fired each 
-		purging event. A number of environment variables are set in order to allow the trigger to
-		take actions; take a look to docs/TRIGGER_VARS to check them out.
+		in SQL plugins, intervals are specified by the 'sql_trigger_time' directive; if no interval
+		is supplied 'sql_refresh_time' value is used instead: this will result in a trigger being
+		fired each purging event. A number of environment variables are set in order to allow the
+		trigger to take actions; take a look to docs/TRIGGER_VARS to check them out. In the print
+		plugin a simpler implementation is made: triggers can be fired at each 'print_refresh_time'
+		only and no environment variables are passed over to the executable.
 
 KEY:		sql_trigger_time
 VALUES:		#[m|h|d|w|M]

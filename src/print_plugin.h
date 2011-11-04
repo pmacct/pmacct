@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -48,28 +48,35 @@ struct chained_cache {
 };
 
 /* prototypes */
-void print_plugin(int, struct configuration *, void *);
-struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
-unsigned int P_cache_modulo(struct pkt_primitives *, struct pkt_bgp_primitives *);
-void P_sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-void P_sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-void P_sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-#if defined (HAVE_L2)
-void P_sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+#if (!defined __PRINT_PLUGIN_C)
+#define EXT extern
+#else
+#define EXT
 #endif
-struct chained_cache *P_cache_search(struct pkt_primitives *, struct pkt_bgp_primitives *);
-void P_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-void P_cache_flush(struct chained_cache *[], int);
-void P_cache_purge(struct chained_cache *[], int);
-void P_write_stats_header_formatted(FILE *);
-void P_write_stats_header_csv(FILE *);
-void P_exit_now(int);
+EXT void print_plugin(int, struct configuration *, void *);
+EXT struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
+EXT unsigned int P_cache_modulo(struct pkt_primitives *, struct pkt_bgp_primitives *);
+EXT void P_sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT void P_sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT void P_sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+#if defined (HAVE_L2)
+EXT void P_sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+#endif
+EXT struct chained_cache *P_cache_search(struct pkt_primitives *, struct pkt_bgp_primitives *);
+EXT void P_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT void P_cache_flush(struct chained_cache *[], int);
+EXT void P_cache_purge(struct chained_cache *[], int);
+EXT void P_write_stats_header_formatted(FILE *);
+EXT void P_write_stats_header_csv(FILE *);
+EXT void P_exit_now(int);
+EXT int P_trigger_exec(char *);
 
 /* global vars */
-void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *); /* pointer to INSERT function */
-struct scratch_area sa;
-struct chained_cache *cache;
-struct chained_cache **queries_queue;
-struct timeval flushtime;
-int qq_ptr, pp_size, pb_size, dbc_size, quit; 
-time_t refresh_deadline;
+EXT void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *); /* pointer to INSERT function */
+EXT struct scratch_area sa;
+EXT struct chained_cache *cache;
+EXT struct chained_cache **queries_queue;
+EXT struct timeval flushtime;
+EXT int qq_ptr, pp_size, pb_size, dbc_size, quit; 
+EXT time_t refresh_deadline;
+#undef EXT
