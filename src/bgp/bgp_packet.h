@@ -58,7 +58,8 @@
 #define SAFI_MULTICAST            2
 #define SAFI_UNICAST_MULTICAST    3
 #define SAFI_MPLS_LABEL           4
-#define SAFI_MAX                  5
+#define SAFI_MPLS_VPN             128
+#define SAFI_MAX                  129
 
 struct bgp_header {
     u_int8_t bgpo_marker[BGP_MARKER_SIZE];

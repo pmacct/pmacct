@@ -744,6 +744,14 @@ int bgp_update_msg(struct bgp_peer *peer, char *pkt)
 	bgp_nlri_parse (peer, NULL, &mp_withdraw);
 
   if (mp_update.length
+          && mp_update.afi == AFI_IP && mp_update.safi == SAFI_MPLS_VPN)
+        bgp_nlri_parse(peer, &attr, &mp_update);
+
+  if (mp_withdraw.length
+          && mp_withdraw.afi == AFI_IP && mp_withdraw.safi == SAFI_MPLS_VPN)
+        bgp_nlri_parse(peer, NULL, &mp_withdraw);
+
+  if (mp_update.length
 	  && mp_update.afi == AFI_IP6
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL))
 	bgp_nlri_parse(peer, &attr, &mp_update);
@@ -1027,6 +1035,9 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
   struct prefix p;
   int psize, end;
   int ret;
+  u_int32_t tmp32, label;
+  u_int16_t tmp16;
+  rd_t rd;
 
   memset (&p, 0, sizeof (struct prefix));
 
@@ -1067,18 +1078,51 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	  /* As we trash the label anyway, let's rewrite the SAFI as plain unicast */
 	  safi = SAFI_UNICAST;
 	}
+	else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
+	  if (info->afi == AFI_IP && p.prefixlen != 112 || info->afi != AFI_IP /* XXX: IPv6? */) return -1;
+
+          psize = ((p.prefixlen+7)/8);
+          if (psize > end) return -1;
+
+          /* Fetch prefix from NLRI packet, skip the 3 bytes label and the 8 bytes RD */
+	  memcpy(&label, pnt, 3);
+
+	  memcpy(&rd.type, pnt+3, 2);
+	  rd.type = ntohs(rd.type);
+	  switch(rd.type) {
+	  case 0: 
+	    memcpy(&tmp16, pnt+5, 2);
+	    memcpy(&tmp32, pnt+7, 4);
+	    rd.admin = ntohs(tmp16);
+	    rd.number = ntohl(tmp32);
+	    break;
+	  case 1: 
+	  case 2: 
+	    memcpy(&tmp32, pnt+5, 4);
+	    memcpy(&tmp16, pnt+9, 2);
+	    rd.admin = ntohl(tmp32);
+	    rd.number = ntohs(tmp16);
+	    break;
+	  default:
+	    return -1;
+	    break;
+	  }
+	  
+          memcpy(&p.u.prefix, pnt+11, (psize-11));
+          p.prefixlen -= 88;
+	}
 	
     /* Let's do our job now! */
 	if (attr)
-	  ret = bgp_process_update(peer, &p, attr, info->afi, safi);
+	  ret = bgp_process_update(peer, &p, attr, info->afi, safi, &rd);
 	else
-	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi);
+	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi, &rd);
   }
 
   return 0;
 }
 
-int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi)
+int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi, rd_t *rd)
 {
   struct bgp_node *route;
   struct bgp_info *ri, *new;
@@ -1089,7 +1133,13 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
   /* Check previously received route. */
   for (ri = route->info[modulo]; ri; ri = ri->next) {
-    if (ri->peer == peer) break;
+    if (safi != SAFI_MPLS_VPN) { 
+      if (ri->peer == peer) break;
+    }
+    else {
+      if (ri->peer == peer && ri->extra && ri->extra->rd.admin == rd->admin &&
+	  ri->extra->rd.number == rd->number) break;
+    }
   }
 
   attr_new = bgp_attr_intern(attr);
@@ -1106,6 +1156,18 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	  /* Update to new attribute.  */
 	  bgp_attr_unintern(ri->attr);
 	  ri->attr = attr_new;
+
+	  /* Install/update MPLS stuff if required */
+	  if (safi == SAFI_MPLS_VPN) {
+	    struct bgp_info_extra *rie;
+
+	    rie = bgp_info_extra_get(ri);
+	    memcpy(&rie->rd, rd, sizeof(rd_t));
+
+	    // printf("CI PASSO 1: rd.type: %u rd.admin: %u rd.number: %u\n", rie->rd.type, rie->rd.admin, rie->rd.number);
+	    // XXX
+	  }
+
 	  bgp_unlock_node (route);
 
 	  if (config.nfacctd_bgp_msglog)
@@ -1119,6 +1181,15 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   new = bgp_info_new();
   new->peer = peer;
   new->attr = attr_new;
+  if (safi == SAFI_MPLS_VPN) {
+    struct bgp_info_extra *rie;
+
+    rie = bgp_info_extra_get(new);
+    memcpy(&rie->rd, rd, sizeof(rd_t));
+
+    // printf("CI PASSO 2: rd.type: %u rd.admin: %u rd.number: %u\n", rie->rd.type, rie->rd.admin, rie->rd.number);
+    // XXX
+  }
 
   /* Register new BGP information. */
   bgp_info_add(route, new, modulo);
@@ -1168,7 +1239,7 @@ log_update:
   return 0;
 }
 
-int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi)
+int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi, rd_t *rd)
 {
   struct bgp_node *route;
   struct bgp_info *ri;
@@ -1179,7 +1250,13 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 
   /* Lookup withdrawn route. */
   for (ri = route->info[modulo]; ri; ri = ri->next) {
-    if (ri->peer == peer) break;
+    if (safi != SAFI_MPLS_VPN) {
+      if (ri->peer == peer) break;
+    }
+    else {
+      if (ri->peer == peer && ri->extra && ri->extra->rd.admin == rd->admin &&
+          ri->extra->rd.number == rd->number) break;
+    }
   }
 
   if (ri && config.nfacctd_bgp_msglog) {
@@ -1217,6 +1294,33 @@ int bgp_afi2family (int afi)
 	return AF_INET6;
 #endif 
   return 0;
+}
+
+/* Allocate bgp_info_extra */
+struct bgp_info_extra *bgp_info_extra_new(void)
+{
+  struct bgp_info_extra *new;
+
+  new = malloc(sizeof(struct bgp_info_extra));
+
+  return new;
+}
+
+void bgp_info_extra_free(struct bgp_info_extra **extra)
+{
+  if (extra && *extra) {
+    free(*extra);
+    *extra = NULL;
+  }
+}
+
+/* Get bgp_info extra information for the given bgp_info */
+struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
+{
+  if (!ri->extra)
+    ri->extra = bgp_info_extra_new();
+
+  return ri->extra;
 }
 
 /* Allocate new bgp info structure. */
@@ -1265,7 +1369,9 @@ void bgp_info_delete(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 void bgp_info_free(struct bgp_info *ri)
 {
   if (ri->attr)
-	bgp_attr_unintern (ri->attr);
+	bgp_attr_unintern(ri->attr);
+
+  bgp_info_extra_free(&ri->extra);
 
   ri->peer->lock--;
   free(ri);

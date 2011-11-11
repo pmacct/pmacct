@@ -76,12 +76,27 @@ struct bgp_node
 */
 };
 
+struct route_distinguisher {
+  u_int16_t type;
+  u_int32_t admin;
+  u_int32_t number;
+};
+
+typedef struct route_distinguisher rd_t;
+
+struct bgp_info_extra
+{
+  rd_t rd;
+  u_char label[3];
+};
+
 struct bgp_info
 {
   struct bgp_info *next;
   struct bgp_info *prev;
   struct bgp_peer *peer;
   struct bgp_attr *attr;
+  struct bgp_info_extra *extra;
 };
 
 /* Prototypes */
