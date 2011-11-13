@@ -1031,15 +1031,16 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 {
   u_char *pnt;
   u_char *lim;
-  u_char safi;
+  u_char safi, label[3];
   struct prefix p;
   int psize, end;
   int ret;
-  u_int32_t tmp32, label;
+  u_int32_t tmp32;
   u_int16_t tmp16;
   rd_t rd;
 
-  memset (&p, 0, sizeof (struct prefix));
+  memset (&p, 0, sizeof(struct prefix));
+  memset (&rd, 0, sizeof(rd_t));
 
   pnt = info->nlri;
   lim = pnt + info->length;
@@ -1084,8 +1085,8 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
           psize = ((p.prefixlen+7)/8);
           if (psize > end) return -1;
 
-          /* Fetch prefix from NLRI packet, skip the 3 bytes label and the 8 bytes RD */
-	  memcpy(&label, pnt, 3);
+          /* Fetch label (3), RD (8) and prefix (4) from NLRI packet */
+	  memcpy(label, pnt, 3);
 
 	  memcpy(&rd.type, pnt+3, 2);
 	  rd.type = ntohs(rd.type);
@@ -1114,19 +1115,20 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	
     /* Let's do our job now! */
 	if (attr)
-	  ret = bgp_process_update(peer, &p, attr, info->afi, safi, &rd);
+	  ret = bgp_process_update(peer, &p, attr, info->afi, safi, &rd, label);
 	else
-	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi, &rd);
+	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi, &rd, label);
   }
 
   return 0;
 }
 
-int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi, rd_t *rd)
+int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
+		       rd_t *rd, char *label)
 {
-  struct bgp_node *route;
-  struct bgp_info *ri, *new;
-  struct bgp_attr *attr_new;
+  struct bgp_node *route = NULL;
+  struct bgp_info *ri = NULL, *new = NULL;
+  struct bgp_attr *attr_new = NULL;
   u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
 
   route = bgp_node_get(rib[afi][safi], p);
@@ -1138,7 +1140,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
     }
     else {
       if (ri->peer == peer && ri->extra && ri->extra->rd.admin == rd->admin &&
-	  ri->extra->rd.number == rd->number) break;
+	  ri->extra->rd.number == rd->number) break; 
     }
   }
 
@@ -1163,9 +1165,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 	    rie = bgp_info_extra_get(ri);
 	    memcpy(&rie->rd, rd, sizeof(rd_t));
-
-	    // printf("CI PASSO 1: rd.type: %u rd.admin: %u rd.number: %u\n", rie->rd.type, rie->rd.admin, rie->rd.number);
-	    // XXX
+	    memcpy(&rie->label, label, 3);
 	  }
 
 	  bgp_unlock_node (route);
@@ -1186,9 +1186,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
     rie = bgp_info_extra_get(new);
     memcpy(&rie->rd, rd, sizeof(rd_t));
-
-    // printf("CI PASSO 2: rd.type: %u rd.admin: %u rd.number: %u\n", rie->rd.type, rie->rd.admin, rie->rd.number);
-    // XXX
+    memcpy(&rie->label, label, 3);
   }
 
   /* Register new BGP information. */
@@ -1197,8 +1195,10 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   /* route_node_get lock */
   bgp_unlock_node(route);
 
-  if (config.nfacctd_bgp_msglog)
+  if (config.nfacctd_bgp_msglog) {
+    ri = new;
     goto log_update;
+  }
 
   /* XXX: Impose a maximum number of prefixes allowed */
   // if (bgp_maximum_prefix_overflow(peer, afi, safi, 0))
@@ -1232,17 +1232,25 @@ log_update:
     else
       inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
 
-    Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
+    if (safi != SAFI_MPLS_VPN)
+      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	  inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
+    else {
+      if (ri && ri->extra)
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u RD: '%u:%u:%u' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
+	    inet_ntoa(peer->id.address.ipv4), ri->extra->rd.type, ri->extra->rd.admin,
+	    ri->extra->rd.number, prefix_str, aspath, comm, ecomm);
+    }
   }
 
   return 0;
 }
 
-int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi, rd_t *rd)
+int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
+			 rd_t *rd, char *label)
 {
-  struct bgp_node *route;
-  struct bgp_info *ri;
+  struct bgp_node *route = NULL;
+  struct bgp_info *ri = NULL;
   u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
 
   /* Lookup node. */
@@ -1264,15 +1272,22 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	char prefix_str[INET6_ADDRSTRLEN];
 	char *aspath, *comm, *ecomm;
 
-    memset(prefix_str, 0, INET6_ADDRSTRLEN);
+	memset(prefix_str, 0, INET6_ADDRSTRLEN);
 	prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
 
 	aspath = ri->attr->aspath ? ri->attr->aspath->str : empty;
 	comm = ri->attr->community ? ri->attr->community->str : empty;
 	ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n",
-		inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
+	if (safi != SAFI_MPLS_VPN)
+	  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
+	      inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
+	else {
+	  if (ri && ri->extra)
+            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w RD: '%u:%u:%u' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
+		inet_ntoa(peer->id.address.ipv4), ri->extra->rd.type, ri->extra->rd.admin,
+		ri->extra->rd.number, prefix_str, aspath, comm, ecomm);
+	}
   }
 
   /* Withdraw specified route from routing table. */
