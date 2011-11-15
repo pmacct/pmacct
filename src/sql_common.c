@@ -1696,8 +1696,8 @@ int sql_evaluate_primitives(int primitive)
         strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
       }
       strncat(insert_clause, "agent_id", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-      strncat(where[primitive].string, "agent_id=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%llu", SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, "agent_id=%llu", SPACELEFT(where[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_ID;
       values[primitive].handler = where[primitive].handler = count_id_handler;
       primitive++;
@@ -1711,8 +1711,8 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
     strncat(insert_clause, "agent_id2", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "agent_id2=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%llu", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "agent_id2=%llu", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_ID2;
     values[primitive].handler = where[primitive].handler = count_id2_handler;
     primitive++;

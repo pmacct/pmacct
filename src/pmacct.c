@@ -1017,14 +1017,14 @@ int main(int argc,char **argv)
 	  char *endptr = NULL;
 	  u_int32_t value;
 
-	  value = strtoul(match_string_token, &endptr, 10);
+	  value = strtoull(match_string_token, &endptr, 10);
 	  request.data.id = value; 
 	}
         else if (!strcmp(count_token[match_string_index], "tag2")) {
           char *endptr = NULL;
           u_int32_t value;
 
-          value = strtoul(match_string_token, &endptr, 10);
+          value = strtoull(match_string_token, &endptr, 10);
           request.data.id2 = value;
         }
         else if (!strcmp(count_token[match_string_index], "class")) {
@@ -1283,13 +1283,13 @@ int main(int argc,char **argv)
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_ID)) {
-	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10u  ", acc_elem->primitives.id);
-	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.id);
+	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id);
+	  else if (want_output == PRINT_OUTPUT_CSV) printf("%llu,", acc_elem->primitives.id);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_ID2)) {
-	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10u  ", acc_elem->primitives.id2);
-	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.id2);
+	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id2);
+	  else if (want_output == PRINT_OUTPUT_CSV) printf("%llu,", acc_elem->primitives.id2);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_CLASS)) {

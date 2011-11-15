@@ -248,6 +248,7 @@ struct packet_ptrs {
   u_char *bmed_table; /* ptr to bgp_src_med table map */
   u_char *biss_table; /* ptr to bgp_is_symmetric table map */
   u_char *bta_table; /* ptr to bgp_to_agent table map */
+  u_char *bitr_table; /* ptr to bgp_iface_to_rd table map */
   u_char *sampling_table; /* ptr to sampling_map table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
@@ -261,6 +262,7 @@ struct packet_ptrs {
   pm_id_t bmed; /* bgp_src_med */
   pm_id_t biss; /* bgp_is_symmetric */
   pm_id_t bta; /* bgp_to_agent */
+  pm_id_t bitr; /* bgp_iface_to_rd */
   pm_id_t st; /* sampling_map */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
   char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 

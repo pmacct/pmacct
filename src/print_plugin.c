@@ -479,8 +479,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       continue;
 
     if (config.print_output == PRINT_OUTPUT_FORMATTED) {
-      fprintf(f, "%-10u  ", data->id);
-      fprintf(f, "%-10u  ", data->id2);
+      fprintf(f, "%-10llu  ", data->id);
+      fprintf(f, "%-10llu  ", data->id2);
       fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);
@@ -567,8 +567,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #endif
     }
     else if (config.print_output == PRINT_OUTPUT_CSV) {
-      fprintf(f, "%u,", data->id);
-      fprintf(f, "%u,", data->id2);
+      fprintf(f, "%llu,", data->id);
+      fprintf(f, "%llu,", data->id2);
       fprintf(f, "%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 #if defined (HAVE_L2)
       etheraddr_string(data->eth_shost, src_mac);

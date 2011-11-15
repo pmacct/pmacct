@@ -235,7 +235,7 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   char *count_token, *range_ptr;
-  pm_id_t value, range = 0;
+  pm_id_t value = 0, range = 0;
   int changes = 0;
   char *endptr_v, *endptr_r;
   u_int8_t neg;
@@ -253,14 +253,14 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 	while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
 	  neg = pt_check_neg(&count_token);
 	  range_ptr = pt_check_range(count_token); 
-	  value = strtoul(count_token, &endptr_v, 10);
-	  if (range_ptr) range = strtoul(range_ptr, &endptr_r, 10);
+	  value = strtoull(count_token, &endptr_v, 10);
+	  if (range_ptr) range = strtoull(range_ptr, &endptr_r, 10);
 	  else range = value;
 
 	  if (range_ptr && range <= value) {
-	      Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%d-%d' not loaded.\n", filename, value, range);
-	      changes++;
-	      break;
+	    Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%llu-%llu' not loaded.\n", filename, value, range);
+	    changes++;
+	    break;
 	  }
 
           list->cfg.ptf.table[list->cfg.ptf.num].neg = neg;
@@ -281,7 +281,7 @@ int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   char *count_token, *range_ptr;
-  pm_id_t value, range = 0;
+  pm_id_t value = 0, range = 0;
   int changes = 0;
   char *endptr_v, *endptr_r;
   u_int8_t neg;
@@ -299,14 +299,14 @@ int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
         while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
           neg = pt_check_neg(&count_token);
           range_ptr = pt_check_range(count_token);
-          value = strtoul(count_token, &endptr_v, 10);
-          if (range_ptr) range = strtoul(range_ptr, &endptr_r, 10);
+          value = strtoull(count_token, &endptr_v, 10);
+          if (range_ptr) range = strtoull(range_ptr, &endptr_r, 10);
           else range = value;
 
           if (range_ptr && range <= value) {
-              Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%d-%d' not loaded.\n", filename, value, range);
-              changes++;
-              break;
+            Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%llu-%llu' not loaded.\n", filename, value, range);
+            changes++;
+            break;
           }
 
           list->cfg.pt2f.table[list->cfg.pt2f.num].neg = neg;
@@ -2051,6 +2051,17 @@ int cfg_key_nfacctd_bgp_to_agent_map(char *filename, char *name, char *value_ptr
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_to_agent_map = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_to_agent_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_iface_to_rd_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_iface_to_rd_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_iface_rd_map'. Globalized.\n", filename);
 
   return changes;
 }

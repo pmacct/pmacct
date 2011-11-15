@@ -124,6 +124,7 @@ struct configuration {
   char *nfacctd_bgp_src_med_map;
   char *nfacctd_bgp_is_symmetric_map;
   char *nfacctd_bgp_to_agent_map;
+  char *nfacctd_bgp_iface_to_rd_map;
   int nfacctd_bgp_follow_default;
   struct prefix nfacctd_bgp_follow_nexthop[FOLLOW_BGP_NH_ENTRIES];
   char *nfacctd_bgp_neighbors_file;

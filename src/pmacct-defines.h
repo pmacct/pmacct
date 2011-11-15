@@ -96,7 +96,8 @@
 #define MAP_BGP_SRC_LOCAL_PREF	102	/* bgp_src_local_pref_map */
 #define MAP_BGP_SRC_MED		103	/* bgp_src_med_map */
 #define MAP_BGP_IS_SYMMETRIC    104	/* bgp_is_symmetric_map */
-#define MAP_SAMPLING		105	/* sampling_map */
+#define MAP_BGP_IFACE_TO_RD	105	/* bgp_iface_to_rd */
+#define MAP_SAMPLING		106	/* sampling_map */
 
 /* 47 primitives currently defined */
 #define COUNT_SRC_HOST		0x0000000000000001ULL
@@ -209,7 +210,7 @@
 #define IFINDEX_TAG2		0x00000004
 
 typedef u_int32_t pm_class_t;
-typedef u_int32_t pm_id_t;
+typedef u_int64_t pm_id_t;
 
 #if defined HAVE_64BIT_COUNTERS
 typedef u_int64_t pm_counter_t;

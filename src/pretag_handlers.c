@@ -38,13 +38,10 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   e->id = 0;
   e->flags = FALSE;
 
-  /* If we spot a '.' within the string let's see if we are given a vaild
-      IPv4 address; by default we would treat it as an unsigned integer */
-  if (strchr(value, '.')) {
-    if (acct_type != MAP_BGP_TO_XFLOW_AGENT) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
-      return TRUE;
-    } 
+  /* If we parse a bgp_agent_map and spot a '.' within the string let's
+     check if we are given a valid IP address */
+  if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, '.')) {
+
     memset(&a, 0, sizeof(a));
     str_to_addr(value, &a);
     if (a.family == AF_INET) j = a.address.ipv4.s_addr;
@@ -53,17 +50,19 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       return TRUE;
     }
   }
-  /* If we spot the word "bgp", let's check this is a BPAS map */
-  else if (!strncmp(value, "bgp", strlen("bgp"))) {
-    if (acct_type != MAP_BGP_PEER_AS_SRC && acct_type != MAP_BGP_SRC_LOCAL_PREF && acct_type != MAP_BGP_SRC_MED) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
-      return TRUE;
-    }
+  /* If we parse a bgp_iface_rd_map and spot some ':' chars, let's validate
+     the string against RD encapsulations supported by rfc4364 */ 
+  else if (acct_type == MAP_BGP_IFACE_TO_RD && strchr(value, ':')) {
+    // XXX
+  }
+  /* If we spot the word "bgp", let's check this is a map that supports it */
+  else if ((acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
+	   acct_type == MAP_BGP_SRC_MED) && !strncmp(value, "bgp", strlen("bgp"))) {
     e->flags = BPAS_MAP_RCODE_BGP;
   }
   else {
-    j = strtoul(value, &endptr, 10);
-    if (!j) {
+    j = strtoull(value, &endptr, 10);
+    if (!j || j > UINT32_MAX) {
       Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
       return TRUE;
     } 
@@ -82,8 +81,8 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
   char *endptr = NULL;
   pm_id_t j;
 
-  j = strtoul(value, &endptr, 10);
-  if (!j) {
+  j = strtoull(value, &endptr, 10);
+  if (!j || j > UINT32_MAX) {
     Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID2 specified. ", filename);
     return TRUE;
   }

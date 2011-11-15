@@ -372,6 +372,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_src_local_pref_type", cfg_key_nfacctd_bgp_src_local_pref_type},
   {"bgp_src_med_type", cfg_key_nfacctd_bgp_src_med_type},
   {"bgp_agent_map", cfg_key_nfacctd_bgp_to_agent_map},
+  {"bgp_iface_rd_map", cfg_key_nfacctd_bgp_iface_to_rd_map},
   {"bgp_follow_default", cfg_key_nfacctd_bgp_follow_default},
   {"bgp_follow_nexthop", cfg_key_nfacctd_bgp_follow_nexthop},
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},

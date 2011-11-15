@@ -99,6 +99,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
+  struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
   u_int16_t ret;
@@ -150,6 +151,7 @@ int main(int argc,char **argv, char **envp)
   bmed_map_allocated = FALSE;
   biss_map_allocated = FALSE;
   bta_map_allocated = FALSE;
+  bitr_map_allocated = FALSE;
   find_id_func = NF_find_id;
 
   data_plugins = 0;
@@ -174,6 +176,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bmed_table, 0, sizeof(bmed_table));
   memset(&biss_table, 0, sizeof(biss_table));
   memset(&bta_table, 0, sizeof(bta_table));
+  memset(&bitr_table, 0, sizeof(bitr_table));
   memset(&sampling_table, 0, sizeof(sampling_table));
   config.acct_type = ACCT_NF;
 
@@ -559,6 +562,12 @@ int main(int argc,char **argv, char **envp)
     }
     else pptrs.v4.bta_table = NULL;
 
+    if (config.nfacctd_bgp_iface_to_rd_map) {
+      load_id_file(MAP_BGP_IFACE_TO_RD, config.nfacctd_bgp_iface_to_rd_map, &bitr_table, &req, &bitr_map_allocated);
+      pptrs.v4.bitr_table = (u_char *) &bitr_table;
+    }
+    else pptrs.v4.bitr_table = NULL;
+
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
@@ -763,6 +772,8 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_BGP_IS_SYMMETRIC, config.nfacctd_bgp_is_symmetric_map, &biss_table, &req, &biss_map_allocated); 
       if (config.nfacctd_bgp && config.nfacctd_bgp_to_agent_map)
         load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
+      if (config.nfacctd_bgp && config.nfacctd_bgp_iface_to_rd_map)
+        load_id_file(MAP_BGP_IFACE_TO_RD, config.nfacctd_bgp_iface_to_rd_map, &bitr_table, &req, &bitr_map_allocated);
       if (config.pre_tag_map) 
         load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated); 
       if (config.sampling_map) {
@@ -842,6 +853,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
       /* IP header's id field is unused; we will use it to transport our id */
       if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
+      if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
@@ -896,6 +908,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
       /* IP header's id field is unused; we will use it to transport our id */ 
       if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
+      if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
@@ -950,6 +963,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
       /* IP header's id field is unused; we will use it to transport our id */
       if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
+      if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
@@ -995,6 +1009,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
       /* IP header's id field is unused; we will use it to transport our id */
       if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
+      if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
       if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
@@ -1259,6 +1274,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrs->class = NF_evaluate_classifiers(entry->class, pptrs->f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
@@ -1304,6 +1320,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->v6.class = NF_evaluate_classifiers(entry->class, pptrsv->v6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->v6, &pptrsv->v6.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->v6);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
@@ -1351,6 +1368,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->vlan4.class = NF_evaluate_classifiers(entry->class, pptrsv->vlan4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  } 
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan4, &pptrsv->vlan4.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan4);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
@@ -1398,6 +1416,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->vlan6.class = NF_evaluate_classifiers(entry->class, pptrsv->vlan6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan6, &pptrsv->vlan6.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlan6);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
@@ -1455,6 +1474,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->mpls4.class = NF_evaluate_classifiers(entry->class, pptrsv->mpls4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls4, &pptrsv->mpls4.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls4);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
@@ -1511,6 +1531,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->mpls6.class = NF_evaluate_classifiers(entry->class, pptrsv->mpls6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls6, &pptrsv->mpls6.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->mpls6);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
@@ -1570,6 +1591,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->vlanmpls4.class = NF_evaluate_classifiers(entry->class, pptrsv->vlanmpls4.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls4);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
@@ -1628,6 +1650,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (entry) pptrsv->vlanmpls6.class = NF_evaluate_classifiers(entry->class, pptrsv->vlanmpls6.f_data+tpl->tpl[NF9_APPLICATION_ID].off);
 	  }
 	  if (config.nfacctd_bgp_to_agent_map) NF_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, NULL);
+	  if (config.nfacctd_bgp_iface_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bitr, NULL);
 	  if (config.nfacctd_bgp) bgp_srcdst_lookup(&pptrsv->vlanmpls6);
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
