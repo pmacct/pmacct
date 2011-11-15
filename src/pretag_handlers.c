@@ -41,7 +41,6 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   /* If we parse a bgp_agent_map and spot a '.' within the string let's
      check if we are given a valid IP address */
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, '.')) {
-
     memset(&a, 0, sizeof(a));
     str_to_addr(value, &a);
     if (a.family == AF_INET) j = a.address.ipv4.s_addr;
@@ -53,7 +52,75 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   /* If we parse a bgp_iface_rd_map and spot some ':' chars, let's validate
      the string against RD encapsulations supported by rfc4364 */ 
   else if (acct_type == MAP_BGP_IFACE_TO_RD && strchr(value, ':')) {
-    // XXX
+    char *endptr, *token;
+    u_int32_t tmp32;
+    u_int16_t tmp16;
+    struct rd_ip  *rdi;
+    struct rd_as  *rda;
+    struct rd_as4 *rda4;
+    int idx = 0;
+    rd_t rd;
+
+    memset(&rd, 0, sizeof(rd));
+
+    /* type:RD_subfield1:RD_subfield2 */
+    while ( (token = extract_token(&value, ':')) && idx < 3) {
+      if (idx == 0) {
+	tmp32 = strtoul(token, &endptr, 10);
+	rd.type = tmp32;
+        switch (rd.type) {
+        case RD_TYPE_AS:
+	  rda = (struct rd_as *) &rd;
+	  break;
+        case RD_TYPE_IP:
+	  rdi = (struct rd_ip *) &rd;
+	  break;
+        case RD_TYPE_AS4:
+	  rda4 = (struct rd_as4 *) &rd;
+	  break;
+        default:
+	  Log(LOG_ERR, "ERROR ( %s ): Invalid RD type specified. ", filename);
+	  return TRUE;
+	}
+      }
+      if (idx == 1) {
+	switch (rd.type) {
+	case RD_TYPE_AS:
+	  tmp32 = strtoul(token, &endptr, 10); 
+	  rda->as = tmp32;
+	  break;
+	case RD_TYPE_IP:
+          memset(&a, 0, sizeof(a));
+          str_to_addr(token, &a);
+          if (a.family == AF_INET) rdi->ip.s_addr = a.address.ipv4.s_addr;
+	  break;
+	case RD_TYPE_AS4:
+	  tmp32 = strtoul(token, &endptr, 10); 
+	  rda4->as = tmp32;
+	  break;
+	}
+      }
+      if (idx == 2) {
+        switch (rd.type) {
+        case RD_TYPE_AS:
+          tmp32 = strtoul(token, &endptr, 10);
+          rda->val = tmp32;
+          break;
+        case RD_TYPE_IP:
+          tmp32 = strtoul(token, &endptr, 10);
+          rdi->val = tmp32;
+          break;
+        case RD_TYPE_AS4:
+          tmp32 = strtoul(token, &endptr, 10);
+          rda4->val = tmp32;
+          break;
+        }
+      }
+
+      idx++;
+    }
+
+    memcpy(&j, &rd, sizeof(rd));
   }
   /* If we spot the word "bgp", let's check this is a map that supports it */
   else if ((acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||

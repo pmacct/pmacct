@@ -963,6 +963,11 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 	    attr->mp_nexthop.family = AF_INET;
 	    memcpy(&attr->mp_nexthop.address.ipv4, ptr, 4); 
 	    break;
+	  case 12:
+	    // XXX: make any use of RD ? 
+	    attr->mp_nexthop.family = AF_INET;
+	    memcpy(&attr->mp_nexthop.address.ipv4, ptr+8, 4);
+	    break;
 #if defined ENABLE_IPV6
 	  case 16:
 	  case 32:
@@ -1037,6 +1042,9 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
   int ret;
   u_int32_t tmp32;
   u_int16_t tmp16;
+  struct rd_ip  *rdi;
+  struct rd_as  *rda;
+  struct rd_as4 *rda4;
   rd_t rd;
 
   memset (&p, 0, sizeof(struct prefix));
@@ -1080,7 +1088,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	  safi = SAFI_UNICAST;
 	}
 	else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
-	  if (info->afi == AFI_IP && p.prefixlen != 112 || info->afi != AFI_IP /* XXX: IPv6? */) return -1;
+	  if (info->afi == AFI_IP && p.prefixlen > 120 || info->afi != AFI_IP /* XXX: IPv6? */) return -1;
 
           psize = ((p.prefixlen+7)/8);
           if (psize > end) return -1;
@@ -1091,18 +1099,26 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	  memcpy(&rd.type, pnt+3, 2);
 	  rd.type = ntohs(rd.type);
 	  switch(rd.type) {
-	  case 0: 
+	  case RD_TYPE_AS: 
+	    rda = (struct rd_as *) &rd;
 	    memcpy(&tmp16, pnt+5, 2);
 	    memcpy(&tmp32, pnt+7, 4);
-	    rd.admin = ntohs(tmp16);
-	    rd.number = ntohl(tmp32);
+	    rda->as = ntohs(tmp16);
+	    rda->val = ntohl(tmp32);
 	    break;
-	  case 1: 
-	  case 2: 
+	  case RD_TYPE_IP: 
+            rdi = (struct rd_ip *) &rd;
+            memcpy(&tmp32, pnt+5, 4);
+            memcpy(&tmp16, pnt+9, 2);
+            rdi->ip.s_addr = ntohl(tmp32);
+            rdi->val = ntohs(tmp16);
+            break;
+	  case RD_TYPE_AS4: 
+	    rda4 = (struct rd_as4 *) &rd;
 	    memcpy(&tmp32, pnt+5, 4);
 	    memcpy(&tmp16, pnt+9, 2);
-	    rd.admin = ntohl(tmp32);
-	    rd.number = ntohs(tmp16);
+	    rda4->as = ntohl(tmp32);
+	    rda4->val = ntohs(tmp16);
 	    break;
 	  default:
 	    return -1;
@@ -1139,8 +1155,8 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
       if (ri->peer == peer) break;
     }
     else {
-      if (ri->peer == peer && ri->extra && ri->extra->rd.admin == rd->admin &&
-	  ri->extra->rd.number == rd->number) break; 
+      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, &rd, sizeof(rd_t)))
+	break;
     }
   }
 
@@ -1212,6 +1228,9 @@ log_update:
     char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char *aspath, *comm, *ecomm; 
     u_int32_t lp, med;
+    struct rd_ip  *rdi;
+    struct rd_as  *rda;
+    struct rd_as4 *rda4;
 
     memset(prefix_str, 0, INET6_ADDRSTRLEN);
     memset(nexthop_str, 0, INET6_ADDRSTRLEN);
@@ -1223,23 +1242,20 @@ log_update:
     lp = attr_new->local_pref;
     med = attr_new->med;
 
-    if (attr_new->mp_nexthop.family == AF_INET)
-      inet_ntop(AF_INET, &attr_new->mp_nexthop.address.ipv4, nexthop_str, INET6_ADDRSTRLEN);
-#if defined ENABLE_IPV6
-    else if (attr_new->mp_nexthop.family == AF_INET6)
-      inet_ntop(AF_INET6, &attr_new->mp_nexthop.address.ipv4, nexthop_str, INET6_ADDRSTRLEN);
-#endif
-    else
-      inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
+    addr_to_str(nexthop_str, &attr_new->mp_nexthop);
 
     if (safi != SAFI_MPLS_VPN)
       Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
 	  inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
     else {
-      if (ri && ri->extra)
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u RD: '%u:%u:%u' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
-	    inet_ntoa(peer->id.address.ipv4), ri->extra->rd.type, ri->extra->rd.admin,
-	    ri->extra->rd.number, prefix_str, aspath, comm, ecomm);
+      if (ri && ri->extra) {
+        u_char rd_str[SRVBUFLEN];
+
+	bgp_rd2str(rd_str, &ri->extra->rd);
+
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u RD: '%s' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	    inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
+      }
     }
   }
 
@@ -1262,8 +1278,8 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
       if (ri->peer == peer) break;
     }
     else {
-      if (ri->peer == peer && ri->extra && ri->extra->rd.admin == rd->admin &&
-          ri->extra->rd.number == rd->number) break;
+      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, &rd, sizeof(rd_t)))
+	break;
     }
   }
 
@@ -1283,10 +1299,14 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
 	      inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
 	else {
-	  if (ri && ri->extra)
-            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w RD: '%u:%u:%u' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
-		inet_ntoa(peer->id.address.ipv4), ri->extra->rd.type, ri->extra->rd.admin,
-		ri->extra->rd.number, prefix_str, aspath, comm, ecomm);
+	  if (ri && ri->extra) {
+	    u_char rd_str[SRVBUFLEN];
+
+	    bgp_rd2str(rd_str, &ri->extra->rd);
+
+            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w RD: '%s' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
+		inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, aspath, comm, ecomm); 
+	  }
 	}
   }
 
@@ -1309,6 +1329,36 @@ int bgp_afi2family (int afi)
 	return AF_INET6;
 #endif 
   return 0;
+}
+
+bgp_rd2str(u_char *str, rd_t *rd)
+{
+  struct rd_ip  *rdi;
+  struct rd_as  *rda;
+  struct rd_as4 *rda4;
+  struct host_addr a;
+  u_char ip_address[INET6_ADDRSTRLEN];
+
+  switch (rd->type) {
+  case RD_TYPE_AS:
+    rda = (struct rd_as *) rd;
+    sprintf(str, "%u:%u:%u", rda->type, rda->as, rda->val); 
+    break;
+  case RD_TYPE_IP:
+    rdi = (struct rd_ip *) rd;
+    a.family = AF_INET;
+    a.address.ipv4.s_addr = rdi->ip.s_addr;
+    addr_to_str(ip_address, &a);
+    sprintf(str, "%u:%s:%u", rdi->type, ip_address, rdi->val); 
+    break;
+  case RD_TYPE_AS4:
+    rda4 = (struct rd_as4 *) rd;
+    sprintf(str, "%u:%u:%u", rda4->type, rda4->as, rda4->val); 
+    break;
+  default:
+    sprintf(str, "unknown");
+    break; 
+  }
 }
 
 /* Allocate bgp_info_extra */
@@ -1812,6 +1862,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
   if (peer) {
     modulo = peer->fd % config.bgp_table_peer_buckets; 
+
+    if (pptrs->bitr) {
+      // XXX
+    }
 
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
