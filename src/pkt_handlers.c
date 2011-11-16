@@ -180,17 +180,9 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_IP) {
-      if (config.acct_type == ACCT_PM) primitives--;
-      else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler;
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler; 
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
-      }
-      else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler;
-        else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler; 
-        else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
-      }
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler; 
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler; 
+      else primitives--; /* Just in case */
       primitives++;
     }
 
@@ -269,7 +261,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
                                             COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
-                                            COUNT_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_PEER_SRC_AS) &&
+                                            COUNT_DST_AS|COUNT_PEER_DST_IP|COUNT_PEER_SRC_AS) &&
         config.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
@@ -2649,21 +2641,6 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	    }
 	  }
 	}
-      }
-    }
-  }
-
-  if (chptr->aggregation & COUNT_PEER_SRC_IP && peer) {
-    if (config.nfacctd_as & NF_AS_BGP) {
-      if (!pptrs->bta && !config.nfacctd_bgp_follow_default) memcpy(&pbgp->peer_src_ip, &peer->addr, sizeof(struct host_addr)); 
-      else {
-        struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
-
-        pbgp->peer_src_ip.family = sa->sa_family;
-        if (sa->sa_family == AF_INET) pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
-#if defined ENABLE_IPV6
-        else if (sa->sa_family == AF_INET6) memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, 16); 
-#endif
       }
     }
   }

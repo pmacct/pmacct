@@ -8,6 +8,17 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:     >= 0.14.0rc3
+FROM:   <= 0.14.0rc2
+TOPIC:  peer_src_ip 
+DESC:	peer_src_ip primitive must represent a reference (IP address, Agent ID) of
+	the NetFlow or sFlow emitter for a certain flow. Due to previous work, this
+	primitive was connected to the [ns]facctd_as_new mechanism which, if set to
+	'bgp', was making it represent the IP address of a BGP peer instead. This is
+	found not correct and hence peer_src_ip has now been disconnected from the
+	[ns]facctd_as_new feature and always constitutes a reference to the NetFlow
+	or sFlow emitter.
+
 TO:	>= 0.14.0rc2
 FROM:	<= 0.14.0rc1
 TOPIC:	NetFlow v9 sampling
@@ -23,6 +34,48 @@ DESC:	Support for sampling in NetFlow v9 and IPFIX is elegant from an architectu
 	network hardware environments at the cost of an extra static setting to care
 	about; on the other hand it's also true sampling rates are often uniform and
 	seldomly redefined in a production network. 
+
+TO:     >= 0.12.1
+FROM    <= 0.12.0
+TOPIC:  Data source for ASNs must be explicitely defined
+DESC:   data source for 'src_as' and 'dst_as' primitives for nfprobe and sfprobe
+        plugins is now expected to be explicitely defined via the [ pmacctd_as |
+        uacctd_as ] directive. All other plugins were already working like that.
+        In terms of backward compatibility the only case affected is getting ASN
+        values out of a Networks File: up to 0.12.0, it was sufficient to define
+        a networks_file to implicitely use it.
+
+TO:     >= 0.12.0rc1
+FROM:   <= 0.11
+TOPIC:  agent_id size and SQL table schemas
+DESC:   With release 0.12, the agent_id field becomes 4-bytes large (from 2-bytes
+        previously). SQL table schemas have been updated accordingly. If running
+        a previous release and upgrading, you might incur into the risk that both
+        Pre/Post-tagging infrastructures will accept values up to ~4M while the
+        underlying SQL table schema is configured with a 2-bytes field. Solution
+        is to run an "ALTER TABLE" statement to increase the field size during a
+        maintenance window.
+
+TOPIC:  nfprobe plugin: NetFlow v9 and 32-bit ASNs
+DESC:   Release 0.12 introduces support for 32-bit ASNs in pmacct; things do not
+        change in NetFlow v5 as if a 32-bit ASN is encountered, it is written as
+        AS23456. In NetFlow v9, though, the source and destination AS fields are
+        specified as 4 bytes long in the template. Given the template nature of
+        NetFlow v9, this shouldn't pose a problem with 3rd party implementations
+        but it's better to pay some extra attention while upgrading an existing
+        installation.
+
+TO:     >= 0.10.0
+FROM:   <= 0.10.0rc3
+TOPIC:  Configuration directives and command-line options
+DESC:   In all previous releases, commandline options ( ie. -D -c ) were mutually
+        exclusive with respect to configuration directives; now, they can cohexist
+        and, more specifically, commandline options will override the content of
+        the configuration file. This exposes to more interesting usages:
+
+        shell> pmacctd -I <tracefile> -f <cfg>
+        to launch pmacctd sharing an unique configuration file while reading data
+        from different tcpdump/ethereal tracefiles among multiple runs.
  
 TO:	>= 0.8.3 
 FROM:	<= 0.8.2 
@@ -47,47 +100,5 @@ DESC:	In all previous releases, the 'pre_tag_map' and 'post_tag' directives were
 	pre_tag_map: /usr/local/pmacct/pre_tag.map
 	aggregate[dummy]: tag,src_host,dst_host,src_port,dst_port
 	... 
-
-TO:     >= 0.10.0
-FROM:   <= 0.10.0rc3 
-TOPIC:  Configuration directives and command-line options 
-DESC:   In all previous releases, commandline options ( ie. -D -c ) were mutually
-	exclusive with respect to configuration directives; now, they can cohexist
-	and, more specifically, commandline options will override the content of
-	the configuration file. This exposes to more interesting usages:
-
-	shell> pmacctd -I <tracefile> -f <cfg>
-	to launch pmacctd sharing an unique configuration file while reading data
-	from different tcpdump/ethereal tracefiles among multiple runs.
-
-TO:     >= 0.12.0rc1
-FROM:   <= 0.11
-TOPIC:  agent_id size and SQL table schemas
-DESC:   With release 0.12, the agent_id field becomes 4-bytes large (from 2-bytes
-	previously). SQL table schemas have been updated accordingly. If running
-	a previous release and upgrading, you might incur into the risk that both
-	Pre/Post-tagging infrastructures will accept values up to ~4M while the
-	underlying SQL table schema is configured with a 2-bytes field. Solution
-	is to run an "ALTER TABLE" statement to increase the field size during a
-	maintenance window. 
-
-TOPIC:  nfprobe plugin: NetFlow v9 and 32-bit ASNs
-DESC:	Release 0.12 introduces support for 32-bit ASNs in pmacct; things do not
-	change in NetFlow v5 as if a 32-bit ASN is encountered, it is written as
-	AS23456. In NetFlow v9, though, the source and destination AS fields are
-	specified as 4 bytes long in the template. Given the template nature of
-	NetFlow v9, this shouldn't pose a problem with 3rd party implementations
-	but it's better to pay some extra attention while upgrading an existing
-	installation.
-
-TO:	>= 0.12.1
-FROM	<= 0.12.0
-TOPIC:  Data source for ASNs must be explicitely defined
-DESC:   data source for 'src_as' and 'dst_as' primitives for nfprobe and sfprobe
-        plugins is now expected to be explicitely defined via the [ pmacctd_as |
-	uacctd_as ] directive. All other plugins were already working like that.
-	In terms of backward compatibility the only case affected is getting ASN
-	values out of a Networks File: up to 0.12.0, it was sufficient to define
-	a networks_file to implicitely use it.
 
 [EOF]

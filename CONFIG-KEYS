@@ -686,9 +686,9 @@ DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as', 'dst_as', '
 		for backward compatibility), 'true' and 'file' expect a 'networks_file' to be defined; 'bgp' just
 		works as described for [nf|sf]acctd; 'fallback' is mapped back to 'bgp' for the reason explained
 		above, no export protocol lookup available. Under nfacctd and sfacctd this feature also influences
-		'peer_src_ip' and 'peer_dst_ip': if 'false', 'true' or 'file' values are taken from NetFlow and
-		sFlow datagrams respectively; if 'bgp' values are looked up against the BGP RIB of the peer from
-		which the NetFlow datagram was received (or mapped to). (default: false) 
+		'peer_dst_ip': if 'false', 'true' or 'file' values are taken from NetFlow and sFlow datagrams
+		respectively; if 'bgp' values are looked up against the BGP RIB of the peer from which the NetFlow
+		datagram was received (or mapped to). (default: false) 
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ]
 VALUES:         [ netflow | sflow | mask | file | bgp | fallback ]
