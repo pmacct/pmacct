@@ -1115,6 +1115,12 @@ DESC:		full pathname to a file to map source IP address of NetFlow agents and Ag
 		this is because these daemons do not have a NetFlow/sFlow source address to match to.
 		Number of map entries (by default 384) can be modified via pre_tag_map_entries.
 
+KEY:		bgp_iface_rd_map
+DESC:		full pathname to a file to map PE routers ifIndexes (input interfaces typically) to a
+		BGP/MPLS Virtual Private Network (VPN) Route Distinguisher (RD), based upon rfc4659.
+		See iface_to_rd.map file in the examples section for further information. Number of map
+		entries (by default 384) can be modified via pre_tag_map_entries. 
+
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can
 		be followed in order to successfully resolve source and destination IP prefixes. This is

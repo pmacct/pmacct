@@ -1,0 +1,32 @@
+! 
+! PE router ifIndex to BGP/MPLS VPN RD map
+!
+! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
+! this same directory.
+!
+! nfacctd, sfacctd: valid keys: id, ip, in, out.
+!
+! list of currently supported keys follow:
+!
+! 'id'			IPv4 address or router ID of the BGP peer
+! 'ip'                  In nfacctd it's compared against the source IP address
+!                       of the device which is originating NetFlow packets; in
+!                       sfacctd this is compared against the AgentId field of
+!                       received sFlow samples.
+! 'in'                  Input interface
+! 'out'                 Output interface
+!
+! A couple of straightforward examples follow.  
+!
+! Maps input interface 100 of router 192.168.1.1 to RD 0:65512:1 - ie.
+! a BGP/MPLS VPN Route Distinguisher encoded as type #0 according to
+! to rfc4659: <2-bytes ASN>:<value> . Type #2 is equivalent to type #0
+! except it supports 4-bytes ASN encoding.
+!
+id=0:65512:1		ip=192.168.1.1		in=100
+!
+! Maps input interface 100 of router 192.168.1.1 to RD 1:192.168.1.1:1
+! ie. a BGP/MPLS VPN Route Distinguisher encoded as type #1 according 
+! to rfc4659: <IPv4 Address>:<value>
+!
+id=1:192.168.1.1:1	ip=192.168.1.1          in=100
