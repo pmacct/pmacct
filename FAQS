@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
 A: It is http://www.pmacct.net/ . There isn't any official mirror site. 
@@ -22,23 +22,25 @@ A: That is not entirely correct today, it was originally though. pmacct born as 
 
 
 Q4: What are pmacct main features?
-A: pmacct can collect, replicate and export network data. Collect in memory tables or
-   open-source SQL databases (MySQL, PostgreSQL, SQLite 3.x, BerkeleyDB 5.x via SQLite
-   API). Export speaking sFlow v5, NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform
-   data aggregation; it can also filter, sample, renormalize, tag, classify at L7. With
-   release 0.12 pmacct integrates a BGP daemon within its NetFlow and sFlow collectors
-   aimed at increasing visibility into the network traffic.
+A: pmacct can collect, replicate and export network data. Collect in memory tables, OSS
+   RDBMS (MySQL, PostgreSQL, SQLite 3.x, BerkeleyDB 5.x via SQLite API) and files (csv,
+   formatted output). Export speaking sFlow v5, NetFlow v1/v5/v9 and IPFIX. pmacct is
+   able to perform data aggregation, offering a rich set of primitives to choose from;
+   it can also filter, sample, renormalize, tag and classify at L7. pmacct integrates a 
+   BGP daemon join routing visibility and network traffic information.
 
 
 Q5: Does any of the pmacct daemons logs to flat files?
-A: No. For a variety of reasons. Mainly, flat-files are used in two-stages approaches:
-   first log everything down, then aggregate to process - while pmacct aims to a single
-   stage approach to improve query response time and resources utilization; flat-files
-   use proprietary formats which often translates is poor query flexibility (compared
-   to the potential offered by the SQL language) and lack of recovery tools in case of
-   file corruption. And finally innovation: other projects already largely stress this
-   rather traditional approach (libpcap: tcpdump; NetFlow: nfcapd, flowd, flow-tools;
-   sFlow: sflowtools) making not attractive to just add one more to the list.
+A: Yes, but in a specific way. In other tools flat-files are typically used to log every
+   micro-flow (or whatever aggregation the NetFlow agents have been configured to export
+   with) and work in a two-stages fashion: a) write down to persistent storage then b)
+   consolidate, on either or both spatial and temporal axes, to build the desired view.
+   By inception, pmacct always aimed to a single-stage approach instead, ie. offer data
+   reduction tecniques and correlation tools to process network traffic data on the fly,
+   so to immediately offer the desired view(s) of the traffic. pmacct writes to files in
+   text-format (either csv or formatted via its 'print' plugin, see EXAMPLES for further
+   information) so to maximize potential integration with 3rd party applications while
+   keeping low the effort of customization.
 
 
 Q6: Is it feasible for pmacct to scale by making use of either memory tables or RDBMS

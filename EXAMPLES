@@ -15,6 +15,7 @@ X.	Quickstart guide to setup a NetFlow agent/probe
 XI.	Quickstart guide to setup a sFlow agent/probe 
 XII.	Quickstart guide to setup the BGP daemon
 XIII.	Quickstart guide to setup a NetFlow/sFlow replicator
+XIV.	Running the print plugin to write to flat-files
 
 
 I. Plugins included with pmacct distribution
@@ -28,7 +29,7 @@ plugins. Here is a list of plugins included within the official pmacct distribut
 'pgsql':   a working PostgreSQL installation can be used for data storage
 'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite API)
            installation can be used for data storage
-'print':   data are printed at regular intervals to the standard output
+'print':   data are printed at regular intervals to flat-files or standard output
 
 
 II. Configuring pmacct for compilation
@@ -903,3 +904,25 @@ Concluding note: 'tee' plugin is not compatible with different plugins - within
 the same daemon instance. So if in the need of using pmacct for both collecting
 and replicating data, two separate instances must be used (intuitively with the
 replicator instance feeding the collector one).
+
+
+XIV. Running the print plugin to write to flat-files
+Print plugin was originally conceived to display data on standard output; with
+pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
+allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
+Output is text-based (no binary proprietary format) and can be either CSV or
+formatted ('print_output' directive). When to write to disk can be configured
+via the 'print_refresh_time' directive. An example follows on how to write to
+files on a 15 mins basis in CSV format:
+
+print_refresh_time: 900
+print_output: csv
+print_output_file: /path/to/file-%Y%m%d-%H%M.txt
+print_time_roundoff: m
+ 
+Which, over time, would produce a would produce a series of files as follows:
+
+-rw-------  1 paolo paolo   2067 Nov 21 00:15 blabla-20111121-0000.txt
+-rw-------  1 paolo paolo   2772 Nov 21 00:30 blabla-20111121-0015.txt
+-rw-------  1 paolo paolo   1916 Nov 21 00:45 blabla-20111121-0030.txt
+-rw-------  1 paolo paolo   2940 Nov 21 01:00 blabla-20111121-0045.txt
