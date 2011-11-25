@@ -95,9 +95,8 @@
 #define MAP_BGP_TO_XFLOW_AGENT	101	/* bgp_to_agent_map */
 #define MAP_BGP_SRC_LOCAL_PREF	102	/* bgp_src_local_pref_map */
 #define MAP_BGP_SRC_MED		103	/* bgp_src_med_map */
-#define MAP_BGP_IS_SYMMETRIC    104	/* bgp_is_symmetric_map */
-#define MAP_BGP_IFACE_TO_RD	105	/* bgp_iface_to_rd */
-#define MAP_SAMPLING		106	/* sampling_map */
+#define MAP_BGP_IFACE_TO_RD	104	/* bgp_iface_to_rd */
+#define MAP_SAMPLING		105	/* sampling_map */
 
 /* 47 primitives currently defined */
 #define COUNT_SRC_HOST		0x0000000000000001ULL
@@ -141,7 +140,7 @@
 #define COUNT_SRC_EXT_COMM	0x0000004000000000ULL
 #define COUNT_SRC_LOCAL_PREF	0x0000008000000000ULL
 #define COUNT_SRC_MED		0x0000010000000000ULL
-#define COUNT_IS_SYMMETRIC      0x0000020000000000ULL
+/* #define COUNT_MPLS_VPN_RD	0x0000020000000000ULL */
 #define COUNT_IN_IFACE		0x0000040000000000ULL
 #define COUNT_OUT_IFACE		0x0000080000000000ULL
 #define COUNT_SRC_NMASK		0x0000100000000000ULL

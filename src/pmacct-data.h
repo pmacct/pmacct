@@ -365,7 +365,6 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_peer_src_as_map", cfg_key_nfacctd_bgp_peer_src_as_map},
   {"bgp_src_local_pref_map", cfg_key_nfacctd_bgp_src_local_pref_map},
   {"bgp_src_med_map", cfg_key_nfacctd_bgp_src_med_map},
-  {"bgp_is_symmetric_map", cfg_key_nfacctd_bgp_is_symmetric_map},
   {"bgp_peer_src_as_type", cfg_key_nfacctd_bgp_peer_src_as_type},
   {"bgp_src_std_comm_type", cfg_key_nfacctd_bgp_src_std_comm_type},
   {"bgp_src_ext_comm_type", cfg_key_nfacctd_bgp_src_ext_comm_type},

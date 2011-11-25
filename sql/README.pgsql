@@ -84,7 +84,6 @@ mode. Since v6 unified mode is no longer supported.
   * src_as_path => as_path_src (CHAR(21) NOT NULL DEFAULT ' ')
   * src_local_pref => local_pref_src (BIGINT NOT NULL DEFAULT 0)
   * src_med => med_src (BIGINT NOT NULL DEFAULT 0)
-  * is_symmetric => is_symmetric (SMALLINT NOT NULL DEFAULT 0, see README.is_symmetric)
   * in_iface => iface_in (BIGINT NOT NULL DEFAULT 0, see README.iface)
   * out_iface => iface_out (BIGINT NOT NULL DEFAULT 0, see README.iface)
   * src_mask => mask_src (SMALLINT NOT NULL DEFAULT 0, see README.mask)

@@ -76,7 +76,6 @@ Similarly, BGP tables:
   * src_as_path => as_path_src (CHAR(21) NOT NULL)
   * src_local_pref => local_pref_src (INT(4) UNSIGNED NOT NULL)
   * src_med => med_src (INT(4) UNSIGNED NOT NULL)
-  * is_symmetric => is_symmetric (INT(1) UNSIGNED NOT NULL, see README.is_symmetric)
   * in_iface => iface_in (INT(4) UNSIGNED NOT NULL, see README.iface)
   * out_iface => iface_out (INT(4) UNSIGNED NOT NULL, see README.iface)
   * src_mask => mask_src (INT(1) UNSIGNED NOT NULL, see README.mask)

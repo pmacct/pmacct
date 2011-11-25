@@ -2285,7 +2285,6 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     }
     c->src_local_pref = p->src_local_pref;
     c->src_med = p->src_med;
-    c->is_symmetric = p->is_symmetric;
   }
 }
 
@@ -2308,7 +2307,6 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
     p->src_local_pref = c->src_local_pref;
     p->src_med = c->src_med;
-    p->is_symmetric = c->is_symmetric;
   }
 }
 
@@ -2317,7 +2315,7 @@ void bgp_config_checks(struct configuration *c)
   if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
 			  COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 			  COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-			  COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)) {
+			  COUNT_SRC_LOCAL_PREF)) {
     /* Sanitizing the aggregation method */
     if ( ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) ||
          ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) ) {

@@ -38,7 +38,7 @@ VALUES:		[src_mac, dst_mac, vlan, cos, src_host, dst_host, src_net, dst_net, src
 		 sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, class, tcpflags,
 		 in_iface, out_iface, std_comm, ext_comm, as_path, peer_src_ip, peer_dst_ip,
 		 peer_src_as, peer_dst_as, local_pref, med, src_as_path, src_std_comm,
-		 src_ext_comm, src_local_pref, src_med, is_symmetric]
+		 src_ext_comm, src_local_pref, src_med]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -1105,13 +1105,6 @@ DESC:           full pathname to a file containing source MED (Multi Exit Discri
 		next-hop (query against the BGP RIB to look up the source IP prefix). Number of map
 		entries (by default 384) can be modified via pre_tag_map_entries. Sample map in
 		'examples/med.map.example'.
-
-KEY:            bgp_is_symmetric_map
-DESC:           full pathname to a file defining for each edge device local traffic paths out of the
-		observed routing domain by using a combination of ingress ifIndex, source MAC address,
-		BGP next-hop (query against the BGP RIB to look up the source IP prefix). Number of
-		map entries (by default 384) can be modified via pre_tag_map_entries. Sample map in
-		'examples/is_symmetric.map.example'.
 
 KEY:		bgp_agent_map
 DESC:		full pathname to a file to map source IP address of NetFlow agents and AgentID of sFlow

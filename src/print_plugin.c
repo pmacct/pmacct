@@ -97,7 +97,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                 COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC)))
+				COUNT_SRC_LOCAL_PREF)))
     PbgpSz = 0;
 
   memset(&nt, 0, sizeof(nt));

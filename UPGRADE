@@ -10,6 +10,12 @@ been (and will be) very limited through the development process.
 
 TO:     >= 0.14.0rc3
 FROM:   <= 0.14.0rc2
+TOPIC:  is_symmetric
+DESC:   Support for is_symmetric aggregation primitive has been ceased due to lack
+	of interest from the general community. 
+
+TO:     >= 0.14.0rc3
+FROM:   <= 0.14.0rc2
 TOPIC:  peer_src_ip 
 DESC:	peer_src_ip primitive must represent a reference (IP address, Agent ID) of
 	the NetFlow or sFlow emitter for a certain flow. Due to previous work, this

@@ -238,14 +238,6 @@ void count_src_med_handler(const struct db_cache *cache_elem, const struct inser
   *ptr_values += strlen(*ptr_values);
 }
 
-void count_is_symmetric_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
-{
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->is_symmetric);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->is_symmetric);
-  *ptr_where += strlen(*ptr_where);
-  *ptr_values += strlen(*ptr_values);
-}
-
 void count_peer_src_as_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->peer_src_as);

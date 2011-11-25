@@ -63,7 +63,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | is_symmetric ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -198,7 +198,6 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_SRC_LOCAL_PREF) printf("SRC_PREF ");
     if (what_to_count & COUNT_MED) printf("MED     ");
     if (what_to_count & COUNT_SRC_MED) printf("SRC_MED ");
-    if (what_to_count & COUNT_IS_SYMMETRIC) printf("SYM  ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS ");
 #if defined ENABLE_IPV6
@@ -318,7 +317,6 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_SRC_LOCAL_PREF) printf("SRC_PREF,");
     if (what_to_count & COUNT_MED) printf("MED,");
     if (what_to_count & COUNT_SRC_MED) printf("SRC_MED,");
-    if (what_to_count & COUNT_IS_SYMMETRIC) printf("SYM,");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS,");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS,");
 #if defined ENABLE_IPV6
@@ -631,10 +629,6 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_SRC_MED;
           what_to_count |= COUNT_SRC_MED;
         }
-	else if (!strcmp(count_token[count_index], "is_symmetric")) {
-	  count_token_int[count_index] = COUNT_IS_SYMMETRIC;
-	  what_to_count |= COUNT_IS_SYMMETRIC;
-	}
         else if (!strcmp(count_token[count_index], "peer_src_as")) {
           count_token_int[count_index] = COUNT_PEER_SRC_AS;
           what_to_count |= COUNT_PEER_SRC_AS;
@@ -1163,11 +1157,6 @@ int main(int argc,char **argv)
 
           request.pbgp.src_med = strtoul(match_string_token, &endptr, 10);
         }
-	else if (!strcmp(count_token[match_string_index], "is_symmetric")) {
-	  char *endptr;
-
-	  request.pbgp.is_symmetric = strtoul(match_string_token, &endptr, 10);
-	}
         else if (!strcmp(count_token[match_string_index], "peer_src_as")) {
           char *endptr;
 
@@ -1247,7 +1236,7 @@ int main(int argc,char **argv)
     if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                          COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 			 COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_MED|
-			 COUNT_SRC_LOCAL_PREF|COUNT_IS_SYMMETRIC))
+			 COUNT_SRC_LOCAL_PREF))
       PbgpSz = TRUE;
 
     if (want_output == PRINT_OUTPUT_FORMATTED)
@@ -1458,11 +1447,6 @@ int main(int argc,char **argv)
           if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-6u  ", pbgp->src_med);
           else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", pbgp->src_med);
         }
-
-	if (!have_wtc || (what_to_count & COUNT_IS_SYMMETRIC)) {
-	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-3u  ", pbgp->is_symmetric);
-	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", pbgp->is_symmetric);
-	}
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_AS)) {
           if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10u  ", pbgp->peer_src_as);

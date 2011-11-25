@@ -133,10 +133,6 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
       return TRUE;
     } 
-    else if (acct_type == MAP_BGP_IS_SYMMETRIC && j > 1) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
-      return TRUE;
-    }
   }
   e->id = j; 
 
