@@ -1308,6 +1308,31 @@ int cfg_key_plugin_pipe_size(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_plugin_pipe_backlog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0 || value >= 100) {
+    Log(LOG_WARNING, "WARN ( %s ): 'plugin_pipe_backlog' is a percentage: 0 <= plugin_pipe_backlog < 100.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pipe_backlog = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pipe_backlog = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_plugin_buffer_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

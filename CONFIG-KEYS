@@ -145,6 +145,14 @@ DESC:		by defining the transfer buffer size, in bytes, this directive enables bu
 		details, read INTERNALS, 'Communications between core process and plugin' section. A
 		value of 10240 (10KB) is usually ok. (default: 0)
 
+KEY:            plugin_pipe_backlog
+VALUES:         [0 <= value < 100]
+DESC:           Expects the value to be a percentage. It creates a backlog of buffers on the pipe
+		before actually releasing them to the plugin. The strategy helps optimizing inter
+		process communications where plugins are quicker handling data than the Core process.
+		By default backlog is disabled; as with buffering in general, this feature should be
+		enabled with caution in lab and low-traffic environments. (default: 0)
+
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.). A mask less than "002" is
 		currently not accepted due to security reasons. (default: 077)

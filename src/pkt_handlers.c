@@ -1478,9 +1478,6 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_peer) return;
-
   if (sa->sa_family == AF_INET) {
     pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
     pbgp->peer_src_ip.family = AF_INET;
@@ -3208,9 +3205,6 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   --pdata; /* Bringing back to original place */
-
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_peer) return;
 
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_src_ip.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;

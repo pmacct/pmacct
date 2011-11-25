@@ -221,6 +221,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_net", cfg_key_nfacctd_net},
   {"plugins", NULL},
   {"plugin_pipe_size", cfg_key_plugin_pipe_size},
+  {"plugin_pipe_backlog", cfg_key_plugin_pipe_backlog},
   {"plugin_buffer_size", cfg_key_plugin_buffer_size},
   {"interface", cfg_key_interface},
   {"interface_wait", cfg_key_interface_wait},

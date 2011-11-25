@@ -80,6 +80,7 @@ EXT int cfg_key_sql_locking_style(char *, char *, char *);
 EXT int cfg_key_sql_use_copy(char *, char *, char *);
 EXT int cfg_key_sql_delimiter(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
+EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);
 EXT int cfg_key_plugin_buffer_size(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);
 EXT int cfg_key_networks_file(char *, char *, char *);

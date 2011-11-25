@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -249,8 +249,13 @@ reprocess:
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
 
 	if (channels_list[index].status->wakeup) {
-	  channels_list[index].status->wakeup = channels_list[index].request;
-	  write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz); 
+	  channels_list[index].status->backlog++;
+	  
+	  if (channels_list[index].status->backlog > ((channels_list[index].plugin->cfg.pipe_size/channels_list[index].plugin->cfg.buffer_size)*channels_list[index].plugin->cfg.pipe_backlog)/100) {
+	    channels_list[index].status->wakeup = channels_list[index].request;
+	    write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz); 
+	    channels_list[index].status->backlog = 0;
+	  }
 	}
 	channels_list[index].rg.ptr += channels_list[index].bufsize;
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
 */
 
 /*
@@ -46,6 +46,7 @@ struct ch_buf_hdr {
 
 struct ch_status {
   u_int8_t wakeup;	/* plugin is polling */ 
+  u_int32_t backlog;
 };
 
 struct sampling {

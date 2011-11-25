@@ -40,6 +40,7 @@ struct configuration {
   int acct_type; 
   int data_type; 
   int pipe_size;
+  int pipe_backlog;
   int buffer_size;
   int files_umask;
   int files_uid;
