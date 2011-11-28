@@ -174,6 +174,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "src_mask")) value |= COUNT_SRC_NMASK;
     else if (!strcmp(count_token, "dst_mask")) value |= COUNT_DST_NMASK;
     else if (!strcmp(count_token, "cos")) value |= COUNT_COS;
+    else if (!strcmp(count_token, "mpls_vpn_rd")) value |= COUNT_MPLS_VPN_RD;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 

@@ -74,6 +74,7 @@ mode. Since v6 unified mode is no longer supported.
   * peer_dst_as => peer_as_dst (BIGINT NOT NULL DEFAULT 0)
   * peer_src_ip => peer_ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * peer_dst_ip => peer_ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * mpls_vpn_rd => mpls_vpn_rd (CHAR(18) NOT NULL DEFAULT ' ')
   * std_comm => comms (CHAR(24) NOT NULL DEFAULT ' ')
   * ext_comm => comms (CHAR(24) NOT NULL DEFAULT ' ')
   * as_path => as_path (CHAR(21) NOT NULL DEFAULT ' ')

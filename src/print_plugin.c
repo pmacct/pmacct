@@ -97,7 +97,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                 COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF)))
+				COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)))
     PbgpSz = 0;
 
   memset(&nt, 0, sizeof(nt));
@@ -451,6 +451,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
+  char rd_str[SRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$";
   FILE *f = NULL;
   int j;
@@ -518,6 +519,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%-5u  ", pbgp->med);
       fprintf(f, "%-10u  ", pbgp->peer_src_as);
       fprintf(f, "%-10u  ", pbgp->peer_dst_as);
+
       addr_to_str(ip_address, &pbgp->peer_src_ip);
 #if defined ENABLE_IPV6
       fprintf(f, "%-45s  ", ip_address);
@@ -533,6 +535,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
       fprintf(f, "%-10u  ", data->ifindex_in);
       fprintf(f, "%-10u  ", data->ifindex_out);
+
+      bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
+      fprintf(f, "%-18s  ", rd_str);
 
       addr_to_str(src_host, &data->src_ip);
 #if defined ENABLE_IPV6
@@ -612,6 +617,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%u,", data->ifindex_in);
       fprintf(f, "%u,", data->ifindex_out);
 
+      bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
+      fprintf(f, "%s,", rd_str);
+
       addr_to_str(src_host, &data->src_ip);
       fprintf(f, "%s,", src_host);
       addr_to_str(dst_host, &data->dst_ip);
@@ -669,6 +677,7 @@ void P_write_stats_header_formatted(FILE *f)
   fprintf(f, "PEER_DST_IP      ");
   fprintf(f, "IN_IFACE    ");
   fprintf(f, "OUT_IFACE   ");
+  fprintf(f, "MPLS_VPN_RD         ");
 #if defined ENABLE_IPV6
   fprintf(f, "SRC_IP                                         ");
   fprintf(f, "DST_IP                                         ");
@@ -717,6 +726,7 @@ void P_write_stats_header_csv(FILE *f)
   fprintf(f, "PEER_DST_IP,");
   fprintf(f, "IN_IFACE,");
   fprintf(f, "OUT_IFACE,");
+  fprintf(f, "MPLS_VPN_RD,");
   fprintf(f, "SRC_IP,");
   fprintf(f, "DST_IP,");
   fprintf(f, "SRC_MASK,");

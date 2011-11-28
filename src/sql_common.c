@@ -104,7 +104,7 @@ void sql_init_default_values()
   if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                 COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF)))
+				COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)))
     PbgpSz = 0;
 
   if ( (config.what_to_count & COUNT_CLASS ||
@@ -897,6 +897,7 @@ int sql_evaluate_primitives(int primitive)
 
     if (config.what_to_count & COUNT_SRC_LOCAL_PREF) what_to_count |= COUNT_SRC_LOCAL_PREF;
     if (config.what_to_count & COUNT_SRC_MED) what_to_count |= COUNT_SRC_MED;
+    if (config.what_to_count & COUNT_MPLS_VPN_RD) what_to_count |= COUNT_MPLS_VPN_RD;
 
     if (config.sql_table_version < 6) {
       if (config.what_to_count & COUNT_SRC_AS) what_to_count |= COUNT_SRC_AS;
@@ -1386,6 +1387,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "med_src=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_SRC_MED;
     values[primitive].handler = where[primitive].handler = count_src_med_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_MPLS_VPN_RD) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "mpls_vpn_rd", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "mpls_vpn_rd=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_MPLS_VPN_RD;
+    values[primitive].handler = where[primitive].handler = count_mpls_vpn_rd_handler;
     primitive++;
   }
 

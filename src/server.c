@@ -26,6 +26,8 @@
 #include "imt_plugin.h"
 #include "ip_flow.h"
 #include "classifier.h"
+#include "bgp/bgp_packet.h"
+#include "bgp/bgp.h"
 
 /* functions */
 int build_query_server(char *path_ptr)
@@ -330,6 +332,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 #endif
       d2->peer_dst_ip.family = s2->peer_dst_ip.family;
     }
+    if (w & COUNT_MPLS_VPN_RD) memcpy(&d2->mpls_vpn_rd, &s2->mpls_vpn_rd, sizeof(rd_t)); 
   }
 }
 

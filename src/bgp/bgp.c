@@ -1330,7 +1330,7 @@ int bgp_afi2family (int afi)
   return 0;
 }
 
-bgp_rd2str(u_char *str, rd_t *rd)
+int bgp_rd2str(u_char *str, rd_t *rd)
 {
   struct rd_ip  *rdi;
   struct rd_as  *rda;
@@ -2285,6 +2285,7 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     }
     c->src_local_pref = p->src_local_pref;
     c->src_med = p->src_med;
+    memcpy(&c->mpls_vpn_rd, &p->mpls_vpn_rd, sizeof(rd_t));
   }
 }
 
@@ -2307,6 +2308,7 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
     p->src_local_pref = c->src_local_pref;
     p->src_med = c->src_med;
+    memcpy(&p->mpls_vpn_rd, &c->mpls_vpn_rd, sizeof(rd_t));
   }
 }
 
@@ -2315,7 +2317,7 @@ void bgp_config_checks(struct configuration *c)
   if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
 			  COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
 			  COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-			  COUNT_SRC_LOCAL_PREF)) {
+			  COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)) {
     /* Sanitizing the aggregation method */
     if ( ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) ||
          ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) ) {

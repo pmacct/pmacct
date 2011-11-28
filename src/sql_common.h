@@ -214,6 +214,7 @@ EXT void count_src_ext_comm_handler(const struct db_cache *, const struct insert
 EXT void count_src_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_local_pref_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_src_med_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_mpls_vpn_rd_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_src_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_dst_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_peer_src_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -238,6 +239,7 @@ EXT void fake_host_handler(const struct db_cache *, const struct insert_data *, 
 EXT void fake_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_comms_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void fake_mpls_vpn_rd_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 
 EXT void count_counters_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_flows_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

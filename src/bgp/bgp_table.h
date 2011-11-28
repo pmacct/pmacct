@@ -76,34 +76,6 @@ struct bgp_node
 */
 };
 
-#define RD_TYPE_AS      0
-#define RD_TYPE_IP      1
-#define RD_TYPE_AS4     2 
-
-struct rd_as
-{
-  u_int16_t type;
-  u_int16_t as;
-  u_int32_t val;
-};
-
-struct rd_ip
-{
-  u_int16_t type;
-  struct in_addr ip;
-  u_int16_t val;
-};
-
-struct rd_as4
-{ 
-  u_int16_t type;
-  as_t as;
-  u_int32_t val;
-};
-
-/* Picking one of the three structures as rd_t for simplicity */ 
-typedef struct rd_as rd_t;
-
 struct bgp_info_extra
 {
   rd_t rd;

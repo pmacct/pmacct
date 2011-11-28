@@ -238,6 +238,17 @@ void count_src_med_handler(const struct db_cache *cache_elem, const struct inser
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_mpls_vpn_rd_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char ptr[SRVBUFLEN];
+
+  bgp_rd2str(ptr, &cache_elem->cbgp->mpls_vpn_rd);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_peer_src_as_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->peer_src_as);

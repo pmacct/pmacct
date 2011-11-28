@@ -225,6 +225,33 @@ struct my_gtphdr {
 typedef u_int32_t as_t;
 typedef u_int16_t as16_t;
 
+#define RD_TYPE_AS      0
+#define RD_TYPE_IP      1
+#define RD_TYPE_AS4     2
+
+struct rd_as
+{
+  u_int16_t type;
+  u_int16_t as;
+  u_int32_t val;
+};
+
+struct rd_ip
+{
+  u_int16_t type;
+  struct in_addr ip;
+  u_int16_t val;
+};
+
+struct rd_as4
+{
+  u_int16_t type;
+  as_t as;
+  u_int32_t val;
+};
+
+/* Picking one of the three structures as rd_t for simplicity */
+typedef struct rd_as rd_t;
 
 /* class status */
 struct class_st {
@@ -391,6 +418,7 @@ struct pkt_bgp_primitives {
   char src_as_path[MAX_BGP_ASPATH];
   u_int32_t src_local_pref;
   u_int32_t src_med;
+  rd_t mpls_vpn_rd;
   u_int32_t pad;
 };
 
@@ -410,6 +438,7 @@ struct cache_bgp_primitives {
   char *src_as_path;
   u_int32_t src_local_pref;
   u_int32_t src_med;
+  rd_t mpls_vpn_rd;
 };
 /* END: BGP section */
 
