@@ -43,6 +43,7 @@
 #define PRETAG_LOCAL_PREF	0x00010000
 #define PRETAG_SRC_STD_COMM	0x00020000
 #define PRETAG_STD_COMM		0x00040000
+#define PRETAG_MPLS_VPN_RD	0x00080000
 
 #define PRETAG_MAP_RCODE_ID  100
 #define PRETAG_MAP_RCODE_ID2 101
@@ -70,6 +71,11 @@ typedef struct {
   u_int8_t neg;
   struct host_addr a;
 } pt_hostaddr_t;
+
+typedef struct {
+  u_int8_t neg;
+  rd_t rd;
+} pt_rd_t;
 
 typedef struct {
   char *label;
@@ -110,6 +116,7 @@ struct id_entry {
   pt_uint32_t local_pref;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
+  pt_rd_t mpls_vpn_rd;
   struct bpf_program filter;
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];

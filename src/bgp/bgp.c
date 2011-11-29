@@ -1330,7 +1330,7 @@ int bgp_afi2family (int afi)
   return 0;
 }
 
-int bgp_rd2str(u_char *str, rd_t *rd)
+int bgp_rd2str(char *str, rd_t *rd)
 {
   struct rd_ip  *rdi;
   struct rd_as  *rda;
@@ -1358,6 +1358,83 @@ int bgp_rd2str(u_char *str, rd_t *rd)
     sprintf(str, "unknown");
     break; 
   }
+}
+
+int bgp_str2rd(rd_t *output, char *value)
+{
+  struct host_addr a;
+  char *endptr, *token;
+  u_int32_t tmp32;
+  u_int16_t tmp16;
+  struct rd_ip  *rdi;
+  struct rd_as  *rda;
+  struct rd_as4 *rda4;
+  int idx = 0;
+  rd_t rd;
+
+  memset(&a, 0, sizeof(a));
+  memset(&rd, 0, sizeof(rd));
+
+  /* type:RD_subfield1:RD_subfield2 */
+  while ( (token = extract_token(&value, ':')) && idx < 3) {
+    if (idx == 0) {
+      tmp32 = strtoul(token, &endptr, 10);
+      rd.type = tmp32;
+      switch (rd.type) {
+      case RD_TYPE_AS:
+        rda = (struct rd_as *) &rd;
+        break;
+      case RD_TYPE_IP:
+        rdi = (struct rd_ip *) &rd;
+        break;
+      case RD_TYPE_AS4:
+        rda4 = (struct rd_as4 *) &rd;
+        break;
+      default:
+        printf("ERROR: Invalid RD type specified\n");
+        return FALSE;
+      }
+    }
+    if (idx == 1) {
+      switch (rd.type) {
+      case RD_TYPE_AS:
+        tmp32 = strtoul(token, &endptr, 10);
+        rda->as = tmp32;
+        break;
+      case RD_TYPE_IP:
+        memset(&a, 0, sizeof(a));
+        str_to_addr(token, &a);
+        if (a.family == AF_INET) rdi->ip.s_addr = a.address.ipv4.s_addr;
+        break;
+      case RD_TYPE_AS4:
+        tmp32 = strtoul(token, &endptr, 10);
+        rda4->as = tmp32;
+        break;
+      }
+    }
+    if (idx == 2) {
+      switch (rd.type) {
+      case RD_TYPE_AS:
+        tmp32 = strtoul(token, &endptr, 10);
+        rda->val = tmp32;
+        break;
+      case RD_TYPE_IP:
+        tmp32 = strtoul(token, &endptr, 10);
+        rdi->val = tmp32;
+        break;
+      case RD_TYPE_AS4:
+        tmp32 = strtoul(token, &endptr, 10);
+        rda4->val = tmp32;
+        break;
+      }
+    }
+
+    idx++;
+  }
+
+  memcpy(output, &rd, sizeof(rd));
+
+  return TRUE;
 }
 
 /* Allocate bgp_info_extra */

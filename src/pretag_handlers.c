@@ -49,77 +49,10 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       return TRUE;
     }
   }
-  /* If we parse a bgp_iface_rd_map and spot some ':' chars, let's validate
-     the string against RD encapsulations supported by rfc4364 */ 
   else if (acct_type == MAP_BGP_IFACE_TO_RD && strchr(value, ':')) {
-    char *endptr, *token;
-    u_int32_t tmp32;
-    u_int16_t tmp16;
-    struct rd_ip  *rdi;
-    struct rd_as  *rda;
-    struct rd_as4 *rda4;
-    int idx = 0;
     rd_t rd;
 
-    memset(&rd, 0, sizeof(rd));
-
-    /* type:RD_subfield1:RD_subfield2 */
-    while ( (token = extract_token(&value, ':')) && idx < 3) {
-      if (idx == 0) {
-	tmp32 = strtoul(token, &endptr, 10);
-	rd.type = tmp32;
-        switch (rd.type) {
-        case RD_TYPE_AS:
-	  rda = (struct rd_as *) &rd;
-	  break;
-        case RD_TYPE_IP:
-	  rdi = (struct rd_ip *) &rd;
-	  break;
-        case RD_TYPE_AS4:
-	  rda4 = (struct rd_as4 *) &rd;
-	  break;
-        default:
-	  Log(LOG_ERR, "ERROR ( %s ): Invalid RD type specified. ", filename);
-	  return TRUE;
-	}
-      }
-      if (idx == 1) {
-	switch (rd.type) {
-	case RD_TYPE_AS:
-	  tmp32 = strtoul(token, &endptr, 10); 
-	  rda->as = tmp32;
-	  break;
-	case RD_TYPE_IP:
-          memset(&a, 0, sizeof(a));
-          str_to_addr(token, &a);
-          if (a.family == AF_INET) rdi->ip.s_addr = a.address.ipv4.s_addr;
-	  break;
-	case RD_TYPE_AS4:
-	  tmp32 = strtoul(token, &endptr, 10); 
-	  rda4->as = tmp32;
-	  break;
-	}
-      }
-      if (idx == 2) {
-        switch (rd.type) {
-        case RD_TYPE_AS:
-          tmp32 = strtoul(token, &endptr, 10);
-          rda->val = tmp32;
-          break;
-        case RD_TYPE_IP:
-          tmp32 = strtoul(token, &endptr, 10);
-          rdi->val = tmp32;
-          break;
-        case RD_TYPE_AS4:
-          tmp32 = strtoul(token, &endptr, 10);
-          rda4->val = tmp32;
-          break;
-        }
-      }
-
-      idx++;
-    }
-
+    bgp_str2rd(&rd, value);
     memcpy(&j, &rd, sizeof(rd));
   }
   /* If we spot the word "bgp", let's check this is a map that supports it */
@@ -831,6 +764,31 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
   return TRUE;
 }
 
+int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0, ret;
+  char *endptr, *token;
+
+  memset(&e->mpls_vpn_rd, 0, sizeof(e->mpls_vpn_rd));
+
+  e->mpls_vpn_rd.neg = pt_check_neg(&value);
+  ret = bgp_str2rd(&e->mpls_vpn_rd.rd, value);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_MPLS_VPN_RD) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'mpls_vpn_rd' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  if (ret) {
+    e->func[x] = pretag_mpls_vpn_rd_handler;
+    e->func_type[x] = PRETAG_MPLS_VPN_RD;
+    return FALSE;
+  }
+  else return TRUE; 
+}
+
 int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   strlcpy(e->label, value, MAX_LABEL_LEN); 
@@ -1505,6 +1463,25 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
+}
+
+int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
+  struct bgp_info *info;
+  int ret = -1;
+
+  if (dst_ret) {
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
+    if (info && info->extra) {
+      ret = memcmp(&entry->mpls_vpn_rd.rd, &info->extra->rd, sizeof(rd_t)); 
+    }
+  }
+
+  if (!ret) return (FALSE | entry->mpls_vpn_rd.neg);
+  else return (TRUE ^ entry->mpls_vpn_rd.neg);
 }
 
 int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
