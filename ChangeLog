@@ -1,5 +1,59 @@
-pmacct (Promiscuous mode IP Accounting package) v0.14.0rc2
+pmacct (Promiscuous mode IP Accounting package) v0.14.0rc3
 pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+
+0.14.0rc3 -- 07-12-2011
+  + BGP daemon: BGP/MPLS VPNs (rfc4364) implemented! This encompasses both
+    RIB storage (ie. virtualization layer) and lookup. bgp_iface_to_rd_map
+    map correlates <router IP, input/output interfaces (ifIndex)> couples
+    to Route Distinguishers (RDs). RD encapsulation types #0 (2-bytes ASN),
+    #1 (IP address) and #2 (4-bytes ASN) are supported. Examples provided:
+    examples/bgp_iface_to_rd.map and EXAMPLES files.
+  + mpls_vpn_rd aggregation primitive has been added to the set. Also this
+    is being supported key in Pre-Tagging (pre_tag_map). 
+  + print plugin: introduced print_output_file feature to write statistics
+    to files. Output is text, formatted or CSV. Filenames can contain time-
+    based variables to make them dynamic. If filename is static instead,
+    content is overwritten over time.
+  + print plugin: introduced print_time_roundoff feature to align time slots
+    nicely, same as per the sql_history_roundoff directive.
+  + print plugin: introduced print_trigger_exec feature to execute custom
+    scripts at each print_refresh_time interval (ie. to process, expire,
+    gzip, etc. files). Feature is in sync with wrap-up of data commit to
+    screen or files.
+  + pmacctd: introduced support for DLT_LOOP link-type (ie. OpenBSD tunnel
+    interfaces). Thanks to Neil Reilly for his support. 
+  + uacctd: a cache of ifIndex is introduced. Hash structure with conflict
+    chains and short expiration time (ie. to avoid getting tricked by cooked
+    interfaces devices a-la ppp0). The cache is an effort to gain speed-ups.
+    Implementation is courtesy by Stephen Hemminger, Vyatta.
+  + Logging: introduced syslog-like timestamping when writing directly to
+    files. Also a separate FD per process is used and SIGHUP elicits files
+    reopening: all aimed at letting proper logs rotation by external tools.
+  + Introduced plugin_pipe_backlog configuration directive: it induces a
+    backlog of buffers on the pipe before actually releasing them to the
+    plugin. The strategy helps optimizing inter-process communications, ie.
+    when plugins are quicker processing data than the Core process.
+  ! fix, peer_src_ip primitive: has been disconnected from [ns]facctd_as_new
+    mechanism in order to ensure it's always representing a reference to the
+    NetFlow or sFlow emitter.
+  ! fix, nfprobe: input and output VLAN ID field types have been aligned to
+    RFC3954, which appears to be also retroactively supported by IPFIX. The
+    new field types are #58 and #59 respectively. Thanks to Maurizio Molina
+    for pointing the issue out.
+  ! fix, IMT plugin: fragmentation of the class table over multiple packets
+    to the pmacct IMT client was failing and has been resolved. 
+  ! fix, nfprobe: individual flows start and end timestamps are now filled
+    to the msec resolution. Thanks to Daniel Aschwanden for having reported
+    the issue.
+  ! fix, uacctd: NETLINK_NO_ENOBUFS is set to prevent the daemon being
+    reported about ENOBUFS events by the underlying operating system. Works
+    on kernels 2.6.30+. Patch is courtesy by Stephen Hemminger, Vyatta.
+  ! fix, uacctd: get_ifindex() can now return values greater than 2^15. Patch
+    is courtesy by Stephen Hemminger, Vyatta.
+  ! fix, pmacctd, uacctd: case of zero IPv6 payload in conjunction with no
+    IPv6 next header is now supported. Thanks to Quirin Scheitle for having
+    reported the issue.
+  - Support for is_symmetric aggregation primitive is discontinued.
 
 0.14.0rc2 -- 26-08-2011
   + sampling_map feature is introduced, allowing definition of static traffic
