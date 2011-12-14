@@ -856,7 +856,10 @@ int main(int argc,char **argv)
       }
     }
     else {
-      freopen(file, "r", f);
+      if (!freopen(file, "r", f)) {
+	printf("ERROR: freopen() failed: %s\n", strerror(errno));
+	exit(1);
+      }
       strnum = 0;
       tmpbufptr = tmpbuf;
       while (!feof(f) && (strnum < MAX_QUERIES)) {
@@ -1715,12 +1718,12 @@ int main(int argc,char **argv)
 #if defined HAVE_64BIT_COUNTERS
       if (which_counter == 0) printf("%llu\n", bcnt); /* print bytes */
       else if (which_counter == 1) printf("%llu\n", pcnt); /* print packets */
-      else if (which_counter == 2) printf("%llu %llu %llu %lu\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
+      else if (which_counter == 2) printf("%llu %llu %llu %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
       else if (which_counter == 3) printf("%llu\n", fcnt); /* print flows */
 #else
       if (which_counter == 0) printf("%lu\n", bcnt); 
       else if (which_counter == 1) printf("%lu\n", pcnt); 
-      else if (which_counter == 2) printf("%lu %lu %lu %lu\n", pcnt, bcnt, fcnt, num_counters); 
+      else if (which_counter == 2) printf("%lu %lu %lu %u\n", pcnt, bcnt, fcnt, num_counters); 
       else if (which_counter == 3) printf("%lu\n", fcnt); 
 #endif
     }

@@ -84,7 +84,10 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	    if (fgets(buf, SRVBUFLEN, file) && !iscomment(buf)) rows++;
       }
       /* 2nd step: loading data into a temporary table */
-      freopen(filename, "r", file);
+      if (!freopen(filename, "r", file)) {
+        Log(LOG_ERR, "ERROR: freopen() failed: %s\n", strerror(errno));
+        goto handle_error;
+      }
 
       /* We have no (valid) rows. We build a zeroed single-row table aimed to complete
 	 successfully any further lookup */ 
@@ -838,7 +841,10 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         if (fgets(buf, SRVBUFLEN, file)) rows++;
       }
       /* 2nd step: loading data into a temporary table */
-      freopen(filename, "r", file);
+      if (!freopen(filename, "r", file)) {
+        Log(LOG_ERR, "ERROR: freopen() failed: %s\n", strerror(errno));
+        goto handle_error;
+      }
 
       /* We have no (valid) rows. We build a zeroed single-row table aimed to complete
          successfully any further lookup */

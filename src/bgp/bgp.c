@@ -2282,7 +2282,9 @@ void write_neighbors_file(char *filename)
 
   file = fopen(filename,"w");
   if (file) {
-    chown(filename, owner, group);
+    if (chown(filename, owner, group) == -1)
+      Log(LOG_WARNING, "WARN: Unable to chown() '%s': %s\n", filename, strerror(errno));
+
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for bgp_neighbors_file '%s'.\n", filename);
       return;

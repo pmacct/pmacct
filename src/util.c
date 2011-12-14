@@ -367,9 +367,12 @@ FILE *open_logfile(char *filename)
   if (config.files_gid) group = config.files_gid;
 
   file = fopen(filename, "a"); 
-  if (file) chown(filename, owner, group); 
+  if (file) {
+    if (chown(filename, owner, group) == -1)
+      printf("WARN: Unable to chown() logfile '%s': %s\n", filename, strerror(errno));
+  }
   else {
-    printf("ERROR: Unable to open logfile '%s'\n", filename);
+    printf("WARN: Unable to fopen() logfile '%s': %s\n", filename, strerror(errno));
     file = NULL;
   }
 
@@ -392,7 +395,9 @@ FILE *open_print_output_file(char *filename, time_t now)
 
   file = fopen(buf, "w");
   if (file) {
-    chown(buf, owner, group);
+    if (chown(buf, owner, group) == -1)
+      Log(LOG_WARNING, "WARN: Unable to chown() print_ouput_file '%s': %s\n", buf, strerror(errno));
+
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for print_ouput_file '%s'.\n", buf);
       file = NULL;
@@ -420,7 +425,9 @@ void write_pid_file(char *filename)
     
   file = fopen(filename,"w");
   if (file) {
-    chown(filename, owner, group);
+    if (chown(filename, owner, group) == -1)
+      Log(LOG_WARNING, "WARN: Unable to chown() pidfile '%s': %s\n", filename, strerror(errno));
+
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for pidfile '%s'.\n", filename);
       return;
@@ -461,7 +468,9 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
 
   file = fopen(fname,"w");
   if (file) {
-    chown(fname, owner, group);
+    if (chown(fname, owner, group) == -1)
+      Log(LOG_WARNING, "WARN: Unable to chown() '%s': %s\n", fname, strerror(errno));
+
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock of '%s'.\n", fname);
       return;
@@ -748,7 +757,11 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
     return(0);
   }
   
-  fread(buf, size, 1, f);
+  if (fread(buf, size, 1, f) != 1) {
+    Log(LOG_ERR, "ERROR: Unable to read from SQL schema '%s': %s\n", path, strerror(errno));
+    return(0);
+  }
+
   fclose(f);
   
   ptr = strrchr(buf, ';');

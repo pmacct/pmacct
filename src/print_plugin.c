@@ -468,7 +468,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   }
   else f = stdout; /* write to standard output */
 
-  if (config.print_markers) fprintf(f, "--START (%u+%u)--\n", refresh_deadline-config.print_refresh_time,
+  if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", refresh_deadline-config.print_refresh_time,
 		  			config.print_refresh_time);
 
   for (j = 0; j < index; j++) {
