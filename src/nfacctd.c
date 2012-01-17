@@ -509,6 +509,14 @@ int main(int argc,char **argv, char **envp)
   else set_sampling_table(&pptrs, NULL);
 
 #if defined ENABLE_THREADS
+  /* starting the ISIS threa */
+  /* XXX: if (config.nfacctd_isis */ /* { 
+    nfacctd_isis_wrapper();
+
+    // Let's give the ISIS thread some advantage to create its structures
+    sleep(5);
+  } */
+
   /* starting the BGP thread */
   if (config.nfacctd_bgp) {
     req.bpf_filter = TRUE;

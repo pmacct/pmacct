@@ -67,7 +67,7 @@ RANLIB = @RANLIB@
 THREADS_SOURCES = @THREADS_SOURCES@
 VERSION = @VERSION@
 
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin 
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis 
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
 bin_PROGRAMS = pmacct @EXTRABIN@ 
 EXTRA_PROGRAMS = pmmyplay pmpgplay
@@ -76,7 +76,7 @@ pmacctd_SOURCES = pmacctd.c signals.c util.c strlcpy.c plugin_hooks.c 	server.c 
 
 pmacctd_LDFLAGS = $(DEFS) 
 pmacctd_LDADD = $(pmacctd_PLUGINS)
-nfacctd_SOURCES = nfacctd.c signals.c util.c strlcpy.c plugin_hooks.c         server.c acct.c memory.c cfg.c imt_plugin.c log.c pkt_handlers.c         cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c pretag.c 	pretag_handlers.c ports_aggr.c nfv8_handlers.c nfv9_template.c addr.c 	setproctitle.c ip_flow.c classifier.c regexp.c regsub.c conntrack.c 	xflow_status.c 
+nfacctd_SOURCES = nfacctd.c signals.c util.c strlcpy.c plugin_hooks.c         server.c acct.c memory.c cfg.c imt_plugin.c log.c pkt_handlers.c         cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c pretag.c 	pretag_handlers.c ports_aggr.c nfv8_handlers.c nfv9_template.c addr.c 	setproctitle.c ip_flow.c classifier.c regexp.c regsub.c conntrack.c 	xflow_status.c
 
 nfacctd_LDFLAGS = $(DEFS)
 nfacctd_LDADD = $(pmacctd_PLUGINS)
@@ -148,7 +148,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 SOURCES = $(pmmyplay_SOURCES) $(pmpgplay_SOURCES) $(pmacct_SOURCES) $(pmacctd_SOURCES) $(nfacctd_SOURCES) $(sfacctd_SOURCES) $(uacctd_SOURCES)
 OBJECTS = $(pmmyplay_OBJECTS) $(pmpgplay_OBJECTS) $(pmacct_OBJECTS) $(pmacctd_OBJECTS) $(nfacctd_OBJECTS) $(sfacctd_OBJECTS) $(uacctd_OBJECTS)

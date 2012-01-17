@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin 
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis 
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
 bin_PROGRAMS = pmacct @EXTRABIN@ 
 EXTRA_PROGRAMS = pmmyplay pmpgplay
@@ -15,7 +15,7 @@ nfacctd_SOURCES = nfacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
         cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c pretag.c \
 	pretag_handlers.c ports_aggr.c nfv8_handlers.c nfv9_template.c addr.c \
 	setproctitle.c ip_flow.c classifier.c regexp.c regsub.c conntrack.c \
-	xflow_status.c 
+	xflow_status.c
 nfacctd_LDFLAGS = $(DEFS)
 nfacctd_LDADD = $(pmacctd_PLUGINS)
 sfacctd_SOURCES = sfacctd.c signals.c util.c strlcpy.c plugin_hooks.c \

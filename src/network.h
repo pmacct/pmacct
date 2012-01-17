@@ -71,6 +71,8 @@ struct token_header {
 #define ETHERTYPE_MPLS          0x8847		/* MPLS */
 #define ETHERTYPE_MPLS_MULTI    0x8848		/* MPLS */
 #define ETHERTYPE_8021AH        0x88A8		/* 802.1ah */
+#define ETHERTYPE_ISO		0xFEFE		/* OSI */
+#define ETHERTYPE_GRE_ISO	0x00FE		/* OSI over GRE */
 
 /* PPP protocol definitions */
 #define PPP_HDRLEN      4       /* octets for standard ppp header */

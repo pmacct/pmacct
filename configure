@@ -3604,7 +3604,7 @@ case "$host_os" in
     ;;
 esac
 
-LIBS="${LIBS} -lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/"
+LIBS="${LIBS} -lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/"
 
 echo "
 PLATFORM ..... : `uname -m`
@@ -3742,7 +3742,7 @@ ac_given_INSTALL="$INSTALL"
 trap 'rm -fr `echo " Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
-	    src/tee_plugin/Makefile " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+	    src/tee_plugin/Makefile src/isis/Makefile " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -3836,7 +3836,7 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
-	    src/tee_plugin/Makefile "}
+	    src/tee_plugin/Makefile src/isis/Makefile "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

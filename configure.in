@@ -906,7 +906,7 @@ case "$host_os" in
     ;;
 esac
 
-LIBS="${LIBS} -lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/"
+LIBS="${LIBS} -lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/"
 
 echo "
 PLATFORM ..... : `uname -m`
@@ -931,4 +931,4 @@ AC_SUBST([EXTRABIN])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
-	    src/tee_plugin/Makefile ])
+	    src/tee_plugin/Makefile src/isis/Makefile ])
