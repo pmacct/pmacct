@@ -1442,9 +1442,9 @@ void readExtendedGateway(SFSample *sample)
 	asNumber = getData32(sample);
 	snprintf(asn_str, MAX_BGP_ASPATH-1, "%u", asNumber);
         len_asn = strlen(asn_str);
-        len_tot += len_asn;
+	len_tot = strlen(sample->dst_as_path);
 
-        if (len_tot < MAX_BGP_ASPATH) {
+        if ((len_tot+len_asn) < MAX_BGP_ASPATH) {
           strncat(sample->dst_as_path, asn_str, len_asn);
         }
         else {
@@ -1457,7 +1457,10 @@ void readExtendedGateway(SFSample *sample)
 
 	/* mark the last one as the dst_as */
 	if (idx == (sample->dst_as_path_len - 1) && i == (seg_len - 1)) sample->dst_as = asNumber;
-	else strncat(sample->dst_as_path, space, 1); 
+        else {
+          if (strlen(sample->dst_as_path) < (MAX_BGP_ASPATH-1))
+            strncat(sample->dst_as_path, space, 1);
+        }
       }
     }
   }
@@ -1489,9 +1492,9 @@ void readExtendedGateway(SFSample *sample)
         break;
       }
       len_comm = strlen(comm_str);
-      len_tot += len_comm;
+      len_tot = strlen(sample->comms);
 
-      if (len_tot < MAX_BGP_STD_COMMS) {
+      if ((len_tot+len_comm) < MAX_BGP_STD_COMMS) {
         strncat(sample->comms, comm_str, len_comm);
       }
       else {
@@ -1499,7 +1502,10 @@ void readExtendedGateway(SFSample *sample)
         sample->comms[MAX_BGP_STD_COMMS-1] = '\0';
       }
 
-      if (idx < (sample->communities_len - 1)) strncat(sample->comms, space, 1);
+      if (idx < (sample->communities_len - 1)) {
+        if (strlen(sample->comms) < (MAX_BGP_STD_COMMS-1))
+          strncat(sample->comms, space, 1);
+      }
     }
   }
 
