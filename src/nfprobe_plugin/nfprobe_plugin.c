@@ -1497,8 +1497,18 @@ expiry_check:
        * expire flows based on time - instead we only 
        * expire flows when the flow table is full. 
        */
-      if (check_expired(&flowtrack, &target, capfile == NULL ? CE_EXPIRE_NORMAL : CE_EXPIRE_FORCED, engine_type, engine_id) < 0)
+      if (check_expired(&flowtrack, &target, capfile == NULL ? CE_EXPIRE_NORMAL : CE_EXPIRE_FORCED, engine_type, engine_id) < 0) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): Unable to export flows.\n", config.name, config.type);
+
+	/* Let's try to sleep a bit and re-open the NetFlow send socket */
+	if (dest.ss_family != 0) {
+	  sleep(5);
+	  target.fd = connsock(&dest, dest_len, hoplimit);
+
+	  Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
+			config.name, config.type, dest_addr, dest_serv);
+	}
+      }
 	
       /*
        * If we are over max_flows, force-expire the oldest 
