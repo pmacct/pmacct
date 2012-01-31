@@ -890,17 +890,13 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DIRECTION].len == 1)
-      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
-
-    if (!direction)
+    if (tpl->tpl[NF9_IN_SRC_MAC].len)
       memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
-    else
+    else if (tpl->tpl[NF9_OUT_SRC_MAC].len)
       memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_OUT_SRC_MAC].off, MIN(tpl->tpl[NF9_OUT_SRC_MAC].len, 6));
     break;
   default:
@@ -913,17 +909,13 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DIRECTION].len == 1)
-      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
-
-    if (!direction)
+    if (tpl->tpl[NF9_IN_DST_MAC].len)
       memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
-    else
+    else if (tpl->tpl[NF9_OUT_DST_MAC].len)
       memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_OUT_DST_MAC].off, MIN(tpl->tpl[NF9_OUT_DST_MAC].len, 6));
     break;
   default:
@@ -936,17 +928,13 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DIRECTION].len == 1)
-      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
-
-    if (!direction)
+    if (tpl->tpl[NF9_IN_VLAN].len)
       memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
-    else
+    else if (tpl->tpl[NF9_OUT_VLAN].len)
       memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off, MIN(tpl->tpl[NF9_OUT_VLAN].len, 2));
 
     pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
@@ -1762,67 +1750,58 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
   time_t fstime = 0;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
-  u_int8_t direction = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DIRECTION].len == 1)
-      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
-
-    if (!direction) {
-      if (tpl->tpl[NF9_IN_BYTES].len == 4) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
-        pdata->pkt_len = ntohl(t32);
-      }
-      else if (tpl->tpl[NF9_IN_BYTES].len == 8) {
-        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 8);
-        pdata->pkt_len = pm_ntohll(t64);
-      }
-      else if (tpl->tpl[NF9_FLOW_BYTES].len == 4) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 4);
-        pdata->pkt_len = ntohl(t32);
-      }
-      else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
-        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
-        pdata->pkt_len = pm_ntohll(t64);
-      }
-
-      if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
-        pdata->pkt_num = ntohl(t32);
-      }
-      else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
-        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
-        pdata->pkt_num = pm_ntohll(t64);
-      }
-      else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
-        pdata->pkt_num = ntohl(t32);
-      }
-      else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
-        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
-        pdata->pkt_num = pm_ntohll(t64);
-      }
+    if (tpl->tpl[NF9_IN_BYTES].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
+      pdata->pkt_len = ntohl(t32);
     }
-    else {
-      if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
-        pdata->pkt_len = ntohl(t32);
-      }
-      else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
-        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
-        pdata->pkt_len = pm_ntohll(t64);
-      }
+    else if (tpl->tpl[NF9_IN_BYTES].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_FLOW_BYTES].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 4);
+      pdata->pkt_len = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
+      pdata->pkt_len = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
 
-      if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
-        pdata->pkt_num = ntohl(t32);
-      }
-      else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
-        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
-        pdata->pkt_num = pm_ntohll(t64);
-      }
+    if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
     }
     
     if ((tpl->tpl[NF9_FIRST_SWITCHED].len || tpl->tpl[NF9_LAST_SWITCHED].len) && hdr->version == 9) {
