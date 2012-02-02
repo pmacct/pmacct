@@ -83,6 +83,7 @@ Similarly, BGP tables:
   * src_mask => mask_src (INT(2) NOT NULL DEFAULT 0, see README.mask)
   * dst_mask => mask_dst (INT(2) NOT NULL DEFAULT 0, see README.mask)
   * cos => cos (INT(2) NOT NULL DEFAULT 0, see README.cos)
+  * etype => etype (INT(2) NOT NULL DEFAULT 0, see README.etype)
   * class => class_id (CHAR(16) NOT NOT NULL DEFAULT ' ')
   * src_mac => mac_src (CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0')
   * dst_mac => mac_dst (CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0')

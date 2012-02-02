@@ -334,6 +334,7 @@ struct pkt_primitives {
   u_int8_t eth_shost[ETH_ADDR_LEN];
   u_int16_t vlan_id;
   u_int8_t cos;
+  u_int16_t etype;
 #endif
   struct host_addr src_ip;
   struct host_addr dst_ip;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -490,6 +490,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%-17s  ", dst_mac);
       fprintf(f, "%-5u  ", data->vlan_id); 
       fprintf(f, "%-2u  ", data->cos); 
+      fprintf(f, "%-5x  ", data->etype); 
 #endif
       fprintf(f, "%-10u  ", data->src_as); 
       fprintf(f, "%-10u  ", data->dst_as); 
@@ -582,6 +583,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%s,", dst_mac);
       fprintf(f, "%u,", data->vlan_id); 
       fprintf(f, "%u,", data->cos); 
+      fprintf(f, "%x,", data->etype); 
 #endif
       fprintf(f, "%u,", data->src_as); 
       fprintf(f, "%u,", data->dst_as); 
@@ -664,6 +666,7 @@ void P_write_stats_header_formatted(FILE *f)
   fprintf(f, "DST_MAC            ");
   fprintf(f, "VLAN   ");
   fprintf(f, "COS ");
+  fprintf(f, "ETYPE  ");
 #endif
   fprintf(f, "SRC_AS      ");
   fprintf(f, "DST_AS      ");
@@ -712,7 +715,7 @@ void P_write_stats_header_csv(FILE *f)
   fprintf(f, "SRC_MAC,");
   fprintf(f, "DST_MAC,");
   fprintf(f, "VLAN,");
-  fprintf(f, "COS,");
+  fprintf(f, "ETYPE,");
 #endif
   fprintf(f, "SRC_AS,");
   fprintf(f, "DST_AS,");

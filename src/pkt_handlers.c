@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -67,6 +67,13 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = cos_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_cos_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_cos_handler;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation & COUNT_ETHERTYPE) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = etype_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_etype_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_etype_handler;
       primitives++;
     }
 #endif
@@ -575,6 +582,13 @@ void cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, c
     pdata->primitives.cos = cos >> 13;
   }
 }
+
+void etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->primitives.etype = pptrs->l3_proto;
+}
 #endif
 
 void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -946,6 +960,23 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
 void NF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+}
+
+void NF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    memcpy(&pdata->primitives.etype, pptrs->f_data+tpl->tpl[NF9_ETHERTYPE].off, MIN(tpl->tpl[NF9_ETHERTYPE].len, 2));
+    pdata->primitives.etype = ntohs(pdata->primitives.etype);
+    break;
+  default:
+    break;
+  }
 }
 #endif
 
@@ -2830,6 +2861,14 @@ void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
 
   pdata->primitives.cos = sample->in_priority;
   if (!pdata->primitives.cos) pdata->primitives.cos = sample->out_priority;
+}
+
+void SF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.etype = sample->eth_type;
 }
 #endif
 

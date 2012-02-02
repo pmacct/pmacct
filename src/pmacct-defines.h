@@ -25,7 +25,7 @@
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:R"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:Ou"
-#define N_PRIMITIVES 47
+#define N_PRIMITIVES 48
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
 #define PROTO_LEN 12
@@ -98,7 +98,7 @@
 #define MAP_BGP_IFACE_TO_RD	104	/* bgp_iface_to_rd */
 #define MAP_SAMPLING		105	/* sampling_map */
 
-/* 47 primitives currently defined */
+/* 48 primitives currently defined */
 #define COUNT_SRC_HOST		0x0000000000000001ULL
 #define COUNT_DST_HOST		0x0000000000000002ULL
 #define COUNT_SUM_HOST          0x0000000000000004ULL
@@ -146,6 +146,7 @@
 #define COUNT_SRC_NMASK		0x0000100000000000ULL
 #define COUNT_DST_NMASK		0x0000200000000000ULL
 #define COUNT_COS		0x0000400000000000ULL
+#define COUNT_ETHERTYPE		0x0000800000000000ULL
 
 /* BYTES and PACKETS are used into templates; we let their values to
    overlap with some values we will not need into templates */ 

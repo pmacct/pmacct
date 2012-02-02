@@ -90,6 +90,7 @@ mode. Since v6 unified mode is no longer supported.
   * src_mask => mask_src (SMALLINT NOT NULL DEFAULT 0, see README.mask)
   * dst_mask => mask_dst (SMALLINT NOT NULL DEFAULT 0, see README.mask)
   * cos => cos (SMALLINT NOT NULL DEFAULT 0, see README.cos)
+  * etype => etype (INT NOT NULL DEFAULT 0, see README.etype)
   * class => class_id (CHAR(16) NOT NOT NULL DEFAULT ' ')
   * src_mac => mac_src (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
   * dst_mac => mac_dst (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')

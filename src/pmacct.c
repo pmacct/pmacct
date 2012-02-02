@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -67,7 +67,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -133,6 +133,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("DST_MAC            ");
     printf("VLAN   ");
     printf("COS ");
+    printf("ETYPE  ");
 #endif
     printf("SRC_AS      ");
     printf("DST_AS      "); 
@@ -189,6 +190,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_DST_MAC) printf("DST_MAC            "); 
     if (what_to_count & COUNT_VLAN) printf("VLAN   ");
     if (what_to_count & COUNT_COS) printf("COS ");
+    if (what_to_count & COUNT_ETHERTYPE) printf("ETYPE  ");
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS      ");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS      "); 
@@ -253,6 +255,7 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int8_t have_wtc)
     printf("DST_MAC,");
     printf("VLAN,");
     printf("COS,");
+    printf("ETYPE,");
 #endif
     printf("SRC_AS,");
     printf("DST_AS,"); 
@@ -309,6 +312,7 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_DST_MAC) printf("DST_MAC,"); 
     if (what_to_count & COUNT_VLAN) printf("VLAN,");
     if (what_to_count & COUNT_COS) printf("COS,");
+    if (what_to_count & COUNT_ETHERTYPE) printf("ETYPE,");
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS,");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS,"); 
@@ -521,6 +525,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "cos")) {
           count_token_int[count_index] = COUNT_COS;
           what_to_count |= COUNT_COS;
+        }
+        else if (!strcmp(count_token[count_index], "etype")) {
+          count_token_int[count_index] = COUNT_ETHERTYPE;
+          what_to_count |= COUNT_ETHERTYPE;
         }
 	else if (!strcmp(count_token[count_index], "sum_mac")) {
 	  count_token_int[count_index] = COUNT_SUM_MAC;
@@ -942,6 +950,9 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "cos")) {
           request.data.cos = atoi(match_string_token);
         }
+        else if (!strcmp(count_token[match_string_index], "etype")) {
+          request.data.etype = atoi(match_string_token);
+        }
 #endif
 
         else if (!strcmp(count_token[match_string_index], "in_iface")) {
@@ -1337,6 +1348,10 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count & COUNT_COS)) {
           if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-2u  ", acc_elem->primitives.cos);
           else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.cos);
+        }
+        if (!have_wtc || (what_to_count & COUNT_ETHERTYPE)) {
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5x  ", acc_elem->primitives.etype);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%x,", acc_elem->primitives.etype);
         }
 #endif
 	if (!have_wtc || (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS))) {

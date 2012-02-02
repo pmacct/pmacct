@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -863,12 +863,6 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) what_to_count |= COUNT_DST_HOST;
     else fakes |= FAKE_DST_HOST;
 
-    if (config.what_to_count & COUNT_IN_IFACE) what_to_count |= COUNT_IN_IFACE;
-    if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
-
-    if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
-    if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
-
     if (config.what_to_count & COUNT_AS_PATH) what_to_count |= COUNT_AS_PATH;
     else fakes |= FAKE_AS_PATH;
 
@@ -897,7 +891,6 @@ int sql_evaluate_primitives(int primitive)
 
     if (config.what_to_count & COUNT_SRC_LOCAL_PREF) what_to_count |= COUNT_SRC_LOCAL_PREF;
     if (config.what_to_count & COUNT_SRC_MED) what_to_count |= COUNT_SRC_MED;
-    if (config.what_to_count & COUNT_MPLS_VPN_RD) what_to_count |= COUNT_MPLS_VPN_RD;
 
     if (config.sql_table_version < 6) {
       if (config.what_to_count & COUNT_SRC_AS) what_to_count |= COUNT_SRC_AS;
@@ -933,9 +926,16 @@ int sql_evaluate_primitives(int primitive)
     what_to_count |= COUNT_ID;
 
     /* aggregation primitives listed below are not part of any default SQL schema; hence
-       either statements' optimization is on or off, these have to be passed on blindly */
-    if (config.what_to_count & COUNT_ID2)
-      what_to_count |= COUNT_ID2;
+       no matter if SQL statements optimization is enabled or not, they have to be passed
+       on blindly */
+    if (config.what_to_count & COUNT_ID2) what_to_count |= COUNT_ID2;
+    if (config.what_to_count & COUNT_COS) what_to_count |= COUNT_COS;
+    if (config.what_to_count & COUNT_ETHERTYPE) what_to_count |= COUNT_ETHERTYPE;
+    if (config.what_to_count & COUNT_MPLS_VPN_RD) what_to_count |= COUNT_MPLS_VPN_RD;
+    if (config.what_to_count & COUNT_IN_IFACE) what_to_count |= COUNT_IN_IFACE;
+    if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
+    if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
+    if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
   }
 
   /* sorting out delimiter */
@@ -1034,6 +1034,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "cos=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_COS;
     values[primitive].handler = where[primitive].handler = count_cos_handler;
+    primitive++;
+  }
+
+  if (what_to_count & COUNT_ETHERTYPE) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, sizeof(values[primitive].string));
+      strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
+    }
+    strncat(insert_clause, "etype", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%x", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "etype=%x", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_ETHERTYPE;
+    values[primitive].handler = where[primitive].handler = count_etype_handler;
     primitive++;
   }
 #endif
