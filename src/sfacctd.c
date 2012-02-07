@@ -911,6 +911,7 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
+Read_SampleType:
     sampleType = getData32(spp);
     switch (sampleType) {
     case SFLFLOW_SAMPLE:
@@ -924,6 +925,10 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
       break;
     case SFLCOUNTERS_SAMPLE_EXPANDED:
       readv5CountersSample(spp);
+      break;
+    case SFLACL_BROCADE_SAMPLE:
+      getData32(spp); /* trash: FoundryFlags + FoundryGroupID */
+      goto Read_SampleType; /* rewind */
       break;
     default:
       notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);

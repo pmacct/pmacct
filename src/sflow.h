@@ -325,12 +325,11 @@ typedef struct _SFLFlow_sample_element {
   SFLFlow_type flowType;
 } SFLFlow_sample_element;
 
-enum SFL_sample_tag {
-  SFLFLOW_SAMPLE = 1,              /* enterprise = 0 : format = 1 */
-  SFLCOUNTERS_SAMPLE = 2,          /* enterprise = 0 : format = 2 */
-  SFLFLOW_SAMPLE_EXPANDED = 3,     /* enterprise = 0 : format = 3 */
-  SFLCOUNTERS_SAMPLE_EXPANDED = 4  /* enterprise = 0 : format = 4 */
-};
+#define SFLFLOW_SAMPLE 1               /* enterprise = 0 : format = 1 */
+#define SFLCOUNTERS_SAMPLE 2           /* enterprise = 0 : format = 2 */
+#define SFLFLOW_SAMPLE_EXPANDED 3      /* enterprise = 0 : format = 3 */
+#define SFLCOUNTERS_SAMPLE_EXPANDED 4  /* enterprise = 0 : format = 4 */
+#define SFLACL_BROCADE_SAMPLE 8155137  /* enterprise = 1991 : format = 1 */
   
 /* Format of a single flow sample */
 
