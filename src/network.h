@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -313,6 +313,7 @@ struct packet_ptrs {
   u_int16_t ifindex_out; /* output ifindex; only used by ULOG for the time being */
   u_int8_t tun_stack; /* tunnelling stack */
   u_int8_t tun_layer; /* tunnelling layer count */
+  u_int32_t sample_type; /* sFlow sample type */
   u_int32_t seqno; /* sFlow/NetFlow sequence number */
   u_int16_t f_len; /* sFlow/NetFlow payload length */
   u_int8_t renormalized; /* Is it renormalized yet ? */

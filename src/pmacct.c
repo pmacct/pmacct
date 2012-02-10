@@ -951,7 +951,7 @@ int main(int argc,char **argv)
           request.data.cos = atoi(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "etype")) {
-          request.data.etype = atoi(match_string_token);
+	  sscanf(match_string_token, "%x", &request.data.etype);
         }
 #endif
 

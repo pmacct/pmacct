@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -460,6 +460,24 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_sampling_rate_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sampling_rate_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SAMPLING_RATE;
+
+  return FALSE;
+}
+
+int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->sample_type.neg = pt_check_neg(&value);
+  e->sample_type.n = atoi(value); // XXX: parse <Enterprise>:<Format> notation
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SAMPLE_TYPE) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'sample_type' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+  if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sample_type_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_SAMPLE_TYPE;
 
   return FALSE;
 }
@@ -1598,6 +1616,15 @@ int SF_pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, voi
 
   if (entry->sampling_rate.n == sample->meanSkipCount) return (FALSE | entry->sampling_rate.neg);
   else return (TRUE ^ entry->sampling_rate.neg);
+}
+
+int SF_pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->sample_type.n == pptrs->sample_type) return (FALSE | entry->sample_type.neg);
+  else return (TRUE ^ entry->sample_type.neg);
 }
 
 int SF_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)

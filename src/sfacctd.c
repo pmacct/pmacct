@@ -879,7 +879,10 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
+    set_vector_sample_type(pptrsv, 0);
+SFv2v4_read_sampleType:
     sampleType = getData32(spp);
+    if (!pptrsv->v4.sample_type) set_vector_sample_type(pptrsv, sampleType);
     switch (sampleType) {
     case SFLFLOW_SAMPLE:
       readv2v4FlowSample(spp, pptrsv, req);
@@ -911,8 +914,10 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
-Read_SampleType:
+    set_vector_sample_type(pptrsv, 0);
+SFv5_read_sampleType:
     sampleType = getData32(spp);
+    if (!pptrsv->v4.sample_type) set_vector_sample_type(pptrsv, sampleType);
     switch (sampleType) {
     case SFLFLOW_SAMPLE:
       readv5FlowSample(spp, FALSE, pptrsv, req);
@@ -928,7 +933,7 @@ Read_SampleType:
       break;
     case SFLACL_BROCADE_SAMPLE:
       getData32(spp); /* trash: FoundryFlags + FoundryGroupID */
-      goto Read_SampleType; /* rewind */
+      goto SFv5_read_sampleType; /* rewind */
       break;
     default:
       notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
@@ -2503,6 +2508,20 @@ u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
   else if (sample->gotIPV6) ret += NF9_FTYPE_IPV6;
 
   return ret;
+}
+
+void set_vector_sample_type(struct packet_ptrs_vector *pptrsv, u_int32_t sample_type)
+{
+  pptrsv->v4.sample_type = sample_type;
+  pptrsv->vlan4.sample_type = sample_type;
+  pptrsv->mpls4.sample_type = sample_type;
+  pptrsv->vlanmpls4.sample_type = sample_type;
+#if defined ENABLE_IPV6
+  pptrsv->v6.sample_type = sample_type;
+  pptrsv->vlan6.sample_type = sample_type;
+  pptrsv->mpls6.sample_type = sample_type;
+  pptrsv->vlanmpls6.sample_type = sample_type;
+#endif
 }
 
 void reset_mac(struct packet_ptrs *pptrs)

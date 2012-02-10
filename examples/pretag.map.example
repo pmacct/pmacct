@@ -13,8 +13,8 @@
 ! mandatory keys for each rule: id or id2 and ip.
 !
 ! sfacctd: valid keys: id, id2, ip, in, out, agent_id, nexthop, bgp_nexthop,
-! src_as, dst_as, sampling_rate and filter; mandatory keys for each rule: id or
-! id2 and ip.
+! src_as, dst_as, sampling_rate, sample_type and filter; mandatory keys for
+! each rule: id or id2 and ip.
 !
 ! pmacctd: valid keys: id, id2, src_as, dst_as and filter. Only either id or id2
 ! are mandatory for each rule. 
@@ -68,6 +68,8 @@
 ! 'sampling_rate'       In sFlow v2/v4/v5 this is compared against the sampling
 !			rate field; it also works against NetFlow v5. NetFlow v9
 !			and IPFIX are unsupported instead.
+! 'sample_type'         In sFlow v2/v4/v5 this is compared against the sample
+!			type field. Expected in <Enterprise>:<Format> notation.
 ! 'direction'		In NetFlow v9 and IPFIX this is compared against the
 !			direction (61) field, which only valid values are 0
 !			(ingress) and 1 (egress) flow.
