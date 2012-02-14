@@ -466,16 +466,46 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
 
 int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
+  char *token = NULL;
+  u_int32_t tmp;
   int x = 0;
 
   e->sample_type.neg = pt_check_neg(&value);
-  e->sample_type.n = atoi(value); // XXX: parse <Enterprise>:<Format> notation
+
+  while (token = extract_token(&value, ':')) {
+    switch (x) {
+    case 0:
+      tmp = atoi(token);
+      if (tmp > 1048575) { // 2^20-1: 20 bit Enterprise value
+        Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+        return TRUE;
+      }
+      e->sample_type.n = tmp;
+      e->sample_type.n <<= 12;
+      break;
+    case 1:
+      tmp = atoi(token);
+      if (tmp > 4095) { // 2^12-1: 12 bit Format value
+        Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+        return TRUE;
+      }
+      e->sample_type.n |= tmp;
+      break;
+    default:
+      Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+      return TRUE;
+    }
+
+    x++;
+  }
+
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SAMPLE_TYPE) {
       Log(LOG_ERR, "ERROR ( %s ): Multiple 'sample_type' clauses part of the same statement. ", filename);
       return TRUE;
     }
   }
+
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sample_type_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SAMPLE_TYPE;
 
