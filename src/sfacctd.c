@@ -932,7 +932,9 @@ SFv5_read_sampleType:
       readv5CountersSample(spp);
       break;
     case SFLACL_BROCADE_SAMPLE:
-      getData32(spp); /* trash: FoundryFlags + FoundryGroupID */
+      getData32(spp); /* trash: sample length */
+      getData32(spp); /* trash: FoundryFlags */
+      getData32(spp); /* trash: FoundryGroupID */
       goto SFv5_read_sampleType; /* rewind */
       break;
     default:
