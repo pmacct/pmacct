@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -749,6 +749,7 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
 {
   FILE *f;
   char *ptr;
+  int ret;
 
   memset(buf, 0, size);
   f = fopen(path, "r");
@@ -757,7 +758,9 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
     return(0);
   }
   
-  if (fread(buf, size, 1, f) != 1) {
+  ret = fread(buf, size, 1, f);
+
+  if (ret != 1 && !feof(f)) {
     Log(LOG_ERR, "ERROR: Unable to read from SQL schema '%s': %s\n", path, strerror(errno));
     return(0);
   }
