@@ -261,6 +261,7 @@ circuit_update_nlpids (struct isis_circuit *circuit)
 }
 
 // XXX: eligible to be rewritten with pcap_sendpacket() or alikes?
+#if defined(PCAP_TYPE_linux)
 int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
 {
   int written = 1;
@@ -287,3 +288,10 @@ int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
 
   return ISIS_OK;
 }
+#else
+int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
+{
+  Log(LOG_ERR, "ERROR ( default/core/ISIS ): isis_send_pdu_p2p() not implemented yet for this OS. Please get in touch.\n");
+  exit_all(1);
+}
+#endif
