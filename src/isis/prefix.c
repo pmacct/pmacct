@@ -217,7 +217,7 @@ str2prefix_ipv4 (const char *str, struct prefix_ipv4 *p)
     }
   else
     {
-      cp = malloc((pnt - str) + 1);
+      cp = calloc(1, (pnt - str) + 1);
       strncpy (cp, str, pnt - str);
       *(cp + (pnt - str)) = '\0';
       ret = inet_aton (cp, &p->prefix);
@@ -597,7 +597,7 @@ prefix_new ()
 {
   struct prefix *p;
 
-  p = malloc(sizeof *p);
+  p = calloc(1, sizeof *p);
   return p;
 }
 

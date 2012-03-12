@@ -92,7 +92,7 @@ sockunion_str2su (const char *str)
   int ret;
   union sockunion *su;
 
-  su = malloc(sizeof (union sockunion));
+  su = calloc(1, sizeof (union sockunion));
 
   ret = inet_pton (AF_INET, str, &su->sin.sin_addr);
   if (ret > 0)			/* Valid IPv4 address format. */
@@ -535,14 +535,14 @@ sockunion_getsockname (int fd)
 
   if (name.sa.sa_family == AF_INET)
     {
-      su = malloc(sizeof (union sockunion));
+      su = calloc(1, sizeof (union sockunion));
       memcpy (su, &name, sizeof (struct sockaddr_in));
       return su;
     }
 #ifdef HAVE_IPV6
   if (name.sa.sa_family == AF_INET6)
     {
-      su = malloc(sizeof (union sockunion));
+      su = calloc(1, sizeof (union sockunion));
       memcpy (su, &name, sizeof (struct sockaddr_in6));
       sockunion_normalise_mapped (su);
       return su;
@@ -580,14 +580,14 @@ sockunion_getpeername (int fd)
 
   if (name.sa.sa_family == AF_INET)
     {
-      su = malloc(sizeof (union sockunion));
+      su = calloc(1, sizeof (union sockunion));
       memcpy (su, &name, sizeof (struct sockaddr_in));
       return su;
     }
 #ifdef HAVE_IPV6
   if (name.sa.sa_family == AF_INET6)
     {
-      su = malloc(sizeof (union sockunion));
+      su = calloc(1, sizeof (union sockunion));
       memcpy (su, &name, sizeof (struct sockaddr_in6));
       sockunion_normalise_mapped (su);
       return su;
@@ -684,7 +684,7 @@ sockunion_cmp (union sockunion *su1, union sockunion *su2)
 union sockunion *
 sockunion_dup (union sockunion *su)
 {
-  union sockunion *dup = malloc(sizeof (union sockunion));
+  union sockunion *dup = calloc(1, sizeof (union sockunion));
   memcpy (dup, su, sizeof (union sockunion));
   return dup;
 }

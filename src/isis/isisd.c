@@ -64,7 +64,7 @@ int area_clear_net_title(struct isis_area *, const u_char *);
 void
 isis_new (unsigned long process_id)
 {
-  isis = malloc(sizeof (struct isis));
+  isis = calloc(1, sizeof (struct isis));
   /*
    * Default values
    */
@@ -95,7 +95,7 @@ isis_area_create ()
 {
   struct isis_area *area;
 
-  area = malloc(sizeof (struct isis_area));
+  area = calloc(1, sizeof (struct isis_area));
 
   /*
    * The first instance is level-1-2 rest are level-1, unless otherwise
@@ -244,7 +244,7 @@ area_net_title (struct isis_area *area, const u_char *net_title)
       return TRUE;
     }
 
-  addr = malloc(sizeof (struct area_addr));
+  addr = calloc(1, sizeof (struct area_addr));
   addr->addr_len = dotformat2buff (buff, net_title);
   memcpy (addr->area_addr, buff, addr->addr_len);
   if (addr->addr_len < 8 || addr->addr_len > 20)
@@ -297,12 +297,14 @@ area_net_title (struct isis_area *area, const u_char *net_title)
   addr->addr_len -= (ISIS_SYS_ID_LEN + 1);
   listnode_add (area->area_addrs, addr);
 
-  /* only now we can safely generate our LSPs for this area */
+  /* XXX: disabled, only now we can safely generate our LSPs for this area */
+/*
   if (listcount (area->area_addrs) > 0)
     {
       lsp_l1_generate (area);
       lsp_l2_generate (area);
     }
+*/
 
   return FALSE;
 }

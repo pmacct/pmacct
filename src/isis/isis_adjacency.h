@@ -94,7 +94,7 @@ struct isis_adjacency
   u_int32_t last_upd;
   u_int32_t last_flap;		/* last time the adj flapped */
   int flaps;			/* number of adjacency flaps  */
-  struct thread *t_expire;	/* expire after hold_time  */
+  struct timeval expire;	/* expiration timestamp */
   struct isis_circuit *circuit;	/* back pointer */
 };
 
@@ -108,7 +108,7 @@ EXT struct isis_adjacency *isis_adj_lookup_snpa (u_char *, struct list *);
 EXT struct isis_adjacency *isis_new_adj (u_char *, u_char *, int, struct isis_circuit *);
 EXT void isis_delete_adj (struct isis_adjacency *, struct list *);
 EXT void isis_adj_state_change (struct isis_adjacency *, enum isis_adj_state, const char *);
-EXT int isis_adj_expire (struct thread *);
+EXT int isis_adj_expire (struct isis_adjacency *);
 EXT void isis_adj_build_neigh_list (struct list *, struct list *);
 EXT void isis_adj_build_up_list (struct list *, struct list *);
 EXT void isis_adjdb_iterate (struct list *, void (*func) (struct isis_adjacency *, void *), void *);

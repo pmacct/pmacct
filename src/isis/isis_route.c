@@ -67,7 +67,7 @@ isis_nexthop_create (struct in_addr *ip, unsigned int ifindex)
       return nexthop;
     }
 
-  nexthop = malloc(sizeof (struct isis_nexthop));
+  nexthop = calloc(1, sizeof (struct isis_nexthop));
   if (!nexthop)
     {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): ISIS-Rte: isis_nexthop_create: out of memory!\n");
@@ -117,7 +117,7 @@ isis_nexthop6_new (struct in6_addr *ip6, unsigned int ifindex)
 {
   struct isis_nexthop6 *nexthop6;
 
-  nexthop6 = malloc(sizeof (struct isis_nexthop6));
+  nexthop6 = calloc(1, sizeof (struct isis_nexthop6));
   if (!nexthop6)
     {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): ISIS-Rte: isis_nexthop_create6: out of memory!\n");
@@ -239,7 +239,7 @@ isis_route_info_new (uint32_t cost, uint32_t depth, u_char family,
   struct isis_adjacency *adj;
   struct listnode *node;
 
-  rinfo = malloc(sizeof (struct isis_route_info));
+  rinfo = calloc(1, sizeof (struct isis_route_info));
   if (!rinfo)
     {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): ISIS-Rte: isis_route_info_new: out of memory!\n");

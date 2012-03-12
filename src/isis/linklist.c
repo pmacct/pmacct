@@ -30,7 +30,7 @@
 struct list *
 list_new (void)
 {
-  return malloc(sizeof (struct list));
+  return calloc(1, sizeof (struct list));
 }
 
 /* Free list. */
@@ -44,7 +44,7 @@ list_free (struct list *l)
 static struct listnode *
 listnode_new (void)
 {
-  return malloc(sizeof (struct listnode));
+  return calloc(1, sizeof (struct listnode));
 }
 
 /* Free listnode. */

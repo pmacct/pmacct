@@ -2209,6 +2209,53 @@ int cfg_key_nfacctd_bgp_table_peer_buckets(char *filename, char *name, char *val
   return changes;
 }
 
+int cfg_key_nfacctd_isis(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_isis = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'isis_daemon'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_isis_ip(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_isis_ip = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'isis_daemon_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_isis_net(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_isis_net = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'isis_daemon_net'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_isis_iface(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_isis_iface = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'isis_daemon_iface'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pmacctd_force_frag_handling(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

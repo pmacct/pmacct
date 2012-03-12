@@ -510,12 +510,12 @@ int main(int argc,char **argv, char **envp)
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */
-  /* XXX: if (config.nfacctd_isis */ /* { 
-    nfacctd_isis_wrapper();
+  if (config.nfacctd_isis) { 
+    /* nfacctd_isis_wrapper(); */
 
-    // Let's give the ISIS thread some advantage to create its structures
+    /* Let's give the ISIS thread some advantage to create its structures */
     sleep(5);
-  } */
+  }
 
   /* starting the BGP thread */
   if (config.nfacctd_bgp) {
@@ -576,6 +576,11 @@ int main(int argc,char **argv, char **envp)
     sleep(5);
   }
 #else
+  if (config.nfacctd_isis) {
+    Log(LOG_ERR, "ERROR ( default/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    exit(1);
+  }
+
   if (config.nfacctd_bgp) {
     Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
     exit(1);

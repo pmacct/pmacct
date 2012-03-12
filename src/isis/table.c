@@ -37,7 +37,7 @@ route_table_init (void)
 {
   struct route_table *rt;
 
-  rt = malloc(sizeof(struct route_table));
+  rt = calloc(1, sizeof(struct route_table));
   return rt;
 }
 
@@ -52,7 +52,7 @@ static struct route_node *
 route_node_new (void)
 {
   struct route_node *node;
-  node = malloc(sizeof (struct route_node));
+  node = calloc(1, sizeof (struct route_node));
   return node;
 }
 

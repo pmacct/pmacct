@@ -240,7 +240,7 @@ static int verify_dict_has_node(dnode_t *nil, dnode_t *root, dnode_t *node)
 
 dict_t *dict_create(dictcount_t maxcount, dict_comp_t comp)
 {
-    dict_t *new = malloc(sizeof *new);
+    dict_t *new = calloc(1, sizeof *new);
 
     if (new) {
 	new->compare = comp;
@@ -940,7 +940,7 @@ int dict_contains(dict_t *dict, dnode_t *node)
 
 static dnode_t *dnode_alloc(void *context)
 {
-    return malloc(sizeof *dnode_alloc(NULL));
+    return calloc(1, sizeof *dnode_alloc(NULL));
 }
 
 static void dnode_free(dnode_t *node, void *context)
@@ -950,7 +950,7 @@ static void dnode_free(dnode_t *node, void *context)
 
 dnode_t *dnode_create(void *data)
 {
-    dnode_t *new = malloc(sizeof *new);
+    dnode_t *new = calloc(1, sizeof *new);
     if (new) {
 	new->data = data;
 	new->parent = NULL;

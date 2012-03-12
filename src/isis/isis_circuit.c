@@ -55,6 +55,11 @@
 extern struct thread_master *master;
 extern struct isis *isis;
 
+u_char ALL_L1_ISS[6] = { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x14 };
+u_char ALL_L2_ISS[6] = { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x15 };
+u_char ALL_ISS[6] = { 0x09, 0x00, 0x2B, 0x00, 0x00, 0x05 };
+u_char ALL_ESS[6] = { 0x09, 0x00, 0x2B, 0x00, 0x00, 0x04 };
+
 /*
  * Prototypes.
  */
@@ -66,7 +71,7 @@ isis_circuit_new ()
   struct isis_circuit *circuit;
   int i;
 
-  circuit = malloc(sizeof (struct isis_circuit));
+  circuit = calloc(1, sizeof (struct isis_circuit));
   if (circuit)
     {
       /* set default metrics for circuit */
@@ -81,7 +86,7 @@ isis_circuit_new ()
     }
   else
     {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can't malloc isis circuit\n");
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can't calloc isis circuit\n");
       return NULL;
     }
 
@@ -185,31 +190,24 @@ isis_circuit_del (struct isis_circuit *circuit)
 void
 isis_circuit_up (struct isis_circuit *circuit)
 {
-
   if (circuit->circ_type == CIRCUIT_T_P2P)
     {
       /* initializing the hello send threads
        * for a ptp IF
        */
       thread_add_event (master, send_p2p_hello, circuit, 0);
-
     }
 
-  /* initialize the circuit streams */
+  /* if needed, initialize the circuit streams (most likely not) */
   if (circuit->rcv_stream == NULL)
     circuit->rcv_stream = stream_new (ISO_MTU (circuit));
 
   if (circuit->snd_stream == NULL)
     circuit->snd_stream = stream_new (ISO_MTU (circuit));
 
-  /* unified init for circuits */
-  // XXX: isis_sock_init () ?
   // isis_sock_init (circuit);
 
-  // XXX: isis_receive() ?
-  // THREAD_TIMER_ON (master, circuit->t_read, isis_receive, circuit,
-  //		   circuit->fd);
-  return;
+  // THREAD_TIMER_ON (master, circuit->t_read, isis_receive, circuit, circuit->fd);
 }
 
 void
@@ -260,4 +258,32 @@ circuit_update_nlpids (struct isis_circuit *circuit)
     }
 #endif /* HAVE_IPV6 */
   return;
+}
+
+// XXX: eligible to be rewritten with pcap_sendpacket() or alikes?
+int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
+{
+  int written = 1;
+  struct sockaddr_ll sa;
+
+  stream_set_getp (circuit->snd_stream, 0);
+  memset (&sa, 0, sizeof (struct sockaddr_ll));
+  sa.sll_family = AF_PACKET;
+  sa.sll_protocol = htons (stream_get_endp (circuit->snd_stream) + LLC_LEN);
+  sa.sll_ifindex = if_nametoindex(config.nfacctd_isis_iface);
+  sa.sll_halen = ETH_ALEN;
+  if (level == 1)
+    memcpy (&sa.sll_addr, ALL_L1_ISS, ETH_ALEN);
+  else
+    memcpy (&sa.sll_addr, ALL_L2_ISS, ETH_ALEN);
+
+
+  /* lets try correcting the protocol */
+  sa.sll_protocol = htons (0x00FE);
+  written = sendto (circuit->fd, circuit->snd_stream->data,
+                    stream_get_endp (circuit->snd_stream), 0,
+                    (struct sockaddr *) &sa,
+                    sizeof (struct sockaddr_ll));
+
+  return ISIS_OK;
 }

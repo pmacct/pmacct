@@ -98,12 +98,12 @@ stream_new (size_t size)
       return NULL;
     }
   
-  s = malloc(sizeof (struct stream));
+  s = calloc(1, sizeof (struct stream));
 
   if (s == NULL)
     return s;
   
-  if ( (s->data = malloc(size)) == NULL)
+  if ( (s->data = calloc(1, size)) == NULL)
     {
       free(s);
       return NULL;

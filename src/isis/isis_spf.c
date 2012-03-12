@@ -116,7 +116,7 @@ isis_spftree_new ()
 {
   struct isis_spftree *tree;
 
-  tree = malloc(sizeof (struct isis_spftree));
+  tree = calloc(1, sizeof (struct isis_spftree));
   if (tree == NULL)
     {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): ISIS-Spf: isis_spftree_new Out of memory!\n");
@@ -186,7 +186,7 @@ isis_vertex_new (void *id, enum vertextype vtype)
 {
   struct isis_vertex *vertex;
 
-  vertex = malloc(sizeof (struct isis_vertex));
+  vertex = calloc(1, sizeof (struct isis_vertex));
   if (vertex == NULL)
     {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): isis_vertex_new Out of memory!\n");

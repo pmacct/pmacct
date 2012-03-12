@@ -423,7 +423,7 @@ lsp_new_from_stream_ptr (struct stream *stream,
 {
   struct isis_lsp *lsp;
 
-  lsp = malloc(sizeof (struct isis_lsp));
+  lsp = calloc(1, sizeof (struct isis_lsp));
   lsp_update_data (lsp, stream, area);
 
   if (lsp0 == NULL)
@@ -451,7 +451,7 @@ lsp_new (u_char * lsp_id, u_int16_t rem_lifetime, u_int32_t seq_num,
 {
   struct isis_lsp *lsp;
 
-  lsp = malloc(sizeof (struct isis_lsp));
+  lsp = calloc(1, sizeof (struct isis_lsp));
   if (!lsp)
     {
       /* FIXME: set lspdbol bit */
@@ -462,7 +462,7 @@ lsp_new (u_char * lsp_id, u_int16_t rem_lifetime, u_int32_t seq_num,
   lsp->pdu = stream_new (1514);	/*Should be minimal mtu? yup... */
 #else
   /* We need to do realloc on TLVs additions */
-  lsp->pdu = malloc (ISIS_FIXED_HDR_LEN + ISIS_LSP_HDR_LEN);
+  lsp->pdu = calloc(1, ISIS_FIXED_HDR_LEN + ISIS_LSP_HDR_LEN);
 #endif /* LSP_MEMORY_PREASSIGN */
   if (LSP_FRAGMENT (lsp_id) == 0)
     lsp->lspu.frags = list_new ();
@@ -765,7 +765,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 #endif /* HAVE_IPV6 */
     )
     {
-      lsp->tlv_data.nlpids = malloc(sizeof (struct nlpids));
+      lsp->tlv_data.nlpids = calloc(1, sizeof (struct nlpids));
       lsp->tlv_data.nlpids->count = 0;
       if (area->ip_circuits > 0)
 	{
@@ -785,7 +785,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 /*
   if (area->dynhostname)
     {
-      lsp->tlv_data.hostname = malloc(sizeof (struct hostname));
+      lsp->tlv_data.hostname = calloc(1, sizeof (struct hostname));
 
       memcpy (lsp->tlv_data.hostname->name, unix_hostname (),
 	      strlen (unix_hostname ()));
@@ -831,7 +831,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 	  lsp->tlv_data.ipv4_addrs->del = free_tlv;
 	}
 
-      routerid = malloc(sizeof (struct in_addr));
+      routerid = calloc(1, sizeof (struct in_addr));
       routerid->s_addr = router_id_zebra.s_addr;
       listnode_add (lsp->tlv_data.ipv4_addrs, routerid);
       tlv_add_in_addr (routerid, lsp->pdu, IPV4_ADDR);
@@ -840,7 +840,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
        * TLV's are in use. */
       if (area->newmetric)
 	{
-	  lsp->tlv_data.router_id = malloc(sizeof (struct in_addr));
+	  lsp->tlv_data.router_id = calloc(1, sizeof (struct in_addr));
 	  lsp->tlv_data.router_id->id.s_addr = router_id_zebra.s_addr;
 	  tlv_add_in_addr (&lsp->tlv_data.router_id->id, lsp->pdu, TE_ROUTER_ID);
 	}
@@ -871,7 +871,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		}
 	      for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
 		{
-		  ipreach = malloc(sizeof (struct ipv4_reachability));
+		  ipreach = calloc(1, sizeof (struct ipv4_reachability));
 		  ipreach->metrics = circuit->metrics[level - 1];
 		  masklen2ip (ipv4->prefixlen, &ipreach->mask);
 		  ipreach->prefix.s_addr = ((ipreach->mask.s_addr) &
@@ -890,7 +890,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 	      for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
 		{
 		  /* FIXME All this assumes that we have no sub TLVs. */
-		  te_ipreach = malloc(sizeof (struct te_ipv4_reachability) +
+		  te_ipreach = calloc(1, sizeof (struct te_ipv4_reachability) +
 					((ipv4->prefixlen + 7)/8) - 1);
 
 		  if (area->oldmetric)
@@ -920,7 +920,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 	    }
           for (ALL_LIST_ELEMENTS_RO (circuit->ipv6_non_link, ipnode, ipv6))
 	    {
-	      ip6reach = malloc(sizeof (struct ipv6_reachability));
+	      ip6reach = calloc(1, sizeof (struct ipv6_reachability));
 
 	      if (area->oldmetric)
 		ip6reach->metric =
@@ -951,7 +951,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		      tlv_data.is_neighs = list_new ();
 		      tlv_data.is_neighs->del = free_tlv;
 		    }
-		  is_neigh = malloc(sizeof (struct is_neigh));
+		  is_neigh = calloc(1, sizeof (struct is_neigh));
 		  if (level == 1)
 		    memcpy (is_neigh->neigh_id,
 			    circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
@@ -971,7 +971,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		      tlv_data.te_is_neighs = list_new ();
 		      tlv_data.te_is_neighs->del = free_tlv;
 		    }
-		  te_is_neigh = malloc(sizeof (struct te_is_neigh));
+		  te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 		  if (level == 1)
 		    memcpy (te_is_neigh->neigh_id,
 			    circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
@@ -1001,7 +1001,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		      tlv_data.is_neighs = list_new ();
 		      tlv_data.is_neighs->del = free_tlv;
 		    }
-		  is_neigh = malloc(sizeof (struct is_neigh));
+		  is_neigh = calloc(1, sizeof (struct is_neigh));
 		  memcpy (is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
 		  is_neigh->metrics = circuit->metrics[level - 1];
 		  listnode_add (tlv_data.is_neighs, is_neigh);
@@ -1015,7 +1015,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		      tlv_data.te_is_neighs = list_new ();
 		      tlv_data.te_is_neighs->del = free_tlv;
 		    }
-		  te_is_neigh = malloc(sizeof (struct te_is_neigh));
+		  te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 		  memcpy (te_is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
 		  metric = ((htonl(*circuit->te_metric) >> 8) & 0xffffff);
 		  memcpy (te_is_neigh->te_metric, &metric, 3);
@@ -1410,7 +1410,7 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
 	  lsp->tlv_data.is_neighs = list_new ();
 	  lsp->tlv_data.is_neighs->del = free_tlv;
 	}
-      is_neigh = malloc(sizeof (struct is_neigh));
+      is_neigh = calloc(1, sizeof (struct is_neigh));
 
       memcpy (&is_neigh->neigh_id, isis->sysid, ISIS_SYS_ID_LEN);
       listnode_add (lsp->tlv_data.is_neighs, is_neigh);
@@ -1422,7 +1422,7 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
 	  lsp->tlv_data.te_is_neighs = list_new ();
 	  lsp->tlv_data.te_is_neighs->del = free_tlv;
 	}
-      te_is_neigh = malloc(sizeof (struct te_is_neigh));
+      te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 
       memcpy (&te_is_neigh->neigh_id, isis->sysid, ISIS_SYS_ID_LEN);
       listnode_add (lsp->tlv_data.te_is_neighs, te_is_neigh);
@@ -1443,14 +1443,14 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
 	      /* an IS neighbour -> add it */
 	      if (circuit->area->oldmetric)
 		{
-		  is_neigh = malloc(sizeof (struct is_neigh));
+		  is_neigh = calloc(1, sizeof (struct is_neigh));
 
 		  memcpy (&is_neigh->neigh_id, adj->sysid, ISIS_SYS_ID_LEN);
 		  listnode_add (lsp->tlv_data.is_neighs, is_neigh);
 		}
 	      if (circuit->area->newmetric)
 		{
-		  te_is_neigh = malloc(sizeof (struct te_is_neigh));
+		  te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 		  memcpy (&te_is_neigh->neigh_id, adj->sysid, ISIS_SYS_ID_LEN);
 		  listnode_add (lsp->tlv_data.te_is_neighs, te_is_neigh);
 		}
@@ -1464,7 +1464,7 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
 		  lsp->tlv_data.es_neighs = list_new ();
 		  lsp->tlv_data.es_neighs->del = free_tlv;
 		}
-	      es_neigh = malloc(sizeof (struct es_neigh));
+	      es_neigh = calloc(1, sizeof (struct es_neigh));
 	      
 	      memcpy (&es_neigh->first_es_neigh, adj->sysid, ISIS_SYS_ID_LEN);
 	      listnode_add (lsp->tlv_data.es_neighs, es_neigh);
@@ -1702,7 +1702,7 @@ lsp_purge_non_exist (struct isis_link_state_hdr *lsp_hdr,
    * We need to create the LSP to be purged 
    */
   Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): LSP PURGE NON EXIST\n");
-  lsp = malloc(sizeof (struct isis_lsp));
+  lsp = calloc(1, sizeof (struct isis_lsp));
   /*FIXME: BUG BUG BUG! the lsp doesn't exist here! */
   /*did smt here, maybe good probably not */
   lsp->level = ((lsp_hdr->lsp_bits & LSPBIT_IST) == IS_LEVEL_1) ? 1 : 2;

@@ -145,6 +145,16 @@ struct isis_circuit
   u_int32_t rej_adjacencies;	/* rejectedAdjacencies */
 };
 
+struct sockaddr_ll {
+  unsigned short int sll_family;
+  unsigned short int sll_protocol;
+  int sll_ifindex;
+  unsigned short int sll_hatype;
+  unsigned char sll_pkttype;
+  unsigned char sll_halen;
+  unsigned char sll_addr[8];
+};
+
 #if (!defined __ISIS_CIRCUIT_C)
 #define EXT extern
 #else
@@ -160,6 +170,7 @@ EXT void isis_circuit_if_add (struct isis_circuit *, struct interface *);
 EXT void isis_circuit_if_del (struct isis_circuit *);
 EXT void circuit_update_nlpids (struct isis_circuit *);
 EXT void isis_circuit_update_params (struct isis_circuit *, struct interface *);
+EXT int isis_send_pdu_p2p (struct isis_circuit *, int);
 #undef EXT
 
 #endif /* _ISIS_CIRCUIT_H_ */

@@ -135,6 +135,7 @@ struct isis_area
 #endif
 EXT void isis_init (void);
 EXT struct isis_area *isis_area_lookup (const char *);
+EXT struct isis_area *isis_area_create ();
 #undef EXT
 
 #define DEBUG_ADJ_PACKETS                (1<<0)

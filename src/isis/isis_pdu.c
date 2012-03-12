@@ -78,6 +78,8 @@ area_match (struct list *left, struct list *right)
   struct area_addr *addr1, *addr2;
   struct listnode *node1, *node2;
 
+  if (!left || !right) return 0; /* mismatch */ 
+
   for (ALL_LIST_ELEMENTS_RO (left, node1, addr1))
   {
     for (ALL_LIST_ELEMENTS_RO (right, node2, addr2))
@@ -232,7 +234,7 @@ tlvs_to_adj_ipv4_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
     {
       for (ALL_LIST_ELEMENTS_RO (tlvs->ipv4_addrs, node, ipv4_addr))
       {
-	malloced = malloc(sizeof (struct in_addr));
+	malloced = calloc(1, sizeof (struct in_addr));
 	memcpy (malloced, ipv4_addr, sizeof (struct in_addr));
 	listnode_add (adj->ipv4_addrs, malloced);
       }
@@ -256,7 +258,7 @@ tlvs_to_adj_ipv6_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
     {
       for (ALL_LIST_ELEMENTS_RO (tlvs->ipv6_addrs, node, ipv6_addr))
       {
-	malloced = malloc(sizeof (struct in6_addr));
+	malloced = calloc(1, sizeof (struct in6_addr));
 	memcpy (malloced, ipv6_addr, sizeof (struct in6_addr));
 	listnode_add (adj->ipv6_addrs, malloced);
       }
@@ -379,9 +381,8 @@ process_p2p_hello (struct isis_circuit *circuit)
 #endif /* HAVE_IPV6 */
 
   /* lets take care of the expiry */
-  THREAD_TIMER_OFF (adj->t_expire);
-  THREAD_TIMER_ON (master, adj->t_expire, isis_adj_expire, adj,
-		   (long) adj->hold_time);
+  adj->expire.tv_sec = isis_now.tv_sec + adj->hold_time; 
+  adj->expire.tv_usec = isis_now.tv_usec;
 
   /* 8.2.5.2 a) a match was detected */
   if (area_match (circuit->area->area_addrs, tlvs.area_addrs))
@@ -1337,6 +1338,7 @@ int isis_handle_pdu (struct isis_circuit *circuit, u_char * ssnpa)
     {
     case P2P_HELLO:
       retval = process_p2p_hello (circuit);
+      if (retval <= ISIS_WARNING) send_hello(circuit, 1);
       break;
     case L1_LINK_STATE:
       retval = process_lsp (ISIS_LEVEL1, circuit, ssnpa);

@@ -47,7 +47,7 @@ adj_alloc (u_char * id)
 {
   struct isis_adjacency *adj;
 
-  adj = malloc(sizeof (struct isis_adjacency));
+  adj = calloc(1, sizeof (struct isis_adjacency));
   memcpy (adj->sysid, id, ISIS_SYS_ID_LEN);
 
   return adj;
@@ -117,7 +117,7 @@ isis_delete_adj (struct isis_adjacency *adj, struct list *adjdb)
   if (adjdb)
     listnode_delete (adjdb, adj);
 
-  THREAD_OFF (adj->t_expire);
+  memset(&adj->expire, 0, sizeof(struct timeval));
 
   if (adj->ipv4_addrs)
     list_delete (adj->ipv4_addrs);
@@ -150,10 +150,7 @@ isis_adj_state_change (struct isis_adjacency *adj, enum isis_adj_state state,
     }
 
   if (state == ISIS_ADJ_UP)
-    {				/* p2p interface */
-      if (adj->sys_type == ISIS_SYSTYPE_UNKNOWN)
-	send_hello (circuit, 1);
-
+    {
       /* update counter & timers for debugging purposes */
       adj->last_flap = time (NULL);
       adj->flaps++;
@@ -172,18 +169,16 @@ isis_adj_state_change (struct isis_adjacency *adj, enum isis_adj_state state,
 }
 
 int
-isis_adj_expire (struct thread *thread)
+isis_adj_expire (struct isis_adjacency *adj)
 {
-  struct isis_adjacency *adj;
   int level;
 
   /*
    * Get the adjacency
    */
-  adj = THREAD_ARG (thread);
   assert (adj);
   level = adj->level;
-  adj->t_expire = NULL;
+  memset(&adj->expire, 0, sizeof(struct timeval));
 
   /* trigger the adj expire event */
   isis_adj_state_change (adj, ISIS_ADJ_DOWN, "holding time expired");

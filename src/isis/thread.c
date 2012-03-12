@@ -231,7 +231,7 @@ static void *
 cpu_record_hash_alloc (struct cpu_thread_history *a)
 {
   struct cpu_thread_history *new;
-  new = malloc(sizeof (struct cpu_thread_history));
+  new = calloc(1, sizeof (struct cpu_thread_history));
   new->func = a->func;
   new->funcname = strdup(a->funcname);
   return new;
@@ -269,7 +269,7 @@ thread_master_create ()
       = hash_create_size (1011, (unsigned int (*) (void *))cpu_record_hash_key, 
                           (int (*) (const void *, const void *))cpu_record_hash_cmp);
     
-  return (struct thread_master *) malloc(sizeof (struct thread_master));
+  return (struct thread_master *) calloc(1, sizeof (struct thread_master));
 }
 
 /* Add a new thread to the list.  */
@@ -441,7 +441,7 @@ thread_get (struct thread_master *m, u_char type,
     }
   else
     {
-      thread = malloc(sizeof (struct thread));
+      thread = calloc(1, sizeof (struct thread));
       m->alloc++;
     }
   thread->type = type;
@@ -782,7 +782,7 @@ thread_fetch (struct thread_master *m, struct thread *fetch)
   struct timeval *timer_wait_bg;
 
   while (1)
-    {
+  {
       int num = 0;
       
       /* Signals pre-empt everything */
@@ -832,7 +832,7 @@ thread_fetch (struct thread_master *m, struct thread *fetch)
 
       /* Check foreground timers.  Historically, they have had higher
          priority than I/O threads, so let's push them onto the ready
-	 list in front of the I/O threads. */
+         list in front of the I/O threads. */
       quagga_get_relative (NULL);
       thread_timer_process (&m->timer, &relative_time);
       
@@ -848,8 +848,8 @@ thread_fetch (struct thread_master *m, struct thread *fetch)
 #if 0
       /* If any threads were made ready above (I/O or foreground timer),
          perhaps we should avoid adding background timers to the ready
-	 list at this time.  If this is code is uncommented, then background
-	 timer threads will not run unless there is nothing else to do. */
+         list at this time.  If this is code is uncommented, then background
+         timer threads will not run unless there is nothing else to do. */
       if ((thread = thread_trim_head (&m->ready)) != NULL)
         return thread_run (m, thread, fetch);
 #endif
@@ -859,7 +859,7 @@ thread_fetch (struct thread_master *m, struct thread *fetch)
       
       if ((thread = thread_trim_head (&m->ready)) != NULL)
         return thread_run (m, thread, fetch);
-    }
+  }
 }
 
 unsigned long

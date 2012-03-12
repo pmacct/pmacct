@@ -73,12 +73,32 @@ void skinny_isis_daemon()
   char errbuf[PCAP_ERRBUF_SIZE];
   struct pcap_device device;
   struct pcap_isis_callback_data cb_data;
-  int index;
+  struct host_addr addr;
+  struct prefix_ipv4 *ipv4;
+  int index, ret;
+
+  char area_tag[] = "default";
+  struct isis_area *area;
+  struct isis_circuit *circuit;
+  struct interface interface;
 
   memset(&device, 0, sizeof(struct pcap_device));
   memset(&cb_data, 0, sizeof(cb_data));
+  memset(&interface, 0, sizeof(interface));
 
-  if ((device.dev_desc = pcap_open_live("ospf_test", 1500, 0, 1000, errbuf)) == NULL) {
+  /* initializing IS-IS structures */
+  isis_init();
+
+  /* thread master */
+  master = thread_master_create();
+
+  if (!config.nfacctd_isis_iface) {
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_iface' value is not specified. Terminating thread.\n");
+    exit(1);
+  }
+
+  // XXX: MTU set by config?
+  if ((device.dev_desc = pcap_open_live(config.nfacctd_isis_iface, 1500, 0, 1000, errbuf)) == NULL) {
     Log(LOG_ERR, "ERROR ( default/core/ISIS ): pcap_open_live(): %s\n", errbuf);
     exit(1);
   }
@@ -98,7 +118,48 @@ void skinny_isis_daemon()
     cb_data.device = &device;
   }
 
+  area = isis_area_create();
+  area->area_tag = area_tag;
+  listnode_add(isis->area_list, area);
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
+  if (config.nfacctd_isis_net) area_net_title(area, config.nfacctd_isis_net);
+  else {
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_net' value is not specified. Terminating thread.\n");
+    exit_all(1);
+  }
+
+  circuit = isis_circuit_new();
+  circuit->circ_type = CIRCUIT_T_P2P;
+  circuit->fd = pcap_fileno(device.dev_desc);
+  circuit->tx = isis_send_pdu_p2p;
+  circuit->interface = &interface;
+
+  if (config.nfacctd_isis_ip) {
+    trim_spaces(config.nfacctd_isis_ip);
+    ret = str_to_addr(config.nfacctd_isis_ip, &addr);
+    if (!ret) {
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'nfacctd_isis_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n");
+      exit_all(1);
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'nfacctd_isis_ip' value is not specified. Terminating thread.\n");
+    exit_all(1);
+  }
+
+  circuit->ip_router = addr.address.ipv4.s_addr;
+  ipv4 = prefix_ipv4_new();
+  ipv4->prefixlen = 32;
+  ipv4->prefix.s_addr = addr.address.ipv4.s_addr;
+  circuit->ip_addrs = list_new();
+  listnode_add(circuit->ip_addrs, ipv4);
+
+  circuit_update_nlpids(circuit);
+  isis_circuit_configure(circuit, area);
+  cb_data.circuit = circuit;
+
   for (;;) {
+    /* XXX: should get a select() here at some stage */
     pcap_loop(device.dev_desc, -1, isis_pdu_runner, (u_char *) &cb_data);
 
     break;
@@ -111,14 +172,23 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
 {
   struct pcap_isis_callback_data *cb_data = (struct pcap_isis_callback_data *) user;
   struct pcap_device *device = cb_data->device;
+  struct isis_circuit *circuit = cb_data->circuit;
   struct packet_ptrs pptrs;
+  struct thread thread;
 
-  struct isis_circuit circuit;
   struct stream stm;
   char *ssnpa;
 
+  /* Let's export a time reference */
+  memcpy(&isis_now, &pkthdr->ts, sizeof(struct timeval));
+
+  /* check if we have to expire adjacency first */
+  if (circuit && circuit->u.p2p.neighbor) {
+    if (timeval_cmp(&isis_now, &circuit->u.p2p.neighbor->expire) >= 0)
+      isis_adj_expire(circuit->u.p2p.neighbor);
+  }
+
   memset(&pptrs, 0, sizeof(pptrs));
-  memset(&circuit, 0, sizeof(circuit));
   memset(&stm, 0, sizeof(stm));
 
   if (buf) {
@@ -128,18 +198,20 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
-	printf("CI PASSO: Wee wee!\n");
 
 	/*assembling handover to isis_handle_pdu() */
-	stm.data = pptrs.packet_ptr;
-	stm.getp = (pptrs.iph_ptr - pptrs.packet_ptr);
-	stm.endp = pkthdr->caplen;
-	stm.size = 1500; // XXX 
-	ssnpa = pptrs.packet_ptr; // XXX
-	circuit.rcv_stream = &stm;
+	stm.data = pptrs.iph_ptr;
+	stm.getp = 0;
+	stm.endp = pkthdr->caplen - (pptrs.iph_ptr - pptrs.packet_ptr);
+	stm.size = pkthdr->caplen - (pptrs.iph_ptr - pptrs.packet_ptr);
+	ssnpa = pptrs.packet_ptr; // XXX: check 
+	circuit->rcv_stream = &stm;
 
-	// XXX: process IS-IS packet
-	isis_handle_pdu (&circuit, ssnpa);
+	/* Let's match MTU based on a remote node Hello (typically padded) */ 
+	if (!circuit->interface->mtu) circuit->interface->mtu = pkthdr->caplen;
+
+	/* process IS-IS packet */
+	isis_handle_pdu (circuit, ssnpa);
       }
     }
   }
@@ -177,5 +249,4 @@ void isis_sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *
 
 int iso_handler(register struct packet_ptrs *pptrs)
 {
-  printf("CI PASSO: ISO\n");
 }

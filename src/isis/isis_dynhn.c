@@ -101,7 +101,7 @@ isis_dynhn_insert (u_char * id, struct hostname *hostname, int level)
       dyn->refresh = time (NULL);
       return;
     }
-  dyn = malloc(sizeof (struct isis_dynhn));
+  dyn = calloc(1, sizeof (struct isis_dynhn));
   if (!dyn)
     {
       Log(LOG_WARNING, "WARN (default/core/ISIS ): isis_dynhn_insert(): out of memory!\n");

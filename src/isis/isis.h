@@ -47,6 +47,7 @@ static struct _devices_struct _isis_devices[] = {
 
 struct pcap_isis_callback_data {
   struct pcap_device *device;
+  struct isis_circuit *circuit;
 };
 
 /* prototypes */
@@ -62,7 +63,9 @@ EXT int iso_handler(register struct packet_ptrs *);
 
 /* global variables */
 EXT struct thread_master *master;
+EXT struct isis *isis;
 EXT struct in_addr router_id_zebra; /* XXX: do something with this eventually */
+EXT struct timeval isis_now;
 
 #undef EXT
 #endif

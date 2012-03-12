@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -377,6 +377,10 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_follow_nexthop", cfg_key_nfacctd_bgp_follow_nexthop},
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},
   {"bgp_table_peer_buckets", cfg_key_nfacctd_bgp_table_peer_buckets},
+  {"isis_daemon", cfg_key_nfacctd_isis},
+  {"isis_daemon_ip", cfg_key_nfacctd_isis_ip},
+  {"isis_daemon_net", cfg_key_nfacctd_isis_net},
+  {"isis_daemon_iface", cfg_key_nfacctd_isis_iface},
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"tunnel_0", cfg_key_tunnel_0},
