@@ -65,6 +65,11 @@ static const u_char maskbit[] = {
   0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff
 };
 
+u_char ALL_L1_ISS[6] = { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x14 };
+u_char ALL_L2_ISS[6] = { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x15 };
+u_char ALL_ISS[6] = { 0x09, 0x00, 0x2B, 0x00, 0x00, 0x05 };
+u_char ALL_ESS[6] = { 0x09, 0x00, 0x2B, 0x00, 0x00, 0x04 };
+
 /*
  * HELPER FUNCS
  */
@@ -1525,9 +1530,10 @@ send_hello (struct isis_circuit *circuit, int level)
       return ISIS_WARNING;
 #endif /* HAVE_IPV6 */
 
-  if (circuit->u.bc.pad_hellos)
-    if (tlv_add_padding (circuit->snd_stream))
-      return ISIS_WARNING;
+  /* We should always pad hellos, even on p2p links */
+  /* if (circuit->u.bc.pad_hellos) */
+  if (tlv_add_padding (circuit->snd_stream))
+    return ISIS_WARNING;
 
   length = stream_get_endp (circuit->snd_stream);
   /* Update PDU length */
@@ -1603,3 +1609,28 @@ ack_lsp (struct isis_link_state_hdr *hdr, struct isis_circuit *circuit,
   return retval;
 }
 
+int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
+{
+  int written = 1;
+  struct sockaddr_ll sa;
+
+  stream_set_getp (circuit->snd_stream, 0);
+  memset (&sa, 0, sizeof (struct sockaddr_ll));
+  sa.sll_family = 0; /* XXX: let's see how far we get with this */
+  sa.sll_protocol = htons (stream_get_endp (circuit->snd_stream) + LLC_LEN);
+  sa.sll_ifindex = if_nametoindex(config.nfacctd_isis_iface);
+  sa.sll_halen = ETH_ALEN;
+  if (level == 1)
+    memcpy (&sa.sll_addr, ALL_L1_ISS, ETH_ALEN);
+  else
+    memcpy (&sa.sll_addr, ALL_L2_ISS, ETH_ALEN);
+
+  /* lets try correcting the protocol */
+  sa.sll_protocol = htons (0x00FE);
+  written = sendto (circuit->fd, circuit->snd_stream->data,
+                    stream_get_endp (circuit->snd_stream), 0,
+                    (struct sockaddr *) &sa,
+                    sizeof (struct sockaddr_ll));
+
+  return ISIS_OK;
+}

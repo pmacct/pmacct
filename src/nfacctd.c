@@ -511,7 +511,7 @@ int main(int argc,char **argv, char **envp)
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */
   if (config.nfacctd_isis) { 
-    /* nfacctd_isis_wrapper(); */
+    nfacctd_isis_wrapper();
 
     /* Let's give the ISIS thread some advantage to create its structures */
     sleep(5);

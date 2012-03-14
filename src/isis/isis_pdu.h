@@ -239,6 +239,7 @@ EXT void fill_fixed_hdr (struct isis_fixed_hdr *, u_char);
 EXT int send_hello (struct isis_circuit *, int);
 EXT int authentication_check (struct isis_passwd *, struct isis_passwd *);
 EXT int isis_handle_pdu (struct isis_circuit *, u_char *);
+EXT int isis_send_pdu_p2p (struct isis_circuit *, int);
 #undef EXT
 
 #endif /* _ISIS_PDU_H_ */

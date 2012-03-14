@@ -207,8 +207,9 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
 	ssnpa = pptrs.packet_ptr; // XXX: check 
 	circuit->rcv_stream = &stm;
 
-	/* Let's match MTU based on a remote node Hello (typically padded) */ 
-	if (!circuit->interface->mtu) circuit->interface->mtu = pkthdr->caplen;
+	/* Let's match ISO MTU based on a remote node Hello (typically padded) */ 
+	if (!circuit->interface->mtu)
+	  circuit->interface->mtu = pkthdr->caplen - (pptrs.iph_ptr - pptrs.packet_ptr);
 
 	/* process IS-IS packet */
 	isis_handle_pdu (circuit, ssnpa);
