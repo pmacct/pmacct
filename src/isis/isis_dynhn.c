@@ -38,23 +38,17 @@
 #include "isis_misc.h"
 #include "isis_constants.h"
 
-extern struct isis *isis;
-extern struct thread_master *master;
 extern struct host host;
-
-struct list *dyn_cache = NULL;
-static int dyn_cache_cleanup (struct thread *);
 
 void
 dyn_cache_init (void)
 {
+  dyn_cache = NULL;
   dyn_cache = list_new ();
-  THREAD_TIMER_ON (master, isis->t_dync_clean, dyn_cache_cleanup, NULL, 120);
-  return;
 }
 
-static int
-dyn_cache_cleanup (struct thread *thread)
+int
+dyn_cache_cleanup ()
 {
   struct listnode *node, *nnode;
   struct isis_dynhn *dyn;
@@ -71,7 +65,6 @@ dyn_cache_cleanup (struct thread *thread)
       free(dyn);
     }
 
-  THREAD_TIMER_ON (master, isis->t_dync_clean, dyn_cache_cleanup, NULL, 120);
   return ISIS_OK;
 }
 

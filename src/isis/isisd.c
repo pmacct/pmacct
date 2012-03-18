@@ -297,14 +297,12 @@ area_net_title (struct isis_area *area, const u_char *net_title)
   addr->addr_len -= (ISIS_SYS_ID_LEN + 1);
   listnode_add (area->area_addrs, addr);
 
-  /* XXX: disabled, only now we can safely generate our LSPs for this area */
-/*
+  /* Only now we can safely generate our LSPs for this area */
   if (listcount (area->area_addrs) > 0)
     {
       lsp_l1_generate (area);
       lsp_l2_generate (area);
     }
-*/
 
   return FALSE;
 }

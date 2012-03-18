@@ -65,7 +65,7 @@ EXT int iso_handler(register struct packet_ptrs *);
 EXT struct thread_master *master;
 EXT struct isis *isis;
 EXT struct in_addr router_id_zebra; /* XXX: do something with this eventually */
-EXT struct timeval isis_now;
+EXT struct timeval isis_now, isis_spf_deadline, isis_psnp_deadline;
 
 #undef EXT
 #endif

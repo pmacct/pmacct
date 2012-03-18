@@ -240,6 +240,10 @@ EXT int send_hello (struct isis_circuit *, int);
 EXT int authentication_check (struct isis_passwd *, struct isis_passwd *);
 EXT int isis_handle_pdu (struct isis_circuit *, u_char *);
 EXT int isis_send_pdu_p2p (struct isis_circuit *, int);
+EXT int build_psnp (int, struct isis_circuit *, struct list *);
+EXT int send_psnp (int, struct isis_circuit *);
+EXT int build_csnp (int, u_char *, u_char *, struct list *, struct isis_circuit *);
+EXT int send_csnp (struct isis_circuit *, int);
 #undef EXT
 
 #endif /* _ISIS_PDU_H_ */

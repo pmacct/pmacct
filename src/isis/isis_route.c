@@ -185,7 +185,6 @@ nexthop6lookup (struct list *nexthops6, struct in6_addr *ip6,
 
 #endif /* HAVE_IPV6 */
 
-/*
 static void
 adjinfo2nexthop (struct list *nexthops, struct isis_adjacency *adj)
 {
@@ -229,7 +228,6 @@ adjinfo2nexthop6 (struct list *nexthops6, struct isis_adjacency *adj)
     }
 }
 #endif
-*/
 
 static struct isis_route_info *
 isis_route_info_new (uint32_t cost, uint32_t depth, u_char family,
@@ -246,7 +244,6 @@ isis_route_info_new (uint32_t cost, uint32_t depth, u_char family,
       return NULL;
     }
 
-/*
   if (family == AF_INET)
     {
       rinfo->nexthops = list_new ();
@@ -262,7 +259,6 @@ isis_route_info_new (uint32_t cost, uint32_t depth, u_char family,
     }
 
 #endif
-*/
 
   rinfo->cost = cost;
   rinfo->depth = depth;

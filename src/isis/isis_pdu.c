@@ -378,11 +378,17 @@ process_p2p_hello (struct isis_circuit *circuit)
 
   /* we do this now because the adj may not survive till the end... */
 
+  /* which protocol are spoken ??? */
+  if (found & TLVFLAG_NLPID)
+    tlvs_to_adj_nlpids (&tlvs, adj);
+
   /* we need to copy addresses to the adj */
-  tlvs_to_adj_ipv4_addrs (&tlvs, adj);
+  if (found & TLVFLAG_IPV4_ADDR)
+    tlvs_to_adj_ipv4_addrs (&tlvs, adj);
 
 #ifdef HAVE_IPV6
-  tlvs_to_adj_ipv6_addrs (&tlvs, adj);
+  if (found & TLVFLAG_IPV6_ADDR)
+    tlvs_to_adj_ipv6_addrs (&tlvs, adj);
 #endif /* HAVE_IPV6 */
 
   /* lets take care of the expiry */
@@ -749,6 +755,9 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
 	      ((level == 2) &&
 	       (circuit->u.p2p.neighbor->adj_usage == ISIS_ADJ_LEVEL1)))
 	    return ISIS_WARNING;	/* Silently discard */
+	  else {
+	    adj = circuit->u.p2p.neighbor;
+	  }
 	}
     }
 dontcheckadj:
@@ -908,6 +917,7 @@ dontcheckadj:
 				     circuit->area);
 	  lsp->level = level;
 	  lsp->adj = adj;
+
 	  lsp_insert (lsp, circuit->area->lspdb[level - 1]);
 	  /* ii */
 	  ISIS_FLAGS_SET_ALL (lsp->SRMflags);
@@ -1633,4 +1643,240 @@ int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
                     sizeof (struct sockaddr_ll));
 
   return ISIS_OK;
+}
+
+/* XXX: debugs in this function should be a-la bgp_daemon_msglog */
+int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
+{
+  struct isis_fixed_hdr fixed_hdr;
+  unsigned long lenp;
+  u_int16_t length;
+  int retval = 0;
+  struct isis_lsp *lsp;
+  struct isis_passwd *passwd;
+  struct listnode *node;
+
+  if (level == 1)
+    fill_fixed_hdr_andstream (&fixed_hdr, L1_PARTIAL_SEQ_NUM,
+                              circuit->snd_stream);
+  else
+    fill_fixed_hdr_andstream (&fixed_hdr, L2_PARTIAL_SEQ_NUM,
+                              circuit->snd_stream);
+
+  /*
+   * Fill Level 1 or 2 Partial Sequence Numbers header
+   */
+  lenp = stream_get_endp (circuit->snd_stream);
+  stream_putw (circuit->snd_stream, 0); /* PDU length - when we know it */
+  stream_put (circuit->snd_stream, isis->sysid, ISIS_SYS_ID_LEN);
+  stream_putc (circuit->snd_stream, circuit->idx);
+
+  /*
+   * And TLVs
+   */
+
+  if (level == 1)
+    passwd = &circuit->area->area_passwd;
+  else
+    passwd = &circuit->area->domain_passwd;
+
+  if (CHECK_FLAG(passwd->snp_auth, SNP_AUTH_SEND))
+    if (passwd->type)
+      retval = tlv_add_authinfo (passwd->type, passwd->len,
+                                 passwd->passwd, circuit->snd_stream);
+
+  if (!retval && lsps)
+    {
+      retval = tlv_add_lsp_entries (lsps, circuit->snd_stream);
+    }
+
+  if (config.debug)
+    {
+      for (ALL_LIST_ELEMENTS_RO (lsps, node, lsp))
+      {
+        Log(LOG_DEBUG, "ISIS-Snp (%s):         PSNP entry %s, seq 0x%08x,"
+                    " cksum 0x%04x, lifetime %us\n",
+                    circuit->area->area_tag,
+                    rawlspid_print (lsp->lsp_header->lsp_id),
+                    ntohl (lsp->lsp_header->seq_num),
+                    ntohs (lsp->lsp_header->checksum),
+                    ntohs (lsp->lsp_header->rem_lifetime));
+      }
+    }
+
+  length = (u_int16_t) stream_get_endp (circuit->snd_stream);
+  assert (length >= ISIS_PSNP_HDRLEN);
+  /* Update PDU length */
+  stream_putw_at (circuit->snd_stream, lenp, length);
+
+  return ISIS_OK;
+}
+
+/*
+ *  7.3.15.4 action on expiration of partial SNP interval
+ *  level 1
+ */
+/* XXX: debugs in this function should be a-la bgp_daemon_msglog */
+int send_psnp (int level, struct isis_circuit *circuit)
+{
+  int retval = ISIS_OK;
+  struct isis_lsp *lsp;
+  struct list *list = NULL;
+  struct listnode *node;
+
+  if ((circuit->circ_type == CIRCUIT_T_BROADCAST &&
+       !circuit->u.bc.is_dr[level - 1]) ||
+      circuit->circ_type != CIRCUIT_T_BROADCAST)
+    {
+
+      if (circuit->area->lspdb[level - 1] &&
+          dict_count (circuit->area->lspdb[level - 1]) > 0)
+        {
+          list = list_new ();
+          lsp_build_list_ssn (circuit, list, circuit->area->lspdb[level - 1]);
+
+          if (listcount (list) > 0)
+            {
+              if (circuit->snd_stream == NULL)
+                circuit->snd_stream = stream_new (ISO_MTU (circuit));
+              else
+                stream_reset (circuit->snd_stream);
+
+
+              Log(LOG_DEBUG, "ISIS-Snp (%s): Sent L%d PSNP on %s, length %ld\n",
+                            circuit->area->area_tag, level,
+                            circuit->interface->name,
+                            /* FIXME: use %z when we stop supporting old
+                             * compilers. */
+                            (unsigned long) STREAM_SIZE (circuit->snd_stream));
+
+              retval = build_psnp (level, circuit, list);
+              if (retval == ISIS_OK)
+                retval = circuit->tx (circuit, level);
+
+              if (retval == ISIS_OK)
+                {
+                  /*
+                   * sending succeeded, we can clear SSN flags of this circuit
+                   * for the LSPs in list
+                   */
+                  for (ALL_LIST_ELEMENTS_RO (list, node, lsp))
+                    ISIS_CLEAR_FLAG (lsp->SSNflags, circuit);
+                }
+            }
+          list_delete (list);
+        }
+    }
+
+  return retval;
+}
+
+/* XXX: debugs in this function should be a-la bgp_daemon_msglog */
+int build_csnp (int level, u_char * start, u_char * stop, struct list *lsps,
+            struct isis_circuit *circuit)
+{
+  struct isis_fixed_hdr fixed_hdr;
+  struct isis_passwd *passwd;
+  int retval = ISIS_OK;
+  unsigned long lenp;
+  u_int16_t length;
+
+  if (level == 1)
+    fill_fixed_hdr_andstream (&fixed_hdr, L1_COMPLETE_SEQ_NUM,
+                              circuit->snd_stream);
+  else
+    fill_fixed_hdr_andstream (&fixed_hdr, L2_COMPLETE_SEQ_NUM,
+                              circuit->snd_stream);
+
+  /*
+   * Fill Level 1 or 2 Complete Sequence Numbers header
+   */
+
+  lenp = stream_get_endp (circuit->snd_stream);
+  stream_putw (circuit->snd_stream, 0); /* PDU length - when we know it */
+  /* no need to send the source here, it is always us if we csnp */
+  stream_put (circuit->snd_stream, isis->sysid, ISIS_SYS_ID_LEN);
+  /* with zero circuit id - ref 9.10, 9.11 */
+  stream_putc (circuit->snd_stream, 0x00);
+
+  stream_put (circuit->snd_stream, start, ISIS_SYS_ID_LEN + 2);
+  stream_put (circuit->snd_stream, stop, ISIS_SYS_ID_LEN + 2);
+
+  /*
+   * And TLVs
+   */
+  if (level == 1)
+    passwd = &circuit->area->area_passwd;
+  else
+    passwd = &circuit->area->domain_passwd;
+
+  if (CHECK_FLAG(passwd->snp_auth, SNP_AUTH_SEND))
+    if (passwd->type)
+      retval = tlv_add_authinfo (passwd->type, passwd->len,
+                                 passwd->passwd, circuit->snd_stream);
+
+  if (!retval && lsps)
+    {
+      retval = tlv_add_lsp_entries (lsps, circuit->snd_stream);
+    }
+  length = (u_int16_t) stream_get_endp (circuit->snd_stream);
+  assert (length >= ISIS_CSNP_HDRLEN);
+  /* Update PU length */
+  stream_putw_at (circuit->snd_stream, lenp, length);
+
+  return retval;
+}
+
+/*
+ * FIXME: support multiple CSNPs
+ */
+/* XXX: debugs in this function should be a-la bgp_daemon_msglog */
+int
+send_csnp (struct isis_circuit *circuit, int level)
+{
+  int retval = ISIS_OK;
+  u_char start[ISIS_SYS_ID_LEN + 2];
+  u_char stop[ISIS_SYS_ID_LEN + 2];
+  struct list *list = NULL;
+  struct listnode *node;
+  struct isis_lsp *lsp;
+
+  memset (start, 0x00, ISIS_SYS_ID_LEN + 2);
+  memset (stop, 0xff, ISIS_SYS_ID_LEN + 2);
+
+  if (circuit->area->lspdb[level - 1] &&
+      dict_count (circuit->area->lspdb[level - 1]) > 0)
+    {
+      list = list_new ();
+      lsp_build_list (start, stop, list, circuit->area->lspdb[level - 1]);
+
+      if (circuit->snd_stream == NULL)
+        circuit->snd_stream = stream_new (ISO_MTU (circuit));
+      else
+        stream_reset (circuit->snd_stream);
+
+      retval = build_csnp (level, start, stop, list, circuit);
+
+      Log(LOG_DEBUG, "ISIS-Snp (%s): Sent L%d CSNP on %s, length %ld\n",
+                     circuit->area->area_tag, level, circuit->interface->name,
+                     /* FIXME: use %z when we stop supporting old compilers. */
+                     (unsigned long) STREAM_SIZE (circuit->snd_stream));
+      if (config.debug) {
+	for (ALL_LIST_ELEMENTS_RO (list, node, lsp)) {
+          Log(LOG_DEBUG, "ISIS-Snp (%s):         CSNP entry %s, seq 0x%08x,"
+                        " cksum 0x%04x, lifetime %us\n",
+                        circuit->area->area_tag,
+                        rawlspid_print (lsp->lsp_header->lsp_id),
+                        ntohl (lsp->lsp_header->seq_num),
+                        ntohs (lsp->lsp_header->checksum),
+                        ntohs (lsp->lsp_header->rem_lifetime));
+        }
+      }
+
+      list_delete (list);
+
+      if (retval == ISIS_OK)
+        retval = circuit->tx (circuit, level);
+    }
+  return retval;
 }

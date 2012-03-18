@@ -79,7 +79,7 @@ struct isis_spftree
 #endif
 EXT void spftree_area_init (struct isis_area *);
 EXT int isis_spf_schedule (struct isis_area *, int);
-EXT void isis_spf_cmds_init (void);
+EXT int isis_run_spf (struct isis_area *, int, int);
 #ifdef HAVE_IPV6
 EXT int isis_spf_schedule6 (struct isis_area *, int);
 #endif

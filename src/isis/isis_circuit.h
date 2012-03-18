@@ -65,6 +65,7 @@ struct isis_p2p_info
 struct interface
 {
   char name[SRVBUFLEN];
+  unsigned int ifindex;
   unsigned int mtu;
 };
 

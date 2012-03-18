@@ -245,7 +245,7 @@ isis_spf_add_self (struct isis_spftree *spftree, struct isis_area *area,
 
   if (!area->oldmetric)
     vertex = isis_vertex_new (isis->sysid, VTYPE_NONPSEUDO_TE_IS);
-  else
+  else 
     vertex = isis_vertex_new (isis->sysid, VTYPE_NONPSEUDO_IS);
 
   vertex->lsp = lsp;
@@ -459,9 +459,9 @@ isis_spf_process_lsp (struct isis_spftree *spftree, struct isis_lsp *lsp,
   struct ipv6_reachability *ip6reach;
 #endif /* HAVE_IPV6 */
 
-
   if (!lsp->adj)
     return ISIS_WARNING;
+
   if (lsp->tlv_data.nlpids == NULL || !speaks (lsp->tlv_data.nlpids, family))
     return ISIS_OK;
 
@@ -740,7 +740,6 @@ isis_spf_preload_tent (struct isis_spftree *spftree,
 	  Log(LOG_WARNING, "WARN ( default/core/ISIS ): isis_spf_preload_tent unsupported media\n");
 	  retval = ISIS_WARNING;
 	}
-
     }
 
   return retval;
@@ -750,6 +749,7 @@ isis_spf_preload_tent (struct isis_spftree *spftree,
  * The parent(s) for vertex is set when added to TENT list
  * now we just put the child pointer(s) in place
  */
+/* XXX: debugs in this function should be a-la bgp_daemon_msglog */ 
 static void
 add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
 	      struct isis_area *area, int level)
@@ -758,11 +758,25 @@ add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
 
   if (vertex->type > VTYPE_ES)
     {
-      if (listcount (vertex->Adj_N) > 0)
+      if (listcount (vertex->Adj_N) > 0) {
 	isis_route_create ((struct prefix *) &vertex->N.prefix, vertex->d_N,
 			   vertex->depth, vertex->Adj_N, area, level);
-      else if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: no adjacencies do not install route\n");
+
+	if (config.debug) {
+	  u_char prefix[BUFSIZ];
+
+	  prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: route installed: %s\n", prefix);
+	}
+      }
+      else {
+	if (config.debug) {
+	  u_char prefix[BUFSIZ];
+
+	  prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: no adjacencies do not install route: %s\n", prefix);
+	}
+      }
     }
 
   return;
@@ -779,7 +793,7 @@ init_spt (struct isis_spftree *spftree)
   return;
 }
 
-static int
+int
 isis_run_spf (struct isis_area *area, int level, int family)
 {
   int retval = ISIS_OK;
@@ -874,9 +888,11 @@ isis_run_spf (struct isis_area *area, int level, int family)
     }
 
 out:
-  thread_add_event (master, isis_route_validate, area, 0);
+  // thread_add_event (master, isis_route_validate, area, 0);
   spftree->lastrun = time (NULL);
   spftree->pending = 0;
+
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s): SPF algorithm run\n", area->area_tag);
 
   return retval;
 }
