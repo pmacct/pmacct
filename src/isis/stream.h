@@ -148,7 +148,7 @@ EXT int stream_putq (struct stream *, uint64_t);
 EXT int stream_putq_at (struct stream *, size_t, uint64_t);
 EXT int stream_put_ipv4 (struct stream *, u_int32_t);
 EXT int stream_put_in_addr (struct stream *, struct in_addr *);
-EXT int stream_put_prefix (struct stream *, struct prefix *);
+EXT int stream_put_prefix (struct stream *, struct isis_prefix *);
 EXT void stream_get (void *, struct stream *, size_t);
 EXT u_char stream_getc (struct stream *);
 EXT u_char stream_getc_from (struct stream *, size_t);

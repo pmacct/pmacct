@@ -58,13 +58,13 @@ route_node_new (void)
 
 /* Allocate new route node with prefix set. */
 static struct route_node *
-route_node_set (struct route_table *table, struct prefix *prefix)
+route_node_set (struct route_table *table, struct isis_prefix *prefix)
 {
   struct route_node *node;
   
   node = route_node_new ();
 
-  prefix_copy (&node->p, prefix);
+  isis_prefix_copy (&node->p, prefix);
   node->table = table;
 
   return node;
@@ -134,7 +134,7 @@ static const u_char maskbit[] =
 
 /* Common prefix route genaration. */
 static void
-route_common (struct prefix *n, struct prefix *p, struct prefix *new)
+route_common (struct isis_prefix *n, struct isis_prefix *p, struct isis_prefix *new)
 {
   int i;
   u_char diff;
@@ -196,7 +196,7 @@ route_unlock_node (struct route_node *node)
 
 /* Find matched prefix. */
 struct route_node *
-route_node_match (const struct route_table *table, const struct prefix *p)
+route_node_match (const struct route_table *table, const struct isis_prefix *p)
 {
   struct route_node *node;
   struct route_node *matched;
@@ -207,7 +207,7 @@ route_node_match (const struct route_table *table, const struct prefix *p)
   /* Walk down tree.  If there is matched route then store it to
      matched. */
   while (node && node->p.prefixlen <= p->prefixlen && 
-	 prefix_match (&node->p, p))
+	 isis_prefix_match (&node->p, p))
     {
       if (node->info)
 	matched = node;
@@ -236,7 +236,7 @@ route_node_match_ipv4 (const struct route_table *table,
   p.prefixlen = IPV4_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return route_node_match (table, (struct prefix *) &p);
+  return route_node_match (table, (struct isis_prefix *) &p);
 }
 
 #ifdef HAVE_IPV6
@@ -251,33 +251,32 @@ route_node_match_ipv6 (const struct route_table *table,
   p.prefixlen = IPV6_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return route_node_match (table, (struct prefix *) &p);
+  return route_node_match (table, (struct sis_prefix *) &p);
 }
 #endif /* HAVE_IPV6 */
 
 /* Lookup same prefix node.  Return NULL when we can't find route. */
 struct route_node *
-route_node_lookup (struct route_table *table, struct prefix *p)
+route_node_lookup (struct route_table *table, struct isis_prefix *p)
 {
   struct route_node *node;
 
   node = table->top;
 
   while (node && node->p.prefixlen <= p->prefixlen && 
-	 prefix_match (&node->p, p))
-    {
-      if (node->p.prefixlen == p->prefixlen)
-        return node->info ? route_lock_node (node) : NULL;
+	 isis_prefix_match (&node->p, p)) {
+    if (node->p.prefixlen == p->prefixlen)
+      return node->info ? route_lock_node (node) : NULL;
 
-      node = node->link[prefix_bit(&p->u.prefix, node->p.prefixlen)];
-    }
+    node = node->link[prefix_bit(&p->u.prefix, node->p.prefixlen)];
+  }
 
   return NULL;
 }
 
 /* Add node to routing table. */
 struct route_node *
-route_node_get (struct route_table *table, struct prefix *p)
+route_node_get (struct route_table *table, struct isis_prefix *p)
 {
   struct route_node *new;
   struct route_node *node;
@@ -286,7 +285,7 @@ route_node_get (struct route_table *table, struct prefix *p)
   match = NULL;
   node = table->top;
   while (node && node->p.prefixlen <= p->prefixlen && 
-	 prefix_match (&node->p, p))
+	 isis_prefix_match (&node->p, p))
     {
       if (node->p.prefixlen == p->prefixlen)
         return route_lock_node (node);

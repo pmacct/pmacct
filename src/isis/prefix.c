@@ -41,7 +41,7 @@ static const u_char maskbit[] = {0x00, 0x80, 0xc0, 0xe0, 0xf0,
 
 /* If n includes p prefix then return 1 else return 0. */
 int
-prefix_match (const struct prefix *n, const struct prefix *p)
+isis_prefix_match (const struct isis_prefix *n, const struct isis_prefix *p)
 {
   int offset;
   int shift;
@@ -70,7 +70,7 @@ prefix_match (const struct prefix *n, const struct prefix *p)
 
 /* Copy prefix from src to dest. */
 void
-prefix_copy (struct prefix *dest, const struct prefix *src)
+isis_prefix_copy (struct isis_prefix *dest, const struct isis_prefix *src)
 {
   dest->family = src->family;
   dest->prefixlen = src->prefixlen;
@@ -81,16 +81,13 @@ prefix_copy (struct prefix *dest, const struct prefix *src)
   else if (src->family == AF_INET6)
     dest->u.prefix6 = src->u.prefix6;
 #endif /* HAVE_IPV6 */
-  else if (src->family == AF_UNSPEC)
-    {
-      dest->u.lp.id = src->u.lp.id;
-      dest->u.lp.adv_router = src->u.lp.adv_router;
-    }
   else
     {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): prefix_copy(): Unknown address family %d\n", src->family);
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): isis_prefix_copy(): Unknown address family %d\n", src->family);
       assert (0);
     }
+
+  dest->adv_router = src->adv_router;
 }
 
 /* 
@@ -99,10 +96,10 @@ prefix_copy (struct prefix *dest, const struct prefix *src)
  * that not only the prefix length and the network part be the same,
  * but also the host part.  Thus, 10.0.0.1/8 and 10.0.0.2/8 are not
  * the same.  Note that this routine has the same return value sense
- * as '==' (which is different from prefix_cmp).
+ * as '==' (which is different from isis_prefix_cmp).
  */
 int
-prefix_same (const struct prefix *p1, const struct prefix *p2)
+isis_prefix_same (const struct isis_prefix *p1, const struct isis_prefix *p2)
 {
   if (p1->family == p2->family && p1->prefixlen == p2->prefixlen)
     {
@@ -126,10 +123,10 @@ prefix_same (const struct prefix *p1, const struct prefix *p2)
  * by the prefix length) are not significant.  Thus, 10.0.0.1/8 and
  * 10.0.0.2/8 are considered equivalent by this routine.  Note that
  * this routine has the same return sense as strcmp (which is different
- * from prefix_same).
+ * from isis_prefix_same).
  */
 int
-prefix_cmp (const struct prefix *p1, const struct prefix *p2)
+isis_prefix_cmp (const struct isis_prefix *p1, const struct isis_prefix *p2)
 {
   int offset;
   int shift;
@@ -157,7 +154,7 @@ prefix_cmp (const struct prefix *p1, const struct prefix *p2)
 
 /* Return prefix family type string. */
 const char *
-prefix_family_str (const struct prefix *p)
+isis_prefix_family_str (const struct isis_prefix *p)
 {
   if (p->family == AF_INET)
     return "inet";
@@ -170,28 +167,21 @@ prefix_family_str (const struct prefix *p)
 
 /* Allocate new prefix_ipv4 structure. */
 struct prefix_ipv4 *
-prefix_ipv4_new ()
+isis_prefix_ipv4_new ()
 {
   struct prefix_ipv4 *p;
 
-  /* Call prefix_new to allocate a full-size struct prefix to avoid problems
-     where the struct prefix_ipv4 is cast to struct prefix and unallocated
+  /* Call isis_prefix_new to allocate a full-size struct isis_prefix to avoid problems
+     where the struct prefix_ipv4 is cast to struct isis_prefix and unallocated
      bytes were being referenced (e.g. in structure assignments). */
-  p = (struct prefix_ipv4 *)prefix_new();
+  p = (struct prefix_ipv4 *)isis_prefix_new();
   p->family = AF_INET;
   return p;
 }
 
-/* Free prefix_ipv4 structure. */
-void
-prefix_ipv4_free (struct prefix_ipv4 *p)
-{
-  prefix_free((struct prefix *)p);
-}
-
 /* When string format is invalid return 0. */
 int
-str2prefix_ipv4 (const char *str, struct prefix_ipv4 *p)
+isis_str2prefix_ipv4 (const char *str, struct prefix_ipv4 *p)
 {
   int ret;
   int plen;
@@ -237,7 +227,7 @@ str2prefix_ipv4 (const char *str, struct prefix_ipv4 *p)
 
 /* Convert masklen into IP address's netmask. */
 void
-masklen2ip (int masklen, struct in_addr *netmask)
+isis_masklen2ip (int masklen, struct in_addr *netmask)
 {
   u_char *pnt;
   int bit;
@@ -259,7 +249,7 @@ masklen2ip (int masklen, struct in_addr *netmask)
 /* Convert IP address's netmask into integer. We assume netmask is
    sequential one. Argument netmask should be network byte order. */
 u_char
-ip_masklen (struct in_addr netmask)
+isis_ip_masklen (struct in_addr netmask)
 {
   u_char len;
   u_char *pnt;
@@ -290,7 +280,7 @@ ip_masklen (struct in_addr netmask)
 
 /* Apply mask to IPv4 prefix. */
 void
-apply_mask_ipv4 (struct prefix_ipv4 *p)
+isis_apply_mask_ipv4 (struct prefix_ipv4 *p)
 {
   u_char *pnt;
   int index;
@@ -311,24 +301,18 @@ apply_mask_ipv4 (struct prefix_ipv4 *p)
     }
 }
 
-/* If prefix is 0.0.0.0/0 then return 1 else return 0. */
-int
-prefix_ipv4_any (const struct prefix_ipv4 *p)
-{
-  return (p->prefix.s_addr == 0 && p->prefixlen == 0);
-}
 
 #ifdef HAVE_IPV6
 
 /* Allocate a new ip version 6 route */
 struct prefix_ipv6 *
-prefix_ipv6_new (void)
+isis_prefix_ipv6_new (void)
 {
   struct prefix_ipv6 *p;
 
-  /* Allocate a full-size struct prefix to avoid problems with structure
+  /* Allocate a full-size struct isis_prefix to avoid problems with structure
      size mismatches. */
-  p = (struct prefix_ipv6 *)prefix_new();
+  p = (struct prefix_ipv6 *)isis_prefix_new();
   p->family = AF_INET6;
   return p;
 }
@@ -337,12 +321,12 @@ prefix_ipv6_new (void)
 void
 prefix_ipv6_free (struct prefix_ipv6 *p)
 {
-  prefix_free((struct prefix *)p);
+  isis_prefix_free((struct isis_prefix *)p);
 }
 
 /* If given string is valid return pin6 else return NULL */
 int
-str2prefix_ipv6 (const char *str, struct prefix_ipv6 *p)
+isis_str2prefix_ipv6 (const char *str, struct prefix_ipv6 *p)
 {
   char *pnt;
   char *cp;
@@ -380,7 +364,7 @@ str2prefix_ipv6 (const char *str, struct prefix_ipv6 *p)
 }
 
 /* Convert struct in6_addr netmask into integer.
- * FIXME return u_char as ip_maskleni() does. */
+ * FIXME return u_char as isis_ip_maskleni() does. */
 int
 ip6_masklen (struct in6_addr netmask)
 {
@@ -409,7 +393,7 @@ ip6_masklen (struct in6_addr netmask)
 }
 
 void
-masklen2ip6 (int masklen, struct in6_addr *netmask)
+isis_masklen2ip6 (int masklen, struct in6_addr *netmask)
 {
   unsigned char *pnt;
   int bit;
@@ -466,16 +450,16 @@ str2in6_addr (const char *str, struct in6_addr *addr)
 #endif /* HAVE_IPV6 */
 
 void
-apply_mask (struct prefix *p)
+isis_apply_mask (struct isis_prefix *p)
 {
   switch (p->family)
     {
       case AF_INET:
-        apply_mask_ipv4 ((struct prefix_ipv4 *)p);
+        isis_apply_mask_ipv4 ((struct prefix_ipv4 *)p);
         break;
 #ifdef HAVE_IPV6
       case AF_INET6:
-        apply_mask_ipv6 ((struct prefix_ipv6 *)p);
+        isis_apply_mask_ipv6 ((struct prefix_ipv6 *)p);
         break;
 #endif /* HAVE_IPV6 */
       default:
@@ -484,9 +468,9 @@ apply_mask (struct prefix *p)
   return;
 }
 
-/* Utility function of convert between struct prefix <=> union sockunion.
+/* Utility function of convert between struct isis_prefix <=> union sockunion.
  * FIXME This function isn't used anywhere. */
-struct prefix *
+struct isis_prefix *
 sockunion2prefix (const union sockunion *dest,
 		  const union sockunion *mask)
 {
@@ -494,58 +478,58 @@ sockunion2prefix (const union sockunion *dest,
     {
       struct prefix_ipv4 *p;
 
-      p = prefix_ipv4_new ();
+      p = isis_prefix_ipv4_new ();
       p->family = AF_INET;
       p->prefix = dest->sin.sin_addr;
-      p->prefixlen = ip_masklen (mask->sin.sin_addr);
-      return (struct prefix *) p;
+      p->prefixlen = isis_ip_masklen (mask->sin.sin_addr);
+      return (struct isis_prefix *) p;
     }
 #ifdef HAVE_IPV6
   if (dest->sa.sa_family == AF_INET6)
     {
       struct prefix_ipv6 *p;
 
-      p = prefix_ipv6_new ();
+      p = isis_prefix_ipv6_new ();
       p->family = AF_INET6;
       p->prefixlen = ip6_masklen (mask->sin6.sin6_addr);
       memcpy (&p->prefix, &dest->sin6.sin6_addr, sizeof (struct in6_addr));
-      return (struct prefix *) p;
+      return (struct isis_prefix *) p;
     }
 #endif /* HAVE_IPV6 */
   return NULL;
 }
 
-/* Utility function of convert between struct prefix <=> union sockunion. */
-struct prefix *
+/* Utility function of convert between struct isis_prefix <=> union sockunion. */
+struct isis_prefix *
 sockunion2hostprefix (const union sockunion *su)
 {
   if (su->sa.sa_family == AF_INET)
     {
       struct prefix_ipv4 *p;
 
-      p = prefix_ipv4_new ();
+      p = isis_prefix_ipv4_new ();
       p->family = AF_INET;
       p->prefix = su->sin.sin_addr;
       p->prefixlen = IPV4_MAX_BITLEN;
-      return (struct prefix *) p;
+      return (struct isis_prefix *) p;
     }
 #ifdef HAVE_IPV6
   if (su->sa.sa_family == AF_INET6)
     {
       struct prefix_ipv6 *p;
 
-      p = prefix_ipv6_new ();
+      p = isis_prefix_ipv6_new ();
       p->family = AF_INET6;
       p->prefixlen = IPV6_MAX_BITLEN;
       memcpy (&p->prefix, &su->sin6.sin6_addr, sizeof (struct in6_addr));
-      return (struct prefix *) p;
+      return (struct isis_prefix *) p;
     }
 #endif /* HAVE_IPV6 */
   return NULL;
 }
 
 int
-prefix_blen (const struct prefix *p)
+isis_prefix_blen (const struct isis_prefix *p)
 {
   switch (p->family) 
     {
@@ -563,18 +547,18 @@ prefix_blen (const struct prefix *p)
 
 /* Generic function for conversion string to struct prefix. */
 int
-str2prefix (const char *str, struct prefix *p)
+isis_str2prefix (const char *str, struct isis_prefix *p)
 {
   int ret;
 
   /* First we try to convert string to struct prefix_ipv4. */
-  ret = str2prefix_ipv4 (str, (struct prefix_ipv4 *) p);
+  ret = isis_str2prefix_ipv4 (str, (struct prefix_ipv4 *) p);
   if (ret)
     return ret;
 
 #ifdef HAVE_IPV6
   /* Next we try to convert string to struct prefix_ipv6. */
-  ret = str2prefix_ipv6 (str, (struct prefix_ipv6 *) p);
+  ret = isis_str2prefix_ipv6 (str, (struct prefix_ipv6 *) p);
   if (ret)
     return ret;
 #endif /* HAVE_IPV6 */
@@ -583,7 +567,7 @@ str2prefix (const char *str, struct prefix *p)
 }
 
 int
-prefix2str (const struct prefix *p, char *str, int size)
+isis_prefix2str (const struct isis_prefix *p, char *str, int size)
 {
   char buf[BUFSIZ];
 
@@ -592,10 +576,10 @@ prefix2str (const struct prefix *p, char *str, int size)
   return 0;
 }
 
-struct prefix *
-prefix_new ()
+struct isis_prefix *
+isis_prefix_new ()
 {
-  struct prefix *p;
+  struct isis_prefix *p;
 
   p = calloc(1, sizeof *p);
   return p;
@@ -603,77 +587,16 @@ prefix_new ()
 
 /* Free prefix structure. */
 void
-prefix_free (struct prefix *p)
+isis_prefix_free (struct isis_prefix *p)
 {
   free(p);
-}
-
-/* Utility function.  Check the string only contains digit
- * character.
- * FIXME str.[c|h] would be better place for this function. */
-int
-all_digit (const char *str)
-{
-  for (; *str != '\0'; str++)
-    if (!isdigit ((int) *str))
-      return 0;
-  return 1;
-}
-
-/* Utility function to convert ipv4 prefixes to Classful prefixes */
-void apply_classful_mask_ipv4 (struct prefix_ipv4 *p)
-{
-
-  u_int32_t destination;
-  
-  destination = ntohl (p->prefix.s_addr);
-  
-  if (p->prefixlen == IPV4_MAX_PREFIXLEN);
-  /* do nothing for host routes */
-  else if (IN_CLASSC (destination)) 
-    {
-      p->prefixlen=24;
-      apply_mask_ipv4(p);
-    }
-  else if (IN_CLASSB(destination)) 
-    {
-      p->prefixlen=16;
-      apply_mask_ipv4(p);
-    }
-  else 
-    {
-      p->prefixlen=8;
-      apply_mask_ipv4(p);
-    }
-}
-
-in_addr_t
-ipv4_network_addr (in_addr_t hostaddr, int masklen)
-{
-  struct in_addr mask;
-
-  masklen2ip (masklen, &mask);
-  return hostaddr & mask.s_addr;
-}
-
-in_addr_t
-ipv4_broadcast_addr (in_addr_t hostaddr, int masklen)
-{
-  struct in_addr mask;
-
-  masklen2ip (masklen, &mask);
-  return (masklen != IPV4_MAX_PREFIXLEN-1) ?
-	 /* normal case */
-         (hostaddr | ~mask.s_addr) :
-	 /* special case for /31 */
-         (hostaddr ^ ~mask.s_addr);
 }
 
 /* Utility function to convert ipv4 netmask to prefixes 
    ex.) "1.1.0.0" "255.255.0.0" => "1.1.0.0/16"
    ex.) "1.0.0.0" NULL => "1.0.0.0/8"                   */
 int
-netmask_str2prefix_str (const char *net_str, const char *mask_str,
+netmask_isis_str2prefix_str (const char *net_str, const char *mask_str,
 			char *prefix_str)
 {
   struct in_addr network;
@@ -692,7 +615,7 @@ netmask_str2prefix_str (const char *net_str, const char *mask_str,
       if (! ret)
         return 0;
 
-      prefixlen = ip_masklen (mask);
+      prefixlen = isis_ip_masklen (mask);
     }
   else 
     {

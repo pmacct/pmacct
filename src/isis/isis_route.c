@@ -30,6 +30,7 @@
 #include "linklist.h"
 #include "dict.h"
 #include "thread.h"
+#include "prefix.h"
 #include "table.h"
 #include "isis_constants.h"
 #include "isis_common.h"
@@ -400,7 +401,7 @@ isis_route_info_prefer_new (struct isis_route_info *new,
 }
 
 struct isis_route_info *
-isis_route_create (struct prefix *prefix, u_int32_t cost, u_int32_t depth,
+isis_route_create (struct isis_prefix *prefix, u_int32_t cost, u_int32_t depth,
 		   struct list *adjacencies, struct isis_area *area,
 		   int level)
 {
@@ -411,7 +412,7 @@ isis_route_create (struct prefix *prefix, u_int32_t cost, u_int32_t depth,
 
   family = prefix->family;
   /* for debugs */
-  prefix2str (prefix, (char *) buff, BUFSIZ);
+  isis_prefix2str (prefix, (char *) buff, BUFSIZ);
 
   rinfo_new = isis_route_info_new (cost, depth, family, adjacencies);
   if (!rinfo_new)
@@ -432,30 +433,26 @@ isis_route_create (struct prefix *prefix, u_int32_t cost, u_int32_t depth,
   rinfo_old = route_node->info;
   if (!rinfo_old)
     {
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s) route created: %s\n", area->area_tag, buff);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route created: %s\n", area->area_tag, area->is_type, buff);
       SET_FLAG (rinfo_new->flag, ISIS_ROUTE_FLAG_ACTIVE);
       route_node->info = rinfo_new;
       return rinfo_new;
     }
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s) route already exists: %s\n",
-	area->area_tag, buff);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route already exists: %s\n",
+	area->area_tag, area->is_type, buff);
 
   if (isis_route_info_same (rinfo_new, rinfo_old, family))
     {
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s) route unchanged: %s\n", area->area_tag, buff);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route unchanged: %s\n", area->area_tag, area->is_type, buff);
       isis_route_info_delete (rinfo_new);
       route_info = rinfo_old;
     }
   else if (isis_route_info_same_attrib (rinfo_new, rinfo_old))
     {
       /* merge the nexthop lists */
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s) route changed (same attribs): %s\n",
-		   area->area_tag, buff);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route changed (same attribs): %s\n",
+		   area->area_tag, area->is_type, buff);
       isis_route_info_merge (rinfo_new, rinfo_old, family);
       isis_route_info_delete (rinfo_new);
       route_info = rinfo_old;
@@ -465,17 +462,15 @@ isis_route_create (struct prefix *prefix, u_int32_t cost, u_int32_t depth,
     {
       if (isis_route_info_prefer_new (rinfo_new, rinfo_old))
 	{
-	  if (config.debug)
-	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s) route changed: %s\n",
-		area->area_tag, buff);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route changed: %s\n",
+		area->area_tag, area->is_type, buff);
 	  isis_route_info_delete (rinfo_old);
 	  route_info = rinfo_new;
 	}
       else
 	{
-	  if (config.debug)
-	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s) route rejected: %s\n",
-		area->area_tag, buff);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route rejected: %s\n",
+		area->area_tag, area->is_type, buff);
 	  isis_route_info_delete (rinfo_new);
 	  route_info = rinfo_old;
 	}
@@ -488,14 +483,14 @@ isis_route_create (struct prefix *prefix, u_int32_t cost, u_int32_t depth,
 }
 
 static void
-isis_route_delete (struct prefix *prefix, struct route_table *table)
+isis_route_delete (struct isis_prefix *prefix, struct route_table *table)
 {
   struct route_node *rode;
   struct isis_route_info *rinfo;
   char buff[BUFSIZ];
 
   /* for log */
-  prefix2str (prefix, buff, BUFSIZ);
+  isis_prefix2str (prefix, buff, BUFSIZ);
 
 
   rode = route_node_get (table, prefix);
@@ -503,8 +498,8 @@ isis_route_delete (struct prefix *prefix, struct route_table *table)
 
   if (rinfo == NULL)
     {
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte: tried to delete non-existant route %s\n", buff);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte: tried to delete non-existant route: %s\n", buff);
+
       return;
     }
 
@@ -515,8 +510,7 @@ isis_route_delete (struct prefix *prefix, struct route_table *table)
 }
 
 /* Validating routes in particular table. */
-static void
-isis_route_validate_table (struct isis_area *area, struct route_table *table)
+void isis_route_validate_table (struct isis_area *area, struct route_table *table)
 {
   struct route_node *rnode, *drnode;
   struct isis_route_info *rinfo;
@@ -530,11 +524,9 @@ isis_route_validate_table (struct isis_area *area, struct route_table *table)
 
       if (config.debug)
 	{
-	  prefix2str (&rnode->p, (char *) buff, BUFSIZ);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (%s): route validate: %s %s %s\n",
-		      area->area_tag,
-		      (CHECK_FLAG (rinfo->flag, ISIS_ROUTE_FLAG_ZEBRA_SYNC) ?
-		      "sync'ed" : "nosync"),
+	  isis_prefix2str (&rnode->p, (char *) buff, BUFSIZ);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u): route validate: %s %s\n",
+		      area->area_tag, area->is_type,
 		      (CHECK_FLAG (rinfo->flag, ISIS_ROUTE_FLAG_ACTIVE) ?
 		      "active" : "inactive"), buff);
 	}
@@ -591,8 +583,7 @@ isis_route_validate_table (struct isis_area *area, struct route_table *table)
  *
  * FIXME: Is it right place to do it at all? Maybe we should push both levels
  * to the RIB with different zebra route types and let RIB handle this? */
-static void
-isis_route_validate_merge (struct isis_area *area, int family)
+void isis_route_validate_merge (struct isis_area *area, int family)
 {
   struct route_table *table = NULL;
   struct route_table *merge;

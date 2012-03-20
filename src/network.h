@@ -297,6 +297,10 @@ struct packet_ptrs {
   char *bgp_dst_info; /* pointer to bgp_info structure for destination prefix, if any */ 
   char *bgp_peer; /* record BGP peer's Router-ID */
   char *bgp_nexthop_info; /* record bgp_info of BGP next-hop in case of follow-up */
+  char *igp_src; /* pointer to IGP node structure for source prefix, if any */
+  char *igp_dst; /* pointer to IGP node structure for destination prefix, if any */
+  char *igp_src_info; /* pointer to IGP node info structure for source prefix, if any */
+  char *igp_dst_info; /* pointer to IGP node info structure for destination prefix, if any */
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 

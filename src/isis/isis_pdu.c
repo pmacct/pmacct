@@ -737,9 +737,6 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
     goto dontcheckadj;
 
   /* 7.3.15.1 a) 6 - Must check that we have an adjacency of the same level  */
-  /* for broadcast circuits, snpa should be compared */
-  /* FIXME : Point To Point */
-
   /* for non broadcast, we just need to find same level adj */
   if (circuit->circ_type == CIRCUIT_T_P2P)
     {
@@ -823,14 +820,12 @@ dontcheckadj:
 		      && circuit->u.bc.is_dr[level - 1] == 1))
 		{
 		  lsp->lsp_header->seq_num = htonl (ntohl (hdr->seq_num) + 1);
-		  if (config.debug)
-		    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): LSP LEN: %d\n",
+		  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): LSP LEN: %d\n",
 				ntohs (lsp->lsp_header->pdu_len));
 		  fletcher_checksum (STREAM_DATA (lsp->pdu) + 12,
 				   ntohs (lsp->lsp_header->pdu_len) - 12, 12);
 		  ISIS_FLAGS_SET_ALL (lsp->SRMflags);
-		  if (config.debug)
-		    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): (1) re-originating LSP %s new seq 0x%08x\n",
+		  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): (1) re-originating LSP %s new seq 0x%08x\n",
 				circuit->area->area_tag,
 				rawlspid_print (hdr->lsp_id),
 				ntohl (lsp->lsp_header->seq_num));
@@ -873,8 +868,7 @@ dontcheckadj:
 			   ntohs (lsp->lsp_header->pdu_len) - 12, 12);
 
 	  ISIS_FLAGS_SET_ALL (lsp->SRMflags);
-	  if (config.debug)
-	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): (2) re-originating LSP %s new seq 0x%08x\n",
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): (2) re-originating LSP %s new seq 0x%08x\n",
 			circuit->area->area_tag,
 			rawlspid_print (hdr->lsp_id),
 			ntohl (lsp->lsp_header->seq_num));

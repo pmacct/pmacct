@@ -51,7 +51,7 @@ struct isis_vertex
   union
   {
     u_char id[ISIS_SYS_ID_LEN + 1];
-    struct prefix prefix;
+    struct isis_prefix prefix;
   } N;
 
   struct isis_lsp *lsp;

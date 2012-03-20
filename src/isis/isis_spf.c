@@ -54,6 +54,79 @@ extern struct host host;
 int isis_run_spf_l1 (struct thread *thread);
 int isis_run_spf_l2 (struct thread *thread);
 
+char *
+vtype2string (enum vertextype vtype)
+{
+  switch (vtype)
+    {
+    case VTYPE_PSEUDO_IS:
+      return "pseudo_IS";
+      break;
+    case VTYPE_PSEUDO_TE_IS:
+      return "pseudo_TE-IS";
+      break;
+    case VTYPE_NONPSEUDO_IS:
+      return "IS";
+      break;
+    case VTYPE_NONPSEUDO_TE_IS:
+      return "TE-IS";
+      break;
+    case VTYPE_ES:
+      return "ES";
+      break;
+    case VTYPE_IPREACH_INTERNAL:
+      return "IP internal";
+      break;
+    case VTYPE_IPREACH_EXTERNAL:
+      return "IP external";
+      break;
+    case VTYPE_IPREACH_TE:
+      return "IP TE";
+      break;
+#ifdef HAVE_IPV6
+    case VTYPE_IP6REACH_INTERNAL:
+      return "IP6 internal";
+      break;
+    case VTYPE_IP6REACH_EXTERNAL:
+      return "IP6 external";
+      break;
+#endif /* HAVE_IPV6 */
+    default:
+      return "UNKNOWN";
+    }
+  return NULL;                  /* Not reached */
+}
+
+char *
+vid2string (struct isis_vertex *vertex, u_char * buff)
+{
+  switch (vertex->type)
+    {
+    case VTYPE_PSEUDO_IS:
+    case VTYPE_PSEUDO_TE_IS:
+      return rawlspid_print (vertex->N.id);
+      break;
+    case VTYPE_NONPSEUDO_IS:
+    case VTYPE_NONPSEUDO_TE_IS:
+    case VTYPE_ES:
+      return sysid_print (vertex->N.id);
+      break;
+    case VTYPE_IPREACH_INTERNAL:
+    case VTYPE_IPREACH_EXTERNAL:
+    case VTYPE_IPREACH_TE:
+#ifdef HAVE_IPV6
+    case VTYPE_IP6REACH_INTERNAL:
+    case VTYPE_IP6REACH_EXTERNAL:
+#endif /* HAVE_IPV6 */
+      isis_prefix2str ((struct isis_prefix *) &vertex->N.prefix, (char *) buff, BUFSIZ);
+      break;
+    default:
+      return "UNKNOWN";
+    }
+
+  return (char *) buff;
+}
+
 /* 7.2.7 */
 static void
 remove_excess_adjs (struct list *adjs)
@@ -212,8 +285,8 @@ isis_vertex_new (void *id, enum vertextype vtype)
     case VTYPE_IP6REACH_INTERNAL:
     case VTYPE_IP6REACH_EXTERNAL:
 #endif /* HAVE_IPV6 */
-      memcpy (&vertex->N.prefix, (struct prefix *) id,
-	      sizeof (struct prefix));
+      memcpy (&vertex->N.prefix, (struct isis_prefix *) id,
+	      sizeof (struct isis_prefix));
       break;
     default:
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): WTF!\n");
@@ -260,7 +333,7 @@ isis_find_vertex (struct list *list, void *id, enum vertextype vtype)
 {
   struct listnode *node;
   struct isis_vertex *vertex;
-  struct prefix *p1, *p2;
+  struct isis_prefix *p1, *p2;
 
   for (ALL_LIST_ELEMENTS_RO (list, node, vertex))
     {
@@ -286,8 +359,8 @@ isis_find_vertex (struct list *list, void *id, enum vertextype vtype)
 	case VTYPE_IP6REACH_INTERNAL:
 	case VTYPE_IP6REACH_EXTERNAL:
 #endif /* HAVE_IPV6 */
-	  p1 = (struct prefix *) id;
-	  p2 = (struct prefix *) &vertex->N.id;
+	  p1 = (struct isis_prefix *) id;
+	  p2 = (struct isis_prefix *) &vertex->N.id;
 	  if (p1->family == p2->family && p1->prefixlen == p2->prefixlen &&
 	      memcmp (&p1->u.prefix, &p2->u.prefix,
 		      PSIZE (p1->prefixlen)) == 0)
@@ -310,12 +383,19 @@ isis_spf_add2tent (struct isis_spftree *spftree, enum vertextype vtype,
   struct isis_vertex *vertex, *v;
   struct listnode *node;
 
+  u_char buff[BUFSIZ];
+
   vertex = isis_vertex_new (id, vtype);
   vertex->d_N = cost;
   vertex->depth = depth;
 
   if (adj)
     listnode_add (vertex->Adj_N, adj);
+
+  /* XXX: separate from plain debug */
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: add to TENT  %s %s depth %d dist %d\n",
+              vtype2string (vertex->type), vid2string (vertex, buff),
+              vertex->depth, vertex->d_N);
 
   listnode_add (spftree->tents, vertex);
   if (list_isempty (spftree->tents))
@@ -454,7 +534,7 @@ isis_spf_process_lsp (struct isis_spftree *spftree, struct isis_lsp *lsp,
   struct ipv4_reachability *ipreach;
   struct te_ipv4_reachability *te_ipv4_reach;
   enum vertextype vtype;
-  struct prefix prefix;
+  struct isis_prefix prefix;
 #ifdef HAVE_IPV6
   struct ipv6_reachability *ip6reach;
 #endif /* HAVE_IPV6 */
@@ -514,7 +594,7 @@ lspfragloop:
 	      dist = cost + ipreach->metrics.metric_default;
 	      vtype = VTYPE_IPREACH_INTERNAL;
 	      prefix.u.prefix4 = ipreach->prefix;
-	      prefix.prefixlen = ip_masklen (ipreach->mask);
+	      prefix.prefixlen = isis_ip_masklen (ipreach->mask);
 	      process_N (spftree, vtype, (void *) &prefix, dist, depth + 1,
 			 lsp->adj, family);
 	    }
@@ -528,8 +608,13 @@ lspfragloop:
 	    {
 	      dist = cost + ipreach->metrics.metric_default;
 	      vtype = VTYPE_IPREACH_EXTERNAL;
+
+              /* Set advertising router to the first IP address */
+              if (lsp->tlv_data.ipv4_addrs) {
+                memcpy(&prefix.adv_router, listnode_head(lsp->tlv_data.ipv4_addrs), sizeof(struct in_addr));
+              }
 	      prefix.u.prefix4 = ipreach->prefix;
-	      prefix.prefixlen = ip_masklen (ipreach->mask);
+	      prefix.prefixlen = isis_ip_masklen (ipreach->mask);
 	      process_N (spftree, vtype, (void *) &prefix, dist, depth + 1,
 			 lsp->adj, family);
 	    }
@@ -542,6 +627,11 @@ lspfragloop:
 	    {
 	      dist = cost + ntohl (te_ipv4_reach->te_metric);
 	      vtype = VTYPE_IPREACH_TE;
+
+	      /* Set advertising router to the first IP address */
+	      if (lsp->tlv_data.ipv4_addrs) {
+		memcpy(&prefix.adv_router, listnode_head(lsp->tlv_data.ipv4_addrs), sizeof(struct in_addr));
+	      }
 	      prefix.u.prefix4 = newprefix2inaddr (&te_ipv4_reach->prefix_start,
 						   te_ipv4_reach->control);
 	      prefix.prefixlen = (te_ipv4_reach->control & 0x3F);
@@ -559,6 +649,7 @@ lspfragloop:
 	      dist = cost + ip6reach->metric;
 	      vtype = (ip6reach->control_info & CTRL_INFO_DISTRIBUTION) ?
 		VTYPE_IP6REACH_EXTERNAL : VTYPE_IP6REACH_INTERNAL;
+
 	      prefix.prefixlen = ip6reach->prefix_len;
 	      memcpy (&prefix.u.prefix6.s6_addr, ip6reach->prefix,
 		      PSIZE (ip6reach->prefix_len));
@@ -664,7 +755,7 @@ isis_spf_preload_tent (struct isis_spftree *spftree,
   struct list *adj_list;
   struct list *adjdb;
   struct prefix_ipv4 *ipv4;
-  struct prefix prefix;
+  struct isis_prefix prefix;
   int retval = ISIS_OK;
   u_char lsp_id[ISIS_SYS_ID_LEN + 2];
 #ifdef HAVE_IPV6
@@ -759,22 +850,22 @@ add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
   if (vertex->type > VTYPE_ES)
     {
       if (listcount (vertex->Adj_N) > 0) {
-	isis_route_create ((struct prefix *) &vertex->N.prefix, vertex->d_N,
+	isis_route_create ((struct isis_prefix *) &vertex->N.prefix, vertex->d_N,
 			   vertex->depth, vertex->Adj_N, area, level);
 
 	if (config.debug) {
 	  u_char prefix[BUFSIZ];
 
-	  prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: route installed: %s\n", prefix);
+	  isis_prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): route installed: %s\n", area->area_tag, area->is_type, prefix);
 	}
       }
       else {
 	if (config.debug) {
 	  u_char prefix[BUFSIZ];
 
-	  prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: no adjacencies do not install route: %s\n", prefix);
+	  isis_prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
+	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): no adjacencies do not install route: %s\n", area->area_tag, area->is_type, prefix);
 	}
       }
     }
@@ -854,13 +945,18 @@ isis_run_spf (struct isis_area *area, int level, int family)
     {
       node = listhead (spftree->tents);
       vertex = listgetdata (node);
+
       /* Remove from tent list */
       list_delete_node (spftree->tents, node);
+
       if (isis_find_vertex (spftree->paths, vertex->N.id, vertex->type))
 	continue;
+
       add_to_paths (spftree, vertex, area, level);
       if (vertex->type == VTYPE_PSEUDO_IS ||
-	  vertex->type == VTYPE_NONPSEUDO_IS)
+	  vertex->type == VTYPE_NONPSEUDO_IS ||
+	  vertex->type == VTYPE_PSEUDO_TE_IS ||
+	  vertex->type == VTYPE_NONPSEUDO_TE_IS)
 	{
 	  memcpy (lsp_id, vertex->N.id, ISIS_SYS_ID_LEN + 1);
 	  LSP_FRAGMENT (lsp_id) = 0;
@@ -892,7 +988,7 @@ out:
   spftree->lastrun = time (NULL);
   spftree->pending = 0;
 
-  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s): SPF algorithm run\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): SPF algorithm run\n", area->area_tag, area->is_type);
 
   return retval;
 }

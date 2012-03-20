@@ -667,7 +667,7 @@ stream_put_in_addr (struct stream *s, struct in_addr *addr)
 
 /* Put prefix by nlri type format. */
 int
-stream_put_prefix (struct stream *s, struct prefix *p)
+stream_put_prefix (struct stream *s, struct isis_prefix *p)
 {
   size_t psize;
   

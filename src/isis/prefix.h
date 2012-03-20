@@ -35,8 +35,7 @@
  */
 
 /* IPv4 and IPv6 unified prefix structure. */
-/*
-struct prefix
+struct isis_prefix
 {
   u_char family;
   u_char prefixlen;
@@ -47,15 +46,10 @@ struct prefix
 #ifdef HAVE_IPV6
     struct in6_addr prefix6;
 #endif
-    struct 
-    {
-      struct in_addr id;
-      struct in_addr adv_router;
-    } lp;
     u_char val[8];
   } u __attribute__ ((aligned (8)));
+  struct in_addr adv_router;
 };
-*/
 
 /* IPv4 prefix structure. */
 /*
@@ -165,41 +159,35 @@ prefix6_bit (const struct in6_addr *prefix, const u_char prefixlen)
 #else
 #define EXT
 #endif
-EXT struct prefix *prefix_new (void);
-EXT void prefix_free (struct prefix *);
-EXT const char *prefix_family_str (const struct prefix *);
-EXT int prefix_blen (const struct prefix *);
-EXT int str2prefix (const char *, struct prefix *);
-EXT int prefix2str (const struct prefix *, char *, int);
-EXT int prefix_match (const struct prefix *, const struct prefix *);
-EXT int prefix_same (const struct prefix *, const struct prefix *);
-EXT int prefix_cmp (const struct prefix *, const struct prefix *);
-EXT void prefix_copy (struct prefix *, const struct prefix *);
-EXT void apply_mask (struct prefix *);
-EXT struct prefix *sockunion2prefix (const union sockunion *, const union sockunion *);
-EXT struct prefix *sockunion2hostprefix (const union sockunion *);
-EXT struct prefix_ipv4 *prefix_ipv4_new (void);
-EXT void prefix_ipv4_free (struct prefix_ipv4 *);
-EXT int str2prefix_ipv4 (const char *, struct prefix_ipv4 *);
-EXT void apply_mask_ipv4 (struct prefix_ipv4 *);
-EXT int prefix_ipv4_any (const struct prefix_ipv4 *);
-EXT void apply_classful_mask_ipv4 (struct prefix_ipv4 *);
-EXT u_char ip_masklen (struct in_addr);
-EXT void masklen2ip (int, struct in_addr *);
-EXT in_addr_t ipv4_network_addr (in_addr_t, int);
-EXT in_addr_t ipv4_broadcast_addr (in_addr_t, int);
-EXT int netmask_str2prefix_str (const char *, const char *, char *);
+EXT struct isis_prefix *isis_prefix_new (void);
+EXT void isis_prefix_free (struct isis_prefix *);
+EXT const char *isis_prefix_family_str (const struct isis_prefix *);
+EXT int isis_prefix_blen (const struct isis_prefix *);
+EXT int isis_str2prefix (const char *, struct isis_prefix *);
+EXT int isis_prefix2str (const struct isis_prefix *, char *, int);
+EXT int isis_prefix_match (const struct isis_prefix *, const struct isis_prefix *);
+EXT int isis_prefix_same (const struct isis_prefix *, const struct isis_prefix *);
+EXT int isis_prefix_cmp (const struct isis_prefix *, const struct isis_prefix *);
+EXT void isis_prefix_copy (struct isis_prefix *, const struct isis_prefix *);
+EXT void isis_apply_mask (struct isis_prefix *);
+EXT struct isis_prefix *sockunion2prefix (const union sockunion *, const union sockunion *);
+EXT struct isis_prefix *sockunion2hostprefix (const union sockunion *);
+EXT struct prefix_ipv4 *isis_prefix_ipv4_new (void);
+EXT int isis_str2prefix_ipv4 (const char *, struct prefix_ipv4 *);
+EXT void isis_apply_mask_ipv4 (struct prefix_ipv4 *);
+EXT u_char isis_ip_masklen (struct in_addr);
+EXT void isis_masklen2ip (int, struct in_addr *);
+EXT int netmask_isis_str2prefix_str (const char *, const char *, char *);
 #ifdef HAVE_IPV6
 EXT struct prefix_ipv6 *prefix_ipv6_new (void);
 EXT void prefix_ipv6_free (struct prefix_ipv6 *);
-EXT int str2prefix_ipv6 (const char *, struct prefix_ipv6 *);
-EXT void apply_mask_ipv6 (struct prefix_ipv6 *);
+EXT int isis_str2prefix_ipv6 (const char *, struct prefix_ipv6 *);
+EXT void isis_apply_mask_ipv6 (struct prefix_ipv6 *);
 EXT int ip6_masklen (struct in6_addr);
-EXT void masklen2ip6 (int, struct in6_addr *);
+EXT void isis_masklen2ip6 (int, struct in6_addr *);
 EXT void str2in6_addr (const char *, struct in6_addr *);
 EXT const char *inet6_ntoa (struct in6_addr);
 #endif /* HAVE_IPV6 */
-EXT int all_digit (const char *);
 #undef EXT
 
 #endif /* _PREFIX_H_ */

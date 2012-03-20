@@ -33,7 +33,7 @@ struct route_table
 struct route_node
 {
   /* Actual prefix of this radix. */
-  struct prefix p;
+  struct isis_prefix p;
 
   /* Tree link. */
   struct route_table *table;
@@ -65,10 +65,10 @@ EXT void route_node_delete (struct route_node *);
 EXT struct route_node *route_top (struct route_table *);
 EXT struct route_node *route_next (struct route_node *);
 EXT struct route_node *route_next_until (struct route_node *, struct route_node *);
-EXT struct route_node *route_node_get (struct route_table *, struct prefix *);
-EXT struct route_node *route_node_lookup (struct route_table *, struct prefix *);
+EXT struct route_node *route_node_get (struct route_table *, struct isis_prefix *);
+EXT struct route_node *route_node_lookup (struct route_table *, struct isis_prefix *);
 EXT struct route_node *route_lock_node (struct route_node *);
-EXT struct route_node *route_node_match (const struct route_table *, const struct prefix *);
+EXT struct route_node *route_node_match (const struct route_table *, const struct isis_prefix *);
 EXT struct route_node *route_node_match_ipv4 (const struct route_table *, const struct in_addr *);
 #ifdef HAVE_IPV6
 EXT struct route_node *route_node_match_ipv6 (const struct route_table *, const struct in6_addr *);

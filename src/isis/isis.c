@@ -35,6 +35,7 @@
 #include "dict.h"
 #include "thread.h"
 #include "iso.h"
+#include "table.h"
 #include "isis_constants.h"
 #include "isis_common.h"
 #include "isis_adjacency.h"
@@ -51,6 +52,7 @@
 #include "isis_csm.h"
 #include "isis_events.h"
 #include "isis_spf.h"
+#include "isis_route.h"
 
 /* variables to be exported away */
 thread_pool_t *isis_pool;
@@ -123,6 +125,7 @@ void skinny_isis_daemon()
 
   area = isis_area_create();
   area->area_tag = area_tag;
+  area->is_type = IS_LEVEL_2;
   area->newmetric = TRUE;
   listnode_add(isis->area_list, area);
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
@@ -153,7 +156,7 @@ void skinny_isis_daemon()
   }
 
   circuit->ip_router = addr.address.ipv4.s_addr;
-  ipv4 = prefix_ipv4_new();
+  ipv4 = isis_prefix_ipv4_new();
   ipv4->prefixlen = 32;
   ipv4->prefix.s_addr = addr.address.ipv4.s_addr;
   circuit->ip_addrs = list_new();
@@ -230,14 +233,22 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
   /* check if it's time to run SPF */
   if (timeval_cmp(&isis_now, &isis_spf_deadline) >= 0) {
     if (circuit->area->is_type & IS_LEVEL_1) {
-      if (circuit->area->ip_circuits) ret = isis_run_spf(circuit->area, 1, AF_INET);
+      if (circuit->area->ip_circuits) {
+	ret = isis_run_spf(circuit->area, 1, AF_INET);
+	isis_route_validate_table (circuit->area, circuit->area->route_table[0]);
+      }
       /* XXX: IPv6 handled here */
     }
 
     if (circuit->area->is_type & IS_LEVEL_2) {
-      if (circuit->area->ip_circuits) ret = isis_run_spf(circuit->area, 2, AF_INET);
+      if (circuit->area->ip_circuits) {
+	ret = isis_run_spf(circuit->area, 2, AF_INET);
+	isis_route_validate_table (circuit->area, circuit->area->route_table[1]);
+      }
       /* XXX: IPv6 handled here */
     }
+
+    isis_route_validate_merge (circuit->area, AF_INET);
 
     dyn_cache_cleanup();
 
@@ -286,4 +297,68 @@ void isis_sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *
 
 int iso_handler(register struct packet_ptrs *pptrs)
 {
+}
+
+void isis_srcdst_lookup(struct packet_ptrs *pptrs)
+{
+  struct route_node *result;
+  struct isis_area *area;
+  char area_tag[] = "default";
+  int level;
+  struct in_addr pref4;
+#if defined ENABLE_IPV6
+  struct in6_addr pref6;
+#endif
+
+  pptrs->igp_src = NULL;
+  pptrs->igp_dst = NULL;
+  pptrs->igp_src_info = NULL;
+  pptrs->igp_dst_info = NULL;
+
+  area = isis_area_lookup(area_tag);
+
+  if (area) {
+    level = MAX(area->is_type, 2);
+
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      if (!pptrs->igp_src) {
+	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+	result = route_node_match_ipv4(area->route_table[level-1], &pref4);
+
+	if (result) {
+	  pptrs->igp_src = (char *) &result->p;
+	  pptrs->igp_src_info = (char *) result->info;
+	}
+      }
+
+      if (!pptrs->igp_dst) {
+	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+	result = route_node_match_ipv4(area->route_table[level-1], &pref4);
+
+	if (result) {
+          pptrs->igp_dst = (char *) &result->p;
+          pptrs->igp_dst_info = (char *) result->info;
+	}
+      }
+    }
+#if defined ENABLE_IPV6
+    else if (area && pptrs->l3_proto == ETHERTYPE_IPV6) {
+      if (!pptrs->igp_src) {
+        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+        result = route_node_match_ipv6(area->route_table6[level-1], &pref6);
+
+        pptrs->igp_src = (char *) &result->p;
+        pptrs->igp_src_info = (char *) result->info;
+      }
+
+      if (!pptrs->igp_dst) {
+        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+        result = route_node_match_ipv6(area->route_table6[level-1], &pref6);
+
+        pptrs->igp_dst = (char *) &result->p;
+        pptrs->igp_dst_info = (char *) result->info;
+      }
+    }
+#endif
+  }
 }

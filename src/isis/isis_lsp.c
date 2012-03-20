@@ -873,7 +873,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		{
 		  ipreach = calloc(1, sizeof (struct ipv4_reachability));
 		  ipreach->metrics = circuit->metrics[level - 1];
-		  masklen2ip (ipv4->prefixlen, &ipreach->mask);
+		  isis_masklen2ip (ipv4->prefixlen, &ipreach->mask);
 		  ipreach->prefix.s_addr = ((ipreach->mask.s_addr) &
 					    (ipv4->prefix.s_addr));
 		  listnode_add (tlv_data.ipv4_int_reachs, ipreach);

@@ -59,8 +59,9 @@ struct isis_route_info
 #else
 #define EXT
 #endif
-EXT struct isis_route_info *isis_route_create (struct prefix *, u_int32_t, u_int32_t, struct list *, struct isis_area *, int);
-EXT int isis_route_validate (struct thread *);
+EXT struct isis_route_info *isis_route_create (struct isis_prefix *, u_int32_t, u_int32_t, struct list *, struct isis_area *, int);
+EXT void isis_route_validate_table (struct isis_area *, struct route_table *);
+EXT void isis_route_validate_merge (struct isis_area *, int);
 #undef EXT
 
 #endif /* _ISIS_ROUTE_H_ */
