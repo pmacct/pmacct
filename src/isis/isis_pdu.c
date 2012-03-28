@@ -1291,7 +1291,6 @@ int isis_handle_pdu (struct isis_circuit *circuit, u_char * ssnpa)
 	  /* FIXME */
 	  break;
 	case ISH_PDU:
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): AN ISH PDU!!\n");
 	  retval = process_is_hello (circuit);
 	  break;
 	default:
@@ -1639,7 +1638,6 @@ int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
   return ISIS_OK;
 }
 
-/* XXX: debugs in this function should be a-la bgp_daemon_msglog */
 int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
 {
   struct isis_fixed_hdr fixed_hdr;
@@ -1684,11 +1682,12 @@ int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
       retval = tlv_add_lsp_entries (lsps, circuit->snd_stream);
     }
 
-  if (config.debug)
+  if (config.nfacctd_isis_msglog)
     {
       for (ALL_LIST_ELEMENTS_RO (lsps, node, lsp))
       {
-        Log(LOG_DEBUG, "ISIS-Snp (%s):         PSNP entry %s, seq 0x%08x,"
+	if (config.nfacctd_isis_msglog) 
+          Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): PSNP entry %s, seq 0x%08x,"
                     " cksum 0x%04x, lifetime %us\n",
                     circuit->area->area_tag,
                     rawlspid_print (lsp->lsp_header->lsp_id),
@@ -1737,7 +1736,8 @@ int send_psnp (int level, struct isis_circuit *circuit)
                 stream_reset (circuit->snd_stream);
 
 
-              Log(LOG_DEBUG, "ISIS-Snp (%s): Sent L%d PSNP on %s, length %ld\n",
+	      if (config.nfacctd_isis_msglog)
+                Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): Sent L%d PSNP on %s, length %ld\n",
                             circuit->area->area_tag, level,
                             circuit->interface->name,
                             /* FIXME: use %z when we stop supporting old
@@ -1851,13 +1851,13 @@ send_csnp (struct isis_circuit *circuit, int level)
 
       retval = build_csnp (level, start, stop, list, circuit);
 
-      Log(LOG_DEBUG, "ISIS-Snp (%s): Sent L%d CSNP on %s, length %ld\n",
+      if (config.nfacctd_isis_msglog) {
+        Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): Sent L%d CSNP on %s, length %ld\n",
                      circuit->area->area_tag, level, circuit->interface->name,
                      /* FIXME: use %z when we stop supporting old compilers. */
                      (unsigned long) STREAM_SIZE (circuit->snd_stream));
-      if (config.debug) {
 	for (ALL_LIST_ELEMENTS_RO (list, node, lsp)) {
-          Log(LOG_DEBUG, "ISIS-Snp (%s):         CSNP entry %s, seq 0x%08x,"
+          Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): CSNP entry %s, seq 0x%08x,"
                         " cksum 0x%04x, lifetime %us\n",
                         circuit->area->area_tag,
                         rawlspid_print (lsp->lsp_header->lsp_id),

@@ -63,8 +63,7 @@ isis_event_circuit_state_change (struct isis_circuit *circuit, int up)
   assert (area);
   area->circuit_state_changes++;
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) circuit %s\n", circuit->area->area_tag, up ? "up" : "down");
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) circuit %s\n", circuit->area->area_tag, up ? "up" : "down");
 
   /*
    * Regenerate LSPs this affects
@@ -80,8 +79,7 @@ isis_event_system_type_change (struct isis_area *area, int newtype)
   struct listnode *node;
   struct isis_circuit *circuit;
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) system type change %s -> %s\n", area->area_tag,
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) system type change %s -> %s\n", area->area_tag,
 	       circuit_t2string (area->is_type), circuit_t2string (newtype));
 
   if (area->is_type == newtype)
@@ -160,8 +158,7 @@ void
 isis_event_circuit_type_change (struct isis_circuit *circuit, int newtype)
 {
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) circuit type change %s -> %s\n",
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) circuit type change %s -> %s\n",
 	       circuit->area->area_tag,
 	       circuit_t2string (circuit->circuit_is_type),
 	       circuit_t2string (newtype));
@@ -238,8 +235,7 @@ isis_event_adjacency_state_change (struct isis_adjacency *adj, int newstate)
   if (!adj || !adj->circuit || !adj->circuit->area)
     return;
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) Adjacency State change\n",
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) Adjacency State change\n",
 		adj->circuit->area->area_tag);
 
   /* LSP generation again */
@@ -253,8 +249,7 @@ isis_event_adjacency_state_change (struct isis_adjacency *adj, int newstate)
 void
 isis_event_auth_failure (char *area_tag, const char *error_string, u_char *sysid)
 {
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) Authentication failure %s from %s\n",
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) Authentication failure %s from %s\n",
 		area_tag, error_string, sysid_print (sysid));
 
   return;

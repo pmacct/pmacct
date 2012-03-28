@@ -444,7 +444,8 @@ int main(int argc,char **argv, char **envp)
           list->cfg.what_to_count |= COUNT_DST_AS;
           list->cfg.what_to_count |= COUNT_PEER_DST_IP;
         }
-        if (list->cfg.nfacctd_bgp && list->cfg.nfacctd_net == NF_NET_BGP) {
+        if ((list->cfg.nfacctd_bgp && list->cfg.nfacctd_net == NF_NET_BGP) ||
+	    (list->cfg.nfacctd_isis && list->cfg.nfacctd_net == NF_NET_IGP)) {
           list->cfg.what_to_count |= COUNT_SRC_NMASK;
           list->cfg.what_to_count |= COUNT_DST_NMASK;
         }
@@ -500,8 +501,9 @@ int main(int argc,char **argv, char **envp)
             if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) ||
                 (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) ||
                 (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp) ||
+                (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
+              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
               exit(1);
             }
           }
@@ -642,6 +644,16 @@ int main(int argc,char **argv, char **envp)
   }
 
 #if defined ENABLE_THREADS
+  /* starting the ISIS threa */
+  if (config.nfacctd_isis) {
+    req.bpf_filter = TRUE;
+
+    nfacctd_isis_wrapper();
+
+    /* Let's give the ISIS thread some advantage to create its structures */
+    sleep(5);
+  }
+
   /* starting the BGP thread */
   if (config.nfacctd_bgp) {
     req.bpf_filter = TRUE;
@@ -709,6 +721,11 @@ int main(int argc,char **argv, char **envp)
     sleep(5);
   }
 #else
+  if (config.nfacctd_isis) {
+    Log(LOG_ERR, "ERROR ( default/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    exit(1);
+  }
+
   if (config.nfacctd_bgp) {
     Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
     exit(1);

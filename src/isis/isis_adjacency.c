@@ -143,11 +143,8 @@ isis_adj_state_change (struct isis_adjacency *adj, enum isis_adj_state state,
 
   circuit = adj->circuit;
 
-  if (config.debug)
-    {
-      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Adj (%s): Adjacency state change %d->%d: %s\n",
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Adj (%s): Adjacency state change %d->%d: %s\n",
 		 circuit->area->area_tag, old_state, state, reason ? reason : "unspecified"); 
-    }
 
   if (state == ISIS_ADJ_UP)
     {
@@ -156,9 +153,8 @@ isis_adj_state_change (struct isis_adjacency *adj, enum isis_adj_state state,
       adj->flaps++;
 
       /* 7.3.17 - going up on P2P -> send CSNP */
-      /* XXX: in our implementation we don't send a thing! */
-      // send_csnp (circuit, 1);
-      // send_csnp (circuit, 2);
+      send_csnp (circuit, 1);
+      send_csnp (circuit, 2);
     }
   else if (state == ISIS_ADJ_DOWN)
     {				/* p2p interface */

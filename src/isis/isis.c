@@ -127,7 +127,7 @@ void skinny_isis_daemon()
   area->is_type = IS_LEVEL_2;
   area->newmetric = TRUE;
   listnode_add(isis->area_list, area);
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
   if (config.nfacctd_isis_net) area_net_title(area, config.nfacctd_isis_net);
   else {
     Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_net' value is not specified. Terminating thread.\n");
@@ -333,8 +333,8 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
 	result = route_node_match_ipv4(area->route_table[level-1], &pref4);
 
 	if (result) {
-          pptrs->igp_dst = (char *) &result->p;
-          pptrs->igp_dst_info = (char *) result->info;
+	  pptrs->igp_dst = (char *) &result->p;
+	  pptrs->igp_dst_info = (char *) result->info;
 	}
       }
     }
@@ -344,16 +344,20 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
         result = route_node_match_ipv6(area->route_table6[level-1], &pref6);
 
-        pptrs->igp_src = (char *) &result->p;
-        pptrs->igp_src_info = (char *) result->info;
+        if (result) {
+          pptrs->igp_src = (char *) &result->p;
+          pptrs->igp_src_info = (char *) result->info;
+        }
       }
 
       if (!pptrs->igp_dst) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
         result = route_node_match_ipv6(area->route_table6[level-1], &pref6);
 
-        pptrs->igp_dst = (char *) &result->p;
-        pptrs->igp_dst_info = (char *) result->info;
+	if (result) {
+	  pptrs->igp_dst = (char *) &result->p;
+	  pptrs->igp_dst_info = (char *) result->info;
+	}
       }
     }
 #endif

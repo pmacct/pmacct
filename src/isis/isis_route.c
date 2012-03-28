@@ -433,25 +433,29 @@ isis_route_create (struct isis_prefix *prefix, u_int32_t cost, u_int32_t depth,
   rinfo_old = route_node->info;
   if (!rinfo_old)
     {
-      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route created: %s\n", area->area_tag, area->is_type, buff);
+      if (config.nfacctd_isis_msglog)
+        Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route created: %s\n", area->area_tag, area->is_type, buff);
       SET_FLAG (rinfo_new->flag, ISIS_ROUTE_FLAG_ACTIVE);
       route_node->info = rinfo_new;
       return rinfo_new;
     }
 
-  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route already exists: %s\n",
+  if (config.nfacctd_isis_msglog)
+    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route already exists: %s\n",
 	area->area_tag, area->is_type, buff);
 
   if (isis_route_info_same (rinfo_new, rinfo_old, family))
     {
-      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route unchanged: %s\n", area->area_tag, area->is_type, buff);
+      if (config.nfacctd_isis_msglog)
+        Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route unchanged: %s\n", area->area_tag, area->is_type, buff);
       isis_route_info_delete (rinfo_new);
       route_info = rinfo_old;
     }
   else if (isis_route_info_same_attrib (rinfo_new, rinfo_old))
     {
       /* merge the nexthop lists */
-      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route changed (same attribs): %s\n",
+      if (config.nfacctd_isis_msglog)
+        Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route changed (same attribs): %s\n",
 		   area->area_tag, area->is_type, buff);
       isis_route_info_merge (rinfo_new, rinfo_old, family);
       isis_route_info_delete (rinfo_new);
@@ -462,14 +466,16 @@ isis_route_create (struct isis_prefix *prefix, u_int32_t cost, u_int32_t depth,
     {
       if (isis_route_info_prefer_new (rinfo_new, rinfo_old))
 	{
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route changed: %s\n",
+	  if (config.nfacctd_isis_msglog)
+	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route changed: %s\n",
 		area->area_tag, area->is_type, buff);
 	  isis_route_info_delete (rinfo_old);
 	  route_info = rinfo_new;
 	}
       else
 	{
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route rejected: %s\n",
+	  if (config.nfacctd_isis_msglog)
+	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u) route rejected: %s\n",
 		area->area_tag, area->is_type, buff);
 	  isis_route_info_delete (rinfo_new);
 	  route_info = rinfo_old;
@@ -525,7 +531,8 @@ void isis_route_validate_table (struct isis_area *area, struct route_table *tabl
       if (config.debug)
 	{
 	  isis_prefix2str (&rnode->p, (char *) buff, BUFSIZ);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u): route validate: %s %s\n",
+	  if (config.nfacctd_isis_msglog)
+	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Rte (tag: %s, level: %u): route validate: %s %s\n",
 		      area->area_tag, area->is_type,
 		      (CHECK_FLAG (rinfo->flag, ISIS_ROUTE_FLAG_ACTIVE) ?
 		      "active" : "inactive"), buff);

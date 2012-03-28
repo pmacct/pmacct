@@ -2273,6 +2273,20 @@ int cfg_key_nfacctd_isis_mtu(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_isis_msglog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_isis_msglog = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'isis_daemon_msglog'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pmacctd_force_frag_handling(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2456,10 +2470,13 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     value = NF_NET_STATIC;
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_NET_BGP;
+  else if (!strcmp(value_ptr, "igp"))
+    value = NF_NET_IGP;
   else if (!strcmp(value_ptr, "fallback")) {
     if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
       value = NF_NET_KEEP;
       value |= NF_NET_BGP;
+      value |= NF_NET_IGP;
     }
     else value = NF_NET_BGP;
   }

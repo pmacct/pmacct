@@ -232,7 +232,7 @@ lsp_compare (char *areatag, struct isis_lsp *lsp, u_int32_t seq_num,
       ((lsp->lsp_header->rem_lifetime == 0 && rem_lifetime == 0) ||
        (lsp->lsp_header->rem_lifetime != 0 && rem_lifetime != 0)))
     {
-      if (config.debug)
+      if (config.nfacctd_isis_msglog)
 	{
 	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): LSP %s seq 0x%08x, cksum 0x%04x, lifetime %us\n",
 		      areatag,
@@ -249,7 +249,7 @@ lsp_compare (char *areatag, struct isis_lsp *lsp, u_int32_t seq_num,
 
   if (ntohl (seq_num) >= ntohl (lsp->lsp_header->seq_num))
     {
-      if (config.debug)
+      if (config.nfacctd_isis_msglog)
 	{
 	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): LSP %s seq 0x%08x, cksum 0x%04x, lifetime %us\n",
 		      areatag,
@@ -263,7 +263,7 @@ lsp_compare (char *areatag, struct isis_lsp *lsp, u_int32_t seq_num,
 	}
       return LSP_NEWER;
     }
-  if (config.debug)
+  if (config.nfacctd_isis_msglog)
     {
       Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): LSP %s seq 0x%08x, cksum 0x%04x, lifetime %us\n",
 	 areatag, rawlspid_print (lsp->lsp_header->lsp_id), ntohl (seq_num),
@@ -487,7 +487,7 @@ lsp_new (u_char * lsp_id, u_int16_t rem_lifetime, u_int32_t seq_num,
 
   stream_forward_endp (lsp->pdu, ISIS_FIXED_HDR_LEN + ISIS_LSP_HDR_LEN);
 
-  if (config.debug)
+  if (config.nfacctd_isis_msglog)
     Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New LSP with ID %s-%02x-%02x seqnum %08x\n",
 		sysid_print (lsp_id), LSP_PSEUDO_ID (lsp->lsp_header->lsp_id),
 		LSP_FRAGMENT (lsp->lsp_header->lsp_id),
@@ -1144,7 +1144,7 @@ lsp_generate_non_pseudo (struct isis_area *area, int level)
     }
 
   /* DEBUG_ADJ_PACKETS */
-  if (config.debug)
+  if (config.nfacctd_isis_msglog)
     {
       /* FIXME: is this place right? fix missing info */
       Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): Building L%d LSP\n", area->area_tag, level);
@@ -1205,7 +1205,7 @@ lsp_non_pseudo_regenerate (struct isis_area *area, int level)
 					  MAX_AGE_JITTER));
   lsp_seqnum_update (lsp);
 
-  if (config.debug)
+  if (config.nfacctd_isis_msglog)
     {
       Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): refreshing our L%d LSP %s, seq 0x%08x, cksum 0x%04x lifetime %us\n",
 		  area->area_tag,
@@ -1534,7 +1534,7 @@ lsp_pseudo_regenerate (struct isis_circuit *circuit, int level)
 
   lsp_inc_seqnum (lsp, 0);
 
-  if (config.debug)
+  if (config.nfacctd_isis_msglog)
     {
       Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): refreshing pseudo LSP L%d %s\n",
 		  circuit->area->area_tag, level,

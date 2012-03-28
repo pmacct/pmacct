@@ -173,8 +173,7 @@ isis_area_get (const char *area_tag)
   area->area_tag = strdup (area_tag);
   listnode_add (isis->area_list, area);
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
 
   return FALSE;
 }
@@ -262,8 +261,7 @@ area_net_title (struct isis_area *area, const u_char *net_title)
        */
       memcpy (isis->sysid, GETSYSID (addr, ISIS_SYS_ID_LEN), ISIS_SYS_ID_LEN);
       isis->sysid_set = 1;
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): Router has SystemID %s\n", sysid_print (isis->sysid));
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): Router has SystemID %s\n", sysid_print (isis->sysid));
     }
   else
     {

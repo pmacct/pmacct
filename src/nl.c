@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -64,6 +64,9 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
+        if (config.nfacctd_isis) {
+          isis_srcdst_lookup(&pptrs);
+        }
         if (config.nfacctd_bgp) {
           PM_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, NULL);
           bgp_srcdst_lookup(&pptrs);

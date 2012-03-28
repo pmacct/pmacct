@@ -396,8 +396,9 @@ int main(int argc,char **argv, char **envp)
 	  else {
 	    if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) || 
 	        (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) || 
-	        (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp)) {
-	      Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
+	        (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp) ||
+	        (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis)) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
 	      exit(1);
 	    }
 	  }

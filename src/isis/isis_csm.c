@@ -73,8 +73,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
   int old_state;
 
   old_state = circuit ? circuit->state : C_STATE_NA;
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): CSM_EVENT: %s\n", EVENT2STR (event));
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): CSM_EVENT: %s\n", EVENT2STR (event));
 
   switch (old_state)
     {
@@ -174,8 +173,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
       Log(LOG_WARNING, "WARN (default/core/ISIS ): Invalid circuit state %d\n", old_state);
     }
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): CSM_STATE_CHANGE: %s -> %s \n", STATE2STR (old_state),
+  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): CSM_STATE_CHANGE: %s -> %s \n", STATE2STR (old_state),
 		circuit ? STATE2STR (circuit->state) : STATE2STR (C_STATE_NA));
 
   return circuit;

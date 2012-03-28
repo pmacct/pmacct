@@ -392,8 +392,8 @@ isis_spf_add2tent (struct isis_spftree *spftree, enum vertextype vtype,
   if (adj)
     listnode_add (vertex->Adj_N, adj);
 
-  /* XXX: separate from plain debug */
-  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: add to TENT  %s %s depth %d dist %d\n",
+  if (config.nfacctd_isis_msglog) 
+    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf: add to TENT  %s %s depth %d dist %d\n",
               vtype2string (vertex->type), vid2string (vertex, buff),
               vertex->depth, vertex->d_N);
 
@@ -840,7 +840,6 @@ isis_spf_preload_tent (struct isis_spftree *spftree,
  * The parent(s) for vertex is set when added to TENT list
  * now we just put the child pointer(s) in place
  */
-/* XXX: debugs in this function should be a-la bgp_daemon_msglog */ 
 static void
 add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
 	      struct isis_area *area, int level)
@@ -853,19 +852,21 @@ add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
 	isis_route_create ((struct isis_prefix *) &vertex->N.prefix, vertex->d_N,
 			   vertex->depth, vertex->Adj_N, area, level);
 
-	if (config.debug) {
+	if (config.nfacctd_isis_msglog) {
 	  u_char prefix[BUFSIZ];
 
 	  isis_prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): route installed: %s\n", area->area_tag, area->is_type, prefix);
+	  if (config.nfacctd_isis_msglog)
+	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): route installed: %s\n", area->area_tag, area->is_type, prefix);
 	}
       }
       else {
-	if (config.debug) {
+	if (config.nfacctd_isis_msglog) {
 	  u_char prefix[BUFSIZ];
 
 	  isis_prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): no adjacencies do not install route: %s\n", area->area_tag, area->is_type, prefix);
+	  if (config.nfacctd_isis_msglog)
+	    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (tag: %s, level: %u): no adjacencies do not install route: %s\n", area->area_tag, area->is_type, prefix);
 	}
       }
     }
@@ -1006,14 +1007,12 @@ isis_run_spf_l1 (struct thread *thread)
 
   if (!(area->is_type & IS_LEVEL_1))
     {
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n",
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n",
 		   area->area_tag);
       return ISIS_WARNING;
     }
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L1 SPF needed, periodic SPF\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L1 SPF needed, periodic SPF\n", area->area_tag);
 
   if (area->ip_circuits)
     retval = isis_run_spf (area, 1, AF_INET);
@@ -1037,13 +1036,11 @@ isis_run_spf_l2 (struct thread *thread)
 
   if (!(area->is_type & IS_LEVEL_2))
     {
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n", area->area_tag);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n", area->area_tag);
       return ISIS_WARNING;
     }
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L2 SPF needed, periodic SPF\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L2 SPF needed, periodic SPF\n", area->area_tag);
 
   if (area->ip_circuits)
     retval = isis_run_spf (area, 2, AF_INET);
@@ -1120,13 +1117,11 @@ isis_run_spf6_l1 (struct thread *thread)
 
   if (!(area->is_type & IS_LEVEL_1))
     {
-      if (config.debug)
-	Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n", area->area_tag);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n", area->area_tag);
       return ISIS_WARNING;
     }
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L1 SPF needed, periodic SPF\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L1 SPF needed, periodic SPF\n", area->area_tag);
 
   if (area->ipv6_circuits)
     retval = isis_run_spf (area, 1, AF_INET6);
@@ -1150,13 +1145,11 @@ isis_run_spf6_l2 (struct thread *thread)
 
   if (!(area->is_type & IS_LEVEL_2))
     {
-      if (config.debug)
-        Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n", area->area_tag);
+      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-SPF (%s) area does not share level\n", area->area_tag);
       return ISIS_WARNING;
     }
 
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L2 SPF needed, periodic SPF\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Spf (%s) L2 SPF needed, periodic SPF\n", area->area_tag);
 
   if (area->ipv6_circuits)
     retval = isis_run_spf (area, 2, AF_INET6);
