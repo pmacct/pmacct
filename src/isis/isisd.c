@@ -75,9 +75,9 @@ isis_new (unsigned long process_id)
   isis->init_circ_list = list_new ();
   isis->uptime = time (NULL);
   isis->nexthops = list_new ();
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   isis->nexthops6 = list_new ();
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
   /*
    * uncomment the next line for full debugs
    */
@@ -114,10 +114,10 @@ isis_area_create ()
   spftree_area_init (area);
   area->route_table[0] = route_table_init ();
   area->route_table[1] = route_table_init ();
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   area->route_table6[0] = route_table_init ();
   area->route_table6[1] = route_table_init ();
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
   area->circuit_list = list_new ();
   area->area_addrs = list_new ();
   flags_initialize (&area->flags);

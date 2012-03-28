@@ -246,7 +246,7 @@ tlvs_to_adj_ipv4_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
     }
 }
 
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
 static void
 tlvs_to_adj_ipv6_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
 {
@@ -270,7 +270,7 @@ tlvs_to_adj_ipv6_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
     }
 
 }
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
 
 /*
  *  RECEIVE SIDE                           
@@ -386,10 +386,10 @@ process_p2p_hello (struct isis_circuit *circuit)
   if (found & TLVFLAG_IPV4_ADDR)
     tlvs_to_adj_ipv4_addrs (&tlvs, adj);
 
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   if (found & TLVFLAG_IPV6_ADDR)
     tlvs_to_adj_ipv6_addrs (&tlvs, adj);
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
 
   /* lets take care of the expiry */
   adj->expire.tv_sec = isis_now.tv_sec + adj->hold_time; 
@@ -1526,13 +1526,13 @@ send_hello (struct isis_circuit *circuit, int level)
     if (tlv_add_ip_addrs (circuit->ip_addrs, circuit->snd_stream))
       return ISIS_WARNING;
 
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   /* IPv6 Interface Address TLV */
   if (circuit->ipv6_router && circuit->ipv6_link &&
       circuit->ipv6_link->count > 0)
     if (tlv_add_ipv6_addrs (circuit->ipv6_link, circuit->snd_stream))
       return ISIS_WARNING;
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
 
   /* We should always pad hellos, even on p2p links */
   /* if (circuit->u.bc.pad_hellos) */

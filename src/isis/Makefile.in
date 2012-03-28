@@ -28,8 +28,8 @@ COMMON=
 
 all: $(TARGETS)
 
-libisis.a: isis.o checksum.o dict.o table.o prefix.o sockunion.o hash.o stream.o thread.o linklist.o sigevent.o isis_circuit.o isis_events.o isis_route.o isis_tlv.o isis_csm.o isis_flags.o isis_misc.o isisd.o isis_adjacency.o isis_dynhn.o isis_spf.o iso_checksum.o isis_lsp.o isis_pdu.o $(COMMON)
-	ar rc $@ isis.o checksum.o dict.o table.o prefix.o sockunion.o hash.o stream.o thread.o linklist.o sigevent.o isis_circuit.o isis_events.o isis_route.o isis_tlv.o isis_csm.o isis_flags.o isis_misc.o isisd.o isis_adjacency.o isis_dynhn.o isis_spf.o iso_checksum.o isis_lsp.o isis_pdu.o $(COMMON)
+libisis.a: isis.o checksum.o dict.o table.o prefix.o sockunion.o hash.o stream.o thread.o linklist.o isis_circuit.o isis_events.o isis_route.o isis_tlv.o isis_csm.o isis_flags.o isis_misc.o isisd.o isis_adjacency.o isis_dynhn.o isis_spf.o iso_checksum.o isis_lsp.o isis_pdu.o $(COMMON)
+	ar rc $@ isis.o checksum.o dict.o table.o prefix.o sockunion.o hash.o stream.o thread.o linklist.o isis_circuit.o isis_events.o isis_route.o isis_tlv.o isis_csm.o isis_flags.o isis_misc.o isisd.o isis_adjacency.o isis_dynhn.o isis_spf.o iso_checksum.o isis_lsp.o isis_pdu.o $(COMMON)
 	$(RANLIB) $@
 
 clean:

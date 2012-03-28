@@ -121,11 +121,11 @@ struct isis_circuit
   struct password *c_tc_passwd;	/* circuitTransmitPassword */
   int ip_router;		/* Route IP ? */
   struct list *ip_addrs;	/* our IP addresses */
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   int ipv6_router;		/* Route IPv6 ? */
   struct list *ipv6_link;	/* our link local IPv6 addresses */
   struct list *ipv6_non_link;	/* our non-link local IPv6 addresses */
-#endif				/* HAVE_IPV6 */
+#endif				/* ENABLE_IPV6 */
   /* 
    * RFC 2973 IS-IS Mesh Groups 
    */

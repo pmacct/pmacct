@@ -26,7 +26,6 @@
 
 #include "thread.h"
 #include "hash.h"
-#include "sigevent.h"
 
 /* Recent absolute time of day */
 struct timeval recent_time;
@@ -786,7 +785,7 @@ thread_fetch (struct thread_master *m, struct thread *fetch)
       int num = 0;
       
       /* Signals pre-empt everything */
-      quagga_sigevent_process ();
+      // quagga_sigevent_process ();
        
       /* Drain the ready queue of already scheduled jobs, before scheduling
        * more.

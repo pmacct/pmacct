@@ -134,6 +134,7 @@ struct configuration {
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;
   char *nfacctd_isis_iface;
+  int nfacctd_isis_mtu;
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */
   char *pcap_savefile;

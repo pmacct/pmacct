@@ -102,8 +102,7 @@ void skinny_isis_daemon()
     exit(1);
   }
 
-  // XXX: MTU set by config?
-  if ((device.dev_desc = pcap_open_live(config.nfacctd_isis_iface, 1500, 0, 1000, errbuf)) == NULL) {
+  if ((device.dev_desc = pcap_open_live(config.nfacctd_isis_iface, 65535, 0, 1000, errbuf)) == NULL) {
     Log(LOG_ERR, "ERROR ( default/core/ISIS ): pcap_open_live(): %s\n", errbuf);
     exit(1);
   }
@@ -169,6 +168,7 @@ void skinny_isis_daemon()
   area->ip_circuits = 1;
   memcpy(circuit->interface->name, config.nfacctd_isis_iface, strlen(config.nfacctd_isis_iface));
   circuit->interface->ifindex = if_nametoindex(config.nfacctd_isis_iface);
+  if (!config.nfacctd_isis_mtu) config.nfacctd_isis_mtu = SNAPLEN_ISIS_DEFAULT;
 
   for (;;) {
     /* XXX: should get a select() here at some stage? */
@@ -219,10 +219,7 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
 	stm.size = pkthdr->caplen - (pptrs.iph_ptr - pptrs.packet_ptr);
 	ssnpa = pptrs.packet_ptr;
 	circuit->rcv_stream = &stm;
-
-	/* Let's match ISO MTU based on a remote node Hello (typically padded) */ 
-	if (!circuit->interface->mtu)
-	  circuit->interface->mtu = pkthdr->caplen - (pptrs.iph_ptr - pptrs.packet_ptr);
+	circuit->interface->mtu = config.nfacctd_isis_mtu;
 
 	/* process IS-IS packet */
 	isis_handle_pdu (circuit, ssnpa);

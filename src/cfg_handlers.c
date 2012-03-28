@@ -2256,6 +2256,23 @@ int cfg_key_nfacctd_isis_iface(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_isis_mtu(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < SNAPLEN_ISIS_MIN) {
+    Log(LOG_WARNING, "WARN ( %s ): 'isis_daemon_mtu' has to be >= %d.\n", filename, SNAPLEN_ISIS_MIN);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_isis_mtu = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'isis_daemon_mtu'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pmacctd_force_frag_handling(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -168,6 +168,7 @@ EXT int cfg_key_nfacctd_isis(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_ip(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_net(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_iface(char *, char *, char *);
+EXT int cfg_key_nfacctd_isis_mtu(char *, char *, char *);
 EXT int cfg_key_uacctd_group(char *, char *, char *);
 EXT int cfg_key_uacctd_nl_size(char *, char *, char *);
 EXT int cfg_key_tunnel_0(char *, char *, char *);

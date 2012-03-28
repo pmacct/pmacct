@@ -197,7 +197,7 @@ struct idrp_info
   u_char *value;
 };
 
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
 struct ipv6_reachability
 {
   u_int32_t metric;
@@ -205,7 +205,7 @@ struct ipv6_reachability
   u_char prefix_len;
   u_char prefix[16];
 };
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
 
 /* bits in control_info */
 #define CTRL_INFO_DIRECTION    0x80
@@ -236,7 +236,7 @@ struct tlvs
   struct list *te_ipv4_reachs;
   struct hostname *hostname;
   struct te_router_id *router_id;
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   struct list *ipv6_addrs;
   struct list *ipv6_reachs;
 #endif
@@ -292,10 +292,10 @@ EXT int tlv_add_dynamic_hostname (struct hostname *, struct stream *);
 EXT int tlv_add_lsp_entries (struct list *, struct stream *);
 EXT int tlv_add_ipv4_reachs (struct list *, struct stream *);
 EXT int tlv_add_te_ipv4_reachs (struct list *, struct stream *);
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
 EXT int tlv_add_ipv6_addrs (struct list *, struct stream *);
 EXT int tlv_add_ipv6_reachs (struct list *, struct stream *);
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
 EXT int tlv_add_padding (struct stream *);
 #undef EXT
 

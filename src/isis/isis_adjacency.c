@@ -121,7 +121,7 @@ isis_delete_adj (struct isis_adjacency *adj, struct list *adjdb)
 
   if (adj->ipv4_addrs)
     list_delete (adj->ipv4_addrs);
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   if (adj->ipv6_addrs)
     list_delete (adj->ipv6_addrs);
 #endif

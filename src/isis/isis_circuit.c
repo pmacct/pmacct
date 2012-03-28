@@ -169,12 +169,12 @@ isis_circuit_del (struct isis_circuit *circuit)
     }
   if (circuit->ip_addrs)
     list_delete (circuit->ip_addrs);
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   if (circuit->ipv6_link)
     list_delete (circuit->ipv6_link);
   if (circuit->ipv6_non_link)
     list_delete (circuit->ipv6_non_link);
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
 
   /* and lastly the circuit itself */
   free(circuit);
@@ -245,12 +245,12 @@ circuit_update_nlpids (struct isis_circuit *circuit)
       circuit->nlpids.nlpids[0] = NLPID_IP;
       circuit->nlpids.count++;
     }
-#ifdef HAVE_IPV6
+#ifdef ENABLE_IPV6
   if (circuit->ipv6_router)
     {
       circuit->nlpids.nlpids[circuit->nlpids.count] = NLPID_IPV6;
       circuit->nlpids.count++;
     }
-#endif /* HAVE_IPV6 */
+#endif /* ENABLE_IPV6 */
   return;
 }

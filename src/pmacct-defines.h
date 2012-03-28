@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -51,6 +51,8 @@
 #else
 #define DEFAULT_SNAPLEN 68
 #endif
+#define SNAPLEN_ISIS_MIN 512
+#define SNAPLEN_ISIS_DEFAULT 1476
 
 #define SRVBUFLEN (256+MOREBUFSZ)
 #define LONGSRVBUFLEN (384+MOREBUFSZ)

@@ -381,6 +381,7 @@ static const struct _dictionary_line dictionary[] = {
   {"isis_daemon_ip", cfg_key_nfacctd_isis_ip},
   {"isis_daemon_net", cfg_key_nfacctd_isis_net},
   {"isis_daemon_iface", cfg_key_nfacctd_isis_iface},
+  {"isis_daemon_mtu", cfg_key_nfacctd_isis_mtu},
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"tunnel_0", cfg_key_tunnel_0},
