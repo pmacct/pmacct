@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -1953,6 +1953,11 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;	
+        if (result->p.prefixlen >= pptrs->lm_mask_src) {
+          pptrs->lm_mask_src = result->p.prefixlen;
+          pptrs->lm_method_src = NF_NET_BGP;
+        }
+
 	for (info = result->info[modulo]; info; info = info->next) {
 	  if (safi != SAFI_MPLS_VPN) {
 	    if (info->peer == peer) {
@@ -1974,6 +1979,11 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst;
+        if (result->p.prefixlen >= pptrs->lm_mask_dst) {
+          pptrs->lm_mask_dst = result->p.prefixlen;
+          pptrs->lm_method_dst = NF_NET_BGP;
+        }
+
         for (info = result->info[modulo]; info; info = info->next) {
 	  if (safi != SAFI_MPLS_VPN) {
             if (info->peer == peer) {
@@ -1998,6 +2008,11 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;
+        if (result->p.prefixlen >= pptrs->lm_mask_src) {
+          pptrs->lm_mask_src = result->p.prefixlen;
+          pptrs->lm_method_src = NF_NET_BGP;
+        }
+
         for (info = result->info[modulo]; info; info = info->next) {
           if (safi != SAFI_MPLS_VPN) {
             if (info->peer == peer) {
@@ -2019,6 +2034,11 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst; 
+        if (result->p.prefixlen >= pptrs->lm_mask_dst) {
+          pptrs->lm_mask_dst = result->p.prefixlen;
+          pptrs->lm_method_dst = NF_NET_BGP;
+        }
+
         for (info = result->info[modulo]; info; info = info->next) {
           if (safi != SAFI_MPLS_VPN) {
             if (info->peer == peer) {

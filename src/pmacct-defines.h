@@ -220,10 +220,12 @@ typedef u_int64_t pm_counter_t;
 typedef u_int32_t pm_counter_t;
 #endif
 
+/* Keep common NF_AS and NF_NET values aligned, ie. NF_[NET|AS]_KEEP == 0x00000001 */
 #define NF_AS_COMPAT    0x00000000 /* Unused */
 #define NF_AS_KEEP	0x00000001 /* Keep AS numbers in Sflow or NetFlow packets */
 #define NF_AS_NEW 	0x00000002 /* ignore ASN from NetFlow and generate from network files */
 #define NF_AS_BGP	0x00000004 /* ignore ASN from NetFlow and generate from BGP peerings */
+#define NF_AS_FALLBACK	0x80000000 /* Fallback flag */
 
 #define NF_NET_COMPAT   0x00000000 /* Backward compatibility selection */
 #define NF_NET_KEEP     0x00000001 /* Determine IP network prefixes from sFlow or NetFlow data */
@@ -231,3 +233,4 @@ typedef u_int32_t pm_counter_t;
 #define NF_NET_BGP      0x00000004 /* Determine IP network prefixes from BGP peerings */
 #define NF_NET_STATIC   0x00000008 /* Determine IP network prefixes from static mask */
 #define NF_NET_IGP	0x00000010 /* Determine IP network prefixes from IGP */
+#define NF_NET_FALLBACK	0x80000000 /* Fallback flag */

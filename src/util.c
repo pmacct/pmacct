@@ -856,6 +856,53 @@ void reset_tag_status(struct packet_ptrs_vector *pptrsv)
 #endif
 }
 
+void reset_net_status(struct packet_ptrs *pptrs)
+{
+  pptrs->lm_mask_src = FALSE;
+  pptrs->lm_mask_dst = FALSE;
+  pptrs->lm_method_src = FALSE;
+  pptrs->lm_method_dst = FALSE;
+}
+
+void reset_net_status_v(struct packet_ptrs_vector *pptrsv)
+{
+  pptrsv->v4.lm_mask_src = FALSE;
+  pptrsv->vlan4.lm_mask_src = FALSE;
+  pptrsv->mpls4.lm_mask_src = FALSE;
+  pptrsv->vlanmpls4.lm_mask_src = FALSE;
+  pptrsv->v4.lm_mask_dst = FALSE;
+  pptrsv->vlan4.lm_mask_dst = FALSE;
+  pptrsv->mpls4.lm_mask_dst = FALSE;
+  pptrsv->vlanmpls4.lm_mask_dst = FALSE;
+  pptrsv->v4.lm_method_src = FALSE;
+  pptrsv->vlan4.lm_method_src = FALSE;
+  pptrsv->mpls4.lm_method_src = FALSE;
+  pptrsv->vlanmpls4.lm_method_src = FALSE;
+  pptrsv->v4.lm_method_dst = FALSE;
+  pptrsv->vlan4.lm_method_dst = FALSE;
+  pptrsv->mpls4.lm_method_dst = FALSE;
+  pptrsv->vlanmpls4.lm_method_dst = FALSE;
+
+#if defined ENABLE_IPV6
+  pptrsv->v6.lm_mask_src = FALSE;
+  pptrsv->vlan6.lm_mask_src = FALSE;
+  pptrsv->mpls6.lm_mask_src = FALSE;
+  pptrsv->vlanmpls6.lm_mask_src = FALSE;
+  pptrsv->v6.lm_mask_dst = FALSE;
+  pptrsv->vlan6.lm_mask_dst = FALSE;
+  pptrsv->mpls6.lm_mask_dst = FALSE;
+  pptrsv->vlanmpls6.lm_mask_dst = FALSE;
+  pptrsv->v6.lm_method_src = FALSE;
+  pptrsv->vlan6.lm_method_src = FALSE;
+  pptrsv->mpls6.lm_method_src = FALSE;
+  pptrsv->vlanmpls6.lm_method_src = FALSE;
+  pptrsv->v6.lm_method_dst = FALSE;
+  pptrsv->vlan6.lm_method_dst = FALSE;
+  pptrsv->mpls6.lm_method_dst = FALSE;
+  pptrsv->vlanmpls6.lm_method_dst = FALSE;
+#endif
+}
+
 void reset_shadow_status(struct packet_ptrs_vector *pptrsv)
 {
   pptrsv->v4.shadow = FALSE;

@@ -847,6 +847,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if ((count <= V1_MAXFLOWS) && ((count*NfDataV1Sz)+NfHdrV1Sz == len)) {
     while (count) {
+      reset_net_status(pptrs);
       pptrs->f_data = (unsigned char *) exp_v1;
       if (req->bpf_filter) {
         Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp_v1->srcaddr.s_addr);
@@ -901,6 +902,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if ((count <= V5_MAXFLOWS) && ((count*NfDataV5Sz)+NfHdrV5Sz == len)) {
     while (count) {
+      reset_net_status(pptrs);
       pptrs->f_data = (unsigned char *) exp_v5;
       if (req->bpf_filter) {
         Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp_v5->srcaddr.s_addr);
@@ -911,6 +913,12 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
         Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp_v5->dstport);
 	Assign8(((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, exp_v5->tcp_flags);
       }
+
+      pptrs->lm_mask_src = exp_v5->src_mask;
+      pptrs->lm_mask_dst = exp_v5->dst_mask;
+      pptrs->lm_method_src = NF_NET_KEEP;
+      pptrs->lm_method_dst = NF_NET_KEEP;
+
       /* Let's copy some relevant field */
       pptrs->l4_proto = exp_v5->prot;
 
@@ -956,6 +964,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if ((count <= V7_MAXFLOWS) && ((count*NfDataV7Sz)+NfHdrV7Sz == len)) {
     while (count) {
+      reset_net_status(pptrs);
       pptrs->f_data = (unsigned char *) exp_v7;
       if (req->bpf_filter) {
         Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp_v7->srcaddr);
@@ -966,6 +975,12 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
         Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp_v7->dstport);
         Assign8(((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, exp_v7->tcp_flags);
       }
+
+      pptrs->lm_mask_src = exp_v7->src_mask;
+      pptrs->lm_mask_dst = exp_v7->dst_mask;
+      pptrs->lm_method_src = NF_NET_KEEP;
+      pptrs->lm_method_dst = NF_NET_KEEP;
+
       /* Let's copy some relevant field */
       pptrs->l4_proto = exp_v7->prot;
 
@@ -1012,8 +1027,12 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if ((count <= v8_handlers[hdr_v8->aggregation].max_flows) && ((count*v8_handlers[hdr_v8->aggregation].exp_size)+NfHdrV8Sz <= len)) {
     while (count) {
+      reset_net_status(pptrs);
       pptrs->f_data = exp_v8;
-      if (req->bpf_filter) v8_handlers[hdr_v8->aggregation].fh(pptrs, exp_v8);
+      if (req->bpf_filter) {
+	/* XXX: nfacctd_net: network masks should be looked up here */ 
+	v8_handlers[hdr_v8->aggregation].fh(pptrs, exp_v8);
+      }
 
       /* IP header's id field is unused; we will use it to transport our id */
       if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
@@ -1245,6 +1264,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       while (flowoff+tpl->len <= flowsetlen) {
         pptrs->f_data = pkt;
 	pptrs->f_tpl = (u_char *) tpl;
+	reset_net_status_v(pptrsv);
 	flow_type = NF_evaluate_flow_type(tpl, pptrs);
 	direction = NF_evaluate_direction(tpl, pptrs);
 
@@ -1272,6 +1292,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             memcpy(&((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+	  memcpy(&pptrs->lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+	  memcpy(&pptrs->lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+	  pptrs->lm_method_src = NF_NET_KEEP;
+	  pptrs->lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrs->l4_proto = 0;
 	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1318,6 +1344,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             memcpy(&((struct my_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->v6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+          memcpy(&pptrsv->v6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->v6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->v6.lm_method_src = NF_NET_KEEP;
+          pptrsv->v6.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->v6.l4_proto = 0;
 	  memcpy(&pptrsv->v6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1366,6 +1398,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+          memcpy(&pptrsv->vlan4.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->vlan4.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->vlan4.lm_method_src = NF_NET_KEEP;
+          pptrsv->vlan4.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->vlan4.l4_proto = 0;
 	  memcpy(&pptrsv->vlan4.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1414,6 +1452,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+          memcpy(&pptrsv->vlan6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->vlan6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->vlan6.lm_method_src = NF_NET_KEEP;
+          pptrsv->vlan6.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->vlan6.l4_proto = 0;
 	  memcpy(&pptrsv->vlan6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1471,7 +1515,13 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             memcpy(&((struct my_tlhdr *)pptrsv->mpls4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
             memcpy(&((struct my_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
-          }
+	  }
+
+          memcpy(&pptrsv->mpls4.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->mpls4.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->mpls4.lm_method_src = NF_NET_KEEP;
+          pptrsv->mpls4.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->mpls4.l4_proto = 0;
 	  memcpy(&pptrsv->mpls4.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1529,6 +1579,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+          memcpy(&pptrsv->mpls6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->mpls6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->mpls6.lm_method_src = NF_NET_KEEP;
+          pptrsv->mpls6.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->mpls6.l4_proto = 0;
 	  memcpy(&pptrsv->mpls6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1589,6 +1645,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+          memcpy(&pptrsv->vlanmpls4.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->vlanmpls4.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->vlanmpls4.lm_method_src = NF_NET_KEEP;
+          pptrsv->vlanmpls4.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->vlanmpls4.l4_proto = 0;
 	  memcpy(&pptrsv->vlanmpls4.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
@@ -1648,6 +1710,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
             memcpy(&((struct my_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
 	  }
+
+          memcpy(&pptrsv->vlanmpls6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
+          memcpy(&pptrsv->vlanmpls6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          pptrsv->vlanmpls6.lm_method_src = NF_NET_KEEP;
+          pptrsv->vlanmpls6.lm_method_dst = NF_NET_KEEP;
+
 	  /* Let's copy some relevant field */
 	  pptrsv->vlanmpls6.l4_proto = 0;
 	  memcpy(&pptrsv->vlanmpls6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);

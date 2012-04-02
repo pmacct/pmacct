@@ -2440,11 +2440,12 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_AS_BGP;
   else if (!strcmp(value_ptr, "fallback")) {
+    value = NF_AS_FALLBACK;
     if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) { 
-      value = NF_AS_KEEP;
+      value |= NF_AS_KEEP;
       value |= NF_AS_BGP;
     }
-    else value = NF_AS_BGP; /* NF_AS_KEEP does not apply to ACCT_PM and ACCT_UL */
+    else value |= NF_AS_BGP; /* NF_AS_KEEP does not apply to ACCT_PM and ACCT_UL */
   }
   else {
     Log(LOG_ERR, "WARN ( %s ): Invalid AS aggregation value '%s'\n", filename, value_ptr);
@@ -2473,12 +2474,16 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
   else if (!strcmp(value_ptr, "igp"))
     value = NF_NET_IGP;
   else if (!strcmp(value_ptr, "fallback")) {
+    value = NF_NET_FALLBACK;
     if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
-      value = NF_NET_KEEP;
+      value |= NF_NET_KEEP;
       value |= NF_NET_BGP;
       value |= NF_NET_IGP;
     }
-    else value = NF_NET_BGP;
+    else {
+      value |= NF_NET_BGP;
+      value |= NF_NET_IGP;
+    }
   }
   else {
     Log(LOG_ERR, "WARN ( %s ): Invalid network aggregation value '%s'\n", filename, value_ptr);

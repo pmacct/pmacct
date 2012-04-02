@@ -31,6 +31,8 @@
 #include "pkt_handlers.h"
 #include "addr.h"
 #include "bgp/bgp.h"
+#include "isis/prefix.h"
+#include "isis/table.h"
 
 /* functions */
 void evaluate_packet_handlers()
@@ -79,35 +81,62 @@ void evaluate_packet_handlers()
 #endif
 
     if (channels_list[index].aggregation & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
-      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP && channels_list[index].aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) {
-	channels_list[index].phandler[primitives] = bgp_src_net_handler;
-	primitives++;
+      if (channels_list[index].aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) {
+        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+	  channels_list[index].phandler[primitives] = bgp_src_net_handler;
+	  primitives++;
+        }
 
-	if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP && channels_list[index].aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) {
+        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+          channels_list[index].phandler[primitives] = igp_src_net_handler;
+          primitives++;
+        }
+
+        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
           if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
           else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
 	  else primitives--; /* Just in case */
 	  primitives++;
-	}
+        }
+
+	if (channels_list[index].plugin->cfg.nfacctd_net & (NF_NET_COMPAT|NF_NET_NEW|NF_NET_STATIC)) {
+          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
+          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
+          primitives++;
+        }
       }
       else {
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
         else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
         else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
-	else primitives--; /* Just in case */
 	primitives++;
       }
     }
 
     if (channels_list[index].aggregation & (COUNT_DST_HOST|COUNT_DST_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
-      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP && channels_list[index].aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) {
-        channels_list[index].phandler[primitives] = bgp_dst_net_handler;
-	primitives++;
+      if (channels_list[index].aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) {
+        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+          channels_list[index].phandler[primitives] = bgp_dst_net_handler;
+	  primitives++;
+	}
 
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP && channels_list[index].aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) {
+        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) { 
+          channels_list[index].phandler[primitives] = igp_dst_net_handler;
+          primitives++;
+        }
+
+        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
           if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
           else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
           else primitives--; /* Just in case */
+          primitives++;
+	}
+
+        if (channels_list[index].plugin->cfg.nfacctd_net & (NF_NET_COMPAT|NF_NET_NEW|NF_NET_STATIC)) {
+          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
+          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
           primitives++;
 	}
       }
@@ -115,7 +144,6 @@ void evaluate_packet_handlers()
 	if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
         else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
         else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
-        else primitives--; /* Just in case */
         primitives++;
       }
     }
@@ -124,6 +152,11 @@ void evaluate_packet_handlers()
       if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) { 
         channels_list[index].phandler[primitives] = bgp_src_nmask_handler;
 	primitives++;
+      }
+
+      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+        channels_list[index].phandler[primitives] = igp_src_nmask_handler;
+        primitives++;
       }
 
       if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
@@ -138,6 +171,11 @@ void evaluate_packet_handlers()
       if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
         channels_list[index].phandler[primitives] = bgp_dst_nmask_handler;
 	primitives++;
+      }
+
+      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+        channels_list[index].phandler[primitives] = igp_dst_nmask_handler;
+        primitives++;
       }
 
       if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
@@ -194,18 +232,22 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_DST_IP) {
-      if (config.acct_type == ACCT_PM) primitives--;
-      else if (config.acct_type == ACCT_NF) {
-        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
-        else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
-        else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
+      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+        channels_list[index].phandler[primitives] = bgp_peer_dst_ip_handler;
+        primitives++;
       }
-      else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler;
-        else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler; 
-        else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
+
+      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+        channels_list[index].phandler[primitives] = igp_peer_dst_ip_handler;
+        primitives++;
       }
-      primitives++;
+
+      if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
+        if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_peer_dst_ip_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_peer_dst_ip_handler;
+        else primitives--; /* Just in case */
+        primitives++;
+      }
     }
 
     if (channels_list[index].aggregation & COUNT_AS_PATH) {
@@ -268,7 +310,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
                                             COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
-                                            COUNT_DST_AS|COUNT_PEER_DST_IP|COUNT_PEER_SRC_AS|COUNT_MPLS_VPN_RD) &&
+                                            COUNT_DST_AS|COUNT_PEER_SRC_AS|COUNT_MPLS_VPN_RD) &&
         config.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
@@ -596,6 +638,9 @@ void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_src;
 
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
+
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     if (ret) {
       memcpy(&pdata->primitives.src_ip.address.ipv4, &ret->p.u.prefix4, 4);
@@ -616,6 +661,9 @@ void bgp_dst_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     if (ret) {
@@ -638,6 +686,9 @@ void bgp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_src;
 
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
+
   if (ret) pdata->primitives.src_nmask = ret->p.prefixlen;
 }
 
@@ -646,7 +697,132 @@ void bgp_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
 
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
+
   if (ret) pdata->primitives.dst_nmask = ret->p.prefixlen;
+}
+
+void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct bgp_info *nh_info;
+
+  --pdata; /* Bringing back to original place */
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
+
+  if (pptrs->bgp_nexthop_info)
+    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
+  else if (pptrs->bgp_dst_info)
+    nh_info = (struct bgp_info *) pptrs->bgp_dst_info;
+
+  if (nh_info && nh_info->attr) {
+    if (nh_info->attr->mp_nexthop.family == AF_INET) {
+      pbgp->peer_dst_ip.family = AF_INET;
+      memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+    }
+#if defined ENABLE_IPV6
+    else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+      pbgp->peer_dst_ip.family = AF_INET6;
+      memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+    }
+#endif
+    else {
+      pbgp->peer_dst_ip.family = AF_INET;
+      pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+    }
+  }
+}
+
+void igp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct route_node *ret = (struct route_node *) pptrs->igp_src;
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (ret) {
+      memcpy(&pdata->primitives.src_ip.address.ipv4, &ret->p.u.prefix4, 4);
+      pdata->primitives.src_ip.family = AF_INET;
+    }
+  }
+#if defined ENABLE_IPV6
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (ret) {
+      memcpy(&pdata->primitives.src_ip.address.ipv6, &ret->p.u.prefix6, 16);
+      pdata->primitives.src_ip.family = AF_INET6;
+    }
+  }
+#endif
+}
+
+void igp_dst_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct route_node *ret = (struct route_node *) pptrs->igp_dst;
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (ret) {
+      memcpy(&pdata->primitives.dst_ip.address.ipv4, &ret->p.u.prefix4, 4);
+      pdata->primitives.dst_ip.family = AF_INET;
+    }
+  }
+#if defined ENABLE_IPV6
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (ret) {
+      memcpy(&pdata->primitives.dst_ip.address.ipv6, &ret->p.u.prefix6, 16);
+      pdata->primitives.dst_ip.family = AF_INET6;
+    }
+  }
+#endif
+}
+
+void igp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct route_node *ret = (struct route_node *) pptrs->igp_src;
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
+
+  if (ret) pdata->primitives.src_nmask = ret->p.prefixlen;
+}
+
+void igp_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct route_node *ret = (struct route_node *) pptrs->igp_dst;
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
+
+  if (ret) pdata->primitives.dst_nmask = ret->p.prefixlen;
+}
+
+void igp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct route_node *ret = (struct route_node *) pptrs->igp_dst;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
+
+  if (ret) {
+    pbgp->peer_dst_ip.family = AF_INET;
+    memcpy(&pbgp->peer_dst_ip.address.ipv4, &ret->p.adv_router, 4);
+  }
 }
 
 void src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -987,8 +1163,8 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t src_mask = 0;
 
-  /* If in a fallback scenario with network-reladed primitives, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if ((chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) && (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP) && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1098,8 +1274,8 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t dst_mask = 0;
 
-  /* If in a fallback scenario with network-reladed primitives, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if ((chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) && (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP) && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1212,8 +1388,8 @@ void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
-  /* If in a fallback scenario, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1263,8 +1439,8 @@ void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
-  /* If in a fallback scenario, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1316,8 +1492,8 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return; 
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1370,8 +1546,8 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1427,8 +1603,8 @@ void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   switch (hdr->version) {
   case 10:
@@ -1459,8 +1635,8 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   switch (hdr->version) {
   case 10:
@@ -1511,8 +1687,8 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -2481,7 +2657,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
   --pdata; /* Bringing back to original place */
 
-  if (src_ret) {
+  if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (config.nfacctd_as & NF_AS_BGP) {
@@ -2550,7 +2726,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
     }
   }
 
-  if (dst_ret) {
+  if (dst_ret && evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
@@ -2615,33 +2791,6 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           }
         }
       }
-      if (chptr->aggregation & COUNT_PEER_DST_IP) {
-	struct bgp_info *nh_info;
-
-	if (config.nfacctd_as & NF_AS_BGP) {
-	  if (pptrs->bgp_nexthop_info)
-	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
-	  else
-	    nh_info = info;
-
-	  if (nh_info && nh_info->attr) {
-	    if (nh_info->attr->mp_nexthop.family == AF_INET) {
-	      pbgp->peer_dst_ip.family = AF_INET;
-	      memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
-	    }
-#if defined ENABLE_IPV6
-	    else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
-	      pbgp->peer_dst_ip.family = AF_INET6;
-	      memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
-	    }
-#endif
-	    else {
-	      pbgp->peer_dst_ip.family = AF_INET; 
-	      pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
-	    }
-	  }
-	}
-      }
     }
     if (info && info->extra) {
       if (chptr->aggregation & COUNT_MPLS_VPN_RD) memcpy(&pbgp->mpls_vpn_rd, &info->extra->rd, sizeof(rd_t)); 
@@ -2657,7 +2806,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
-  if (src_ret) {
+  if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (config.nfacctd_as & NF_AS_BGP) {
@@ -2671,7 +2820,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
     }
   }
 
-  if (dst_ret) {
+  if (dst_ret && evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (config.nfacctd_as & NF_AS_BGP) {
@@ -2681,32 +2830,6 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
           else
 	    payload->dst_as = evaluate_first_asn(info->attr->aspath->str);
 	}
-
-	if (chptr->aggregation & COUNT_PEER_DST_IP) {
-          struct bgp_info *nh_info;
-
-          if (pptrs->bgp_nexthop_info)
-	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
-          else
-	    nh_info = info;
-
-	  if (nh_info && nh_info->attr) {
-            if (nh_info->attr->mp_nexthop.family == AF_INET) {
-              payload->bgp_next_hop.family = AF_INET;
-              memcpy(&payload->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
-            }
-#if defined ENABLE_IPV6
-            else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
-              payload->bgp_next_hop.family = AF_INET6;
-              memcpy(&payload->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
-            }
-#endif
-            else {
-              payload->bgp_next_hop.family = AF_INET;
-              payload->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
-            }
-	  }
-        }
       }
     }
   }
@@ -2723,7 +2846,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
 
   --pdata; /* Bringing back to original place */
 
-  if (src_ret) {
+  if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
       if (config.nfacctd_as & NF_AS_BGP) {
@@ -2737,7 +2860,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
     }
   }
 
-  if (dst_ret) {
+  if (dst_ret && evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (config.nfacctd_as & NF_AS_BGP) {
@@ -2746,32 +2869,6 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
             pdata->primitives.dst_as = evaluate_last_asn(info->attr->aspath);
           else
             pdata->primitives.dst_as = evaluate_first_asn(info->attr->aspath->str);
-        }
-
-        if (chptr->aggregation & COUNT_PEER_DST_IP) {
-          struct bgp_info *nh_info;
-
-          if (pptrs->bgp_nexthop_info)
-	    nh_info = (struct bgp_info *) pptrs->bgp_nexthop_info;
-          else
-	    nh_info = info;
-
-	  if (nh_info && nh_info->attr) {
-            if (nh_info->attr->mp_nexthop.family == AF_INET) {
-              pextras->bgp_next_hop.family = AF_INET;
-              memcpy(&pextras->bgp_next_hop.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
-            }
-#if defined ENABLE_IPV6
-            else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
-              pextras->bgp_next_hop.family = AF_INET6;
-              memcpy(&pextras->bgp_next_hop.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
-            }
-#endif
-            else {
-              pextras->bgp_next_hop.family = AF_INET;
-              pextras->bgp_next_hop.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
-            }
-	  }
         }
       }
     }
@@ -2879,8 +2976,8 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   SFLAddress *addr = &sample->ipsrc;
   u_int8_t src_mask = sample->srcMask;
 
-  /* If in a fallback scenario with network-reladed primitives, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if ((chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) && (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP) && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   if (sample->gotIPV4) {
     pdata->primitives.src_ip.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
@@ -2923,8 +3020,8 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   SFLAddress *addr = &sample->ipdst;
   u_int8_t dst_mask = sample->dstMask;
 
-  /* If in a fallback scenario with network-reladed primitives, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if ((chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) && (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP) && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   if (sample->gotIPV4) { 
     pdata->primitives.dst_ip.address.ipv4.s_addr = sample->dcd_dstIP.s_addr; 
@@ -2965,8 +3062,8 @@ void SF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* If in a fallback scenario, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   pdata->primitives.src_nmask = sample->srcMask;
 }
@@ -2976,8 +3073,8 @@ void SF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* If in a fallback scenario, ie. NF_NET_BGP + NF_NET_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_net & NF_NET_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   pdata->primitives.dst_nmask = sample->dstMask;
 }
@@ -3109,8 +3206,8 @@ void SF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
   
   pdata->primitives.src_as = sample->src_as;
 }
@@ -3120,8 +3217,8 @@ void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   pdata->primitives.dst_as = sample->dst_as;
 }
@@ -3134,8 +3231,8 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   if (sample->dst_as_path_len) {
     strlcpy(pbgp->as_path, sample->dst_as_path, MAX_BGP_ASPATH);
@@ -3153,8 +3250,8 @@ void SF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_src) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   pbgp->peer_src_as = sample->src_peer_as;
 }
@@ -3167,8 +3264,8 @@ void SF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   pbgp->peer_dst_as = sample->dst_peer_as;
 }
@@ -3181,8 +3278,8 @@ void SF_local_pref_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   pbgp->local_pref = sample->localpref;
 }
@@ -3195,8 +3292,8 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   if (sample->communities_len) strlcpy(pbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS); 
 }
@@ -3229,8 +3326,8 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (chptr->plugin->cfg.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   if (sample->bgp_nextHop.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_dst_ip.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;
@@ -3323,4 +3420,23 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
   pbgp->peer_src_as = 0;
 
   // XXX: fill this in
+}
+
+/* srcdst: 0 == src, 1 == dst */
+int evaluate_lm_method(struct packet_ptrs *pptrs, u_int8_t srcdst, u_int32_t bitmap, u_int32_t method) 
+{
+  /* src */
+  if (srcdst == FALSE) {
+    if (pptrs->lm_method_src == method || !(bitmap & NF_NET_FALLBACK)) 
+      return TRUE;
+    else
+      return FALSE;
+  }
+  /* dst */
+  else if (srcdst == TRUE) {
+    if (pptrs->lm_method_dst == method || !(bitmap & NF_NET_FALLBACK))
+      return TRUE;
+    else 
+      return FALSE;
+  }
 }

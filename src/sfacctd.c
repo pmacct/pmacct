@@ -2143,6 +2143,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
      - !sample->eth_type : we don't know the L3 protocol. VLAN or MPLS accounting case.
   */
   if (sample->gotIPV4 || sample->gotIPV6 || !sample->eth_type) {
+    reset_net_status_v(pptrsv);
     flow_type = SF_evaluate_flow_type(pptrs);
 
     /* we need to understand the IP protocol version in order to build the fake packet */
@@ -2163,6 +2164,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrs->lm_mask_src = sample->srcMask;
+      pptrs->lm_mask_dst = sample->dstMask;
+      pptrs->lm_method_src = NF_NET_KEEP;
+      pptrs->lm_method_dst = NF_NET_KEEP;
+
       pptrs->l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
@@ -2192,6 +2199,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->v6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->v6.lm_mask_src = sample->srcMask;
+      pptrsv->v6.lm_mask_dst = sample->dstMask;
+      pptrsv->v6.lm_method_src = NF_NET_KEEP;
+      pptrsv->v6.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->v6);
@@ -2222,6 +2235,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->vlan4.lm_mask_src = sample->srcMask;
+      pptrsv->vlan4.lm_mask_dst = sample->dstMask;
+      pptrsv->vlan4.lm_method_src = NF_NET_KEEP;
+      pptrsv->vlan4.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan4);
@@ -2252,6 +2271,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->vlan6.lm_mask_src = sample->srcMask;
+      pptrsv->vlan6.lm_mask_dst = sample->dstMask;
+      pptrsv->vlan6.lm_method_src = NF_NET_KEEP;
+      pptrsv->vlan6.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan6);
@@ -2295,6 +2320,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->mpls4.lm_mask_src = sample->srcMask;
+      pptrsv->mpls4.lm_mask_dst = sample->dstMask;
+      pptrsv->mpls4.lm_method_src = NF_NET_KEEP;
+      pptrsv->mpls4.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls4);
@@ -2337,6 +2368,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->mpls6.lm_mask_src = sample->srcMask;
+      pptrsv->mpls6.lm_mask_dst = sample->dstMask;
+      pptrsv->mpls6.lm_method_src = NF_NET_KEEP;
+      pptrsv->mpls6.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls6);
@@ -2380,6 +2417,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->vlanmpls4.lm_mask_src = sample->srcMask;
+      pptrsv->vlanmpls4.lm_mask_dst = sample->dstMask;
+      pptrsv->vlanmpls4.lm_method_src = NF_NET_KEEP;
+      pptrsv->vlanmpls4.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls4);
@@ -2423,6 +2466,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
         memcpy(&((struct my_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port, &dcd_dport, 2);
         memcpy(&((struct my_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
       }
+
+      pptrsv->vlanmpls6.lm_mask_src = sample->srcMask;
+      pptrsv->vlanmpls6.lm_mask_dst = sample->dstMask;
+      pptrsv->vlanmpls6.lm_method_src = NF_NET_KEEP;
+      pptrsv->vlanmpls6.lm_method_dst = NF_NET_KEEP;
+
       pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls6);

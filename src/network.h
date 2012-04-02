@@ -301,6 +301,10 @@ struct packet_ptrs {
   char *igp_dst; /* pointer to IGP node structure for destination prefix, if any */
   char *igp_src_info; /* pointer to IGP node info structure for source prefix, if any */
   char *igp_dst_info; /* pointer to IGP node info structure for destination prefix, if any */
+  u_int8_t lm_mask_src; /* Longest match for source prefix (network mask bits) */
+  u_int8_t lm_mask_dst; /* Longest match for destination prefix (network mask bits) */
+  u_int8_t lm_method_src; /* Longest match for source prefix (method: BGP, IGP, etc.) */
+  u_int8_t lm_method_dst; /* Longest match for destination prefix (method: BGP, IGP, etc.) */
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 

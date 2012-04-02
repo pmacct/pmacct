@@ -66,6 +66,8 @@ EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
 EXT void exit_plugin(int);
 EXT void reset_tag_status(struct packet_ptrs_vector *);
+EXT void reset_net_status(struct packet_ptrs *);
+EXT void reset_net_status_v(struct packet_ptrs_vector *);
 EXT void reset_shadow_status(struct packet_ptrs_vector *);
 EXT void reset_fallback_status(struct packet_ptrs *);
 EXT void set_sampling_table(struct packet_ptrs_vector *, u_char *);
