@@ -184,11 +184,11 @@ int ip_handler(register struct packet_ptrs *pptrs)
 
     /* tunnel handlers here */ 
     if (config.tunnel0 && !pptrs->tun_stack) {
-      for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[num][0].tf; num++) {
-        if (tunnel_registry[num][0].proto == pptrs->l4_proto) {
-	  if (!tunnel_registry[num][0].port || (pptrs->tlh_ptr && tunnel_registry[num][0].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
+      for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[0][num].tf; num++) {
+        if (tunnel_registry[0][num].proto == pptrs->l4_proto) {
+	  if (!tunnel_registry[0][num].port || (pptrs->tlh_ptr && tunnel_registry[0][num].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
 	    pptrs->tun_stack = num;
-	    ret = (*tunnel_registry[num][0].tf)(pptrs);
+	    ret = (*tunnel_registry[0][num].tf)(pptrs);
 	  }
         }
       }
