@@ -7,7 +7,7 @@ The guidelines below (typically in MySQL format) are to add such primitives to t
 schema:
 
 * etype field:
-  - "etype INT(2) UNSIGNED NOT NULL," to declare the field itself
+  - "etype CHAR(5) NOT NULL," to declare the field itself
   - "PRIMARY KEY (..., etype, ...)" to put it in the primary key 
 
 The primitive is not declared as part of any default table version; yet will not fail

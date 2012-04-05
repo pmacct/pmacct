@@ -1044,8 +1044,8 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
     strncat(insert_clause, "etype", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "%x", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "etype=%x", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "\'%x\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "etype=\'%x\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_ETHERTYPE;
     values[primitive].handler = where[primitive].handler = count_etype_handler;
     primitive++;
