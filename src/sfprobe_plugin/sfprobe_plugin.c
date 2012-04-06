@@ -282,23 +282,6 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
     pkt_len -= ethHdrLen;
   }
 
-  Log(LOG_DEBUG, "DEBUG ( %s/%s ): %02x%02x%02x%02x%02x%02x -> %02x%02x%02x%02x%02x%02x (len = %d, captured = %d)\n",
-		  	     config.name, config.type,
-			     local_buf[6],
-			     local_buf[7],
-			     local_buf[8],
-			     local_buf[9],
-			     local_buf[10],
-			     local_buf[11],
-			     local_buf[0],
-			     local_buf[1],
-			     local_buf[2],
-			     local_buf[3],
-			     local_buf[4],
-			     local_buf[5],
-			     pkt_len,
-			     cap_len);
-
   /* Let's fill sample direction in - and default to ingress */
   direction = 0;
 
@@ -372,6 +355,23 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
   else sp->counters[idx].frames[direction]++;
 
   if (config.ext_sampling_rate || sfl_sampler_takeSample(sp->sampler)) {
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): %02x%02x%02x%02x%02x%02x -> %02x%02x%02x%02x%02x%02x (len = %d, captured = %d)\n",
+                             config.name, config.type,
+                             local_buf[6],
+                             local_buf[7],
+                             local_buf[8],
+                             local_buf[9],
+                             local_buf[10],
+                             local_buf[11],
+                             local_buf[0],
+                             local_buf[1],
+                             local_buf[2],
+                             local_buf[3],
+                             local_buf[4],
+                             local_buf[5],
+                             pkt_len,
+                             cap_len);
+
     // Yes. Build a flow sample and send it off...
     SFL_FLOW_SAMPLE_TYPE fs;
     memset(&fs, 0, sizeof(fs));

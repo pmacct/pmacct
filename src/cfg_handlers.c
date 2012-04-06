@@ -2445,7 +2445,9 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
       value |= NF_AS_KEEP;
       value |= NF_AS_BGP;
     }
-    else value |= NF_AS_BGP; /* NF_AS_KEEP does not apply to ACCT_PM and ACCT_UL */
+    else value = NF_AS_BGP; /* NF_AS_KEEP does not apply to ACCT_PM and ACCT_UL;
+			       we set value to NF_AS_BGP since we can't fallback
+			       to any alternative method as of yet */
   }
   else {
     Log(LOG_ERR, "WARN ( %s ): Invalid AS aggregation value '%s'\n", filename, value_ptr);
