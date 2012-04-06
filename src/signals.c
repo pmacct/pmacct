@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -113,9 +113,12 @@ void my_sigint_handler(int signum)
   signal(SIGCHLD, ignore_falling_child);
 #endif
 
+  signal(SIGINT, SIG_IGN);
+  signal(SIGTERM, SIG_IGN);
+
   fill_pipe_buffer();
   sleep(2); /* XXX: we should really choose an adaptive value here. It should be
-	            closely bound to, say, biggestplugin_buffer_size value */ 
+	            closely bound to, say, biggest plugin_buffer_size value */ 
 
   while (list) {
     if (memcmp(list->type.string, "core", sizeof("core"))) kill(list->pid, SIGINT);
