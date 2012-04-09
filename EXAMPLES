@@ -15,7 +15,8 @@ X.	Quickstart guide to setup a NetFlow agent/probe
 XI.	Quickstart guide to setup a sFlow agent/probe 
 XII.	Quickstart guide to setup the BGP daemon
 XIII.	Quickstart guide to setup a NetFlow/sFlow replicator
-XIV.	Running the print plugin to write to flat-files
+XIV.	Quickstart guide to setup the IS-IS daemon
+XV.	Running the print plugin to write to flat-files
 
 
 I. Plugins included with pmacct distribution
@@ -610,19 +611,19 @@ sfprobe_receiver: 1.2.3.4:6343
 
 
 XII. Quickstart guide to setup the BGP daemon
-pmacct 0.12.0 integrates a BGP daemon feature to nfacctd and sfacctd, respectively the
-NetFlow and sFlow collectors. Such daemon is run as a thread within the collector's
-core process. The idea is to receive both (ingress) NetFlow (or sFlow) traffic samples
-and full routing tables via BGP from edge routers. Per-peer BGP RIBs are maintained to
-ensure local or regional views of the network (ie. in case of large networks which
-are partitioned in BGP clusters or federations).
+pmacct 0.12.0 integrates a BGP daemon into the IP accounting collectors part of
+the toolset. Such daemon is run as a thread within the collector core process. The
+idea is to receive data-plane information, ie. via NetFlow, sFlow, etc., and control
+plane information, ie. full routing tables via BGP from edge routers. Per-peer BGP
+RIBs are maintained to ensure local or regional views of the network (ie. in case
+of large networks which are partitioned in BGP clusters or federations).
 In case of routers with default-only or partial BGP views, the default route can be
 followed up (bgp_default_follow); also it might be desirable in certain situations,
 for example to save resources, to entirely map one or a set of agents to a BGP peer
 (bgp_agent_map). 
 
-The first requirement is that pmacct has to be configured for compilation with threads,
-this line will do it:
+Pre-requisite is that the pmacct package has to be configured for compilation with
+threads, this line will do it:
 
 ./configure --enable-threads
 
@@ -906,7 +907,63 @@ and replicating data, two separate instances must be used (intuitively with the
 replicator instance feeding the collector one).
 
 
-XIV. Running the print plugin to write to flat-files
+XIV. Quickstart guide to setup the IS-IS daemon
+pmacct 0.14.0 integrates an IS-IS daemon into the IP accounting collectors part
+of the toolset. Such daemon is run as a thread within the collector core process.
+The idea is to receive data-plane information, ie. via NetFlow, sFlow, etc., and
+control-plane information via IS-IS. Currently a single L2 P2P neighborship, ie.
+over a GRE tunnel, is supported. The daemon is currently used for the purpose of
+route resolution. A sample scenario could be that more specific internal routes
+might be configured to get summarized in BGP while crossing cluster boundaries.  
+
+Pre-requisite for the use of the IS-IS daemon is that the pmacct package has to
+be configured for compilation with threads, this line will do it:
+
+./configure --enable-threads
+
+XIVa. Preparing the collector for the L2 P2P IS-IS neighborship
+It's assumed the collector sits on an Ethernet segment and has not direct link
+(L2) connectivity to an IS-IS speaker, hence the need to establish a GRE tunnel. 
+While extensive literature and OS specific examples exist on the topic, a brief
+example for Linux, consistent with rest of the chapter, is provided below:
+
+ip tunnel add gre2 mode gre remote 10.0.1.2 local 10.0.1.1 ttl 255
+ip link set gre2 up
+
+The following configuration fragment is sufficient to set up an IS-IS daemon
+which will bind to a network interface gre2 configured with IP address 10.0.1.1
+in an IS-IS area 49.0001 and a CLNS MTU set to 1400:
+
+isis_daemon: true
+isis_daemon_ip: 10.0.1.1
+isis_daemon_net: 49.0001.0100.0000.1001.00
+isis_daemon_iface: gre2
+isis_daemon_mtu: 1400
+! isis_daemon_msglog: true
+
+XIVb. Preparing the router for the L2 P2P IS-IS neighborship 
+Once the collector is ready, the remaining step is to configure a remote router
+for the L2 P2P IS-IS neighborship. The following bit of configuration (based on
+Cisco IOS) will match the above fragment of configuration for the IS-IS daemon:
+
+interface Tunnel0
+ ip address 10.0.1.2 255.255.255.252
+ ip router isis
+ tunnel source FastEthernet0
+ tunnel destination XXX.XXX.XXX.XXX
+ clns mtu 1400
+ isis metric 1000
+!
+router isis
+ net 49.0001.0100.0000.1002.00
+ is-type level-2-only
+ metric-style wide
+ log-adjacency-changes
+ passive-interface Loopback0
+!
+
+
+XV. Running the print plugin to write to flat-files
 Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.

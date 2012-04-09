@@ -145,12 +145,12 @@ void skinny_isis_daemon()
     trim_spaces(config.nfacctd_isis_ip);
     ret = str_to_addr(config.nfacctd_isis_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'nfacctd_isis_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n");
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n");
       exit_all(1);
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'nfacctd_isis_ip' value is not specified. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_ip' value is not specified. Terminating thread.\n");
     exit_all(1);
   }
 

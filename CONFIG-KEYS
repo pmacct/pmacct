@@ -684,34 +684,32 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp | fallback ]
-DESC:		When 'false', it instructs [nf|sf]acctd to populate 'src_as', 'dst_as', 'peer_src_as' and
-		'peer_dst_as' from data within the NetFlow and sFlow datagram respectively; when 'true' ('file'
-		being an alias of 'true') it instructs [nf|sf]acctd to generate 'src_as' aand 'dst_as' (only!
-		ie. no peer-AS) ASNs by looking up source and destination IP addresses against a 'networks_file'
-		map. When 'bgp' is specified, ASNs are looked up against the BGP RIB of the peer from which the
-		NetFlow datagram was received (see also bgp_agent_map directive). When 'fallback' is specified,
-		lookup is done against BGP first and, if not successful, against NetFlow/sFlow protocols.
-		As pmacctd and uacctd do not have an export protocol to look up ASNs against 'false' (maintained
-		for backward compatibility), 'true' and 'file' expect a 'networks_file' to be defined; 'bgp' just
-		works as described for [nf|sf]acctd; 'fallback' is mapped back to 'bgp' for the reason explained
-		above, no export protocol lookup available. Under nfacctd and sfacctd this feature also influences
-		'peer_dst_ip': if 'false', 'true' or 'file' values are taken from NetFlow and sFlow datagrams
-		respectively; if 'bgp' values are looked up against the BGP RIB of the peer from which the NetFlow
-		datagram was received (or mapped to). (default: false) 
+DESC:		When 'false', it instructs nfacctd and sfacctd to populate 'src_as', 'dst_as', 'peer_src_as' and
+		'peer_dst_as' primitives from NetFlow and sFlow datagram respectively; when 'true' ('file' being
+		an alias of 'true') it instructs nfacctd and sfacctd to generate 'src_as' and 'dst_as' (only! ie.
+		no peer-AS) by looking up source and destination IP addresses against a networks_file. When 'bgp'
+		is specified, ASNs are looked up against the BGP RIB of the peer from which the NetFlow datagram
+		was received (see also bgp_agent_map directive). When 'fallback' is specified, lookup is done
+		against the winning longest match lookup method (sFlow/NetFlow <= BGP), which can be different
+		for source and destination IP prefix. Intuitively if 'fallback' is specified, IS-IS/IGP daemon
+		is enabled and IGP is the winning method then no BGP information will be attached to the prefixes.
+		In pmacctd and uacctd 'false' (maintained for backward compatibility), 'true' and 'file' expect a
+		'networks_file' to be defined; 'bgp' just works as described previously for nfacctd and sfacctd;
+		'fallback' is mapped to 'bgp' since no export protocol lookup method is available. (default: false)
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ]
-VALUES:         [ netflow | sflow | mask | file | bgp | fallback ]
-DESC:		Determines the source of data to perform network aggregation - directly influencing 'src_net',
-		'dst_net', 'src_mask' and 'dst_mask' primitives. 'netflow' and 'sflow' use netmask values
-		carried within NetFlow and sFlow protocols; valid only in conjunction with nfacctd and sfacctd.
-		'mask' selects a defined networks_mask; 'file' selects a defined networks_file; 'bgp' uses
-		netmask values carried within BGP protocol. If this directive is not specified, the daemon
-		falls back to backward compatibility mode, hence enabling 'mask', if a networks_mask is
-		defined, and 'file', if a networks_file. If both are defined, the outcome will be the
-		intersection of their definitions. When 'fallback' is specified, in nfacctd and sfacctd lookup
-		is done against BGP first and, if not successful, against NetFlow/sFlow protocols; in pmacctd
-		and uacctd 'fallback' is mapped to 'bgp' since no export protocol lookup is available (default:
-		nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file')
+VALUES:         [ netflow | sflow | mask | file | igp | bgp | fallback ]
+DESC:		Determines the method for performing IP prefix aggregation - hence directly influencing 'src_net',
+		'dst_net', 'src_mask', 'dst_mask' and 'peer_dst_ip' primitives. 'netflow' and 'sflow' get values
+		from NetFlow and sFlow protocols respectively; these keywords are only valid in nfacctd, sfacctd.
+		'mask' applies a defined networks_mask; 'file' selects a defined networks_file; 'igp' and 'bgp'
+		source values from IGP/IS-IS daemon and BGP daemon respectively. Default behaviour under pmacctd
+		and uacctd is for backward compatibility: 'mask' and 'file' are turned on if a networks_mask and
+		a networks_file are respectively specified by configuration. If they both are defined, the outcome
+		will be the intersection of their definitions. 'fallback' behaves in a longest-match-wins fashion:
+		in nfacctd and sfacctd lookup is done against sFlow/NetFlow protocol, IGP and BGP (sFlow/NetFlow < 
+		IGP <= BGP) whereas in pmacctd and uacctd lookup is done against IGP and BGP only (IGP <= BGP).
+		(default: nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file')
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]
 DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are
@@ -1016,7 +1014,7 @@ DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon rea
 KEY:		bgp_daemon_msglog
 VALUES:		[true|false]
 DESC:		enables BGP messages logging: as this can get easily verbose, it is intended for debug and
-		troubleshooting purposes only.
+		troubleshooting purposes only. (default: false)
 
 KEY:		bgp_aspath_radius
 DESC:		cuts down AS-PATHs to the specified number of ASN hops. If the same ASN is repeated multiple
@@ -1179,6 +1177,39 @@ DESC:		From version 0.12.4, a shared BGP RIB is worked out from announcements se
 		set to 1/10 of the expected number of peers. The default value proved to work fine up to
 		aprox 100 BGP peers in lab. More buckets means better CPU usage but also increased memory
 		footprint - and vice-versa. (default: 13)
+
+KEY:		isis_daemon
+VALUES:		[true|false]
+DESC:		Enables the skinny IS-IS daemon thread. This feature requires the package to be supporting
+		multi-threading (--enable-threads). It implements P2P Hellos, CSNP and PSNP - and does not
+		send any LSP information out. It currently supports a single L2 P2P neighborship. Testing
+		has been done over a GRE tunnel. (default: false)
+
+KEY:		isis_daemon_ip
+DESC:		Sets the sub-TLV of the Extended IS Reachability TLV that contains an IPv4 address for the
+		local end of a link. No default value is set and a non-zero value is mandatory. It should
+		be set to the IPv4 address configured on the interface pointed by isis_daemon_iface. 
+
+KEY:		isis_daemon_net
+DESC:		Defines the Network entity title (NET) of the IS-IS daemon. In turn a NET defines the area
+		addresses for the IS-IS area and the system ID of the router. No default value is set and
+		a non-zero value is mandatory. Extensive IS-IS and ISO literature cover the topic, example
+		of the NET value format can be found as part of the "Quickstart guide to setup the IS-IS
+		daemon" in the EXAMPLES document.
+
+KEY:		isis_daemon_iface
+DESC:		Defines the network interface (ie. gre1) where to bind the IS-IS daemon. No default value
+		is set and a non-zero value is mandatory.
+
+KEY:		isis_daemon_mtu
+DESC:		Defines the available MTU for the IS-IS daemon. P2P HELLOs will be padded to such length.
+		When the daemon is configured to set a neighborship with a Cisco router running IOS, this
+		value should match the value of the "clns mtu" IOS directive. (default: 1476) 
+
+KEY		isis_daemon_msglog
+VALUES:		[true|false]
+DESC:	 	enables IS-IS messages logging: as this can get easily verbose, it is intended for debug
+		and troubleshooting purposes only. (default: false)
 
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)

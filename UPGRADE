@@ -8,6 +8,14 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 0.14.0
+FROM:	<= 0.14.0rc3
+TOPIC:	Fallback resolution of networks and ASNs (ie. nfacctd_net, nfacctd_as_new)
+DESC:	Longest match wins has been introduced to select which route resolution
+	method to use in fallback scenarios. For example up to 0.14.0rc3, a route
+	advertised via BGP would have been winning over any more specific route
+	learned via sFlow/NetFlow regardless. 
+
 TO:     >= 0.14.0rc3
 FROM:   <= 0.14.0rc2
 TOPIC:  is_symmetric
