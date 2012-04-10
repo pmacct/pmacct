@@ -715,6 +715,7 @@ void P_write_stats_header_csv(FILE *f)
   fprintf(f, "SRC_MAC,");
   fprintf(f, "DST_MAC,");
   fprintf(f, "VLAN,");
+  fprintf(f, "COS,");
   fprintf(f, "ETYPE,");
 #endif
   fprintf(f, "SRC_AS,");

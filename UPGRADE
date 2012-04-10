@@ -8,6 +8,13 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:     >= 0.14.0
+FROM:   <= 0.14.0rc3
+TOPIC:  peer_dst_ip
+DESC:	The peer_dst_ip primitive is being attached to IP prefix resolution method
+	(ie. as defined by nfacctd_net directive) from AS number resolution method
+	in the past (ie. as defined by nfacctd_as_new directive).
+
 TO:	>= 0.14.0
 FROM:	<= 0.14.0rc3
 TOPIC:	Fallback resolution of networks and ASNs (ie. nfacctd_net, nfacctd_as_new)

@@ -1688,7 +1688,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -3327,7 +3327,7 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
+  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   if (sample->bgp_nextHop.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_dst_ip.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;

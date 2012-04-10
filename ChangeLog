@@ -25,6 +25,8 @@ pmacct is Copyright (C) 2003-2012 by Paolo Lucente
     cause pipe buffer overruns. Patch is courtesy by Osama Abu Elsorour.
   ! fix, pmacctd: tunnel registry now correctly supports multiple tunnel
     definitions for the same stack level. 
+  ! fix, print plugin: cos field now correctly shows up in the format
+    title while CSV format is selected and L2 primitives are enabled.
   ! fix, util.c: a feof() check has been added to the fread() call in
     read_SQLquery_from_file(); thanks to Elisa Jasinska and Brent Van
     Dussen for their support.
