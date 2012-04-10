@@ -1,4 +1,11 @@
 /*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+*/
+
+/*
+ * Originally based on softflowd which is:
+ *
  * Copyright 2002 Damien Miller <djm@mindrot.org> All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

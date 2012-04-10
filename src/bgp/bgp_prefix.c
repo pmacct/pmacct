@@ -1,8 +1,12 @@
 /*
- * Prefix related functions.
- * Copyright (C) 1997, 98, 99 Kunihiro Ishiguro
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+*/
+
+/* 
+ * Originally based on Quagga prefix related functions which is:
  *
- * This file is part of pmacct but mostly based on GNU Zebra. 
+ * Copyright (C) 1997, 98, 99 Kunihiro Ishiguro
  *
  * GNU Zebra is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

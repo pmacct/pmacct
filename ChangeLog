@@ -1,5 +1,38 @@
-pmacct (Promiscuous mode IP Accounting package) v0.14.0rc3
-pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+pmacct (Promiscuous mode IP Accounting package) v0.14.0
+pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+
+0.14.0 -- 11-04-2012
+  + pmacct now integrates an IS-IS daemon within collectors; the daemon
+    is being run as a parallel thread within the collector core process;
+    a single L2 P2P neighborship, ie. over a GRE tunnel, is supported;
+    it implements P2P Hello, CSNP and PSNP - and does not send any LSP
+    information out. The daemon is currently used for route resolution.
+    It is well suited to several case-studies, popular one being: more
+    specific internal routes are carried within the IGP while they are
+    summarized in BGP crossing cluster boundaries.
+  + A new aggregation primitive 'etype' has been introduced in order to
+    support accounting against the EtherType field of Ethernet frames.
+    The implementation is consistent across all data collection methods
+    and backends.
+  + sfacctd: introduced support for samples generated on ACL matches in
+    Brocade (sFlow sample type: Enterprise: #1991, Format: #1). Thanks
+    to Elisa Jasinska and Brent Van Dussen for their support.
+  + sfacctd, pre_tag_map: introduced sample_type key. In sFlow v2/v4/v5
+    this is compared against the sample type field. Value is expected
+    in <Enterprise>:<Format> notation.
+  ! fix, signals.c: ignoring SIGINT and SIGTERM in my_sigint_handler()
+    to prevent multiple calls to fill_pipe_buffer(), condition that can
+    cause pipe buffer overruns. Patch is courtesy by Osama Abu Elsorour.
+  ! fix, pmacctd: tunnel registry now correctly supports multiple tunnel
+    definitions for the same stack level. 
+  ! fix, util.c: a feof() check has been added to the fread() call in
+    read_SQLquery_from_file(); thanks to Elisa Jasinska and Brent Van
+    Dussen for their support.
+  ! fix, nfprobe: NetFlow output socket is now re-opened after failing
+    send() calls. Thanks to Maurizio Molina for reporting the problem.
+  ! fix, sfacctd: length checks have been imporved while extracting
+    string tokens (ie. AS-PATH and BGP communities) from sFlow Extended
+    Gateway object. Thanks to Duncan Small for his support.
 
 0.14.0rc3 -- 07-12-2011
   + BGP daemon: BGP/MPLS VPNs (rfc4364) implemented! This encompasses both

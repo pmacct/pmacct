@@ -1,7 +1,13 @@
-/* Community attribute related functions.
-   Copyright (C) 1998, 2001 Kunihiro Ishiguro
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+*/
 
-This file is part of pmacct but mostly based on GNU Zebra.
+/* 
+ Originally based on Quagga BGP community attribute related functions
+ which is:
+
+ Copyright (C) 1998, 2001 Kunihiro Ishiguro
 
 GNU Zebra is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

@@ -1,8 +1,13 @@
-/* AS path management routines.
-   Copyright (C) 1996, 97, 98, 99 Kunihiro Ishiguro
-   Copyright (C) 2005 Sun Microsystems, Inc.
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+*/
 
-This file is part of pmacct but mostly based on GNU Zebra. 
+/* 
+ Originally based on Quagga AS path management routines which is:
+
+ Copyright (C) 1996, 97, 98, 99 Kunihiro Ishiguro
+ Copyright (C) 2005 Sun Microsystems, Inc.
 
 GNU Zebra is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

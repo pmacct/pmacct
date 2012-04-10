@@ -1,5 +1,14 @@
-/* Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence: */
-/* http://www.inmon.com/technology/sflowlicense.txt */
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+*/
+
+/* 
+   Originally based on sflowtool which is:
+
+   Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence:
+   http://www.inmon.com/technology/sflowlicense.txt
+*/
 
 #include <stdio.h>
 #include <unistd.h>

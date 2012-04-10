@@ -1,3 +1,8 @@
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+*/
+
 /* 
  * Definitions for BGP packet disassembly structures and routine
  *
