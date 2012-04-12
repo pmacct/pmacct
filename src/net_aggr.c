@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -667,7 +667,7 @@ void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, stru
   else if (p->src_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->src_ip);
     if (!res6) p->src_nmask = 0;
-    else p->src_nmask = res->masknum; 
+    else p->src_nmask = res6->masknum; 
   }
 #endif
 }
@@ -688,7 +688,7 @@ void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, stru
   else if (p->dst_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->dst_ip);
     if (!res6) p->dst_nmask = 0;
-    else p->dst_nmask = res->masknum;
+    else p->dst_nmask = res6->masknum;
   }
 #endif
 }

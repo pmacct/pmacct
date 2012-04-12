@@ -1147,10 +1147,14 @@ void NF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   switch(hdr->version) {
   case 10:
   case 9:
-    memcpy(&pdata->primitives.etype, pptrs->f_data+tpl->tpl[NF9_ETHERTYPE].off, MIN(tpl->tpl[NF9_ETHERTYPE].len, 2));
-    pdata->primitives.etype = ntohs(pdata->primitives.etype);
+    if (tpl->tpl[NF9_ETHERTYPE].len == 2) {
+      memcpy(&pdata->primitives.etype, pptrs->f_data+tpl->tpl[NF9_ETHERTYPE].off, MIN(tpl->tpl[NF9_ETHERTYPE].len, 2));
+      pdata->primitives.etype = ntohs(pdata->primitives.etype);
+    }
+    else pdata->primitives.etype = pptrs->l3_proto;
     break;
   default:
+    pdata->primitives.etype = pptrs->l3_proto; 
     break;
   }
 }
