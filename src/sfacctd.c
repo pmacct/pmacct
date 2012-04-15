@@ -2491,13 +2491,13 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   }
 }
 
-void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   SFSample *sample = (SFSample *)pptrs->f_data; 
   int x, j, stop;
   pm_id_t id;
 
-  if (!t) return;
+  if (!t) return 0;
 
   /* The id_table is shared between by IPv4 and IPv6 sFlow collectors.
      IPv4 ones are in the lower part (0..x), IPv6 ones are in the upper
@@ -2520,6 +2520,11 @@ void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
           else if (stop == PRETAG_MAP_RCODE_ID2) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
             *tag2 = id;
+          }
+          else if (stop == BTA_MAP_RCODE_ID_ID2) {
+            // stack not applicable here
+            *tag = id;
+            *tag2 = t->e[x].id2;
           }
 
           if (t->e[x].jeq.ptr) {
@@ -2552,6 +2557,11 @@ void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
             *tag2 = id;
           }
+          else if (stop == BTA_MAP_RCODE_ID_ID2) {
+            // stack not applicable here
+            *tag = id;
+            *tag2 = t->e[x].id2;
+          }
 
           if (t->e[x].jeq.ptr) {
 	    if (t->e[x].ret) {
@@ -2570,6 +2580,8 @@ void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
     }
   }
 #endif
+
+  return stop;
 }
 
 u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -230,6 +230,18 @@ void ip6_addr_cpy(void *dst, void *src)
 
   for (chunk = 0; chunk < 4; chunk++) 
     ptrd[chunk] = ptrs[chunk];
+}
+
+/*
+ * ip6_addr_32bit_cpy(): copy of arbitrary 32bit IPv6 address chunks
+ */
+void ip6_addr_32bit_cpy(void *dst, void *src, int dstart, int sstart, int send)
+{
+  register u_int32_t *ptrs = src, *ptrd = dst;
+  int schunk, dchunk;
+
+  for (schunk = sstart, dchunk = dstart; schunk <= send; schunk++, dchunk++)
+    ptrd[dchunk] = ptrs[schunk];
 }
 
 void etheraddr_string(const u_char *ep, char *buf)

@@ -1185,3 +1185,21 @@ int check_allow(struct hosts_table *allow, struct sockaddr *sa)
 
   return FALSE;
 }
+
+int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
+  int ret = 0;
+
+  pptrs->bta_af = 0;
+
+  if (find_id_func) {
+    ret = find_id_func(t, pptrs, tag, tag2);
+
+    if (ret == PRETAG_MAP_RCODE_ID) pptrs->bta_af = ETHERTYPE_IP;
+#if defined ENABLE_IPV6
+    else if (ret == BTA_MAP_RCODE_ID_ID2) pptrs->bta_af = ETHERTYPE_IPV6;
+#endif
+  }
+
+  return ret;
+}

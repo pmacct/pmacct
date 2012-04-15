@@ -4,7 +4,7 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! nfacctd, sfacctd: valid keys: id, ip.
+! All daemons valid keys: id, ip, filter.
 !
 ! list of currently supported keys follow:
 !
@@ -13,6 +13,11 @@
 !                       of the device which is originating NetFlow packets; in
 !                       sfacctd this is compared against the AgentId field of
 !                       received sFlow samples.
+! 'filter'              Matches incoming packets against the supplied filter
+!                       expression (expected in libpcap syntax); the filter
+!                       needs to be enclosed in quotes ('). In this map this
+!			is meant to discriminate among IPv4 ('ip') and IPv6
+!			('ip6') traffic. 
 !
 ! A couple of straightforward examples follow.  
 !

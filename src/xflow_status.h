@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -58,7 +58,8 @@ struct xflow_status_entry
                                    NetFlow v9: Source ID
                                    sFlow v5: agentSubID */
   u_int16_t inc;		/* increment, NetFlow v5: required by flow sequence number */
-  u_int32_t peer_idx;           /* last known BGP peer index */
+  u_int32_t peer_v4_idx;        /* last known BGP peer index for ipv4 address family */
+  u_int32_t peer_v6_idx;        /* last known BGP peer index for ipv6 address family */
   struct xflow_status_entry_counters counters;
   struct xflow_status_entry_sampling *sampling;
   struct xflow_status_entry_class *class;

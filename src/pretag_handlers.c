@@ -33,22 +33,40 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
 {
   struct host_addr a;
   char *endptr = NULL;
-  pm_id_t j = 0;
+  pm_id_t j = 0, z = 0;
 
   e->id = 0;
   e->flags = FALSE;
 
   /* If we parse a bgp_agent_map and spot a '.' within the string let's
-     check if we are given a valid IP address */
+     check if we are given a valid IPv4 address */
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, '.')) {
     memset(&a, 0, sizeof(a));
     str_to_addr(value, &a);
     if (a.family == AF_INET) j = a.address.ipv4.s_addr;
     else {
-      Log(LOG_ERR, "ERROR ( %s ): Agent ID does not appear to be a valid IPv4 address. ", filename);
+      Log(LOG_ERR, "ERROR ( %s ): ID does not appear to be a valid IPv4 address. ", filename);
       return TRUE;
     }
   }
+  /* If we parse a bgp_agent_map and spot a ':' within the string let's
+     check if we are given a valid IPv6 address */
+#if defined ENABLE_IPV6
+  else if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, ':')) {
+    memset(&a, 0, sizeof(a));
+    str_to_addr(value, &a);
+    if (a.family == AF_INET6) {
+      ip6_addr_32bit_cpy(&j, &a.address.ipv6, 0, 0, 1);
+      ip6_addr_32bit_cpy(&z, &a.address.ipv6, 0, 2, 3);
+
+      e->flags = BTA_MAP_RCODE_ID_ID2;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s ): ID does not appear to be a valid IPv6 address. ", filename);
+      return TRUE;
+    }
+  }
+#endif
   else if (acct_type == MAP_BGP_IFACE_TO_RD && strchr(value, ':')) {
     rd_t rd;
 
@@ -63,11 +81,13 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   else {
     j = strtoull(value, &endptr, 10);
     if (!j || j > UINT32_MAX) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID specified. ", filename);
+      Log(LOG_ERR, "ERROR ( %s ): Invalid ID specified. ", filename);
       return TRUE;
     } 
   }
+
   e->id = j; 
+  if (z) e->id2 = z;
 
   return FALSE;
 }
@@ -79,7 +99,7 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 
   j = strtoull(value, &endptr, 10);
   if (!j || j > UINT32_MAX) {
-    Log(LOG_ERR, "ERROR ( %s ): Invalid Agent ID2 specified. ", filename);
+    Log(LOG_ERR, "ERROR ( %s ): Invalid ID2 specified. ", filename);
     return TRUE;
   }
   e->id2 = j;
@@ -364,6 +384,13 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   bpf_u_int32 localnet, netmask;  /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
   int x, link_type;
+
+  if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
+    if (strncmp(value, "ip", 2) && strncmp(value, "ip6", 3)) {
+      Log(LOG_ERR, "ERROR ( %s ): bgp_agent_map filter supports only 'ip' and 'ip6' keywords\n", filename);
+      return TRUE;
+    }
+  }
 
   memset(&device, 0, sizeof(struct pcap_device));
   if (glob_pcapt) device.link_type = pcap_datalink(glob_pcapt);
@@ -1562,6 +1589,10 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
         }
       }
     }
+  }
+
+  if (entry->flags == BTA_MAP_RCODE_ID_ID2) {
+    return BTA_MAP_RCODE_ID_ID2; /* cap */
   }
 
   return PRETAG_MAP_RCODE_ID; /* cap */

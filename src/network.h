@@ -288,7 +288,9 @@ struct packet_ptrs {
   pm_id_t bpas; /* bgp_peer_as_src */
   pm_id_t blp; /* bgp_src_local_pref */
   pm_id_t bmed; /* bgp_src_med */
+  u_int16_t bta_af; /* bgp_to_agent address family */
   pm_id_t bta; /* bgp_to_agent */
+  pm_id_t bta2; /* bgp_to_agent (cont.d: 64bits more for IPv6 addresses) */
   pm_id_t bitr; /* bgp_iface_to_rd */
   pm_id_t st; /* sampling_map */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  

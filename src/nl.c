@@ -49,7 +49,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.mac_ptr = 0; pptrs.vlan_ptr = 0; pptrs.mpls_ptr = 0;
     pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag = 0; pptrs.tag2 = 0;
     pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0; pptrs.blp = 0;
-    pptrs.bmed = 0; pptrs.bitr = 0;
+    pptrs.bmed = 0; pptrs.bitr = 0; pptrs.bta2 = 0; pptrs.bta_af = 0;
     pptrs.tun_layer = 0; pptrs.tun_stack = 0;
     pptrs.f_agent = cb_data->f_agent;
     pptrs.idtable = cb_data->idt;
@@ -68,7 +68,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
           isis_srcdst_lookup(&pptrs);
         }
         if (config.nfacctd_bgp) {
-          PM_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, NULL);
+          BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
           bgp_srcdst_lookup(&pptrs);
         }
         if (config.nfacctd_bgp_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
@@ -331,12 +331,12 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 }
 #endif
 
-void PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   int x, j, stop;
   pm_id_t id;
 
-  if (!t) return;
+  if (!t) return 0;
 
   id = 0;
   if (tag) *tag = 0;
@@ -353,6 +353,11 @@ void PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
         if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
         *tag2 = id;
       }
+      else if (stop == BTA_MAP_RCODE_ID_ID2) {
+        // stack not applicable here
+        *tag = id;
+        *tag2 = t->e[x].id2;
+      }
 
       if (t->e[x].jeq.ptr) {
         if (t->e[x].ret) {
@@ -368,6 +373,8 @@ void PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
       else break;
     }
   }
+
+  return stop;
 }
 
 void compute_once()

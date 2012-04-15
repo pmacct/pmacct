@@ -46,9 +46,10 @@
 #define PRETAG_MPLS_VPN_RD	0x00080000
 #define PRETAG_SAMPLE_TYPE      0x00100000
 
-#define PRETAG_MAP_RCODE_ID  100
-#define PRETAG_MAP_RCODE_ID2 101
-#define BPAS_MAP_RCODE_BGP   102
+#define PRETAG_MAP_RCODE_ID	100
+#define PRETAG_MAP_RCODE_ID2	101
+#define BTA_MAP_RCODE_ID_ID2	102
+#define BPAS_MAP_RCODE_BGP	103
 
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
@@ -170,6 +171,6 @@ EXT int biss_map_allocated;
 EXT int bta_map_allocated;
 EXT int bitr_map_allocated;
 EXT int sampling_map_allocated;
-EXT void (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
+EXT int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
 #undef EXT

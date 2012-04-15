@@ -1896,7 +1896,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
-  u_int32_t modulo;
+  u_int32_t modulo, peer_idx, *peer_idx_ptr;
   safi_t safi;
   rd_t rd;
 
@@ -1910,20 +1910,44 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
   if (pptrs->bta) {
     sa = &sa_local;
-    sa->sa_family = AF_INET;
-    ((struct sockaddr_in *)sa)->sin_addr.s_addr = pptrs->bta; 
+    if (pptrs->bta_af == ETHERTYPE_IP) {
+      sa->sa_family = AF_INET;
+      ((struct sockaddr_in *)sa)->sin_addr.s_addr = pptrs->bta; 
+    }
+#if defined ENABLE_IPV6
+    else if (pptrs->bta_af == ETHERTYPE_IPV6) {
+      sa->sa_family = AF_INET6;
+      ip6_addr_32bit_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &pptrs->bta, 0, 0, 1);
+      ip6_addr_32bit_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &pptrs->bta2, 2, 0, 1);
+    }
+#endif
   }
 
   start_again:
 
-  if (xs_entry && xs_entry->peer_idx) {
-    if (!sa_addr_cmp(sa, &peers[xs_entry->peer_idx].addr) || !sa_addr_cmp(sa, &peers[xs_entry->peer_idx].id)) {
-      peer = &peers[xs_entry->peer_idx];
-      pptrs->bgp_peer = (char *) &peers[xs_entry->peer_idx];
+  peer_idx = 0; peer_idx_ptr = NULL;
+  if (xs_entry) {
+    if (pptrs->l3_proto == ETHERTYPE_IP) {
+      peer_idx = xs_entry->peer_v4_idx; 
+      peer_idx_ptr = &xs_entry->peer_v4_idx;
+    }
+#if defined ENABLE_IPV6
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      peer_idx = xs_entry->peer_v6_idx; 
+      peer_idx_ptr = &xs_entry->peer_v6_idx;
+    }
+#endif
+  }
+  
+
+  if (xs_entry && peer_idx) {
+    if (!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) {
+      peer = &peers[peer_idx];
+      pptrs->bgp_peer = (char *) &peers[peer_idx];
     }
     /* If no match then let's invalidate the entry */
     else {
-      xs_entry->peer_idx = 0;
+      *peer_idx_ptr = 0;
       peer = NULL;
     }
   }
@@ -1932,7 +1956,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
         peer = &peers[peers_idx];
         pptrs->bgp_peer = (char *) &peers[peers_idx];
-        if (xs_entry) xs_entry->peer_idx = peers_idx;
+        if (xs_entry && peer_idx_ptr) *peer_idx_ptr = peers_idx;
         break;
       }
     }
