@@ -27,27 +27,31 @@
 #include "nfacctd.h"
 #include "pmacct-data.h"
 
-void handle_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
+void handle_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
 {
   struct template_cache_entry *tpl;
+  u_int8_t version = 0;
 
   if (pens) *pens = FALSE;
 
+  if (tpl_type == 0 || tpl_type == 1) version = 9;
+  else if (tpl_type == 2 || tpl_type == 3) version = 10;
+
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
-    if (tpl = find_template_v9(hdr->template_id, pptrs, tpl_type, sid))
-      refresh_template_v9(hdr, tpl, pptrs, tpl_type, sid, pens);
-    else insert_template_v9(hdr, pptrs, tpl_type, sid, pens);
+    if (tpl = find_template(hdr->template_id, pptrs, tpl_type, sid))
+      refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version);
+    else insert_template(hdr, pptrs, tpl_type, sid, pens, version);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
-    if (tpl = find_template_v9(hdr->template_id, pptrs, tpl_type, sid))
-      refresh_opt_template_v9(hdr, tpl, pptrs, tpl_type, sid);
-    else insert_opt_template_v9(hdr, pptrs, tpl_type, sid);
+    if (tpl = find_template(hdr->template_id, pptrs, tpl_type, sid))
+      refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, version);
+    else insert_opt_template(hdr, pptrs, tpl_type, sid, version);
   }
 }
 
-struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+struct template_cache_entry *find_template(u_int16_t id, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
 {
   struct template_cache_entry *ptr;
   u_int16_t modulo = (ntohs(id)%tpl_cache.num);
@@ -64,7 +68,7 @@ struct template_cache_entry *find_template_v9(u_int16_t id, struct packet_ptrs *
   return NULL;
 }
 
-struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
+struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version)
 {
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
@@ -94,7 +98,7 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   ptr->template_type = 0;
   ptr->num = num;
 
-  log_template_v9_header(ptr, pptrs, tpl_type, sid);
+  log_template_header(ptr, pptrs, tpl_type, sid, version);
 
   count = 0;
   tpl = (u_char *) hdr;
@@ -105,7 +109,7 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
     ipfix_ebit = FALSE;
     type = ntohs(field->type);
 
-    if (type & IPFIX_TPL_EBIT) {
+    if (type & IPFIX_TPL_EBIT && version == 10) {
       ipfix_ebit = TRUE;
       type ^= IPFIX_TPL_EBIT;
       if (pens) (*pens)++;
@@ -113,7 +117,7 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
       pen++;
     }
 
-    log_template_v9_field(ptr->vlen, pen, type, ptr->len, ntohs(field->len));
+    log_template_field(ptr->vlen, pen, type, ptr->len, ntohs(field->len), version);
 
     /* Let's determine if we use legacy template registry or the
        new template database (ie. if we have a PEN or high field
@@ -177,12 +181,12 @@ struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *hdr, str
   if (prevptr) prevptr->next = ptr;
   else tpl_cache.c[modulo] = ptr;
 
-  log_template_v9_footer(ptr->len);
+  log_template_footer(ptr->len, version);
 
   return ptr;
 }
 
-void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
+void refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version)
 {
   struct template_cache_entry *next;
   struct template_field_v9 *field;
@@ -200,7 +204,7 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
   tpl->num = num;
   tpl->next = next;
 
-  log_template_v9_header(tpl, pptrs, tpl_type, sid);
+  log_template_header(tpl, pptrs, tpl_type, sid, version);
 
   count = 0;
   ptr = (u_char *) hdr;
@@ -211,13 +215,13 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
     ipfix_ebit = FALSE;
     type = ntohs(field->type);
 
-    if (type & IPFIX_TPL_EBIT) {
+    if (type & IPFIX_TPL_EBIT && version == 10) {
       ipfix_ebit = TRUE;
       type ^= IPFIX_TPL_EBIT;
       if (pens) (*pens)++;
       pen = (u_int32_t *) field; pen++;
     }
-    log_template_v9_field(tpl->vlen, pen, type, tpl->len, ntohs(field->len));
+    log_template_field(tpl->vlen, pen, type, tpl->len, ntohs(field->len), version);
 
     if (type < NF9_MAX_DEFINED_FIELD && !pen) {
       tpl->tpl[type].off = tpl->len;
@@ -275,30 +279,26 @@ void refresh_template_v9(struct template_hdr_v9 *hdr, struct template_cache_entr
     field++;
   }
 
-  log_template_v9_footer(tpl->len);
+  log_template_footer(tpl->len, version);
 }
 
-void log_template_v9_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
 {
   struct host_addr a;
   u_char agent_addr[50];
   u_int16_t agent_port, count, size;
-  u_int8_t nf_version = 0;
 
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
   addr_to_str(agent_addr, &a);
 
-  if (tpl_type == 0 || tpl_type == 1) nf_version = 9;
-  else if (tpl_type == 2 || tpl_type == 3) nf_version = 10;
-
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u agent         : %s:%u\n", nf_version, agent_addr, sid);
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template type : %s\n", nf_version, ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template ID   : %u\n", nf_version, ntohs(tpl->template_id));
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u agent         : %s:%u\n", version, agent_addr, sid);
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template type : %s\n", version, ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
+  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template ID   : %u\n", version, ntohs(tpl->template_id));
   Log(LOG_DEBUG, "DEBUG ( default/core ): -----------------------------------------------------\n");
   Log(LOG_DEBUG, "DEBUG ( default/core ): |    pen     |     field type     | offset |  size  |\n");
 }
 
-void log_template_v9_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t off, u_int16_t len)
+void log_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
 {
   if (!pen && type <= MAX_TPL_DESC_LIST && strlen(tpl_desc_list[type])) { 
     if (!off && vlen) 
@@ -314,7 +314,7 @@ void log_template_v9_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int1
   }
 }
 
-void log_opt_template_v9_field(u_int16_t type, u_int16_t off, u_int16_t len)
+void log_opt_template_field(u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
 {
   if (type <= MAX_OPT_TPL_DESC_LIST && strlen(opt_tpl_desc_list[type]))
     Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18s | %6u | %6u |\n", opt_tpl_desc_list[type], off, len);
@@ -322,7 +322,7 @@ void log_opt_template_v9_field(u_int16_t type, u_int16_t off, u_int16_t len)
     Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18u | %6u | %6u |\n", type, off, len);
 }
 
-void log_template_v9_footer(u_int16_t size)
+void log_template_footer(u_int16_t size, u_int8_t version)
 {
   Log(LOG_DEBUG, "DEBUG ( default/core ): -----------------------------------------------------\n");
   if (!size)
@@ -332,7 +332,7 @@ void log_template_v9_footer(u_int16_t size)
   Log(LOG_DEBUG, "DEBUG ( default/core ): \n");
 }
 
-struct template_cache_entry *insert_opt_template_v9(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
@@ -376,7 +376,7 @@ struct template_cache_entry *insert_opt_template_v9(void *hdr, struct packet_ptr
   ptr->template_type = 1;
   ptr->num = olen+slen;
 
-  log_template_v9_header(ptr, pptrs, tpl_type, sid);
+  log_template_header(ptr, pptrs, tpl_type, sid, version);
 
   count = ptr->num;
   tpl = (u_char *) hdr;
@@ -384,7 +384,7 @@ struct template_cache_entry *insert_opt_template_v9(void *hdr, struct packet_ptr
   field = (struct template_field_v9 *)tpl;
   while (count) {
     type = ntohs(field->type);
-    log_opt_template_v9_field(type, ptr->len, ntohs(field->len));
+    log_opt_template_field(type, ptr->len, ntohs(field->len), version);
     if (type < NF9_MAX_DEFINED_FIELD) { 
       ptr->tpl[type].off = ptr->len;
       ptr->tpl[type].len = ntohs(field->len);
@@ -399,12 +399,12 @@ struct template_cache_entry *insert_opt_template_v9(void *hdr, struct packet_ptr
   if (prevptr) prevptr->next = ptr;
   else tpl_cache.c[modulo] = ptr;
 
-  log_template_v9_footer(ptr->len);
+  log_template_footer(ptr->len, version);
 
   return ptr;
 }
 
-void refresh_opt_template_v9(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
+void refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
@@ -435,7 +435,7 @@ void refresh_opt_template_v9(void *hdr, struct template_cache_entry *tpl, struct
   tpl->num = olen+slen;
   tpl->next = next;
 
-  log_template_v9_header(tpl, pptrs, tpl_type, sid);  
+  log_template_header(tpl, pptrs, tpl_type, sid, version);  
 
   count = tpl->num;
   ptr = (u_char *) hdr;
@@ -443,7 +443,7 @@ void refresh_opt_template_v9(void *hdr, struct template_cache_entry *tpl, struct
   field = (struct template_field_v9 *)ptr;
   while (count) {
     type = ntohs(field->type);
-    log_opt_template_v9_field(type, tpl->len, ntohs(field->len));
+    log_opt_template_field(type, tpl->len, ntohs(field->len), version);
     if (type < NF9_MAX_DEFINED_FIELD) {
       tpl->tpl[type].off = tpl->len;
       tpl->tpl[type].len = ntohs(field->len);
@@ -455,7 +455,7 @@ void refresh_opt_template_v9(void *hdr, struct template_cache_entry *tpl, struct
     field++;
   }
 
-  log_template_v9_footer(tpl->len);
+  log_template_footer(tpl->len, version);
 }
 
 void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)

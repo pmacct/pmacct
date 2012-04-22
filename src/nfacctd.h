@@ -413,7 +413,7 @@ struct data_hdr_v9 {
 #define NF9_MAX_DEFINED_FIELD		384
 
 #define IES_PER_TPL_EXT_DB_ENTRY        32
-#define TPL_EXT_DB_ENTRIES              4
+#define TPL_EXT_DB_ENTRIES              8
 #define TPL_LIST_ENTRIES                256
 #define TPL_TYPE_LEGACY                 0
 #define TPL_TYPE_EXT_DB                 1
@@ -496,11 +496,6 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
-/* ... */
-#define NF9_XLATE_IPV4_SRC_ADDR		225
-#define NF9_XLATE_IPV4_DST_ADDR		226
-#define NF9_XLATE_L4_SRC_PORT		227
-#define NF9_XLATE_L4_DST_PORT		228
 /* ... */
 #define NF9_ETHERTYPE			256
 /* ... */
@@ -739,16 +734,16 @@ EXT struct v8_handler_entry v8_handlers[15];
 #else
 #define EXT
 #endif
-EXT void handle_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
-EXT struct template_cache_entry *find_template_v9(u_int16_t, struct packet_ptrs *, u_int16_t, u_int32_t);
-EXT struct template_cache_entry *insert_template_v9(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
-EXT void refresh_template_v9(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
-EXT void log_template_v9_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
-EXT void log_opt_template_v9_field(u_int16_t, u_int16_t, u_int16_t);
-EXT void log_template_v9_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t);
-EXT void log_template_v9_footer(u_int16_t);
-EXT struct template_cache_entry *insert_opt_template_v9(void *, struct packet_ptrs *, u_int16_t, u_int32_t);
-EXT void refresh_opt_template_v9(void *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT void handle_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *);
+EXT struct template_cache_entry *find_template(u_int16_t, struct packet_ptrs *, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *insert_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t);
+EXT void refresh_template(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t);
+EXT void log_template_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
+EXT void log_opt_template_field(u_int16_t, u_int16_t, u_int16_t, u_int8_t);
+EXT void log_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t, u_int8_t);
+EXT void log_template_footer(u_int16_t, u_int8_t);
+EXT struct template_cache_entry *insert_opt_template(void *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
+EXT void refresh_opt_template(void *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
 
 EXT void resolve_vlen_template(char *, struct template_cache_entry *);
 EXT u_int8_t get_ipfix_vlen(char *, u_int16_t *);

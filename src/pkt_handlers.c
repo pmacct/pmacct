@@ -1174,8 +1174,8 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].len) {
-        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV4_SRC_ADDR].len, 4));
+      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_ASA_XLATE_IPV4_SRC_ADDR].len) {
+        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_ASA_XLATE_IPV4_SRC_ADDR].len, 4));
         src_mask = 32; /* no xlate mask field exists atm */
       }
       else {
@@ -1187,14 +1187,9 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_IPV6_SRC_ADDR].len) {
-        memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV6_SRC_ADDR].len, 16));
-        src_mask = 128;
-      }
-      else {
-        memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
-        memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
-      }
+      memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
+      memcpy(&src_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
+
       pdata->primitives.src_ip.family = AF_INET6;
       break;
     }
@@ -1285,8 +1280,8 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].len) {
-        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV4_DST_ADDR].len, 4));
+      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_ASA_XLATE_IPV4_DST_ADDR].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_ASA_XLATE_IPV4_DST_ADDR].len, 4));
         dst_mask = 32; /* no xlate mask field exists atm */
       }
       else {
@@ -1298,14 +1293,9 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_IPV6_DST_ADDR].len) {
-        memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_XLATE_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_XLATE_IPV6_DST_ADDR].len, 16));
-        dst_mask = 128;
-      }
-      else {
-        memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
-        memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
-      }
+      memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+      memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
+
       pdata->primitives.dst_ip.family = AF_INET6;
       break;
     }
@@ -1730,8 +1720,8 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
     if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) { 
-      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_XLATE_L4_SRC_PORT].len)
-	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_XLATE_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_XLATE_L4_SRC_PORT].len, 2));
+      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_ASA_XLATE_L4_SRC_PORT].len)
+	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_ASA_XLATE_L4_SRC_PORT].len, 2));
       else if (tpl->tpl[NF9_L4_SRC_PORT].len) 
 	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
       else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_SRC_PORT].len) 
@@ -1794,8 +1784,8 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
     if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
-      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_XLATE_L4_DST_PORT].len)
-	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_XLATE_L4_DST_PORT].off, MIN(tpl->tpl[NF9_XLATE_L4_DST_PORT].len, 2));
+      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_ASA_XLATE_L4_DST_PORT].len)
+	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_L4_DST_PORT].off, MIN(tpl->tpl[NF9_ASA_XLATE_L4_DST_PORT].len, 2));
       else if (tpl->tpl[NF9_L4_DST_PORT].len)
 	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
       else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_DST_PORT].len)

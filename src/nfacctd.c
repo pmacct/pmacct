@@ -1118,7 +1118,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         return;
       }
 
-      handle_template_v9(template_hdr, pptrs, fid, SourceId, &pens);
+      handle_template(template_hdr, pptrs, fid, SourceId, &pens);
 
       tpl_ptr += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
       flowoff += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
@@ -1144,7 +1144,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         return;
       }
 
-      handle_template_v9((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL);
+      handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL);
 
       /* Increment is not precise for NetFlow v9 but will work */
       tpl_ptr += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9));
@@ -1167,7 +1167,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     pkt += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
 
-    tpl = find_template_v9(data_hdr->flow_id, pptrs, fid, SourceId);
+    tpl = find_template(data_hdr->flow_id, pptrs, fid, SourceId);
     if (!tpl) {
       struct host_addr a;
       u_char agent_addr[50];
