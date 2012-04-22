@@ -1262,6 +1262,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     }
     else {
       while (flowoff+tpl->len <= flowsetlen) {
+        /* Let's bake offsets and lengths if we have variable-length fields */
+        if (tpl->vlen) resolve_vlen_template(pkt, tpl);
+
         pptrs->f_data = pkt;
 	pptrs->f_tpl = (u_char *) tpl;
 	reset_net_status_v(pptrsv);

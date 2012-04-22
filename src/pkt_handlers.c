@@ -3444,3 +3444,17 @@ int evaluate_lm_method(struct packet_ptrs *pptrs, u_int8_t srcdst, u_int32_t bit
       return FALSE;
   }
 }
+
+char *lookup_tpl_ext_db(void *entry, u_int32_t pen, u_int16_t type)
+{
+  struct template_cache_entry *tpl = (struct template_cache_entry *) entry;
+  u_int16_t ie_idx, ext_db_modulo = (type%TPL_EXT_DB_ENTRIES);
+
+  for (ie_idx = 0; ie_idx < IES_PER_TPL_EXT_DB_ENTRY; ie_idx++) {
+    if (tpl->ext_db[ext_db_modulo].ie[ie_idx].type == type &&
+        tpl->ext_db[ext_db_modulo].ie[ie_idx].pen == pen)
+      return (char *) &tpl->ext_db[ext_db_modulo].ie[ie_idx];
+  }
+
+  return NULL;
+}
