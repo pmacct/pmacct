@@ -201,16 +201,18 @@ static struct NF9_SOFTFLOWD_TEMPLATE v4_template;
 static struct NF9_INTERNAL_TEMPLATE v4_int_template;
 static struct NF9_SOFTFLOWD_TEMPLATE v4_template_out;
 static struct NF9_INTERNAL_TEMPLATE v4_int_template_out;
+#if defined ENABLE_IPV6
 static struct NF9_SOFTFLOWD_TEMPLATE v6_template;
 static struct NF9_INTERNAL_TEMPLATE v6_int_template;
 static struct NF9_SOFTFLOWD_TEMPLATE v6_template_out;
 static struct NF9_INTERNAL_TEMPLATE v6_int_template_out;
+#endif
 static struct NF9_OPTIONS_TEMPLATE sampling_option_template;
 static struct NF9_INTERNAL_OPTIONS_TEMPLATE sampling_option_int_template;
 static struct NF9_OPTIONS_TEMPLATE class_option_template;
 static struct NF9_INTERNAL_OPTIONS_TEMPLATE class_option_int_template;
-static char ftoft_buf_0[sizeof(struct NF9_SOFTFLOWD_DATA_V6)];
-static char ftoft_buf_1[sizeof(struct NF9_SOFTFLOWD_DATA_V6)];
+static char ftoft_buf_0[NF9_SOFTFLOWD_MAX_PACKET_SIZE*2];
+static char ftoft_buf_1[NF9_SOFTFLOWD_MAX_PACKET_SIZE*2];
 
 static int nf9_pkts_until_template = -1;
 static u_int8_t send_options = FALSE;
@@ -733,6 +735,7 @@ nf9_init_template(void)
 	  v4_int_template_out.tot_rec_len += v4_int_template_out.r[idx].length;
 	}
 
+#if defined ENABLE_IPV6
 	rcount = 0;
 	bzero(&v6_template, sizeof(v6_template));
 	bzero(&v6_int_template, sizeof(v6_int_template));
@@ -1043,6 +1046,7 @@ nf9_init_template(void)
 	  v6_int_template.tot_rec_len += v6_int_template.r[idx].length;
 	  v6_int_template_out.tot_rec_len += v6_int_template_out.r[idx].length;
 	}
+#endif
 }
 
 static void
@@ -1180,39 +1184,41 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                 memcpy(ftoft_ptr_0, &rec8, 1);
                 ftoft_ptr_0 += 1;
 		if (flow_direction[0] == DIRECTION_IN) {
-                  for (idx = 5; v4_int_template.r[idx].length; idx++) {
+                  for (idx = 5; v4_int_template.r[idx].handler; idx++) {
                     v4_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template.r[idx].length);
                     ftoft_ptr_0 += v4_int_template.r[idx].length;
                   }
                   freclen = v4_int_template.tot_rec_len;
 		}
 		else if (flow_direction[0] == DIRECTION_OUT) {
-                  for (idx = 5; v4_int_template_out.r[idx].length; idx++) {
+                  for (idx = 5; v4_int_template_out.r[idx].handler; idx++) {
                     v4_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template_out.r[idx].length);
                     ftoft_ptr_0 += v4_int_template_out.r[idx].length;
                   }
                   freclen = v4_int_template_out.tot_rec_len;
 		}
                 break;
+#if defined ENABLE_IPV6
           case AF_INET6:
                 rec8 = 6;
                 memcpy(ftoft_ptr_0, &rec8, 1);
                 ftoft_ptr_0 += 1;
 		if (flow_direction[0] == DIRECTION_IN) {
-                  for (idx = 5; v6_int_template.r[idx].length; idx++) {
+                  for (idx = 5; v6_int_template.r[idx].handler; idx++) {
                     v6_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template.r[idx].length);
                     ftoft_ptr_0 += v6_int_template.r[idx].length;
                   }
                   freclen = v6_int_template.tot_rec_len;
 		}
 		else if (flow_direction[0] == DIRECTION_OUT) {
-                  for (idx = 5; v6_int_template_out.r[idx].length; idx++) {
+                  for (idx = 5; v6_int_template_out.r[idx].handler; idx++) {
                     v6_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template_out.r[idx].length);
                     ftoft_ptr_0 += v6_int_template_out.r[idx].length;
                   }
                   freclen = v6_int_template_out.tot_rec_len;
 		}
                 break;
+#endif
           default:
                 return (-1);
           }
@@ -1241,39 +1247,41 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                 memcpy(ftoft_ptr_1, &rec8, 1);
                 ftoft_ptr_1 += 1;
 		if (flow_direction[1] == DIRECTION_IN) {
-                  for (idx = 5; v4_int_template.r[idx].length; idx++) {
+                  for (idx = 5; v4_int_template.r[idx].handler; idx++) {
                     v4_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template.r[idx].length);
                     ftoft_ptr_1 += v4_int_template.r[idx].length;
                   }
                   freclen = v4_int_template.tot_rec_len;
 		}
 		else if (flow_direction[1] == DIRECTION_OUT) {
-                  for (idx = 5; v4_int_template_out.r[idx].length; idx++) {
+                  for (idx = 5; v4_int_template_out.r[idx].handler; idx++) {
                     v4_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template_out.r[idx].length);
                     ftoft_ptr_1 += v4_int_template_out.r[idx].length;
                   }
                   freclen = v4_int_template_out.tot_rec_len;
 		}
                 break;
+#if defined ENABLE_IPV6
           case AF_INET6:
                 rec8 = 6;
                 memcpy(ftoft_ptr_1, &rec8, 1);
                 ftoft_ptr_1 += 1;
 		if (flow_direction[1] == DIRECTION_IN) {
-                  for (idx = 5; v6_int_template.r[idx].length; idx++) {
+                  for (idx = 5; v6_int_template.r[idx].handler; idx++) {
                     v6_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template.r[idx].length);
                     ftoft_ptr_1 += v6_int_template.r[idx].length;
                   }
                   freclen = v6_int_template.tot_rec_len;
 		}
 		else if (flow_direction[1] == DIRECTION_OUT) {
-                  for (idx = 5; v6_int_template_out.r[idx].length; idx++) {
+                  for (idx = 5; v6_int_template_out.r[idx].handler; idx++) {
                     v6_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template_out.r[idx].length);
                     ftoft_ptr_1 += v6_int_template_out.r[idx].length;
                   }
                   freclen = v6_int_template_out.tot_rec_len;
 		}
                 break;
+#endif
           default:
                 return (-1);
           }
@@ -1485,15 +1493,16 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                         offset += v4_template_out.tot_len;
                         flows++;
 			tot_len += v4_template_out.tot_len;
+#if defined ENABLE_IPV6
 			memcpy(packet + offset, &v6_template, v6_template.tot_len);
 			offset += v6_template.tot_len; 
 			flows++;
-			/*XXX: shall v6 templates be issued only if v6 is enabled? */
 			tot_len += v6_template.tot_len; 
                         memcpy(packet + offset, &v6_template_out, v6_template_out.tot_len);
                         offset += v6_template_out.tot_len;
                         flows++;
 			tot_len += v6_template_out.tot_len; 
+#endif
 			if (config.sampling_rate || config.ext_sampling_rate) {
                           memcpy(packet + offset, &sampling_option_template, sampling_option_template.tot_len);
                           offset += sampling_option_template.tot_len;
@@ -1555,12 +1564,14 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 				    else if (direction == DIRECTION_OUT)
 				      dh->c.flowset_id = v4_template_out.h.template_id;
 				  }
+#if defined ENABLE_IPV6
 				  else if (flows[flow_i + flow_j]->af == AF_INET6) {
 				    if (direction == DIRECTION_IN)
 				      dh->c.flowset_id = v6_template.h.template_id;
 				    else if (direction == DIRECTION_OUT)
 				      dh->c.flowset_id = v6_template_out.h.template_id;
 				  }
+#endif
 				  // last_af = flows[flow_i + flow_j]->af; /* XXX */
 				}
 				last_valid = offset;
