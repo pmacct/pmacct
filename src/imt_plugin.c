@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -35,7 +35,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct sockaddr cAddr;
   struct pkt_data *data;
   struct ports_table pt;
-  struct timezone tz;
   unsigned char srvbuf[maxqsize];
   unsigned char *srvbufptr;
   struct query_header *qh;
@@ -174,7 +173,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     num = select(select_fd, &read_descs, NULL, NULL, NULL);
     if (num < 0) goto select_again;  
 
-    gettimeofday(&cycle_stamp, &tz);
+    gettimeofday(&cycle_stamp, NULL);
 
     /* doing server tasks */
     if (FD_ISSET(sd, &read_descs)) {

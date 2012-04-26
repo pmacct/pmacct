@@ -82,7 +82,11 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
   }
 
   if (reload_map) {
+    bta_map_caching = FALSE;
+    sampling_map_caching = FALSE;
+
     load_networks(config.networks_file, &nt, &nc);
+
     if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
       load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
     if (config.nfacctd_bgp && config.nfacctd_bgp_src_local_pref_map)
@@ -93,7 +97,9 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
     if (config.pre_tag_map)
       load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req, &tag_map_allocated);
+
     reload_map = FALSE;
+    gettimeofday(&reload_map_tstamp, NULL);
   }
 }
 

@@ -49,6 +49,14 @@ struct xflow_status_entry_class
   struct xflow_status_entry_class *next;
 };
 
+struct xflow_status_map_cache
+{
+  pm_id_t id;
+  pm_id_t id2;
+  int ret;
+  struct timeval stamp;
+};
+
 struct xflow_status_entry
 {
   struct host_addr agent_addr;  /* xFlow agent IP address */
@@ -60,6 +68,9 @@ struct xflow_status_entry
   u_int16_t inc;		/* increment, NetFlow v5: required by flow sequence number */
   u_int32_t peer_v4_idx;        /* last known BGP peer index for ipv4 address family */
   u_int32_t peer_v6_idx;        /* last known BGP peer index for ipv6 address family */
+  struct xflow_status_map_cache bta_v4;			/* last known bgp_agent_map IPv4 result */
+  struct xflow_status_map_cache bta_v6;			/* last known bgp_agent_map IPv6 result */
+  struct xflow_status_map_cache st;			/* last known sampling_map result */
   struct xflow_status_entry_counters counters;
   struct xflow_status_entry_sampling *sampling;
   struct xflow_status_entry_class *class;

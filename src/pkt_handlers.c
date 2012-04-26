@@ -2627,10 +2627,21 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 void NF_counters_map_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct xflow_status_entry *xsentry = (struct xflow_status_entry *) pptrs->f_status;
 
   if (pptrs->renormalized) return;
 
-  NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+  if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
+    pptrs->st = xsentry->st.id;
+  }
+  else { 
+    NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+
+    if (xsentry) {
+      xsentry->st.id = pptrs->st;
+      gettimeofday(&xsentry->st.stamp, NULL);
+    }
+  }
 
   if (pptrs->st) {
     pdata->pkt_len = pdata->pkt_len * pptrs->st;
@@ -3182,10 +3193,21 @@ void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 void SF_counters_map_renormalize_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct xflow_status_entry *xsentry = (struct xflow_status_entry *) pptrs->f_status;
 
   if (pptrs->renormalized) return;
 
-  SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+  if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
+    pptrs->st = xsentry->st.id;
+  }
+  else {
+    SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+
+    if (xsentry) {
+      xsentry->st.id = pptrs->st;
+      gettimeofday(&xsentry->st.stamp, NULL);
+    }
+  }
 
   if (pptrs->st) {
     pdata->pkt_len = pdata->pkt_len * pptrs->st;

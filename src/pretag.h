@@ -171,6 +171,9 @@ EXT int biss_map_allocated;
 EXT int bta_map_allocated;
 EXT int bitr_map_allocated;
 EXT int sampling_map_allocated;
-EXT int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
+EXT int bta_map_caching; 
+EXT int sampling_map_caching; 
+
+EXT int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 #undef EXT

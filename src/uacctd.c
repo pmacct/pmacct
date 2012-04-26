@@ -145,6 +145,8 @@ int main(int argc,char **argv, char **envp)
   blp_map_allocated = FALSE;
   bmed_map_allocated = FALSE;
   biss_map_allocated = FALSE;
+  bta_map_caching = FALSE;
+  sampling_map_caching = FALSE;
   find_id_func = PM_find_id;
 
   errflag = 0;
@@ -165,6 +167,7 @@ int main(int argc,char **argv, char **envp)
   memset(&client, 0, sizeof(client));
   memset(&cb_data, 0, sizeof(cb_data));
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
+  memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   config.acct_type = ACCT_PM;
 
   rows = 0;

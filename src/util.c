@@ -1188,18 +1188,40 @@ int check_allow(struct hosts_table *allow, struct sockaddr *sa)
 
 int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
+  struct xflow_status_entry *xsentry = (struct xflow_status_entry *) pptrs->f_status;
+  struct xflow_status_map_cache *xsmc = NULL;
   int ret = 0;
 
   pptrs->bta_af = 0;
 
-  if (find_id_func) {
-    ret = find_id_func(t, pptrs, tag, tag2);
-
-    if (ret == PRETAG_MAP_RCODE_ID) pptrs->bta_af = ETHERTYPE_IP;
+  if (bta_map_caching && xsentry) {
+    if (pptrs->l3_proto == ETHERTYPE_IP) xsmc = &xsentry->bta_v4; 
 #if defined ENABLE_IPV6
-    else if (ret == BTA_MAP_RCODE_ID_ID2) pptrs->bta_af = ETHERTYPE_IPV6;
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) xsmc = &xsentry->bta_v6;
 #endif
   }
+
+  if (bta_map_caching && xsmc && timeval_cmp(&xsmc->stamp, &reload_map_tstamp) > 0) {
+    *tag = xsmc->id;
+    *tag2 = xsmc->id2;
+    ret = xsmc->ret;
+  }
+  else {
+    if (find_id_func) {
+      ret = find_id_func(t, pptrs, tag, tag2);
+      if (xsmc) {
+	xsmc->id = *tag;
+	xsmc->id2 = *tag2;
+	xsmc->ret = ret;
+	gettimeofday(&xsmc->stamp, NULL);
+      }
+    }
+  }
+
+  if (ret == PRETAG_MAP_RCODE_ID) pptrs->bta_af = ETHERTYPE_IP;
+#if defined ENABLE_IPV6
+  else if (ret == BTA_MAP_RCODE_ID_ID2) pptrs->bta_af = ETHERTYPE_IPV6;
+#endif
 
   return ret;
 }

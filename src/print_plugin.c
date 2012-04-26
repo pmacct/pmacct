@@ -39,7 +39,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ports_table pt;
   unsigned char *pipebuf;
   struct pollfd pfd;
-  struct timezone tz;
   time_t t, now;
   int timeout, ret, num; 
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
@@ -169,7 +168,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           exit(0);
         default: /* Parent */
           P_cache_flush(queries_queue, qq_ptr);
-	  gettimeofday(&flushtime, &tz);
+	  gettimeofday(&flushtime, NULL);
     	  refresh_deadline += config.print_refresh_time; 
           qq_ptr = FALSE;
 	  if (reload_map) {
@@ -225,7 +224,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             exit(0);
           default: /* Parent */
             P_cache_flush(queries_queue, qq_ptr);
-	    gettimeofday(&flushtime, &tz);
+	    gettimeofday(&flushtime, NULL);
             refresh_deadline += config.print_refresh_time; 
             qq_ptr = FALSE;
 	    if (reload_map) {

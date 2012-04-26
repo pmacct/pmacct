@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -514,9 +514,9 @@ void recollect_pipe_memory(struct channels_list_entry *mychptr)
 
 void init_random_seed()
 {
-  struct timeval tv; struct timezone tz;
+  struct timeval tv;
 
-  gettimeofday(&tv, &tz);
+  gettimeofday(&tv, NULL);
   srandom((unsigned int)tv.tv_usec);
 }
 

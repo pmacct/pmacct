@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -36,7 +36,6 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ports_table pt;
   struct pollfd pfd;
   struct insert_data idata;
-  struct timezone tz;
   time_t refresh_deadline;
   int timeout;
   int ret, num;
@@ -141,7 +140,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         exit(0);
       default: /* Parent */
 	if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
-	gettimeofday(&idata.flushtime, &tz);
+	gettimeofday(&idata.flushtime, NULL);
 	while (idata.now > refresh_deadline)
 	  refresh_deadline += config.sql_refresh_time; 
 	while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
@@ -223,7 +222,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           exit(0);
         default: /* Parent */
 	  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
-	  gettimeofday(&idata.flushtime, &tz);
+	  gettimeofday(&idata.flushtime, NULL);
 	  while (idata.now > refresh_deadline)
 	    refresh_deadline += config.sql_refresh_time; 
           while (idata.now > idata.triggertime && idata.t_timeslot > 0) {

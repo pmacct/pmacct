@@ -288,6 +288,7 @@ EXT void compute_once();
 #endif
 EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 EXT int reload_map, reload_map_bgp_thread, data_plugins, tee_plugins;
+EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;
 #undef EXT
 

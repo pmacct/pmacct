@@ -152,6 +152,8 @@ int main(int argc,char **argv, char **envp)
   biss_map_allocated = FALSE;
   bta_map_allocated = FALSE;
   bitr_map_allocated = FALSE;
+  bta_map_caching = TRUE;
+  sampling_map_caching = TRUE;
   find_id_func = NF_find_id;
 
   data_plugins = 0;
@@ -178,6 +180,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bta_table, 0, sizeof(bta_table));
   memset(&bitr_table, 0, sizeof(bitr_table));
   memset(&sampling_table, 0, sizeof(sampling_table));
+  memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   config.acct_type = ACCT_NF;
 
   rows = 0;
@@ -771,7 +774,11 @@ int main(int argc,char **argv, char **envp)
     if (!allowed) continue;
 
     if (reload_map) {
+      bta_map_caching = TRUE;
+      sampling_map_caching = TRUE;
+
       load_networks(config.networks_file, &nt, &nc);
+
       if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map) 
         load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated); 
       if (config.nfacctd_bgp && config.nfacctd_bgp_src_local_pref_map) 
@@ -788,7 +795,9 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
         set_sampling_table(&pptrs, (u_char *) &sampling_table);
       }
+
       reload_map = FALSE;
+      gettimeofday(&reload_map_tstamp, NULL);
     }
 
     if (data_plugins) {

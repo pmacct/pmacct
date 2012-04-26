@@ -122,6 +122,8 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   int x = 0, len;
   char *endptr;
 
+  if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
+
   e->input.neg = pt_check_neg(&value);
   len = strlen(value);
 
@@ -152,6 +154,8 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
 {
   int x = 0, len;
   char *endptr;
+
+  if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
 
   e->output.neg = pt_check_neg(&value);
   len = strlen(value);

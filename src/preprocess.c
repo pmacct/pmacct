@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -460,7 +460,7 @@ int check_fss(struct db_cache *queue[], int *num, int seq)
 int check_fsrc(struct db_cache *queue[], int *num, int seq)
 {
   struct fsrc_queue_elem *ptr, *last_seen, *new;
-  struct timeval tv; struct timezone tz;
+  struct timeval tv; 
   float w /* random variable */, z;
   u_int32_t max = prep.fsrc+1; /* maximum number of allowed flows */
   int x, queueElemSz = sizeof(struct fsrc_queue_elem);
@@ -482,7 +482,7 @@ int check_fsrc(struct db_cache *queue[], int *num, int seq)
   /* 1st stage: computing the m+1==max flows with highest z */ 
   for (x = 0; x < *num; x++) {
     if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
-      gettimeofday(&tv, &tz);
+      gettimeofday(&tv, NULL);
       srandom((unsigned int)tv.tv_usec);
       w = (float) (random()/(RAND_MAX+1.0));
 

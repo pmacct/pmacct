@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -79,9 +79,8 @@ void init_ip4_flow_handler()
 void ip_flow_handler(struct packet_ptrs *pptrs)
 {
   struct timeval now;
-  struct timezone tz;
 
-  gettimeofday(&now, &tz);
+  gettimeofday(&now, NULL);
 
   if (now.tv_sec > flt_prune_deadline) {
     prune_old_flows(&now);
@@ -420,9 +419,8 @@ void init_ip6_flow_handler()
 void ip_flow6_handler(struct packet_ptrs *pptrs)
 {
   struct timeval now;
-  struct timezone tz;
 
-  gettimeofday(&now, &tz);
+  gettimeofday(&now, NULL);
 
   if (now.tv_sec > flt6_prune_deadline) {
     prune_old_flows6(&now);
