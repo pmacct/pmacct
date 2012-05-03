@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
   char default_pwd[] = "arealsmartpwd";
   int have_pwd = 0, have_logfile = 0, n;
   int result = 0, position = 0, howmany = 0; 
-  int do_nothing = 0; 
+  int do_nothing = 0, ret; 
   char *cl_sql_host = NULL, *cl_sql_user = NULL, *cl_sql_db = NULL, *cl_sql_table = NULL;
 
   char sql_pwd[SRVBUFLEN];
@@ -271,7 +271,10 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  fread(&lh, sizeof(lh), 1, f);
+  if ((ret = fread(&lh, sizeof(lh), 1, f)) != 1) {
+    printf("ERROR: Short read from %s\nExiting...\n", logfile);
+    exit(1);
+  }
   lh.sql_table_version = ntohs(lh.sql_table_version);
   lh.sql_optimize_clauses = ntohs(lh.sql_optimize_clauses);
   lh.sql_history = ntohs(lh.sql_history);
@@ -306,7 +309,10 @@ int main(int argc, char **argv)
   if (cl_sql_host) sql_host = cl_sql_host;
   else sql_host = lh.sql_host;
   
-  fread(&th, sizeof(th), 1, f);
+  if ((ret = fread(&th, sizeof(th), 1, f)) != 1) {
+    printf("ERROR: Short read from %s\nExiting...\n", logfile);
+    exit(1);
+  }
   th.magic = ntohl(th.magic);
   th.num = ntohs(th.num);
   th.sz = ntohs(th.sz);
@@ -319,7 +325,10 @@ int main(int argc, char **argv)
     }
     te = malloc(th.num*sizeof(struct template_entry));
     memset(te, 0, th.num*sizeof(struct template_entry));
-    fread(te, th.num*sizeof(struct template_entry), 1, f);
+    if ((ret = fread(te, th.num*sizeof(struct template_entry), 1, f)) != 1) {
+      printf("ERROR: Short read from %s\nExiting...\n", logfile);
+      exit(1);
+    }
   }
   else {
     if (debug) printf("ERROR: no template header found.\n");

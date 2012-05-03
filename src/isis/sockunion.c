@@ -625,7 +625,7 @@ sockunion_print (union sockunion *su)
 	struct sockaddr_dl *sdl;
 
 	sdl = (struct sockaddr_dl *)&(su->sa);
-	printf ("link#%d\n", sdl->sdl_index);
+	// printf ("link#%d\n", sdl->sdl_index);
       }
       break;
 #endif /* AF_LINK */

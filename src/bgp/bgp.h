@@ -178,7 +178,6 @@ EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspa
 EXT void load_comm_patterns(char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
-//EXT as_t evaluate_last_asn(char *);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
 EXT void bgp_srcdst_lookup(struct packet_ptrs *);
@@ -187,7 +186,7 @@ EXT void write_neighbors_file(char *);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 
 EXT unsigned int attrhash_key_make(void *);
-EXT int attrhash_cmp(void *, void *);
+EXT int attrhash_cmp(const void *, const void *);
 EXT void attrhash_init();
 
 EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);

@@ -337,7 +337,7 @@ void skinny_bgp_daemon()
       }
       else {
 	if (peer->buf.len > BGP_MAX_PACKET_SIZE) { 
-	  realloc(peer->buf.base, BGP_MAX_PACKET_SIZE);
+	  peer->buf.base = realloc(peer->buf.base, BGP_MAX_PACKET_SIZE);
 	  memset(peer->buf.base, 0, BGP_MAX_PACKET_SIZE);
 	  peer->buf.len = BGP_MAX_PACKET_SIZE;
 	}
@@ -1562,10 +1562,10 @@ unsigned int attrhash_key_make(void *p)
   return key;
 }
 
-int attrhash_cmp(void *p1,void *p2)
+int attrhash_cmp(const void *p1, const void *p2)
 {
-  struct bgp_attr *attr1 = p1;
-  struct bgp_attr *attr2 = p2;
+  const struct bgp_attr *attr1 = (const struct bgp_attr *)p1;
+  const struct bgp_attr *attr2 = (const struct bgp_attr *)p2;
 
   if (attr1->flag == attr2->flag
       && attr1->origin == attr2->origin
@@ -2315,7 +2315,7 @@ void write_neighbors_file(char *filename)
 {
   FILE *file;
   char neighbor[INET6_ADDRSTRLEN+1];
-  int idx, len;
+  int idx, len, ret;
   uid_t owner = -1;
   gid_t group = -1;
 
@@ -2326,7 +2326,7 @@ void write_neighbors_file(char *filename)
 
   file = fopen(filename,"w");
   if (file) {
-    if (chown(filename, owner, group) == -1)
+    if ((ret = chown(filename, owner, group)) == -1)
       Log(LOG_WARNING, "WARN: Unable to chown() '%s': %s\n", filename, strerror(errno));
 
     if (file_lock(fileno(file))) {
