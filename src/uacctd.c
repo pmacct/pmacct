@@ -744,12 +744,12 @@ int main(int argc,char **argv, char **envp)
       hdr.len = ulog_pkt->data_len;
 
       if (strlen(ulog_pkt->indev_name) > 1) {
-       cb_data.ifindex_in = get_ifindex(ulog_pkt->indev_name);
+	cb_data.ifindex_in = cache_ifindex(ulog_pkt->indev_name, tv.tv_sec);
       }
       else cb_data.ifindex_in = 0;
 
       if (strlen(ulog_pkt->outdev_name) > 1) {
-       cb_data.ifindex_out = get_ifindex(ulog_pkt->outdev_name);
+	cb_data.ifindex_out = cache_ifindex(ulog_pkt->outdev_name, tv.tv_sec);
       }
       else cb_data.ifindex_out = 0;
 
