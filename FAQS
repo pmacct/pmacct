@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
 A: It is http://www.pmacct.net/ . There isn't any official mirror site. 
@@ -38,9 +38,9 @@ A: Yes, but in a specific way. In other tools flat-files are typically used to l
    By inception, pmacct always aimed to a single-stage approach instead, ie. offer data
    reduction tecniques and correlation tools to process network traffic data on the fly,
    so to immediately offer the desired view(s) of the traffic. pmacct writes to files in
-   text-format (either csv or formatted via its 'print' plugin, see EXAMPLES for further
-   information) so to maximize potential integration with 3rd party applications while
-   keeping low the effort of customization.
+   text-format (either csv or formatted via its 'print' plugin, see QUICKSTART doc for
+   further information) so to maximize potential integration with 3rd party applications
+   while keeping low the effort of customization.
 
 
 Q6: Is it feasible for pmacct to scale by making use of either memory tables or RDBMS
@@ -152,7 +152,7 @@ Q11: How to get the historical accounting enabled ? SQL table have a 'stamp_inse
    and 'stamp_updated' fields but they remain empty.
 A: Historical accounting is easily enabled by adding to the SQL plugin configuration a
    'sql_history' directive. Associate to it a 'sql_history_roundoff'. For examples and
-   syntax, refer to CONFIG-KEYS and EXAMPLES documents. 
+   syntax, refer to CONFIG-KEYS and QUICKSTART documents. 
 
 
 Q12: CLI is not enough to me. I would like to graph traffic data: how to do that?

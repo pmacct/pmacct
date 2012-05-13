@@ -2,7 +2,7 @@ SUPPORTED CONFIGURATION KEYS
 Both configuration directives and commandline switches are listed below. 
 A configuration consists of key/value pairs, separated by the ':' char.
 Starting a line with the '!' symbol, makes the whole line to be ignored
-by the interpreter, making it a comment. Please refer also to the EXAMPLES
+by the interpreter, making it a comment. Please also refer to QUICKSTART 
 document and the 'examples/' sub-tree for some examples.
 
 Directives are sometimes grouped, like sql_table and print_output_file:
@@ -1195,7 +1195,7 @@ DESC:		Defines the Network entity title (NET) of the IS-IS daemon. In turn a NET
 		addresses for the IS-IS area and the system ID of the router. No default value is set and
 		a non-zero value is mandatory. Extensive IS-IS and ISO literature cover the topic, example
 		of the NET value format can be found as part of the "Quickstart guide to setup the IS-IS
-		daemon" in the EXAMPLES document.
+		daemon" in the QUICKSTART document.
 
 KEY:		isis_daemon_iface
 DESC:		Defines the network interface (ie. gre1) where to bind the IS-IS daemon. No default value

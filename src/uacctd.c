@@ -79,7 +79,7 @@ void usage_daemon(char *prog_name)
   printf("  -r  \tRefresh time (in seconds)\n");
   printf("  -O  \t[ formatted | csv ] \n\tOutput format\n");
   printf("\n");
-  printf("  See EXAMPLES or visit http://wiki.pmacct.net/ for examples.\n");
+  printf("  See QUICKSTART or visit http://wiki.pmacct.net/ for examples.\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }

@@ -78,7 +78,7 @@ void usage_client(char *prog)
   printf("  -O\tShow output in CSV format (applies to -M and -s)\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
   printf("\n");
-  printf("  See EXAMPLES file in the distribution for examples\n");
+  printf("  See QUICKSTART file in the distribution for examples\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
