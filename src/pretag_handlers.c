@@ -225,19 +225,21 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
     }
   }
 
-  if (config.nfacctd_as & NF_AS_BGP) {
+  if (config.nfacctd_net & NF_NET_BGP) {
     e->func[x] = pretag_bgp_bgp_nexthop_handler;
     have_bgp = TRUE;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
     x++;
   }
 
-  if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_NF) {
+  /* XXX: IGP? */
+
+  if (config.nfacctd_net & NF_NET_KEEP && config.acct_type == ACCT_NF) {
     e->func[x] = pretag_bgp_nexthop_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
     return FALSE;
   }
-  else if (config.nfacctd_as & NF_AS_KEEP && config.acct_type == ACCT_SF) {
+  else if (config.nfacctd_net & NF_NET_KEEP && config.acct_type == ACCT_SF) {
     e->func[x] = SF_pretag_bgp_nexthop_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
     return FALSE;
@@ -371,7 +373,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_ENGINE_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'bgp_nexthop' clauses part of the same statement. ", filename);
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'engine_id' clauses part of the same statement. ", filename);
       return TRUE;
     }
   }
@@ -1064,6 +1066,9 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->last_matched == PRETAG_BGP_NEXTHOP) return FALSE;
 
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return;
+
   switch(hdr->version) {
   case 9:
     if (entry->bgp_nexthop.a.family == AF_INET) {
@@ -1093,6 +1098,9 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   int ret = -1;
+
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_BGP)) return;
 
   if (dst_ret) {
     if (pptrs->bgp_nexthop_info)
@@ -1651,8 +1659,8 @@ int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void 
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* If in a fallback scenario, ie. NF_AS_BGP + NF_AS_KEEP set, check BGP first */
-  if (config.nfacctd_as & NF_AS_BGP && pptrs->bgp_dst) return FALSE;
+  /* check network-related primitives against fallback scenarios */
+  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return;
 
   if (entry->bgp_nexthop.a.family == AF_INET) {
     if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, &sample->bgp_nextHop.address.ip_v4, 4)) return (FALSE | entry->bgp_nexthop.neg);
