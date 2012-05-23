@@ -460,14 +460,16 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_table) {
     f = open_print_output_file(config.sql_table, refresh_deadline-config.print_refresh_time);
 
-    if (config.print_output == PRINT_OUTPUT_FORMATTED)
-      P_write_stats_header_formatted(f);
-    else if (config.print_output == PRINT_OUTPUT_CSV)
-      P_write_stats_header_csv(f);
+    if (f) { 
+      if (config.print_output == PRINT_OUTPUT_FORMATTED)
+        P_write_stats_header_formatted(f);
+      else if (config.print_output == PRINT_OUTPUT_CSV)
+        P_write_stats_header_csv(f);
+    }
   }
   else f = stdout; /* write to standard output */
 
-  if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", refresh_deadline-config.print_refresh_time,
+  if (f && config.print_markers) fprintf(f, "--START (%ld+%d)--\n", refresh_deadline-config.print_refresh_time,
 		  			config.print_refresh_time);
 
   for (j = 0; j < index; j++) {
@@ -478,7 +480,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     if (!queue[j]->bytes_counter && !queue[j]->packet_counter && !queue[j]->flow_counter)
       continue;
 
-    if (config.print_output == PRINT_OUTPUT_FORMATTED) {
+    if (f && config.print_output == PRINT_OUTPUT_FORMATTED) {
       fprintf(f, "%-10llu  ", data->id);
       fprintf(f, "%-10llu  ", data->id2);
       fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
@@ -571,7 +573,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       fprintf(f, "%lu\n", queue[j]->bytes_counter);
 #endif
     }
-    else if (config.print_output == PRINT_OUTPUT_CSV) {
+    else if (f && config.print_output == PRINT_OUTPUT_CSV) {
       fprintf(f, "%llu,", data->id);
       fprintf(f, "%llu,", data->id2);
       fprintf(f, "%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
@@ -648,9 +650,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
   }
 
-  if (config.print_markers) fprintf(f, "--END--\n");
+  if (f && config.print_markers) fprintf(f, "--END--\n");
 
-  if (config.sql_table) fclose(f);
+  if (f && config.sql_table) fclose(f);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

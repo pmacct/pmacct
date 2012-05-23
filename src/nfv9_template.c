@@ -300,11 +300,19 @@ void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *p
 
 void log_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
 {
-  if (!pen && type <= MAX_TPL_DESC_LIST && strlen(tpl_desc_list[type])) { 
-    if (!off && vlen) 
-      Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6s | %6u |\n", 0, tpl_desc_list[type], "tbd", len);
-    else
-      Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6u | %6u |\n", 0, tpl_desc_list[type], off, len);
+  if (!pen) {
+    if (type <= MAX_TPL_DESC_LIST && strlen(tpl_desc_list[type])) { 
+      if (!off && vlen) 
+        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6s | %6u |\n", 0, tpl_desc_list[type], "tbd", len);
+      else
+        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6u | %6u |\n", 0, tpl_desc_list[type], off, len);
+    }
+    else {
+      if (!off && vlen)
+        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6s | %6u |\n", 0, type, "tbd", len);
+      else
+        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6u | %6u |\n", 0, type, off, len);
+    }
   }
   else {
     if (!off && vlen) 

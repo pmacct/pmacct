@@ -381,17 +381,32 @@ FILE *open_logfile(char *filename)
 
 FILE *open_print_output_file(char *filename, time_t now)
 {
-  char buf[LARGEBUFLEN];
+  char buf[LARGEBUFLEN], *fname_ptr, *fname_ptr_tmp;
+  char latest_fname[LARGEBUFLEN], latest_pname[LARGEBUFLEN];
   FILE *file = NULL;
   struct tm *tmnow;
   uid_t owner = -1;
   gid_t group = -1;
+  u_int16_t offset;
 
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
   tmnow = localtime(&now);
-  strftime(buf, LARGEBUFLEN, filename, tmnow);
+  strftime(buf, LARGEBUFLEN-10, filename, tmnow);
+
+  /* Check: filename is not making use of the reserved word 'latest' */
+  for (fname_ptr_tmp = buf, fname_ptr = NULL; fname_ptr_tmp; fname_ptr_tmp = strchr(fname_ptr_tmp, '/')) {
+    if (*fname_ptr_tmp == '/') fname_ptr_tmp++;
+    fname_ptr = fname_ptr_tmp;
+  }
+
+  strcpy(latest_fname, config.name);
+  strcat(latest_fname, "-latest");
+  if (!strcmp(fname_ptr, latest_fname)) {
+    Log(LOG_WARNING, "WARN: Invalid print_ouput_file '%s': reserved word\n", buf);
+    return NULL;
+  }
 
   file = fopen(buf, "w");
   if (file) {
@@ -401,6 +416,18 @@ FILE *open_print_output_file(char *filename, time_t now)
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock for print_ouput_file '%s'.\n", buf);
       file = NULL;
+    }
+
+    /* Let's point 'latest' to the newly opened file */
+    if (file) {
+      memcpy(latest_pname, buf, LARGEBUFLEN);
+      offset = strlen(buf)-strlen(fname_ptr);
+      if (strlen(latest_fname) < LARGEBUFLEN-offset) {
+        strcpy(latest_pname+offset, latest_fname);
+        unlink(latest_pname);
+        symlink(fname_ptr, latest_pname);
+      }
+      else Log(LOG_WARNING, "WARN: Unable to link latest file for print_ouput_file '%s'\n", buf);
     }
   }
   else {
