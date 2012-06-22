@@ -2342,7 +2342,15 @@ void write_neighbors_file(char *filename)
 	  neighbor[len] = '\0';
           fwrite(neighbor, len, 1, file);
         }
-        /* we don't happen to support IPv6 neighbors just yet */
+#if defined ENABLE_IPV6
+	else if (peers[idx].addr.family == AF_INET6) {
+          inet_ntop(AF_INET6, &peers[idx].addr.address.ipv6, neighbor, INET6_ADDRSTRLEN);
+          len = strlen(neighbor);
+          neighbor[len] = '\n'; len++;
+          neighbor[len] = '\0';
+          fwrite(neighbor, len, 1, file);
+        }
+#endif
       }
     }
 
