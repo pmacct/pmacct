@@ -653,7 +653,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   return;
 
   safe_action:
-  Log(LOG_DEBUG, "DEBUG ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
+  Log(LOG_WARNING, "WARN ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
 
   if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
   switch (fork()) {
