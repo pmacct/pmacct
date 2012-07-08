@@ -2672,7 +2672,7 @@ char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
   hash = hash_status_table(aux1, &salocal, XFLOW_STATUS_TABLE_SZ);
 
   if (hash >= 0) {
-    entry = search_status_table(&salocal, aux1, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&salocal, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
       update_status_table(entry, spp->sequenceNo);
       entry->inc = 1;

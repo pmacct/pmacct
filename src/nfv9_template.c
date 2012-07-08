@@ -492,7 +492,6 @@ void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)
 	otpl_ptr->off = len+add_len;
       }
 
-      //printf("CI PASSO: idx: %u vlen: %u off: %u (len: %u) flen: %u add_len: %u\n", idx, vlen, otpl_ptr->off, len, otpl_ptr->len, add_len);
       len += (otpl_ptr->len+add_len); 
     }
     else if (tpl->list[idx].type == TPL_TYPE_EXT_DB) {
@@ -505,7 +504,6 @@ void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)
 	utpl_ptr->off = len+add_len;
       }
 
-      //printf("CI PASSO: idx: %u vlen: %u off: %u (len: %u) flen: %u add_len: %u\n", idx, vlen, utpl_ptr->off, len, utpl_ptr->len, add_len);
       len += (utpl_ptr->len+add_len);
     }
 

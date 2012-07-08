@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -44,7 +44,7 @@ u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
   return hash;
 }
 
-struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t aux1, int hash, int num_entries)
+struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t aux1, u_int32_t aux2, int hash, int num_entries)
 {
   struct xflow_status_entry *entry = xflow_status_table[hash], *saved = NULL;
   u_int16_t port;
@@ -52,7 +52,7 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
   cycle_again:
   if (entry) {
     saved = entry;
-    if (!sa_addr_cmp(sa, &entry->agent_addr) && aux1 == entry->aux1); /* FOUND IT: we are finished */
+    if (!sa_addr_cmp(sa, &entry->agent_addr) && aux1 == entry->aux1 && aux2 == entry->aux2); /* FOUND IT: we are done */
     else {
       entry = entry->next;
       goto cycle_again;
@@ -66,6 +66,7 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
 	memset(entry, 0, sizeof(struct xflow_status_entry));
 	sa_to_addr(sa, &entry->agent_addr, &port);
 	entry->aux1 = aux1;
+	entry->aux2 = aux2;
 	entry->seqno = 0;
 	entry->next = FALSE;
         if (!saved) xflow_status_table[hash] = entry;
@@ -232,7 +233,12 @@ create_smp_entry_status_table(struct xflow_status_entry *entry)
 struct xflow_status_entry_class *
 search_class_id_status_table(struct xflow_status_entry_class *centry, pm_class_t class_id)
 {
+  pm_class_t needle, haystack;
+
   while (centry) {
+    needle = ntohl(class_id);
+    haystack = ntohl(centry->class_id);
+
     if (centry->class_id == class_id) return centry;
     centry = centry->next;
   }
@@ -269,18 +275,6 @@ create_class_entry_status_table(struct xflow_status_entry *entry)
   return new;
 }
 
-pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_class_t *class_id)
-{
-  struct xflow_status_entry_class *centry;
-
-  centry = search_class_id_status_table(entry, *class_id);
-  if (centry) {
-    return centry->class_int_id;
-  }
-
-  return 0;
-}
-
 void set_vector_f_status(struct packet_ptrs_vector *pptrsv)
 {
   pptrsv->vlan4.f_status = pptrsv->v4.f_status;
@@ -291,5 +285,18 @@ void set_vector_f_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan6.f_status = pptrsv->v4.f_status;
   pptrsv->vlanmpls6.f_status = pptrsv->v4.f_status;
   pptrsv->mpls6.f_status = pptrsv->v4.f_status;
+#endif
+}
+
+void set_vector_f_status_g(struct packet_ptrs_vector *pptrsv)
+{
+  pptrsv->vlan4.f_status_g = pptrsv->v4.f_status_g;
+  pptrsv->mpls4.f_status_g = pptrsv->v4.f_status_g;
+  pptrsv->vlanmpls4.f_status_g = pptrsv->v4.f_status_g;
+#if defined ENABLE_IPV6
+  pptrsv->v6.f_status_g = pptrsv->v4.f_status_g;
+  pptrsv->vlan6.f_status_g = pptrsv->v4.f_status_g;
+  pptrsv->vlanmpls6.f_status_g = pptrsv->v4.f_status_g;
+  pptrsv->mpls6.f_status_g = pptrsv->v4.f_status_g;
 #endif
 }
