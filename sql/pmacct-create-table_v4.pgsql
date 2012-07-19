@@ -19,7 +19,7 @@ CREATE TABLE acct_uni_v4 (
         packets INT NOT NULL,
         bytes BIGINT NOT NULL,
 	flows INT NOT NULL DEFAULT 0,
-        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', 
+        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0001-01-01 00:00:00', 
         stamp_updated timestamp without time zone,
         CONSTRAINT acct_uni_v4_pk PRIMARY KEY (agent_id, mac_src, mac_dst, vlan, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
@@ -39,7 +39,7 @@ CREATE TABLE acct_v4 (
         packets INT NOT NULL,
         bytes BIGINT NOT NULL,
 	flows INT NOT NULL DEFAULT 0,
-        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', 
+        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0001-01-01 00:00:00', 
         stamp_updated timestamp without time zone,
         CONSTRAINT acct_v4_pk PRIMARY KEY (agent_id, mac_src, mac_dst, vlan, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
@@ -59,7 +59,7 @@ CREATE TABLE acct_as_v4 (
         packets INT NOT NULL,
         bytes BIGINT NOT NULL,
 	flows INT NOT NULL DEFAULT 0,
-        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', 
+        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0001-01-01 00:00:00', 
         stamp_updated timestamp without time zone,
         CONSTRAINT acct_as_v4_pk PRIMARY KEY (agent_id, mac_src, mac_dst, vlan, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );

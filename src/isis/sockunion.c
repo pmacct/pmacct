@@ -596,45 +596,6 @@ sockunion_getpeername (int fd)
   return NULL;
 }
 
-/* Print sockunion structure */
-static void __attribute__ ((unused))
-sockunion_print (union sockunion *su)
-{
-  if (su == NULL)
-    return;
-
-  switch (su->sa.sa_family) 
-    {
-    case AF_INET:
-      printf ("%s\n", inet_ntoa (su->sin.sin_addr));
-      break;
-#ifdef ENABLE_IPV6
-    case AF_INET6:
-      {
-	char buf [SU_ADDRSTRLEN];
-
-	printf ("%s\n", inet_ntop (AF_INET6, &(su->sin6.sin6_addr),
-				 buf, sizeof (buf)));
-      }
-      break;
-#endif /* ENABLE_IPV6 */
-
-#ifdef AF_LINK
-    case AF_LINK:
-      {
-	struct sockaddr_dl *sdl;
-
-	sdl = (struct sockaddr_dl *)&(su->sa);
-	// printf ("link#%d\n", sdl->sdl_index);
-      }
-      break;
-#endif /* AF_LINK */
-    default:
-      printf ("af_unknown %d\n", su->sa.sa_family);
-      break;
-    }
-}
-
 #ifdef ENABLE_IPV6
 static int
 in6addr_cmp (struct in6_addr *addr1, struct in6_addr *addr2)
