@@ -2142,7 +2142,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
               sa = &sa_local;
               memset(sa, 0, sizeof(struct sockaddr));
               sa->sa_family = AF_INET6;
-              memcpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6, 16);
+              ip6_addr_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6);
               goto start_again;
             }
 #endif
@@ -2271,7 +2271,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
           pptrs->f_agent = (char *) &sa_local;
           memset(sa, 0, sizeof(struct sockaddr));
           sa->sa_family = AF_INET6;
-          memcpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6, 16);
+          ip6_addr_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6);
 	  saved_info = (char *) info;
 	  ttl--;
           goto start_again;
