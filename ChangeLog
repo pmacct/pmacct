@@ -1,6 +1,44 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.1
 pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 
+0.14.1 -- 03-08-2012
+  + nfacctd: introduced support for IPFIX variable-length IEs (RFC5101),
+    improved support for IPFIX PEN IEs. 
+  + nfacctd, sfacctd: positive/negative caching for bgp_agent_map and
+    sampling_map is being introduced. Cache entries are invalidated upon 
+    reload of the maps.
+  + bgp_agent_map: resolution of IPv4 NetFlow agents to BGP speakers
+    with IPv6 sessions is now possible. This is to support dual-stack
+    network deployments. Also the keyword 'filter' is introduced and
+    supported values are only 'ip' and 'ip6'.
+  + nfacctd: etype primitive can be populated from IP_PROTOCOL_VERSION,
+    ie. Field Type #60, in addition to ETHERTYPE, ie. Field Type #256.
+    Should both be present the latter has priority over the former.
+  + print plugin: introduced a pointer to the latest filename in the set,
+    ie. in cases when variable filenames are specified. The pointer comes
+    in the shape of a symlink called "<plugin name>-latest". 
+  ! fix, pretag_handlers.c: BGP next-hop handlers are now hooked to the
+    longest-match mechanism for destination IP prefix.
+  ! fix, net_aggr.c: defining a networks_file configuration directive in
+    conjunction with --enable-ipv6 was causing a SEGVs. This is now solved.
+  ! fix, uacctd: cache routine is now being called in order to resolve
+    in/out interface ifindexes. Patch is courtesy by Stig Thormodsrud.
+  ! fix, BGP daemon: bgp_neighbors_file now lists also IPv6 BGP peerings.
+  ! fix, sql_common.c: SQL writers due to safe action are now logged with
+    a warning message rather than debug.
+  ! fix, PostgreSQL table schemas: under certain conditions, default
+    definition of stamp_inserted was generating a 'date/time field value
+    out of range: "0000-01-01 00:00:00"' error. Many thanks to Marcello
+    di Leonardo for reporting the issue and providing a fix.
+  ! fix, IS-IS daemon: sockunion_print() function was found not portable
+    and has been removed.
+  ! fix, BGP daemon: memcpy() replaced by ip6_addr_cpy() upon writing to
+    sockaddr_in6 structures. 
+  ! fix, EXAMPLES document has been renamed QUICKSTART for disambiguation
+    on filesystems where case-sensitive names are not supported.
+  ! Several code cleanups. Patches are courtesy by Osama Abu Elsorour
+    and Ryan Steinmetz.
+
 0.14.0 -- 11-04-2012
   + pmacct now integrates an IS-IS daemon within collectors; the daemon
     is being run as a parallel thread within the collector core process;
