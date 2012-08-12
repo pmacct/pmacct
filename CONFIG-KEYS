@@ -272,7 +272,7 @@ DESC:		defines the SQL database to use. Remember that when using the SQLite3 plu
 		directive refers to the full path to the database file (default: 'pmacct', SQLite 3.x
 		default: '/tmp/pmacct.db'). 
 
-KEY:            [ sql_table | print_output_file ]
+KEY:            [ sql_table | print_output_file | mongo_table ]
 DESC:           In SQL plugins this defines the SQL table to use (sql_table); in print plugin it defines
 		the file to write to (print_output_file). Dynamic names are supported through the use of
 		variables, which are computed at the moment when data is purged to the backend. The list
@@ -382,7 +382,7 @@ DESC:		defines the username to use when connecting to the SQL server (default: p
 KEY:		sql_passwd
 DESC:		defines the password to use when connecting to the SQL server (default: arealsmartpwd).
 
-KEY:		[ sql_refresh_time | print_refresh_time ] (-r)
+KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time ] (-r)
 DESC:		time interval between consecutive executions of the SQL cache scanner. The scanner purges
 		data from the cache into the RDBMS. The value is expressed in seconds.
 
@@ -404,7 +404,7 @@ DESC:		enables the optimization of the statements sent to the RDBMS essentially 
 		always remember to specify which default SQL table version you intend to stick to by using
 		the 'sql_table_version' directive. (default: false)
 
-KEY:		sql_history
+KEY:		[ sql_history | mongo_history ]
 VALUES:		#[m|h|d|w|M]
 DESC:		enables historical accounting by dividing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
@@ -416,7 +416,7 @@ DESC:		enables historical accounting by dividing accounted data into configurabl
 		is close to time slots in a RRD file. Examples of valid values are: '5m' - five minutes,
 		'1h' - one hour, '4h' - four hours, '1d' - one day, '1w' - one week, '1M' - one month).
 
-KEY:		[ sql_history_roundoff | print_time_roundoff ]
+KEY:		[ sql_history_roundoff | print_time_roundoff | mongo_time_roundoff ]
 VALUES		[m,h,d,w,M]
 DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
 		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).
@@ -470,7 +470,7 @@ DESC:           sets the maximum number of concurrent writer processes the SQL p
 		lost at this stage) and an error message is printed out. Triggers (sql_trigger_exec) will
 		continue working in any case. (default: 10) 
 
-KEY:		[ sql_cache_entries | print_cache_entries ]
+KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries ]
 DESC:		SQL and print plugins sport a Plugin Memory Cache (PMC) meant to accumulate bytes/packets
 		counters until next purging event (for further insights take a look to 'sql_refresh_time'). 
 		This directive sets the number of PMC buckets. Default value is suitable for most common
@@ -507,7 +507,7 @@ DESC:		enables the use of multi-values INSERT statements. The value of the direc
 		to check the size of this pmacct buffer against the size of the corresponding MySQL buffer
 		(max_allowed_packet). (default: none) 
 
-KEY:		[ sql_trigger_exec | print_trigger_exec ]
+KEY:		[ sql_trigger_exec | print_trigger_exec | mongo_trigger_exec ]
 DESC:		defines the executable to be launched at fixed time intervals to post-process aggregates;
 		in SQL plugins, intervals are specified by the 'sql_trigger_time' directive; if no interval
 		is supplied 'sql_refresh_time' value is used instead: this will result in a trigger being

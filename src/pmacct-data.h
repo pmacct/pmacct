@@ -29,6 +29,7 @@
 #define PLUGIN_ID_PGSQL         6
 #define PLUGIN_ID_SQLITE3       7
 #define PLUGIN_ID_TEE		8
+#define PLUGIN_ID_MONGODB	9
 #define PLUGIN_ID_UNKNOWN       -1
 
 /* vars */
@@ -279,6 +280,12 @@ static const struct _dictionary_line dictionary[] = {
   {"print_time_roundoff", cfg_key_sql_history_roundoff},
   {"print_output_file", cfg_key_sql_table},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
+  {"mongo_table", cfg_key_sql_table},
+  {"mongo_refresh_time", cfg_key_print_refresh_time},
+  {"mongo_cache_entries", cfg_key_print_cache_entries},
+  {"mongo_history", cfg_key_sql_history},
+  {"mongo_time_roundoff", cfg_key_sql_history_roundoff},
+  {"mongo_trigger_exec", cfg_key_sql_trigger_exec},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
   {"nfacctd_allow_file", cfg_key_nfacctd_allow_file},
@@ -405,6 +412,9 @@ static struct plugin_type_entry plugin_types_list[] = {
 #endif
 #ifdef WITH_SQLITE3
   {PLUGIN_ID_SQLITE3,	"sqlite3",	sqlite3_plugin},
+#endif
+#ifdef WITH_MONGODB
+  {PLUGIN_ID_MONGODB,   "mongodb",      mongodb_plugin},
 #endif
   {PLUGIN_ID_TEE,	"tee",		tee_plugin},
   {PLUGIN_ID_UNKNOWN,	"",		NULL},

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -140,6 +140,10 @@ EXT void pgsql_plugin(int, struct configuration *, void *);
 
 #ifdef WITH_SQLITE3
 EXT void sqlite3_plugin(int, struct configuration *, void *);
+#endif
+
+#ifdef WITH_MONGODB
+EXT void mongodb_plugin(int, struct configuration *, void *);
 #endif
 
 EXT void stats_plugin(int, struct configuration *, void *);

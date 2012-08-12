@@ -677,6 +677,105 @@ AC_ARG_ENABLE(pgsql,
 AC_MSG_RESULT(no))
 dnl finish: pgsql handling
 
+dnl start: mongodb handling
+AC_MSG_CHECKING(whether to enable MongoDB support)
+AC_ARG_ENABLE(mongodb,
+  [  --enable-mongodb                 Enable MongoDB support],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+dnl USING_SQL="yes"
+
+    AC_ARG_WITH(mongodb-libs,
+      [  --with-mongodb-libs=DIR          Search for MongoDB libs in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	LIBS="${LIBS} -L$withval"
+	MONGODBLIB=$withval
+	MONGODBLIBFOUND=1
+      ]) 
+
+    if test x"$MONGODBLIB" != x""; then
+      AC_MSG_CHECKING(your own MongoDB client library)
+      if test -r $MONGODLIB/libmongoc.a -o -r $MONGODBLIB/libmongoc.so; then
+        AC_MSG_RESULT(ok)
+      else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing MongoDB client library in $MONGODBLIB)
+      fi
+    fi
+
+    if test x"$MONGODBLIBFOUND" = x""; then
+      AC_MSG_CHECKING([default locations for libmongoc])
+      if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
+	AC_MSG_RESULT([found in /usr/lib])
+	MONGODBLIBFOUND=1
+      elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
+	LIBS="${LIBS} -L/usr/local/lib"
+	AC_MSG_RESULT([found in /usr/local/lib])
+	MONGODBLIBFOUND=1
+      else 
+        AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$MONGODBLIBFOUND" = x""; then
+      AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
+        ERROR: missing MongoDB library. Refer to: http://api.mongodb.org/c/
+      ])])
+    else 
+      LIBS="${LIBS} -lmongoc"
+    fi 
+
+    AC_ARG_WITH(mongodb-includes,
+      [  --with-mongodb-includes=DIR      Search for MongoDB includes in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	INCLUDES="${INCLUDES} -I$withval"
+	MONGODBINCLUDES=$withval
+	MONGODBNCLUDESFOUND=1
+      ])
+
+    if test x"$MONGODBINCLUDES" != x""; then
+      AC_MSG_CHECKING(your own MongoDB headers)
+      if test -r $MONGODBINCLUDES/mongo.h; then
+        AC_MSG_RESULT(ok)
+      else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing MongoDB headers in $MONGODBINCLUDES)
+      fi
+    fi
+
+    if test x"$MONGODBINCLUDESFOUND" = x""; then 
+      AC_MSG_CHECKING([default locations for mongo.h])
+      if test -r /usr/include/mongo.h; then
+	AC_MSG_RESULT([found in /usr/include])
+	MONGODBINCLUDESFOUND=1;
+      elif test -r /usr/local/include/mongo.h; then
+	INCLUDES="${INCLUDES} -I/usr/local/include"
+	AC_MSG_RESULT([found in /usr/local/include])
+	MONGODBINCLUDESFOUND=1;
+      fi
+      if test x"$MONGODBINCLUDESFOUND" = x""; then
+	AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$MONGODBINCLUDESFOUND" = x""; then
+      AC_CHECK_HEADER([mongo.h],,
+      [AC_MSG_ERROR(ERROR: missing MongoDB headers)])      
+    fi
+
+    AC_DEFINE(WITH_MONGODB, 1)
+    PLUGINS="${PLUGINS} mongodb_plugin.c"
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
+dnl finish: mongodb handling
+
 AC_MSG_CHECKING(whether to enable SQLite3 support)
 AC_ARG_ENABLE(sqlite3,
   [  --enable-sqlite3                 Enable SQLite3 support],
