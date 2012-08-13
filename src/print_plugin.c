@@ -481,88 +481,108 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       continue;
 
     if (f && config.print_output == PRINT_OUTPUT_FORMATTED) {
-      fprintf(f, "%-10llu  ", data->id);
-      fprintf(f, "%-10llu  ", data->id2);
-      fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      if (config.what_to_count & COUNT_ID) fprintf(f, "%-10llu  ", data->id);
+      if (config.what_to_count & COUNT_ID2) fprintf(f, "%-10llu  ", data->id2);
+      if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 #if defined (HAVE_L2)
-      etheraddr_string(data->eth_shost, src_mac);
-      fprintf(f, "%-17s  ", src_mac);
-      etheraddr_string(data->eth_dhost, dst_mac);
-      fprintf(f, "%-17s  ", dst_mac);
-      fprintf(f, "%-5u  ", data->vlan_id); 
-      fprintf(f, "%-2u  ", data->cos); 
-      fprintf(f, "%-5x  ", data->etype); 
+      if (config.what_to_count & COUNT_SRC_MAC) {
+        etheraddr_string(data->eth_shost, src_mac);
+        fprintf(f, "%-17s  ", src_mac);
+      }
+      if (config.what_to_count & COUNT_DST_MAC) {
+        etheraddr_string(data->eth_dhost, dst_mac);
+        fprintf(f, "%-17s  ", dst_mac);
+      }
+      if (config.what_to_count & COUNT_VLAN) fprintf(f, "%-5u  ", data->vlan_id); 
+      if (config.what_to_count & COUNT_COS) fprintf(f, "%-2u  ", data->cos); 
+      if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%-5x  ", data->etype); 
 #endif
-      fprintf(f, "%-10u  ", data->src_as); 
-      fprintf(f, "%-10u  ", data->dst_as); 
+      if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "%-10u  ", data->src_as); 
+      if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%-10u  ", data->dst_as); 
 
-      bgp_comm = pbgp->std_comms;
-      while (bgp_comm) {
-        bgp_comm = strchr(pbgp->std_comms, ' ');
-        if (bgp_comm) *bgp_comm = '_';
+      if (config.what_to_count & COUNT_STD_COMM) { 
+        bgp_comm = pbgp->std_comms;
+        while (bgp_comm) {
+          bgp_comm = strchr(pbgp->std_comms, ' ');
+          if (bgp_comm) *bgp_comm = '_';
+        }
+
+        if (strlen(pbgp->std_comms)) 
+          fprintf(f, "%-22s   ", pbgp->std_comms);
+        else
+	  fprintf(f, "%-22u   ", 0);
       }
 
-      if (strlen(pbgp->std_comms)) 
-        fprintf(f, "%-22s   ", pbgp->std_comms);
-      else
-	fprintf(f, "%-22u   ", 0);
-
-      as_path = pbgp->as_path;
-      while (as_path) {
-	as_path = strchr(pbgp->as_path, ' ');
-	if (as_path) *as_path = '_';
+      if (config.what_to_count & COUNT_AS_PATH) {
+        as_path = pbgp->as_path;
+        while (as_path) {
+	  as_path = strchr(pbgp->as_path, ' ');
+	  if (as_path) *as_path = '_';
+        }
+        if (strlen(pbgp->as_path))
+	  fprintf(f, "%-22s   ", pbgp->as_path);
+        else
+	  fprintf(f, "%-22s   ", empty_aspath);
       }
-      if (strlen(pbgp->as_path))
-	fprintf(f, "%-22s   ", pbgp->as_path);
-      else
-	fprintf(f, "%-22s   ", empty_aspath);
 
-      fprintf(f, "%-5u  ", pbgp->local_pref);
-      fprintf(f, "%-5u  ", pbgp->med);
-      fprintf(f, "%-10u  ", pbgp->peer_src_as);
-      fprintf(f, "%-10u  ", pbgp->peer_dst_as);
+      if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%-5u  ", pbgp->local_pref);
+      if (config.what_to_count & COUNT_MED) fprintf(f, "%-5u  ", pbgp->med);
+      if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%-10u  ", pbgp->peer_src_as);
+      if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%-10u  ", pbgp->peer_dst_as);
 
-      addr_to_str(ip_address, &pbgp->peer_src_ip);
+      if (config.what_to_count & COUNT_PEER_SRC_IP) {
+        addr_to_str(ip_address, &pbgp->peer_src_ip);
 #if defined ENABLE_IPV6
-      fprintf(f, "%-45s  ", ip_address);
+        fprintf(f, "%-45s  ", ip_address);
 #else
-      fprintf(f, "%-15s  ", ip_address);
+        fprintf(f, "%-15s  ", ip_address);
 #endif
-      addr_to_str(ip_address, &pbgp->peer_dst_ip);
+      }
+      if (config.what_to_count & COUNT_PEER_DST_IP) {
+        addr_to_str(ip_address, &pbgp->peer_dst_ip);
 #if defined ENABLE_IPV6
-      fprintf(f, "%-45s  ", ip_address);
+        fprintf(f, "%-45s  ", ip_address);
 #else
-      fprintf(f, "%-15s  ", ip_address);
+        fprintf(f, "%-15s  ", ip_address);
 #endif
+      }
 
-      fprintf(f, "%-10u  ", data->ifindex_in);
-      fprintf(f, "%-10u  ", data->ifindex_out);
+      if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "%-10u  ", data->ifindex_in);
+      if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "%-10u  ", data->ifindex_out);
 
-      bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
-      fprintf(f, "%-18s  ", rd_str);
+      if (config.what_to_count & COUNT_MPLS_VPN_RD) {
+        bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
+        fprintf(f, "%-18s  ", rd_str);
+      }
 
-      addr_to_str(src_host, &data->src_ip);
+      if (config.what_to_count & COUNT_SRC_HOST) {
+        addr_to_str(src_host, &data->src_ip);
 #if defined ENABLE_IPV6
-      fprintf(f, "%-45s  ", src_host);
+        fprintf(f, "%-45s  ", src_host);
 #else
-      fprintf(f, "%-15s  ", src_host);
+        fprintf(f, "%-15s  ", src_host);
 #endif
-      addr_to_str(dst_host, &data->dst_ip);
+      }
+      if (config.what_to_count & COUNT_DST_HOST) {
+        addr_to_str(dst_host, &data->dst_ip);
 #if defined ENABLE_IPV6
-      fprintf(f, "%-45s  ", dst_host);
+        fprintf(f, "%-45s  ", dst_host);
 #else
-      fprintf(f, "%-15s  ", dst_host);
+        fprintf(f, "%-15s  ", dst_host);
 #endif
-      fprintf(f, "%-3u       ", data->src_nmask);
-      fprintf(f, "%-3u       ", data->dst_nmask);
-      fprintf(f, "%-5u     ", data->src_port);
-      fprintf(f, "%-5u     ", data->dst_port);
-      fprintf(f, "%-3u        ", queue[j]->tcp_flags);
+      }
+      if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%-3u       ", data->src_nmask);
+      if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%-3u       ", data->dst_nmask);
+      if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%-5u     ", data->src_port);
+      if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "%-5u     ", data->dst_port);
+      if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%-3u        ", queue[j]->tcp_flags);
 
-      if (!config.num_protos) fprintf(f, "%-10s  ", _protocols[data->proto].name);
-      else  fprintf(f, "%-10d  ", _protocols[data->proto].number);
+      if (config.what_to_count & COUNT_IP_PROTO) {
+        if (!config.num_protos) fprintf(f, "%-10s  ", _protocols[data->proto].name);
+        else  fprintf(f, "%-10d  ", _protocols[data->proto].number);
+      }
 
-      fprintf(f, "%-3u    ", data->tos);
+      if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%-3u    ", data->tos);
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%-20llu  ", queue[j]->packet_counter);
       fprintf(f, "%-20llu  ", queue[j]->flow_counter);
@@ -574,70 +594,90 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #endif
     }
     else if (f && config.print_output == PRINT_OUTPUT_CSV) {
-      fprintf(f, "%llu,", data->id);
-      fprintf(f, "%llu,", data->id2);
-      fprintf(f, "%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      if (config.what_to_count & COUNT_ID) fprintf(f, "%llu,", data->id);
+      if (config.what_to_count & COUNT_ID2) fprintf(f, "%llu,", data->id2);
+      if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s,", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 #if defined (HAVE_L2)
-      etheraddr_string(data->eth_shost, src_mac);
-      fprintf(f, "%s,", src_mac);
-      etheraddr_string(data->eth_dhost, dst_mac);
-      fprintf(f, "%s,", dst_mac);
-      fprintf(f, "%u,", data->vlan_id); 
-      fprintf(f, "%u,", data->cos); 
-      fprintf(f, "%x,", data->etype); 
+      if (config.what_to_count & COUNT_SRC_MAC) {
+        etheraddr_string(data->eth_shost, src_mac);
+        fprintf(f, "%s,", src_mac);
+      }
+      if (config.what_to_count & COUNT_DST_MAC) {
+        etheraddr_string(data->eth_dhost, dst_mac);
+        fprintf(f, "%s,", dst_mac);
+      }
+      if (config.what_to_count & COUNT_VLAN) fprintf(f, "%u,", data->vlan_id); 
+      if (config.what_to_count & COUNT_COS) fprintf(f, "%u,", data->cos); 
+      if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%x,", data->etype); 
 #endif
-      fprintf(f, "%u,", data->src_as); 
-      fprintf(f, "%u,", data->dst_as); 
+      if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "%u,", data->src_as); 
+      if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%u,", data->dst_as); 
 
-      bgp_comm = pbgp->std_comms;
-      while (bgp_comm) {
-        bgp_comm = strchr(pbgp->std_comms, ' ');
-        if (bgp_comm) *bgp_comm = '_';
+      if (config.what_to_count & COUNT_STD_COMM) {
+        bgp_comm = pbgp->std_comms;
+        while (bgp_comm) {
+          bgp_comm = strchr(pbgp->std_comms, ' ');
+          if (bgp_comm) *bgp_comm = '_';
+        }
+
+        if (strlen(pbgp->std_comms)) 
+          fprintf(f, "%s,", pbgp->std_comms);
+        else
+          fprintf(f, "%u,", 0);
       }
 
-      if (strlen(pbgp->std_comms)) 
-        fprintf(f, "%s,", pbgp->std_comms);
-      else
-        fprintf(f, "%u,", 0);
-
-      as_path = pbgp->as_path;
-      while (as_path) {
-	as_path = strchr(pbgp->as_path, ' ');
-	if (as_path) *as_path = '_';
+      if (config.what_to_count & COUNT_AS_PATH) {
+        as_path = pbgp->as_path;
+        while (as_path) {
+	  as_path = strchr(pbgp->as_path, ' ');
+	  if (as_path) *as_path = '_';
+        }
+        fprintf(f, "%s,", pbgp->as_path);
       }
-      fprintf(f, "%s,", pbgp->as_path);
 
-      fprintf(f, "%u,", pbgp->local_pref);
-      fprintf(f, "%u,", pbgp->med);
-      fprintf(f, "%u,", pbgp->peer_src_as);
-      fprintf(f, "%u,", pbgp->peer_dst_as);
+      if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%u,", pbgp->local_pref);
+      if (config.what_to_count & COUNT_MED) fprintf(f, "%u,", pbgp->med);
+      if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%u,", pbgp->peer_src_as);
+      if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%u,", pbgp->peer_dst_as);
 
-      addr_to_str(ip_address, &pbgp->peer_src_ip);
-      fprintf(f, "%s,", ip_address);
-      addr_to_str(ip_address, &pbgp->peer_dst_ip);
-      fprintf(f, "%s,", ip_address);
+      if (config.what_to_count & COUNT_PEER_SRC_IP) {
+        addr_to_str(ip_address, &pbgp->peer_src_ip);
+        fprintf(f, "%s,", ip_address);
+      }
+      if (config.what_to_count & COUNT_PEER_DST_IP) {
+        addr_to_str(ip_address, &pbgp->peer_dst_ip);
+        fprintf(f, "%s,", ip_address);
+      }
 
-      fprintf(f, "%u,", data->ifindex_in);
-      fprintf(f, "%u,", data->ifindex_out);
+      if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "%u,", data->ifindex_in);
+      if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "%u,", data->ifindex_out);
 
-      bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
-      fprintf(f, "%s,", rd_str);
+      if (config.what_to_count & COUNT_MPLS_VPN_RD) {
+        bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
+        fprintf(f, "%s,", rd_str);
+      }
 
-      addr_to_str(src_host, &data->src_ip);
-      fprintf(f, "%s,", src_host);
-      addr_to_str(dst_host, &data->dst_ip);
-      fprintf(f, "%s,", dst_host);
+      if (config.what_to_count & COUNT_SRC_HOST) {
+        addr_to_str(src_host, &data->src_ip);
+        fprintf(f, "%s,", src_host);
+      }
+      if (config.what_to_count & COUNT_DST_HOST) {
+        addr_to_str(dst_host, &data->dst_ip);
+        fprintf(f, "%s,", dst_host);
+      }
 
-      fprintf(f, "%u,", data->src_nmask);
-      fprintf(f, "%u,", data->dst_nmask);
-      fprintf(f, "%u,", data->src_port);
-      fprintf(f, "%u,", data->dst_port);
-      fprintf(f, "%u,", queue[j]->tcp_flags);
+      if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%u,", data->src_nmask);
+      if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%u,", data->dst_nmask);
+      if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%u,", data->src_port);
+      if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "%u,", data->dst_port);
+      if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%u,", queue[j]->tcp_flags);
 
-      if (!config.num_protos) fprintf(f, "%s,", _protocols[data->proto].name);
-      else fprintf(f, "%d,", _protocols[data->proto].number);
+      if (config.what_to_count & COUNT_IP_PROTO) {
+        if (!config.num_protos) fprintf(f, "%s,", _protocols[data->proto].name);
+        else fprintf(f, "%d,", _protocols[data->proto].number);
+      }
 
-      fprintf(f, "%u,", data->tos);
+      if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%u,", data->tos);
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%llu,", queue[j]->packet_counter);
       fprintf(f, "%llu,", queue[j]->flow_counter);
@@ -659,43 +699,43 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
 void P_write_stats_header_formatted(FILE *f)
 {
-  fprintf(f, "TAG         ");
-  fprintf(f, "TAG2        ");
-  fprintf(f, "CLASS             ");
+  if (config.what_to_count & COUNT_ID) fprintf(f, "TAG         ");
+  if (config.what_to_count & COUNT_ID2) fprintf(f, "TAG2        ");
+  if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS             ");
 #if defined HAVE_L2
-  fprintf(f, "SRC_MAC            ");
-  fprintf(f, "DST_MAC            ");
-  fprintf(f, "VLAN   ");
-  fprintf(f, "COS ");
-  fprintf(f, "ETYPE  ");
+  if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "SRC_MAC            ");
+  if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC            ");
+  if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN   ");
+  if (config.what_to_count & COUNT_COS) fprintf(f, "COS ");
+  if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "ETYPE  ");
 #endif
-  fprintf(f, "SRC_AS      ");
-  fprintf(f, "DST_AS      ");
-  fprintf(f, "BGP_COMMS                ");
-  fprintf(f, "AS_PATH                  ");
-  fprintf(f, "PREF   ");
-  fprintf(f, "MED    ");
-  fprintf(f, "PEER_SRC_AS ");
-  fprintf(f, "PEER_DST_AS ");
-  fprintf(f, "PEER_SRC_IP      ");
-  fprintf(f, "PEER_DST_IP      ");
-  fprintf(f, "IN_IFACE    ");
-  fprintf(f, "OUT_IFACE   ");
-  fprintf(f, "MPLS_VPN_RD         ");
+  if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "SRC_AS      ");
+  if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS      ");
+  if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "BGP_COMMS                ");
+  if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "AS_PATH                  ");
+  if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF   ");
+  if (config.what_to_count & COUNT_MED) fprintf(f, "MED    ");
+  if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "PEER_SRC_AS ");
+  if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "PEER_DST_AS ");
+  if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP      ");
+  if (config.what_to_count & COUNT_PEER_DST_IP) fprintf(f, "PEER_DST_IP      ");
+  if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE    ");
+  if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE   ");
+  if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD         ");
 #if defined ENABLE_IPV6
-  fprintf(f, "SRC_IP                                         ");
-  fprintf(f, "DST_IP                                         ");
+  if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP                                         ");
+  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP                                         ");
 #else
-  fprintf(f, "SRC_IP           ");
-  fprintf(f, "DST_IP           ");
+  if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP           ");
+  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP           ");
 #endif
-  fprintf(f, "SRC_MASK  ");
-  fprintf(f, "DST_MASK  ");
-  fprintf(f, "SRC_PORT  ");
-  fprintf(f, "DST_PORT  ");
-  fprintf(f, "TCP_FLAGS  ");
-  fprintf(f, "PROTOCOL    ");
-  fprintf(f, "TOS    ");
+  if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK  ");
+  if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK  ");
+  if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "SRC_PORT  ");
+  if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "DST_PORT  ");
+  if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "TCP_FLAGS  ");
+  if (config.what_to_count & COUNT_IP_PROTO) fprintf(f, "PROTOCOL    ");
+  if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "TOS    ");
 #if defined HAVE_64BIT_COUNTERS
   fprintf(f, "PACKETS               ");
   fprintf(f, "FLOWS                 ");
@@ -709,38 +749,38 @@ void P_write_stats_header_formatted(FILE *f)
 
 void P_write_stats_header_csv(FILE *f)
 {
-  fprintf(f, "TAG,");
-  fprintf(f, "TAG2,");
-  fprintf(f, "CLASS,");
+  if (config.what_to_count & COUNT_ID) fprintf(f, "TAG,");
+  if (config.what_to_count & COUNT_ID2) fprintf(f, "TAG2,");
+  if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS,");
 #if defined HAVE_L2
-  fprintf(f, "SRC_MAC,");
-  fprintf(f, "DST_MAC,");
-  fprintf(f, "VLAN,");
-  fprintf(f, "COS,");
-  fprintf(f, "ETYPE,");
+  if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "SRC_MAC,");
+  if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC,");
+  if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN,");
+  if (config.what_to_count & COUNT_COS) fprintf(f, "COS,");
+  if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "ETYPE,");
 #endif
-  fprintf(f, "SRC_AS,");
-  fprintf(f, "DST_AS,");
-  fprintf(f, "BGP_COMMS,");
-  fprintf(f, "AS_PATH,");
-  fprintf(f, "PREF,");
-  fprintf(f, "MED,");
-  fprintf(f, "PEER_SRC_AS,");
-  fprintf(f, "PEER_DST_AS,");
-  fprintf(f, "PEER_SRC_IP,");
-  fprintf(f, "PEER_DST_IP,");
-  fprintf(f, "IN_IFACE,");
-  fprintf(f, "OUT_IFACE,");
-  fprintf(f, "MPLS_VPN_RD,");
-  fprintf(f, "SRC_IP,");
-  fprintf(f, "DST_IP,");
-  fprintf(f, "SRC_MASK,");
-  fprintf(f, "DST_MASK,");
-  fprintf(f, "SRC_PORT,");
-  fprintf(f, "DST_PORT,");
-  fprintf(f, "TCP_FLAGS,");
-  fprintf(f, "PROTOCOL,");
-  fprintf(f, "TOS,");
+  if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "SRC_AS,");
+  if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS,");
+  if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "BGP_COMMS,");
+  if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "AS_PATH,");
+  if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF,");
+  if (config.what_to_count & COUNT_MED) fprintf(f, "MED,");
+  if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "PEER_SRC_AS,");
+  if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "PEER_DST_AS,");
+  if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP,");
+  if (config.what_to_count & COUNT_PEER_DST_IP) fprintf(f, "PEER_DST_IP,");
+  if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE,");
+  if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE,");
+  if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD,");
+  if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP,");
+  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP,");
+  if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK,");
+  if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK,");
+  if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "SRC_PORT,");
+  if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "DST_PORT,");
+  if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "TCP_FLAGS,");
+  if (config.what_to_count & COUNT_IP_PROTO) fprintf(f, "PROTOCOL,");
+  if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "TOS,");
   fprintf(f, "PACKETS,");
   fprintf(f, "FLOWS,");
   fprintf(f, "BYTES\n");

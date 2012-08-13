@@ -278,7 +278,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_output", cfg_key_print_output},
   {"print_num_protos", cfg_key_num_protos},
   {"print_time_roundoff", cfg_key_sql_history_roundoff},
-  {"print_output_file", cfg_key_sql_table},
+  {"print_output_file", cfg_key_print_output_file},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
   {"mongo_table", cfg_key_sql_table},
   {"mongo_refresh_time", cfg_key_print_refresh_time},

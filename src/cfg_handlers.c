@@ -654,8 +654,73 @@ int cfg_key_sql_table(char *filename, char *name, char *value_ptr)
   }
 
   if (strlen(value_ptr) > 64) {
-    Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum SQL table name length (64).\n", filename);
+    Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum SQL table name length (255).\n", filename);
     exit(1);
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_table = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sql_table = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  /* validations: we allow only a) certain variable names, b) a maximum of 8 variables */
+  {
+    int num = 0;
+    char *c, *ptr = value_ptr;
+
+    while (c = strchr(ptr, '%')) {
+      c++;
+      ptr = c;
+      switch (*c) {
+      case 'd':
+        num++;
+        break;
+      case 'H':
+        num++;
+        break;
+      case 'm':
+        num++;
+        break;
+      case 'M':
+        num++;
+        break;
+      case 'w':
+        num++;
+        break;
+      case 'W':
+        num++;
+        break;
+      case 'Y':
+        num++;
+        break;
+      case 's':
+        num++;
+        break;
+      default:
+        Log(LOG_ERR, "ERROR ( %s ): sql_table, %%%c not supported.\n", filename, *c);
+        exit(1);
+        break;
+      }
+    }
+
+    if (num > 8) {
+      Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum allowed variables (8) into the table name.\n", filename);
+      exit(1);
+    }
   }
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_table = value_ptr;
