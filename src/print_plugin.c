@@ -63,6 +63,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   reload_map = FALSE;
 
+  basetime_init = NULL;
+  basetime_eval = NULL;
+  basetime_cmp = NULL;
+  memset(&basetime, 0, sizeof(basetime));
+  memset(&ibasetime, 0, sizeof(ibasetime));
+  memset(&timeslot, 0, sizeof(timeslot));
+
   /* signal handling */
   signal(SIGINT, P_exit_now);
   signal(SIGUSR1, SIG_IGN);
@@ -281,16 +288,17 @@ struct chained_cache *P_cache_search(struct pkt_primitives *data, struct pkt_bgp
 {
   unsigned int modulo = P_cache_modulo(data, pbgp);
   struct chained_cache *cache_ptr = &cache[modulo];
-  int res_data = TRUE, res_bgp = TRUE;
+  int res_data = TRUE, res_bgp = TRUE, res_time = TRUE;
 
   start:
   res_data = memcmp(&cache_ptr->primitives, data, sizeof(struct pkt_primitives));
+  res_time = (*basetime_cmp)(&cache_ptr->basetime, &ibasetime);
   if (PbgpSz) {
     if (cache_ptr->pbgp) res_bgp = memcmp(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
   }
   else res_bgp = FALSE;
 
-  if (res_data || res_bgp) {
+  if (res_data || res_bgp || res_time) {
     if (cache_ptr->valid == TRUE) {
       if (cache_ptr->next) {
         cache_ptr = cache_ptr->next;
@@ -308,7 +316,12 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
   unsigned int modulo = P_cache_modulo(&data->primitives, pbgp);
   struct chained_cache *cache_ptr = &cache[modulo];
   struct pkt_primitives *srcdst = &data->primitives;
-  int res_data, res_bgp;
+  int res_data, res_bgp, res_time;
+
+  if (config.sql_history && (*basetime_eval)) {
+    memcpy(&ibasetime, &basetime, sizeof(ibasetime));
+    (*basetime_eval)(&data->time_start, &ibasetime, timeslot);
+  }
 
   /* We are classifing packets. We have a non-zero bytes accumulator (ba)
      and a non-zero class. Before accounting ba to this class, we have to
@@ -339,15 +352,16 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
   }
 
   start:
-  res_data = res_bgp = TRUE;
+  res_data = res_bgp = res_time = TRUE;
 
   res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives)); 
+  res_time = (*basetime_cmp)(&cache_ptr->basetime, &ibasetime);
   if (PbgpSz) {
     if (cache_ptr->pbgp) res_bgp = memcmp(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
   }
   else res_bgp = FALSE;
 
-  if (res_data || res_bgp) {
+  if (res_data || res_bgp || res_time) {
     /* aliasing of entries */
     if (cache_ptr->valid == TRUE) { 
       if (cache_ptr->next) {
@@ -389,6 +403,8 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
       cache_ptr->flow_counter += data->cst.fa;
     }
     cache_ptr->valid = TRUE;
+    cache_ptr->basetime.tv_sec = ibasetime.tv_sec;
+    cache_ptr->basetime.tv_usec = ibasetime.tv_usec;
   }
   else {
     if (cache_ptr->valid == TRUE) {
@@ -415,6 +431,8 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
         cache_ptr->flow_counter += data->cst.fa;
       }
       cache_ptr->valid = TRUE;
+      cache_ptr->basetime.tv_sec = ibasetime.tv_sec;
+      cache_ptr->basetime.tv_usec = ibasetime.tv_usec;
       queries_queue[qq_ptr] = cache_ptr;
       qq_ptr++;
     }
@@ -873,4 +891,60 @@ int P_trigger_exec(char *filename)
   }
 
   return 0;
+}
+
+void P_init_historical_acct(time_t now)
+{
+  time_t t = 0;
+
+  basetime.tv_sec = now;
+  basetime.tv_usec = 0;
+
+  if (config.sql_history == COUNT_MINUTELY) timeslot = config.sql_history_howmany*60;
+  else if (config.sql_history == COUNT_HOURLY) timeslot = config.sql_history_howmany*3600;
+  else if (config.sql_history == COUNT_DAILY) timeslot = config.sql_history_howmany*86400;
+  else if (config.sql_history == COUNT_WEEKLY) timeslot = config.sql_history_howmany*86400*7;
+  else if (config.sql_history == COUNT_MONTHLY) {
+    basetime.tv_sec = roundoff_time(basetime.tv_sec, "d"); /* resetting day of month */
+    timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
+  }
+
+  /* round off stuff */
+  t = roundoff_time(basetime.tv_sec, config.sql_history_roundoff);
+
+  while ((t+timeslot) < basetime.tv_sec) {
+    t += timeslot;
+    if (config.sql_history == COUNT_MONTHLY) timeslot = calc_monthly_timeslot(t, config.sql_history_howmany, ADD);
+  }
+
+  basetime.tv_sec = t;
+}
+
+void P_eval_historical_acct(struct timeval *stamp, struct timeval *basetime, time_t timeslot)
+{
+  if (stamp->tv_sec) {
+    while (basetime->tv_sec > stamp->tv_sec) {
+      if (config.sql_history != COUNT_MONTHLY) basetime->tv_sec -= timeslot;
+      else {
+        timeslot = calc_monthly_timeslot(basetime->tv_sec, config.sql_history_howmany, SUB);
+        basetime->tv_sec -= timeslot;
+      }
+    }
+    while ((basetime->tv_sec+timeslot) < stamp->tv_sec) {
+      if (config.sql_history != COUNT_MONTHLY) basetime->tv_sec += timeslot;
+      else {
+        basetime->tv_sec += timeslot;
+        timeslot = calc_monthly_timeslot(basetime->tv_sec, config.sql_history_howmany, ADD);
+      }
+    }
+  }
+}
+
+int P_cmp_historical_acct(struct timeval *entry_basetime, struct timeval *insert_basetime)
+{
+  int ret = TRUE;
+
+  ret = memcmp(entry_basetime, insert_basetime, sizeof(struct timeval));
+
+  return ret;
 }

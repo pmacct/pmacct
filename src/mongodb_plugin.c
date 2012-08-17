@@ -64,6 +64,13 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   reload_map = FALSE;
 
+  basetime_init = NULL;
+  basetime_eval = NULL;
+  basetime_cmp = NULL;
+  memset(&basetime, 0, sizeof(basetime));
+  memset(&ibasetime, 0, sizeof(ibasetime));
+  memset(&timeslot, 0, sizeof(timeslot));
+
   /* signal handling */
   signal(SIGINT, MongoDB_exit_now);
   signal(SIGUSR1, SIG_IGN);
@@ -135,6 +142,14 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_deadline = t;
   refresh_deadline += config.print_refresh_time; /* it's a deadline not a basetime */
 
+  if (config.sql_history) {
+    basetime_init = P_init_historical_acct;
+    basetime_eval = P_eval_historical_acct;
+    basetime_cmp = P_cmp_historical_acct;
+
+    (*basetime_init)(now);
+  }
+
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
 
@@ -155,6 +170,14 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret < 0) goto poll_again;
 
     now = time(NULL);
+
+    if (config.sql_history) {
+      while (now > (basetime.tv_sec + timeslot)) {
+        basetime.tv_sec += timeslot;
+        if (config.sql_history == COUNT_MONTHLY)
+          timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
+      }
+    }
 
     switch (ret) {
     case 0: /* timeout */
@@ -450,7 +473,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     }
 
     if (config.sql_history) {
-      /* XXX: stamp_inserted */
+      bson_append_date(bson_elem, "stamp_inserted", (bson_date_t) 1000*queue[j]->basetime.tv_sec);
       bson_append_date(bson_elem, "stamp_updated", (bson_date_t) 1000*time(NULL));
     }
 

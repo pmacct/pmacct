@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -44,6 +44,7 @@ struct chained_cache {
   u_int32_t tcp_flags;
   struct pkt_bgp_primitives *pbgp;
   int valid;
+  struct timeval basetime;
   struct chained_cache *next;
 };
 
@@ -79,4 +80,14 @@ EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
 EXT int qq_ptr, pp_size, pb_size, dbc_size, quit; 
 EXT time_t refresh_deadline;
+
+EXT void (*basetime_init)(time_t);
+EXT void (*basetime_eval)(struct timeval *, struct timeval *, time_t);
+EXT int (*basetime_cmp)(struct timeval *, struct timeval *);
+EXT struct timeval basetime, ibasetime;
+EXT time_t timeslot;
+
+EXT void P_init_historical_acct(time_t);
+EXT void P_eval_historical_acct(struct timeval *, struct timeval *, time_t);
+EXT int P_cmp_historical_acct(struct timeval *, struct timeval *);
 #undef EXT

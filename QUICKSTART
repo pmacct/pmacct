@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
 II.	Configuring pmacct for compilation
-III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) setup examples
+III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) and noSQL (MongoDB) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
 VI.	Running the ULOG-based daemon (uacctd)
@@ -31,6 +31,8 @@ plugins. Here is a list of plugins included within the official pmacct distribut
 'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite API)
            installation can be used for data storage
 'print':   data are printed at regular intervals to flat-files or standard output
+'mongodb': a working MongoDB installation can be used for data storage. Installation
+	   of the MongoDB API C driver is also required.
 
 
 II. Configuring pmacct for compilation
@@ -42,16 +44,17 @@ get the list of available switches, you can use the following command-line:
 
 shell> ./configure --help
 
-Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite and
-any (4) mixed compilation:
+Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
+(4) MongoDB and any (5) mixed compilation:
 
 (1) shell> ./configure --enable-mysql
 (2) shell> ./configure --enable-pgsql
 (3) shell> ./configure --enable-sqlite3
+(3) shell> ./configure --enable-mongodb
 (4) shell> ./configure --enable-mysql --enable-pgsql
 
 
-III. Brief SQL setup examples
+III. Brief SQL and noSQL setup examples
 Scripts for setting up databases (MySQL, PostgreSQL and SQLite) are into the 'sql/'
 tree. For further guidance read the relevant README files in such directory. One of
 the crucial concepts to deal with, when using default IP or BGP SQL tables, is table
@@ -148,7 +151,26 @@ sql_history: 5m
 sql_history_roundoff: m
 sql_dont_try_update: true
 
-Note that sql_refresh_time is always expressed in seconds.
+Note that sql_refresh_time is always expressed in seconds. An alternative approach
+for cases where sql_refresh_time must be kept shorter than sql_history (for example
+because a) of long sql_history periods, ie. hours or days, and/or because b) near
+real-time data feed is a requirement) is to set up a synthetic auto-increment 'id'
+field: it successfully prevents duplicates but comes at the expenses of GROUP BY
+queries when retrieving data.
+
+IIIg. MongoDB examples 
+MongoDB if a document-oriented noSQL database. Defining feature of document-oriented
+databases is that they are schemaless hence this section will only need to focus on a
+simple configuration with historical accounting support:
+
+...
+plugins: mongodb
+aggregate: ...
+mongo_history: 5m
+mongo_time_roundoff: m
+mongo_refresh_time: 300
+mongo_table: test.acct
+...
 
 
 IV. Running the libpcap-based daemon (pmacctd) 
