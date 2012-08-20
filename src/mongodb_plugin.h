@@ -51,4 +51,7 @@ EXT struct timeval flushtime;
 EXT int qq_ptr, pp_size, pb_size, dbc_size, quit; 
 EXT time_t refresh_deadline;
 EXT mongo db_conn;
+
+EXT struct timeval sbasetime;
+EXT int dyn_table;
 #undef EXT

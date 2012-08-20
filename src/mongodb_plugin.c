@@ -69,6 +69,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   basetime_cmp = NULL;
   memset(&basetime, 0, sizeof(basetime));
   memset(&ibasetime, 0, sizeof(ibasetime));
+  memset(&sbasetime, 0, sizeof(sbasetime));
   memset(&timeslot, 0, sizeof(timeslot));
 
   /* signal handling */
@@ -172,7 +173,9 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     now = time(NULL);
 
     if (config.sql_history) {
+      memset(&sbasetime, 0, sizeof(sbasetime));
       while (now > (basetime.tv_sec + timeslot)) {
+	sbasetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
           timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
@@ -338,6 +341,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
 
   if (!config.sql_table) config.sql_table = default_table;
+  if (strchr(config.sql_table, '%')) dyn_table = TRUE;
+  else dyn_table = FALSE;
 
   bson_batch = (bson **) malloc(sizeof(bson *) * index);
 
@@ -493,7 +498,14 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     if (config.debug) bson_print(bson_elem);
   }
 
-  mongo_insert_batch(&db_conn, config.sql_table, bson_batch, j, NULL, MONGO_CONTINUE_ON_ERROR /* XXX: test */);
+  if (dyn_table) {
+    char tmpbuf[LONGLONGSRVBUFLEN];
+    time_t stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
+
+    strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+    mongo_insert_batch(&db_conn, tmpbuf, bson_batch, j, NULL, MONGO_CONTINUE_ON_ERROR /* XXX: test */);
+  }
+  else mongo_insert_batch(&db_conn, config.sql_table, bson_batch, j, NULL, MONGO_CONTINUE_ON_ERROR /* XXX: test */);
 
   for (i = 0; i < j; i++) {
     bson_elem = (bson *) bson_batch[i];
