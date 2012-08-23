@@ -67,7 +67,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -230,6 +230,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS  "); 
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL    ");
     if (what_to_count & COUNT_IP_TOS) printf("TOS    ");
+    if (what_to_count & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS                 ");
@@ -352,6 +353,7 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS,"); 
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL,");
     if (what_to_count & COUNT_IP_TOS) printf("TOS,");
+    if (what_to_count & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE,");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS,");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS,");
@@ -546,6 +548,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "tos")) {
 	  count_token_int[count_index] = COUNT_IP_TOS;
 	  what_to_count |= COUNT_IP_TOS;
+	}
+        else if (!strcmp(count_token[count_index], "sampling_rate")) {
+	  count_token_int[count_index] = COUNT_SAMPLING_RATE;
+	  what_to_count |= COUNT_SAMPLING_RATE;
 	}
         else if (!strcmp(count_token[count_index], "none")) {
 	  count_token_int[count_index] = COUNT_NONE;
@@ -991,6 +997,9 @@ int main(int argc,char **argv)
 	else if (!strcmp(count_token[match_string_index], "tos")) {
 	  tmpnum = atoi(match_string_token);
 	  request.data.tos = (u_int8_t) tmpnum; 
+	}
+	else if (!strcmp(count_token[match_string_index], "sampling_rate")) {
+	  request.data.sampling_rate = atoi(match_string_token);
 	}
         else if (!strcmp(count_token[match_string_index], "proto")) {
 	  int proto;
@@ -1635,6 +1644,11 @@ int main(int argc,char **argv)
 	if (!have_wtc || (what_to_count & COUNT_IP_TOS)) {
 	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-3u    ", acc_elem->primitives.tos); 
 	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.tos); 
+	}
+
+	if (!have_wtc || (what_to_count & COUNT_SAMPLING_RATE)) {
+	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-7u       ", acc_elem->primitives.sampling_rate); 
+	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.sampling_rate); 
 	}
 
 #if defined HAVE_64BIT_COUNTERS

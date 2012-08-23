@@ -149,6 +149,7 @@
 #define COUNT_DST_NMASK		0x0000200000000000ULL
 #define COUNT_COS		0x0000400000000000ULL
 #define COUNT_ETHERTYPE		0x0000800000000000ULL
+#define COUNT_SAMPLING_RATE	0x0001000000000000ULL
 
 /* BYTES and PACKETS are used into templates; we let their values to
    overlap with some values we will not need into templates */ 

@@ -936,6 +936,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
     if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
     if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
+    if (config.what_to_count & COUNT_SAMPLING_RATE) what_to_count |= COUNT_SAMPLING_RATE;
   }
 
   /* sorting out delimiter */
@@ -1689,6 +1690,20 @@ int sql_evaluate_primitives(int primitive)
       values[primitive].type = where[primitive].type = COUNT_IP_PROTO;
       primitive++;
     }
+  }
+
+  if (what_to_count & COUNT_SAMPLING_RATE) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "sampling_rate", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "sampling_rate=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_SAMPLING_RATE;
+    values[primitive].handler = where[primitive].handler = count_sampling_rate_handler;
+    primitive++;
   }
 
   if (what_to_count & COUNT_ID) {

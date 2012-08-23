@@ -1,0 +1,14 @@
+This document doesn't replace documentation relevant to the database software you are
+using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'sampling_rate' field.
+Such field is being introduced to inform about the sampling rate that has either been
+applied (if renormalization was enabled) or should be applied to counters. Guidelines 
+below (typically in MySQL format) are to add such primitives to the SQL schema:
+
+* iface_in field:
+  - "sampling_rate INT(4) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., sampling_rate, ...)" to put it in the primary key 
+
+The primitive is not declared as part of any default table version; yet will not fail
+version checks which are enabled when 'sql_optimize_clauses' feature is disabled.

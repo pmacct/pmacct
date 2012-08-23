@@ -460,6 +460,13 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation & COUNT_SAMPLING_RATE) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sampling_rate_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sampling_rate_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sampling_rate_handler;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
       if (config.acct_type == ACCT_PM) {
 	channels_list[index].phandler[primitives] = counters_handler;
@@ -1072,6 +1079,13 @@ void out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->ifindex_out > 0) pdata->primitives.ifindex_out = pptrs->ifindex_out;
+}
+
+void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->primitives.sampling_rate = config.ext_sampling_rate ? config.ext_sampling_rate : 1;
 }
 
 #if defined (HAVE_L2)
@@ -2477,6 +2491,86 @@ void NF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   }
 }
 
+void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct xflow_status_entry *xsentry = (struct xflow_status_entry *) pptrs->f_status;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+  struct xflow_status_entry_sampling *sentry = NULL;
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t srate = 0, is_sampled = 0;
+  u_int16_t sampler_id = 0, t16 = 0;
+  u_int32_t sample_pool = 0, t32 = 0;
+  u_int8_t t8 = 0;
+
+  pdata->primitives.sampling_rate = 0; /* 0 = unknown */
+
+  if (config.sampling_map) {
+    if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
+      pdata->primitives.sampling_rate = xsentry->st.id;
+    }
+    else {
+      NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
+
+      if (xsentry) {
+        xsentry->st.id = pdata->primitives.sampling_rate;
+        gettimeofday(&xsentry->st.stamp, NULL);
+      }
+    }
+  }
+  else {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len) {
+        if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
+          memcpy(&t8, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
+          sampler_id = t8;
+        }
+        else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 2) {
+          memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 2);
+          sampler_id = ntohs(t16);
+        }
+        if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, TRUE);
+        if (sentry) pdata->primitives.sampling_rate = sentry->sample_pool;
+      }
+      /* SAMPLING_INTERVAL part of the NetFlow v9/IPFIX record seems to be reality, ie. FlowMon by Invea-Tech */
+      else if (tpl->tpl[NF9_SAMPLING_INTERVAL].len || tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len) {
+        if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 2) {
+	  memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 2);
+	  sample_pool = ntohs(t16);
+        }
+        else if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
+	  memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	  sample_pool = ntohl(t32);
+        }
+
+        if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 2) {
+	  memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 2);
+	  sample_pool = ntohs(t16);
+        }
+        else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) {
+	  memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+          sample_pool = ntohl(t32);
+        }
+
+        pdata->primitives.sampling_rate = sample_pool;
+      }
+      break;
+    case 5:
+      hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+      is_sampled = ( ntohs(hdr5->sampling) & 0xC000 );
+      srate = ( ntohs(hdr5->sampling) & 0x3FFF );
+      if (srate) pdata->primitives.sampling_rate = srate;
+      break;
+    default:
+      break;
+    }
+  }
+}
+
 void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -3371,6 +3465,30 @@ void SF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.ifindex_out = sample->outputPort;
+}
+
+void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct xflow_status_entry *xsentry = (struct xflow_status_entry *) pptrs->f_status;
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.sampling_map) {
+    if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
+      pdata->primitives.sampling_rate = xsentry->st.id;
+    }
+    else {
+      SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
+
+      if (xsentry) {
+        xsentry->st.id = pdata->primitives.sampling_rate;
+        gettimeofday(&xsentry->st.stamp, NULL);
+      }
+    }
+  }
+  else {
+    pdata->primitives.sampling_rate = sample->meanSkipCount;
+  }
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

@@ -363,6 +363,7 @@ struct pkt_primitives {
   pm_id_t id;
   pm_id_t id2;
   pm_class_t class;
+  u_int32_t sampling_rate;
 };
 
 struct pkt_data {

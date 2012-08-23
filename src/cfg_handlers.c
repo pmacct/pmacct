@@ -176,6 +176,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "cos")) value |= COUNT_COS;
     else if (!strcmp(count_token, "etype")) value |= COUNT_ETHERTYPE;
     else if (!strcmp(count_token, "mpls_vpn_rd")) value |= COUNT_MPLS_VPN_RD;
+    else if (!strcmp(count_token, "sampling_rate")) value |= COUNT_SAMPLING_RATE;
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 
