@@ -722,7 +722,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   if (f && config.print_markers) fprintf(f, "--END--\n");
 
-  if (f && config.sql_table) fclose(f);
+  if (f && config.sql_table) close_print_output_file(f, config.sql_table, refresh_deadline-config.print_refresh_time);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
