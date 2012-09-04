@@ -236,11 +236,6 @@ void sql_init_refresh_deadline(time_t *rd)
   *rd += (config.sql_refresh_time+config.sql_startup_delay); /* it's a deadline not a basetime */
 }
 
-void sql_calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
-{
-  *timeout = ((deadline-now)+1)*1000;
-}
-
 void sql_init_pipe(struct pollfd *pollfd, int fd)
 {
   pollfd->fd = fd;

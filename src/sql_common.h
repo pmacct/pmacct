@@ -265,7 +265,6 @@ EXT void sql_init_default_values();
 EXT void sql_init_historical_acct(time_t, struct insert_data *);
 EXT void sql_init_triggers(time_t, struct insert_data *);
 EXT void sql_init_refresh_deadline(time_t *);
-EXT void sql_calc_refresh_timeout(time_t, time_t, int *);
 EXT void sql_init_pipe(struct pollfd *, int);
 EXT struct template_entry *sql_init_logfile_template(struct template_header *);
 EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);

@@ -161,6 +161,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
+    calc_refresh_timeout(refresh_deadline, now, &timeout);
     ret = poll(&pfd, 1, timeout);
     if (ret < 0) goto poll_again;
 
@@ -168,23 +169,21 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      if (qq_ptr) {
-	switch (fork()) {
-	case 0: /* Child */
-	  P_cache_purge(queries_queue, qq_ptr);
-          exit(0);
-        default: /* Parent */
-          P_cache_flush(queries_queue, qq_ptr);
-	  gettimeofday(&flushtime, NULL);
-    	  refresh_deadline += config.print_refresh_time; 
-          qq_ptr = FALSE;
-	  if (reload_map) {
-	    load_networks(config.networks_file, &nt, &nc);
-	    load_ports(config.ports_file, &pt);
-	    reload_map = FALSE;
-	  }
-          break;
-        }
+      switch (fork()) {
+      case 0: /* Child */
+	P_cache_purge(queries_queue, qq_ptr);
+	exit(0);
+      default: /* Parent */
+        P_cache_flush(queries_queue, qq_ptr);
+	gettimeofday(&flushtime, NULL);
+    	refresh_deadline += config.print_refresh_time; 
+        qq_ptr = FALSE;
+	if (reload_map) {
+	  load_networks(config.networks_file, &nt, &nc);
+	  load_ports(config.ports_file, &pt);
+	  reload_map = FALSE;
+	}
+        break;
       }
       break;
     default: /* we received data */

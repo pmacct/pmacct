@@ -97,7 +97,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
-    sql_calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
+    calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
     ret = poll(&pfd, 1, timeout);
     if (ret < 0) goto poll_again;
 

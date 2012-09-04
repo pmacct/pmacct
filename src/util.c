@@ -1263,3 +1263,8 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 
   return ret;
 }
+
+void calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
+{
+  *timeout = ((deadline-now)+1)*1000;
+}
