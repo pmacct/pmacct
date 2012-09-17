@@ -88,7 +88,6 @@ struct configuration {
   char *sql_locking_style;
   int sql_use_copy;
   char *sql_delimiter;
-  int print_refresh_time;
   int print_cache_entries;
   int print_markers;
   int print_output;

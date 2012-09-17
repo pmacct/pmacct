@@ -76,8 +76,8 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   dest_len = sizeof(dest);
   Tee_parse_hostport(config.nfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
 
-  config.print_refresh_time = DEFAULT_TEE_REFRESH_TIME;
-  timeout = config.print_refresh_time*1000;
+  config.sql_refresh_time = DEFAULT_TEE_REFRESH_TIME;
+  timeout = config.sql_refresh_time*1000;
 
   pipebuf = (unsigned char *) Malloc(config.buffer_size);
 

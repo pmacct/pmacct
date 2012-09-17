@@ -442,6 +442,11 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     char tmpbuf[LONGLONGSRVBUFLEN];
     time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
 
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, copy_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause);
+
     strftime_same(copy_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
@@ -885,7 +890,7 @@ void PG_init_default_values(struct insert_data *idata)
       else config.sql_table = pgsql_table_uni;
     }
   }
-  if (strchr(config.sql_table, '%')) idata->dyn_table = TRUE;
+  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) idata->dyn_table = TRUE;
   glob_dyn_table = idata->dyn_table;
 
   if (config.sql_backup_host || config.sql_recovery_logfile) idata->recover = TRUE;

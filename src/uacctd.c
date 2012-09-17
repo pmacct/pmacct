@@ -243,10 +243,6 @@ int main(int argc,char **argv, char **envp)
       strlcpy(cfg_cmdline[rows], "sql_refresh_time: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
-      cfg_cmdline[rows] = malloc(SRVBUFLEN);
-      strlcpy(cfg_cmdline[rows], "print_refresh_time: ", SRVBUFLEN);
-      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
-      rows++;
       break;
     case 'v':
       strlcpy(cfg_cmdline[rows], "sql_table_version: ", SRVBUFLEN);

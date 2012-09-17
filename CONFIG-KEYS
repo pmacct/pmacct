@@ -289,7 +289,7 @@ DESC:           In SQL plugins this defines the SQL table to use (sql_table); in
 
 		%M	The minute as a decimal number (range 00 to 59).
 
-		%s     The number of seconds since the Epoch, i.e., since 1970-01-01 00:00:00 UTC.
+		%s      The number of seconds since the Epoch, i.e., since 1970-01-01 00:00:00 UTC.
 
 		%w	The day of the week as a decimal, range 0 to 6, Sunday being 0.
 
@@ -298,6 +298,8 @@ DESC:           In SQL plugins this defines the SQL table to use (sql_table); in
 			week 01.
 
 		%Y	The year as a decimal number including the century.
+
+		$ref	Configured value of refresh time
 
 		SQL plugins notes:
 		Time-related variables require 'sql_history' to be specified in order to work correctly
@@ -386,8 +388,16 @@ KEY:		sql_passwd
 DESC:		defines the password to use when connecting to the SQL server (default: arealsmartpwd).
 
 KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time ] (-r)
-DESC:		time interval between consecutive executions of the SQL cache scanner. The scanner purges
-		data from the cache into the RDBMS. The value is expressed in seconds.
+DESC:		time interval, in seconds, between consecutive executions of the plugin cache scanner. The
+		scanner purges data into the plugin backend. Note: internally all these config directives
+		write to the same variable; when using multiple plugins it is recommended to bind refresh
+		time definitions to specific plugins, ie.:
+
+		plugins: mysql[x], mongo[y]
+		sql_refresh_time[x]: 900
+		mongo_refresh_time[y]: 300
+
+		As doing otherwise can originate unexpected behaviours.
 
 KEY:		sql_startup_delay
 DESC:		defines the time, in seconds, the first SQL cache scan event has to be delayed. This delay

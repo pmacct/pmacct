@@ -439,6 +439,10 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     char tmpbuf[LONGLONGSRVBUFLEN];
     time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
 
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause);
+
     strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
@@ -681,7 +685,7 @@ void MY_init_default_values(struct insert_data *idata)
     else if (config.sql_table_version == 2) config.sql_table = mysql_table_v2;
     else config.sql_table = mysql_table;
   }
-  if (strchr(config.sql_table, '%')) idata->dyn_table = TRUE;
+  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) idata->dyn_table = TRUE;
   glob_dyn_table = idata->dyn_table;
 
   if (config.sql_backup_host || config.sql_recovery_logfile) idata->recover = TRUE;

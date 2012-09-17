@@ -87,7 +87,6 @@ EXT int cfg_key_networks_file(char *, char *, char *);
 EXT int cfg_key_networks_cache_entries(char *, char *, char *);
 EXT int cfg_key_ports_file(char *, char *, char *);
 EXT int cfg_key_refresh_maps(char *, char *, char *);
-EXT int cfg_key_print_refresh_time(char *, char *, char *);
 EXT int cfg_key_print_cache_entries(char *, char *, char *);
 EXT int cfg_key_print_markers(char *, char *, char *);
 EXT int cfg_key_print_output(char *, char *, char *);

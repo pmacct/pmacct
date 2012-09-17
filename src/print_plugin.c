@@ -81,13 +81,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGCHLD, ignore_falling_child);
 #endif
 
-  if (!config.print_refresh_time)
-    config.print_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
+  if (!config.sql_refresh_time)
+    config.sql_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
 
   if (!config.print_output)
     config.print_output = PRINT_OUTPUT_FORMATTED;
 
-  timeout = config.print_refresh_time*1000;
+  timeout = config.sql_refresh_time*1000;
 
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
     insert_func = P_sum_host_insert;
@@ -139,9 +139,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* print_refresh time init: deadline */
   refresh_deadline = now; 
   t = roundoff_time(refresh_deadline, config.sql_history_roundoff);
-  while ((t+config.print_refresh_time) < refresh_deadline) t += config.print_refresh_time;
+  while ((t+config.sql_refresh_time) < refresh_deadline) t += config.sql_refresh_time;
   refresh_deadline = t;
-  refresh_deadline += config.print_refresh_time; /* it's a deadline not a basetime */
+  refresh_deadline += config.sql_refresh_time; /* it's a deadline not a basetime */
 
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
@@ -176,7 +176,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       default: /* Parent */
         P_cache_flush(queries_queue, qq_ptr);
 	gettimeofday(&flushtime, NULL);
-    	refresh_deadline += config.print_refresh_time; 
+    	refresh_deadline += config.sql_refresh_time; 
         qq_ptr = FALSE;
 	if (reload_map) {
 	  load_networks(config.networks_file, &nt, &nc);
@@ -231,7 +231,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           default: /* Parent */
             P_cache_flush(queries_queue, qq_ptr);
 	    gettimeofday(&flushtime, NULL);
-            refresh_deadline += config.print_refresh_time; 
+            refresh_deadline += config.sql_refresh_time; 
             qq_ptr = FALSE;
 	    if (reload_map) {
 	      load_networks(config.networks_file, &nt, &nc);
@@ -485,7 +485,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
 
   if (config.sql_table) {
-    f = open_print_output_file(config.sql_table, refresh_deadline-config.print_refresh_time);
+    f = open_print_output_file(config.sql_table, refresh_deadline-config.sql_refresh_time);
 
     if (f) { 
       if (config.print_output == PRINT_OUTPUT_FORMATTED)
@@ -496,8 +496,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   }
   else f = stdout; /* write to standard output */
 
-  if (f && config.print_markers) fprintf(f, "--START (%ld+%d)--\n", refresh_deadline-config.print_refresh_time,
-		  			config.print_refresh_time);
+  if (f && config.print_markers) fprintf(f, "--START (%ld+%d)--\n", refresh_deadline-config.sql_refresh_time,
+		  			config.sql_refresh_time);
 
   for (j = 0; j < index; j++) {
     data = &queue[j]->primitives;
@@ -721,7 +721,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   if (f && config.print_markers) fprintf(f, "--END--\n");
 
-  if (f && config.sql_table) close_print_output_file(f, config.sql_table, refresh_deadline-config.print_refresh_time);
+  if (f && config.sql_table) close_print_output_file(f, config.sql_table, refresh_deadline-config.sql_refresh_time);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

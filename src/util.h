@@ -75,6 +75,8 @@ EXT void set_shadow_status(struct packet_ptrs *);
 EXT void set_default_preferences(struct configuration *);
 EXT FILE *open_logfile(char *);
 EXT FILE *open_print_output_file(char *, time_t);
+EXT void handle_dynname_internal_strings(char *, int, char *);
+EXT void handle_dynname_internal_strings_same(char *, int, char *);
 EXT void close_print_output_file(FILE *, char *, time_t);
 EXT void evaluate_bgp_aspath_radius(char *, int, int);
 EXT void copy_stdcomm_to_asn(char *, as_t *, int);

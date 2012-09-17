@@ -2243,13 +2243,14 @@ FILE *sql_file_open(const char *path, const char *mode, const struct insert_data
 void sql_create_table(struct DBdesc *db, time_t *basetime)
 {
   struct tm *nowtm;
-  char buf[LARGEBUFLEN], tmpbuf[LARGEBUFLEN];
+  char buf[LARGEBUFLEN], tmpbuf[LARGEBUFLEN], tmpbuf2[LARGEBUFLEN];
   int ret;
 
   ret = read_SQLquery_from_file(config.sql_table_schema, tmpbuf, LARGEBUFLEN);
   if (ret) {
+    handle_dynname_internal_strings(tmpbuf2, LARGEBUFLEN-10, tmpbuf);
     nowtm = localtime(basetime);
-    strftime(buf, LARGEBUFLEN, tmpbuf, nowtm);
+    strftime(buf, LARGEBUFLEN, tmpbuf2, nowtm);
     (*sqlfunc_cbr.create_table)(db, buf);
   }
 }

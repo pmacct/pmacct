@@ -1530,31 +1530,6 @@ int cfg_key_refresh_maps(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_print_refresh_time(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_ERR, "WARN ( %s ): 'print_refresh_time' has to be > 0.\n", filename);
-    return ERR;
-  }
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.print_refresh_time = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.print_refresh_time = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_print_cache_entries(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

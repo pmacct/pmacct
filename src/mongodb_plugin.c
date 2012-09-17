@@ -83,10 +83,10 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGCHLD, ignore_falling_child);
 #endif
 
-  if (!config.print_refresh_time)
-    config.print_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
+  if (!config.sql_refresh_time)
+    config.sql_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
 
-  timeout = config.print_refresh_time*1000;
+  timeout = config.sql_refresh_time*1000;
 
   /* XXX: reusing cache functions from print plugin -- should get common'ed? */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -139,9 +139,9 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* print_refresh time init: deadline */
   refresh_deadline = now; 
   t = roundoff_time(refresh_deadline, config.sql_history_roundoff);
-  while ((t+config.print_refresh_time) < refresh_deadline) t += config.print_refresh_time;
+  while ((t+config.sql_refresh_time) < refresh_deadline) t += config.sql_refresh_time;
   refresh_deadline = t;
-  refresh_deadline += config.print_refresh_time; /* it's a deadline not a basetime */
+  refresh_deadline += config.sql_refresh_time; /* it's a deadline not a basetime */
 
   if (config.sql_history) {
     basetime_init = P_init_historical_acct;
@@ -192,7 +192,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         default: /* Parent */
           MongoDB_cache_flush(queries_queue, qq_ptr);
 	  gettimeofday(&flushtime, NULL);
-    	  refresh_deadline += config.print_refresh_time; 
+    	  refresh_deadline += config.sql_refresh_time; 
           qq_ptr = FALSE;
 	  if (reload_map) {
 	    load_networks(config.networks_file, &nt, &nc);
@@ -248,7 +248,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           default: /* Parent */
             MongoDB_cache_flush(queries_queue, qq_ptr);
 	    gettimeofday(&flushtime, NULL);
-            refresh_deadline += config.print_refresh_time; 
+            refresh_deadline += config.sql_refresh_time; 
             qq_ptr = FALSE;
 	    if (reload_map) {
 	      load_networks(config.networks_file, &nt, &nc);
@@ -341,7 +341,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
 
   if (!config.sql_table) config.sql_table = default_table;
-  if (strchr(config.sql_table, '%')) dyn_table = TRUE;
+  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
   else dyn_table = FALSE;
 
   bson_batch = (bson **) malloc(sizeof(bson *) * index);
@@ -503,6 +503,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   if (dyn_table) {
     char tmpbuf[LONGLONGSRVBUFLEN];
     time_t stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
+
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
 
     strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
     mongo_insert_batch(&db_conn, tmpbuf, bson_batch, j, NULL, MONGO_CONTINUE_ON_ERROR /* XXX: test */);
