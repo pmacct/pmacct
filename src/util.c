@@ -459,7 +459,7 @@ FILE *open_print_output_file(char *filename, time_t now)
 void handle_dynname_internal_strings(char *new, int newlen, char *old)
 {
   int oldlen;
-  char ref_string[] = "$ref";
+  char ref_string[] = "$ref", hst_string[] = "$hst";
   char *ptr_start, *ptr_end;
 
   oldlen = strlen(old);
@@ -482,12 +482,44 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old)
     *ptr_start = '\0';
     strncat(new, buf, len); 
   }
+
+  ptr_start = strstr(new, hst_string);
+  if (ptr_start) {
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += 4;
+    len -= 4;
+
+    howmany = sql_history_to_secs(config.sql_history, config.sql_history_howmany);
+    snprintf(buf, newlen, "%u", howmany);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
 }
 
 void handle_dynname_internal_strings_same(char *new, int newlen, char *old)
 {
   handle_dynname_internal_strings(new, newlen, old);
   strlcpy(old, new, newlen);
+}
+
+int sql_history_to_secs(int mu, int howmany)
+{
+  int ret = 0;
+
+  if (mu == COUNT_MINUTELY) ret = howmany*60;
+  else if (mu == COUNT_HOURLY) ret = howmany*3600;
+  else if (mu == COUNT_DAILY) ret = howmany*86400;
+  else if (mu == COUNT_WEEKLY) ret = howmany*86400*7;
+  else if (mu == COUNT_MONTHLY) ret = howmany*86400*30; /* XXX: this is an approx! */
+
+  return ret;
 }
 
 void write_pid_file(char *filename)

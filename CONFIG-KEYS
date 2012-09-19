@@ -299,7 +299,9 @@ DESC:           In SQL plugins this defines the SQL table to use (sql_table); in
 
 		%Y	The year as a decimal number including the century.
 
-		$ref	Configured value of refresh time
+		$ref	Configured value of refresh time.
+
+		$hst	Configured value of sql_history in seconds.
 
 		SQL plugins notes:
 		Time-related variables require 'sql_history' to be specified in order to work correctly
