@@ -2520,7 +2520,8 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       }
     }
   }
-  else {
+
+  if (pdata->primitives.sampling_rate == 0) { /* 0 = still unknown */
     switch (hdr->version) {
     case 10:
     case 9:
@@ -2557,6 +2558,10 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
         }
 
         pdata->primitives.sampling_rate = sample_pool;
+      }
+      else {
+	if (entry) sentry = search_smp_id_status_table(entry->sampling, 0, FALSE);
+        if (sentry) pdata->primitives.sampling_rate = sentry->sample_pool;
       }
       break;
     case 5:
@@ -3473,6 +3478,8 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
+  pdata->primitives.sampling_rate = 0;
+
   if (config.sampling_map) {
     if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
       pdata->primitives.sampling_rate = xsentry->st.id;
@@ -3486,7 +3493,8 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       }
     }
   }
-  else {
+
+  if (pdata->primitives.sampling_rate == 0) {
     pdata->primitives.sampling_rate = sample->meanSkipCount;
   }
 }
