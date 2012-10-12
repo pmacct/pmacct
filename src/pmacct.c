@@ -58,7 +58,7 @@ int CHECK_Q_TYPE(int type)
 
 void usage_client(char *prog)
 {
-  printf("%s\n", PMACCT_USAGE_HEADER);
+  printf("%s (%s)\n", PMACCT_USAGE_HEADER, PMACCT_BUILD);
   printf("Usage: %s [query]\n\n", prog);
   printf("Queries:\n");
   printf("  -s\tShow statistics\n"); 

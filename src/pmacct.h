@@ -66,6 +66,8 @@
 #endif
 #endif
 
+#include "pmacct-build.h"
+
 #if !defined INET_ADDRSTRLEN 
 #define INET_ADDRSTRLEN 16
 #endif

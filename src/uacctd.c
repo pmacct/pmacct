@@ -48,7 +48,7 @@ u_char dummy_tlhdr[16];
 /* Functions */
 void usage_daemon(char *prog_name)
 {
-  printf("%s\n", UACCTD_USAGE_HEADER);
+  printf("%s (%s)\n", UACCTD_USAGE_HEADER, PMACCT_BUILD);
   printf("Usage: %s [ -D | -d ] [ -g ULOG group ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);

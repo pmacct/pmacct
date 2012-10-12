@@ -52,7 +52,7 @@ pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 /* Functions */
 void usage_daemon(char *prog_name)
 {
-  printf("%s\n", SFACCTD_USAGE_HEADER);
+  printf("%s (%s)\n", SFACCTD_USAGE_HEADER, PMACCT_BUILD);
   printf("Usage: %s [ -D | -d ] [ -L IP address ] [ -l port ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
