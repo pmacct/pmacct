@@ -821,12 +821,14 @@ DESC:		forces 'pmacctd' to join together IPv4/IPv6 fragments: 'pmacctd' does thi
 		(default: false) 
 
 KEY:		[ pmacctd_frag_buffer_size | uacctd_frag_buffer_size ] [GLOBAL, NO_NFACCTD]
-DESC:		defines the maximum size of the fragment buffer. The value is expeced in bytes (default: 4 Mb). 
+DESC:		defines the maximum size of the fragment buffer. In case IPv6 is enabled two buffers of equal
+		size will be allocated. The value is expected in bytes (default: 4 Mb). 
 
 KEY:            [ pmacctd_flow_buffer_size | uacctd_flow_buffer_size ] [GLOBAL, NO_NFACCTD]
 DESC:           defines the maximum size of the flow buffer. This is an upper limit to avoid unlimited growth
-		of the memory structure. This value has to scale accordingly to the link traffic rate. It is
-		expected in bytes (default: 16 Mb).
+		of the memory structure. This value has to scale accordingly to the link traffic rate. In case
+		IPv6 is enabled two buffers of equal size will be allocated. It is expected in bytes (default:
+		16 Mb).
 
 KEY:            [ pmacctd_flow_buffer_buckets | uacctd_flow_buffer_buckets ] [GLOBAL, NO_NFACCTD] 
 DESC:           defines the number of buckets of the flow buffer - which is organized as a chained hash table.
@@ -835,8 +837,8 @@ DESC:           defines the number of buckets of the flow buffer - which is orga
 		a value of 65536 works just fine under full 100Mbit load (default: 256).
 
 KEY:            [ pmacctd_conntrack_buffer_size | uacctd_conntrack_buffer_size ] [GLOBAL, NO_NFACCTD]
-DESC:           defines the maximum size of the connection tracking buffer. The value is expected in bytes
-		(default: 8 Mb).
+DESC:           defines the maximum size of the connection tracking buffer. In case IPv6 is enabled two buffers
+		of equal size will be allocated. The value is expected in bytes (default: 8 Mb).
 
 KEY:            [ pmacctd_flow_lifetime | uacctd_flow_lifetime ] [GLOBAL, NO_NFACCTD]
 DESC:           defines how long a flow could remain inactive (ie. no packets belonging to such flow are received)

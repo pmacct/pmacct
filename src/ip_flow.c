@@ -395,7 +395,7 @@ void init_ip6_flow_handler()
 {
   int size;
 
-  if (config.frag_bufsz) flt6_total_nodes = config.frag_bufsz / sizeof(struct ip_flow6);
+  if (config.flow_bufsz) flt6_total_nodes = config.flow_bufsz / sizeof(struct ip_flow6);
   else flt6_total_nodes = DEFAULT_FLOW_BUFFER_SIZE / sizeof(struct ip_flow6);
 
   if (!config.flow_hashsz) config.flow_hashsz = FLOW_TABLE_HASHSZ;
