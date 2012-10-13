@@ -478,7 +478,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives empty_pbgp;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN];
-  char *as_path, *bgp_comm, empty_aspath[] = "^$";
+  char *as_path, *bgp_comm, empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
+  char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
   int j;
 
@@ -514,11 +515,17 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #if defined (HAVE_L2)
       if (config.what_to_count & COUNT_SRC_MAC) {
         etheraddr_string(data->eth_shost, src_mac);
-        fprintf(f, "%-17s  ", src_mac);
+	if (strlen(src_mac))
+          fprintf(f, "%-17s  ", src_mac);
+        else
+          fprintf(f, "%-17s  ", empty_macaddress);
       }
       if (config.what_to_count & COUNT_DST_MAC) {
         etheraddr_string(data->eth_dhost, dst_mac);
-        fprintf(f, "%-17s  ", dst_mac);
+	if (strlen(dst_mac))
+          fprintf(f, "%-17s  ", dst_mac);
+	else
+          fprintf(f, "%-17s  ", empty_macaddress);
       }
       if (config.what_to_count & COUNT_VLAN) fprintf(f, "%-5u  ", data->vlan_id); 
       if (config.what_to_count & COUNT_COS) fprintf(f, "%-2u  ", data->cos); 
@@ -560,17 +567,29 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count & COUNT_PEER_SRC_IP) {
         addr_to_str(ip_address, &pbgp->peer_src_ip);
 #if defined ENABLE_IPV6
-        fprintf(f, "%-45s  ", ip_address);
+        if (strlen(ip_address))
+          fprintf(f, "%-45s  ", ip_address);
+	else
+          fprintf(f, "%-45s  ", empty_ip6);
 #else
-        fprintf(f, "%-15s  ", ip_address);
+	if (strlen(ip_address))
+          fprintf(f, "%-15s  ", ip_address);
+	else
+          fprintf(f, "%-15s  ", empty_ip4);
 #endif
       }
       if (config.what_to_count & COUNT_PEER_DST_IP) {
         addr_to_str(ip_address, &pbgp->peer_dst_ip);
 #if defined ENABLE_IPV6
-        fprintf(f, "%-45s  ", ip_address);
+        if (strlen(ip_address))
+          fprintf(f, "%-45s  ", ip_address);
+        else
+          fprintf(f, "%-45s  ", empty_ip6);
 #else
-        fprintf(f, "%-15s  ", ip_address);
+        if (strlen(ip_address))
+          fprintf(f, "%-15s  ", ip_address);
+        else 
+          fprintf(f, "%-15s  ", empty_ip4);
 #endif
       }
 
@@ -579,23 +598,38 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
       if (config.what_to_count & COUNT_MPLS_VPN_RD) {
         bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
-        fprintf(f, "%-18s  ", rd_str);
+	if (strlen(rd_str))
+          fprintf(f, "%-18s  ", rd_str);
+	else
+          fprintf(f, "%-18s  ", empty_rd);
       }
 
       if (config.what_to_count & COUNT_SRC_HOST) {
         addr_to_str(src_host, &data->src_ip);
 #if defined ENABLE_IPV6
-        fprintf(f, "%-45s  ", src_host);
+	if (strlen(src_host))
+          fprintf(f, "%-45s  ", src_host);
+	else
+          fprintf(f, "%-45s  ", empty_ip6);
 #else
-        fprintf(f, "%-15s  ", src_host);
+	if (strlen(src_host))
+          fprintf(f, "%-15s  ", src_host);
+	else
+          fprintf(f, "%-15s  ", empty_ip4);
 #endif
       }
       if (config.what_to_count & COUNT_DST_HOST) {
         addr_to_str(dst_host, &data->dst_ip);
 #if defined ENABLE_IPV6
-        fprintf(f, "%-45s  ", dst_host);
+	if (strlen(dst_host))
+          fprintf(f, "%-45s  ", dst_host);
+	else
+          fprintf(f, "%-45s  ", empty_ip6);
 #else
-        fprintf(f, "%-15s  ", dst_host);
+	if (strlen(dst_host))
+          fprintf(f, "%-15s  ", dst_host);
+	else
+          fprintf(f, "%-15s  ", empty_ip4);
 #endif
       }
       if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%-3u       ", data->src_nmask);
