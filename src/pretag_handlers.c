@@ -915,6 +915,7 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int8_t neg = entry->input.neg;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_INPUT_SNMP].len == 2) { 
       if (!memcmp(&input16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
@@ -976,6 +977,7 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int8_t neg = entry->output.neg;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2) {
       if (!memcmp(&output16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
@@ -1037,6 +1039,7 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (entry->nexthop.a.family == AF_INET) {
       if (!memcmp(&entry->nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_NEXT_HOP].off, tpl->tpl[NF9_IPV4_NEXT_HOP].len))
@@ -1070,6 +1073,7 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (entry->bgp_nexthop.a.family == AF_INET) {
       if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len))
@@ -1235,6 +1239,7 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->last_matched == PRETAG_SRC_AS) return FALSE;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_SRC_AS].len == 2) {
       memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 2);
@@ -1314,6 +1319,7 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->last_matched == PRETAG_DST_AS) return FALSE;
 
   switch(hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DST_AS].len == 2) {
       memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 2);
@@ -1541,6 +1547,7 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int16_t direction = 0;
 
   switch (hdr->version) {
+  case 10:
   case 9:
     if (tpl->tpl[NF9_DIRECTION].len == 1) {
       memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
