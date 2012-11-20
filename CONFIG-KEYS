@@ -276,10 +276,10 @@ DESC:		defines the SQL database to use. Remember that when using the SQLite3 plu
 		default: '/tmp/pmacct.db'). 
 
 KEY:            [ sql_table | print_output_file | mongo_table ]
-DESC:           In SQL plugins this defines the SQL table to use (sql_table); in print plugin it defines
-		the file to write to (print_output_file). Dynamic names are supported through the use of
-		variables, which are computed at the moment when data is purged to the backend. The list
-		of supported variables follows: 
+DESC:           In SQL and mongodb plugins this defines the table to use; in print plugin it defines the
+		file to write output to. Dynamic names are supported through the use of variables, which
+		are computed at the moment when data is purged to the backend. The list of supported
+		variables follows: 
 
 		%d	The day of the month as a decimal number (range 01 to 31).
 
@@ -331,6 +331,9 @@ DESC:           In SQL plugins this defines the SQL table to use (sql_table); in
 		Print plugin notes:
 		If a non-dynamic filename is selected, content is overwritten to the existing one. 
 
+		MongoDB plugin notes:
+		Default table is test.acct
+
 		Common notes:
 		The maximum table name length is 64 characters. The maximum number of variables it may
 		contain is 8.
@@ -380,8 +383,8 @@ DESC:		this switch makes sense only when using PostgreSQL plugin; each of the pg
 		in a faster but more rigid structure. Since v6 unified mode is being discontinued leading
 		to efficiency and simplification. (default: 'typed').
 
-KEY:	 	sql_host
-DESC:		defines the SQL server IP/hostname (default: localhost).
+KEY:	 	[ sql_host | mongo_host ]
+DESC:		defines the backend server IP/hostname (default: localhost).
 
 KEY:		sql_user
 DESC:		defines the username to use when connecting to the SQL server (default: pmacct).
@@ -395,7 +398,7 @@ DESC:		time interval, in seconds, between consecutive executions of the plugin c
 		write to the same variable; when using multiple plugins it is recommended to bind refresh
 		time definitions to specific plugins, ie.:
 
-		plugins: mysql[x], mongo[y]
+		plugins: mysql[x], mongodb[y]
 		sql_refresh_time[x]: 900
 		mongo_refresh_time[y]: 300
 
@@ -486,7 +489,7 @@ DESC:           sets the maximum number of concurrent writer processes the SQL p
 		continue working in any case. (default: 10) 
 
 KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries ]
-DESC:		SQL and print plugins sport a Plugin Memory Cache (PMC) meant to accumulate bytes/packets
+DESC:		SQL and other plugins sport a Plugin Memory Cache (PMC) meant to accumulate bytes/packets
 		counters until next purging event (for further insights take a look to 'sql_refresh_time'). 
 		This directive sets the number of PMC buckets. Default value is suitable for most common
 		scenarios, however when facing large-scale networks, it's higly recommended to carefully
@@ -528,8 +531,9 @@ DESC:		defines the executable to be launched at fixed time intervals to post-pro
 		is supplied 'sql_refresh_time' value is used instead: this will result in a trigger being
 		fired each purging event. A number of environment variables are set in order to allow the
 		trigger to take actions; take a look to docs/TRIGGER_VARS to check them out. In the print
-		plugin a simpler implementation is made: triggers can be fired at each 'print_refresh_time'
-		only and no environment variables are passed over to the executable.
+		and mongodb plugins a simpler implementation is made: triggers can be fired each time data
+		is written to the backend (ie. print_refresh_time) and no environment variables are passed
+		over to the executable.
 
 KEY:		sql_trigger_time
 VALUES:		#[m|h|d|w|M]

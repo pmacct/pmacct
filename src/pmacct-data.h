@@ -280,6 +280,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_time_roundoff", cfg_key_sql_history_roundoff},
   {"print_output_file", cfg_key_print_output_file},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
+  {"mongo_host", cfg_key_sql_host},
   {"mongo_table", cfg_key_sql_table},
   {"mongo_refresh_time", cfg_key_sql_refresh_time},
   {"mongo_cache_entries", cfg_key_print_cache_entries},
