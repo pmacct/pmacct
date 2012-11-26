@@ -460,7 +460,7 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    if (channels_list[index].aggregation & COUNT_SAMPLING_RATE) {
+    if (channels_list[index].aggregation_2 & COUNT_SAMPLING_RATE) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sampling_rate_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sampling_rate_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sampling_rate_handler;

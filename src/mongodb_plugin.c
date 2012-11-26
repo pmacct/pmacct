@@ -477,7 +477,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       bson_append_string(bson_elem, "tos", misc_str);
     }
 
-    if (config.what_to_count & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
+    if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
 
     if (config.sql_history) {
       bson_append_date(bson_elem, "stamp_inserted", (bson_date_t) 1000*queue[j]->basetime.tv_sec);

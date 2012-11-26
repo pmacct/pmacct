@@ -412,7 +412,7 @@ nf9_init_template(void)
 	 * aggregation, then let's choose one. If we don't have one or
 	 * more flow-distinguishing primitives, then let's add flow
 	 * aggregation info to the template */
-	if ( ! config.nfprobe_what_to_count ) {
+	if (!config.nfprobe_what_to_count && !config.nfprobe_what_to_count_2) {
 	  config.nfprobe_what_to_count |= COUNT_SRC_HOST;
 	  config.nfprobe_what_to_count |= COUNT_DST_HOST;
 	  config.nfprobe_what_to_count |= COUNT_SRC_PORT;

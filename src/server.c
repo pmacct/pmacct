@@ -105,6 +105,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
 
   if (q->type & WANT_STATS) {
     q->what_to_count = config.what_to_count; 
+    q->what_to_count_2 = config.what_to_count_2; 
     for (idx = 0; idx < config.buckets; idx++) {
       if (!following_chain) acc_elem = (struct acc *) elem;
       if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
@@ -158,10 +159,11 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
     unsigned int j;
 
     q->what_to_count = config.what_to_count;
+    q->what_to_count_2 = config.what_to_count_2;
     for (j = 0; j < uq->num; j++, bufptr += sizeof(struct query_entry)) {
       memcpy(&request, bufptr, sizeof(struct query_entry));
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): Searching into accounting structure ...\n", config.name, config.type); 
-      if (request.what_to_count == config.what_to_count) { 
+      if (request.what_to_count == config.what_to_count && request.what_to_count_2 == config.what_to_count_2) { 
         acc_elem = search_accounting_structure(&request.data, &request.pbgp);
         if (acc_elem) { 
 	  if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
@@ -206,7 +208,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
         for (idx = 0; idx < config.buckets; idx++) {
           if (!following_chain) acc_elem = (struct acc *) elem;
 	  if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
-	    mask_elem(&tbuf, &bbuf, acc_elem, request.what_to_count); 
+	    mask_elem(&tbuf, &bbuf, acc_elem, request.what_to_count, request.what_to_count_2); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives))) {
 	      if (q->type & WANT_COUNTER) Accumulate_Counters(&abuf, acc_elem); 
@@ -260,7 +262,7 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
   }
 }
 
-void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct acc *src, u_int64_t w)
+void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct acc *src, u_int64_t w, u_int64_t w2)
 {
   struct pkt_primitives *s1 = &src->primitives;
   struct pkt_bgp_primitives tmp_pbgp;
@@ -302,10 +304,11 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_IP_PROTO) d1->proto = s1->proto; 
   if (w & COUNT_IN_IFACE) d1->ifindex_in = s1->ifindex_in; 
   if (w & COUNT_OUT_IFACE) d1->ifindex_out = s1->ifindex_out; 
-  if (w & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
   if (w & COUNT_ID) d1->id = s1->id; 
   if (w & COUNT_ID2) d1->id2 = s1->id2; 
   if (w & COUNT_CLASS) d1->class = s1->class; 
+
+  if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
 
   if (PbgpSz && s2) {
     if (w & COUNT_STD_COMM) strlcpy(d2->std_comms, s2->std_comms, MAX_BGP_STD_COMMS); 

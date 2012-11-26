@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -29,7 +29,8 @@ struct template_header {
 };
 
 struct template_entry {
-  u_int32_t tag;
+  u_int64_t tag;
+  /* u_int64_t tag_2; XXX: not supported */
   u_int8_t size;
   u_int8_t type;  /* unused */
 };

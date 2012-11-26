@@ -120,7 +120,7 @@ void print_ex_options_error()
   exit(1);
 }
 
-void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
+void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_count_2, u_int8_t have_wtc)
 {
   if (!have_wtc) {
     printf("TAG         ");
@@ -230,7 +230,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS  "); 
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL    ");
     if (what_to_count & COUNT_IP_TOS) printf("TOS    ");
-    if (what_to_count & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
+    if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS                 ");
@@ -243,7 +243,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int8_t have_wtc)
   }
 }
 
-void write_stats_header_csv(u_int64_t what_to_count, u_int8_t have_wtc)
+void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, u_int8_t have_wtc)
 {
   if (!have_wtc) {
     printf("TAG,");
@@ -353,7 +353,7 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int8_t have_wtc)
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS,"); 
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL,");
     if (what_to_count & COUNT_IP_TOS) printf("TOS,");
-    if (what_to_count & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE,");
+    if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE,");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS,");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS,");
@@ -439,7 +439,7 @@ int main(int argc,char **argv)
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
   int want_output, want_ipproto_num;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
-  u_int64_t what_to_count, have_wtc;
+  u_int64_t what_to_count, what_to_count_2, have_wtc;
   u_int32_t tmpnum;
 
   int PbgpSz = FALSE;
@@ -471,6 +471,7 @@ int main(int argc,char **argv)
   num_counters = FALSE;
   fetch_from_file = FALSE;
   what_to_count = FALSE;
+  what_to_count_2 = FALSE;
   have_wtc = FALSE;
   want_output = PRINT_OUTPUT_FORMATTED;
 
@@ -551,7 +552,7 @@ int main(int argc,char **argv)
 	}
         else if (!strcmp(count_token[count_index], "sampling_rate")) {
 	  count_token_int[count_index] = COUNT_SAMPLING_RATE;
-	  what_to_count |= COUNT_SAMPLING_RATE;
+	  what_to_count_2 |= COUNT_SAMPLING_RATE;
 	}
         else if (!strcmp(count_token[count_index], "none")) {
 	  count_token_int[count_index] = COUNT_NONE;
@@ -758,7 +759,7 @@ int main(int argc,char **argv)
     exit(1);
   }
 
-  if ((want_counter || want_match) && !what_to_count) {
+  if ((want_counter || want_match) && (!what_to_count && !what_to_count_2)) {
     printf("ERROR: -N or -M selected but -c has not been specified or is invalid.\n  Exiting...\n\n");
     usage_client(argv[0]);
     exit(1);
@@ -794,7 +795,7 @@ int main(int argc,char **argv)
   }
 
   /* Sanitizing the aggregation method */ 
-  if (what_to_count) {
+  if (what_to_count || what_to_count_2) {
     if (what_to_count & COUNT_STD_COMM && what_to_count & COUNT_EXT_COMM) {
       printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
       exit(1);
@@ -894,12 +895,11 @@ int main(int argc,char **argv)
     
     /* 4th step: build queries */
     for (q.num = 0; (q.num < strnum) && (q.num < MAX_QUERIES); q.num++) {
-      u_int64_t entry_wtc = what_to_count;
-
       match_string_ptr = strings[q.num];
       match_string_index = 0;
       memset(&request, 0, sizeof(struct query_entry));
       request.what_to_count = what_to_count;
+      request.what_to_count_2 = what_to_count_2;
       while ((*match_string_ptr != '\0') && (match_string_index < count_index))  {
         match_string_token = pmc_extract_token(&match_string_ptr, ',');
 
@@ -1243,6 +1243,7 @@ int main(int argc,char **argv)
     if (want_all_fields) have_wtc = FALSE; 
     else have_wtc = TRUE; 
     what_to_count = ((struct query_header *)largebuf)->what_to_count;
+    what_to_count_2 = ((struct query_header *)largebuf)->what_to_count_2;
     if (check_data_sizes((struct query_header *)largebuf, acc_elem)) exit(1);
 
     /* Before going on with the output, we need to retrieve the class strings
@@ -1279,9 +1280,9 @@ int main(int argc,char **argv)
       PbgpSz = TRUE;
 
     if (want_output == PRINT_OUTPUT_FORMATTED)
-      write_stats_header_formatted(what_to_count, have_wtc);
+      write_stats_header_formatted(what_to_count, what_to_count_2, have_wtc);
     else if (want_output == PRINT_OUTPUT_CSV)
-      write_stats_header_csv(what_to_count, have_wtc);
+      write_stats_header_csv(what_to_count, what_to_count_2, have_wtc);
 
     elem = largebuf+sizeof(struct query_header);
     unpacked -= sizeof(struct query_header);
@@ -1646,7 +1647,7 @@ int main(int argc,char **argv)
 	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.tos); 
 	}
 
-	if (!have_wtc || (what_to_count & COUNT_SAMPLING_RATE)) {
+	if (!have_wtc || (what_to_count_2 & COUNT_SAMPLING_RATE)) {
 	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-7u       ", acc_elem->primitives.sampling_rate); 
 	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.sampling_rate); 
 	}

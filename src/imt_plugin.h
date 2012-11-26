@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
 */
 
 /*
@@ -58,6 +58,7 @@ struct memory_pool_desc {
 struct query_header {
   int type;			/* type of query */
   u_int64_t what_to_count;	/* aggregation */
+  u_int64_t what_to_count_2;	/* aggregation */
   unsigned int num;		/* number of queries */
   unsigned int ip_sz;		/* IP addresses size (in bytes) */
   unsigned int cnt_sz;		/* counters size (in bytes) */
@@ -66,6 +67,7 @@ struct query_header {
 
 struct query_entry {
   u_int64_t what_to_count;	/* aggregation */
+  u_int64_t what_to_count_2;	/* aggregation */
   struct pkt_primitives data;	/* actual data */
   struct pkt_bgp_primitives pbgp; /* extended BGP data */
 };
@@ -112,7 +114,7 @@ EXT void set_reset_flag(struct acc *);
 EXT void reset_counters(struct acc *);
 EXT int build_query_server(char *);
 EXT void process_query_data(int, unsigned char *, int, int);
-EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct acc *, u_int64_t);
+EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct acc *, u_int64_t, u_int64_t);
 EXT void enQueue_elem(int, struct reply_buffer *, void *, int, int);
 EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
 #undef EXT

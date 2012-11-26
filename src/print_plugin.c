@@ -644,7 +644,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       }
 
       if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%-3u    ", data->tos);
-      if (config.what_to_count & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
+      if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%-20llu  ", queue[j]->packet_counter);
       fprintf(f, "%-20llu  ", queue[j]->flow_counter);
@@ -740,7 +740,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       }
 
       if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%u,", data->tos);
-      if (config.what_to_count & COUNT_SAMPLING_RATE) fprintf(f, "%u,", data->sampling_rate);
+      if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%u,", data->sampling_rate);
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%llu,", queue[j]->packet_counter);
       fprintf(f, "%llu,", queue[j]->flow_counter);
@@ -799,7 +799,7 @@ void P_write_stats_header_formatted(FILE *f)
   if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "TCP_FLAGS  ");
   if (config.what_to_count & COUNT_IP_PROTO) fprintf(f, "PROTOCOL    ");
   if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "TOS    ");
-  if (config.what_to_count & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE ");
+  if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE ");
 #if defined HAVE_64BIT_COUNTERS
   fprintf(f, "PACKETS               ");
   fprintf(f, "FLOWS                 ");
@@ -845,7 +845,7 @@ void P_write_stats_header_csv(FILE *f)
   if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "TCP_FLAGS,");
   if (config.what_to_count & COUNT_IP_PROTO) fprintf(f, "PROTOCOL,");
   if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "TOS,");
-  if (config.what_to_count & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE,");
+  if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE,");
   fprintf(f, "PACKETS,");
   fprintf(f, "FLOWS,");
   fprintf(f, "BYTES\n");

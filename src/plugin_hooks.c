@@ -194,7 +194,7 @@ void exec_plugins(struct packet_ptrs *pptrs)
   char *bptr;
   int index;
 
-  for (index = 0; channels_list[index].aggregation; index++) {
+  for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
     if (evaluate_filters(&channels_list[index].agg_filter, pptrs->packet_ptr, pptrs->pkthdr) &&
         !evaluate_tags(&channels_list[index].tag_filter, pptrs->tag) && 
         !evaluate_tags(&channels_list[index].tag2_filter, pptrs->tag2) && 
@@ -280,8 +280,9 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
 
   while (index < MAX_N_PLUGINS) {
     chptr = &channels_list[index]; 
-    if (!chptr->aggregation) { /* found room */
+    if (!chptr->aggregation && !chptr->aggregation_2) { /* found room */
       chptr->aggregation = cfg->what_to_count;
+      chptr->aggregation_2 = cfg->what_to_count_2;
       chptr->pipe = pipe; 
       chptr->agg_filter.table = cfg->bpfp_a_table;
       chptr->agg_filter.num = (int *) &cfg->bpfp_a_num; 
@@ -338,6 +339,7 @@ void delete_pipe_channel(int pipe)
 
     if (chptr->pipe == pipe) {
       chptr->aggregation = FALSE;
+      chptr->aggregation_2 = FALSE;
 	
       /* we ensure that any plugin is depending on the one
 	 being removed via the 'same_aggregate' flag */
@@ -346,7 +348,7 @@ void delete_pipe_channel(int pipe)
 	for (index2++; index2 < MAX_N_PLUGINS; index2++) {
 	  chptr = &channels_list[index2];
 
-	  if (!chptr->aggregation) break; /* we finished channels */
+	  if (!chptr->aggregation && !chptr->aggregation_2) break; /* we finished channels */
 	  if (chptr->same_aggregate) {
 	    chptr->same_aggregate = FALSE;
 	    break; 
@@ -358,7 +360,7 @@ void delete_pipe_channel(int pipe)
       index2 = index;
       for (index2++; index2 < MAX_N_PLUGINS; index2++) {
 	chptr = &channels_list[index2];
-	if (chptr->aggregation) {
+	if (chptr->aggregation || chptr->aggregation_2) {
 	  memcpy(&channels_list[index], chptr, sizeof(struct channels_list_entry)); 
 	  memset(chptr, 0, sizeof(struct channels_list_entry)); 
 	  index++;
@@ -380,11 +382,12 @@ void sort_pipe_channels()
   int x = 0, y = 0; 
 
   while (x < MAX_N_PLUGINS) {
-    if (!channels_list[x].aggregation) break;
+    if (!channels_list[x].aggregation && !channels_list[x].aggregation_2) break;
     y = x+1; 
     while (y < MAX_N_PLUGINS) {
-      if (!channels_list[y].aggregation) break;
-      if (channels_list[x].aggregation == channels_list[y].aggregation) {
+      if (!channels_list[y].aggregation && !channels_list[y].aggregation_2) break;
+      if (channels_list[x].aggregation == channels_list[y].aggregation &&
+          channels_list[x].aggregation_2 == channels_list[y].aggregation_2) {
 	channels_list[y].same_aggregate = TRUE;
 	if (y == x+1) x++;
 	else {
@@ -524,7 +527,7 @@ void fill_pipe_buffer()
 {
   int index;
 
-  for (index = 0; channels_list[index].aggregation; index++) {
+  for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
     channels_list[index].hdr.seq++;
     channels_list[index].hdr.seq %= MAX_SEQNUM;
 

@@ -379,7 +379,9 @@ int main(int argc,char **argv, char **envp)
 
 	config.handle_fragments = TRUE;
 	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
+	list->cfg.nfprobe_what_to_count_2 = list->cfg.what_to_count_2;
 	list->cfg.what_to_count = 0;
+	list->cfg.what_to_count_2 = 0;
 #if defined (HAVE_L2)
 	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
 	  list->cfg.what_to_count |= COUNT_SRC_MAC;
@@ -433,6 +435,7 @@ int main(int argc,char **argv, char **envp)
 
 	if (psize < 128) psize = config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
+	list->cfg.what_to_count_2 = 0;
 	if (list->cfg.classifiers_path) {
 	  list->cfg.what_to_count |= COUNT_CLASS;
 	  config.handle_fragments = TRUE;
@@ -479,7 +482,7 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
-	if (!list->cfg.what_to_count) {
+	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
 	}

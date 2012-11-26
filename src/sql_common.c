@@ -817,7 +817,7 @@ void sql_exit_gracefully(int signum)
 
 int sql_evaluate_primitives(int primitive)
 {
-  u_int64_t what_to_count = 0, fakes = 0;
+  u_int64_t what_to_count = 0, what_to_count_2 = 0, fakes = 0;
   short int assume_custom_table = FALSE; 
   char *insert_clause_start_ptr = insert_clause + strlen(insert_clause);
   char default_delim[] = ",", delim_buf[SRVBUFLEN];
@@ -931,7 +931,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
     if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
     if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
-    if (config.what_to_count & COUNT_SAMPLING_RATE) what_to_count |= COUNT_SAMPLING_RATE;
+    if (config.what_to_count_2 & COUNT_SAMPLING_RATE) what_to_count_2 |= COUNT_SAMPLING_RATE;
   }
 
   /* sorting out delimiter */
@@ -1687,7 +1687,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if (what_to_count & COUNT_SAMPLING_RATE) {
+  if (what_to_count_2 & COUNT_SAMPLING_RATE) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));

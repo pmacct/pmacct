@@ -32,8 +32,10 @@ struct _dictionary_line {
 };
 
 struct configuration {
-  u_int64_t what_to_count;
+  u_int64_t what_to_count;	/* first registry */
+  u_int64_t what_to_count_2;	/* second registry */
   u_int64_t nfprobe_what_to_count;
+  u_int64_t nfprobe_what_to_count_2;
   char *name;
   char *type;
   int sock;
