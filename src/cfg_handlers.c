@@ -129,58 +129,58 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
   memset(&value, 0, sizeof(value));
 
   while (count_token = extract_token(&value_ptr, ',')) {
-    if (!strcmp(count_token, "src_host")) cfg_set_aggregate(value, COUNT_INT_SRC_HOST);
-    else if (!strcmp(count_token, "dst_host")) cfg_set_aggregate(value, COUNT_INT_DST_HOST);
-    else if (!strcmp(count_token, "src_net")) cfg_set_aggregate(value, COUNT_INT_SRC_NET);
-    else if (!strcmp(count_token, "dst_net")) cfg_set_aggregate(value, COUNT_INT_DST_NET);
-    else if (!strcmp(count_token, "sum")) cfg_set_aggregate(value, COUNT_INT_SUM_HOST);
-    else if (!strcmp(count_token, "src_port")) cfg_set_aggregate(value, COUNT_INT_SRC_PORT);
-    else if (!strcmp(count_token, "dst_port")) cfg_set_aggregate(value, COUNT_INT_DST_PORT);
-    else if (!strcmp(count_token, "proto")) cfg_set_aggregate(value, COUNT_INT_IP_PROTO);
+    if (!strcmp(count_token, "src_host")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST, count_token);
+    else if (!strcmp(count_token, "dst_host")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST, count_token);
+    else if (!strcmp(count_token, "src_net")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_NET, count_token);
+    else if (!strcmp(count_token, "dst_net")) cfg_set_aggregate(filename, value, COUNT_INT_DST_NET, count_token);
+    else if (!strcmp(count_token, "sum")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_HOST, count_token);
+    else if (!strcmp(count_token, "src_port")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_PORT, count_token);
+    else if (!strcmp(count_token, "dst_port")) cfg_set_aggregate(filename, value, COUNT_INT_DST_PORT, count_token);
+    else if (!strcmp(count_token, "proto")) cfg_set_aggregate(filename, value, COUNT_INT_IP_PROTO, count_token);
 #if defined (HAVE_L2)
-    else if (!strcmp(count_token, "src_mac")) cfg_set_aggregate(value, COUNT_INT_SRC_MAC);
-    else if (!strcmp(count_token, "dst_mac")) cfg_set_aggregate(value, COUNT_INT_DST_MAC);
-    else if (!strcmp(count_token, "vlan")) cfg_set_aggregate(value, COUNT_INT_VLAN);
-    else if (!strcmp(count_token, "sum_mac")) cfg_set_aggregate(value, COUNT_INT_SUM_MAC);
+    else if (!strcmp(count_token, "src_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_MAC, count_token);
+    else if (!strcmp(count_token, "dst_mac")) cfg_set_aggregate(filename, value, COUNT_INT_DST_MAC, count_token);
+    else if (!strcmp(count_token, "vlan")) cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
+    else if (!strcmp(count_token, "sum_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_MAC, count_token);
 #endif
-    else if (!strcmp(count_token, "tos")) cfg_set_aggregate(value, COUNT_INT_IP_TOS);
-    else if (!strcmp(count_token, "none")) cfg_set_aggregate(value, COUNT_INT_NONE);
-    else if (!strcmp(count_token, "src_as")) cfg_set_aggregate(value, COUNT_INT_SRC_AS);
-    else if (!strcmp(count_token, "dst_as")) cfg_set_aggregate(value, COUNT_INT_DST_AS);
-    else if (!strcmp(count_token, "sum_host")) cfg_set_aggregate(value, COUNT_INT_SUM_HOST);
-    else if (!strcmp(count_token, "sum_net")) cfg_set_aggregate(value, COUNT_INT_SUM_NET);
-    else if (!strcmp(count_token, "sum_as")) cfg_set_aggregate(value, COUNT_INT_SUM_AS);
-    else if (!strcmp(count_token, "sum_port")) cfg_set_aggregate(value, COUNT_INT_SUM_PORT);
-    else if (!strcmp(count_token, "tag")) cfg_set_aggregate(value, COUNT_INT_ID);
-    else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(value, COUNT_INT_ID2);
-    else if (!strcmp(count_token, "flows")) cfg_set_aggregate(value, COUNT_INT_FLOWS);
-    else if (!strcmp(count_token, "class")) cfg_set_aggregate(value, COUNT_INT_CLASS);
-    else if (!strcmp(count_token, "tcpflags")) cfg_set_aggregate(value, COUNT_INT_TCPFLAGS);
-    else if (!strcmp(count_token, "std_comm")) cfg_set_aggregate(value, COUNT_INT_STD_COMM);
-    else if (!strcmp(count_token, "ext_comm")) cfg_set_aggregate(value, COUNT_INT_EXT_COMM);
-    else if (!strcmp(count_token, "as_path")) cfg_set_aggregate(value, COUNT_INT_AS_PATH);
-    else if (!strcmp(count_token, "local_pref")) cfg_set_aggregate(value, COUNT_INT_LOCAL_PREF);
-    else if (!strcmp(count_token, "med")) cfg_set_aggregate(value, COUNT_INT_MED);
-    else if (!strcmp(count_token, "peer_src_as")) cfg_set_aggregate(value, COUNT_INT_PEER_SRC_AS);
-    else if (!strcmp(count_token, "peer_dst_as")) cfg_set_aggregate(value, COUNT_INT_PEER_DST_AS);
-    else if (!strcmp(count_token, "peer_src_ip")) cfg_set_aggregate(value, COUNT_INT_PEER_SRC_IP);
-    else if (!strcmp(count_token, "peer_dst_ip")) cfg_set_aggregate(value, COUNT_INT_PEER_DST_IP);
-    else if (!strcmp(count_token, "src_as_path")) cfg_set_aggregate(value, COUNT_INT_SRC_AS_PATH);
-    else if (!strcmp(count_token, "src_std_comm")) cfg_set_aggregate(value, COUNT_INT_SRC_STD_COMM);
-    else if (!strcmp(count_token, "src_ext_comm")) cfg_set_aggregate(value, COUNT_INT_SRC_EXT_COMM);
-    else if (!strcmp(count_token, "src_local_pref")) cfg_set_aggregate(value, COUNT_INT_SRC_LOCAL_PREF);
-    else if (!strcmp(count_token, "src_med")) cfg_set_aggregate(value, COUNT_INT_SRC_MED);
-    else if (!strcmp(count_token, "in_iface")) cfg_set_aggregate(value, COUNT_INT_IN_IFACE);
-    else if (!strcmp(count_token, "out_iface")) cfg_set_aggregate(value, COUNT_INT_OUT_IFACE);
-    else if (!strcmp(count_token, "src_mask")) cfg_set_aggregate(value, COUNT_INT_SRC_NMASK);
-    else if (!strcmp(count_token, "dst_mask")) cfg_set_aggregate(value, COUNT_INT_DST_NMASK);
-    else if (!strcmp(count_token, "cos")) cfg_set_aggregate(value, COUNT_INT_COS);
-    else if (!strcmp(count_token, "etype")) cfg_set_aggregate(value, COUNT_INT_ETHERTYPE);
-    else if (!strcmp(count_token, "mpls_vpn_rd")) cfg_set_aggregate(value, COUNT_INT_MPLS_VPN_RD);
-    else if (!strcmp(count_token, "sampling_rate")) cfg_set_aggregate(value, COUNT_INT_SAMPLING_RATE);
-    else if (!strcmp(count_token, "src_country")) cfg_set_aggregate(value, COUNT_INT_SRC_COUNTRY);
-    else if (!strcmp(count_token, "dst_country")) cfg_set_aggregate(value, COUNT_INT_DST_COUNTRY);
-    else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
+    else if (!strcmp(count_token, "tos")) cfg_set_aggregate(filename, value, COUNT_INT_IP_TOS, count_token);
+    else if (!strcmp(count_token, "none")) cfg_set_aggregate(filename, value, COUNT_INT_NONE, count_token);
+    else if (!strcmp(count_token, "src_as")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_AS, count_token);
+    else if (!strcmp(count_token, "dst_as")) cfg_set_aggregate(filename, value, COUNT_INT_DST_AS, count_token);
+    else if (!strcmp(count_token, "sum_host")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_HOST, count_token);
+    else if (!strcmp(count_token, "sum_net")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_NET, count_token);
+    else if (!strcmp(count_token, "sum_as")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_AS, count_token);
+    else if (!strcmp(count_token, "sum_port")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_PORT, count_token);
+    else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_ID, count_token);
+    else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_ID2, count_token);
+    else if (!strcmp(count_token, "flows")) cfg_set_aggregate(filename, value, COUNT_INT_FLOWS, count_token);
+    else if (!strcmp(count_token, "class")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token);
+    else if (!strcmp(count_token, "tcpflags")) cfg_set_aggregate(filename, value, COUNT_INT_TCPFLAGS, count_token);
+    else if (!strcmp(count_token, "std_comm")) cfg_set_aggregate(filename, value, COUNT_INT_STD_COMM, count_token);
+    else if (!strcmp(count_token, "ext_comm")) cfg_set_aggregate(filename, value, COUNT_INT_EXT_COMM, count_token);
+    else if (!strcmp(count_token, "as_path")) cfg_set_aggregate(filename, value, COUNT_INT_AS_PATH, count_token);
+    else if (!strcmp(count_token, "local_pref")) cfg_set_aggregate(filename, value, COUNT_INT_LOCAL_PREF, count_token);
+    else if (!strcmp(count_token, "med")) cfg_set_aggregate(filename, value, COUNT_INT_MED, count_token);
+    else if (!strcmp(count_token, "peer_src_as")) cfg_set_aggregate(filename, value, COUNT_INT_PEER_SRC_AS, count_token);
+    else if (!strcmp(count_token, "peer_dst_as")) cfg_set_aggregate(filename, value, COUNT_INT_PEER_DST_AS, count_token);
+    else if (!strcmp(count_token, "peer_src_ip")) cfg_set_aggregate(filename, value, COUNT_INT_PEER_SRC_IP, count_token);
+    else if (!strcmp(count_token, "peer_dst_ip")) cfg_set_aggregate(filename, value, COUNT_INT_PEER_DST_IP, count_token);
+    else if (!strcmp(count_token, "src_as_path")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_AS_PATH, count_token);
+    else if (!strcmp(count_token, "src_std_comm")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_STD_COMM, count_token);
+    else if (!strcmp(count_token, "src_ext_comm")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_EXT_COMM, count_token);
+    else if (!strcmp(count_token, "src_local_pref")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_LOCAL_PREF, count_token);
+    else if (!strcmp(count_token, "src_med")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_MED, count_token);
+    else if (!strcmp(count_token, "in_iface")) cfg_set_aggregate(filename, value, COUNT_INT_IN_IFACE, count_token);
+    else if (!strcmp(count_token, "out_iface")) cfg_set_aggregate(filename, value, COUNT_INT_OUT_IFACE, count_token);
+    else if (!strcmp(count_token, "src_mask")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_NMASK, count_token);
+    else if (!strcmp(count_token, "dst_mask")) cfg_set_aggregate(filename, value, COUNT_INT_DST_NMASK, count_token);
+    else if (!strcmp(count_token, "cos")) cfg_set_aggregate(filename, value, COUNT_INT_COS, count_token);
+    else if (!strcmp(count_token, "etype")) cfg_set_aggregate(filename, value, COUNT_INT_ETHERTYPE, count_token);
+    else if (!strcmp(count_token, "mpls_vpn_rd")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_VPN_RD, count_token);
+    else if (!strcmp(count_token, "sampling_rate")) cfg_set_aggregate(filename, value, COUNT_INT_SAMPLING_RATE, count_token);
+    else if (!strcmp(count_token, "src_country")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_COUNTRY, count_token);
+    else if (!strcmp(count_token, "dst_country")) cfg_set_aggregate(filename, value, COUNT_INT_DST_COUNTRY, count_token);
+    else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename);
   }
 
   if (!name) for (; list; list = list->next, changes++) {
@@ -3102,10 +3102,14 @@ int cfg_key_xlate_dst(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-void cfg_set_aggregate(u_int64_t registry[], u_int64_t input)
+void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, char *token)
 {
   u_int64_t index = (input >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
   u_int64_t value = (input & COUNT_REGISTRY_MASK);
 
-  registry[index] |= value;
+  if (registry[index] & value) {
+    Log(LOG_ERR, "ERROR ( %s ): '%s' repeated in 'aggregate' or invalid 0x%x bit code.\n", filename, token, input);
+    exit(1);
+  }
+  else registry[index] |= value;
 }
