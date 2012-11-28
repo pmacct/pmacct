@@ -696,12 +696,12 @@ dnl USING_SQL="yes"
       ]) 
 
     if test x"$MONGODBLIB" != x""; then
-      AC_MSG_CHECKING(your own MongoDB client library)
-      if test -r $MONGODLIB/libmongoc.a -o -r $MONGODBLIB/libmongoc.so; then
+      AC_MSG_CHECKING(your own MongoDB library)
+      if test -r $MONGODBLIB/libmongoc.a -o -r $MONGODBLIB/libmongoc.so; then
         AC_MSG_RESULT(ok)
       else
         AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing MongoDB client library in $MONGODBLIB)
+	AC_MSG_ERROR(ERROR: missing MongoDB library in $MONGODBLIB)
       fi
     fi
 
@@ -733,7 +733,7 @@ dnl USING_SQL="yes"
 	AC_LINEARIZE_PATH($withval, withval=$absdir)
 	INCLUDES="${INCLUDES} -I$withval"
 	MONGODBINCLUDES=$withval
-	MONGODBNCLUDESFOUND=1
+	MONGODBINCLUDESFOUND=1
       ])
 
     if test x"$MONGODBINCLUDES" != x""; then
@@ -882,6 +882,103 @@ AC_ARG_ENABLE(sqlite3,
   esac ],
 AC_MSG_RESULT(no))
 dnl finish: sqlite3 handling
+
+dnl start: geoip handling
+AC_MSG_CHECKING(whether to enable GeoIP support)
+AC_ARG_ENABLE(geoip,
+  [  --enable-geoip                   Enable GeoIP support],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+
+    AC_ARG_WITH(geoip-libs,
+      [  --with-geoip-libs=DIR            Search for Maxmind GeoIP libs in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	LIBS="${LIBS} -L$withval"
+	MMGEOIPLIB=$withval
+	MMGEOIPLIBFOUND=1
+      ]) 
+
+    if test x"$MMGEOIPLIB" != x""; then
+      AC_MSG_CHECKING(your own Maxmind GeoIP library)
+      if test -r $MMGEOIPLIB/libGeoIP.a -o -r $MMGEOIPLIB/libGeoIP.so; then
+        AC_MSG_RESULT(ok)
+      else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Maxmind GeoIP library in $MMGEOIPLIB)
+      fi
+    fi
+
+    if test x"$MMGEOIPLIBFOUND" = x""; then
+      AC_MSG_CHECKING([default locations for libGeoIP])
+      if test -r /usr/lib/libGeoIP.a -o -r /usr/lib/libGeoIP.so; then
+	AC_MSG_RESULT([found in /usr/lib])
+	MMGEOIPLIBFOUND=1
+      elif test -r /usr/local/lib/libGeoIP.a -o -r /usr/local/lib/libGeoIP.so; then
+	LIBS="${LIBS} -L/usr/local/lib"
+	AC_MSG_RESULT([found in /usr/local/lib])
+	MMGEOIPLIBFOUND=1
+      else 
+        AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$MMGEOIPLIBFOUND" = x""; then
+      AC_CHECK_LIB([GeoIP], [GeoIP_open], [], [AC_MSG_ERROR([
+	ERROR: missing Maxmind GeoIP library. Refer to: http://www.maxmind.com/download/geoip/api/c/ 
+      ])])
+    else 
+      LIBS="${LIBS} -lGeoIP"
+    fi 
+
+    AC_ARG_WITH(geoip-includes,
+      [  --with-geoip-includes=DIR        Search for Maxmind GeoIP includes in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	INCLUDES="${INCLUDES} -I$withval"
+	MMGEOIPINCLUDES=$withval
+	MMGEOIPINCLUDESFOUND=1
+      ])
+
+    if test x"$MMGEOIPINCLUDES" != x""; then
+      AC_MSG_CHECKING(your own Maxmind GeoIP headers)
+      if test -r $MMGEOIPINCLUDES/GeoIP.h; then
+        AC_MSG_RESULT(ok)
+      else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Maximind GeoIP headers in $MMGEOIPINCLUDES)
+      fi
+    fi
+
+    if test x"$MMGEOIPINCLUDESFOUND" = x""; then 
+      AC_MSG_CHECKING([default locations for GeoIP.h])
+      if test -r /usr/include/GeoIP.h; then
+	AC_MSG_RESULT([found in /usr/include])
+	MMGEOIPINCLUDESFOUND=1;
+      elif test -r /usr/local/include/GeoIP.h; then
+	INCLUDES="${INCLUDES} -I/usr/local/include"
+	AC_MSG_RESULT([found in /usr/local/include])
+	MMGEOIPINCLUDESFOUND=1;
+      fi
+      if test x"$MMGEOIPINCLUDESFOUND" = x""; then
+	AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$MMGEOIPINCLUDESFOUND" = x""; then
+      AC_CHECK_HEADER([GeoIP.h],,
+      [AC_MSG_ERROR(ERROR: missing Maxmind GeoIP headers)])      
+    fi
+
+    AC_DEFINE(WITH_GEOIP, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
+dnl finish: GeoIP handling
 
 AC_MSG_CHECKING([whether to disable shared objects])
 AC_ARG_ENABLE(so,
