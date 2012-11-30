@@ -308,6 +308,10 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_ID2) d1->id2 = s1->id2; 
   if (w & COUNT_CLASS) d1->class = s1->class; 
 
+#if defined WITH_GEOIP
+  if (w2 & COUNT_SRC_HOST_COUNTRY) d1->src_ip_country = s1->src_ip_country; 
+  if (w2 & COUNT_DST_HOST_COUNTRY) d1->dst_ip_country = s1->dst_ip_country; 
+#endif
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
 
   if (PbgpSz && s2) {

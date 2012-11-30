@@ -102,7 +102,7 @@
 
 /* PRIMITIVES DEFINITION: START */
 /* 50 primitives currently defined */
-/* internal: first registry */
+/* internal: first registry, ie. what_to_count, aggregation, etc. */
 #define COUNT_INT_SRC_HOST		0x0001000000000001ULL
 #define COUNT_INT_DST_HOST		0x0001000000000002ULL
 #define COUNT_INT_SUM_HOST		0x0001000000000004ULL
@@ -152,16 +152,16 @@
 #define COUNT_INT_COS			0x0001400000000000ULL
 #define COUNT_INT_ETHERTYPE		0x0001800000000000ULL
 
-/* internal: second registry */
+/* internal: second registry, ie. what_to_count_2, aggregation_2, etc. */
 #define COUNT_INT_SAMPLING_RATE		0x0002000000000001ULL
-#define COUNT_INT_SRC_COUNTRY		0x0002000000000002ULL
-#define COUNT_INT_DST_COUNTRY		0x0002000000000004ULL
+#define COUNT_INT_SRC_HOST_COUNTRY	0x0002000000000002ULL
+#define COUNT_INT_DST_HOST_COUNTRY	0x0002000000000004ULL
 
 #define COUNT_INDEX_MASK	0xFFFF
 #define COUNT_REGISTRY_MASK	0xFFFFFFFFFFFFULL
 #define COUNT_REGISTRY_BITS	48
 
-/* external: first registry */
+/* external: first registry, ie. what_to_count, aggregation, etc. */
 #define COUNT_SRC_HOST                  (COUNT_INT_SRC_HOST & COUNT_REGISTRY_MASK)
 #define COUNT_DST_HOST                  (COUNT_INT_DST_HOST & COUNT_REGISTRY_MASK)
 #define COUNT_SUM_HOST                  (COUNT_INT_SUM_HOST & COUNT_REGISTRY_MASK)
@@ -211,10 +211,10 @@
 #define COUNT_COS                       (COUNT_INT_COS & COUNT_REGISTRY_MASK)
 #define COUNT_ETHERTYPE                 (COUNT_INT_ETHERTYPE & COUNT_REGISTRY_MASK)
 
-/* external: second registry */
+/* external: second registry, ie. what_to_count_2, aggregation_2, etc. */
 #define COUNT_SAMPLING_RATE		(COUNT_INT_SAMPLING_RATE & COUNT_REGISTRY_MASK)
-#define COUNT_SRC_COUNTRY		(COUNT_INT_SRC_COUNTRY & COUNT_REGISTRY_MASK)
-#define COUNT_DST_COUNTRY		(COUNT_INT_DST_COUNTRY & COUNT_REGISTRY_MASK)
+#define COUNT_SRC_HOST_COUNTRY		(COUNT_INT_SRC_HOST_COUNTRY & COUNT_REGISTRY_MASK)
+#define COUNT_DST_HOST_COUNTRY		(COUNT_INT_DST_HOST_COUNTRY & COUNT_REGISTRY_MASK)
 /* PRIMITIVES DEFINITION: END */
 
 /* BYTES and PACKETS are used into templates; we let their values to
@@ -280,6 +280,7 @@
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
+typedef u_int32_t pm_country_t;
 
 #if defined HAVE_64BIT_COUNTERS
 typedef u_int64_t pm_counter_t;

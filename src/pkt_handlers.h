@@ -153,6 +153,12 @@ EXT void ptag_id2_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
+#if defined (WITH_GEOIP)
+EXT void geoip_init();
+EXT void src_host_country_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void dst_host_country_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+#endif
+
 EXT int evaluate_lm_method(struct packet_ptrs *, u_int8_t, u_int32_t, u_int32_t);
 EXT char *lookup_tpl_ext_db(void *, u_int32_t, u_int16_t);
 #undef EXT

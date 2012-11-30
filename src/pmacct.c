@@ -169,6 +169,12 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     printf("TCP_FLAGS  ");
     printf("PROTOCOL    ");
     printf("TOS    ");
+#if defined (WITH_GEOIP)
+    printf("SH_COUNTRY  ");
+    printf("DH_COUNTRY  "); 
+#endif
+    printf("SAMPLING_RATE ");
+
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
     printf("FLOWS                 ");
@@ -230,6 +236,11 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS  "); 
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL    ");
     if (what_to_count & COUNT_IP_TOS) printf("TOS    ");
+
+#ifdef WITH_GEOIP
+    if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("SH_COUNTRY  ");
+    if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY  "); 
+#endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
@@ -292,6 +303,11 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     printf("TCP_FLAGS,");
     printf("PROTOCOL,");
     printf("TOS,");
+#if defined WITH_GEOIP
+    printf("SH_COUNTRY,");
+    printf("DH_COUNTRY,");
+#endif
+    printf("SAMPLING_RATE,");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS,");
     printf("FLOWS,");
@@ -353,7 +369,13 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     if (what_to_count & COUNT_TCPFLAGS) printf("TCP_FLAGS,"); 
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL,");
     if (what_to_count & COUNT_IP_TOS) printf("TOS,");
+
+#if defined WITH_GEOIP
+    if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("SH_COUNTRY,");
+    if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY,");
+#endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE,");
+
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS,");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS,");
@@ -550,6 +572,16 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_IP_TOS;
 	  what_to_count |= COUNT_IP_TOS;
 	}
+#if defined WITH_GEOIP
+        else if (!strcmp(count_token[count_index], "src_host_country")) {
+          count_token_int[count_index] = COUNT_SRC_HOST_COUNTRY;
+          what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
+        }
+        else if (!strcmp(count_token[count_index], "dst_host_country")) {
+          count_token_int[count_index] = COUNT_DST_HOST_COUNTRY;
+          what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
+        }
+#endif
         else if (!strcmp(count_token[count_index], "sampling_rate")) {
 	  count_token_int[count_index] = COUNT_SAMPLING_RATE;
 	  what_to_count_2 |= COUNT_SAMPLING_RATE;
@@ -998,6 +1030,14 @@ int main(int argc,char **argv)
 	  tmpnum = atoi(match_string_token);
 	  request.data.tos = (u_int8_t) tmpnum; 
 	}
+#if defined WITH_GEOIP
+        else if (!strcmp(count_token[match_string_index], "src_host_country")) {
+          request.data.src_ip_country = atoi(match_string_token);
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
+          request.data.dst_ip_country = atoi(match_string_token);
+        }
+#endif
 	else if (!strcmp(count_token[match_string_index], "sampling_rate")) {
 	  request.data.sampling_rate = atoi(match_string_token);
 	}
@@ -1646,6 +1686,18 @@ int main(int argc,char **argv)
 	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-3u    ", acc_elem->primitives.tos); 
 	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.tos); 
 	}
+
+#if defined WITH_GEOIP
+        if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5u       ", acc_elem->primitives.src_ip_country);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.src_ip_country);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5u       ", acc_elem->primitives.dst_ip_country);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.dst_ip_country);
+        }
+#endif
 
 	if (!have_wtc || (what_to_count_2 & COUNT_SAMPLING_RATE)) {
 	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-7u       ", acc_elem->primitives.sampling_rate); 

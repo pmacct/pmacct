@@ -467,6 +467,18 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+#if defined (WITH_GEOIP)
+    if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
+      channels_list[index].phandler[primitives] = src_host_country_handler;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY) {
+      channels_list[index].phandler[primitives] = dst_host_country_handler;
+      primitives++;
+    }
+#endif
+
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
       if (config.acct_type == ACCT_PM) {
 	channels_list[index].phandler[primitives] = counters_handler;
@@ -3563,6 +3575,49 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
 
   // XXX: fill this in
 }
+
+#if defined (WITH_GEOIP)
+void geoip_init()
+{
+  if (config.geoip_ip_to_country) return;
+  if (!config.geoip_ip_to_country_file) return;
+  config.geoip_ip_to_country = GeoIP_open(config.geoip_ip_to_country_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
+}
+
+void src_host_country_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  geoip_init();
+  if (config.geoip_ip_to_country) {
+    if (pptrs->l3_proto == ETHERTYPE_IP)
+      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum(config.geoip_ip_to_country,
+							ntohl(pdata->primitives.src_ip.address.ipv4.s_addr));
+#if defined ENABLE_IPV6
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6)
+      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ip_to_country,
+							pm_ntohl6(&pdata->primitives.src_ip.address.ipv6));
+#endif
+  }
+}
+
+void dst_host_country_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  geoip_init();
+  if (config.geoip_ip_to_country) {
+    if (pptrs->l3_proto == ETHERTYPE_IP)
+      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum(config.geoip_ip_to_country,
+							ntohl(pdata->primitives.dst_ip.address.ipv4.s_addr));
+#if defined ENABLE_IPV6
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6)
+      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ip_to_country,
+							pm_ntohl6(&pdata->primitives.dst_ip.address.ipv6));
+#endif
+  }
+}
+#endif
 
 /* srcdst: 0 == src, 1 == dst */
 int evaluate_lm_method(struct packet_ptrs *pptrs, u_int8_t srcdst, u_int32_t bitmap, u_int32_t method) 

@@ -178,9 +178,9 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "etype")) cfg_set_aggregate(filename, value, COUNT_INT_ETHERTYPE, count_token);
     else if (!strcmp(count_token, "mpls_vpn_rd")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_VPN_RD, count_token);
     else if (!strcmp(count_token, "sampling_rate")) cfg_set_aggregate(filename, value, COUNT_INT_SAMPLING_RATE, count_token);
-    else if (!strcmp(count_token, "src_country")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_COUNTRY, count_token);
-    else if (!strcmp(count_token, "dst_country")) cfg_set_aggregate(filename, value, COUNT_INT_DST_COUNTRY, count_token);
-    else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename);
+    else if (!strcmp(count_token, "src_host_country")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST_COUNTRY, count_token);
+    else if (!strcmp(count_token, "dst_host_country")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST_COUNTRY, count_token);
+    else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 
   if (!name) for (; list; list = list->next, changes++) {
@@ -3098,6 +3098,16 @@ int cfg_key_xlate_dst(char *filename, char *name, char *value_ptr)
       }
     }
   }
+
+  return changes;
+}
+
+int cfg_key_geoip_ip_to_country_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.geoip_ip_to_country_file = value_ptr;
 
   return changes;
 }
