@@ -391,7 +391,12 @@ static const struct _dictionary_line dictionary[] = {
   {"isis_daemon_iface", cfg_key_nfacctd_isis_iface},
   {"isis_daemon_mtu", cfg_key_nfacctd_isis_mtu},
   {"isis_daemon_msglog", cfg_key_nfacctd_isis_msglog},
-  {"geoip_ip_to_country_file", cfg_key_geoip_ip_to_country_file},
+#if defined WITH_GEOIP
+  {"geoip_ipv4_file", cfg_key_geoip_ipv4_file},
+#if defined ENABLE_IPV6
+  {"geoip_ipv6_file", cfg_key_geoip_ipv6_file},
+#endif
+#endif
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"tunnel_0", cfg_key_tunnel_0},

@@ -137,9 +137,13 @@ struct configuration {
   char *nfacctd_isis_iface;
   int nfacctd_isis_mtu;
   int nfacctd_isis_msglog;
-  char *geoip_ip_to_country_file;
-#if defined (WITH_GEOIP)
-  GeoIP *geoip_ip_to_country;
+  char *geoip_ipv4_file;
+  char *geoip_ipv6_file;
+#if defined WITH_GEOIP
+  GeoIP *geoip_ipv4;
+#if defined ENABLE_IPV6
+  GeoIP *geoip_ipv6;
+#endif
 #endif
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */

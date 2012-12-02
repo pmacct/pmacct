@@ -3102,15 +3102,29 @@ int cfg_key_xlate_dst(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_geoip_ip_to_country_file(char *filename, char *name, char *value_ptr)
+#if defined WITH_GEOIP
+int cfg_key_geoip_ipv4_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.geoip_ip_to_country_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.geoip_ipv4_file = value_ptr;
 
   return changes;
 }
+
+#if defined ENABLE_IPV6
+int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.geoip_ipv6_file = value_ptr;
+
+  return changes;
+}
+#endif
+#endif
 
 void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, char *token)
 {

@@ -834,6 +834,7 @@ int sql_evaluate_primitives(int primitive)
 
   if (config.sql_optimize_clauses) {
     what_to_count = config.what_to_count;
+    what_to_count_2 = config.what_to_count_2;
     assume_custom_table = TRUE;
   }
   else {
@@ -931,6 +932,10 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_OUT_IFACE) what_to_count |= COUNT_OUT_IFACE;
     if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
     if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
+#if defined WITH_GEOIP
+    if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
+    if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
+#endif
     if (config.what_to_count_2 & COUNT_SAMPLING_RATE) what_to_count_2 |= COUNT_SAMPLING_RATE;
   }
 
@@ -1686,6 +1691,36 @@ int sql_evaluate_primitives(int primitive)
       primitive++;
     }
   }
+
+#if defined WITH_GEOIP
+  if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "country_ip_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "country_ip_src=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_SRC_HOST_COUNTRY;
+    values[primitive].handler = where[primitive].handler = count_src_host_country_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "country_ip_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "country_ip_dst=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_DST_HOST_COUNTRY;
+    values[primitive].handler = where[primitive].handler = count_dst_host_country_handler;
+    primitive++;
+  }
+#endif
 
   if (what_to_count_2 & COUNT_SAMPLING_RATE) {
     if (primitive) {

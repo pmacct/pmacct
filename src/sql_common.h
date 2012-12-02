@@ -244,6 +244,11 @@ EXT void fake_comms_handler(const struct db_cache *, const struct insert_data *,
 EXT void fake_as_path_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_mpls_vpn_rd_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 
+#if defined WITH_GEOIP
+EXT void count_src_host_country_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_dst_host_country_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+#endif
+
 EXT void count_counters_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_flows_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
