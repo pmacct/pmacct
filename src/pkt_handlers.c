@@ -3595,12 +3595,12 @@ void src_host_country_handler(struct channels_list_entry *chptr, struct packet_p
   geoip_init();
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(pdata->primitives.src_ip.address.ipv4.s_addr));
+      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
   }
 #if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
     if (pptrs->l3_proto == ETHERTYPE_IPV6)
-      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, pdata->primitives.src_ip.address.ipv6);
+      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src);
   }
 #endif
 }
@@ -3612,12 +3612,12 @@ void dst_host_country_handler(struct channels_list_entry *chptr, struct packet_p
   geoip_init();
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(pdata->primitives.dst_ip.address.ipv4.s_addr));
+      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
   }
 #if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
     if (pptrs->l3_proto == ETHERTYPE_IPV6)
-      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, pdata->primitives.dst_ip.address.ipv6);
+      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst);
   }
 #endif
 }

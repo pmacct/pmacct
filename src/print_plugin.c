@@ -646,8 +646,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%-3u    ", data->tos);
 
 #if defined WITH_GEOIP
-      if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) fprintf(f, "%-5u       ", data->src_ip_country);
-      if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "%-5u       ", data->dst_ip_country);
+      if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) fprintf(f, "%-5s       ", GeoIP_code_by_id(data->src_ip_country));
+      if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "%-5s       ", GeoIP_code_by_id(data->dst_ip_country));
 #endif
 
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
@@ -748,8 +748,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%u,", data->tos);
 
 #if defined WITH_GEOIP
-      if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) fprintf(f, "%u,", data->src_ip_country);
-      if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "%u,", data->dst_ip_country);
+      if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) fprintf(f, "%s,", GeoIP_code_by_id(data->src_ip_country));
+      if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "%s,", GeoIP_code_by_id(data->dst_ip_country));
 #endif
 
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%u,", data->sampling_rate);

@@ -1032,10 +1032,10 @@ int main(int argc,char **argv)
 	}
 #if defined WITH_GEOIP
         else if (!strcmp(count_token[match_string_index], "src_host_country")) {
-          request.data.src_ip_country = atoi(match_string_token);
+          request.data.src_ip_country = GeoIP_id_by_code(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
-          request.data.dst_ip_country = atoi(match_string_token);
+          request.data.dst_ip_country = GeoIP_id_by_code(match_string_token);
         }
 #endif
 	else if (!strcmp(count_token[match_string_index], "sampling_rate")) {
@@ -1689,13 +1689,13 @@ int main(int argc,char **argv)
 
 #if defined WITH_GEOIP
         if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
-          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5u       ", acc_elem->primitives.src_ip_country);
-          else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.src_ip_country);
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
-          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5u       ", acc_elem->primitives.dst_ip_country);
-          else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", acc_elem->primitives.dst_ip_country);
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u,", GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
         }
 #endif
 

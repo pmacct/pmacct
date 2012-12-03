@@ -698,6 +698,12 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+#if defined WITH_GEOIP
+  if (config.geoip_ipv4_file || config.geoip_ipv6_file) {
+    req.bpf_filter = TRUE;
+  }
+#endif
+
   /* plugins glue: creation (until 093) */
   evaluate_packet_handlers();
   pm_setproctitle("%s [%s]", "Core Process", "default");

@@ -734,6 +734,12 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+#if defined WITH_GEOIP
+  if (config.geoip_ipv4_file || config.geoip_ipv6_file) {
+    req.bpf_filter = TRUE;
+  }
+#endif
+
   /* Init tunnel handlers */
   tunnel_registry_init();
 

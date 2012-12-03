@@ -1700,8 +1700,8 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "country_ip_src", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "country_ip_src=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "country_ip_src=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_SRC_HOST_COUNTRY;
     values[primitive].handler = where[primitive].handler = count_src_host_country_handler;
     primitive++;
@@ -1714,8 +1714,8 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "country_ip_dst", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "country_ip_dst=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "country_ip_dst=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_DST_HOST_COUNTRY;
     values[primitive].handler = where[primitive].handler = count_dst_host_country_handler;
     primitive++;

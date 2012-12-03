@@ -589,6 +589,12 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+#if defined WITH_GEOIP
+  if (config.geoip_ipv4_file || config.geoip_ipv6_file) {
+    req.bpf_filter = TRUE;
+  }
+#endif
+
   rc = bind(config.sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( default/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.nfacctd_ip, config.nfacctd_port, errno);
