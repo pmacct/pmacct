@@ -1097,6 +1097,11 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
+  if (config.sfacctd_renormalize) {
+    pdata->primitives.sampling_rate = 1; /* already renormalized */
+    return;
+  }
+
   pdata->primitives.sampling_rate = config.ext_sampling_rate ? config.ext_sampling_rate : 1;
 }
 
@@ -2517,6 +2522,11 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   u_int32_t sample_pool = 0, t32 = 0;
   u_int8_t t8 = 0;
 
+  if (config.sfacctd_renormalize) {
+    pdata->primitives.sampling_rate = 1; /* already renormalized */
+    return;
+  }
+
   pdata->primitives.sampling_rate = 0; /* 0 = unknown */
 
   if (config.sampling_map) {
@@ -3489,6 +3499,11 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   struct xflow_status_entry *xsentry = (struct xflow_status_entry *) pptrs->f_status;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.sfacctd_renormalize) {
+    pdata->primitives.sampling_rate = 1; /* already renormalized */
+    return;
+  }
 
   pdata->primitives.sampling_rate = 0;
 

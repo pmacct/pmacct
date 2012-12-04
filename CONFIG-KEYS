@@ -65,6 +65,9 @@ NOTES:		* Some primitives (ie. tag2, src_as_path, src_std_comm, src_ext_comm, sr
 		  shipped with pmacct. Always check out documentation related to the RDBMS in
 		  use (ie. 'sql/README.mysql') which will point you to extra primitive-related
 		  documentation, if required.
+		* sampling_rate: if counters renormalization is enabled this field will report
+		  a value of 1; otherwise it will report the rate pmacct would have applied if
+		  renormalize counters was enabled.  
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
