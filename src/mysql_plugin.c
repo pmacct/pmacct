@@ -44,6 +44,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct pkt_bgp_primitives *pbgp;
   char *dataptr;
+  struct host_addr na;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -53,6 +54,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "MySQL Plugin", config.name);
   memset(&idata, 0, sizeof(idata));
+  memset(&na, 0, sizeof(na));
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {
     fclose(config.logfile_fd);
@@ -262,7 +264,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, &na);
 
 	if (config.ports_file) {
 	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;

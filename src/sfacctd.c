@@ -386,13 +386,19 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
 	}
-	if ((list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) && !list->cfg.networks_file && list->cfg.nfacctd_as & NF_AS_NEW) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation was selected but NO 'networks_file' specified. Exiting...\n\n", list->name, list->type.string);
-	  exit(1);
-	}
-        if ((list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) && !list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but 'bgp_daemon' is not enabled. Exiting...\n\n", list->name, list->type.string);
-          exit(1);
+	if (list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) {
+	  if (!list->cfg.networks_file && list->cfg.nfacctd_as & NF_AS_NEW) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation was selected but NO 'networks_file' specified. Exiting...\n\n", list->name, list->type.string);
+	    exit(1);
+	  }
+          if (!list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but 'bgp_daemon' is not enabled. Exiting...\n\n", list->name, list->type.string);
+            exit(1);
+	  }
+/*        XXX: to be worked out
+          if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
+            list->cfg.nfacctd_as |= NF_AS_NEW;
+*/
         }
         if (list->cfg.what_to_count & (COUNT_SRC_NET|COUNT_DST_NET|COUNT_SUM_NET|COUNT_SRC_NMASK|COUNT_DST_NMASK|COUNT_PEER_DST_IP)) {
           if (!list->cfg.nfacctd_net) {
@@ -408,6 +414,8 @@ int main(int argc,char **argv, char **envp)
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
               exit(1);
             }
+            if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
+              list->cfg.nfacctd_net |= NF_NET_NEW;
           }
         }
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
