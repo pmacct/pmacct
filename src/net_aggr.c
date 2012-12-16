@@ -582,29 +582,27 @@ void set_net_funcs(struct networks_table *nt)
     net_funcs[count] = clear_dst_nmask;
     count++;
   }
+
+  assert(count < NET_FUNCS_N);
 }
 
 void clear_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 1\n");
   p->src_nmask = 0;
 }
 
 void clear_dst_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 2\n");
   p->dst_nmask = 0;
 }
 
 void clear_save_addr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 3\n");
   memset(a, 0, sizeof(struct host_addr)); 
 }
 
 void compare_commit_src_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 4: p: %u, a: %u\n", p->src_ip.address.ipv4.s_addr, a->address.ipv4.s_addr);
   if (p->src_ip.family == AF_INET) {
     if (p->src_ip.address.ipv4.s_addr < a->address.ipv4.s_addr)
       p->src_ip.address.ipv4.s_addr = a->address.ipv4.s_addr;
@@ -619,15 +617,12 @@ void compare_commit_src_net(struct networks_table *nt, struct networks_cache *nc
 
 void compare_commit_dst_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 5\n");
   if (p->dst_ip.family == AF_INET) {
-    // printf("CI PASSO 5-1\n");
     if (p->dst_ip.address.ipv4.s_addr < a->address.ipv4.s_addr)
       p->dst_ip.address.ipv4.s_addr = a->address.ipv4.s_addr;
   }
 #if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
-    // printf("CI PASSO 5-2\n");
     if (ip6_addr_cmp(&p->dst_ip.address.ipv6, &a->address.ipv6) < 0)
       memcpy(&p->dst_ip.address.ipv6, &a->address.ipv6, IP6AddrSz);
   }
@@ -637,12 +632,12 @@ void compare_commit_dst_net(struct networks_table *nt, struct networks_cache *nc
 void save_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
   u_int32_t maskbits[4], addrh[4];
-  u_int8_t j;
+  u_int8_t j, mask;
 
-  // printf("CI PASSO 6: p: %u\n", p->src_ip.address.ipv4.s_addr);
   memset(maskbits, 0,sizeof(maskbits));
-  for (j = 0; j < 4 && p->src_nmask >= 32; j++, p->src_nmask -= 32) maskbits[j] = 0xffffffffU;
-  if (j < 4 && p->src_nmask) maskbits[j] = ~(0xffffffffU >> p->src_nmask);
+  mask = p->src_nmask;
+  for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
+  if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
 
   if (p->src_ip.family == AF_INET) {
     addrh[0] = ntohl(p->src_ip.address.ipv4.s_addr);
@@ -663,11 +658,12 @@ void save_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
   u_int32_t maskbits[4], addrh[4];
-  u_int8_t j;
+  u_int8_t j, mask;
 
   memset(maskbits, 0,sizeof(maskbits));
-  for (j = 0; j < 4 && p->src_nmask >= 32; j++, p->src_nmask -= 32) maskbits[j] = 0xffffffffU;
-  if (j < 4 && p->src_nmask) maskbits[j] = ~(0xffffffffU >> p->src_nmask);
+  mask = p->src_nmask;
+  for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
+  if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
 
   if (p->src_ip.family == AF_INET) {
     addrh[0] = ntohl(p->src_ip.address.ipv4.s_addr);
@@ -688,7 +684,6 @@ void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc
   u_int32_t addrh[4];
   u_int8_t j;
 
-  // printf("CI PASSO 7\n");
   if (p->src_ip.family == AF_INET) {
     addrh[0] = ntohl(p->src_ip.address.ipv4.s_addr);
     addrh[0] &= nt->maskbits[0]; 
@@ -706,12 +701,12 @@ void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc
 void save_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
   u_int32_t maskbits[4], addrh[4];
-  u_int8_t j;
+  u_int8_t j, mask;
 
-  // printf("CI PASSO 9\n");
   memset(maskbits, 0,sizeof(maskbits));
-  for (j = 0; j < 4 && p->dst_nmask >= 32; j++, p->dst_nmask -= 32) maskbits[j] = 0xffffffffU;
-  if (j < 4 && p->dst_nmask) maskbits[j] = ~(0xffffffffU >> p->dst_nmask);
+  mask = p->dst_nmask;
+  for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
+  if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
 
   if (p->dst_ip.family == AF_INET) {
     addrh[0] = ntohl(p->dst_ip.address.ipv4.s_addr);
@@ -732,11 +727,12 @@ void save_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
   u_int32_t maskbits[4], addrh[4];
-  u_int8_t j;
+  u_int8_t j, mask;
 
   memset(maskbits, 0,sizeof(maskbits));
-  for (j = 0; j < 4 && p->dst_nmask >= 32; j++, p->dst_nmask -= 32) maskbits[j] = 0xffffffffU;
-  if (j < 4 && p->dst_nmask) maskbits[j] = ~(0xffffffffU >> p->dst_nmask);
+  mask = p->dst_nmask; 
+  for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
+  if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
 
   if (p->dst_ip.family == AF_INET) {
     addrh[0] = ntohl(p->dst_ip.address.ipv4.s_addr);
@@ -757,7 +753,6 @@ void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc
   u_int32_t addrh[4];
   u_int8_t j;
 
-  // printf("CI PASSO 10\n");
   if (p->dst_ip.family == AF_INET) {
     addrh[0] = ntohl(p->dst_ip.address.ipv4.s_addr);
     addrh[0] &= nt->maskbits[0];
@@ -789,7 +784,6 @@ void search_src_host(struct networks_table *nt, struct networks_cache *nc, struc
   struct networks6_table_entry *res6;
 #endif
 
-  // printf("CI PASSO 11\n");
   if (p->src_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->src_ip);
     if (!res) p->src_ip.address.ipv4.s_addr = 0;
@@ -811,7 +805,6 @@ void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struc
   struct networks6_table_entry *res6;
 #endif
 
-  // printf("CI PASSO 12\n");
   if (p->dst_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->dst_ip);
     if (!res) p->dst_ip.address.ipv4.s_addr = 0;
@@ -833,7 +826,6 @@ void search_src_net(struct networks_table *nt, struct networks_cache *nc, struct
   struct networks6_table_entry *res6;
 #endif
 
-  // printf("CI PASSO 13: p: %u\n", p->src_ip.address.ipv4.s_addr);
   if (p->src_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->src_ip);
     if (!res) p->src_ip.address.ipv4.s_addr = 0;
@@ -846,8 +838,6 @@ void search_src_net(struct networks_table *nt, struct networks_cache *nc, struct
     else memcpy(&p->src_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz);
   }
 #endif
-
-  // printf("CI PASSO 13-1: p: %u\n", p->src_ip.address.ipv4.s_addr);
 }
 
 void search_dst_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
@@ -857,7 +847,6 @@ void search_dst_net(struct networks_table *nt, struct networks_cache *nc, struct
   struct networks6_table_entry *res6;
 #endif
   
-  // printf("CI PASSO 14\n");
   if (p->dst_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->dst_ip);
     if (!res) p->dst_ip.address.ipv4.s_addr = 0;
@@ -880,7 +869,6 @@ void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, stru
 #endif
   u_int8_t mask = 0;
 
-  // printf("CI PASSO 15\n");
   if (p->src_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->src_ip);
     if (!res) mask = 0;
@@ -910,7 +898,6 @@ void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, stru
 #endif
   u_int8_t mask = 0;
 
-  // printf("CI PASSO 16\n");
   if (p->dst_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->dst_ip);
     if (!res) mask = 0;
@@ -972,13 +959,11 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
 
 void drop_src_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 17\n");
   memset(&p->src_ip, 0, HostAddrSz);
 }
 
 void drop_dst_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
 {
-  // printf("CI PASSO 18\n");
   memset(&p->dst_ip, 0, HostAddrSz);
 }
 

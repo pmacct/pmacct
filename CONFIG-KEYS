@@ -729,8 +729,10 @@ DESC:		Determines the method for performing IP prefix aggregation - hence direct
 		and uacctd is for backward compatibility: 'mask' and 'file' are turned on if a networks_mask and
 		a networks_file are respectively specified by configuration. If they both are defined, the outcome
 		will be the intersection of their definitions. 'fallback' behaves in a longest-match-wins fashion:
-		in nfacctd and sfacctd lookup is done against sFlow/NetFlow protocol, IGP and BGP (sFlow/NetFlow < 
-		IGP <= BGP) whereas in pmacctd and uacctd lookup is done against IGP and BGP only (IGP <= BGP).
+		in nfacctd and sfacctd lookup is done against a networks list (if networks_file is defined) sFlow/
+		NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is started) with the
+		following logics: networks_file < sFlow/NetFlow < IGP <= BGP; in pmacctd and uacctd lookup is done
+		against ia networks list, IGP and BGP only (networks_file < IGP <= BGP).
 		(default: nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file')
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]

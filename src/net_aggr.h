@@ -24,6 +24,7 @@
 #define NETWORKS6_CACHE_ENTRIES 32771 
 #define RETURN_NET 0
 #define RETURN_AS 1
+#define NET_FUNCS_N 32
 
 /* structures */
 struct networks_cache_entry {
@@ -87,7 +88,7 @@ typedef void (*net_func) (struct networks_table *, struct networks_cache *, stru
 #else
 #define EXT
 #endif
-EXT net_func net_funcs[32]; 
+EXT net_func net_funcs[NET_FUNCS_N]; 
 EXT void set_net_funcs();
 EXT void mask_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
 EXT void mask_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
