@@ -133,8 +133,8 @@ void skinny_bgp_daemon()
     if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for IP_TOS (errno: %d).\n", errno);
   }
 
-  rc = Setsocksize(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): Setsocksize() failed for SO_REUSEADDR (errno: %d).\n", errno);
+  rc = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", errno);
 
   rc = bind(sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
