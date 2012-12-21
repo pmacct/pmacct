@@ -87,8 +87,10 @@ send_netflow_v1(struct FLOW **flows, int num_flows, int nfsock,
 			errsz = sizeof(err);
 			getsockopt(nfsock, SOL_SOCKET, SO_ERROR,
 			    &err, &errsz); /* Clear ICMP errors */
-			if (send(nfsock, packet, (size_t)offset, 0) == -1)
-				return (-1);
+			if (send(nfsock, packet, (size_t)offset, 0) == -1) {
+			  Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
+			  return (-1);
+			}
 			*flows_exported += j;
 			j = 0;
 			num_packets++;
@@ -163,8 +165,10 @@ send_netflow_v1(struct FLOW **flows, int num_flows, int nfsock,
 		errsz = sizeof(err);
 		getsockopt(nfsock, SOL_SOCKET, SO_ERROR,
 		    &err, &errsz); /* Clear ICMP errors */
-		if (send(nfsock, packet, (size_t)offset, 0) == -1)
-			return (-1);
+		if (send(nfsock, packet, (size_t)offset, 0) == -1) {
+		  Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
+		  return (-1);
+		}
 		num_packets++;
 	}
 

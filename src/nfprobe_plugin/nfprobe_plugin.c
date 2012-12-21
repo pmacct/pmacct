@@ -1511,6 +1511,7 @@ expiry_check:
 
 	/* Let's try to sleep a bit and re-open the NetFlow send socket */
 	if (dest.ss_family != 0) {
+	  if (target.fd != -1) close(target.fd);
 	  sleep(5);
 	  target.fd = connsock(&dest, dest_len, hoplimit);
 
