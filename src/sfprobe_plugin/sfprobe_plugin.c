@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /* 
@@ -579,7 +579,6 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *rgptr;
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
-  struct host_addr na;
 
   time_t clk, test_clk;
   SflSp sp;
@@ -627,7 +626,6 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
   memset(&dummy, 0, sizeof(dummy));
-  memset(&na, 0, sizeof(na));
 
   if (config.networks_file) {
     config.what_to_count |= (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SRC_NMASK|COUNT_DST_NMASK);
@@ -698,7 +696,7 @@ read_data:
 	  memcpy(&dummy.primitives.src_ip, &hdr->src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &hdr->dst_ip, HostAddrSz);
 
-	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, &na);
+	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives);
 
           if (config.nfacctd_as == NF_AS_NEW) {
 	    hdr->src_as = dummy.primitives.src_as;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -464,48 +464,31 @@ void set_net_funcs(struct networks_table *nt)
   }
 
   if (config.nfacctd_net & NF_NET_NEW) {
-    if (config.nfacctd_net & NF_NET_FALLBACK) {
-      net_funcs[count] = save_src_ipaddr;
-      count++;
-    }
-    else {
-      net_funcs[count] = clear_save_addr;
-      count++;
-    }
+    net_funcs[count] = search_src_nmask;
+    count++;
+  }
 
-    if (config.what_to_count & COUNT_SRC_NMASK) {
-      net_funcs[count] = search_src_nmask;
-      count++;
-    }
-    else {
-      net_funcs[count] = clear_src_nmask;
-      count++;
-    }
-
-    if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
-      net_funcs[count] = search_src_net;
-      count++;
-
-      if (config.nfacctd_net & NF_NET_FALLBACK) {
-        net_funcs[count] = compare_commit_src_net;
-        count++;
-      }
-    }
-  } 
-
-  if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) {
-    if (((config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) &&
-	(config.nfacctd_as & NF_AS_KEEP || config.nfacctd_as & NF_AS_BGP))
-	|| (config.acct_type == ACCT_PM && config.nfacctd_as & NF_AS_BGP));
-    else {
+  if (config.nfacctd_as & NF_AS_NEW) {
+    if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) {
       net_funcs[count] = search_src_as;
       count++;
-
-      if (!(config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST|COUNT_SRC_NET|COUNT_SUM_NET))) {
-	net_funcs[count] = drop_src_host;
-	count++;
-      }
     }
+  }
+
+  if (!(config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST|COUNT_SRC_NET|COUNT_SUM_NET))) {
+    net_funcs[count] = clear_src_host;
+    count++;
+  }
+  else {
+    if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
+      net_funcs[count] = mask_src_ipaddr;
+      count++;
+    }
+  }
+
+  if (!(config.what_to_count & COUNT_SRC_NMASK)) {
+    net_funcs[count] = clear_src_nmask;
+    count++;
   }
 
   if (config.what_to_count & (COUNT_DST_HOST|COUNT_SUM_HOST)) {
@@ -514,63 +497,60 @@ void set_net_funcs(struct networks_table *nt)
   }
 
   if (config.nfacctd_net & NF_NET_NEW) {
-    if (config.nfacctd_net & NF_NET_FALLBACK) {
-      net_funcs[count] = save_dst_ipaddr;
-      count++;
-    }
-    else {
-      net_funcs[count] = clear_save_addr;
-      count++;
-    }
-
-    if (config.what_to_count & COUNT_DST_NMASK) {
-      net_funcs[count] = search_dst_nmask;
-      count++;
-    }
-    else {
-      net_funcs[count] = clear_dst_nmask;
-      count++;
-    }
-
-    if (config.what_to_count & (COUNT_DST_NET|COUNT_SUM_NET)) {
-      net_funcs[count] = search_dst_net;
-      count++;
-
-      if (config.nfacctd_net & NF_NET_FALLBACK) {
-        net_funcs[count] = compare_commit_dst_net;
-        count++;
-      }
-    }
+    net_funcs[count] = search_dst_nmask;
+    count++;
   }
 
-  if (config.what_to_count & (COUNT_DST_AS|COUNT_SUM_AS)) {
-    if (((config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) &&
-	(config.nfacctd_as & NF_AS_KEEP || config.nfacctd_as & NF_AS_BGP))
-	|| (config.acct_type == ACCT_PM && config.nfacctd_as & NF_AS_BGP));
-    else {
+  if (config.nfacctd_as & NF_AS_NEW) {
+    if (config.what_to_count & (COUNT_DST_AS|COUNT_SUM_AS)) {
       net_funcs[count] = search_dst_as;
       count++;
-
-      if (!(config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET))) {
-        net_funcs[count] = drop_dst_host;
-        count++;
-      }
     }
   }
+
+  if (!(config.what_to_count & (COUNT_DST_HOST|COUNT_SUM_HOST|COUNT_DST_NET|COUNT_SUM_NET))) {
+    net_funcs[count] = clear_dst_host;
+    count++;
+  }
+  else {
+    if (config.what_to_count & (COUNT_DST_NET|COUNT_SUM_NET)) {
+      net_funcs[count] = mask_dst_ipaddr;
+      count++;
+    }
+  }
+
+  if (!(config.what_to_count & COUNT_DST_NMASK)) {
+    net_funcs[count] = clear_dst_nmask;
+    count++;
+  }
+
+  assert(count < NET_FUNCS_N);  
 
   return;
 
   /* no networks_file loaded: apply masks and clean-up */
   exit_lane:
 
-  if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
-    net_funcs[count] = mask_src_ipaddr;
+  if (!(config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST|COUNT_SRC_NET|COUNT_SUM_NET))) {
+    net_funcs[count] = clear_src_host;
     count++;
   }
+  else {
+    if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
+      net_funcs[count] = mask_src_ipaddr;
+      count++;
+    }
+  }
 
-  if (config.what_to_count & COUNT_DST_NET) {
-    net_funcs[count] = mask_dst_ipaddr;
+  if (!(config.what_to_count & (COUNT_DST_HOST|COUNT_SUM_HOST|COUNT_DST_NET|COUNT_SUM_NET))) {
+    net_funcs[count] = clear_dst_host;
     count++;
+  }
+  else {
+    if (config.what_to_count & COUNT_DST_NET) {
+      net_funcs[count] = mask_dst_ipaddr;
+      count++;
+    }
   }
 
   if (!(config.what_to_count & COUNT_SRC_NMASK)) {
@@ -586,76 +566,17 @@ void set_net_funcs(struct networks_table *nt)
   assert(count < NET_FUNCS_N);
 }
 
-void clear_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void clear_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   p->src_nmask = 0;
 }
 
-void clear_dst_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void clear_dst_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   p->dst_nmask = 0;
 }
 
-void clear_save_addr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  memset(a, 0, sizeof(struct host_addr)); 
-}
-
-void compare_commit_src_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  if (p->src_ip.family == AF_INET) {
-    if (p->src_ip.address.ipv4.s_addr < a->address.ipv4.s_addr)
-      p->src_ip.address.ipv4.s_addr = a->address.ipv4.s_addr;
-  }
-#if defined ENABLE_IPV6
-  else if (p->src_ip.family == AF_INET6) {
-    if (ip6_addr_cmp(&p->src_ip.address.ipv6, &a->address.ipv6) < 0)
-      memcpy(&p->src_ip.address.ipv6, &a->address.ipv6, IP6AddrSz); 
-  }
-#endif
-}
-
-void compare_commit_dst_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  if (p->dst_ip.family == AF_INET) {
-    if (p->dst_ip.address.ipv4.s_addr < a->address.ipv4.s_addr)
-      p->dst_ip.address.ipv4.s_addr = a->address.ipv4.s_addr;
-  }
-#if defined ENABLE_IPV6
-  else if (p->dst_ip.family == AF_INET6) {
-    if (ip6_addr_cmp(&p->dst_ip.address.ipv6, &a->address.ipv6) < 0)
-      memcpy(&p->dst_ip.address.ipv6, &a->address.ipv6, IP6AddrSz);
-  }
-#endif
-}
-
-void save_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  u_int32_t maskbits[4], addrh[4];
-  u_int8_t j, mask;
-
-  memset(maskbits, 0,sizeof(maskbits));
-  mask = p->src_nmask;
-  for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
-  if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
-
-  if (p->src_ip.family == AF_INET) {
-    addrh[0] = ntohl(p->src_ip.address.ipv4.s_addr);
-    addrh[0] &= maskbits[0];
-    a->family = AF_INET;
-    a->address.ipv4.s_addr = htonl(addrh[0]);
-  }
-#if defined ENABLE_IPV6
-  else if (p->src_ip.family == AF_INET6) {
-    memcpy(&addrh, (void *) pm_ntohl6(&p->src_ip.address.ipv6), IP6AddrSz);
-    for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j];
-    a->family = AF_INET6;
-    memcpy(&a->address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
-  }
-#endif
-}
-
-void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   u_int32_t maskbits[4], addrh[4];
   u_int8_t j, mask;
@@ -679,7 +600,7 @@ void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 #endif
 }
 
-void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   u_int32_t addrh[4];
   u_int8_t j;
@@ -698,33 +619,7 @@ void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc
 #endif
 }
 
-void save_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  u_int32_t maskbits[4], addrh[4];
-  u_int8_t j, mask;
-
-  memset(maskbits, 0,sizeof(maskbits));
-  mask = p->dst_nmask;
-  for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
-  if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
-
-  if (p->dst_ip.family == AF_INET) {
-    addrh[0] = ntohl(p->dst_ip.address.ipv4.s_addr);
-    addrh[0] &= maskbits[0];
-    a->family = AF_INET;
-    a->address.ipv4.s_addr = htonl(addrh[0]);
-  }
-#if defined ENABLE_IPV6
-  else if (p->dst_ip.family == AF_INET6) {
-    memcpy(&addrh, (void *) pm_ntohl6(&p->dst_ip.address.ipv6), IP6AddrSz);
-    for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j];
-    a->family = AF_INET6;
-    memcpy(&a->address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
-  }
-#endif
-}
-
-void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   u_int32_t maskbits[4], addrh[4];
   u_int8_t j, mask;
@@ -748,7 +643,7 @@ void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 #endif
 }
 
-void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   u_int32_t addrh[4];
   u_int8_t j;
@@ -767,17 +662,17 @@ void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc
 #endif
 }
 
-void copy_src_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void copy_src_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   p->src_nmask = config.networks_mask;
 }
 
-void copy_dst_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void copy_dst_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   p->dst_nmask = config.networks_mask;
 }
 
-void search_src_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void search_src_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   struct networks_table_entry *res;
 #if defined ENABLE_IPV6
@@ -798,7 +693,7 @@ void search_src_host(struct networks_table *nt, struct networks_cache *nc, struc
 #endif
 }
 
-void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   struct networks_table_entry *res;
 #if defined ENABLE_IPV6
@@ -819,49 +714,7 @@ void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struc
 #endif
 }
 
-void search_src_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  struct networks_table_entry *res;
-#if defined ENABLE_IPV6
-  struct networks6_table_entry *res6;
-#endif
-
-  if (p->src_ip.family == AF_INET) {
-    res = binsearch(nt, nc, &p->src_ip);
-    if (!res) p->src_ip.address.ipv4.s_addr = 0;
-    else p->src_ip.address.ipv4.s_addr = htonl(res->net);
-  }
-#if defined ENABLE_IPV6
-  else if (p->src_ip.family == AF_INET6) {
-    res6 = binsearch6(nt, nc, &p->src_ip);
-    if (!res6) memset(&p->src_ip.address.ipv6, 0, IP6AddrSz);
-    else memcpy(&p->src_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz);
-  }
-#endif
-}
-
-void search_dst_net(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
-{
-  struct networks_table_entry *res;
-#if defined ENABLE_IPV6
-  struct networks6_table_entry *res6;
-#endif
-  
-  if (p->dst_ip.family == AF_INET) {
-    res = binsearch(nt, nc, &p->dst_ip);
-    if (!res) p->dst_ip.address.ipv4.s_addr = 0;
-    else p->dst_ip.address.ipv4.s_addr = htonl(res->net);
-  }
-#if defined ENABLE_IPV6
-  else if (p->dst_ip.family == AF_INET6) {
-    res6 = binsearch6(nt, nc, &p->dst_ip);
-    if (!res6) memset(&p->dst_ip.address.ipv6, 0, IP6AddrSz);
-    else memcpy(&p->dst_ip.address.ipv6, (void *)pm_htonl6(res6->net), IP6AddrSz);
-  }
-#endif
-}
-
-void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   struct networks_table_entry *res;
 #if defined ENABLE_IPV6
@@ -890,7 +743,7 @@ void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, stru
   }
 }
 
-void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   struct networks_table_entry *res;
 #if defined ENABLE_IPV6
@@ -919,7 +772,7 @@ void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, stru
   }
 }
 
-void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   struct networks_table_entry *res;
 #if defined ENABLE_IPV6
@@ -928,17 +781,31 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
   
   if (p->src_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->src_ip);
-    if (res) p->src_as = res->as;
+    if (res) {
+      if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
+        p->src_as = res->as;
+      }
+      else {
+        if (res->masknum >= p->src_nmask) p->src_as = res->as;
+      }
+    }
   }
 #if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->src_ip);
-    if (res6) p->src_as = res6->as;
+    if (res6) {
+      if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
+	p->src_as = res6->as;
+      }
+      else {
+        if (res6->masknum >= p->src_nmask) p->src_as = res6->as;
+      }
+    }
   }
 #endif
 }
 
-void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   struct networks_table_entry *res;
 #if defined ENABLE_IPV6
@@ -947,22 +814,36 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
   
   if (p->dst_ip.family == AF_INET) {
     res = binsearch(nt, nc, &p->dst_ip);
-    if (res) p->dst_as = res->as;
+    if (res) {
+      if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
+        p->dst_as = res->as;
+      }
+      else {
+	if (res->masknum >= p->dst_nmask) p->dst_as = res->as;
+      }
+    }
   }
 #if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     res6 = binsearch6(nt, nc, &p->dst_ip);
-    if (res6) p->dst_as = res6->as;
+    if (res6) {
+      if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
+	p->dst_as = res6->as;
+      }
+      else {
+	if (res6->masknum >= p->dst_nmask) p->dst_as = res6->as;
+      }
+    }
   }
 #endif
 }
 
-void drop_src_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void clear_src_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   memset(&p->src_ip, 0, HostAddrSz);
 }
 
-void drop_dst_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p, struct host_addr *a)
+void clear_dst_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p)
 {
   memset(&p->dst_ip, 0, HostAddrSz);
 }

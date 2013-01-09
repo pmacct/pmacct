@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -100,14 +100,10 @@ EXT void sfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptr
 EXT void bgp_peer_src_as_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_src_local_pref_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_src_med_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void bgp_src_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void bgp_dst_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_dst_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void bgp_peer_dst_ip_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
-EXT void igp_src_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void igp_dst_net_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void igp_src_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void igp_dst_nmask_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void igp_peer_dst_ip_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

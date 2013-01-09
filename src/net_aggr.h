@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -80,7 +80,7 @@ struct networks_table_metadata {
   u_int32_t childs;
 };
 
-typedef void (*net_func) (struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
+typedef void (*net_func) (struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
 
 /* prototypes */
 #if (!defined __NET_AGGR_C)
@@ -90,29 +90,22 @@ typedef void (*net_func) (struct networks_table *, struct networks_cache *, stru
 #endif
 EXT net_func net_funcs[NET_FUNCS_N]; 
 EXT void set_net_funcs();
-EXT void mask_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void mask_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void mask_static_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void mask_static_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void copy_src_mask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void copy_dst_mask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void search_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void search_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void search_src_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void search_dst_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void search_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void search_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void search_src_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void search_dst_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void drop_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void drop_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *); 
-EXT void save_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void save_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void compare_commit_src_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void compare_commit_dst_net(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void clear_save_addr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void clear_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
-EXT void clear_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct host_addr *);
+EXT void mask_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void mask_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void mask_static_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void mask_static_dst_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void copy_src_mask(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void copy_dst_mask(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void search_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void search_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void search_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *);
+EXT void search_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *);
+EXT void search_src_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void search_dst_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void clear_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void clear_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *); 
+EXT void clear_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *);
+EXT void clear_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *);
 EXT as_t search_pretag_src_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
 EXT as_t search_pretag_dst_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
 

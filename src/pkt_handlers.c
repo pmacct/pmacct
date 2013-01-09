@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -81,70 +81,62 @@ void evaluate_packet_handlers()
 #endif
 
     if (channels_list[index].aggregation & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
+      /* always copy the host */
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
+      primitives++;
+
+      /* optionally copy mask */
       if (channels_list[index].aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) {
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
-	  channels_list[index].phandler[primitives] = bgp_src_net_handler;
-	  primitives++;
-        }
+	if (!(channels_list[index].aggregation & COUNT_SRC_NMASK)) {
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+	    channels_list[index].phandler[primitives] = bgp_src_nmask_handler;
+	    primitives++;
+          }
 
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
-          channels_list[index].phandler[primitives] = igp_src_net_handler;
-          primitives++;
-        }
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+            channels_list[index].phandler[primitives] = igp_src_nmask_handler;
+            primitives++;
+          } 
 
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
-          if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
-          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
-	  else primitives--; /* Just in case */
-	  primitives++;
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
+            if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_nmask_handler;
+            else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_nmask_handler;
+	    else primitives--; /* Just in case */
+	    primitives++;
+          }
         }
-
-	if (channels_list[index].plugin->cfg.nfacctd_net & (NF_NET_COMPAT|NF_NET_NEW|NF_NET_STATIC)) {
-          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
-          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
-          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
-          primitives++;
-        }
-      }
-      else {
-        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
-        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
-        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
-	primitives++;
       }
     }
 
     if (channels_list[index].aggregation & (COUNT_DST_HOST|COUNT_DST_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
+      /* always copy the host */
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
+      primitives++;
+
+      /* optionally copy mask */
       if (channels_list[index].aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) {
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
-          channels_list[index].phandler[primitives] = bgp_dst_net_handler;
-	  primitives++;
-	}
+        if (!(channels_list[index].aggregation & COUNT_DST_NMASK)) {
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+            channels_list[index].phandler[primitives] = bgp_dst_nmask_handler;
+	    primitives++;
+	  }
 
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) { 
-          channels_list[index].phandler[primitives] = igp_dst_net_handler;
-          primitives++;
-        }
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) { 
+            channels_list[index].phandler[primitives] = igp_dst_nmask_handler;
+            primitives++;
+          }
 
-        if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
-          if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
-          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
-          else primitives--; /* Just in case */
-          primitives++;
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
+            if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_nmask_handler;
+            else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_nmask_handler;
+            else primitives--; /* Just in case */
+            primitives++;
+	  }
 	}
-
-        if (channels_list[index].plugin->cfg.nfacctd_net & (NF_NET_COMPAT|NF_NET_NEW|NF_NET_STATIC)) {
-          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
-          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
-          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
-          primitives++;
-	}
-      }
-      else { 
-	if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
-        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
-        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
-        primitives++;
       }
     }
 
@@ -165,6 +157,15 @@ void evaluate_packet_handlers()
         else primitives--; /* Just in case */
 	primitives++;
       }
+
+      if (channels_list[index].plugin->cfg.nfacctd_net & (NF_NET_COMPAT|NF_NET_NEW)) {
+	if (!(channels_list[index].aggregation & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET))) {
+          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
+          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
+          primitives++;
+	}
+      }
     }
 
     if (channels_list[index].aggregation & COUNT_DST_NMASK) {
@@ -184,44 +185,89 @@ void evaluate_packet_handlers()
         else primitives--; /* Just in case */
         primitives++;
       }
+
+      if (channels_list[index].plugin->cfg.nfacctd_net & (NF_NET_COMPAT|NF_NET_NEW)) {
+	if (!(channels_list[index].aggregation & (COUNT_DST_HOST|COUNT_DST_NET|COUNT_SUM_HOST|COUNT_SUM_NET))) {
+          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
+          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
+          primitives++;
+	}
+      }
     }
 
     if (channels_list[index].aggregation & (COUNT_SRC_AS|COUNT_SUM_AS)) {
-      if (config.acct_type == ACCT_PM) {
-	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = src_host_handler;
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = src_host_handler;
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
+      if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
+        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_as_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_as_handler;
+        primitives++;
       }
-      else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_src_as_handler;
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_src_host_handler;
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
+
+      if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_NEW) {
+        if (!(channels_list[index].aggregation & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET))) {
+          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_host_handler;
+          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_host_handler;
+          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_host_handler;
+          primitives++;
+        }
+
+        if (!(channels_list[index].aggregation & COUNT_SRC_NMASK)) {
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+            channels_list[index].phandler[primitives] = bgp_src_nmask_handler;
+            primitives++;
+          }
+
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+            channels_list[index].phandler[primitives] = igp_src_nmask_handler;
+            primitives++;
+          }
+
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
+            if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_src_nmask_handler;
+            else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_nmask_handler;
+            else primitives--; /* Just in case */
+            primitives++;
+          }
+        } 
       }
-      else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_src_as_handler;
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_src_host_handler;
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
-      }
-      primitives++;
     }
 
     if (channels_list[index].aggregation & (COUNT_DST_AS|COUNT_SUM_AS)) {
-      if (config.acct_type == ACCT_PM) {
-	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = dst_host_handler;
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = dst_host_handler;
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
+      if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
+        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_as_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_as_handler;
+        primitives++;
       }
-      else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = NF_dst_as_handler; 
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = NF_dst_host_handler;
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
+
+      if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_NEW) {
+        if (!(channels_list[index].aggregation & (COUNT_DST_HOST|COUNT_DST_NET|COUNT_SUM_HOST|COUNT_SUM_NET))) {
+          if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = dst_host_handler;
+          else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_host_handler;
+          else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_host_handler;
+          primitives++;
+        }
+
+        if (!(channels_list[index].aggregation & COUNT_DST_NMASK)) {
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_BGP) {
+            channels_list[index].phandler[primitives] = bgp_dst_nmask_handler;
+            primitives++;
+          }
+
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_IGP) {
+            channels_list[index].phandler[primitives] = igp_dst_nmask_handler;
+            primitives++;
+          }
+
+          if (channels_list[index].plugin->cfg.nfacctd_net & NF_NET_KEEP) {
+            if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_dst_nmask_handler;
+            else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_nmask_handler;
+            else primitives--; /* Just in case */
+            primitives++;
+          }
+        }
       }
-      else if (config.acct_type == ACCT_SF) {
-	if (config.nfacctd_as & NF_AS_KEEP) channels_list[index].phandler[primitives] = SF_dst_as_handler;
-	else if (config.nfacctd_as & NF_AS_NEW) channels_list[index].phandler[primitives] = SF_dst_host_handler;
-	else if (config.nfacctd_as & NF_AS_BGP) primitives--; /* This is handled elsewhere */
-      }
-      primitives++;
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_IP) {
@@ -261,13 +307,13 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_NF) {
-        if (config.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
+        if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
           channels_list[index].phandler[primitives] = NF_peer_src_as_handler;
           primitives++;
         }
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
+        if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
           channels_list[index].phandler[primitives] = SF_peer_src_as_handler;
           primitives++;
         }
@@ -276,13 +322,13 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_PEER_DST_AS) {
       if (config.acct_type == ACCT_NF) {
-        if (config.nfacctd_as & NF_AS_KEEP) {
+        if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
 	  channels_list[index].phandler[primitives] = NF_peer_dst_as_handler;
 	  primitives++;
 	}
       }
       else if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP) {
+        if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_peer_dst_as_handler;
           primitives++;
         }
@@ -291,7 +337,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_LOCAL_PREF) {
       if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP) {
+        if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_local_pref_handler;
           primitives++;
         }
@@ -300,7 +346,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_STD_COMM) {
       if (config.acct_type == ACCT_SF) {
-        if (config.nfacctd_as & NF_AS_KEEP) {
+        if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
           channels_list[index].phandler[primitives] = SF_std_comms_handler;
           primitives++;
         }
@@ -311,7 +357,7 @@ void evaluate_packet_handlers()
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
                                             COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
                                             COUNT_DST_AS|COUNT_PEER_SRC_AS|COUNT_MPLS_VPN_RD) &&
-        config.nfacctd_as & NF_AS_BGP) {
+        channels_list[index].plugin->cfg.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
           channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
@@ -652,25 +698,6 @@ void etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
 }
 #endif
 
-void bgp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
-
-  src_host_handler(chptr, pptrs, data);
-  bgp_src_nmask_handler(chptr, pptrs, data);
-}
-
-void bgp_dst_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  dst_host_handler(chptr, pptrs, data);
-  bgp_dst_nmask_handler(chptr, pptrs, data);
-}
-
 void bgp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -726,28 +753,6 @@ void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
       pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
     }
   }
-}
-
-void igp_src_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
-
-  src_host_handler(chptr, pptrs, data);
-  igp_src_nmask_handler(chptr, pptrs, data);
-}
-
-void igp_dst_net_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
-
-  dst_host_handler(chptr, pptrs, data);
-  igp_dst_nmask_handler(chptr, pptrs, data);
 }
 
 void igp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1143,9 +1148,6 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t src_mask = 0;
 
-  /* check network-related primitives against fallback scenarios */
-  if (chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
-
   switch(hdr->version) {
   case 10:
   case 9:
@@ -1207,10 +1209,6 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.src_ip.family = AF_INET;
     break;
   }
-
-  if ((chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net & NF_NET_KEEP && !src_mask) {
-    NF_src_nmask_handler(chptr, pptrs, data);
-  }
 }
 
 void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1219,9 +1217,6 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t dst_mask = 0;
-
-  /* check network-related primitives against fallback scenarios */
-  if (chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   switch(hdr->version) {
   case 10:
@@ -1289,10 +1284,6 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
     pdata->primitives.dst_ip.family = AF_INET;
     break;
-  }
-
-  if ((chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net & NF_NET_KEEP && !dst_mask) {
-    NF_dst_nmask_handler(chptr, pptrs, data); 
   }
 }
 
@@ -2990,9 +2981,6 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *addr = &sample->ipsrc;
 
-  /* check network-related primitives against fallback scenarios */
-  if (chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
-
   if (sample->gotIPV4) {
     pdata->primitives.src_ip.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
     pdata->primitives.src_ip.family = AF_INET;
@@ -3003,10 +2991,6 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.src_ip.family = AF_INET6;
   }
 #endif
-
-  if ((chptr->aggregation & (COUNT_SRC_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net & NF_NET_KEEP) {
-    SF_src_nmask_handler(chptr, pptrs, data);
-  }
 }
 
 void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3014,9 +2998,6 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *addr = &sample->ipdst;
-
-  /* check network-related primitives against fallback scenarios */
-  if (chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET) && !evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
 
   if (sample->gotIPV4) { 
     pdata->primitives.dst_ip.address.ipv4.s_addr = sample->dcd_dstIP.s_addr; 
@@ -3028,10 +3009,6 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.dst_ip.family = AF_INET6;
   }
 #endif
-
-  if ((chptr->aggregation & (COUNT_DST_NET|COUNT_SUM_NET)) && chptr->plugin->cfg.nfacctd_net & NF_NET_KEEP) {
-    SF_dst_nmask_handler(chptr, pptrs, data);
-  }
 }
 
 void SF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

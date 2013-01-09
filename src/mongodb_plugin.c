@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -45,7 +45,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
-  struct host_addr na;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -110,7 +109,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
-  memset(&na, 0, sizeof(na));
 
   load_networks(config.networks_file, &nt, &nc);
   set_net_funcs(&nt);
@@ -266,7 +264,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, &na);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives);
 
 	if (config.ports_file) {
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
