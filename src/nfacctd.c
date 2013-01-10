@@ -1116,12 +1116,20 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   process_flowset:
   if (off+NfDataHdrV9Sz >= len) { 
     notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset; incomplete NetFlow v9/IPFIX packet",
-		    (struct sockaddr *) pptrsv->v4.f_agent);
+			(struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     return;
   }
 
   data_hdr = (struct data_hdr_v9 *)pkt;
+
+  if (data_hdr->flow_len == 0) {
+    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset; NetFlow v9/IPFIX packet claiming flow_len 0!",
+			(struct sockaddr *) pptrsv->v4.f_agent);
+    xflow_tot_bad_datagrams++;
+    return;
+  }
+
   fid = ntohs(data_hdr->flow_id);
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
