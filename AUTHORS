@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.2
-pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
 Founder:
 
@@ -24,16 +24,26 @@ the time:
 	Martin Anderberg
 	Sven Anderson
 	Joerg Behrens
+	Vincent Bernat
 	Robert Blechinger
 	Arnaud De-Bermingham
 	Marcello Di Leonardo
+	Pierre Francois
 	Rich Gade
 	Aaron Glenn
 	Gianluca Guida
+        Elisa Jasinska
 	Wim Kerkhoff
 	Peter Nixon
 	Karl O. Pinc
 	Vasiliy Ponomarev
 	Martin Pot
 	A.O. Prokofiev
+	Edwin Punt
 	Anik Rahman
+	Rene Stoutjesdijk
+	Thomas Telkamp
+	Stig Thormodsrud
+	Luca Tosolini
+	Brent Van Dussen
+	Chris Wilson

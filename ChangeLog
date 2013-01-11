@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.2
-pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
 0.14.1 -- 03-08-2012
   + nfacctd: introduced support for IPFIX variable-length IEs (RFC5101),

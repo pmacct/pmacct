@@ -1,5 +1,6 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+
 
 TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
@@ -17,6 +18,7 @@ XII.	Quickstart guide to setup the BGP daemon
 XIII.	Quickstart guide to setup a NetFlow/sFlow replicator
 XIV.	Quickstart guide to setup the IS-IS daemon
 XV.	Running the print plugin to write to flat-files
+XVI.	Quickstart guide to setup GeoIP lookups
 
 
 I. Plugins included with pmacct distribution
@@ -1005,3 +1007,28 @@ Which, over time, would produce a would produce a series of files as follows:
 -rw-------  1 paolo paolo   2772 Nov 21 00:30 blabla-20111121-0015.txt
 -rw-------  1 paolo paolo   1916 Nov 21 00:45 blabla-20111121-0030.txt
 -rw-------  1 paolo paolo   2940 Nov 21 01:00 blabla-20111121-0045.txt
+
+
+XVI. Quickstart guide to setup GeoIP lookups
+From pmacct 0.14.2 is possible to perform GeoIP country lookups against a
+Maxmind library database - and as a result of that two new traffic aggregation
+primitives have been added to the set: src_host_country and dst_host_country. 
+Pre-requisite for the feature to work are: a) a working installed Maxmind GeoIP
+library and headers and b) a Maxmind GeoIP country database (freely available).
+Two steps to quickly start with GeoIP lookups in pmacct:
+ 
+* to compile the pmacct package with support for GeoIP lookups, the code must
+  be configured for compilation as follows: ./configure --enable-geoip [ ... ]
+  The switches --with-geoip-libs and --with-geoip-includes can be of help if
+  the library is installed in some non-standard location.
+
+* include as part of the pmacct configuration the following fragment:
+
+  ...
+  geoip_ipv4_file: /path/to/GeoIP/GeoIP.dat  
+  aggregate: src_host_country, dst_host_country, ...
+  ...
+
+Concluding note: more fine-grained GeoIP lookup primitives (ie. cities, states,
+counties, metro areas, zip codes, etc.) are not yet supported: should you be
+interested into any of these, please get in touch.  
