@@ -52,8 +52,8 @@ Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
 (1) shell> ./configure --enable-mysql
 (2) shell> ./configure --enable-pgsql
 (3) shell> ./configure --enable-sqlite3
-(3) shell> ./configure --enable-mongodb
-(4) shell> ./configure --enable-mysql --enable-pgsql
+(4) shell> ./configure --enable-mongodb
+(5) shell> ./configure --enable-mysql --enable-pgsql
 
 
 III. Brief SQL and noSQL setup examples

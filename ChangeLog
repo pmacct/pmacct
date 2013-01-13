@@ -1,6 +1,57 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.2
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
+0.14.2 -- XX-01-2013
+  + pmacct opens to MongoDB, a leading noSQL document-oriented database
+    via a new 'mongodb' plugin. Feature parity is maintained with all
+    existing plugins. The QUICKSTART doc includes a brief section on how
+    to getting started with it. Using MongoDB >= 2.2.0 is  recommended;
+    MongoDB C driver is required.
+  + GeoIP lookups support has been introduced: geoip_ipv4 and geoip_ipv6
+    config directives now allow to load Maxmind IPv4/IPv6 GeoIP database
+    files; two new traffic aggregation primitives are added to support the
+    feature: src_host_country and dst_host_country. Feature implemented
+    against all deamons and all plugins and supports both IPv4 and IPv6.
+    Thanks to Vincent Bernat for his patches and precious support.
+  + networks_file: user-supplied files to define IP networks and their
+    associations to ASNs (optional) has been hooked up to the 'fallback'
+    (longest match wins) setting of [pm|u|sf|nf]acctd_net, [pm|u]acctd_as
+    and [sf|nf]acctd_as_new. Thanks to John Hess for his support.
+  + A new sampling_rate traffic aggregation primitive has been introduced:
+    to report on the sampling rate to be applied to renormalize counters
+    (ie. useful to support troubleshooting of untrusted node exports and
+    hybrid scenarios where a partial sampling_map is supplied). If renorm
+    of counters is enabled (ie. [n|s]facctd_renormalize set to true) then
+    sampling_rate will show as 1 (ie. already renormalized).
+  + sql_table, print_output_file, mongo_table: dynamic table names are
+    now enriched by a $ref variable, populated with the configured value
+    for refresh time, and a $hst variable, populated with the configured
+    value for sql_history (in secs).
+  + Solved the limit of 64 traffic aggregation primitives: the original
+    64 bits bitmap is now split in a 16 bits index + 48 bits registry
+    with multiple entries (currently 2). cfg_set_aggregate() and, in
+    future, cfg_get_aggregate() functions are meant to safely manipulate
+    the new bitmap structure and detect mistakes in primitives definition.
+  ! fix, print plugin: removed print_output_file limitation to 64 chars.
+    Now maximum filename length is imposed by underlying OS.
+  ! fix, print plugin: primitives are selectively enabled for printing
+    based on 'aggregate' directive.
+  ! fix, print plugin: pointer to latest file been generated is updated
+    at very last in the workflow.
+  ! fix, ip_flow.c: incorrect initialization for IPv6 flow buffer. Thanks
+    to Mike Jager for reporting the issue and providing a patch.
+  ! fix, pre_tag_map: improved matching of pre_tag_map primitives against
+    IPFIX fields. Thanks to Nikita V Shirokov for reporting the issue.
+  ! fix, nfprobe plugin: improved handling of unsuccessful send() calls
+    in order to prevent file descriptors depletion and log failure cause.
+    Patch is courtesy by Mike Jager.
+  ! fix, nfacctd: gracefully handling the case of NetFlow v9/IPFIX flowset
+    length of zero; unproper handling of the condition was causing nfacctd
+    to infinite loop over the packet; patch is courtesy by Mike Jager.
+  ! fix, Setsocksize(): setsockopt() replaces Setsocksize() in certain
+    cases and Setsocksize() fix to len parameter. Patch is courtesy by
+    Vincent Bernat
+
 0.14.1 -- 03-08-2012
   + nfacctd: introduced support for IPFIX variable-length IEs (RFC5101),
     improved support for IPFIX PEN IEs. 

@@ -1,81 +1,32 @@
 SIGNALS:
-Here follows a list of supported signals and their meaning; remember
-that pmacct core says goodbye when its last child dies or is terminated.
+Here follows a list of supported signals and their meaning; note: pmacct core
+process says goodbye when its last child dies or is terminated.
 
 
-pmacctd/nfacctd/sfacctd Core process:
+Core process:
 SIGCHLD:	used to handle gracefully his loved child processes;
-SIGHUP:         reopens the logging infrastructure. Works with both syslog and logfiles
-SIGUSR1:        returns various statistics via either console or syslog; the syslog level reserved
-		for such purpose is NOTICE; the facility is selected through configuration (ie key
-		'syslog'). It works for all pmacctd/nfacctd/sfacctd;
-SIGUSR2:	if 'refresh_maps' configuration directive is enabled it causes Core Process-based
-		maps to be reloaded (ie. Pre-Tagging, BGP source peer ASN, NetFlow/sFlow agent to
-		BGP peer, BGP MD5, etc.);
-SIGINT:		ignored if the daemon is started in background; otherwise the signal is propagated
-		to each running plugin (which is in turn gracefully terminated);
-SIGTERM:	not handled (which means it follows the default behaviour for the OS) if the daemon
-		is started in background; else it works like SIGINT;
+SIGHUP:         reopens the logging infrastructure. Works with both syslog
+		and logfiles;
+SIGUSR1:        returns various statistics via either console or syslog; the
+		syslog level used is NOTICE; the facility is selected through
+		configuration (ie. key 'syslog'). The feature works for all
+		daemons;
+SIGUSR2:	if 'refresh_maps' config directive is enabled, it causes Core
+		Process-based maps to be reloaded (ie. Pre-Tagging, BGP source
+		peer ASN, NetFlow/sFlow agent to BGP peer, BGP MD5, etc.).
+SIGINT:		ignored if the daemon is started in background; otherwise the
+		signal is propagated to each running plugin (which is in turn
+		gracefully terminated);
+SIGTERM:	not handled (which means it follows the default behaviour for
+		the OS) if the daemon is started in background; otherwise it 
+		orks like SIGINT;
 SIGPIPE:	ignored;
 
-MySQL plugin process:
+Plugin (SQL, noSQL, memory, print, tee, probes, etc.) processes:
 SIGPIPE:	ignored;
 SIGCHLD:	ignored;
 SIGHUP:		inherited by Core Process; 
 SIGUSR1:	ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
-		maps to be reloaded;
+SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes
+		Ports and Networks maps to be reloaded;
 SIGINT:		causes the process to exit gracefully;	
-
-PGSQL plugin process:
-SIGPIPE:	ignored;
-SIGCHLD:        ignored; 
-SIGHUP:         inherited by Core Process; 
-SIGUSR1:	ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
-                maps to be reloaded;
-SIGINT:         causes the process to exit gracefully;
-
-In-memory table process:
-SIGPIPE:        ignored;
-SIGCHLD:	ignored; 
-SIGHUP:         inherited by Core Process; 
-SIGUSR1:	ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
-                maps to be reloaded;
-SIGINT:         causes the process to exit gracefully;
-
-Print process:
-SIGPIPE:        ignored;
-SIGCHLD:        ignored;
-SIGHUP:         inherited by Core Process;
-SIGUSR1:        ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
-                maps to be reloaded;
-SIGINT:         causes the process to exit gracefully;
-
-NetFlow probe process:
-SIGPIPE:        ignored;
-SIGCHLD:        ignored;
-SIGHUP:         inherited by Core Process;
-SIGUSR1:        ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
-                maps to be reloaded;
-SIGINT:         causes the process to exit gracefully;
-
-sFlow probe process:
-SIGPIPE:        ignored;
-SIGCHLD:        ignored;
-SIGHUP:         inherited by Core Process;
-SIGUSR1:        ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes the Ports and Networks
-                maps to be reloaded;
-SIGINT:         causes the process to exit gracefully;
-
-Tee process:
-SIGPIPE:        ignored;
-SIGCHLD:        ignored;
-SIGHUP:         inherited by Core Process;
-SIGUSR1:        ignored;
-SIGUSR2:        ignored;
-SIGINT:         causes the process to exit gracefully;

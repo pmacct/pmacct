@@ -1,73 +1,65 @@
 INTRODUCTION
-Recently (0.7) an executable triggering mechanism has been added to
-both SQL plugins (sql_trigger_exec). Such executables may either be
-spawned each time a cache purging event occurs or at arbitrary time
-intervals (specified via sql_trigger_time).
-Because the triggering mechanism is hooked on top of 'lazy deadlines'
-it should absolutely not be preferred to run tasks strictly connected
-to timing issues (use crontab instead). The concept of lazy deadlines
-has been introduced a while ago to avoid the wide use of signals for 
-time handling with the purpose of keep it light while preserving its
-correctness. 
-Version 0.7.8 sees the introduction of a few status informations passed
-to the trigger in the form of environment variables. The list of supported
-variables follows: 
+An executable triggering mechanism feature is part of all SQL plugins
+(sql_trigger_exec). Executables may either be spawned each time a cache
+purging event occurs or at arbitrary time intervals (that are specified
+via sql_trigger_time). Because the triggering mechanism is hooked on top
+of the 'lazy deadlines' plugin concept, it should not be preferred method
+to run tasks strictly connected to timing issues (use crontab instead).
+As a recap, the concept of lazy deadlines was introduced a while ago to
+avoid large use of UNIX signals for precise time handling. Information
+is being passed to the triggered executable in the form of environment
+variables. The list of supported variables follows: 
 
 VAR:		$SQL_DB
-DESC:		The DB name currently in use by the plugin.
+DESC:		RDBMS database name.
 
 VAR:		$SQL_TABLE
-DESC:		The SQL table name currently in use by the plugin.
+DESC:		SQL table name.
 
 VAR:		$EFFECTIVE_SQL_TABLE
-DESC:		The SQL table name currently in use by the plugin. It is
-		defined only whether the 'sql_table' value contains any
-		variable. Variable values are substitute here by their
-		actual values.
+DESC:		SQL table name. This is defined only if the 'sql_table' value
+		contains variables. Variables are replaced here by their actual
+		values.
 
 VAR:		$SQL_HOST
-DESC:		Hostname (if any) to which the plugin is connecting to
-		contact the SQL server.
+DESC:		SQL server hostname (if any)
 
 VAR:		$SQL_USER
-DESC:		Username currently in use while authenticating to the
-		SQL server.
+DESC:		Username when authenticating to the SQL server.
 
 VAR:		$SQL_REFRESH_TIME
-DESC:		The time interval at which data is currently purged from
-		the cache into the DB. 
+DESC:		Time interval at which data is currently purged from the cache
+		to the database.
 
 VAR:		$SAMPLING_RATE
-DESC:		The ratio of packet to be sampled (1 out of N). It is
-		defined only if packet sampling is actually enabled via
-		'sampling_rate' (see CONFIG-KEYS for further details
-		about the key). 
+DESC:		Packet sampling ratio (1 out of N). It is defined only if packet
+		sampling is actually enabled via a 'sampling_rate' configuration
+		directive (see CONFIG-KEYS for further details about the key). 
 
 VAR:		$SQL_RECOVERY_LOGFILE
-DESC:		Full pathname to the logfile used when recovery mode is
-		enabled. It is defined only if 'sql_recovery_logfile' (see
-		CONFIG-KEYS for further details about the key) is actually
-		defined.
+DESC:		Full pathname to the logfile used when recovery mode is enabled.
+		This is defined only if a 'sql_recovery_logfile' configuration
+		directive is defined (see CONFIG-KEYS for further details about
+		the key). Note: sql_recovery_logfile is being deprecated. 
 
 VAR:		$SQL_RECOVERY_BACKUP_HOST
-DESC:		Hostname which is contacted as a backup SQL server. It is
-		defined only if 'sql_recovery_backup_host' (see CONFIG-KEYS
-		for further details about the key) is actually defined.
+DESC:		SQL server hostname contacted if the primary server fails. This
+		is defined only if 'sql_recovery_backup_host' is activated (see
+		CONFIG-KEYS for further details about the key).
 
 VAR:		$TOTAL_ELEM_NUMBER
-DESC:		Returns the total number of elements on the queue during the
-		last cache-to-DB purging event. Elements may be subsequently
-		filtered out and, then, are encapsulated in SQL queries. It
-		is defined only if 'sql_trigger_time' is NOT defined (this
-		causes the trigger to be launched each time the purging event
-		occurs).
+DESC:		Returns the total number of queued elements during the last
+		purging event. Elements may be subsequently filtered out. It
+		is defined only if 'sql_trigger_time' directive is NOT defined
+		(this causes the trigger to be launched each time the purging
+		event occurs).
 
 VAR:		$EFFECTIVE_ELEM_NUMBER
 DESC:		Returns the effective number of elements (that is, excluding
 		those filtered out) on the queue being encapsulated in SQL
-		queries during the last cache-to-DB purging event. It is
-		defined only if 'sql_trigger_time' is NOT defined (this causes
-                the trigger to be launched each time the purging event occurs).
+		queries during the last purging event. It is defined only if
+		'sql_trigger_time' is NOT defined (this causes the trigger to
+		be launched each time the purging event occurs).
 
 VAR:		$INSERT_QUERIES_NUMBER
 DESC:		Returns the number of elements being successfully incapsulated
@@ -84,34 +76,34 @@ DESC:           Returns the number of elements being successfully incapsulated
                 occurs).
 
 VAR:		$ELAPSED_TIME
-DESC:		Returns the number of seconds the last cache-to-DB purging
-		event took to complete. It is defined only if 'sql_trigger_time'
-		is NOT defined (this causes the trigger to be launched each
-		time the purging event occurs).
+DESC:		Returns the number of seconds the last purging event took to
+		complete. It is defined only if 'sql_trigger_time' directive is
+		NOT defined (this causes the trigger to be launched each time
+		the purging event occurs).
 
 VAR:		$SQL_HISTORY_BASETIME
 DESC:		Returns the basetime of the current timeslot, if 'sql_history'
-		(see CONFIG-KEYS for further details about the key) is defined.
+		is defined (see CONFIG-KEYS for further details about the key).
 		It is the same value being inserted into 'stamp_inserted' field
-		and is expressed as unixtime (seconds since Epoch). It is defined
-		only if 'sql_trigger_time' is NOT defined (this causes the trigger
-		to be launched each time the purging event occurs).
+		and is expressed as unixtime (seconds since Epoch). This is
+		defined only if 'sql_trigger_time' is NOT defined (this causes
+		the trigger to be launched each time the purging event occurs).
 
 VAR:		$SQL_HISTORY_TIMESLOT
-DESC:		Returns the current timeslot width (in seconds), if 'sql_history'
-		(see CONFIG-KEYS for further details about the key) is defined.
-		Note that this value may change (it's recomputed) if monthly
-		timeslot are in use. It is defined only if 'sql_trigger_time'
-		is NOT defined (this causes the trigger to be launched each time
-		the purging event occurs).
+DESC:		Returns the timeslot size (in seconds), if 'sql_history' (see
+		CONFIG-KEYS for further details about the key) is defined. Note
+		that this value may change (it's recomputed) if monthly timeslot
+		are in use. This is defined only if 'sql_trigger_time' is NOT
+		defined (this causes the trigger to be launched each time the
+		purging event occurs).
  
 VAR:		$SQL_MAX_WRITERS
-DESC:		Returns the maximum number of concurrent writer processes allowed
-		(see CONFIG-KEYS for further details about 'sql_max_writers').  
+DESC:		Returns the maximum number of concurrent SQL writer processes
+		allowed (see CONFIG-KEYS for details about 'sql_max_writers').  
 
 VAR:            $SQL_ACTIVE_WRITERS
-DESC:           Returns the active number of concurrent writer processes in place
-                (see CONFIG-KEYS for further details about 'sql_max_writers'). If
-		used in conjunction with $SQL_MAX_WRITERS, it can prevent hitting
-		the upper limit of writers by taking corrective actions or firing
-		proper notifications.
+DESC:           Returns the active number of concurrent writer processes in
+		place (see CONFIG-KEYS for details about 'sql_max_writers'). If
+		used in conjunction with $SQL_MAX_WRITERS, this can prevent
+		hitting the upper limit of writers by, say, taking corrective
+		actions or sending proper warning notifications.
