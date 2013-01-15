@@ -1,7 +1,7 @@
-pmacct (Promiscuous mode IP Accounting package) v0.14.2
+pmacct (Promiscuous mode IP Accounting package) v0.14.3
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
-0.14.2 -- XX-01-2013
+0.14.2 -- 14-01-2013
   + pmacct opens to MongoDB, a leading noSQL document-oriented database
     via a new 'mongodb' plugin. Feature parity is maintained with all
     existing plugins. The QUICKSTART doc includes a brief section on how
