@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -1893,8 +1893,13 @@ void readFlowSample_ethernet(SFSample *sample)
 
   if (sample->eth_type == ETHERTYPE_IP) sample->gotIPV4 = TRUE;
 #if defined ENABLE_IPV6
-  if (sample->eth_type == ETHERTYPE_IPV6) sample->gotIPV6 = TRUE;
+  else if (sample->eth_type == ETHERTYPE_IPV6) sample->gotIPV6 = TRUE;
 #endif
+
+  /* Commit eth_len to packet length: will be overwritten if we get
+     SFLFLOW_IPV4 or SFLFLOW_IPV6; otherwise will get along as the
+     best information we have */ 
+  if (!sample->sampledPacketSize) sample->sampledPacketSize = sample->eth_len;
 }
 
 
