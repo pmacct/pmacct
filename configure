@@ -13,57 +13,57 @@ ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_default_prefix=/usr/local
 ac_help="$ac_help
-  --enable-debug                   enable debugging compiler options"
+  --enable-debug                   Enable debugging compiler options (default: no)"
 ac_help="$ac_help
-  --enable-relax                   relax compiler optimization"
+  --enable-relax                   Relax compiler optimization (default: no)"
 ac_help="$ac_help
-  --disable-l2                     disable Layer-2 features and support"
+  --enable-l2                      Enable Layer-2 features and support (default: yes)"
 ac_help="$ac_help
-  --enable-ipv6                    Enable IPv6 code"
+  --enable-ipv6                    Enable IPv6 code (default: no)"
 ac_help="$ac_help
-  --enable-v4-mapped               allow IPv6 sockets to handle IPv4 connections"
+  --enable-v4-mapped               Allow IPv6 sockets to handle IPv4 connections (default: no)"
 ac_help="$ac_help
   --with-pcap-includes=DIR         Search the specified directories for header files"
 ac_help="$ac_help
   --with-pcap-libs=DIR             Search the specified directories for libraries"
 ac_help="$ac_help
-  --enable-mysql                   Enable MySQL support"
+  --enable-mysql                   Enable MySQL support (default: no)"
 ac_help="$ac_help
   --with-mysql-libs=DIR            Search for MySQL libs in the specified directory"
 ac_help="$ac_help
   --with-mysql-includes=DIR        Search for MySQL includes in the specified directory"
 ac_help="$ac_help
-  --enable-pgsql                   Enable PostgreSQL support"
+  --enable-pgsql                   Enable PostgreSQL support (default: no)"
 ac_help="$ac_help
   --with-pgsql-libs=DIR            Search for PostgreSQL libs in the specified directory"
 ac_help="$ac_help
   --with-pgsql-includes=DIR        Search for PostgreSQL includes in the specified directory"
 ac_help="$ac_help
-  --enable-mongodb                 Enable MongoDB support"
+  --enable-mongodb                 Enable MongoDB support (default: no)"
 ac_help="$ac_help
   --with-mongodb-libs=DIR          Search for MongoDB libs in the specified directory"
 ac_help="$ac_help
   --with-mongodb-includes=DIR      Search for MongoDB includes in the specified directory"
 ac_help="$ac_help
-  --enable-sqlite3                 Enable SQLite3 support"
+  --enable-sqlite3                 Enable SQLite3 support (default: no)"
 ac_help="$ac_help
   --with-sqlite3-libs=DIR          Search for SQLite3 libs in the specified directory"
 ac_help="$ac_help
   --with-sqlite3-includes=DIR      Search for SQLite3 includes in the specified directory"
 ac_help="$ac_help
-  --enable-geoip                   Enable GeoIP support"
+  --enable-geoip                   Enable GeoIP support (default: no)"
 ac_help="$ac_help
   --with-geoip-libs=DIR            Search for Maxmind GeoIP libs in the specified directory"
 ac_help="$ac_help
   --with-geoip-includes=DIR        Search for Maxmind GeoIP includes in the specified directory"
 ac_help="$ac_help
-  --disable-so                     Disable shared objects"
+  --disable-so                     Disable shared objects (default: no)"
 ac_help="$ac_help
-  --enable-64bit                   Enable 64bit counters"
+  --enable-64bit                   Enable 64bit counters (default: yes)"
 ac_help="$ac_help
-  --enable-threads                 Enable multi-threading in pmacctd"
+  --enable-threads                 Enable multi-threading in pmacct (default: yes)"
 ac_help="$ac_help
-  --enable-ulog                    Enable ULOG support"
+  --enable-ulog                    Enable ULOG support (default: no)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -1499,23 +1499,23 @@ EOF
 
 fi
 
-echo $ac_n "checking whether to disable L2 features""... $ac_c" 1>&6
-echo "configure:1504: checking whether to disable L2 features" >&5
+echo $ac_n "checking whether to enable L2 features""... $ac_c" 1>&6
+echo "configure:1504: checking whether to enable L2 features" >&5
 # Check whether --enable-l2 or --disable-l2 was given.
 if test "${enable_l2+set}" = set; then
   enableval="$enable_l2"
   if test x$enableval = x"yes" ; then
-          echo "$ac_t""no" 1>&6
+          echo "$ac_t""yes" 1>&6
 	  cat >> confdefs.h <<\EOF
 #define HAVE_L2 1
 EOF
  
         else
-          echo "$ac_t""yes" 1>&6
+          echo "$ac_t""no" 1>&6
         fi
         
 else
-  echo "$ac_t""no" 1>&6
+  echo "$ac_t""yes" 1>&6
 	cat >> confdefs.h <<\EOF
 #define HAVE_L2 1
 EOF
@@ -3850,13 +3850,17 @@ EOF
         fi
         
 else
-  echo "$ac_t""no" 1>&6
+  echo "$ac_t""yes" 1>&6
+	cat >> confdefs.h <<\EOF
+#define HAVE_64BIT_COUNTERS 1
+EOF
+
 
 fi
 
 
-echo $ac_n "checking whether to enable multithreading in pmacctd""... $ac_c" 1>&6
-echo "configure:3860: checking whether to enable multithreading in pmacctd" >&5
+echo $ac_n "checking whether to enable multithreading in pmacct""... $ac_c" 1>&6
+echo "configure:3864: checking whether to enable multithreading in pmacct" >&5
 # Check whether --enable-threads or --disable-threads was given.
 if test "${enable_threads+set}" = set; then
   enableval="$enable_threads"
@@ -3891,13 +3895,36 @@ EOF
         fi
         
 else
-  echo "$ac_t""no" 1>&6
+  echo "$ac_t""yes" 1>&6
+        cat >> confdefs.h <<\EOF
+#define ENABLE_THREADS 1
+EOF
+
+
+                    
+            case "$host" in
+            *-linux-*)
+              cat >> confdefs.h <<\EOF
+#define _XOPEN_SOURCE 600
+EOF
+
+              cat >> confdefs.h <<\EOF
+#define _GNU_SOURCE 1
+EOF
+
+              ;;
+            esac
+          
+
+
+          LIBS="${LIBS} -lpthread"
+          THREADS_SOURCES="thread_pool.c"
 
 fi
 
 
 echo $ac_n "checking whether to enable ULOG support""... $ac_c" 1>&6
-echo "configure:3901: checking whether to enable ULOG support" >&5
+echo "configure:3928: checking whether to enable ULOG support" >&5
 # Check whether --enable-ulog or --disable-ulog was given.
 if test "${enable_ulog+set}" = set; then
   enableval="$enable_ulog"
@@ -3915,12 +3942,12 @@ fi
 
 
 echo $ac_n "checking return type of signal handlers""... $ac_c" 1>&6
-echo "configure:3919: checking return type of signal handlers" >&5
+echo "configure:3946: checking return type of signal handlers" >&5
 if eval "test \"`echo '$''{'ac_cv_type_signal'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3924 "configure"
+#line 3951 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 #include <signal.h>
@@ -3937,7 +3964,7 @@ int main() {
 int i;
 ; return 0; }
 EOF
-if { (eval echo configure:3941: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:3968: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_type_signal=void
 else
@@ -3959,12 +3986,12 @@ EOF
 for ac_func in strlcpy vsnprintf setproctitle
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:3963: checking for $ac_func" >&5
+echo "configure:3990: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3968 "configure"
+#line 3995 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -3987,7 +4014,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:3991: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4018: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else

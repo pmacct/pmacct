@@ -44,7 +44,7 @@ fi
 dnl set debug level
 AC_MSG_CHECKING([whether to enable debugging compiler options])
 AC_ARG_ENABLE(debug,
-	[  --enable-debug                   enable debugging compiler options],
+	[  --enable-debug                   Enable debugging compiler options (default: no)],
 	AC_MSG_RESULT(yes)
 	tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
 	CFLAGS="$tmp_CFLAGS"
@@ -58,7 +58,7 @@ AC_ARG_ENABLE(debug,
 dnl set relax level
 AC_MSG_CHECKING([whether to relax compiler optimizations])
 AC_ARG_ENABLE(relax,
-[  --enable-relax                   relax compiler optimization],
+[  --enable-relax                   Relax compiler optimization (default: no)],
 	AC_MSG_RESULT(yes)
         tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
         CFLAGS="$tmp_CFLAGS",
@@ -245,23 +245,23 @@ if test x"$ac_cv_unaligned" = x"fail"; then
   AC_DEFINE(NEED_ALIGN, 1)
 fi
 
-AC_MSG_CHECKING([whether to disable L2 features])
+AC_MSG_CHECKING([whether to enable L2 features])
 AC_ARG_ENABLE(l2,
-        [  --disable-l2                     disable Layer-2 features and support],
+        [  --enable-l2                      Enable Layer-2 features and support (default: yes)],
         if test x$enableval = x"yes" ; then
-          AC_MSG_RESULT(no)
+          AC_MSG_RESULT(yes)
 	  AC_DEFINE(HAVE_L2, 1) 
         else
-          AC_MSG_RESULT(yes)
+          AC_MSG_RESULT(no)
         fi
         ,
-        AC_MSG_RESULT(no)
+        AC_MSG_RESULT(yes)
 	AC_DEFINE(HAVE_L2, 1) 
 )
 
 AC_MSG_CHECKING([whether to enable IPv6 code])
 AC_ARG_ENABLE(ipv6,
-        [  --enable-ipv6                    Enable IPv6 code],
+        [  --enable-ipv6                    Enable IPv6 code (default: no)],
 	[ 
         AC_MSG_RESULT(yes)
         AC_CHECK_FUNCS(inet_pton)
@@ -288,7 +288,7 @@ AC_ARG_ENABLE(ipv6,
 if test $ipv6support = "yes"; then 
 AC_MSG_CHECKING([whether to enable IPv4-mapped IPv6 sockets ])
 AC_ARG_ENABLE(v4-mapped,		    
-	[  --enable-v4-mapped               allow IPv6 sockets to handle IPv4 connections],
+	[  --enable-v4-mapped               Allow IPv6 sockets to handle IPv4 connections (default: no)],
 	[ 
 	if test x$enableval = x"yes" ; then
 	  AC_DEFINE(V4_MAPPED, 1)
@@ -454,7 +454,7 @@ AC_DEFINE_UNQUOTED(PCAP_TYPE_$V_PCAP, 1)
 dnl start: mysql handling
 AC_MSG_CHECKING(whether to enable MySQL support)
 AC_ARG_ENABLE(mysql,
-  [  --enable-mysql                   Enable MySQL support],
+  [  --enable-mysql                   Enable MySQL support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -572,7 +572,7 @@ dnl finish: mysql handling
 dnl start: pgsql handling
 AC_MSG_CHECKING(whether to enable PostgreSQL support)
 AC_ARG_ENABLE(pgsql,
-  [  --enable-pgsql                   Enable PostgreSQL support],
+  [  --enable-pgsql                   Enable PostgreSQL support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -680,7 +680,7 @@ dnl finish: pgsql handling
 dnl start: mongodb handling
 AC_MSG_CHECKING(whether to enable MongoDB support)
 AC_ARG_ENABLE(mongodb,
-  [  --enable-mongodb                 Enable MongoDB support],
+  [  --enable-mongodb                 Enable MongoDB support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -778,7 +778,7 @@ dnl finish: mongodb handling
 
 AC_MSG_CHECKING(whether to enable SQLite3 support)
 AC_ARG_ENABLE(sqlite3,
-  [  --enable-sqlite3                 Enable SQLite3 support],
+  [  --enable-sqlite3                 Enable SQLite3 support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -886,7 +886,7 @@ dnl finish: sqlite3 handling
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,
-  [  --enable-geoip                   Enable GeoIP support],
+  [  --enable-geoip                   Enable GeoIP support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -982,7 +982,7 @@ dnl finish: GeoIP handling
 
 AC_MSG_CHECKING([whether to disable shared objects])
 AC_ARG_ENABLE(so,
-        [  --disable-so                     Disable shared objects],
+        [  --disable-so                     Disable shared objects (default: no)],
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(no)
 	  AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], []) 
@@ -1033,7 +1033,7 @@ AC_CHECK_TYPEDEF(uint8_t, sys/types.h)
 
 AC_MSG_CHECKING([whether to enable 64bit counters])
 AC_ARG_ENABLE(64bit,
-        [  --enable-64bit                   Enable 64bit counters],
+        [  --enable-64bit                   Enable 64bit counters (default: yes)],
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(yes)
           AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
@@ -1041,12 +1041,13 @@ AC_ARG_ENABLE(64bit,
           AC_MSG_RESULT(no)
         fi
         ,
-        AC_MSG_RESULT(no)
+        AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
 )
 
-AC_MSG_CHECKING([whether to enable multithreading in pmacctd])
+AC_MSG_CHECKING([whether to enable multithreading in pmacct])
 AC_ARG_ENABLE(threads,
-        [  --enable-threads                 Enable multi-threading in pmacctd],
+        [  --enable-threads                 Enable multi-threading in pmacct (default: yes)],
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(yes)
           AC_DEFINE(ENABLE_THREADS, 1)
@@ -1069,12 +1070,27 @@ AC_ARG_ENABLE(threads,
 	  THREADS_SOURCES=""
         fi
         ,
-        AC_MSG_RESULT(no)
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(ENABLE_THREADS, 1)
+
+          dnl OS Specifics
+          [
+            case "$host" in
+            *-linux-*)
+              AC_DEFINE(_XOPEN_SOURCE, 600)
+              AC_DEFINE(_GNU_SOURCE, 1)
+              ;;
+            esac
+          ]
+
+
+          LIBS="${LIBS} -lpthread"
+          THREADS_SOURCES="thread_pool.c"
 )
 
 AC_MSG_CHECKING(whether to enable ULOG support)
 AC_ARG_ENABLE(ulog,
-  [  --enable-ulog                    Enable ULOG support],
+  [  --enable-ulog                    Enable ULOG support (default: no)],
        if test "x$enableval" = xyes ; then
                AC_MSG_RESULT(yes)
                CFLAGS="${CFLAGS} -DENABLE_ULOG"
