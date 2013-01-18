@@ -604,7 +604,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%-18s  ", empty_rd);
       }
 
-      if (config.what_to_count & COUNT_SRC_HOST) {
+      if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
         addr_to_str(src_host, &data->src_ip);
 #if defined ENABLE_IPV6
 	if (strlen(src_host))
@@ -618,7 +618,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%-15s  ", empty_ip4);
 #endif
       }
-      if (config.what_to_count & COUNT_DST_HOST) {
+      if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
         addr_to_str(dst_host, &data->dst_ip);
 #if defined ENABLE_IPV6
 	if (strlen(dst_host))
@@ -725,11 +725,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         fprintf(f, "%s,", rd_str);
       }
 
-      if (config.what_to_count & COUNT_SRC_HOST) {
+      if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
         addr_to_str(src_host, &data->src_ip);
         fprintf(f, "%s,", src_host);
       }
-      if (config.what_to_count & COUNT_DST_HOST) {
+      if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
         addr_to_str(dst_host, &data->dst_ip);
         fprintf(f, "%s,", dst_host);
       }
@@ -798,11 +798,11 @@ void P_write_stats_header_formatted(FILE *f)
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE   ");
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD         ");
 #if defined ENABLE_IPV6
-  if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP                                         ");
-  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP                                         ");
+  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP                                         ");
+  if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP                                         ");
 #else
-  if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP           ");
-  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP           ");
+  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP           ");
+  if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP           ");
 #endif
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK  ");
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK  ");
@@ -852,8 +852,8 @@ void P_write_stats_header_csv(FILE *f)
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE,");
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE,");
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD,");
-  if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP,");
-  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP,");
+  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP,");
+  if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP,");
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK,");
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK,");
   if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "SRC_PORT,");
