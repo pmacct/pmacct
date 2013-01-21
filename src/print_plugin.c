@@ -169,11 +169,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      switch (fork()) {
+      switch (ret = fork()) {
       case 0: /* Child */
 	P_cache_purge(queries_queue, qq_ptr);
 	exit(0);
       default: /* Parent */
+        if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
         P_cache_flush(queries_queue, qq_ptr);
 	gettimeofday(&flushtime, NULL);
     	refresh_deadline += config.sql_refresh_time; 
@@ -224,11 +225,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       /* lazy refresh time handling */ 
       if (now > refresh_deadline) {
         if (qq_ptr) {
-          switch (fork()) {
+          switch (ret = fork()) {
           case 0: /* Child */
             P_cache_purge(queries_queue, qq_ptr);
             exit(0);
           default: /* Parent */
+	    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
             P_cache_flush(queries_queue, qq_ptr);
 	    gettimeofday(&flushtime, NULL);
             refresh_deadline += config.sql_refresh_time; 

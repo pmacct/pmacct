@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -464,6 +464,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   struct pkt_primitives *srcdst = &data->primitives;
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
+  int ret;
 
   if (data->time_start.tv_sec && config.sql_history) {
     while (basetime > data->time_start.tv_sec) {
@@ -651,7 +652,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   Log(LOG_WARNING, "WARN ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
 
   if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
-  switch (fork()) {
+  switch (ret = fork()) {
   case 0: /* Child */
     signal(SIGINT, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
@@ -666,6 +667,11 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
 
     exit(0);
   default: /* Parent */
+    if (ret == -1) { /* Something went wrong */
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer (urgent): %s\n", config.name, config.type, strerror(errno));
+      sql_writers.active--;
+    }
+
     qq_ptr = pqq_ptr;
     memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
     break;

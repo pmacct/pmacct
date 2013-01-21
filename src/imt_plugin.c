@@ -259,6 +259,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	}
 	else { 
           switch (fork()) {
+	  case -1: /* Something went wrong */
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Unable to serve client query: %s\n", config.name, config.type, strerror(errno));
+	    break;
           case 0: /* Child */
             close(sd);
 	    pm_setproctitle("%s [%s]", "IMT Plugin -- serving client", config.name);

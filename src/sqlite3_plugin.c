@@ -118,7 +118,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     switch (ret) {
     case 0: /* timeout */
       if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
-      switch (fork()) {
+      switch (ret = fork()) {
       case 0: /* Child */
 	/* we have to ignore signals to avoid loops:
 	   because we are already forked */
@@ -139,6 +139,11 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  
         exit(0);
       default: /* Parent */
+        if (ret == -1) { /* Something went wrong */
+          Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
+          sql_writers.active--;
+        }
+
 	if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	gettimeofday(&idata.flushtime, NULL);
 	while (idata.now > refresh_deadline)
@@ -200,7 +205,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       /* lazy sql refresh handling */ 
       if (idata.now > refresh_deadline) {
         if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
-        switch (fork()) {
+        switch (ret = fork()) {
         case 0: /* Child */
           /* we have to ignore signals to avoid loops:
              because we are already forked */
@@ -221,6 +226,11 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
           exit(0);
         default: /* Parent */
+          if (ret == -1) { /* Something went wrong */
+            Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
+            sql_writers.active--;
+          }
+
 	  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
 	  gettimeofday(&idata.flushtime, NULL);
 	  while (idata.now > refresh_deadline)

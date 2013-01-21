@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -160,6 +160,10 @@ void load_plugins(struct plugin_requests *req)
       }
       
       switch (list->pid = fork()) {  
+      case -1: /* Something went wrong */
+	Log(LOG_WARNING, "WARN ( %s/%s ): Unable to initialize plugin: %s\n", list->name, list->type.string, strerror(errno));
+	delete_pipe_channel(list->pipe[1]);
+	break;
       case 0: /* Child */
 	/* SIGCHLD handling issue: SysV avoids zombies by ignoring SIGCHLD; to emulate
 	   such semantics on BSD systems, we need an handler like handle_falling_child() */
