@@ -97,26 +97,26 @@ lsp_clear_data (struct isis_lsp *lsp)
 	free(lsp->tlv_data.hostname);
     }
   if (lsp->tlv_data.is_neighs)
-    list_delete (lsp->tlv_data.is_neighs);
+    isis_list_delete (lsp->tlv_data.is_neighs);
   if (lsp->tlv_data.te_is_neighs)
-    list_delete (lsp->tlv_data.te_is_neighs);
+    isis_list_delete (lsp->tlv_data.te_is_neighs);
   if (lsp->tlv_data.area_addrs)
-    list_delete (lsp->tlv_data.area_addrs);
+    isis_list_delete (lsp->tlv_data.area_addrs);
   if (lsp->tlv_data.es_neighs)
-    list_delete (lsp->tlv_data.es_neighs);
+    isis_list_delete (lsp->tlv_data.es_neighs);
   if (lsp->tlv_data.ipv4_addrs)
-    list_delete (lsp->tlv_data.ipv4_addrs);
+    isis_list_delete (lsp->tlv_data.ipv4_addrs);
   if (lsp->tlv_data.ipv4_int_reachs)
-    list_delete (lsp->tlv_data.ipv4_int_reachs);
+    isis_list_delete (lsp->tlv_data.ipv4_int_reachs);
   if (lsp->tlv_data.ipv4_ext_reachs)
-    list_delete (lsp->tlv_data.ipv4_ext_reachs);
+    isis_list_delete (lsp->tlv_data.ipv4_ext_reachs);
   if (lsp->tlv_data.te_ipv4_reachs)
-    list_delete (lsp->tlv_data.te_ipv4_reachs);
+    isis_list_delete (lsp->tlv_data.te_ipv4_reachs);
 #ifdef ENABLE_IPV6
   if (lsp->tlv_data.ipv6_addrs)
-    list_delete (lsp->tlv_data.ipv6_addrs);
+    isis_list_delete (lsp->tlv_data.ipv6_addrs);
   if (lsp->tlv_data.ipv6_reachs)
-    list_delete (lsp->tlv_data.ipv6_reachs);
+    isis_list_delete (lsp->tlv_data.ipv6_reachs);
 #endif /* ENABLE_IPV6 */
 
   memset (&lsp->tlv_data, 0, sizeof (struct tlvs));
@@ -134,7 +134,7 @@ lsp_destroy (struct isis_lsp *lsp)
 
   if (LSP_FRAGMENT (lsp->lsp_header->lsp_id) == 0 && lsp->lspu.frags)
     {
-      list_delete (lsp->lspu.frags);
+      isis_list_delete (lsp->lspu.frags);
     }
 
   if (lsp->pdu)
@@ -180,7 +180,7 @@ lsp_remove_frags (struct list *frags, dict_t * lspdb)
       dnode_destroy (dict_delete (lspdb, dnode));
     }
 
-  list_delete_all_node (frags);
+  isis_list_delete_all_node (frags);
 
   return;
 }
@@ -210,7 +210,7 @@ lsp_search_and_destroy (u_char * id, dict_t * lspdb)
 	   * else just remove this frag, from the zero lsps' frag list
 	   */
 	  if (lsp->lspu.zero_lsp && lsp->lspu.zero_lsp->lspu.frags)
-	    listnode_delete (lsp->lspu.zero_lsp->lspu.frags, lsp);
+	    isis_listnode_delete (lsp->lspu.zero_lsp->lspu.frags, lsp);
 	}
       lsp_destroy (lsp);
       dnode_destroy (node);
@@ -431,7 +431,7 @@ lsp_new_from_stream_ptr (struct stream *stream,
       /*
        * zero lsp -> create the list for fragments
        */
-      lsp->lspu.frags = list_new ();
+      lsp->lspu.frags = isis_list_new ();
     }
   else
     {
@@ -439,7 +439,7 @@ lsp_new_from_stream_ptr (struct stream *stream,
        * a fragment -> set the backpointer and add this to zero lsps frag list
        */
       lsp->lspu.zero_lsp = lsp0;
-      listnode_add (lsp0->lspu.frags, lsp);
+      isis_listnode_add (lsp0->lspu.frags, lsp);
     }
 
   return lsp;
@@ -465,7 +465,7 @@ lsp_new (u_char * lsp_id, u_int16_t rem_lifetime, u_int32_t seq_num,
   lsp->pdu = calloc(1, ISIS_FIXED_HDR_LEN + ISIS_LSP_HDR_LEN);
 #endif /* LSP_MEMORY_PREASSIGN */
   if (LSP_FRAGMENT (lsp_id) == 0)
-    lsp->lspu.frags = list_new ();
+    lsp->lspu.frags = isis_list_new ();
   lsp->isis_header = (struct isis_fixed_hdr *) (STREAM_DATA (lsp->pdu));
   lsp->lsp_header = (struct isis_link_state_hdr *)
     (STREAM_DATA (lsp->pdu) + ISIS_FIXED_HDR_LEN);
@@ -505,7 +505,7 @@ lsp_insert (struct isis_lsp *lsp, dict_t * lspdb)
  * Build a list of LSPs with non-zero ht bounded by start and stop ids
  */
 void
-lsp_build_list_nonzero_ht (u_char * start_id, u_char * stop_id,
+lsp_build_isis_list_nonzero_ht (u_char * start_id, u_char * stop_id,
 			   struct list *list, dict_t * lspdb)
 {
   dnode_t *first, *last, *curr;
@@ -519,14 +519,14 @@ lsp_build_list_nonzero_ht (u_char * start_id, u_char * stop_id,
   curr = first;
 
   if (((struct isis_lsp *) (curr->dict_data))->lsp_header->rem_lifetime)
-    listnode_add (list, first->dict_data);
+    isis_listnode_add (list, first->dict_data);
 
   while (curr)
     {
       curr = dict_next (lspdb, curr);
       if (curr &&
 	  ((struct isis_lsp *) (curr->dict_data))->lsp_header->rem_lifetime)
-	listnode_add (list, curr->dict_data);
+	isis_listnode_add (list, curr->dict_data);
       if (curr == last)
 	break;
     }
@@ -551,13 +551,13 @@ lsp_build_list (u_char * start_id, u_char * stop_id,
 
   curr = first;
 
-  listnode_add (list, first->dict_data);
+  isis_listnode_add (list, first->dict_data);
 
   while (curr)
     {
       curr = dict_next (lspdb, curr);
       if (curr)
-	listnode_add (list, curr->dict_data);
+	isis_listnode_add (list, curr->dict_data);
       if (curr == last)
 	break;
     }
@@ -569,7 +569,7 @@ lsp_build_list (u_char * start_id, u_char * stop_id,
  * Build a list of LSPs with SSN flag set for the given circuit
  */
 void
-lsp_build_list_ssn (struct isis_circuit *circuit, struct list *list,
+lsp_build_isis_list_ssn (struct isis_circuit *circuit, struct list *list,
 		    dict_t * lspdb)
 {
   dnode_t *dnode, *next;
@@ -581,7 +581,7 @@ lsp_build_list_ssn (struct isis_circuit *circuit, struct list *list,
       next = dict_next (lspdb, dnode);
       lsp = dnode_get (dnode);
       if (ISIS_CHECK_FLAG (lsp->SSNflags, circuit))
-	listnode_add (list, lsp);
+	isis_listnode_add (list, lsp);
       dnode = next;
     }
 
@@ -670,8 +670,8 @@ lsp_tlv_fit (struct isis_lsp *lsp, struct list **from, struct list **to,
 	count = count / tlvsize;
       for (i = 0; i < count; i++)
 	{
-	  listnode_add (*to, listgetdata (listhead (*from)));
-	  listnode_delete (*from, listgetdata (listhead (*from)));
+	  isis_listnode_add (*to, listgetdata (listhead (*from)));
+	  isis_listnode_delete (*from, listgetdata (listhead (*from)));
 	}
       tlv_build_func (*to, lsp->pdu);
     }
@@ -709,7 +709,7 @@ lsp_next_frag (u_char frag_num, struct isis_lsp *lsp0, struct isis_area *area,
 		 0, level);
   lsp->own_lsp = 1;
   lsp_insert (lsp, area->lspdb[level - 1]);
-  listnode_add (lsp0->lspu.frags, lsp);
+  isis_listnode_add (lsp0->lspu.frags, lsp);
   lsp->lspu.zero_lsp = lsp0;
   /*
    * Copy the authinfo from zero LSP
@@ -756,8 +756,8 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 
   /* Area addresses */
   if (lsp->tlv_data.area_addrs == NULL)
-    lsp->tlv_data.area_addrs = list_new ();
-  list_add_list (lsp->tlv_data.area_addrs, area->area_addrs);
+    lsp->tlv_data.area_addrs = isis_list_new ();
+  isis_list_add_list (lsp->tlv_data.area_addrs, area->area_addrs);
   /* Protocols Supported */
   if (area->ip_circuits > 0
 #ifdef ENABLE_IPV6
@@ -827,13 +827,13 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
     {
       if (lsp->tlv_data.ipv4_addrs == NULL)
 	{
-	  lsp->tlv_data.ipv4_addrs = list_new ();
+	  lsp->tlv_data.ipv4_addrs = isis_list_new ();
 	  lsp->tlv_data.ipv4_addrs->del = free_tlv;
 	}
 
       routerid = calloc(1, sizeof (struct in_addr));
       routerid->s_addr = router_id_zebra.s_addr;
-      listnode_add (lsp->tlv_data.ipv4_addrs, routerid);
+      isis_listnode_add (lsp->tlv_data.ipv4_addrs, routerid);
       tlv_add_in_addr (routerid, lsp->pdu, IPV4_ADDR);
 
       /* Exactly same data is put into TE router ID TLV, but only if new style
@@ -866,7 +866,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 	    {
 	      if (tlv_data.ipv4_int_reachs == NULL)
 		{
-		  tlv_data.ipv4_int_reachs = list_new ();
+		  tlv_data.ipv4_int_reachs = isis_list_new ();
 		  tlv_data.ipv4_int_reachs->del = free_tlv;
 		}
 	      for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
@@ -876,7 +876,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		  isis_masklen2ip (ipv4->prefixlen, &ipreach->mask);
 		  ipreach->prefix.s_addr = ((ipreach->mask.s_addr) &
 					    (ipv4->prefix.s_addr));
-		  listnode_add (tlv_data.ipv4_int_reachs, ipreach);
+		  isis_listnode_add (tlv_data.ipv4_int_reachs, ipreach);
 		}
 	      tlv_data.ipv4_int_reachs->del = free_tlv;
 	    }
@@ -884,7 +884,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 	    {
 	      if (tlv_data.te_ipv4_reachs == NULL)
 		{
-		  tlv_data.te_ipv4_reachs = list_new ();
+		  tlv_data.te_ipv4_reachs = isis_list_new ();
 		  tlv_data.te_ipv4_reachs->del = free_tlv;
 		}
 	      for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
@@ -901,7 +901,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		  te_ipreach->control = (ipv4->prefixlen & 0x3F);
 		  memcpy (&te_ipreach->prefix_start, &ipv4->prefix.s_addr,
 			  (ipv4->prefixlen + 7)/8);
-		  listnode_add (tlv_data.te_ipv4_reachs, te_ipreach);
+		  isis_listnode_add (tlv_data.te_ipv4_reachs, te_ipreach);
 		}
 	    }
 	}
@@ -915,7 +915,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 
 	  if (tlv_data.ipv6_reachs == NULL)
 	    {
-	      tlv_data.ipv6_reachs = list_new ();
+	      tlv_data.ipv6_reachs = isis_list_new ();
 	      tlv_data.ipv6_reachs->del = free_tlv;
 	    }
           for (ALL_LIST_ELEMENTS_RO (circuit->ipv6_non_link, ipnode, ipv6))
@@ -934,7 +934,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 	      isis_apply_mask_ipv6 (ip6prefix);
 	      memcpy (ip6reach->prefix, ip6prefix->prefix.s6_addr,
 		      sizeof (ip6reach->prefix));
-	      listnode_add (tlv_data.ipv6_reachs, ip6reach);
+	      isis_listnode_add (tlv_data.ipv6_reachs, ip6reach);
 	    }
 	}
 #endif /* ENABLE_IPV6 */
@@ -948,7 +948,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		{
 		  if (tlv_data.is_neighs == NULL)
 		    {
-		      tlv_data.is_neighs = list_new ();
+		      tlv_data.is_neighs = isis_list_new ();
 		      tlv_data.is_neighs->del = free_tlv;
 		    }
 		  is_neigh = calloc(1, sizeof (struct is_neigh));
@@ -959,7 +959,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		    memcpy (is_neigh->neigh_id,
 			    circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
 		  is_neigh->metrics = circuit->metrics[level - 1];
-		  listnode_add (tlv_data.is_neighs, is_neigh);
+		  isis_listnode_add (tlv_data.is_neighs, is_neigh);
 		  tlv_data.is_neighs->del = free_tlv;
 		}
 	      if (area->newmetric)
@@ -968,7 +968,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 
 		  if (tlv_data.te_is_neighs == NULL)
 		    {
-		      tlv_data.te_is_neighs = list_new ();
+		      tlv_data.te_is_neighs = isis_list_new ();
 		      tlv_data.te_is_neighs->del = free_tlv;
 		    }
 		  te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
@@ -986,7 +986,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		    metric = ((htonl(*circuit->te_metric) >> 8) & 0xffffff);
 
 		  memcpy (te_is_neigh->te_metric, &metric, 3);
-		  listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+		  isis_listnode_add (tlv_data.te_is_neighs, te_is_neigh);
 		}
 	    }
 	  break;
@@ -998,13 +998,13 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 		{
 		  if (tlv_data.is_neighs == NULL)
 		    {
-		      tlv_data.is_neighs = list_new ();
+		      tlv_data.is_neighs = isis_list_new ();
 		      tlv_data.is_neighs->del = free_tlv;
 		    }
 		  is_neigh = calloc(1, sizeof (struct is_neigh));
 		  memcpy (is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
 		  is_neigh->metrics = circuit->metrics[level - 1];
-		  listnode_add (tlv_data.is_neighs, is_neigh);
+		  isis_listnode_add (tlv_data.is_neighs, is_neigh);
 		}
 	      if (area->newmetric)
 		{
@@ -1012,14 +1012,14 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
 
 		  if (tlv_data.te_is_neighs == NULL)
 		    {
-		      tlv_data.te_is_neighs = list_new ();
+		      tlv_data.te_is_neighs = isis_list_new ();
 		      tlv_data.te_is_neighs->del = free_tlv;
 		    }
 		  te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 		  memcpy (te_is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
 		  metric = ((htonl(*circuit->te_metric) >> 8) & 0xffffff);
 		  memcpy (te_is_neigh->te_metric, &metric, 3);
-		  listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+		  isis_listnode_add (tlv_data.te_is_neighs, te_is_neigh);
 		}
 	    }
 	  break;
@@ -1040,7 +1040,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
   while (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
     {
       if (lsp->tlv_data.ipv4_int_reachs == NULL)
-	lsp->tlv_data.ipv4_int_reachs = list_new ();
+	lsp->tlv_data.ipv4_int_reachs = isis_list_new ();
       lsp_tlv_fit (lsp, &tlv_data.ipv4_int_reachs,
 		   &lsp->tlv_data.ipv4_int_reachs,
 		   IPV4_REACH_LEN, area->lsp_frag_threshold,
@@ -1055,7 +1055,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
   while (tlv_data.te_ipv4_reachs && listcount (tlv_data.te_ipv4_reachs))
     {
       if (lsp->tlv_data.te_ipv4_reachs == NULL)
-	lsp->tlv_data.te_ipv4_reachs = list_new ();
+	lsp->tlv_data.te_ipv4_reachs = isis_list_new ();
       lsp_tlv_fit (lsp, &tlv_data.te_ipv4_reachs,
 		   &lsp->tlv_data.te_ipv4_reachs,
 		   9, area->lsp_frag_threshold, tlv_add_te_ipv4_reachs);
@@ -1068,7 +1068,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
   while (tlv_data.ipv6_reachs && listcount (tlv_data.ipv6_reachs))
     {
       if (lsp->tlv_data.ipv6_reachs == NULL)
-	lsp->tlv_data.ipv6_reachs = list_new ();
+	lsp->tlv_data.ipv6_reachs = isis_list_new ();
       lsp_tlv_fit (lsp, &tlv_data.ipv6_reachs,
 		   &lsp->tlv_data.ipv6_reachs,
 		   IPV6_REACH_LEN, area->lsp_frag_threshold,
@@ -1082,7 +1082,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
   while (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
     {
       if (lsp->tlv_data.is_neighs == NULL)
-	lsp->tlv_data.is_neighs = list_new ();
+	lsp->tlv_data.is_neighs = isis_list_new ();
       lsp_tlv_fit (lsp, &tlv_data.is_neighs,
 		   &lsp->tlv_data.is_neighs,
 		   IS_NEIGHBOURS_LEN, area->lsp_frag_threshold,
@@ -1095,7 +1095,7 @@ lsp_build_nonpseudo (struct isis_lsp *lsp, struct isis_area *area)
   while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
     {
       if (lsp->tlv_data.te_is_neighs == NULL)
-	lsp->tlv_data.te_is_neighs = list_new ();
+	lsp->tlv_data.te_is_neighs = isis_list_new ();
       lsp_tlv_fit (lsp, &tlv_data.te_is_neighs, &lsp->tlv_data.te_is_neighs,
 		   IS_NEIGHBOURS_LEN, area->lsp_frag_threshold,
 		   tlv_add_te_is_neighs);
@@ -1407,28 +1407,28 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
     {
       if (lsp->tlv_data.is_neighs == NULL)
 	{
-	  lsp->tlv_data.is_neighs = list_new ();
+	  lsp->tlv_data.is_neighs = isis_list_new ();
 	  lsp->tlv_data.is_neighs->del = free_tlv;
 	}
       is_neigh = calloc(1, sizeof (struct is_neigh));
 
       memcpy (&is_neigh->neigh_id, isis->sysid, ISIS_SYS_ID_LEN);
-      listnode_add (lsp->tlv_data.is_neighs, is_neigh);
+      isis_listnode_add (lsp->tlv_data.is_neighs, is_neigh);
     }
   if (circuit->area->newmetric)
     {
       if (lsp->tlv_data.te_is_neighs == NULL)
 	{
-	  lsp->tlv_data.te_is_neighs = list_new ();
+	  lsp->tlv_data.te_is_neighs = isis_list_new ();
 	  lsp->tlv_data.te_is_neighs->del = free_tlv;
 	}
       te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 
       memcpy (&te_is_neigh->neigh_id, isis->sysid, ISIS_SYS_ID_LEN);
-      listnode_add (lsp->tlv_data.te_is_neighs, te_is_neigh);
+      isis_listnode_add (lsp->tlv_data.te_is_neighs, te_is_neigh);
     }
 
-  adj_list = list_new ();
+  adj_list = isis_list_new ();
   isis_adj_build_up_list (circuit->u.bc.adjdb[level - 1], adj_list);
 
   for (ALL_LIST_ELEMENTS_RO (adj_list, node, adj))
@@ -1446,13 +1446,13 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
 		  is_neigh = calloc(1, sizeof (struct is_neigh));
 
 		  memcpy (&is_neigh->neigh_id, adj->sysid, ISIS_SYS_ID_LEN);
-		  listnode_add (lsp->tlv_data.is_neighs, is_neigh);
+		  isis_listnode_add (lsp->tlv_data.is_neighs, is_neigh);
 		}
 	      if (circuit->area->newmetric)
 		{
 		  te_is_neigh = calloc(1, sizeof (struct te_is_neigh));
 		  memcpy (&te_is_neigh->neigh_id, adj->sysid, ISIS_SYS_ID_LEN);
-		  listnode_add (lsp->tlv_data.te_is_neighs, te_is_neigh);
+		  isis_listnode_add (lsp->tlv_data.te_is_neighs, te_is_neigh);
 		}
 	    }
 	  else if (level == 1 && adj->sys_type == ISIS_SYSTYPE_ES)
@@ -1461,13 +1461,13 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
 	      /* FIXME: the tlv-format is hard to use here */
 	      if (lsp->tlv_data.es_neighs == NULL)
 		{
-		  lsp->tlv_data.es_neighs = list_new ();
+		  lsp->tlv_data.es_neighs = isis_list_new ();
 		  lsp->tlv_data.es_neighs->del = free_tlv;
 		}
 	      es_neigh = calloc(1, sizeof (struct es_neigh));
 	      
 	      memcpy (&es_neigh->first_es_neigh, adj->sysid, ISIS_SYS_ID_LEN);
-	      listnode_add (lsp->tlv_data.es_neighs, es_neigh);
+	      isis_listnode_add (lsp->tlv_data.es_neighs, es_neigh);
 	    }
 	}
     }
@@ -1500,7 +1500,7 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
   fletcher_checksum (STREAM_DATA (lsp->pdu) + 12,
 		   ntohs (lsp->lsp_header->pdu_len) - 12, 12);
 
-  list_delete (adj_list);
+  isis_list_delete (adj_list);
 
   return;
 }

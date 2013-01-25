@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -126,7 +126,7 @@ void skinny_isis_daemon()
   area->area_tag = area_tag;
   area->is_type = IS_LEVEL_2;
   area->newmetric = TRUE;
-  listnode_add(isis->area_list, area);
+  isis_listnode_add(isis->area_list, area);
   Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
   if (config.nfacctd_isis_net) area_net_title(area, config.nfacctd_isis_net);
   else {
@@ -158,8 +158,8 @@ void skinny_isis_daemon()
   ipv4 = isis_prefix_ipv4_new();
   ipv4->prefixlen = 32;
   ipv4->prefix.s_addr = addr.address.ipv4.s_addr;
-  circuit->ip_addrs = list_new();
-  listnode_add(circuit->ip_addrs, ipv4);
+  circuit->ip_addrs = isis_list_new();
+  isis_listnode_add(circuit->ip_addrs, ipv4);
 
   circuit_update_nlpids(circuit);
   isis_circuit_configure(circuit, area);

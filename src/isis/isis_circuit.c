@@ -111,8 +111,8 @@ isis_circuit_configure (struct isis_circuit *circuit, struct isis_area *area)
     }
   if (circuit->circ_type == CIRCUIT_T_BROADCAST)
     {
-      circuit->u.bc.adjdb[0] = list_new ();
-      circuit->u.bc.adjdb[1] = list_new ();
+      circuit->u.bc.adjdb[0] = isis_list_new ();
+      circuit->u.bc.adjdb[1] = isis_list_new ();
       circuit->u.bc.pad_hellos = 1;
     }
   circuit->lsp_interval = LSP_INTERVAL;
@@ -120,10 +120,10 @@ isis_circuit_configure (struct isis_circuit *circuit, struct isis_area *area)
   /*
    * Add the circuit into area
    */
-  listnode_add (area->circuit_list, circuit);
+  isis_listnode_add (area->circuit_list, circuit);
 
   circuit->idx = flags_get_index (&area->flags);
-  circuit->lsp_queue = list_new ();
+  circuit->lsp_queue = isis_list_new ();
 
   return;
 }
@@ -139,7 +139,7 @@ isis_circuit_deconfigure (struct isis_circuit *circuit,
   if (circuit->u.bc.adjdb[1])
     isis_adjdb_iterate (circuit->u.bc.adjdb[1], (void(*) (struct isis_adjacency *, void *)) isis_delete_adj, circuit->u.bc.adjdb[1]);
   /* Remove circuit from area */
-  listnode_delete (area->circuit_list, circuit);
+  isis_listnode_delete (area->circuit_list, circuit);
   /* Free the index of SRM and SSN flags */
   flags_free_index (&area->flags, circuit->idx);
 
@@ -157,23 +157,23 @@ isis_circuit_del (struct isis_circuit *circuit)
     {
       /* destroy adjacency databases */
       if (circuit->u.bc.adjdb[0])
-	list_delete (circuit->u.bc.adjdb[0]);
+	isis_list_delete (circuit->u.bc.adjdb[0]);
       if (circuit->u.bc.adjdb[1])
-	list_delete (circuit->u.bc.adjdb[1]);
+	isis_list_delete (circuit->u.bc.adjdb[1]);
       /* destroy neighbour lists */
       if (circuit->u.bc.lan_neighs[0])
-	list_delete (circuit->u.bc.lan_neighs[0]);
+	isis_list_delete (circuit->u.bc.lan_neighs[0]);
       if (circuit->u.bc.lan_neighs[1])
-	list_delete (circuit->u.bc.lan_neighs[1]);
+	isis_list_delete (circuit->u.bc.lan_neighs[1]);
       /* destroy addresses */
     }
   if (circuit->ip_addrs)
-    list_delete (circuit->ip_addrs);
+    isis_list_delete (circuit->ip_addrs);
 #ifdef ENABLE_IPV6
   if (circuit->ipv6_link)
-    list_delete (circuit->ipv6_link);
+    isis_list_delete (circuit->ipv6_link);
   if (circuit->ipv6_non_link)
-    list_delete (circuit->ipv6_non_link);
+    isis_list_delete (circuit->ipv6_non_link);
 #endif /* ENABLE_IPV6 */
 
   /* and lastly the circuit itself */

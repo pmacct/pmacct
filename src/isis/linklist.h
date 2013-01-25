@@ -44,7 +44,7 @@ struct list
 
   /*
    * Returns -1 if val1 < val2, 0 if equal?, 1 if val1 > val2.
-   * Used as definition of sorted for listnode_add_sort
+   * Used as definition of sorted for isis_listnode_add_sort
    */
   int (*cmp) (void *val1, void *val2);
 
@@ -58,7 +58,7 @@ struct list
 #define listhead(X) ((X)->head)
 #define listtail(X) ((X)->tail)
 #define listcount(X) ((X)->count)
-#define list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
+#define isis_list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
 #define listgetdata(X) (assert((X)->data != NULL), (X)->data)
 
 /* Prototypes. */
@@ -67,16 +67,16 @@ struct list
 #else
 #define EXT
 #endif
-EXT struct list *list_new(void); /* encouraged: set list.del callback on new lists */
-EXT void list_free (struct list *);
-EXT void listnode_add (struct list *, void *);
-EXT void listnode_add_sort (struct list *, void *);
-EXT void listnode_add_after (struct list *, struct listnode *, void *);
-EXT void listnode_delete (struct list *, void *);
-EXT struct listnode *listnode_lookup (struct list *, void *);
-EXT void *listnode_head (struct list *);
-EXT void list_delete (struct list *);
-EXT void list_delete_all_node (struct list *);
+EXT struct list *isis_list_new(void); /* encouraged: set list.del callback on new lists */
+EXT void isis_list_free (struct list *);
+EXT void isis_listnode_add (struct list *, void *);
+EXT void isis_listnode_add_sort (struct list *, void *);
+EXT void isis_listnode_add_after (struct list *, struct listnode *, void *);
+EXT void isis_listnode_delete (struct list *, void *);
+EXT struct listnode *isis_listnode_lookup (struct list *, void *);
+EXT void *isis_listnode_head (struct list *);
+EXT void isis_list_delete (struct list *);
+EXT void isis_list_delete_all_node (struct list *);
 #undef EXT
 
 /* List iteration macro. 

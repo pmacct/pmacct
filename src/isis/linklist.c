@@ -28,41 +28,41 @@
 
 /* Allocate new list. */
 struct list *
-list_new (void)
+isis_list_new (void)
 {
   return calloc(1, sizeof (struct list));
 }
 
 /* Free list. */
 void
-list_free (struct list *l)
+isis_list_free (struct list *l)
 {
   free(l);
 }
 
 /* Allocate new listnode.  Internal use only. */
 static struct listnode *
-listnode_new (void)
+isis_listnode_new (void)
 {
   return calloc(1, sizeof (struct listnode));
 }
 
 /* Free listnode. */
 static void
-listnode_free (struct listnode *node)
+isis_listnode_free (struct listnode *node)
 {
   free(node);
 }
 
 /* Add new data to the list. */
 void
-listnode_add (struct list *list, void *val)
+isis_listnode_add (struct list *list, void *val)
 {
   struct listnode *node;
   
   assert (val != NULL);
   
-  node = listnode_new ();
+  node = isis_listnode_new ();
 
   node->prev = list->tail;
   node->data = val;
@@ -83,14 +83,14 @@ listnode_add (struct list *list, void *val)
  * notion of omitting duplicates.
  */
 void
-listnode_add_sort (struct list *list, void *val)
+isis_listnode_add_sort (struct list *list, void *val)
 {
   struct listnode *n;
   struct listnode *new;
   
   assert (val != NULL);
   
-  new = listnode_new ();
+  new = isis_listnode_new ();
   new->data = val;
 
   if (list->cmp)
@@ -125,13 +125,13 @@ listnode_add_sort (struct list *list, void *val)
 }
 
 void
-listnode_add_after (struct list *list, struct listnode *pp, void *val)
+isis_listnode_add_after (struct list *list, struct listnode *pp, void *val)
 {
   struct listnode *nn;
   
   assert (val != NULL);
   
-  nn = listnode_new ();
+  nn = isis_listnode_new ();
   nn->data = val;
 
   if (pp == NULL)
@@ -164,7 +164,7 @@ listnode_add_after (struct list *list, struct listnode *pp, void *val)
 
 /* Delete specific date pointer from the list. */
 void
-listnode_delete (struct list *list, void *val)
+isis_listnode_delete (struct list *list, void *val)
 {
   struct listnode *node;
 
@@ -184,7 +184,7 @@ listnode_delete (struct list *list, void *val)
 	    list->tail = node->prev;
 
 	  list->count--;
-	  listnode_free (node);
+	  isis_listnode_free (node);
 	  return;
 	}
     }
@@ -192,7 +192,7 @@ listnode_delete (struct list *list, void *val)
 
 /* Return first node's data if it is there.  */
 void *
-listnode_head (struct list *list)
+isis_listnode_head (struct list *list)
 {
   struct listnode *node;
 
@@ -206,7 +206,7 @@ listnode_head (struct list *list)
 
 /* Delete all listnode from the list. */
 void
-list_delete_all_node (struct list *list)
+isis_list_delete_all_node (struct list *list)
 {
   struct listnode *node;
   struct listnode *next;
@@ -217,7 +217,7 @@ list_delete_all_node (struct list *list)
       next = node->next;
       if (list->del)
 	(*list->del) (node->data);
-      listnode_free (node);
+      isis_listnode_free (node);
     }
   list->head = list->tail = NULL;
   list->count = 0;
@@ -225,16 +225,16 @@ list_delete_all_node (struct list *list)
 
 /* Delete all listnode then free list itself. */
 void
-list_delete (struct list *list)
+isis_list_delete (struct list *list)
 {
   assert(list);
-  list_delete_all_node (list);
-  list_free (list);
+  isis_list_delete_all_node (list);
+  isis_list_free (list);
 }
 
 /* Lookup the node which has given data. */
 struct listnode *
-listnode_lookup (struct list *list, void *data)
+isis_listnode_lookup (struct list *list, void *data)
 {
   struct listnode *node;
 
@@ -247,7 +247,7 @@ listnode_lookup (struct list *list, void *data)
 
 /* Delete the node from list.  For ospfd and ospf6d. */
 void
-list_delete_node (struct list *list, struct listnode *node)
+isis_list_delete_node (struct list *list, struct listnode *node)
 {
   if (node->prev)
     node->prev->next = node->next;
@@ -258,18 +258,18 @@ list_delete_node (struct list *list, struct listnode *node)
   else
     list->tail = node->prev;
   list->count--;
-  listnode_free (node);
+  isis_listnode_free (node);
 }
 
 /* ospf_spf.c */
 void
-list_add_node_prev (struct list *list, struct listnode *current, void *val)
+isis_list_add_node_prev (struct list *list, struct listnode *current, void *val)
 {
   struct listnode *node;
   
   assert (val != NULL);
   
-  node = listnode_new ();
+  node = isis_listnode_new ();
   node->next = current;
   node->data = val;
 
@@ -286,13 +286,13 @@ list_add_node_prev (struct list *list, struct listnode *current, void *val)
 
 /* ospf_spf.c */
 void
-list_add_node_next (struct list *list, struct listnode *current, void *val)
+isis_list_add_node_next (struct list *list, struct listnode *current, void *val)
 {
   struct listnode *node;
   
   assert (val != NULL);
   
-  node = listnode_new ();
+  node = isis_listnode_new ();
   node->prev = current;
   node->data = val;
 
@@ -309,10 +309,10 @@ list_add_node_next (struct list *list, struct listnode *current, void *val)
 
 /* ospf_spf.c */
 void
-list_add_list (struct list *l, struct list *m)
+isis_list_add_list (struct list *l, struct list *m)
 {
   struct listnode *n;
 
   for (n = listhead (m); n; n = listnextnode (n))
-    listnode_add (l, n->data);
+    isis_listnode_add (l, n->data);
 }

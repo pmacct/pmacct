@@ -115,15 +115,15 @@ isis_delete_adj (struct isis_adjacency *adj, struct list *adjdb)
     return;
   /* When we recieve a NULL list, we will know its p2p. */
   if (adjdb)
-    listnode_delete (adjdb, adj);
+    isis_listnode_delete (adjdb, adj);
 
   memset(&adj->expire, 0, sizeof(struct timeval));
 
   if (adj->ipv4_addrs)
-    list_delete (adj->ipv4_addrs);
+    isis_list_delete (adj->ipv4_addrs);
 #ifdef ENABLE_IPV6
   if (adj->ipv6_addrs)
-    list_delete (adj->ipv6_addrs);
+    isis_list_delete (adj->ipv6_addrs);
 #endif
   
   free(adj);
@@ -234,7 +234,7 @@ isis_adj_build_neigh_list (struct list *adjdb, struct list *list)
 
       if ((adj->adj_state == ISIS_ADJ_UP ||
 	   adj->adj_state == ISIS_ADJ_INITIALIZING))
-	listnode_add (list, adj->snpa);
+	isis_listnode_add (list, adj->snpa);
     }
   return;
 }
@@ -260,7 +260,7 @@ isis_adj_build_up_list (struct list *adjdb, struct list *list)
 	}
 
       if (adj->adj_state == ISIS_ADJ_UP)
-	listnode_add (list, adj);
+	isis_listnode_add (list, adj);
     }
 
   return;

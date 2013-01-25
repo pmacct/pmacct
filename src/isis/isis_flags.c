@@ -53,7 +53,7 @@ flags_get_index (struct flags *flags)
     {
       node = listhead (flags->free_idcs);
       index = (int) listgetdata (node);
-      listnode_delete (flags->free_idcs, (void *) index);
+      isis_listnode_delete (flags->free_idcs, (void *) index);
       index--;
     }
 
@@ -71,10 +71,10 @@ flags_free_index (struct flags *flags, int index)
 
   if (flags->free_idcs == NULL)
     {
-      flags->free_idcs = list_new ();
+      flags->free_idcs = isis_list_new ();
     }
 
-  listnode_add (flags->free_idcs, (void *) (index + 1));
+  isis_listnode_add (flags->free_idcs, (void *) (index + 1));
 
   return;
 }

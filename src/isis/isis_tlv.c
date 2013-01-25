@@ -65,32 +65,32 @@ void
 free_tlvs (struct tlvs *tlvs)
 {
   if (tlvs->area_addrs)
-    list_delete (tlvs->area_addrs);
+    isis_list_delete (tlvs->area_addrs);
   if (tlvs->is_neighs)
-    list_delete (tlvs->is_neighs);
+    isis_list_delete (tlvs->is_neighs);
   if (tlvs->te_is_neighs)
-    list_delete (tlvs->te_is_neighs);
+    isis_list_delete (tlvs->te_is_neighs);
   if (tlvs->es_neighs)
-    list_delete (tlvs->es_neighs);
+    isis_list_delete (tlvs->es_neighs);
   if (tlvs->lsp_entries)
-    list_delete (tlvs->lsp_entries);
+    isis_list_delete (tlvs->lsp_entries);
   if (tlvs->lan_neighs)
-    list_delete (tlvs->lan_neighs);
+    isis_list_delete (tlvs->lan_neighs);
   if (tlvs->prefix_neighs)
-    list_delete (tlvs->prefix_neighs);
+    isis_list_delete (tlvs->prefix_neighs);
   if (tlvs->ipv4_addrs)
-    list_delete (tlvs->ipv4_addrs);
+    isis_list_delete (tlvs->ipv4_addrs);
   if (tlvs->ipv4_int_reachs)
-    list_delete (tlvs->ipv4_int_reachs);
+    isis_list_delete (tlvs->ipv4_int_reachs);
   if (tlvs->ipv4_ext_reachs)
-    list_delete (tlvs->ipv4_ext_reachs);
+    isis_list_delete (tlvs->ipv4_ext_reachs);
   if (tlvs->te_ipv4_reachs)
-    list_delete (tlvs->te_ipv4_reachs);
+    isis_list_delete (tlvs->te_ipv4_reachs);
 #ifdef ENABLE_IPV6
   if (tlvs->ipv6_addrs)
-    list_delete (tlvs->ipv6_addrs);
+    isis_list_delete (tlvs->ipv6_addrs);
   if (tlvs->ipv6_reachs)
-    list_delete (tlvs->ipv6_reachs);
+    isis_list_delete (tlvs->ipv6_reachs);
 #endif /* ENABLE_IPV6 */
   
   return;
@@ -158,8 +158,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		  value_len += area_addr->addr_len + 1;
 		  pnt += area_addr->addr_len + 1;
 		  if (!tlvs->area_addrs)
-		    tlvs->area_addrs = list_new ();
-		  listnode_add (tlvs->area_addrs, area_addr);
+		    tlvs->area_addrs = isis_list_new ();
+		  isis_listnode_add (tlvs->area_addrs, area_addr);
 		}
 	    }
 	  else
@@ -198,8 +198,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		  value_len += 4 + ISIS_SYS_ID_LEN + 1;
 		  pnt += 4 + ISIS_SYS_ID_LEN + 1;
 		  if (!tlvs->is_neighs)
-		    tlvs->is_neighs = list_new ();
-		  listnode_add (tlvs->is_neighs, is_nei);
+		    tlvs->is_neighs = isis_list_new ();
+		  isis_listnode_add (tlvs->is_neighs, is_nei);
 		}
 	    }
 	  else
@@ -231,8 +231,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		  pnt += te_is_nei->sub_tlvs_length;
 
 		  if (!tlvs->te_is_neighs)
-		    tlvs->te_is_neighs = list_new ();
-		  listnode_add (tlvs->te_is_neighs, te_is_nei);
+		    tlvs->te_is_neighs = isis_list_new ();
+		  isis_listnode_add (tlvs->te_is_neighs, te_is_nei);
 		}
 	    }
 	  else
@@ -272,8 +272,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		  /*  if (!es_nei->neigh_ids) es_nei->neigh_ids = sysid; */
 		}
 	      if (!tlvs->es_neighs)
-		tlvs->es_neighs = list_new ();
-	      listnode_add (tlvs->es_neighs, es_nei);
+		tlvs->es_neighs = isis_list_new ();
+	      isis_listnode_add (tlvs->es_neighs, es_nei);
 	    }
 	  else
 	    {
@@ -294,8 +294,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		{
 		  lan_nei = (struct lan_neigh *) pnt;
 		  if (!tlvs->lan_neighs)
-		    tlvs->lan_neighs = list_new ();
-		  listnode_add (tlvs->lan_neighs, lan_nei);
+		    tlvs->lan_neighs = isis_list_new ();
+		  isis_listnode_add (tlvs->lan_neighs, lan_nei);
 		  value_len += ETH_ALEN;
 		  pnt += ETH_ALEN;
 		}
@@ -330,8 +330,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		  value_len += 10 + ISIS_SYS_ID_LEN;
 		  pnt += 10 + ISIS_SYS_ID_LEN;
 		  if (!tlvs->lsp_entries)
-		    tlvs->lsp_entries = list_new ();
-		  listnode_add (tlvs->lsp_entries, lsp_entry);
+		    tlvs->lsp_entries = isis_list_new ();
+		  isis_listnode_add (tlvs->lsp_entries, lsp_entry);
 		}
 	    }
 	  else
@@ -381,8 +381,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		{
 		  ipv4_addr = (struct in_addr *) pnt;
 		  if (!tlvs->ipv4_addrs)
-		    tlvs->ipv4_addrs = list_new ();
-		  listnode_add (tlvs->ipv4_addrs, ipv4_addr);
+		    tlvs->ipv4_addrs = isis_list_new ();
+		  isis_listnode_add (tlvs->ipv4_addrs, ipv4_addr);
 		  value_len += 4;
 		  pnt += 4;
 		}
@@ -453,8 +453,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		{
 		  ipv4_reach = (struct ipv4_reachability *) pnt;
 		  if (!tlvs->ipv4_int_reachs)
-		    tlvs->ipv4_int_reachs = list_new ();
-		  listnode_add (tlvs->ipv4_int_reachs, ipv4_reach);
+		    tlvs->ipv4_int_reachs = isis_list_new ();
+		  isis_listnode_add (tlvs->ipv4_int_reachs, ipv4_reach);
 		  value_len += 12;
 		  pnt += 12;
 		}
@@ -488,8 +488,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		{
 		  ipv4_reach = (struct ipv4_reachability *) pnt;
 		  if (!tlvs->ipv4_ext_reachs)
-		    tlvs->ipv4_ext_reachs = list_new ();
-		  listnode_add (tlvs->ipv4_ext_reachs, ipv4_reach);
+		    tlvs->ipv4_ext_reachs = isis_list_new ();
+		  isis_listnode_add (tlvs->ipv4_ext_reachs, ipv4_reach);
 		  value_len += 12;
 		  pnt += 12;
 		}
@@ -519,8 +519,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		{
 		  te_ipv4_reach = (struct te_ipv4_reachability *) pnt;
 		  if (!tlvs->te_ipv4_reachs)
-		    tlvs->te_ipv4_reachs = list_new ();
-		  listnode_add (tlvs->te_ipv4_reachs, te_ipv4_reach);
+		    tlvs->te_ipv4_reachs = isis_list_new ();
+		  isis_listnode_add (tlvs->te_ipv4_reachs, te_ipv4_reach);
 		  /* this trickery is permitable since no subtlvs are defined */
 		  value_len += 5 + ((te_ipv4_reach->control & 0x3F) ?
 				    ((((te_ipv4_reach->control & 0x3F) -
@@ -549,8 +549,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		{
 		  ipv6_addr = (struct in6_addr *) pnt;
 		  if (!tlvs->ipv6_addrs)
-		    tlvs->ipv6_addrs = list_new ();
-		  listnode_add (tlvs->ipv6_addrs, ipv6_addr);
+		    tlvs->ipv6_addrs = isis_list_new ();
+		  isis_listnode_add (tlvs->ipv6_addrs, ipv6_addr);
 		  value_len += 16;
 		  pnt += 16;
 		}
@@ -583,8 +583,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 		  pnt += prefix_octets + 6;
 		  /* FIXME: sub-tlvs */
 		  if (!tlvs->ipv6_reachs)
-		    tlvs->ipv6_reachs = list_new ();
-		  listnode_add (tlvs->ipv6_reachs, ipv6_reach);
+		    tlvs->ipv6_reachs = isis_list_new ();
+		  isis_listnode_add (tlvs->ipv6_reachs, ipv6_reach);
 		}
 	    }
 	  else
