@@ -986,11 +986,12 @@ AC_ARG_ENABLE(so,
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(no)
 	  AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], []) 
+	  AC_CHECK_LIB(dl, dlopen,
+                [ USING_DLOPEN="yes"
+                  LIBS="${LIBS} -ldl" ],
+		  [])
 	  if test x"$USING_DLOPEN" != x"yes"; then 
-	    AC_CHECK_LIB(dl, dlopen,
-		[ USING_DLOPEN="yes"
-		  LIBS="${LIBS} -ldl" ],
-		[ AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so) ]) 
+		AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
 	  fi
         else
           AC_MSG_RESULT(yes)
@@ -998,11 +999,12 @@ AC_ARG_ENABLE(so,
         ,
         AC_MSG_RESULT(no)
         AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
+        AC_CHECK_LIB(dl, dlopen,
+                [ USING_DLOPEN="yes"
+                  LIBS="${LIBS} -ldl" ],
+		  [])
         if test x"$USING_DLOPEN" != x"yes"; then
-          AC_CHECK_LIB(dl, dlopen,
-		[ USING_DLOPEN="yes"
-		  LIBS="${LIBS} -ldl" ],
-		[ AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so) ])
+		AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
 	fi
 )
 dnl finish: shared object handling
