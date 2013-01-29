@@ -333,17 +333,16 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
 	while (((struct ch_buf_hdr *)pipebuf)->num) {
+          if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
+          else pbgp = NULL;
+
 	  for (num = 0; net_funcs[num]; num++)
-	    (*net_funcs[num])(&nt, &nc, &data->primitives);
+	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp);
 
 	  if (config.ports_file) {
 	    if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
 	    if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	  }
-
-	  /* XXX: can be optimized? */
-	  if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
-	  else pbgp = NULL;
 
           (*insert_func)(data, pbgp);
 

@@ -1,7 +1,10 @@
 !
 ! Sample networks-list; enabled by 'networks_file' key.
 !
-! Format supported: [<AS number>',']<Network>'/'<numeric mask>
+! Format supported: [<next-hop>','[<AS number>',']]<Network>'/'<numeric mask>
+!
+!
+! <Network>'/'<numeric mask> examples
 !
 192.168.95.0/24
 192.168.94.0/25
@@ -10,6 +13,15 @@
 192.168.92.64/26
 192.168.92.128/26
 192.168.92.192/26
-! 137,150.145.0.0/16
-! 137,150.146.0.0/16
-! 137,194.119.192.0/19
+!
+! <AS number>','<Network>'/'<numeric mask> examples 
+!
+65500,192.168.1.0/24
+65501,192.168.2.0/25
+65502,192.168.4.0/23
+!
+! <next-hop>','<AS number>','<Network>'/'<numeric mask> examples
+!
+10.0.0.1,65500,192.168.1.0/24
+10.0.0.2,65501,192.168.2.0/25
+10.0.0.3,65502,192.168.4.0/23

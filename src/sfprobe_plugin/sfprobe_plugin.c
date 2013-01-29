@@ -567,6 +567,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_payload *hdr;
   struct pkt_data dummy;
+  struct pkt_bgp_primitives *dummy_pbgp = NULL;
   struct pollfd pfd;
   struct timezone tz;
   unsigned char *pipebuf, *pipebuf_ptr;
@@ -696,7 +697,7 @@ read_data:
 	  memcpy(&dummy.primitives.src_ip, &hdr->src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &hdr->dst_ip, HostAddrSz);
 
-	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives);
+	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp);
 
           if (config.nfacctd_as == NF_AS_NEW) {
 	    hdr->src_as = dummy.primitives.src_as;

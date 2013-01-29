@@ -1265,6 +1265,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data, dummy;
   struct pkt_extras *extras;
+  struct pkt_bgp_primitives *dummy_pbgp = NULL;
   struct ports_table pt;
   struct pollfd pfd;
   struct timezone tz;
@@ -1458,7 +1459,7 @@ read_data:
 	  memcpy(&dummy.primitives.src_ip, &data->primitives.src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &data->primitives.dst_ip, HostAddrSz);
 
-          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives);
+          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp);
 
 	  if (config.nfacctd_as == NF_AS_NEW) {
 	    data->primitives.src_as = dummy.primitives.src_as;
