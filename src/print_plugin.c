@@ -44,6 +44,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  struct networks_file_data nfd;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -252,7 +253,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         else pbgp = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
 
 	if (config.ports_file) {
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;

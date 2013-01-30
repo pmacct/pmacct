@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -161,6 +161,7 @@ struct configuration {
   char *pidfile; 
   int networks_mask;
   char *networks_file;
+  int networks_file_filter;
   int networks_cache_entries;
   char *ports_file;
   int refresh_maps;

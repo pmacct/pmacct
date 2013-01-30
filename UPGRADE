@@ -8,6 +8,20 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 0.14.3
+FROM:	<= 0.14.2
+TOPIC:	networks_file & host aggregation primitives 
+DESC:	In previous releases defining a networks_file in conjunction with host
+	aggregation primitives would automatically work as a filter (ie. zero out
+	hosts not included in the networks_file); whereas defining a networks_file
+	in conjunction with net primitives would only work as a resolver. Now this
+	behaviour has been streamlined by introducing a networks_file_filter true-
+	false configuration directive to explicitely enable/disable the filtering
+	feature (for both host and net primitives) on top of the resolver one. To
+	summarize: if using a networks_file in conjunction with host aggregation
+	primitives, and in order to keep the same behaviour while upgrading, a
+	line should be added to the configuration: "networks_file_filter: true".
+
 TO:     >= 0.14.0
 FROM:   <= 0.14.0rc3
 TOPIC:  peer_dst_ip

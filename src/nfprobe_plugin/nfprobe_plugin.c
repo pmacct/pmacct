@@ -1277,6 +1277,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  struct networks_file_data nfd;
 
   unsigned char *rgptr, *dataptr;
   int pollagain = TRUE;
@@ -1459,7 +1460,7 @@ read_data:
 	  memcpy(&dummy.primitives.src_ip, &data->primitives.src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &data->primitives.dst_ip, HostAddrSz);
 
-          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp);
+          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp, &nfd);
 
 	  if (config.nfacctd_as == NF_AS_NEW) {
 	    data->primitives.src_as = dummy.primitives.src_as;

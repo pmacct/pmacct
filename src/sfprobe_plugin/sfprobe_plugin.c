@@ -580,6 +580,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *rgptr;
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
+  struct networks_file_data nfd;
 
   time_t clk, test_clk;
   SflSp sp;
@@ -697,7 +698,7 @@ read_data:
 	  memcpy(&dummy.primitives.src_ip, &hdr->src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &hdr->dst_ip, HostAddrSz);
 
-	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp);
+	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp, &nfd);
 
           if (config.nfacctd_as == NF_AS_NEW) {
 	    hdr->src_as = dummy.primitives.src_as;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -232,6 +232,7 @@ static const struct _dictionary_line dictionary[] = {
   {"savefile_wait", cfg_key_savefile_wait},
   {"networks_mask", cfg_key_networks_mask},
   {"networks_file", cfg_key_networks_file},
+  {"networks_file_filter", cfg_key_networks_file_filter},
   {"networks_cache_entries", cfg_key_networks_cache_entries},
   {"refresh_maps", cfg_key_refresh_maps},
   {"ports_file", cfg_key_ports_file},

@@ -254,6 +254,11 @@ DESC:		full pathname to a file containing a list of networks - and optionally AS
 		IGP, telemetry protocol) or for the purpose of overriding such information with custom/
 		self-defined one.
 
+KEY:		networks_file_filter
+VALUES          [true|false]
+DESC:           Makes networks_file work as a filter in addition to its basic resolver functionality:
+		networks and hosts not belonging to defined networks are zeroed out. (default: false)
+
 KEY:            networks_mask
 DESC:           specifies the network mask - in bits - to apply to IP address values in L3 header. The
 		mask is applied sistematically and before evaluating the 'networks_file' content (if

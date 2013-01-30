@@ -43,6 +43,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct pkt_bgp_primitives *pbgp;
+  struct networks_file_data nfd;
   char *dataptr;
 
   unsigned char *rgptr;
@@ -274,7 +275,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         else pbgp = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
 
 	if (config.ports_file) {
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;

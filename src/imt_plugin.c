@@ -48,6 +48,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 0;
   int rg_err_count = 0;
   struct pkt_bgp_primitives *pbgp;
+  struct networks_file_data nfd;
 
   fd_set read_descs, bkp_read_descs; /* select() stuff */
   int select_fd, lock = FALSE;
@@ -337,7 +338,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else pbgp = NULL;
 
 	  for (num = 0; net_funcs[num]; num++)
-	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp);
+	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
 
 	  if (config.ports_file) {
 	    if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
