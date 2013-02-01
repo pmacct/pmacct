@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -32,20 +32,17 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   int timeout, err;
-  int ret, num, fd;
+  int ret, num, fd, pool_idx, recv_idx;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   char *dataptr, dest_addr[256], dest_serv[256];
-
-  struct sockaddr dest;
-  socklen_t dest_len;
+  struct tee_receiver *target = NULL;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
 
-  /* XXX: glue */
   memcpy(&config, cfgptr, sizeof(struct configuration));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "Tee Plugin", config.name);
@@ -67,14 +64,51 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  if (!config.nfprobe_receiver) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): tee_receiver is not specified. Exiting ...\n", config.name, config.type);
+  if (config.nfprobe_receiver && config.tee_receivers) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): tee_receiver and tee_receivers are mutually exclusive. Exiting ...\n", config.name, config.type);
+    exit_plugin(1);
+  }
+  else if (!config.nfprobe_receiver && !config.tee_receivers) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): No receivers specified: tee_receiver or tee_receivers is required. Exiting ...\n", config.name, config.type);
     exit_plugin(1);
   }
 
-  memset(&dest, 0, sizeof(dest));
-  dest_len = sizeof(dest);
-  Tee_parse_hostport(config.nfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
+  memset(&receivers, 0, sizeof(receivers));
+
+  /* Setting up pools */
+  if (!config.tee_max_receiver_pools) config.tee_max_receiver_pools = MAX_TEE_POOLS;
+
+  receivers.pools = malloc(config.tee_max_receiver_pools*sizeof(struct tee_receivers_pool));
+  if (!receivers.pools) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receiver pools. Exiting ...\n", config.name, config.type);
+    exit_plugin(1);
+  }
+  else memset(receivers.pools, 0, config.tee_max_receiver_pools*sizeof(struct tee_receivers_pool));
+
+  /* Setting up receivers per pool */
+  if (!config.tee_max_receivers) config.tee_max_receivers = MAX_TEE_RECEIVERS;
+
+  for (pool_idx = 0; pool_idx < MAX_TEE_POOLS; pool_idx++) { 
+    receivers.pools[pool_idx].receivers = malloc(config.tee_max_receivers*sizeof(struct tee_receivers));
+    if (!receivers.pools[pool_idx].receivers) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receivers for pool #%u. Exiting ...\n", config.name, config.type, pool_idx);
+      exit_plugin(1);
+    }
+    else memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+  }
+
+  if (config.nfprobe_receiver) {
+    pool_idx = 0; recv_idx = 0;
+
+    target = &receivers.pools[pool_idx].receivers[recv_idx];
+    target->dest_len = sizeof(target->dest);
+    Tee_parse_hostport(config.nfprobe_receiver, (struct sockaddr *) &target->dest, &target->dest_len);
+    recv_idx++; receivers.pools[pool_idx].num = recv_idx;
+    pool_idx++; receivers.num = pool_idx;
+  }
+  else if (config.tee_receivers) {
+    // XXX
+  }
 
   config.sql_refresh_time = DEFAULT_TEE_REFRESH_TIME;
   timeout = config.sql_refresh_time*1000;
@@ -88,14 +122,21 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(pipebuf, 0, config.buffer_size);
 
   /* Arrange send socket */
-  if (dest.sa_family != 0) {
-    if ((err = getnameinfo((struct sockaddr *) &dest,
-            dest_len, dest_addr, sizeof(dest_addr),
+  for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
+    for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+      target = &receivers.pools[pool_idx].receivers[recv_idx];
+
+      if (target->dest.sa_family != 0) {
+        if ((err = getnameinfo((struct sockaddr *) &target->dest,
+            target->dest_len, dest_addr, sizeof(dest_addr),
             dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
-      exit_plugin(1);
+          Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
+          exit_plugin(1);
+	}
+      }
+
+      target->fd = Tee_prepare_sock(&target->dest, target->dest_len);
     }
-    fd = Tee_prepare_sock(&dest, dest_len);
   }
 
   /* plugin main loop */
@@ -147,7 +188,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       msg = (struct pkt_msg *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        Tee_send(msg, &dest, fd);
+	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
+	  for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+	    target = &receivers.pools[pool_idx].receivers[recv_idx];
+	    Tee_send(msg, &target->dest, target->fd);
+	  }
+	}
 
         ((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
@@ -169,6 +215,10 @@ void Tee_exit_now(int signum)
 
 void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 {
+  struct host_addr r;
+  u_char recv_addr[50];
+  u_int16_t recv_port;
+
   if (config.debug) {
     struct host_addr a;
     u_char agent_addr[50];
@@ -176,13 +226,21 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
     addr_to_str(agent_addr, &a);
+
+    sa_to_addr((struct sockaddr *)target, &r, &recv_port);
+    addr_to_str(recv_addr, &r);
+
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow packet from [%s:%u] seqno [%u] to [%s]\n",
-			config.name, config.type, agent_addr, agent_port, msg->seqno, config.nfprobe_receiver);
+                        config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr);
   }
 
   if (!config.tee_transparent) {
-    if (send(fd, msg->payload, msg->len, 0) == -1)
-      Log(LOG_ERR, "ERROR ( %s/%s ): send() to [%s] failed (%s)\n", config.name, config.type, config.nfprobe_receiver, strerror(errno));
+    if (send(fd, msg->payload, msg->len, 0) == -1) {
+      sa_to_addr((struct sockaddr *)target, &r, &recv_port);
+      addr_to_str(recv_addr, &r);
+
+      Log(LOG_ERR, "ERROR ( %s/%s ): send() to [%s] failed (%s)\n", config.name, config.type, recv_addr, strerror(errno));
+    }
   }
   else {
     char *buf_ptr = tee_send_buf;
@@ -197,15 +255,15 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
     if (msg->agent.sa_family == target->sa_family) {
       /* UDP header first */
       if (target->sa_family == AF_INET) {
-	buf_ptr += IP4HdrSz;
-	uh = (struct my_udphdr *) buf_ptr;
-	uh->uh_sport = sa->sin_port;
-	uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
+        buf_ptr += IP4HdrSz;
+        uh = (struct my_udphdr *) buf_ptr;
+        uh->uh_sport = sa->sin_port;
+        uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
       }
 #if defined ENABLE_IPV6
-      else if (target->sa_family == AF_INET6) { 
-	buf_ptr += IP6HdrSz;
-	uh = (struct my_udphdr *) buf_ptr;
+      else if (target->sa_family == AF_INET6) {
+        buf_ptr += IP6HdrSz;
+        uh = (struct my_udphdr *) buf_ptr;
         uh->uh_sport = sa6->sin6_port;
         uh->uh_dport = ((struct sockaddr_in6 *)target)->sin6_port;
       }
@@ -216,28 +274,28 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 
       /* IP header then */
       if (target->sa_family == AF_INET) {
-	i4h->ip_vhl = 4;
-	i4h->ip_vhl <<= 4;
-	i4h->ip_vhl |= (IP4HdrSz/4);
-	i4h->ip_tos = 0;
-	i4h->ip_len = htons(IP4HdrSz+UDPHdrSz+msg->len);
-	i4h->ip_id = 0;
-	i4h->ip_off = 0;
-	i4h->ip_ttl = 255;
-	i4h->ip_p = IPPROTO_UDP;
-	i4h->ip_sum = 0;
-	i4h->ip_src.s_addr = sa->sin_addr.s_addr;
-	i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
+        i4h->ip_vhl = 4;
+        i4h->ip_vhl <<= 4;
+        i4h->ip_vhl |= (IP4HdrSz/4);
+        i4h->ip_tos = 0;
+        i4h->ip_len = htons(IP4HdrSz+UDPHdrSz+msg->len);
+        i4h->ip_id = 0;
+        i4h->ip_off = 0;
+        i4h->ip_ttl = 255;
+        i4h->ip_p = IPPROTO_UDP;
+        i4h->ip_sum = 0;
+        i4h->ip_src.s_addr = sa->sin_addr.s_addr;
+        i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
       }
 #if defined ENABLE_IPV6
       else if (target->sa_family == AF_INET6) {
-	i6h->ip6_vfc = 6;
-	i6h->ip6_vfc <<= 4;
-	i6h->ip6_plen = htons(UDPHdrSz+msg->len);
-	i6h->ip6_nxt = IPPROTO_UDP;
-	i6h->ip6_hlim = 255;
-	memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz); 
-	memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz); 
+        i6h->ip6_vfc = 6;
+        i6h->ip6_vfc <<= 4;
+        i6h->ip6_plen = htons(UDPHdrSz+msg->len);
+        i6h->ip6_nxt = IPPROTO_UDP;
+        i6h->ip6_hlim = 255;
+        memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz);
+        memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz);
       }
 #endif
 
@@ -245,8 +303,12 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
       buf_ptr += UDPHdrSz;
       memcpy(buf_ptr, msg->payload, msg->len);
 
-      if (send(fd, tee_send_buf, IP4HdrSz+UDPHdrSz+msg->len, 0) == -1)
-        Log(LOG_ERR, "ERROR ( %s/%s ): raw send() to [%s] failed (%s)\n", config.name, config.type, config.nfprobe_receiver, strerror(errno));
+      if (send(fd, tee_send_buf, IP4HdrSz+UDPHdrSz+msg->len, 0) == -1) {
+	sa_to_addr((struct sockaddr *)target, &r, &recv_port);
+	addr_to_str(recv_addr, &r);
+
+        Log(LOG_ERR, "ERROR ( %s/%s ): raw send() to [%s] failed (%s)\n", config.name, config.type, recv_addr, strerror(errno));
+      }
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode. Exiting ...\n", config.name, config.type);

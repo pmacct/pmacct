@@ -201,6 +201,9 @@ struct configuration {
   int sfprobe_agentsubid;
   u_int64_t sfprobe_ifspeed;
   int tee_transparent;
+  int tee_max_receivers;
+  int tee_max_receiver_pools;
+  char *tee_receivers;
   int uacctd_group;
   int uacctd_nl_size;
   char *tunnel0;
