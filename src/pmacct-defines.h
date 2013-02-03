@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -99,6 +99,7 @@
 #define MAP_BGP_SRC_MED		103	/* bgp_src_med_map */
 #define MAP_BGP_IFACE_TO_RD	104	/* bgp_iface_to_rd */
 #define MAP_SAMPLING		105	/* sampling_map */
+#define MAP_TEE_RECVS		106	/* tee_receivers */
 
 /* PRIMITIVES DEFINITION: START */
 /* 50 primitives currently defined */

@@ -24,8 +24,8 @@ TARGETS=libtee_plugin.a
 
 all: $(TARGETS)
 
-libtee_plugin.a: tee_plugin.o
-	ar rc $@ tee_plugin.o
+libtee_plugin.a: tee_plugin.o tee_recvs.o
+	ar rc $@ tee_plugin.o tee_recvs.o
 	$(RANLIB) $@
 
 clean:

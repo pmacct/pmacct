@@ -32,12 +32,13 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   int timeout, err;
-  int ret, num, fd, pool_idx, recv_idx;
+  int ret, num, fd, pool_idx, recv_idx, recvs_allocated;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   char *dataptr, dest_addr[256], dest_serv[256];
   struct tee_receiver *target = NULL;
+  struct plugin_requests req;
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -74,6 +75,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 
   memset(&receivers, 0, sizeof(receivers));
+  memset(&req, 0, sizeof(req));
 
   /* Setting up pools */
   if (!config.tee_max_receiver_pools) config.tee_max_receiver_pools = MAX_TEE_POOLS;
@@ -107,6 +109,10 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     pool_idx++; receivers.num = pool_idx;
   }
   else if (config.tee_receivers) {
+    req.key_value_table = (void *) &receivers;
+    recvs_allocated = FALSE;
+
+    load_id_file(MAP_TEE_RECVS, config.tee_receivers, NULL, &req, &recvs_allocated);
     // XXX
   }
 

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -159,7 +159,8 @@
 #endif
 
 struct plugin_requests {
-  u_int8_t bpf_filter; /* On-request packet copy for BPF purposes */
+  u_int8_t bpf_filter;		/* On-request packet copy for BPF purposes */
+  void *key_value_table;	/* generic pointer to a table to be filled in from key-value files: load_id_table() */
 };
 
 #include "pmacct-defines.h"
