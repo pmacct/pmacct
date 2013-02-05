@@ -1269,8 +1269,14 @@ DESC:		Defines tunnel inspection, disabled by default. The daemon will then acco
 
 KEY:		tee_receiver 
 DESC:           defines remote IP address and port to which NetFlow/sFlow dagagrams are to be replicated
-		to. The value is expected to be in the usual form 'address:port'. This key is mandatory
-		for a 'tee' plugin instance and no default value is set in order to prevent loops.
+		to. The value is expected to be in the usual form 'address:port'. Either tee_receiver key
+		(legacy) or tee_receivers is mandatory for a 'tee' plugin instance.
+
+KEY:            tee_receivers
+DESC:           defines full pathname to a list of remote IP addresses and ports to which NetFlow/sFlow
+		dagagrams are to be replicated to. Examples are available in "examples/tee_receivers.lst.
+		example" file. Either tee_receiver key (legacy) or tee_receivers is mandatory for a 'tee'
+		plugin instance.
 
 KEY:		tee_source_ip
 DESC:           defines the local IP address from which NetFlow/sFlow dagagrams are to be replicate from.
@@ -1282,6 +1288,16 @@ KEY:		tee_transparent
 VALUES:         [true|false]
 DESC:		Enables transparent replication mode. It essentially spoofs the source IP address to the
 		original sender of the datagram. It requires super-user permissions. (default: false)
+
+KEY:            tee_max_receiver_pools
+DESC:           tee receivers list is organized in pools (for present and future features that require
+		grouping) of receivers. This directive defines the amount of pools to be allocated and
+		cannot be changed at runtime. (default: 128)
+
+KEY:            tee_max_receivers
+DESC:           tee receivers list is organized in pools (for present and future features that require
+                grouping) of receivers. This directive defines the amount of receivers per pool to be
+		allocated and cannot be changed at runtime. (default: 32)
 
 KEY:            xlate_src
 VALUES:         [true|false]

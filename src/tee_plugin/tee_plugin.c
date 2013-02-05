@@ -32,7 +32,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   int timeout, err;
-  int ret, num, fd, pool_idx, recv_idx, recvs_allocated;
+  int ret, num, fd, pool_idx, recv_idx;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
@@ -52,7 +52,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* signal handling */
   signal(SIGINT, Tee_exit_now);
   signal(SIGUSR1, SIG_IGN);
-  signal(SIGUSR2, SIG_IGN);
+  signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN);
 #if !defined FBSD4
   signal(SIGCHLD, SIG_IGN);
@@ -76,6 +76,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   memset(&receivers, 0, sizeof(receivers));
   memset(&req, 0, sizeof(req));
+  reload_map = FALSE;
 
   /* Setting up pools */
   if (!config.tee_max_receiver_pools) config.tee_max_receiver_pools = MAX_TEE_POOLS;
@@ -104,16 +105,20 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     target = &receivers.pools[pool_idx].receivers[recv_idx];
     target->dest_len = sizeof(target->dest);
-    Tee_parse_hostport(config.nfprobe_receiver, (struct sockaddr *) &target->dest, &target->dest_len);
-    recv_idx++; receivers.pools[pool_idx].num = recv_idx;
-    pool_idx++; receivers.num = pool_idx;
+    if (Tee_parse_hostport(config.nfprobe_receiver, (struct sockaddr *) &target->dest, &target->dest_len)) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid receiver %s . ", config.name, config.type, config.nfprobe_receiver);
+      exit_plugin(1);
+    }
+    else {
+      recv_idx++; receivers.pools[pool_idx].num = recv_idx;
+      pool_idx++; receivers.num = pool_idx;
+    }
   }
   else if (config.tee_receivers) {
-    req.key_value_table = (void *) &receivers;
-    recvs_allocated = FALSE;
+    int recvs_allocated = FALSE;
 
+    req.key_value_table = (void *) &receivers;
     load_id_file(MAP_TEE_RECVS, config.tee_receivers, NULL, &req, &recvs_allocated);
-    // XXX
   }
 
   config.sql_refresh_time = DEFAULT_TEE_REFRESH_TIME;
@@ -128,22 +133,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(pipebuf, 0, config.buffer_size);
 
   /* Arrange send socket */
-  for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
-    for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
-      target = &receivers.pools[pool_idx].receivers[recv_idx];
-
-      if (target->dest.sa_family != 0) {
-        if ((err = getnameinfo((struct sockaddr *) &target->dest,
-            target->dest_len, dest_addr, sizeof(dest_addr),
-            dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
-          exit_plugin(1);
-	}
-      }
-
-      target->fd = Tee_prepare_sock(&target->dest, target->dest_len);
-    }
-  }
+  Tee_init_socks();
 
   /* plugin main loop */
   for (;;) {
@@ -151,6 +141,16 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     status->wakeup = TRUE;
     ret = poll(&pfd, 1, timeout);
     if (ret < 0) goto poll_again;
+
+    if (reload_map) {
+      int recvs_allocated = FALSE;
+
+      Tee_destroy_recvs();
+      load_id_file(MAP_TEE_RECVS, config.tee_receivers, NULL, &req, &recvs_allocated);
+
+      Tee_init_socks();
+      reload_map = FALSE;
+    }
 
     switch (ret) {
     case 0: /* timeout */
@@ -323,6 +323,57 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
   }
 }
 
+void Tee_destroy_recvs()
+{
+  struct tee_receiver *target = NULL;
+  int pool_idx, recv_idx;
+
+  for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
+    for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+      target = &receivers.pools[pool_idx].receivers[recv_idx];
+      if (target->fd) close(target->fd);
+    }
+
+    memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+    receivers.pools[pool_idx].id = 0;
+    receivers.pools[pool_idx].num = 0;
+  }
+
+  receivers.num = 0;
+}
+
+void Tee_init_socks()
+{
+  struct tee_receiver *target = NULL;
+  int pool_idx, recv_idx, err;
+  char dest_addr[256], dest_serv[256];
+
+  for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
+    for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+      target = &receivers.pools[pool_idx].receivers[recv_idx];
+
+      if (target->dest.sa_family != 0) {
+        if ((err = getnameinfo((struct sockaddr *) &target->dest,
+            target->dest_len, dest_addr, sizeof(dest_addr),
+            dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
+          Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
+          exit_plugin(1);
+        }
+      }
+
+      target->fd = Tee_prepare_sock(&target->dest, target->dest_len);
+
+      if (config.debug) {
+        u_char recv_addr[50];
+
+        addr_to_str(recv_addr, &target->dest);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): pool ID: %u :: receiver: %s :: fd: %d.\n",
+                config.name, config.type, receivers.pools[pool_idx].id, recv_addr, target->fd);
+      }
+    }
+  }
+}
+
 int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
 {
   int s, ret = 0;
@@ -361,50 +412,41 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
   return(s);
 }
 
-// XXX: duplicate function
-void Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
+int Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 {
-        char *orig, *host, *port;
-        struct addrinfo hints, *res;
-        int herr;
+  char *orig, *host, *port;
+  struct addrinfo hints, *res;
+  int herr;
 
-        if ((host = orig = strdup(s)) == NULL) {
-                fprintf(stderr, "Out of memory\n");
-                exit_plugin(1);
-        }
+  if ((host = orig = strdup(s)) == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Tee_parse_hostport() out of memory. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
 
-        trim_spaces(host);
-        trim_spaces(orig);
+  trim_spaces(host);
+  trim_spaces(orig);
 
-        if ((port = strrchr(host, ':')) == NULL ||
-            *(++port) == '\0' || *host == '\0') {
-                fprintf(stderr, "Invalid -n argument.\n");
-                exit_plugin(1);
-        }
-        *(port - 1) = '\0';
+  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') return TRUE;
 
-        /* Accept [host]:port for numeric IPv6 addresses */
-        if (*host == '[' && *(port - 2) == ']') {
-                host++;
-                *(port - 2) = '\0';
-        }
+  *(port - 1) = '\0';
 
-        memset(&hints, '\0', sizeof(hints));
-        hints.ai_socktype = SOCK_DGRAM;
-        if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
-                fprintf(stderr, "Address lookup failed: %s\n",
-                    gai_strerror(herr));
-                exit_plugin(1);
-        }
-        if (res == NULL || res->ai_addr == NULL) {
-                fprintf(stderr, "No addresses found for [%s]:%s\n", host, port);
-                exit_plugin(1);
-        }
-        if (res->ai_addrlen > *len) {
-                Log(LOG_ERR, "ERROR ( %s/%s ): Address too long.\n", config.name, config.type);
-                exit_plugin(1);
-        }
-        memcpy(addr, res->ai_addr, res->ai_addrlen);
-        free(orig);
-        *len = res->ai_addrlen;
+  /* Accept [host]:port for numeric IPv6 addresses */
+  if (*host == '[' && *(port - 2) == ']') {
+    host++;
+    *(port - 2) = '\0';
+  }
+
+  memset(&hints, '\0', sizeof(hints));
+  hints.ai_socktype = SOCK_DGRAM;
+
+  /* Validations */
+  if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) return TRUE;
+  if (res == NULL || res->ai_addr == NULL) return TRUE;
+  if (res->ai_addrlen > *len) return TRUE;
+
+  memcpy(addr, res->ai_addr, res->ai_addrlen);
+  free(orig);
+  *len = res->ai_addrlen;
+
+  return FALSE;
 }

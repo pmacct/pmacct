@@ -64,19 +64,20 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
     sz = sizeof(struct id_entry)*config.pre_tag_map_entries;
 
-    if (*map_allocated == 0) {
-      if (t) {
+    if (t) {
+      if (*map_allocated == 0) {
         memset(t, 0, sizeof(struct id_table));
         t->e = (struct id_entry *) malloc(sz);
         *map_allocated = TRUE;
       }
-    }
-    else {
-      if (t) {
+      else {
         ptr = t->e ;
         memset(t, 0, sizeof(struct id_table));
         t->e = ptr ;
       }
+    }
+    else {
+      *map_allocated = TRUE;
     }
 
     tmp.e = (struct id_entry *) malloc(sz);

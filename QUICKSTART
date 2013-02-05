@@ -888,20 +888,20 @@ features see the CONFIG-KEYS document.
 
 
 XIII. Quickstart guide to setup a NetFlow/sFlow replicator
-pmacct 0.12 (>= 0.12.2) includes a new 'tee' plugin which is meant to replicate
-NetFlow/sFlow data to N remote collectors. The plugin can also act transparently
-by preserving the original IP address of the datagrams.
-Setting up a replicator is very easy. All is needed is where to listen to for
-incoming packets, where to replicate them to and optionally a filtering layer,
-if required. Filtering bases on the standard pre_tag_map infrastructure; only
-coarse-grained filtering against original source IP address is possible. 
+A 'tee' plugin which is meant, in basic terms, to replicate NetFlow/sFlow data
+to remote collectors. The plugin can also act transparently by preserving the
+original IP address of the datagrams. Setting up a replicator is very easy. All
+is needed is where to listen to for incoming packets, where to replicate them
+to and optionally a filtering layer, if required. Filtering bases on the
+standard pre_tag_map infrastructure; only coarse-grained filtering against
+original source IP address is possible. 
 
 nfacctd_port: 2100
 nfacctd_ip: X.X.X.X
 
 plugins: tee[a], tee[b]
-tee_receiver[a]: Y.Y.Y.Y:2100
-tee_receiver[b]: Z.Z.Z.Z:2100
+tee_receivers[a]: /path/to/tee_receivers_a.lst
+tee_receivers[b]: /path/to/tee_receivers_b.lst
 ! tee_transparent: true
 
 ! pre_tag_map: /path/to/pretag.map
@@ -910,14 +910,21 @@ tee_receiver[b]: Z.Z.Z.Z:2100
 plugin_buffer_size: 10240
 plugin_pipe_size: 1024000
 
+An example of content of a tee_receivers map, ie. /path/to/tee_receivers_a.lst,
+is as follows ('id' is the pool ID and 'ip' a comma-separated list of receivers
+for that pool):
+
+id=1	ip=X.X.X.X:2100
+id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
+
 The pre_tag_filter in the above configuration snapshot applies only to the 'tee'
 plugin instance 'b' and filters out any NetFlow/sFlow packets marked with a non-
 zero 'id'. Plugin instance 'a' would normally receive all packets instead. An
 example of the pre_tag_map content follows:
 
-id=1 ip=A.A.A.A
-id=1 ip=B.B.B.B
-id=1 ip=C.C.C.C
+id=1	ip=A.A.A.A
+id=1	ip=B.B.B.B
+id=1	ip=C.C.C.C
 
 To enable the transparent mode, the tee_transparent should be commented out. It
 preserves the original IP address of the NetFlow/sFlow sender while replicating

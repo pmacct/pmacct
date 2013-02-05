@@ -1,0 +1,18 @@
+!
+! Tee receivers map
+!
+! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
+! this same directory.
+!
+! nfacctd, sfacctd: valid keys: id, ip
+!
+! list of currently supported keys follow:
+!
+! 'id'                  Unique pool ID, must be greater than zero.
+! 'ip'                  Comma-separated list of receivers in <host>:<port>
+!			format. Host can be a FQDN or an IPv4/IPv6 address.
+!
+! A couple of straightforward examples follow.
+!
+id=1	ip=192.168.1.1:2100
+id=2	ip=192.168.2.1:2100,192.168.2.2:2100

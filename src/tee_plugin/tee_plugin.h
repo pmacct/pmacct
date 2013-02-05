@@ -38,7 +38,8 @@ struct tee_receiver {
 
 struct tee_receivers_pool {
   struct tee_receiver *receivers;
-  int num;
+  u_int32_t id;				/* Pool ID */
+  int num;				/* Number of receivers in the pool */
 };
 
 struct tee_receivers {
@@ -54,9 +55,11 @@ struct tee_receivers {
 #endif
 
 EXT void Tee_exit_now(int);
+EXT void Tee_init_socks();
+EXT void Tee_destroy_recvs();
 EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
 EXT int Tee_prepare_sock(struct sockaddr *, socklen_t);
-EXT void Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
 
 /* global variables */
 EXT char tee_send_buf[65535];
