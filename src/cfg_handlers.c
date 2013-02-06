@@ -1634,6 +1634,30 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_print_output_separator(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (strlen(value_ptr) != 1) {
+    Log(LOG_WARNING, "WARN ( %s ): Invalid print_output_separator value '%s'. Only one char allowed.\n", filename, value_ptr);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_separator = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_output_separator = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_num_protos(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

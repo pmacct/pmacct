@@ -668,6 +668,11 @@ VALUES:		[ formatted | csv ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
 		comma-separated values format, suitable for injection into 3rd party tools. (default: formatted)
 
+KEY:            print_output_separator
+DESC:           Defines the print plugin output separator. Value is expected to be a single character and
+		cannot be a spacing (if spacing separator is wanted then 'formatted' output should be the
+		natural choice) (default: ,). 
+
 KEY:            [ print_num_protos | sql_num_protos ]
 VALUES:         [true|false]
 DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
