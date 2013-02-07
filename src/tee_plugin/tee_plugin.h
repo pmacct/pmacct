@@ -39,6 +39,7 @@ struct tee_receiver {
 struct tee_receivers_pool {
   struct tee_receiver *receivers;
   u_int32_t id;				/* Pool ID */
+  struct pretag_filter tag_filter; 	/* filter datagrams basing on a pre_tag_map */
   int num;				/* Number of receivers in the pool */
 };
 

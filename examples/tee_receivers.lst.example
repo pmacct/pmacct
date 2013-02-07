@@ -4,15 +4,29 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! nfacctd, sfacctd: valid keys: id, ip
+! nfacctd, sfacctd: valid keys: id, ip, tag; mandatory keys: id, ip.
 !
 ! list of currently supported keys follow:
 !
 ! 'id'                  Unique pool ID, must be greater than zero.
 ! 'ip'                  Comma-separated list of receivers in <host>:<port>
 !			format. Host can be a FQDN or an IPv4/IPv6 address.
+! 'tag'			Comma-separated list of tags for filtering purposes;
+!			tags are applied to datagrams via a pre_tag_map map
+!			and matched with a tee_receivers map.
 !
 ! A couple of straightforward examples follow.
 !
+!
+! Just replicate to one or multiple collectors:
+!
 id=1	ip=192.168.1.1:2100
 id=2	ip=192.168.2.1:2100,192.168.2.2:2100
+!
+!
+! Replicate with selective filtering. Replicate datagrams tagged as 100 and
+! 150 to pool #1; replicate datagrams tagged as 105 and within the tag range
+! 110-120 to pool #2.
+!
+id=1	ip=192.168.1.1:2100			tag=100,150
+id=2	ip=192.168.2.1:2100,192.168.2.2:2100	tag=105,110-120

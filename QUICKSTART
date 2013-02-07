@@ -898,15 +898,14 @@ original source IP address is possible.
 
 nfacctd_port: 2100
 nfacctd_ip: X.X.X.X
-
+!
 plugins: tee[a], tee[b]
 tee_receivers[a]: /path/to/tee_receivers_a.lst
 tee_receivers[b]: /path/to/tee_receivers_b.lst
 ! tee_transparent: true
-
+!
 ! pre_tag_map: /path/to/pretag.map
-! pre_tag_filter[b]: 0
-
+!
 plugin_buffer_size: 10240
 plugin_pipe_size: 1024000
 
@@ -916,15 +915,23 @@ for that pool):
 
 id=1	ip=X.X.X.X:2100
 id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
+! id=1	ip=X.X.X.X:2100			tag=0
+! id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
 
-The pre_tag_filter in the above configuration snapshot applies only to the 'tee'
-plugin instance 'b' and filters out any NetFlow/sFlow packets marked with a non-
-zero 'id'. Plugin instance 'a' would normally receive all packets instead. An
-example of the pre_tag_map content follows:
+Selective teeing allows to filter which pool of receivers has to receive which
+datagrams. Tags are applied via a pre_tag_map, the one illustrated below applies
+tag 100 to packets exported from agents A.A.A.A, B.B.B.B and C.C.C.C; in case
+there was also an agent D.D.D.D exporting towards the replicator, its packets
+would intuitively remain untagged. Tags are matched by a tee_receivers map, see
+above the two pool definitions commented out containing the 'tag' keyword: the
+definition would cause untagged packets (tag=0) to be replicated only to pool
+#1 whereas packets tagged as 100 (tag=100) to be replicated only to pool #2.
+More examples in the pretag.map.example and tee_receivers.lst.example files in
+the examples/ sub-tree:
 
-id=1	ip=A.A.A.A
-id=1	ip=B.B.B.B
-id=1	ip=C.C.C.C
+id=100	ip=A.A.A.A
+id=100	ip=B.B.B.B
+id=100	ip=C.C.C.C
 
 To enable the transparent mode, the tee_transparent should be commented out. It
 preserves the original IP address of the NetFlow/sFlow sender while replicating

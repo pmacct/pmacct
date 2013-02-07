@@ -195,9 +195,11 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
 	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
-	  for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
-	    target = &receivers.pools[pool_idx].receivers[recv_idx];
-	    Tee_send(msg, &target->dest, target->fd);
+	  if (!evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->id)) {
+	    for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+	      target = &receivers.pools[pool_idx].receivers[recv_idx];
+	      Tee_send(msg, &target->dest, target->fd);
+	    }
 	  }
 	}
 
@@ -335,6 +337,7 @@ void Tee_destroy_recvs()
     }
 
     memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+    memset(&receivers.pools[pool_idx].tag_filter, 0, sizeof(struct pretag_filter));
     receivers.pools[pool_idx].id = 0;
     receivers.pools[pool_idx].num = 0;
   }

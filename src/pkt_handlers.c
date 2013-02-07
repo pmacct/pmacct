@@ -1016,6 +1016,8 @@ void tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   pmsg->len = pptrs->f_len;
   memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
   memcpy(&pmsg->payload, pptrs->f_header, MIN(sizeof(pmsg->payload), pptrs->f_len));
+  pmsg->id = pptrs->tag;
+  pmsg->id2 = pptrs->tag2;
 }
 
 void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

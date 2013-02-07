@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -88,8 +88,8 @@ EXT void load_bgp_md5_file(char *, struct bgp_md5_table *);
 EXT void unload_bgp_md5_file(struct bgp_md5_table *);
 EXT int BTA_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void calc_refresh_timeout(time_t, time_t, int *);
-
-EXT unsigned int str_to_addr(const char *, struct host_addr *);
+EXT int load_tags(char *, struct pretag_filter *, char *);
+EXT int evaluate_tags(struct pretag_filter *, pm_id_t);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);

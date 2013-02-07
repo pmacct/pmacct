@@ -103,6 +103,21 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
   return FALSE;
 }
 
+int tee_recvs_map_tag_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+  int pool_idx, recv_idx, ret;
+
+  if (table) ret = load_tags(filename, &table->pools[table->num].tag_filter, value);
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  if (!ret) return TRUE;
+  else return FALSE;
+}
+
 void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;

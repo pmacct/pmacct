@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -1340,4 +1340,60 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 void calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
 {
   *timeout = ((deadline-now)+1)*1000;
+}
+
+int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
+{
+  char *count_token, *range_ptr;
+  pm_id_t value = 0, range = 0;
+  int changes = 0;
+  char *endptr_v, *endptr_r;
+  u_int8_t neg;
+
+  if (!filter || !value_ptr) return changes;
+
+  trim_all_spaces(value_ptr);
+  filter->num = 0;
+
+  while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
+    neg = pt_check_neg(&count_token);
+    range_ptr = pt_check_range(count_token);
+    value = strtoull(count_token, &endptr_v, 10);
+    if (range_ptr) range = strtoull(range_ptr, &endptr_r, 10);
+    else range = value;
+
+    if (range_ptr && range <= value) {
+      Log(LOG_ERR, "WARN ( %s/%s ): Range value is expected in format low-high. '%llu-%llu' not loaded in file '%s'.\n",
+			config.name, config.type, value, range, filename);
+      changes++;
+      break;
+    }
+
+    filter->table[filter->num].neg = neg;
+    filter->table[filter->num].n = value;
+    filter->table[filter->num].r = range;
+    filter->num++;
+    changes++;
+  }
+
+  return changes;
+}
+
+/* return value:
+   TRUE: We want it!
+   FALSE: Discard it!
+*/
+
+int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
+{
+  int index;
+
+  if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
+
+  for (index = 0; index < filter->num; index++) {
+    if (filter->table[index].n <= tag && filter->table[index].r >= tag) return (FALSE | filter->table[index].neg);
+    else if (filter->table[index].neg) return FALSE;
+  }
+
+  return TRUE;
 }

@@ -415,6 +415,8 @@ struct pkt_msg {
   u_int32_t seqno;
   u_int16_t len;
   u_char payload[PKT_MSG_SIZE];
+  pm_id_t id;
+  pm_id_t id2;
   u_int16_t pad;
 };
 

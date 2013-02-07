@@ -243,11 +243,7 @@ int cfg_key_aggregate_filter(char *filename, char *name, char *value_ptr)
 int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  char *count_token, *range_ptr;
-  pm_id_t value = 0, range = 0;
   int changes = 0;
-  char *endptr_v, *endptr_r;
-  u_int8_t neg;
 
   if (!name) {
     Log(LOG_ERR, "ERROR ( %s ): TAG filter cannot be global. Not loaded.\n", filename);
@@ -256,28 +252,7 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-	trim_all_spaces(value_ptr);
-
-	list->cfg.ptf.num = 0;
-	while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
-	  neg = pt_check_neg(&count_token);
-	  range_ptr = pt_check_range(count_token); 
-	  value = strtoull(count_token, &endptr_v, 10);
-	  if (range_ptr) range = strtoull(range_ptr, &endptr_r, 10);
-	  else range = value;
-
-	  if (range_ptr && range <= value) {
-	    Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%llu-%llu' not loaded.\n", filename, value, range);
-	    changes++;
-	    break;
-	  }
-
-          list->cfg.ptf.table[list->cfg.ptf.num].neg = neg;
-          list->cfg.ptf.table[list->cfg.ptf.num].n = value;
-          list->cfg.ptf.table[list->cfg.ptf.num].r = range;
-	  list->cfg.ptf.num++;
-          changes++;
-	}
+	changes = load_tags(filename, &list->cfg.ptf, value_ptr);
         break;
       }
     }
@@ -302,28 +277,7 @@ int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        trim_all_spaces(value_ptr);
-
-        list->cfg.pt2f.num = 0;
-        while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
-          neg = pt_check_neg(&count_token);
-          range_ptr = pt_check_range(count_token);
-          value = strtoull(count_token, &endptr_v, 10);
-          if (range_ptr) range = strtoull(range_ptr, &endptr_r, 10);
-          else range = value;
-
-          if (range_ptr && range <= value) {
-            Log(LOG_ERR, "WARN ( %s ): Range value is expected in the format low-high. '%llu-%llu' not loaded.\n", filename, value, range);
-            changes++;
-            break;
-          }
-
-          list->cfg.pt2f.table[list->cfg.pt2f.num].neg = neg;
-          list->cfg.pt2f.table[list->cfg.pt2f.num].n = value;
-          list->cfg.pt2f.table[list->cfg.pt2f.num].r = range;
-          list->cfg.pt2f.num++;
-          changes++;
-        }
+        load_tags(filename, &list->cfg.pt2f, value_ptr);
         break;
       }
     }

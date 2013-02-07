@@ -472,25 +472,6 @@ pm_counter_t take_simple_systematic_skip(pm_counter_t mean)
    TRUE: We want it!
    FALSE: Discard it!
 */
-
-int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
-{
-  int index;
-
-  if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
-  
-  for (index = 0; index < filter->num; index++) {
-    if (filter->table[index].n <= tag && filter->table[index].r >= tag) return (FALSE | filter->table[index].neg);
-    else if (filter->table[index].neg) return FALSE;
-  }
-  
-  return TRUE;
-}
-
-/* return value:
-   TRUE: We want it!
-   FALSE: Discard it!
-*/
 int evaluate_filters(struct aggregate_filter *filter, char *pkt, struct pcap_pkthdr *pkthdr)
 {
   int index;

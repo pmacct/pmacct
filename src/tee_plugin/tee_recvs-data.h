@@ -22,5 +22,6 @@
 const struct _map_dictionary_line tee_recvs_map_dictionary[] = {
   {"id", tee_recvs_map_id_handler},
   {"ip", tee_recvs_map_ip_handler},
+  {"tag", tee_recvs_map_tag_handler},
   {"", NULL}
 };
