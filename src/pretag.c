@@ -30,6 +30,11 @@
 #include "tee_plugin/tee_recvs.h"
 #include "tee_plugin/tee_recvs-data.h"
 
+/*
+   XXX: load_id_file() interface cleanup pending:
+   - if a table is tag-related then it is passed as argument t
+   - else it is passed as argument req->key_value_table 
+*/
 void load_id_file(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req, int *map_allocated)
 {
   struct id_table tmp;

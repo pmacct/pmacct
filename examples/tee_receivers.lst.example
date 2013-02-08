@@ -14,6 +14,8 @@
 ! 'tag'			Comma-separated list of tags for filtering purposes;
 !			tags are applied to datagrams via a pre_tag_map map
 !			and matched with a tee_receivers map.
+! 'balance-alg'		Enables balancing of datagrams to receivers within
+!			the pool. Supported algorithms: 'rr' round-robin. 
 !
 ! A couple of straightforward examples follow.
 !
@@ -30,3 +32,8 @@ id=2	ip=192.168.2.1:2100,192.168.2.2:2100
 !
 id=1	ip=192.168.1.1:2100			tag=100,150
 id=2	ip=192.168.2.1:2100,192.168.2.2:2100	tag=105,110-120
+!
+!
+! Replicate with balancing. Round-robin enabled in pool#1
+!
+id=1	ip=192.168.1.1:2100,192.168.1.2:2100	balance-alg=rr

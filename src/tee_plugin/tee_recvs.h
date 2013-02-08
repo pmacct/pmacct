@@ -35,6 +35,7 @@
 EXT int tee_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int tee_recvs_map_balance_alg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
 EXT void tee_recvs_map_validate(char *, struct plugin_requests *);
 

@@ -29,6 +29,8 @@
 #define MAX_TEE_POOLS 128 
 #define MAX_TEE_RECEIVERS 32 
 
+typedef struct tee_receiver *(*tee_balance_algorithm) (void *, struct pkt_msg *);
+
 /* structures */
 struct tee_receiver {
   struct sockaddr dest;
@@ -36,10 +38,16 @@ struct tee_receiver {
   int fd;
 };
 
+struct tee_balance {
+  tee_balance_algorithm func;		/* Balancing algorithm */
+  int next;				/* RR algorithm: next receiver */
+};
+
 struct tee_receivers_pool {
   struct tee_receiver *receivers;
   u_int32_t id;				/* Pool ID */
   struct pretag_filter tag_filter; 	/* filter datagrams basing on a pre_tag_map */
+  struct tee_balance balance;		/* balance datagrams basing on supported algorithm */
   int num;				/* Number of receivers in the pool */
 };
 
@@ -61,6 +69,7 @@ EXT void Tee_destroy_recvs();
 EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
 EXT int Tee_prepare_sock(struct sockaddr *, socklen_t);
 EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+EXT struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
 
 /* global variables */
 EXT char tee_send_buf[65535];

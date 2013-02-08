@@ -118,6 +118,26 @@ int tee_recvs_map_tag_handler(char *filename, struct id_entry *e, char *value, s
   else return FALSE;
 }
 
+int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+  int pool_idx, recv_idx, ret;
+
+  if (table) {
+    if (!strncmp(value, "rr", 2)) table->pools[table->num].balance.func = Tee_rr_balance;
+    else {
+      table->pools[table->num].balance.func = NULL;
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unknown balance algorithm '%s' in map '%s'. Ignoring.\n", config.name, config.type, value, filename);
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
@@ -129,5 +149,7 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
     table->pools[table->num].id = 0;
     table->pools[table->num].num = 0;
     memset(table->pools[table->num].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+    memset(&table->pools[table->num].tag_filter, 0, sizeof(struct pretag_filter));
+    memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
   }
 }

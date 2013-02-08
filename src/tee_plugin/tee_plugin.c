@@ -196,8 +196,14 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       while (((struct ch_buf_hdr *)pipebuf)->num) {
 	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
 	  if (!evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->id)) {
-	    for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
-	      target = &receivers.pools[pool_idx].receivers[recv_idx];
+	    if (!receivers.pools[pool_idx].balance.func) {
+	      for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+	        target = &receivers.pools[pool_idx].receivers[recv_idx];
+	        Tee_send(msg, &target->dest, target->fd);
+	      }
+	    }
+	    else {
+	      target = receivers.pools[pool_idx].balance.func(&receivers.pools[pool_idx], msg);
 	      Tee_send(msg, &target->dest, target->fd);
 	    }
 	  }
@@ -338,6 +344,7 @@ void Tee_destroy_recvs()
 
     memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
     memset(&receivers.pools[pool_idx].tag_filter, 0, sizeof(struct pretag_filter));
+    memset(&receivers.pools[pool_idx].balance, 0, sizeof(struct tee_balance));
     receivers.pools[pool_idx].id = 0;
     receivers.pools[pool_idx].num = 0;
   }
@@ -452,4 +459,18 @@ int Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
   *len = res->ai_addrlen;
 
   return FALSE;
+}
+
+struct tee_receiver *Tee_rr_balance(void *pool, struct pkt_msg *msg)
+{
+  struct tee_receivers_pool *p = pool;
+  struct tee_receiver *target = NULL;
+
+  if (p) {
+    target = &p->receivers[p->balance.next % p->num];
+    p->balance.next++;
+    p->balance.next %= p->num;
+  }
+
+  return target;
 }
