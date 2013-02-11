@@ -29,6 +29,11 @@
 #define MAX_TEE_POOLS 128 
 #define MAX_TEE_RECEIVERS 32 
 
+#define TEE_BALANCE_NONE	0
+#define TEE_BALANCE_RR		1
+#define TEE_BALANCE_HASH_AGENT	2
+#define TEE_BALANCE_HASH_TAG	3
+
 typedef struct tee_receiver *(*tee_balance_algorithm) (void *, struct pkt_msg *);
 
 /* structures */
@@ -39,7 +44,8 @@ struct tee_receiver {
 };
 
 struct tee_balance {
-  tee_balance_algorithm func;		/* Balancing algorithm */
+  int type;				/* Balancing algorithm: id */
+  tee_balance_algorithm func;		/* Balancing algorithm: handler */
   int next;				/* RR algorithm: next receiver */
 };
 
@@ -70,6 +76,8 @@ EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
 EXT int Tee_prepare_sock(struct sockaddr *, socklen_t);
 EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
 EXT struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
+EXT struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);
+EXT struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
 
 /* global variables */
 EXT char tee_send_buf[65535];

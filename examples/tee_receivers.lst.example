@@ -4,9 +4,10 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! nfacctd, sfacctd: valid keys: id, ip, tag; mandatory keys: id, ip.
+! nfacctd, sfacctd: valid keys: id, ip, tag, balance-alg; mandatory keys: id,
+! ip.
 !
-! list of currently supported keys follow:
+! list of currently supported keys follows:
 !
 ! 'id'                  Unique pool ID, must be greater than zero.
 ! 'ip'                  Comma-separated list of receivers in <host>:<port>
@@ -15,7 +16,11 @@
 !			tags are applied to datagrams via a pre_tag_map map
 !			and matched with a tee_receivers map.
 ! 'balance-alg'		Enables balancing of datagrams to receivers within
-!			the pool. Supported algorithms: 'rr' round-robin. 
+!			the pool. Supported algorithms: 'rr' round-robin,
+!			'hash-tag' hashing of tag (pre_tag_map) against the
+!			number of receivers in pool, 'hash-agent' hashing of
+!			the exporter/agent IP address against the number of
+!			receivers in pool.
 !
 ! A couple of straightforward examples follow.
 !

@@ -28,10 +28,11 @@
 int tee_recvs_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table; 
-  int pool_idx, recv_idx, pool_id;
+  int pool_idx, recv_idx;
+  u_int32_t pool_id;
   char *endptr = NULL;
 
-  if (table) {
+  if (table && table->pools) {
     if (table->num < config.tee_max_receiver_pools) {
       pool_id = strtoull(value, &endptr, 10);
 
@@ -70,7 +71,7 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
   int pool_idx, recv_idx;
   char *str_ptr, *token;
 
-  if (table) {
+  if (table && table->pools && table->pools && table->pools[table->num].receivers) {
     str_ptr = value;
     recv_idx = 0;
 
@@ -108,7 +109,7 @@ int tee_recvs_map_tag_handler(char *filename, struct id_entry *e, char *value, s
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
   int pool_idx, recv_idx, ret;
 
-  if (table) ret = load_tags(filename, &table->pools[table->num].tag_filter, value);
+  if (table && table->pools) ret = load_tags(filename, &table->pools[table->num].tag_filter, value);
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
     return TRUE;
@@ -123,8 +124,19 @@ int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
   int pool_idx, recv_idx, ret;
 
-  if (table) {
-    if (!strncmp(value, "rr", 2)) table->pools[table->num].balance.func = Tee_rr_balance;
+  if (table && table->pools) {
+    if (!strncmp(value, "rr", 2)) {
+      table->pools[table->num].balance.type = TEE_BALANCE_RR;
+      table->pools[table->num].balance.func = Tee_rr_balance;
+    }
+    else if (!strncmp(value, "hash-agent", 10)) {
+      table->pools[table->num].balance.type = TEE_BALANCE_HASH_AGENT;
+      table->pools[table->num].balance.func = Tee_hash_agent_balance;
+    }
+    else if (!strncmp(value, "hash-tag", 8)) {
+      table->pools[table->num].balance.type = TEE_BALANCE_HASH_TAG;
+      table->pools[table->num].balance.func = Tee_hash_tag_balance;
+    }
     else {
       table->pools[table->num].balance.func = NULL;
       Log(LOG_WARNING, "WARN ( %s/%s ): Unknown balance algorithm '%s' in map '%s'. Ignoring.\n", config.name, config.type, value, filename);
@@ -141,15 +153,20 @@ int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *
 void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+  int valid = FALSE;
 
-  /* If we have got: a) a valid pool ID and b) at least a receiver
-     THEN validate entry ELSE clean up */ 
-  if (table->pools[table->num].id && table->pools[table->num].num > 0) table->num++;
-  else {
-    table->pools[table->num].id = 0;
-    table->pools[table->num].num = 0;
-    memset(table->pools[table->num].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
-    memset(&table->pools[table->num].tag_filter, 0, sizeof(struct pretag_filter));
-    memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
+  if (table && table->pools && table->pools[table->num].receivers) {
+    /* If we have got: a) a valid pool ID and b) at least a receiver THEN ok */
+    if (table->pools[table->num].id && table->pools[table->num].num > 0) valid = TRUE;
+    else valid = FALSE;
+
+    if (valid) table->num++;
+    else {
+      table->pools[table->num].id = 0;
+      table->pools[table->num].num = 0;
+      memset(table->pools[table->num].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+      memset(&table->pools[table->num].tag_filter, 0, sizeof(struct pretag_filter));
+      memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
+    }
   }
 }

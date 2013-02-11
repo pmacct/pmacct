@@ -81,12 +81,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* Setting up pools */
   if (!config.tee_max_receiver_pools) config.tee_max_receiver_pools = MAX_TEE_POOLS;
 
-  receivers.pools = malloc(config.tee_max_receiver_pools*sizeof(struct tee_receivers_pool));
+  receivers.pools = malloc((config.tee_max_receiver_pools+1)*sizeof(struct tee_receivers_pool));
   if (!receivers.pools) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receiver pools. Exiting ...\n", config.name, config.type);
     exit_plugin(1);
   }
-  else memset(receivers.pools, 0, config.tee_max_receiver_pools*sizeof(struct tee_receivers_pool));
+  else memset(receivers.pools, 0, (config.tee_max_receiver_pools+1)*sizeof(struct tee_receivers_pool));
 
   /* Setting up receivers per pool */
   if (!config.tee_max_receivers) config.tee_max_receivers = MAX_TEE_RECEIVERS;
@@ -471,6 +471,30 @@ struct tee_receiver *Tee_rr_balance(void *pool, struct pkt_msg *msg)
     p->balance.next++;
     p->balance.next %= p->num;
   }
+
+  return target;
+}
+
+struct tee_receiver *Tee_hash_agent_balance(void *pool, struct pkt_msg *msg)
+{
+  struct tee_receivers_pool *p = pool;
+  struct tee_receiver *target = NULL;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &msg->agent;
+
+  if (p) {
+    if (msg->agent.sa_family == AF_INET) target = &p->receivers[sa4->sin_addr.s_addr & p->num];
+    /* XXX: hashing against IPv6 agents is not supported (yet) */
+  }
+
+  return target;
+}
+
+struct tee_receiver *Tee_hash_tag_balance(void *pool, struct pkt_msg *msg)
+{
+  struct tee_receivers_pool *p = pool;
+  struct tee_receiver *target = NULL;
+
+  if (p) target = &p->receivers[msg->id % p->num];
 
   return target;
 }
