@@ -39,7 +39,7 @@ VALUES:		[src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_n
 		 tcpflags, in_iface, out_iface, std_comm, ext_comm, as_path, peer_src_ip,
 		 peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med, src_as_path,
 		 src_std_comm, src_ext_comm, src_local_pref, src_med, mpls_vpn_rd,
-		 sampling_rate, src_host_country, dst_host_country]
+		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -1315,3 +1315,10 @@ VALUES:         [true|false]
 DESC:           Copies NAT L3/L4 field values in place of the original ones (ie. dst_host, dst_port,
                 dst_net) when available; alternatively it falls back to original values. At time of
                 writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have support for this (default: false)
+
+KEY:		pkt_len_distrib_bins
+DESC:		Defines a list of packet length distributions, comma-separated, which is then used to
+		populate values for the 'pkt_len_ditrib' aggregation primitive. Values can be ranges or
+		exact, ie. "0-499,500-999,1000-1499,1500-9000". The maximum amount of bins that can be
+		defined is 255; packet lengths must be in the range 0-9000; if a length is part of more
+		than a single bin the latest definition wins. 

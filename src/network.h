@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -35,6 +35,7 @@
 #define ETH_ADDR_LEN    	6               /* Octets in one ethernet addr   */
 #define ETHER_HDRLEN    	14
 #define ETHERMTU		1500
+#define ETHER_JUMBO_MTU		9000
 #define IEEE8021Q_TAGLEN	4
 #define IEEE8021AH_LEN		10
 #define PPP_TAGLEN              2
@@ -368,6 +369,7 @@ struct pkt_primitives {
   pm_id_t id2;
   pm_class_t class;
   u_int32_t sampling_rate;
+  u_int16_t pkt_len_distrib;
 };
 
 struct pkt_data {

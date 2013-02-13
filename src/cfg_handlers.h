@@ -182,6 +182,7 @@ EXT int cfg_key_uacctd_nl_size(char *, char *, char *);
 EXT int cfg_key_tunnel_0(char *, char *, char *);
 EXT int cfg_key_xlate_src(char *, char *, char *);
 EXT int cfg_key_xlate_dst(char *, char *, char *);
+EXT int cfg_key_pkt_len_distrib_bins(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 EXT void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);

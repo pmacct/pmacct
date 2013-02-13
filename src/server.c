@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -260,6 +260,24 @@ void process_query_data(int sd, unsigned char *buf, int len, int forked)
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
     send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
+  else if (q->type & WANT_PKT_LEN_DISTRIB_TABLE) {
+    struct stripped_pkt_len_distrib dummy, real;
+    u_int32_t idx = 0, max = 0;
+
+    for (idx = 0; idx < MAX_PKT_LEN_DISTRIB_BINS && config.pkt_len_distrib_bins[idx]; idx++);
+    max = q->num = idx;
+
+    for (idx = 0; idx < max; idx++) {
+      memset(&real, 0, sizeof(real));
+      strlcpy(real.str, config.pkt_len_distrib_bins[idx], MAX_PKT_LEN_DISTRIB_LEN); 
+      enQueue_elem(sd, &rb, &real, sizeof(struct stripped_pkt_len_distrib), sizeof(struct stripped_pkt_len_distrib));
+    }
+
+    send_pldt_dummy:
+    memset(&dummy, 0, sizeof(dummy));
+    enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
+    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+  }
 }
 
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct acc *src, u_int64_t w, u_int64_t w2)
@@ -313,6 +331,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w2 & COUNT_DST_HOST_COUNTRY) d1->dst_ip_country = s1->dst_ip_country; 
 #endif
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
+  if (w2 & COUNT_PKT_LEN_DISTRIB) d1->pkt_len_distrib = s1->pkt_len_distrib; 
 
   if (PbgpSz && s2) {
     if (w & COUNT_STD_COMM) strlcpy(d2->std_comms, s2->std_comms, MAX_BGP_STD_COMMS); 

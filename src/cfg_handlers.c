@@ -180,6 +180,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "sampling_rate")) cfg_set_aggregate(filename, value, COUNT_INT_SAMPLING_RATE, count_token);
     else if (!strcmp(count_token, "src_host_country")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST_COUNTRY, count_token);
     else if (!strcmp(count_token, "dst_host_country")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST_COUNTRY, count_token);
+    else if (!strcmp(count_token, "pkt_len_distrib")) cfg_set_aggregate(filename, value, COUNT_INT_PKT_LEN_DISTRIB, count_token);
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 
@@ -3194,6 +3195,25 @@ int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
 }
 #endif
 #endif
+
+int cfg_key_pkt_len_distrib_bins(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pkt_len_distrib_bins_str = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pkt_len_distrib_bins_str = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
 
 void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, char *token)
 {

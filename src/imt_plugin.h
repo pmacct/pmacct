@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -82,6 +82,10 @@ struct reply_buffer {
 struct stripped_class {
   pm_class_t id;
   char protocol[MAX_PROTOCOL_LEN];
+};
+
+struct stripped_pkt_len_distrib {
+  char str[MAX_PKT_LEN_DISTRIB_LEN];
 };
 
 /* prototypes */

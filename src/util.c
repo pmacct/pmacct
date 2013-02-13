@@ -24,6 +24,8 @@
 /* includes */
 #include "pmacct.h"
 
+static const char pkt_len_distrib_unknown[] = "unknown";
+
 /* functions */
 void setnonblocking(int sock)
 {
@@ -1396,4 +1398,60 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
   }
 
   return TRUE;
+}
+
+void load_pkt_len_distrib_bins()
+{
+  char *ptr, *endptr_v, *endptr_r, *token, *range_ptr;
+  u_int16_t value = 0, range = 0;
+  int idx, aux_idx;
+
+  ptr = config.pkt_len_distrib_bins_str;
+
+  /* We leave config.pkt_len_distrib_bins[0] to NULL to catch unknowns */
+  config.pkt_len_distrib_bins[0] = pkt_len_distrib_unknown;
+  idx = 1;
+
+  while ((token = extract_token(&ptr, ',')) && idx < MAX_PKT_LEN_DISTRIB_BINS) {
+    range_ptr = pt_check_range(token);
+    value = strtoull(token, &endptr_v, 10);
+    if (range_ptr) {
+      range = strtoull(range_ptr, &endptr_r, 10);
+      range_ptr--; *range_ptr = '-';
+    }
+    else range = value;
+
+    if (value > ETHER_JUMBO_MTU || range > ETHER_JUMBO_MTU) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): pkt_len_distrib_bins: value must be in the range 0-9000. '%llu-%llu' not loaded.\n",
+                        config.name, config.type, value, range);
+      continue;
+    }
+
+    if (range_ptr && range <= value) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): pkt_len_distrib_bins: range value is expected in format low-high. '%llu-%llu' not loaded.\n",
+                        config.name, config.type, value, range);
+      continue;
+    }
+
+    config.pkt_len_distrib_bins[idx] = token;
+    for (aux_idx = value; aux_idx <= range; aux_idx++)
+      config.pkt_len_distrib_bins_lookup[aux_idx] = idx;
+
+    idx++;
+  }
+
+  if (config.debug) {
+    for (idx = 0; idx < MAX_PKT_LEN_DISTRIB_BINS; idx++) {
+      if (config.pkt_len_distrib_bins[idx])
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): pkt_len_distrib_bins[%u]: %s\n", config.name, config.type, idx, config.pkt_len_distrib_bins[idx]);
+    }
+  }
+}
+
+void evaluate_pkt_len_distrib(struct pkt_data *data)
+{
+  u_int16_t avg_len = data->pkt_num ? data->pkt_len / data->pkt_num : 0;
+
+  if (avg_len > 0 && avg_len < ETHER_JUMBO_MTU) data->primitives.pkt_len_distrib = config.pkt_len_distrib_bins_lookup[avg_len];
+  else data->primitives.pkt_len_distrib = 0;
 }

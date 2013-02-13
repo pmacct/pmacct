@@ -407,6 +407,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tunnel_0", cfg_key_tunnel_0},
   {"xlate_src", cfg_key_xlate_src},
   {"xlate_dst", cfg_key_xlate_dst},
+  {"pkt_len_distrib_bins", cfg_key_pkt_len_distrib_bins},
   {"", NULL},
 };
 

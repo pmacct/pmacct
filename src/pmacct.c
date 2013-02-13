@@ -34,6 +34,7 @@ void print_ex_options_error();
 void write_status_header_formatted();
 void write_status_header_csv();
 void write_class_table_header();
+void write_pkt_len_distrib_table_header();
 int CHECK_Q_TYPE(int);
 int check_data_sizes(struct query_header *, struct pkt_data *);
 void client_counters_merge_sort(void *, int, int, int, int);
@@ -67,13 +68,14 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
   printf("  -l\tPerform locking of the table\n");
   printf("  -t\tShow memory table status\n");
   printf("  -C\tShow classifiers table\n");
+  printf("  -D\tShow packet length distribution table\n");
   printf("  -p\t[file] \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -O\tShow output in CSV format (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
@@ -175,6 +177,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     printf("DH_COUNTRY  "); 
 #endif
     printf("SAMPLING_RATE ");
+    printf("PKT_LEN_DISTRIB ");
 
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
@@ -243,6 +246,7 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY  "); 
 #endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
+    if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("PKT_LEN_DISTRIB ");
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS                 ");
@@ -309,6 +313,7 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     printf("DH_COUNTRY%s", sep);
 #endif
     printf("SAMPLING_RATE%s", sep);
+    printf("PKT_LEN_DISTRIB%s", sep);
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS%s", sep);
     printf("FLOWS%s", sep);
@@ -376,6 +381,7 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY%s", sep);
 #endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE%s", sep);
+    if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("PKT_LEN_DISTRIB%s", sep);
 
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS%s", sep);
@@ -392,13 +398,19 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
 void write_status_header()
 {
   printf("* = element\n\n"); 
-  printf("BUCKET\tCHAIN STATUS\n");
+  printf("BUCKET\tCHAIN_STATUS\n");
 }
 
 void write_class_table_header()
 {
-  printf("CLASS ID\tCLASS NAME\n");
+  printf("CLASS_ID\tCLASS_NAME\n");
 }
+
+void write_pkt_len_distrib_table_header()
+{
+  printf("ID\tPKT_LEN_DISTRIB\n");
+}
+
 
 int build_query_client(char *path_ptr)
 {
@@ -442,12 +454,14 @@ int main(int argc,char **argv)
   struct stripped_class *class_table = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;
   char clibuf[clibufsz], *bufptr;
-  unsigned char *largebuf, *elem, *ct;
+  char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
+  unsigned char *largebuf, *elem, *ct, *pldt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
   char path[128], file[128], password[9], rd_str[SRVBUFLEN];
-  char *as_path, empty_aspath[] = "^$", *bgp_comm;
+  char *as_path, empty_aspath[] = "^$", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
   int sd, buflen, unpacked, printed;
   int counter=0, ct_idx=0, ct_num=0, sep_len=0;
+  int pldt_idx=0, pldt_num=0;
   char *sep_ptr = NULL, sep[10], default_sep[] = ",";
 
   /* mrtg stuff */
@@ -461,7 +475,7 @@ int main(int argc,char **argv)
   extern int optind, opterr, optopt;
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
-  int want_output, want_ipproto_num;
+  int want_output, want_ipproto_num, want_pkt_len_distrib_table;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   u_int64_t what_to_count, what_to_count_2, have_wtc;
   u_int32_t tmpnum;
@@ -475,6 +489,7 @@ int main(int argc,char **argv)
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
+  memset(pkt_len_distrib_table, 0, sizeof(pkt_len_distrib_table));
 
   strcpy(path, "/tmp/collect.pipe");
   unpacked = 0; printed = 0;
@@ -490,6 +505,7 @@ int main(int argc,char **argv)
   want_reset = FALSE;
   want_class_table = FALSE;
   want_ipproto_num = FALSE;
+  want_pkt_len_distrib_table = FALSE;
   which_counter = FALSE;
   topN_counter = FALSE;
   sum_counters = FALSE;
@@ -645,6 +661,10 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_CLASS;
           what_to_count |= COUNT_CLASS;
         }
+        else if (!strcmp(count_token[count_index], "pkt_len_distrib")) {
+          count_token_int[count_index] = COUNT_PKT_LEN_DISTRIB;
+          what_to_count_2 |= COUNT_PKT_LEN_DISTRIB;
+        }
         else if (!strcmp(count_token[count_index], "std_comm")) {
           count_token_int[count_index] = COUNT_STD_COMM;
           what_to_count |= COUNT_STD_COMM;
@@ -715,6 +735,12 @@ int main(int argc,char **argv)
       q.type |= WANT_CLASS_TABLE;
       q.num = 1;
       want_class_table = TRUE;
+      break;
+    case 'D':
+      if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
+      q.type |= WANT_PKT_LEN_DISTRIB_TABLE;
+      q.num = 1;
+      want_pkt_len_distrib_table = TRUE;
       break;
     case 'e':
       q.type |= WANT_ERASE; 
@@ -1152,6 +1178,44 @@ int main(int argc,char **argv)
 	    else request.data.class = value;
 	  }
         }
+	else if (!strcmp(count_token[match_string_index], "pkt_len_distrib")) {
+          struct stripped_pkt_len_distrib *pldt_elem, req_elem;
+          struct query_header qhdr;
+          u_int16_t req_value = 0;
+
+          memset(&req_elem, 0, sizeof(req_elem));
+          strlcpy(req_elem.str, match_string_token, MAX_PKT_LEN_DISTRIB_LEN);
+          req_elem.str[MAX_PKT_LEN_DISTRIB_LEN-1] = '\0';
+
+	  memset(&qhdr, 0, sizeof(struct query_header));
+	  qhdr.type = WANT_PKT_LEN_DISTRIB_TABLE;
+	  qhdr.num = 1;
+
+	  memcpy(clibuf, &qhdr, sizeof(struct query_header));
+	  buflen = sizeof(struct query_header);
+	  buflen++;
+	  clibuf[buflen] = '\x4'; /* EOT */
+	  buflen++;
+
+	  sd = build_query_client(path);
+	  send(sd, clibuf, buflen, 0);
+	  Recv(sd, &pldt);
+
+	  pldt_num = ((struct query_header *)pldt)->num;
+	  elem = pldt+sizeof(struct query_header);
+	  pldt_elem = (struct stripped_pkt_len_distrib *) elem;
+	  while (pldt_idx < pldt_num) {
+	    pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
+	    if (!strcmp(req_elem.str, pkt_len_distrib_table[pldt_idx])) req_value = pldt_idx;
+	    pldt_idx++; pldt_elem++;
+	  }
+
+          if (!pldt_num) {
+            printf("ERROR: Server has not loaded any packet length distributions.\n");
+            exit(1);
+          }
+	  else request.data.pkt_len_distrib = req_value;
+	}
         else if (!strcmp(count_token[match_string_index], "std_comm")) {
 	  if (!strcmp(match_string_token, "0"))
 	    memset(request.pbgp.std_comms, 0, MAX_BGP_STD_COMMS);
@@ -1324,6 +1388,33 @@ int main(int argc,char **argv)
       while (ct_idx < ct_num) {
 	class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
         ct_idx++;
+      }
+    }
+
+    if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB && !pkt_len_distrib_table[0]) {
+      struct stripped_pkt_len_distrib *pldt_elem;
+      struct query_header qhdr;
+
+      memset(&qhdr, 0, sizeof(struct query_header));
+      qhdr.type = WANT_PKT_LEN_DISTRIB_TABLE;
+      qhdr.num = 1;
+
+      memcpy(clibuf, &qhdr, sizeof(struct query_header));
+      buflen = sizeof(struct query_header);
+      buflen++;
+      clibuf[buflen] = '\x4'; /* EOT */
+      buflen++;
+
+      sd = build_query_client(path);
+      send(sd, clibuf, buflen, 0);
+      Recv(sd, &pldt);
+
+      pldt_num = ((struct query_header *)pldt)->num;
+      elem = pldt+sizeof(struct query_header);
+      pldt_elem = (struct stripped_pkt_len_distrib *) elem;
+      while (pldt_idx < pldt_num) {
+        pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
+        pldt_idx++; pldt_elem++;
       }
     }
 
@@ -1718,6 +1809,18 @@ int main(int argc,char **argv)
 	  else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", acc_elem->primitives.sampling_rate, sep_ptr); 
 	}
 
+        if (!have_wtc || (what_to_count_2 & COUNT_PKT_LEN_DISTRIB)) {
+          char *pkt_len_distrib_table_ptr = NULL;
+
+          if (pkt_len_distrib_table[0])
+	    pkt_len_distrib_table_ptr = pkt_len_distrib_table[acc_elem->primitives.pkt_len_distrib];
+	  else
+	    pkt_len_distrib_table_ptr = unknown_pkt_len_distrib;
+
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10s      ", pkt_len_distrib_table_ptr);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", pkt_len_distrib_table_ptr, sep_ptr);
+        }
+
 #if defined HAVE_64BIT_COUNTERS
 	if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-20llu  ", acc_elem->pkt_num);
 	else if (want_output == PRINT_OUTPUT_CSV) printf("%llu%s", acc_elem->pkt_num, sep_ptr);
@@ -1841,6 +1944,22 @@ int main(int argc,char **argv)
       ct_idx++;
     }
     printf("\nFor a total of: %d classifiers\n", ct_eff);
+  }
+  else if (want_pkt_len_distrib_table) {
+    struct stripped_pkt_len_distrib *pldt_elem;
+    int pldt_eff=0;
+
+    Recv(sd, &pldt);
+    write_pkt_len_distrib_table_header();
+    pldt_num = ((struct query_header *)pldt)->num;
+    elem = pldt+sizeof(struct query_header);
+    pldt_elem = (struct stripped_pkt_len_distrib *) elem;
+    while (pldt_idx < pldt_num) {
+      pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
+      printf("%u\t%s\n", pldt_idx, pkt_len_distrib_table[pldt_idx]);
+      pldt_idx++; pldt_elem++;
+    }
+    printf("\nFor a total of: %d packet length distributions\n", pldt_idx);
   }
   else {
     usage_client(argv[0]);
