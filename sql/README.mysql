@@ -86,6 +86,7 @@ Similarly, BGP tables:
   * src_host_country => country_ip_src (CHAR(2) NOT NULL, see README.country)
   * dst_host_country => country_ip_dst (CHAR(2) NOT NULL, see README.country)
   * sampling_rate => sampling_rate (INT(4) UNSIGNED NOT NULL, see README.sampling_rate)
+  * pkt_len_distrib => pkt_len_distrib (CHAR(10) NOT NULL, see README.pkt_len_distrib)
   * class => class_id (CHAR(16) NOT NULL)
   * src_mac => mac_src (CHAR(17) NOT NULL)
   * dst_mac => mac_dst (CHAR(17) NOT NULL)

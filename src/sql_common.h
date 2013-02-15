@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -72,6 +72,7 @@ struct multi_values {
 
 /* structures */
 struct insert_data {
+  struct configuration *cfg;
   unsigned int hash;
   unsigned int modulo;
   time_t now;
@@ -229,6 +230,7 @@ EXT void count_out_iface_handler(const struct db_cache *, const struct insert_da
 EXT void count_src_nmask_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_dst_nmask_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_sampling_rate_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_pkt_len_distrib_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void MY_count_ip_proto_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void PG_count_ip_proto_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);

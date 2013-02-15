@@ -1,0 +1,15 @@
+This document doesn't replace documentation relevant to the database software
+you are using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'pkt_len_distrib' field.
+Such field carries information about packet length distribution according to
+bins that have been defined by the user. Guidelines  below (typically in MySQL
+format) are to add such primitives to the SQL schema:
+
+* iface_in field:
+  - "pkt_len_distrib CHAR(10) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., pkt_len_distrib, ...)" to put it in the primary key 
+
+The primitive is not declared as part of any default table version; yet will
+not fail version checks which are enabled when 'sql_optimize_clauses' feature
+is disabled.

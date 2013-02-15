@@ -100,6 +100,12 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
   if (config.pkt_len_distrib_bins_str) load_pkt_len_distrib_bins();
+  else {
+    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'aggregate' contains pkt_len_distrib but no 'pkt_len_distrib_bins' defined. Exiting.\n", config.name, config.type);
+      exit_plugin(1); 
+    }
+  }
 
   if ((!config.num_memory_pools) && (!have_num_memory_pools))
     config.num_memory_pools = NUM_MEMORY_POOLS;

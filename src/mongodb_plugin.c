@@ -115,6 +115,13 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
+  if (config.pkt_len_distrib_bins_str) load_pkt_len_distrib_bins();
+  else {
+    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'aggregate' contains pkt_len_distrib but no 'pkt_len_distrib_bins' defined. Exiting.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+  }
   
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
@@ -276,6 +283,10 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
           if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
         }
+
+        if (config.pkt_len_distrib_bins_str &&
+            config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
+          evaluate_pkt_len_distrib(data);
 
         (*insert_func)(data, pbgp);
 
@@ -495,6 +506,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     }
 
     if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
+    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
+      bson_append_string(bson_elem, "pkt_len_distrib", config.pkt_len_distrib_bins[data->pkt_len_distrib]);
 
     if (config.sql_history) {
       bson_append_date(bson_elem, "stamp_inserted", (bson_date_t) 1000*queue[j]->basetime.tv_sec);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -188,6 +188,14 @@ void count_sampling_rate_handler(const struct db_cache *cache_elem, const struct
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.sampling_rate);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.sampling_rate);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_pkt_len_distrib_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, idata->cfg->pkt_len_distrib_bins[cache_elem->primitives.pkt_len_distrib]);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, idata->cfg->pkt_len_distrib_bins[cache_elem->primitives.pkt_len_distrib]);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

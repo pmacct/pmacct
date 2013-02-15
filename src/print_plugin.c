@@ -116,6 +116,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
+  if (config.pkt_len_distrib_bins_str) load_pkt_len_distrib_bins();
+  else {
+    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'aggregate' contains pkt_len_distrib but no 'pkt_len_distrib_bins' defined. Exiting.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+  }
   
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
@@ -262,6 +269,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
           if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
         }
+
+        if (config.pkt_len_distrib_bins_str &&
+            config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
+          evaluate_pkt_len_distrib(data);
 
         (*insert_func)(data, pbgp);
 
@@ -657,6 +668,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #endif
 
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
+      if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) fprintf(f, "%-10s      ", config.pkt_len_distrib_bins[data->pkt_len_distrib]);
+
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%-20llu  ", queue[j]->packet_counter);
       fprintf(f, "%-20llu  ", queue[j]->flow_counter);
@@ -759,6 +772,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 #endif
 
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%u%s", data->sampling_rate, sep);
+      if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) fprintf(f, "%s%s", config.pkt_len_distrib_bins[data->pkt_len_distrib], sep);
+
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%llu%s", queue[j]->packet_counter, sep);
       fprintf(f, "%llu%s", queue[j]->flow_counter, sep);
@@ -822,6 +837,7 @@ void P_write_stats_header_formatted(FILE *f)
   if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "DH_COUNTRY  ");
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE ");
+  if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) fprintf(f, "PKT_LEN_DISTRIB ");
 #if defined HAVE_64BIT_COUNTERS
   fprintf(f, "PACKETS               ");
   fprintf(f, "FLOWS                 ");
@@ -874,6 +890,7 @@ void P_write_stats_header_csv(FILE *f)
   if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "DH_COUNTRY%s", sep);
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE%s", sep);
+  if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) fprintf(f, "PKT_LEN_DISTRIB%s", sep);
   fprintf(f, "PACKETS%s", sep);
   fprintf(f, "FLOWS%s", sep);
   fprintf(f, "BYTES\n");
