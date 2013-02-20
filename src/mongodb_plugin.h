@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -27,6 +27,8 @@
 #define MONGO_HAVE_STDINT 1
 #endif
 #include <mongo.h>
+
+#define DEFAULT_MONGO_INSERT_BATCH 10000
 
 /* structures */
 

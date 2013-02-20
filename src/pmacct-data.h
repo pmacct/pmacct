@@ -289,6 +289,7 @@ static const struct _dictionary_line dictionary[] = {
   {"mongo_history", cfg_key_sql_history},
   {"mongo_time_roundoff", cfg_key_sql_history_roundoff},
   {"mongo_trigger_exec", cfg_key_sql_trigger_exec},
+  {"mongo_insert_batch", cfg_key_mongo_insert_batch},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
   {"nfacctd_allow_file", cfg_key_nfacctd_allow_file},

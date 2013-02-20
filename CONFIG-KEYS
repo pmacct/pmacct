@@ -657,6 +657,10 @@ KEY:		sql_preprocess_type
 VALUES:		[any|all]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
 		are valid if they just match one of the checks (any) or all of them (all) (default: any).
+
+KEY:		mongo_insert_batch
+DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per batch
+		(default: 10000)
 		
 KEY:		print_markers
 VALUES:		[true|false]

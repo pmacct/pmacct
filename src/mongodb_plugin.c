@@ -87,6 +87,9 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.sql_refresh_time)
     config.sql_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
 
+  if (!config.mongo_insert_batch)
+    config.mongo_insert_batch = DEFAULT_MONGO_INSERT_BATCH;
+
   timeout = config.sql_refresh_time*1000;
 
   /* XXX: reusing cache functions from print plugin -- should get common'ed? */
@@ -321,11 +324,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN];
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
-  int i, j, db_status;
+  int i, j, db_status, batch_idx;
 
-  const bson **bson_batch;
+  const bson **bson_batch, **bson_batch_ptr;
   bson *bson_elem;
 
   if (config.sql_host)
@@ -359,9 +362,25 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   else dyn_table = FALSE;
 
   bson_batch = (bson **) malloc(sizeof(bson *) * index);
+  if (!bson_batch) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed: bson_batch\n", config.name, config.type);
+    return;
+  }
 
-  for (j = 0; j < index; j++) {
+  if (dyn_table) {
+    time_t stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
+
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
+    strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+  }
+
+  for (j = 0, batch_idx = 0; j < index; j++, batch_idx++) {
     bson_elem = (bson *) malloc(sizeof(bson));
+    if (!bson_elem) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed: bson_elem (elem# %u batch# %u\n", config.name, config.type, j, batch_idx);
+      return;
+    }
+
     bson_init(bson_elem);
     bson_append_new_oid(bson_elem, "_id" );
 
@@ -528,23 +547,37 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     bson_batch[j] = bson_elem;
 
     if (config.debug) bson_print(bson_elem);
+
+    if (batch_idx == config.mongo_insert_batch) {
+      bson_batch_ptr = &bson_batch[j-batch_idx];
+
+      if (dyn_table) mongo_insert_batch(&db_conn, tmpbuf, bson_batch_ptr, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+      else mongo_insert_batch(&db_conn, config.sql_table, bson_batch_ptr, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+
+      for (i = j-batch_idx; i < j; i++) {
+        bson_elem = (bson *) bson_batch[i];
+        bson_destroy(bson_elem);
+        free(bson_elem);
+      }
+
+      batch_idx = 0;
+    }
   }
 
-  if (dyn_table) {
-    char tmpbuf[LONGLONGSRVBUFLEN];
-    time_t stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
+  /* last round on the lollipop */
+  if (batch_idx) {
+    bson_batch_ptr = &bson_batch[j-batch_idx];
 
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
+    if (dyn_table) mongo_insert_batch(&db_conn, tmpbuf, bson_batch_ptr, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+    else mongo_insert_batch(&db_conn, config.sql_table, bson_batch_ptr, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
 
-    strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
-    mongo_insert_batch(&db_conn, tmpbuf, bson_batch, j, NULL, MONGO_CONTINUE_ON_ERROR /* XXX: test */);
-  }
-  else mongo_insert_batch(&db_conn, config.sql_table, bson_batch, j, NULL, MONGO_CONTINUE_ON_ERROR /* XXX: test */);
+    for (i = j-batch_idx; i < j; i++) {
+      bson_elem = (bson *) bson_batch[i];
+      bson_destroy(bson_elem);
+      free(bson_elem);
+    }
 
-  for (i = 0; i < j; i++) {
-    bson_elem = (bson *) bson_batch[i];
-    bson_destroy(bson_elem);
-    free(bson_elem);
+    batch_idx = 0;
   }
 
   if (config.sql_trigger_exec) MongoDB_trigger_exec(config.sql_trigger_exec); 
