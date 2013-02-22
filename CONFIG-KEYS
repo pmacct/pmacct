@@ -979,11 +979,13 @@ DESC:           allows to define Engine ID and Engine Type fields. It applies on
 		for letting NetFlow v9/IPFIX templates to work correctly: in fact, template IDs get automatically
 		selected only inside single daemon instances. (default: 0:0)
 
-KEY:		[ nfprobe_peer_as | sfprobe_peer_as ]
+KEY:		[ nfacctd_peer_as | sfacctd_peer_as | nfprobe_peer_as | sfprobe_peer_as ]
 VALUES:         [true|false]
-DESC:		includes peer-AS rather than origin-AS as part of the NetFlow/sFlow export. Requirements to
-		enable this feature are: a) one of the nfacctd_as_new/sfacctd_as_new/pmacctd_as/uacctd_as set
-		to 'bgp' and b) a fully functional BGP daemon (bgp_daemon). (default: false)
+DESC:		When applied to [ns]fprobe src_as and dst_as fields are valued with peer-AS rather than origin-AS
+		as part of the NetFlow/sFlow export. Requirements to enable this feature on the probes are: a) one
+		of the nfacctd_as_new/sfacctd_as_new/pmacctd_as/uacctd_as set to 'bgp' and b) a fully functional
+		BGP daemon (bgp_daemon). When applied to [ns]facctd instead it uses src_as and dst_as values of
+		the NetFlow/sFlow export to populate peer_src_as and peer_dst_as primitives. (default: false)
 
 KEY:            [ nfprobe_ipprec | sfprobe_ipprec ]
 DESC:           marks self-originated NetFlow (nfprobe) and sFlow (sfprobe) messages with the supplied IP

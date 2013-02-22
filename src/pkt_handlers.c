@@ -308,14 +308,26 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_NF) {
         if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
-          channels_list[index].phandler[primitives] = NF_peer_src_as_handler;
-          primitives++;
+	  if (channels_list[index].plugin->cfg.nfprobe_peer_as) {
+            channels_list[index].phandler[primitives] = NF_src_as_handler;
+            primitives++;
+	  }
+	  else {
+            channels_list[index].phandler[primitives] = NF_peer_src_as_handler;
+            primitives++;
+	  }
         }
       }
       else if (config.acct_type == ACCT_SF) {
         if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_KEEP) {
-          channels_list[index].phandler[primitives] = SF_peer_src_as_handler;
-          primitives++;
+	  if (channels_list[index].plugin->cfg.nfprobe_peer_as) {
+            channels_list[index].phandler[primitives] = SF_src_as_handler;
+            primitives++;
+	  }
+	  else {
+            channels_list[index].phandler[primitives] = SF_peer_src_as_handler;
+            primitives++;
+	  }
         }
       }
     }
@@ -323,14 +335,26 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_PEER_DST_AS) {
       if (config.acct_type == ACCT_NF) {
         if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
-	  channels_list[index].phandler[primitives] = NF_peer_dst_as_handler;
-	  primitives++;
+          if (channels_list[index].plugin->cfg.nfprobe_peer_as) {
+            channels_list[index].phandler[primitives] = NF_dst_as_handler;
+            primitives++;
+	  }
+	  else {
+	    channels_list[index].phandler[primitives] = NF_peer_dst_as_handler;
+	    primitives++;
+	  }
 	}
       }
       else if (config.acct_type == ACCT_SF) {
         if (channels_list[index].plugin->cfg.nfacctd_as & NF_AS_KEEP) {
-          channels_list[index].phandler[primitives] = SF_peer_dst_as_handler;
-          primitives++;
+          if (channels_list[index].plugin->cfg.nfprobe_peer_as) {
+            channels_list[index].phandler[primitives] = SF_dst_as_handler;
+            primitives++;
+          }
+          else {
+            channels_list[index].phandler[primitives] = SF_peer_dst_as_handler;
+            primitives++;
+	  }
         }
       }
     }
@@ -1396,8 +1420,11 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
+
+  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -1443,6 +1470,11 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
     pdata->primitives.src_as = ntohs(((struct struct_export_v5 *) pptrs->f_data)->src_as);
     break;
   }
+
+  if (chptr->plugin->cfg.nfprobe_peer_as) {
+    if (chptr->aggregation & COUNT_PEER_SRC_AS) pbgp->peer_src_as = pdata->primitives.src_as;
+    pdata->primitives.src_as = 0;
+  }
 }
 
 void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1450,8 +1482,11 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
+
+  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -1496,6 +1531,11 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   default:
     pdata->primitives.dst_as = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dst_as);
     break;
+  }
+
+  if (chptr->plugin->cfg.nfprobe_peer_as) {
+    if (chptr->aggregation & COUNT_PEER_DST_AS) pbgp->peer_dst_as = pdata->primitives.dst_as;
+    pdata->primitives.dst_as = 0;
   }
 }
 
@@ -3172,22 +3212,38 @@ void SF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
   
   pdata->primitives.src_as = sample->src_as;
+
+  if (chptr->plugin->cfg.nfprobe_peer_as) {
+    if (chptr->aggregation & COUNT_PEER_SRC_AS) pbgp->peer_src_as = pdata->primitives.src_as;
+    pdata->primitives.src_as = 0;
+  }
 }
 
 void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+
+  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   pdata->primitives.dst_as = sample->dst_as;
+
+  if (chptr->plugin->cfg.nfprobe_peer_as) {
+    if (chptr->aggregation & COUNT_PEER_DST_AS) pbgp->peer_dst_as = pdata->primitives.dst_as;
+    pdata->primitives.dst_as = 0;
+  }
 }
 
 void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
