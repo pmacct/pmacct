@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -955,8 +955,8 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
   mpnhoplen = *ptr; ptr++;
   mpreachlen -= 4; /* 2+1+1 above */ 
   
-  /* IPv4, RD+IPv4, IPv6, IPv6 link-local+IPv6 global */
-  if (mpnhoplen == 4 || mpnhoplen == 12 || mpnhoplen == 16 || mpnhoplen == 32) {
+  /* IPv4 (4), RD+IPv4 (12), IPv6 (16), RD+IPv6 (24), IPv6 link-local+IPv6 global (32) */
+  if (mpnhoplen == 4 || mpnhoplen == 12 || mpnhoplen == 16 || mpnhoplen == 24 || mpnhoplen == 32) {
 	if (mpreachlen > mpnhoplen) {
 	  switch (mpnhoplen) {
 	  case 4:
@@ -974,6 +974,11 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 	    attr->mp_nexthop.family = AF_INET6;
 	    memcpy(&attr->mp_nexthop.address.ipv6, ptr, 16); 
 	    break;
+	  case 24:
+            // XXX: make any use of RD ? 
+            attr->mp_nexthop.family = AF_INET6;
+            memcpy(&attr->mp_nexthop.address.ipv6, ptr+8, 16);
+            break;
 #endif
 	  default:
 	    memset(&attr->mp_nexthop, 0, sizeof(struct host_addr));
@@ -1088,7 +1093,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	  safi = SAFI_UNICAST;
 	}
 	else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
-	  if (info->afi == AFI_IP && p.prefixlen > 120 || info->afi != AFI_IP /* XXX: IPv6? */) return -1;
+	  if (info->afi == AFI_IP && p.prefixlen > 120 || (info->afi == AFI_IP6 && p.prefixlen > 216)) return -1;
 
           psize = ((p.prefixlen+7)/8);
           if (psize > end) return -1;
