@@ -313,8 +313,11 @@ int main(int argc,char **argv, char **envp)
   while(list) {
     list->cfg.acct_type = ACCT_NF;
     set_default_preferences(&list->cfg);
-    if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) 
+    if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
+      config.name = list->name;
+      config.type = list->type.string;
+    }
     list = list->next;
   }
 

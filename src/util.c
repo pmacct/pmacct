@@ -1450,7 +1450,7 @@ void load_pkt_len_distrib_bins()
 
 void evaluate_pkt_len_distrib(struct pkt_data *data)
 {
-  u_int16_t avg_len = data->pkt_num ? data->pkt_len / data->pkt_num : 0;
+  pm_counter_t avg_len = data->pkt_num ? data->pkt_len / data->pkt_num : 0;
 
   if (avg_len > 0 && avg_len < ETHER_JUMBO_MTU) data->primitives.pkt_len_distrib = config.pkt_len_distrib_bins_lookup[avg_len];
   else data->primitives.pkt_len_distrib = 0;
