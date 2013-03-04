@@ -176,6 +176,7 @@ EXT int cfg_key_nfacctd_isis_net(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_iface(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_mtu(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_msglog(char *, char *, char *);
+EXT int cfg_key_igp_daemon_map(char *, char *, char *);
 EXT int cfg_key_geoip_ipv4_file(char *, char *, char *);
 EXT int cfg_key_geoip_ipv6_file(char *, char *, char *);
 EXT int cfg_key_uacctd_group(char *, char *, char *);

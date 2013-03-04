@@ -97,29 +97,35 @@ void skinny_isis_daemon()
   /* thread master */
   master = thread_master_create();
 
-  if (!config.nfacctd_isis_iface) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_iface' value is not specified. Terminating thread.\n");
-    exit(1);
+  if (!config.nfacctd_isis_iface && !config.igp_daemon_map) {
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): No 'isis_daemon_iface' and 'igp_daemon_map' values specified. Terminating thread.\n");
+    exit_all(1);
+  }
+  else if (config.nfacctd_isis_iface && config.igp_daemon_map) {
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_iface' and 'igp_daemon_map' are mutually exclusive. Terminating thread.\n");
+    exit_all(1);
   }
 
-  if ((device.dev_desc = pcap_open_live(config.nfacctd_isis_iface, 65535, 0, 1000, errbuf)) == NULL) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): pcap_open_live(): %s\n", errbuf);
-    exit(1);
-  }
+  if (config.nfacctd_isis_iface) {
+    if ((device.dev_desc = pcap_open_live(config.nfacctd_isis_iface, 65535, 0, 1000, errbuf)) == NULL) {
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): pcap_open_live(): %s\n", errbuf);
+      exit(1);
+    }
 
-  device.link_type = pcap_datalink(device.dev_desc);
-  for (index = 0; _isis_devices[index].link_type != -1; index++) {
-    if (device.link_type == _isis_devices[index].link_type)
-      device.data = &_isis_devices[index];
-  }
+    device.link_type = pcap_datalink(device.dev_desc);
+    for (index = 0; _isis_devices[index].link_type != -1; index++) {
+      if (device.link_type == _isis_devices[index].link_type)
+        device.data = &_isis_devices[index];
+    }
 
-  if (device.data == NULL) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): data link not supported: %d\n", device.link_type);
-    return;
-  }
-  else {
-    Log(LOG_INFO, "OK ( default/core/ISIS ): link type is: %d\n", device.link_type);
-    cb_data.device = &device;
+    if (device.data == NULL) {
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): data link not supported: %d\n", device.link_type);
+      return;
+    }
+    else {
+      Log(LOG_INFO, "OK ( default/core/ISIS ): link type is: %d\n", device.link_type);
+      cb_data.device = &device;
+    }
   }
 
   area = isis_area_create();
@@ -136,8 +142,14 @@ void skinny_isis_daemon()
 
   circuit = isis_circuit_new();
   circuit->circ_type = CIRCUIT_T_P2P;
-  circuit->fd = pcap_fileno(device.dev_desc);
-  circuit->tx = isis_send_pdu_p2p;
+  if (config.nfacctd_isis_iface) {
+    circuit->fd = pcap_fileno(device.dev_desc);
+    circuit->tx = isis_send_pdu_p2p;
+  }
+  else {
+    circuit->fd = 0;
+    circuit->tx = NULL;
+  }
   circuit->interface = &interface;
   circuit->state = C_STATE_UP;
 
@@ -166,18 +178,37 @@ void skinny_isis_daemon()
   cb_data.circuit = circuit;
 
   area->ip_circuits = 1;
-  memcpy(circuit->interface->name, config.nfacctd_isis_iface, strlen(config.nfacctd_isis_iface));
-  circuit->interface->ifindex = if_nametoindex(config.nfacctd_isis_iface);
-  if (!config.nfacctd_isis_mtu) config.nfacctd_isis_mtu = SNAPLEN_ISIS_DEFAULT;
-
-  for (;;) {
-    /* XXX: should get a select() here at some stage? */
-    pcap_loop(device.dev_desc, -1, isis_pdu_runner, (u_char *) &cb_data);
-
-    break;
+  if (config.nfacctd_isis_iface) {
+    memcpy(circuit->interface->name, config.nfacctd_isis_iface, strlen(config.nfacctd_isis_iface));
+    circuit->interface->ifindex = if_nametoindex(config.nfacctd_isis_iface);
+  }
+  else {
+    // XXX
   }
 
-  pcap_close(device.dev_desc);
+  if (!config.nfacctd_isis_mtu) config.nfacctd_isis_mtu = SNAPLEN_ISIS_DEFAULT;
+
+  if (config.nfacctd_isis_iface) {
+    for (;;) {
+      /* XXX: should get a select() here at some stage? */
+      pcap_loop(device.dev_desc, -1, isis_pdu_runner, (u_char *) &cb_data);
+
+      break;
+    }
+
+    pcap_close(device.dev_desc);
+  }
+  else if (config.igp_daemon_map) {
+    for (;;) {
+      sleep(3);
+
+      if (reload_map) {
+	// XXX
+
+	reload_map = FALSE;
+      }
+    }
+  }
 }
 
 void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
