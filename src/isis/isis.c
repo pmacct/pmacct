@@ -78,6 +78,7 @@ void skinny_isis_daemon()
   struct pcap_isis_callback_data cb_data;
   struct host_addr addr;
   struct prefix_ipv4 *ipv4;
+  struct plugin_requests req;
   int index, ret;
 
   char area_tag[] = "default";
@@ -89,6 +90,10 @@ void skinny_isis_daemon()
   memset(&cb_data, 0, sizeof(cb_data));
   memset(&interface, 0, sizeof(interface));
   memset(&isis_spf_deadline, 0, sizeof(isis_spf_deadline));
+
+  memset(&ime, 0, sizeof(ime));
+  memset(&req, 0, sizeof(req));
+  reload_map = FALSE;
 
   /* initializing IS-IS structures */
   isis_init();
@@ -126,6 +131,13 @@ void skinny_isis_daemon()
       Log(LOG_INFO, "OK ( default/core/ISIS ): link type is: %d\n", device.link_type);
       cb_data.device = &device;
     }
+  }
+
+  if (config.igp_daemon_map) {
+    int igp_map_allocated = FALSE;
+
+    req.key_value_table = (void *) &ime;
+    load_id_file(MAP_IGP, config.igp_daemon_map, NULL, &req, &igp_map_allocated);
   }
 
   area = isis_area_create();
@@ -203,8 +215,9 @@ void skinny_isis_daemon()
       sleep(3);
 
       if (reload_map) {
-	// XXX
+        int igp_map_allocated = FALSE;
 
+        load_id_file(MAP_IGP, config.igp_daemon_map, NULL, &req, &igp_map_allocated);
 	reload_map = FALSE;
       }
     }
@@ -409,4 +422,38 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
     }
 #endif
   }
+}
+
+int igp_daemon_map_node_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+
+  if (!str_to_addr(value, &entry->node)) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad IP address '%s'. ", filename, value);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+
+  // XXX
+}
+
+int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+
+  // XXX
+}
+
+void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
+{
+  struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+  int valid = FALSE;
+
+  // XXX
 }

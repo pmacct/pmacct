@@ -29,6 +29,8 @@
 #include "pretag-data.h"
 #include "tee_plugin/tee_recvs.h"
 #include "tee_plugin/tee_recvs-data.h"
+#include "isis/isis.h"
+#include "isis/isis-data.h"
 
 /*
    XXX: load_id_file() interface cleanup pending:
@@ -223,6 +225,24 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
 		}
+                else if (acct_type == MAP_IGP) {
+		  memset(&ime, 0, sizeof(ime));
+
+                  for (dindex = 0; strcmp(igp_daemon_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(igp_daemon_map_dictionary[dindex].key, key)) {
+                      err = (*igp_daemon_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+                  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): unknown key '%s' at line %d in map '%s'. Ignored.\n",
+                                                config.name, config.type, key, tot_lines, filename);
+                    else Log(LOG_ERR, "Line %d ignored in map '%s'.\n", tot_lines, filename);
+                    break;
+                  }
+                  key = NULL; value = NULL;
+                }
 		else {
 		  if (tee_plugins) {
                     for (dindex = 0; strcmp(tag_map_tee_dictionary[dindex].key, ""); dindex++) {
@@ -356,6 +376,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 			config.name, config.type, tot_lines, filename);
             }
 	    else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, req); 
+	    else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
           }
           else Log(LOG_ERR, "ERROR ( %s/%s ): malformed line %d in map '%s'. Ignored.\n",
 			config.name, config.type, tot_lines, filename);

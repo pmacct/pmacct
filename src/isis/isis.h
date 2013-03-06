@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -26,6 +26,8 @@
 #include "isis_ll.h"
 
 /* defines */
+#define MAX_IGP_MAP_ELEM 16
+
 typedef u_int16_t afi_t;
 typedef u_int8_t safi_t;
 
@@ -50,6 +52,17 @@ struct pcap_isis_callback_data {
   struct isis_circuit *circuit;
 };
 
+struct igp_map_metric {
+  struct host_addr node;
+  u_int32_t metric;
+};
+
+struct igp_map_entry {
+  struct host_addr node;
+  struct igp_map_metric adj_metric[MAX_IGP_MAP_ELEM];
+  struct igp_map_metric reach_metric[MAX_IGP_MAP_ELEM];
+};
+
 /* prototypes */
 #if (!defined __ISIS_C)
 #define EXT extern
@@ -61,11 +74,17 @@ EXT void skinny_isis_daemon();
 EXT void isis_pdu_runner(u_char *, const struct pcap_pkthdr *, const u_char *);
 EXT int iso_handler(register struct packet_ptrs *);
 
+EXT int igp_daemon_map_node_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int igp_daemon_map_adj_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int igp_daemon_map_reach_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT void igp_daemon_map_validate(char *, struct plugin_requests *);
+
 /* global variables */
 EXT struct thread_master *master;
 EXT struct isis *isis;
 EXT struct in_addr router_id_zebra; /* XXX: do something with this eventually */
 EXT struct timeval isis_now, isis_spf_deadline, isis_psnp_deadline;
+EXT struct igp_map_entry ime;
 
 #undef EXT
 #endif
