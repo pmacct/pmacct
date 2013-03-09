@@ -26,7 +26,7 @@
 #include "isis_ll.h"
 
 /* defines */
-#define MAX_IGP_MAP_ELEM 16
+#define MAX_IGP_MAP_ELEM 4
 
 typedef u_int16_t afi_t;
 typedef u_int8_t safi_t;
@@ -61,6 +61,8 @@ struct igp_map_entry {
   struct host_addr node;
   struct igp_map_metric adj_metric[MAX_IGP_MAP_ELEM];
   struct igp_map_metric reach_metric[MAX_IGP_MAP_ELEM];
+  u_int8_t adj_metric_num;
+  u_int8_t reach_metric_num;
 };
 
 /* prototypes */

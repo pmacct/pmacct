@@ -494,13 +494,13 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     }
 #if defined (WITH_GEOIP)
     if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
-      if (data->src_host_country > 0)
+      if (data->src_ip_country > 0)
 	bson_append_string(bson_elem, "country_ip_src", GeoIP_code_by_id(data->src_ip_country));
       else
 	bson_append_null(bson_elem, "country_ip_src");
     }
     if (config.what_to_count & COUNT_DST_HOST_COUNTRY) {
-      if (data->dst_host_country > 0)
+      if (data->dst_ip_country > 0)
 	bson_append_string(bson_elem, "country_ip_dst", GeoIP_code_by_id(data->dst_ip_country));
       else
 	bson_append_null(bson_elem, "country_ip_dst");

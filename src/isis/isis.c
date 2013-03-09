@@ -439,21 +439,108 @@ int igp_daemon_map_node_handler(char *filename, struct id_entry *e, char *value,
 int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+  char *str_ptr, *token, *sep, *ip_str, *metric_str, *endptr;
+  int idx = 0, debug_idx;
+  
+  str_ptr = strdup(value);
+  if (!str_ptr) {
+    Log(LOG_ERR, "ERROR ( %s ): not enough memory to strdup(). ", filename);
+    return TRUE;
+  }
 
-  // XXX
+  while (token = extract_token(&str_ptr, ';')) {
+    if (idx >= MAX_IGP_MAP_ELEM) {
+      Log(LOG_ERR, "ERROR ( %s ): maximum number of elements (%u) per adj_metric violated. ", filename, MAX_IGP_MAP_ELEM);
+      return TRUE;
+    }
+
+    sep = strchr(token, ',');
+    if (!sep) {
+      Log(LOG_WARNING, "WARN ( %s ): missing adj_metric entry separator '%s'.\n", filename, token);
+      continue;
+    }
+
+    ip_str = token;
+    metric_str = sep+1;
+    *sep = '\0';
+
+    if (!str_to_addr(ip_str, &entry->adj_metric[idx].node)) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad IP address '%s'.\n", filename, ip_str);
+      continue;
+    }
+
+    entry->adj_metric[idx].metric = strtoull(metric_str, &endptr, 10);
+    if (!entry->adj_metric[idx].metric) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad metric '%s'.\n", filename, metric_str);
+      continue;
+    }
+    
+    idx++;
+  }
+
+  if (!idx) {
+    Log(LOG_ERR, "ERROR ( %s ): invalid or empty adj_metric entry '%s'. ", filename, value);
+    return TRUE;
+  }
+  else entry->adj_metric_num = idx;
 }
 
 int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+  char *str_ptr, *token, *sep, *ip_str, *metric_str, *endptr;
+  int idx = 0, debug_idx;
 
-  // XXX
+  str_ptr = strdup(value);
+  if (!str_ptr) {
+    Log(LOG_ERR, "ERROR ( %s ): not enough memory to strdup(). ", filename);
+    return TRUE;
+  }
+
+  while (token = extract_token(&str_ptr, ';')) {
+    if (idx >= MAX_IGP_MAP_ELEM) {
+      Log(LOG_ERR, "ERROR ( %s ): maximum number of elements (%u) per reach_metric violated. ", filename, MAX_IGP_MAP_ELEM);
+      return TRUE;
+    }
+
+    sep = strchr(token, ',');
+    if (!sep) {
+      Log(LOG_WARNING, "WARN ( %s ): missing reach_metric entry separator '%s'.\n", filename, token);
+      continue;
+    }
+
+    ip_str = token;
+    metric_str = sep+1;
+    *sep = '\0';
+
+    if (!str_to_addr(ip_str, &entry->reach_metric[idx].node)) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad IP address '%s'.\n", filename, ip_str);
+      continue;
+    }
+
+    entry->reach_metric[idx].metric = strtoull(metric_str, &endptr, 10);
+    if (!entry->reach_metric[idx].metric) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad metric '%s'.\n", filename, metric_str);
+      continue;
+    }
+
+    idx++;
+  }
+
+  if (!idx) {
+    Log(LOG_ERR, "ERROR ( %s ): invalid or empty reach_metric entry '%s'. ", filename, value);
+    return TRUE;
+  }
+  else entry->reach_metric_num = idx; 
 }
 
 void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
-  int valid = FALSE;
 
-  // XXX
+  if (entry) {
+    if (entry->adj_metric_num || entry->reach_metric_num) {
+      // XXX
+    }
+  }
 }
