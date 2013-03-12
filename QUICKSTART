@@ -57,10 +57,16 @@ Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
 
 
 III. Brief SQL and noSQL setup examples
-Scripts for setting up databases (MySQL, PostgreSQL and SQLite) are into the 'sql/'
-tree. For further guidance read the relevant README files in such directory. One of
-the crucial concepts to deal with, when using default IP or BGP SQL tables, is table
-versioning: please read more about it in the FAQS document (Q16). 
+RDBMS require a table schema to manage data. pmacct offers two options: use one
+of the few pre-determined table schemas available (sections IIIa, b and c) or
+compose a custom schema to fit your needs (section IIId). If you are blind to
+SQL the former approach is recommended, although it can pose scalability issues
+in larger deployments; if you know some SQL the latter is definitely the way to
+go. Scripts for setting up RDBMS are located in the 'sql/' tree of the pmacct
+distribution tarball. For further guidance read the relevant README files in
+such directory. One of the crucial concepts to deal with, when using default
+table schemas, is table versioning: please read more about this topic in the
+FAQS document (Q16). 
 
 IIIa. MySQL examples 
 shell> cd sql/
@@ -121,15 +127,69 @@ Data will be available in 'acct_v2' table of '/tmp/pmacct.db' DB.
 ... And so on for the newer versions.
 
 IIId. Custom SQL tables
-Custom SQL tables can be built by creating your own SQL schema and indexes. This allows
-to freely mix-and-match the primitives relevant to your accounting scenario. Specifying
-SQL table version and type (sql_table_version, sql_table_type) is not required; whereas
-a new directive, sql_optimize_clauses, is introduced to flag table customization to
-pmacct. This is a simple configuration snippet:
+Custom tables can be built by creating your own SQL schema and indexes. This
+allows to mix-and-match the primitives relevant to your accounting scenario.
+To flag intention to build a custom table the sql_optimize_clauses directive
+must be set to true, ie.:
 
 sql_optimize_clauses: true
 sql_table: <table name>
 aggregate: <aggregation primitives list> 
+
+How to build the custom schema? Let's say the aggregation method of choice
+(aggregate directive) is "vlan, in_iface, out_iface, etype" the table name is
+"acct" and the database of choice is MySQL. The SQL schema is composed of four
+main parts, explained below:
+
+1) A fixed skeleton needed by pmacct logics:
+
+CREATE TABLE <table_name> (
+	packets INT UNSIGNED NOT NULL,
+	bytes BIGINT UNSIGNED NOT NULL,
+	stamp_inserted DATETIME NOT NULL,
+	stamp_updated DATETIME,
+);
+
+2) Indexing: primary key (of your choice, this is only an example) plus
+   any additional index you may find relevant.
+
+3) Primitives enabled in pmacct, in this specific example the ones below; should
+   one need more/others, these can be looked up in the sql/README.mysql file in
+   the section named "Aggregation primitives to SQL schema mapping:" :
+
+	vlan INT(2) UNSIGNED NOT NULL,
+	iface_in INT(4) UNSIGNED NOT NULL,
+	iface_out INT(4) UNSIGNED NOT NULL,
+	etype INT(2) UNSIGNED NOT NULL,
+
+4) Any additional fields, ignored by pmacct, that can be of use, these can be
+   for lookup purposes, auto-increment, etc. and can be of course also part of
+   the indexing you might choose. 
+
+Putting the pieces together, the resulting SQL schema is below along with the
+required statements to create the database:
+
+DROP DATABASE IF EXISTS pmacct;
+CREATE DATABASE pmacct;
+
+USE pmacct;
+
+DROP TABLE IS EXISTS acct;
+
+CREATE TABLE acct (
+	vlan INT(2) UNSIGNED NOT NULL,
+	iface_in INT(4) UNSIGNED NOT NULL,
+	iface_out INT(4) UNSIGNED NOT NULL,
+	etype INT(2) UNSIGNED NOT NULL,
+	packets INT UNSIGNED NOT NULL,
+	bytes BIGINT UNSIGNED NOT NULL,
+	stamp_inserted DATETIME NOT NULL,
+	stamp_updated DATETIME,
+	PRIMARY KEY (vlan, iface_in, iface_out, etype, stamp_inserted)
+); 
+
+To grant default pmacct user permission to write into the database look at the
+file sql/pmacct-grant-db.mysql
 
 IIIe. Historical accounting
 Enabling historical accounting allows to aggregate data over time (ie. 5 mins, hourly,
