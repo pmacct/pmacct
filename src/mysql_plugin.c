@@ -104,7 +104,15 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     status->wakeup = TRUE;
     calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
     ret = poll(&pfd, 1, timeout);
-    if (ret < 0) goto poll_again;
+
+    if (ret <= 0) {
+      if (getppid() == 1) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
+        exit_plugin(1);
+      }
+
+      if (ret < 0) goto poll_again;
+    }
 
     idata.now = time(NULL);
 

@@ -49,6 +49,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int rg_err_count = 0;
   struct pkt_bgp_primitives *pbgp;
   struct networks_file_data nfd;
+  struct timeval select_timeout;
 
   fd_set read_descs, bkp_read_descs; /* select() stuff */
   int select_fd, lock = FALSE;
@@ -177,9 +178,19 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* plugin main loop */
   for(;;) {
     select_again:
+    select_timeout.tv_sec = DEFAULT_IMT_PLUGIN_SELECT_TIMEOUT;
+    select_timeout.tv_usec = 0;
+
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
-    num = select(select_fd, &read_descs, NULL, NULL, NULL);
-    if (num < 0) goto select_again;  
+    num = select(select_fd, &read_descs, NULL, NULL, &select_timeout);
+    if (num <= 0) {
+      if (getppid() == 1) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
+	exit_plugin(1);
+      } 
+
+      goto select_again;  
+    }
 
     gettimeofday(&cycle_stamp, NULL);
 
