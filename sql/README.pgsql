@@ -90,7 +90,7 @@ mode. Since v6 unified mode is no longer supported.
   * src_mask => mask_src (SMALLINT NOT NULL DEFAULT 0, see README.mask)
   * dst_mask => mask_dst (SMALLINT NOT NULL DEFAULT 0, see README.mask)
   * cos => cos (SMALLINT NOT NULL DEFAULT 0, see README.cos)
-  * etype => etype (INT NOT NULL DEFAULT 0, see README.etype)
+  * etype => etype (CHAR(5) NOT NULL DEFAULT ' ', see README.etype)
   * src_host_country => country_ip_src (CHAR (2) NOT NULL DEFAULT '--', see README.country)
   * dst_host_country => country_ip_dst (CHAR (2) NOT NULL DEFAULT '--', see README.country)
   * sampling_rate => sampling_rate (BIGINT NOT NULL DEFAULT 0, see README.sampling_rate)

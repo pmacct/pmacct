@@ -82,7 +82,7 @@ Similarly, BGP tables:
   * src_mask => mask_src (INT(1) UNSIGNED NOT NULL, see README.mask)
   * dst_mask => mask_dst (INT(1) UNSIGNED NOT NULL, see README.mask)
   * cos => cos (INT(1) UNSIGNED NOT NULL, see README.cos)
-  * etype => etype (INT(2) UNSIGNED NOT NULL, see README.etype)
+  * etype => etype (CHAR(5) NOT NULL, see README.etype)
   * src_host_country => country_ip_src (CHAR(2) NOT NULL, see README.country)
   * dst_host_country => country_ip_dst (CHAR(2) NOT NULL, see README.country)
   * sampling_rate => sampling_rate (INT(4) UNSIGNED NOT NULL, see README.sampling_rate)
