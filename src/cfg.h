@@ -140,6 +140,7 @@ struct configuration {
   int nfacctd_isis_mtu;
   int nfacctd_isis_msglog;
   char *igp_daemon_map;
+  char *igp_daemon_map_msglog;
   char *geoip_ipv4_file;
   char *geoip_ipv6_file;
 #if defined WITH_GEOIP

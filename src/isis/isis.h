@@ -80,6 +80,8 @@ EXT int igp_daemon_map_node_handler(char *, struct id_entry *, char *, struct pl
 EXT int igp_daemon_map_adj_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int igp_daemon_map_reach_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT void igp_daemon_map_validate(char *, struct plugin_requests *);
+EXT void igp_daemon_map_initialize(char *, struct plugin_requests *);
+EXT void igp_daemon_map_finalize(char *, struct plugin_requests *);
 
 /* global variables */
 EXT struct thread_master *master;
@@ -87,6 +89,7 @@ EXT struct isis *isis;
 EXT struct in_addr router_id_zebra; /* XXX: do something with this eventually */
 EXT struct timeval isis_now, isis_spf_deadline, isis_psnp_deadline;
 EXT struct igp_map_entry ime;
+EXT pcap_dumper_t *idmm_fd; /* igp_daemon_map : file descriptor for igp_daemon_map_msglog */
 
 #undef EXT
 #endif

@@ -160,7 +160,7 @@
 
 struct plugin_requests {
   u_int8_t bpf_filter;		/* On-request packet copy for BPF purposes */
-  void *key_value_table;	/* generic pointer to a table to be filled in from key-value files: load_id_table() */
+  void *key_value_table;	/* load_id_file() : table to be filled in from key-value files */
 };
 
 #include "pmacct-defines.h"

@@ -537,10 +537,56 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
 void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+  struct pcap_pkthdr phdr;
 
   if (entry) {
     if (entry->adj_metric_num || entry->reach_metric_num) {
+      char isis_dgram[ETHERMTU], *isis_dgram_ptr = isis_dgram;
+      struct isis_fixed_hdr *isis_hdr;
+      struct isis_link_state_hdr *lsp_hdr;
+      int rem_len = sizeof(isis_dgram);
+
+      isis_hdr = (struct isis_fixed_hdr *) isis_dgram_ptr;
+      isis_hdr->idrp = ISO10589_ISIS;
+      isis_hdr->length = 27; /* fixed: IS-IS header + LSP header */
+      isis_hdr->version1 = TRUE;
+      isis_hdr->pdu_type = 0x14; 
+      isis_hdr->version2 = TRUE;
+
+      isis_dgram_ptr += sizeof(struct isis_fixed_hdr);
+      rem_len -= sizeof(struct isis_fixed_hdr);
+
+      lsp_hdr = (struct isis_link_state_hdr *) isis_dgram_ptr;
+      lsp_hdr->pdu_len = htons(ISIS_LSP_HDR_LEN); /* updated later */ 
+      lsp_hdr->rem_lifetime = htons(-1);
+
       // XXX
+
+      if (config.debug && config.igp_daemon_map_msglog) {
+	memset(&phdr, 0, sizeof(phdr));
+	phdr.len = phdr.caplen = sizeof(isis_dgram)-rem_len;
+	pcap_dump((char *) idmm_fd, &phdr, isis_dgram);
+      }
     }
   }
+}
+
+void igp_daemon_map_initialize(char *filename, struct plugin_requests *req)
+{
+  pcap_t *p;
+
+  if (config.debug && config.igp_daemon_map_msglog) {
+    p = pcap_open_dead(DLT_RAW, 65535);
+
+    if ((idmm_fd = pcap_dump_open(p, config.igp_daemon_map_msglog)) == NULL) {
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can not open igp_daemon_map_msglog '%s' (%s).\n",
+                config.igp_daemon_map_msglog, pcap_geterr(p));
+      exit_all(1);
+    }
+  }
+}
+
+void igp_daemon_map_finalize(char *filename, struct plugin_requests *req)
+{
+  if (config.debug && config.igp_daemon_map_msglog) pcap_dump_close(idmm_fd);
 }
