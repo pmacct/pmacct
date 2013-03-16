@@ -428,8 +428,8 @@ int igp_daemon_map_node_handler(char *filename, struct id_entry *e, char *value,
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
 
-  if (!str_to_addr(value, &entry->node)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad IP address '%s'. ", filename, value);
+  if (!str_to_addr(value, &entry->node) || entry->node.family != AF_INET) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad IPv4 address '%s'. ", filename, value);
     return TRUE;
   }
 
@@ -464,8 +464,8 @@ int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *
     metric_str = sep+1;
     *sep = '\0';
 
-    if (!str_to_addr(ip_str, &entry->adj_metric[idx].node)) {
-      Log(LOG_WARNING, "WARN ( %s ): Bad IP address '%s'.\n", filename, ip_str);
+    if (!isis_str2prefix(ip_str, &entry->adj_metric[idx].prefix) || entry->adj_metric[idx].prefix.family != AF_INET) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad IPv4 address '%s'.\n", filename, ip_str);
       continue;
     }
 
@@ -483,6 +483,8 @@ int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *
     return TRUE;
   }
   else entry->adj_metric_num = idx;
+
+  return FALSE;
 }
 
 int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
@@ -513,8 +515,8 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
     metric_str = sep+1;
     *sep = '\0';
 
-    if (!str_to_addr(ip_str, &entry->reach_metric[idx].node)) {
-      Log(LOG_WARNING, "WARN ( %s ): Bad IP address '%s'.\n", filename, ip_str);
+    if (!isis_str2prefix(ip_str, &entry->reach_metric[idx].prefix) || entry->reach_metric[idx].prefix.family != AF_INET) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad IPv4 address '%s'.\n", filename, ip_str);
       continue;
     }
 
@@ -532,6 +534,8 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
     return TRUE;
   }
   else entry->reach_metric_num = idx; 
+
+  return FALSE; 
 }
 
 void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
@@ -541,10 +545,23 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 
   if (entry) {
     if (entry->adj_metric_num || entry->reach_metric_num) {
-      char isis_dgram[ETHERMTU], *isis_dgram_ptr = isis_dgram;
+      char isis_dgram[65535], *isis_dgram_ptr = isis_dgram;
+      struct chdlc_header *chdlc_hdr;
       struct isis_fixed_hdr *isis_hdr;
       struct isis_link_state_hdr *lsp_hdr;
-      int rem_len = sizeof(isis_dgram);
+      struct idrp_info *adj_hdr, *reach_v4_hdr;
+      struct is_neigh *adj;
+      struct ipv4_reachability *reach_v4;
+      int rem_len = sizeof(isis_dgram), cnt, tlvs_cnt = 0, pdu_len = 0;
+
+      /* can't use DLT_RAW for IS-IS, let's use DLT_CHDLC */
+      chdlc_hdr = (struct chdlc_header *) isis_dgram_ptr;
+      chdlc_hdr->address = CHDLC_MCAST_ADDR;
+      chdlc_hdr->control = CHDLC_FIXED_CONTROL;
+      chdlc_hdr->protocol = ETHERTYPE_ISO;
+      
+      isis_dgram_ptr += sizeof(struct chdlc_header);
+      rem_len -= sizeof(struct chdlc_header);
 
       isis_hdr = (struct isis_fixed_hdr *) isis_dgram_ptr;
       isis_hdr->idrp = ISO10589_ISIS;
@@ -557,10 +574,75 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       rem_len -= sizeof(struct isis_fixed_hdr);
 
       lsp_hdr = (struct isis_link_state_hdr *) isis_dgram_ptr;
-      lsp_hdr->pdu_len = htons(ISIS_LSP_HDR_LEN); /* updated later */ 
-      lsp_hdr->rem_lifetime = htons(-1);
+      lsp_hdr->pdu_len = 0; /* updated later */ 
+      memcpy(&lsp_hdr->lsp_id, &entry->node.address.ipv4, 4);  
+      lsp_hdr->rem_lifetime = htons(-1); /* maximum lifetime possible */
+      lsp_hdr->lsp_bits = 0x03; /* IS Type = L2 */
+
+      isis_dgram_ptr += sizeof(struct isis_link_state_hdr);
+      rem_len -= sizeof(struct isis_link_state_hdr);
+
+      if (entry->adj_metric_num) {
+        adj_hdr = (struct idrp_info *) isis_dgram_ptr; 
+        adj_hdr->value = IS_NEIGHBOURS;
+        adj_hdr->len = (11 * entry->adj_metric_num) + 1; 
+	pdu_len += adj_hdr->len;
+
+        isis_dgram_ptr += sizeof(struct idrp_info);
+        rem_len -= sizeof(struct idrp_info);
+
+        for (cnt = 0; cnt < entry->adj_metric_num; cnt++) { 
+	  if (!cnt) {
+	    /* reserved space must be zero */
+	    isis_dgram_ptr++;
+	    rem_len--;
+	  }
+
+	  adj = (struct is_neigh *) isis_dgram_ptr;
+	  adj->metrics.metric_default = entry->adj_metric[cnt].metric;
+	  adj->metrics.metric_error = 0x80;
+	  adj->metrics.metric_expense = 0x80;
+	  adj->metrics.metric_delay = 0x80;
+	  memcpy(adj->neigh_id, &entry->adj_metric[cnt].prefix.u.prefix4, 4);
+	  
+          isis_dgram_ptr += sizeof(struct is_neigh);
+          rem_len -= sizeof(struct is_neigh);
+        }
+
+	tlvs_cnt++;
+      }
+
+      if (entry->reach_metric_num) {
+        reach_v4_hdr = (struct idrp_info *) isis_dgram_ptr;
+        reach_v4_hdr->value = IPV4_INT_REACHABILITY;
+        reach_v4_hdr->len = (12 * entry->reach_metric_num);
+	pdu_len += reach_v4_hdr->len;
+
+        isis_dgram_ptr += sizeof(struct idrp_info);
+        rem_len -= sizeof(struct idrp_info);
+
+        for (cnt = 0; cnt < entry->reach_metric_num; cnt++) {
+          reach_v4 = (struct ipv4_reachability *) isis_dgram_ptr;
+          reach_v4->metrics.metric_default = entry->reach_metric[cnt].metric;
+          reach_v4->metrics.metric_error = 0x80;
+          reach_v4->metrics.metric_expense = 0x80;
+          reach_v4->metrics.metric_delay = 0x80;
+          memcpy(&reach_v4->prefix, &entry->reach_metric[cnt].prefix.u.prefix4, 4);
+          reach_v4->mask.s_addr = ntohl((entry->reach_metric[cnt].prefix.prefixlen == 32) ? 0xffffffffUL :
+					~(0xffffffffUL >> entry->reach_metric[cnt].prefix.prefixlen));
+
+          isis_dgram_ptr += sizeof(struct ipv4_reachability);
+          rem_len -= sizeof(struct ipv4_reachability);
+        }
+
+	tlvs_cnt++;
+      }
 
       // XXX
+
+      /* wrapping up: fix lsp length */
+      pdu_len += sizeof(struct isis_fixed_hdr)+ISIS_LSP_HDR_LEN+(ISIS_TLV_HDR_LEN*tlvs_cnt);
+      lsp_hdr->pdu_len = htons(pdu_len);
 
       if (config.debug && config.igp_daemon_map_msglog) {
 	memset(&phdr, 0, sizeof(phdr));
@@ -576,7 +658,7 @@ void igp_daemon_map_initialize(char *filename, struct plugin_requests *req)
   pcap_t *p;
 
   if (config.debug && config.igp_daemon_map_msglog) {
-    p = pcap_open_dead(DLT_RAW, 65535);
+    p = pcap_open_dead(DLT_CHDLC, 65535);
 
     if ((idmm_fd = pcap_dump_open(p, config.igp_daemon_map_msglog)) == NULL) {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can not open igp_daemon_map_msglog '%s' (%s).\n",

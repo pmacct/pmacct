@@ -309,4 +309,18 @@ A: In general, it's good rule to run the backend part of any accounting system a
    time-bins and scanner deadlines among the others. The use of timezones is supported
    but not recommended. 
 
+
+Q20: I'm using the 'tee' plugin with transparent mode set to true and keep receiving
+     "Can't bridge Address Families when in transparent mode. Exiting ..." messages,
+     why?
+
+A: It means you can't receive packets on an IPv4 address and transparently replicate
+   to an IPv6 collector or vice-versa. Less obvious scenarios are: a) some operating
+   systems where loopback (127.0.0.1) is considered a different address family hence
+   it's not possible to replicate to a 127.0.0.1 address; it's possible though to use
+   any locally configured IPv4 address bound to a (sub-)interface in 'up' state; b)
+   an  IPv4-mapped IPv6 address is still technically an IPv6 address hence on servers
+   running IPv4 and IPv6 it is good practice to explicitely define also the receiving
+   IP address (nfacctd_ip), if IPv4 is used.
+
 /* EOF */

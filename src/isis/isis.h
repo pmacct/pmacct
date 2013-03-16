@@ -24,6 +24,7 @@
 
 /* includes */
 #include "isis_ll.h"
+#include "prefix.h"
 
 /* defines */
 #define MAX_IGP_MAP_ELEM 4
@@ -53,7 +54,7 @@ struct pcap_isis_callback_data {
 };
 
 struct igp_map_metric {
-  struct host_addr node;
+  struct isis_prefix prefix;
   u_int32_t metric;
 };
 

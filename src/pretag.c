@@ -111,6 +111,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	    strip_quotes(buf);
 
 	    /* resetting the entry and enforcing defaults */
+	    memset(&ime, 0, sizeof(ime));
             memset(&tmp.e[tmp.num], 0, sizeof(struct id_entry));
 	    tmp.e[tmp.num].ret = FALSE;
 
@@ -228,8 +229,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   key = NULL; value = NULL;
 		}
                 else if (acct_type == MAP_IGP) {
-		  memset(&ime, 0, sizeof(ime));
-
                   for (dindex = 0; strcmp(igp_daemon_map_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(igp_daemon_map_dictionary[dindex].key, key)) {
                       err = (*igp_daemon_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);

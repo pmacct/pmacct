@@ -50,6 +50,15 @@ struct eth_header
   u_int16_t ether_type;                     /* packet type ID field */
 };
 
+#define CHDLC_MCAST_ADDR	0x8F
+#define CHDLC_FIXED_CONTROL	0x00
+/* CHDLC header */
+struct chdlc_header {
+  u_int8_t address;
+  u_int8_t control;
+  u_int16_t protocol;
+};
+
 #define TR_RIF_LENGTH(trp)		((ntohs((trp)->token_rcf) & 0x1f00) >> 8)
 #define TR_IS_SOURCE_ROUTED(trp)	((trp)->token_shost[0] & 0x80)
 #define TOKEN_FC_LLC			1
