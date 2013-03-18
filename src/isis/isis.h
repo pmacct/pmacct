@@ -60,8 +60,10 @@ struct igp_map_metric {
 
 struct igp_map_entry {
   struct host_addr node;
+  u_int16_t area_id;
   struct igp_map_metric adj_metric[MAX_IGP_MAP_ELEM];
   struct igp_map_metric reach_metric[MAX_IGP_MAP_ELEM];
+  struct igp_map_metric reach6_metric[MAX_IGP_MAP_ELEM];
   u_int8_t adj_metric_num;
   u_int8_t reach_metric_num;
 };
@@ -78,11 +80,14 @@ EXT void isis_pdu_runner(u_char *, const struct pcap_pkthdr *, const u_char *);
 EXT int iso_handler(register struct packet_ptrs *);
 
 EXT int igp_daemon_map_node_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int igp_daemon_map_area_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int igp_daemon_map_adj_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int igp_daemon_map_reach_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int igp_daemon_map_reach6_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT void igp_daemon_map_validate(char *, struct plugin_requests *);
 EXT void igp_daemon_map_initialize(char *, struct plugin_requests *);
 EXT void igp_daemon_map_finalize(char *, struct plugin_requests *);
+EXT int igp_daemon_map_handle_len(int *, int, struct plugin_requests *, char *);
 
 /* global variables */
 EXT struct thread_master *master;

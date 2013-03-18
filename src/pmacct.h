@@ -161,6 +161,7 @@
 struct plugin_requests {
   u_int8_t bpf_filter;		/* On-request packet copy for BPF purposes */
   void *key_value_table;	/* load_id_file() : table to be filled in from key-value files */
+  int line_num;			/* load_id_file() : line number being processed */
 };
 
 #include "pmacct-defines.h"

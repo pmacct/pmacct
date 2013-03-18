@@ -44,6 +44,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   FILE *file;
   char buf[SRVBUFLEN];
   int v4_num = 0, x, tot_lines = 0, err, index, label_solved, sz;
+  int ignoring;
   struct stat st;
 
 #if defined ENABLE_IPV6
@@ -96,7 +97,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
     /* first stage: reading Agent ID file and arranging it in a temporary memory table */
     while (!feof(file)) {
-      tot_lines++;
+      ignoring = FALSE;
+      req->line_num = ++tot_lines;
+
       if (tmp.num >= config.pre_tag_map_entries) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): map '%s' cut to the first %u entries. Number of entries can be configured via 'pre_tag_map_etries'.\n",
 		config.name, config.type, filename, config.pre_tag_map_entries);
@@ -111,7 +114,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	    strip_quotes(buf);
 
 	    /* resetting the entry and enforcing defaults */
-	    memset(&ime, 0, sizeof(ime));
+	    if (acct_type == MAP_IGP) memset(&ime, 0, sizeof(ime));
             memset(&tmp.e[tmp.num], 0, sizeof(struct id_entry));
 	    tmp.e[tmp.num].ret = FALSE;
 
@@ -239,8 +242,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   if (err) {
                     if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): unknown key '%s' at line %d in map '%s'. Ignored.\n",
                                                 config.name, config.type, key, tot_lines, filename);
-                    else Log(LOG_ERR, "Line %d ignored in map '%s'.\n", tot_lines, filename);
-                    break;
+                    else {
+		      Log(LOG_ERR, "Line %d ignored in map '%s'.\n", tot_lines, filename);
+		      ignoring = TRUE;
+		    }
                   }
                   key = NULL; value = NULL;
                 }
@@ -273,111 +278,113 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		}
               }
             }
-            /* verifying errors and required fields */
-	    if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
-	      if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2) 
-		 Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
+	    if (!ignoring) {
+              /* verifying errors and required fields */
+	      if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
+	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2) 
+		   Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
-              else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2) && tmp.e[tmp.num].agent_ip.a.family) {
-                int j;
+                else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2) && tmp.e[tmp.num].agent_ip.a.family) {
+                  int j;
 
-                for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
-                else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
+                  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                  if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
+                  else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
 
-	        if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+	          if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-	        else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+	          else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
 #endif
-                tmp.num++;
-              }
-	      /* if any required field is missing and other errors have been signalled
-	         before we will trap an error message */
-	      else if (((!tmp.e[tmp.num].id && !tmp.e[tmp.num].id2) || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-	        Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
+                  tmp.num++;
+                }
+	        /* if any required field is missing and other errors have been signalled
+	           before we will trap an error message */
+	        else if (((!tmp.e[tmp.num].id && !tmp.e[tmp.num].id2) || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+	          Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
 			config.name, config.type, tot_lines, filename); 
-	    }
-	    else if (acct_type == ACCT_PM) {
-	      if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2)
-                 Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
+	      }
+	      else if (acct_type == ACCT_PM) {
+	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2)
+                   Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
-	      else if (tmp.e[tmp.num].agent_ip.a.family)
-		Log(LOG_ERR, "ERROR ( %s/%s ): key 'ip' not applicable here. Invalid line %d in map '%s'.\n",
+	        else if (tmp.e[tmp.num].agent_ip.a.family)
+		  Log(LOG_ERR, "ERROR ( %s/%s ): key 'ip' not applicable here. Invalid line %d in map '%s'.\n",
 			config.name, config.type, tot_lines, filename);
-	      else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2)) {
-                int j;
+	        else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2)) {
+                  int j;
 
-		for (j = 0; tmp.e[tmp.num].func[j]; j++);
-		tmp.e[tmp.num].agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
-		if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
-		else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
-		v4_num++; tmp.num++;
-	      } 
-	    }
-	    else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
-		     acct_type == MAP_BGP_SRC_MED) {
-              if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].flags) && tmp.e[tmp.num].agent_ip.a.family) {
-                int j;
+		  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+		  tmp.e[tmp.num].agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
+		  if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
+		  else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
+		  v4_num++; tmp.num++;
+	        } 
+	      }
+	      else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
+	  	       acct_type == MAP_BGP_SRC_MED) {
+                if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].flags) && tmp.e[tmp.num].agent_ip.a.family) {
+                  int j;
 
-                for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                tmp.e[tmp.num].func[j] = pretag_id_handler;
-                if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                  tmp.e[tmp.num].func[j] = pretag_id_handler;
+                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
 #endif
-                tmp.num++;
-              }
-              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-                Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n", 
+                  tmp.num++;
+                }
+                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                  Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n", 
 			config.name, config.type, tot_lines, filename);
-	    }
-            else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
-              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
-                int j;
+	      }
+              else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
+                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                  int j;
 
-                for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                tmp.e[tmp.num].func[j] = pretag_id_handler;
-                if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                  tmp.e[tmp.num].func[j] = pretag_id_handler;
+                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
 #endif
-                tmp.num++;
-              }
-              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-                Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
+                  tmp.num++;
+                }
+                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                  Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
 			config.name, config.type, filename, tot_lines, filename);
-            }
-            else if (acct_type == MAP_BGP_IFACE_TO_RD) {
-              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
-                int j;
-
-                for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                tmp.e[tmp.num].func[j] = pretag_id_handler;
-                if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
-#if defined ENABLE_IPV6
-                else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
-#endif
-                tmp.num++;
               }
-	    }
-            else if (acct_type == MAP_SAMPLING) {
-              if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
-                int j;
+              else if (acct_type == MAP_BGP_IFACE_TO_RD) {
+                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                  int j;
 
-                for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                tmp.e[tmp.num].func[j] = pretag_id_handler;
-                if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                  tmp.e[tmp.num].func[j] = pretag_id_handler;
+                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
 #endif
-                tmp.num++;
-              }
-              else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-                Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
+                  tmp.num++;
+               }
+	      }
+              else if (acct_type == MAP_SAMPLING) {
+                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                  int j;
+
+                  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                  tmp.e[tmp.num].func[j] = pretag_id_handler;
+                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+#if defined ENABLE_IPV6
+                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+#endif
+                  tmp.num++;
+                }
+                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                  Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
 			config.name, config.type, tot_lines, filename);
-            }
-	    else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, req); 
-	    else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
+              }
+	      else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, req); 
+	      else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
+	    }
           }
           else Log(LOG_ERR, "ERROR ( %s/%s ): malformed line %d in map '%s'. Ignored.\n",
 			config.name, config.type, tot_lines, filename);

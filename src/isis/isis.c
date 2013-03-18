@@ -436,6 +436,32 @@ int igp_daemon_map_node_handler(char *filename, struct id_entry *e, char *value,
   return FALSE;
 }
 
+int igp_daemon_map_area_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+  int x = 0, j, len;
+
+  len = strlen(value);
+
+  while (x < len) {
+    if (!isdigit(value[x])) {
+      Log(LOG_ERR, "ERROR ( %s ): Bad 'area_id' value: '%s'. ", filename, value);
+      return TRUE;
+    }
+    x++;
+  }
+
+  j = atoi(value);
+  if (j < 0 || j > 65535) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad 'area_id' value (range: 0 >= value > 65536). ", filename);
+    return TRUE;
+  }
+
+  entry->area_id = j;
+
+  return FALSE;
+}
+
 int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
@@ -538,21 +564,30 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
   return FALSE; 
 }
 
+int igp_daemon_map_reach6_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+#if defined ENABLE_IPV6
+#endif
+}
+
 void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
   struct pcap_pkthdr phdr;
 
   if (entry) {
-    if (entry->adj_metric_num || entry->reach_metric_num) {
+    if (entry->node.family && entry->area_id && (entry->adj_metric_num || entry->reach_metric_num)) {
       char isis_dgram[65535], *isis_dgram_ptr = isis_dgram;
       struct chdlc_header *chdlc_hdr;
       struct isis_fixed_hdr *isis_hdr;
       struct isis_link_state_hdr *lsp_hdr;
-      struct idrp_info *adj_hdr, *reach_v4_hdr;
+      struct idrp_info *adj_hdr, *reach_v4_hdr, *proto_supported_hdr, *area_address_hdr;
       struct is_neigh *adj;
       struct ipv4_reachability *reach_v4;
+      struct area_address *area_addr;
       int rem_len = sizeof(isis_dgram), cnt, tlvs_cnt = 0, pdu_len = 0;
+
+      memset(isis_dgram, 0, sizeof(isis_dgram));
 
       /* can't use DLT_RAW for IS-IS, let's use DLT_CHDLC */
       chdlc_hdr = (struct chdlc_header *) isis_dgram_ptr;
@@ -561,7 +596,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       chdlc_hdr->protocol = ETHERTYPE_ISO;
       
       isis_dgram_ptr += sizeof(struct chdlc_header);
-      rem_len -= sizeof(struct chdlc_header);
+      if (igp_daemon_map_handle_len(&rem_len, sizeof(struct chdlc_header), req, filename)) return;
 
       isis_hdr = (struct isis_fixed_hdr *) isis_dgram_ptr;
       isis_hdr->idrp = ISO10589_ISIS;
@@ -571,7 +606,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       isis_hdr->version2 = TRUE;
 
       isis_dgram_ptr += sizeof(struct isis_fixed_hdr);
-      rem_len -= sizeof(struct isis_fixed_hdr);
+      if (igp_daemon_map_handle_len(&rem_len, sizeof(struct isis_fixed_hdr), req, filename)) return;
 
       lsp_hdr = (struct isis_link_state_hdr *) isis_dgram_ptr;
       lsp_hdr->pdu_len = 0; /* updated later */ 
@@ -580,7 +615,42 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       lsp_hdr->lsp_bits = 0x03; /* IS Type = L2 */
 
       isis_dgram_ptr += sizeof(struct isis_link_state_hdr);
-      rem_len -= sizeof(struct isis_link_state_hdr);
+      if (igp_daemon_map_handle_len(&rem_len, sizeof(struct isis_link_state_hdr), req, filename)) return;
+
+      proto_supported_hdr = (struct idrp_info *) isis_dgram_ptr;
+      proto_supported_hdr->value = PROTOCOLS_SUPPORTED;
+
+      isis_dgram_ptr += sizeof(struct idrp_info);
+      if (igp_daemon_map_handle_len(&rem_len, sizeof(struct idrp_info), req, filename)) return;
+
+      *isis_dgram_ptr = (u_char) 0xCC;
+      isis_dgram_ptr++;
+      proto_supported_hdr->len++;
+#if defined ENABLE_IPV6
+      *isis_dgram_ptr = (u_char) 0x8E;
+      isis_dgram_ptr++;
+      proto_supported_hdr->len++;
+#endif
+      if (igp_daemon_map_handle_len(&rem_len, proto_supported_hdr->len, req, filename)) return;
+      pdu_len += proto_supported_hdr->len;
+      tlvs_cnt++;
+
+      area_address_hdr = (struct idrp_info *) isis_dgram_ptr;
+      area_address_hdr->value = AREA_ADDRESSES;
+      area_address_hdr->len = sizeof(struct area_address);
+
+      isis_dgram_ptr += sizeof(struct idrp_info);
+      if (igp_daemon_map_handle_len(&rem_len, sizeof(struct idrp_info), req, filename)) return;
+
+      area_addr = (struct area_address *) isis_dgram_ptr;
+      area_addr->len = 3;
+      area_addr->afi = 0x49;
+      area_addr->area_id = htons(entry->area_id);
+
+      isis_dgram_ptr += area_address_hdr->len;
+      if (igp_daemon_map_handle_len(&rem_len, area_address_hdr->len, req, filename)) return;
+      pdu_len += area_address_hdr->len;
+      tlvs_cnt++;
 
       if (entry->adj_metric_num) {
         adj_hdr = (struct idrp_info *) isis_dgram_ptr; 
@@ -589,13 +659,13 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 	pdu_len += adj_hdr->len;
 
         isis_dgram_ptr += sizeof(struct idrp_info);
-        rem_len -= sizeof(struct idrp_info);
+        if (igp_daemon_map_handle_len(&rem_len, sizeof(struct idrp_info), req, filename)) return;
 
         for (cnt = 0; cnt < entry->adj_metric_num; cnt++) { 
 	  if (!cnt) {
 	    /* reserved space must be zero */
 	    isis_dgram_ptr++;
-	    rem_len--;
+            if (igp_daemon_map_handle_len(&rem_len, 1, req, filename)) return;
 	  }
 
 	  adj = (struct is_neigh *) isis_dgram_ptr;
@@ -606,7 +676,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 	  memcpy(adj->neigh_id, &entry->adj_metric[cnt].prefix.u.prefix4, 4);
 	  
           isis_dgram_ptr += sizeof(struct is_neigh);
-          rem_len -= sizeof(struct is_neigh);
+          if (igp_daemon_map_handle_len(&rem_len, sizeof(struct is_neigh), req, filename)) return;
         }
 
 	tlvs_cnt++;
@@ -619,7 +689,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 	pdu_len += reach_v4_hdr->len;
 
         isis_dgram_ptr += sizeof(struct idrp_info);
-        rem_len -= sizeof(struct idrp_info);
+        if (igp_daemon_map_handle_len(&rem_len, sizeof(struct idrp_info), req, filename)) return;
 
         for (cnt = 0; cnt < entry->reach_metric_num; cnt++) {
           reach_v4 = (struct ipv4_reachability *) isis_dgram_ptr;
@@ -632,13 +702,13 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 					~(0xffffffffUL >> entry->reach_metric[cnt].prefix.prefixlen));
 
           isis_dgram_ptr += sizeof(struct ipv4_reachability);
-          rem_len -= sizeof(struct ipv4_reachability);
+          if (igp_daemon_map_handle_len(&rem_len, sizeof(struct ipv4_reachability), req, filename)) return;
         }
 
 	tlvs_cnt++;
       }
 
-      // XXX
+      // XXX: handle entry->reach6_metric_num here 
 
       /* wrapping up: fix lsp length */
       pdu_len += sizeof(struct isis_fixed_hdr)+ISIS_LSP_HDR_LEN+(ISIS_TLV_HDR_LEN*tlvs_cnt);
@@ -650,7 +720,13 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 	pcap_dump((char *) idmm_fd, &phdr, isis_dgram);
       }
     }
+    else {
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): required key missing at line %d in map '%s'. Required keys are:\n",
+		req->line_num, filename);
+      Log(LOG_ERR, "ERROR ( default/core/ISIS ): node, area_id, adj_metric or reach_metric or reach6_metric.\n");
+    }
   }
+  else Log(LOG_ERR, "ERROR ( %s ): Invalid pointer to entry. ", filename);
 }
 
 void igp_daemon_map_initialize(char *filename, struct plugin_requests *req)
@@ -671,4 +747,15 @@ void igp_daemon_map_initialize(char *filename, struct plugin_requests *req)
 void igp_daemon_map_finalize(char *filename, struct plugin_requests *req)
 {
   if (config.debug && config.igp_daemon_map_msglog) pcap_dump_close(idmm_fd);
+}
+
+int igp_daemon_map_handle_len(int *rem_len, int len, struct plugin_requests *req, char *filename)
+{
+  *rem_len -= len;
+  if (*rem_len < 0) {
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): Not enough space. Ignoring line %d in map '%s'.\n", req->line_num, filename);
+    return TRUE;
+  }
+
+  return FALSE;
 }

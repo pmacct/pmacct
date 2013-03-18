@@ -196,6 +196,12 @@ struct idrp_info
   u_char len;
 };
 
+struct area_address {
+  u_char len;
+  u_char afi;
+  u_int16_t area_id;
+};
+
 #ifdef ENABLE_IPV6
 struct ipv6_reachability
 {

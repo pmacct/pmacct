@@ -21,7 +21,9 @@
 
 const struct _map_dictionary_line igp_daemon_map_dictionary[] = {
   {"node", igp_daemon_map_node_handler},
+  {"area_id", igp_daemon_map_area_id_handler},
   {"adj_metric", igp_daemon_map_adj_metric_handler},
   {"reach_metric", igp_daemon_map_reach_metric_handler},
+  {"reach6_metric", igp_daemon_map_reach6_metric_handler},
   {"", NULL}
 };
