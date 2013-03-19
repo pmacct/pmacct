@@ -1,4 +1,3 @@
-! 
 ! Pre-Tagging map -- multiplexes various fields into a 4-bytes numerical-only ID 
 !
 ! File syntax is key-based. Position of keys inside the same row (rule) is not
@@ -9,7 +8,8 @@
 ! be used to alter the standard rule evaluation flow.
 !
 ! nfacctd: valid keys: id, id2, ip, in, out, engine_type, engine_id, nexthop,
-! bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate and filter;
+! bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate,  filter and
+! set_qos;
 ! mandatory keys for each rule: id or id2 and ip.
 !
 ! sfacctd: valid keys: id, id2, ip, in, out, agent_id, nexthop, bgp_nexthop,
@@ -38,6 +38,11 @@
 !			using memory tables and 'agent_id2' when using a SQL
 !			plugin. If using a SQL plugin, read more about the
 !			'agent_id2' field in the 'sql/README.agent_id2' document
+! 'set_qos'             Matching packets are set their 'tos' primitive to the
+!			specified value. Valid only in nfacctd. When collecting
+!			ingress NetFlow at both trusted and untrusted borders,
+!			for example, this is useful to selectively override ToS
+!			values read only at untrusted ones. 
 ! 'ip'			In nfacctd it's compared against the source IP address
 !			of the device which is originating NetFlow packets; in
 !			sfacctd this is compared against the AgentId field of

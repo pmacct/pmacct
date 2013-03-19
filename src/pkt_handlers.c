@@ -1792,6 +1792,12 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
+  /* setting tos from pre_tag_map */
+  if (pptrs->set_tos.set) {
+    pdata->primitives.tos = pptrs->set_tos.n;
+    return; 
+  }
+
   switch(hdr->version) {
   case 10:
   case 9:

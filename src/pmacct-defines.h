@@ -290,6 +290,11 @@ typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
 typedef u_int32_t pm_country_t;
 
+typedef struct {
+  u_int8_t set;
+  u_int8_t n;
+} s_uint8_t;
+
 #if defined HAVE_64BIT_COUNTERS
 typedef u_int64_t pm_counter_t;
 #else

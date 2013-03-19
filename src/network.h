@@ -304,6 +304,7 @@ struct packet_ptrs {
   pm_id_t bta2; /* bgp_to_agent (cont.d: 64bits more for IPv6 addresses) */
   pm_id_t bitr; /* bgp_iface_to_rd */
   pm_id_t st; /* sampling_map */
+  s_uint8_t set_tos; /* pretag map: set_tos feature */
   char *bgp_src; /* pointer to bgp_node structure for source prefix, if any */  
   char *bgp_dst; /* pointer to bgp_node structure for destination prefix, if any */ 
   char *bgp_src_info; /* pointer to bgp_info structure for source prefix, if any */  

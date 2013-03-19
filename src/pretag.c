@@ -285,9 +285,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		   Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
                 else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2) && tmp.e[tmp.num].agent_ip.a.family) {
-                  int j;
+                  int j, z;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
+		  for (z = 0; tmp.e[tmp.num].set_func[z]; z++, j++) {
+		    tmp.e[tmp.num].func[j] = tmp.e[tmp.num].set_func[z];
+		  }
                   if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
                   else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
 
@@ -311,9 +314,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		  Log(LOG_ERR, "ERROR ( %s/%s ): key 'ip' not applicable here. Invalid line %d in map '%s'.\n",
 			config.name, config.type, tot_lines, filename);
 	        else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2)) {
-                  int j;
+                  int j, z;
 
 		  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+		  for (z = 0; tmp.e[tmp.num].set_func[z]; z++, j++) {
+		    tmp.e[tmp.num].func[j] = tmp.e[tmp.num].set_func[z];
+		  }
 		  tmp.e[tmp.num].agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
 		  if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
 		  else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
@@ -364,7 +370,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
-               }
+                }
 	      }
               else if (acct_type == MAP_SAMPLING) {
                 if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {

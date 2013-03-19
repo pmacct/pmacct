@@ -564,11 +564,58 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
   return FALSE; 
 }
 
+#if defined ENABLE_IPV6
 int igp_daemon_map_reach6_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-#if defined ENABLE_IPV6
-#endif
+  struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
+  char *str_ptr, *token, *sep, *ip_str, *metric_str, *endptr;
+  int idx = 0, debug_idx;
+
+  str_ptr = strdup(value);
+  if (!str_ptr) {
+    Log(LOG_ERR, "ERROR ( %s ): not enough memory to strdup(). ", filename);
+    return TRUE;
+  }
+
+  while (token = extract_token(&str_ptr, ';')) {
+    if (idx >= MAX_IGP_MAP_ELEM) {
+      Log(LOG_ERR, "ERROR ( %s ): maximum number of elements (%u) per reach6_metric violated. ", filename, MAX_IGP_MAP_ELEM);
+      return TRUE;
+    }
+
+    sep = strchr(token, ',');
+    if (!sep) {
+      Log(LOG_WARNING, "WARN ( %s ): missing reach6_metric entry separator '%s'.\n", filename, token);
+      continue;
+    }
+
+    ip_str = token;
+    metric_str = sep+1;
+    *sep = '\0';
+
+    if (!isis_str2prefix(ip_str, &entry->reach6_metric[idx].prefix) || entry->reach6_metric[idx].prefix.family != AF_INET6) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad IPv6 address '%s'.\n", filename, ip_str);
+      continue;
+    }
+
+    entry->reach6_metric[idx].metric = strtoull(metric_str, &endptr, 10);
+    if (!entry->reach6_metric[idx].metric) {
+      Log(LOG_WARNING, "WARN ( %s ): Bad metric '%s'.\n", filename, metric_str);
+      continue;
+    }
+
+    idx++;
+  }
+
+  if (!idx) {
+    Log(LOG_ERR, "ERROR ( %s ): invalid or empty reach6_metric entry '%s'. ", filename, value);
+    return TRUE;
+  }
+  else entry->reach6_metric_num = idx;
+
+  return FALSE;
 }
+#endif
 
 void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 {
@@ -576,14 +623,17 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
   struct pcap_pkthdr phdr;
 
   if (entry) {
-    if (entry->node.family && entry->area_id && (entry->adj_metric_num || entry->reach_metric_num)) {
+    if (entry->node.family && entry->area_id && (entry->adj_metric_num || entry->reach_metric_num || entry->reach6_metric_num)) {
       char isis_dgram[65535], *isis_dgram_ptr = isis_dgram;
       struct chdlc_header *chdlc_hdr;
       struct isis_fixed_hdr *isis_hdr;
       struct isis_link_state_hdr *lsp_hdr;
-      struct idrp_info *adj_hdr, *reach_v4_hdr, *proto_supported_hdr, *area_address_hdr;
+      struct idrp_info *adj_hdr, *reach_v4_hdr, *reach_v6_hdr, *proto_supported_hdr, *area_address_hdr;
       struct is_neigh *adj;
       struct ipv4_reachability *reach_v4;
+#ifdef ENABLE_IPV6
+      struct ipv6_reachability *reach_v6;
+#endif
       struct area_address *area_addr;
       int rem_len = sizeof(isis_dgram), cnt, tlvs_cnt = 0, pdu_len = 0;
 
@@ -685,7 +735,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       if (entry->reach_metric_num) {
         reach_v4_hdr = (struct idrp_info *) isis_dgram_ptr;
         reach_v4_hdr->value = IPV4_INT_REACHABILITY;
-        reach_v4_hdr->len = (12 * entry->reach_metric_num);
+        reach_v4_hdr->len = (IPV4_REACH_LEN * entry->reach_metric_num);
 	pdu_len += reach_v4_hdr->len;
 
         isis_dgram_ptr += sizeof(struct idrp_info);
@@ -698,7 +748,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
           reach_v4->metrics.metric_expense = 0x80;
           reach_v4->metrics.metric_delay = 0x80;
           memcpy(&reach_v4->prefix, &entry->reach_metric[cnt].prefix.u.prefix4, 4);
-          reach_v4->mask.s_addr = ntohl((entry->reach_metric[cnt].prefix.prefixlen == 32) ? 0xffffffffUL :
+          reach_v4->mask.s_addr = htonl((entry->reach_metric[cnt].prefix.prefixlen == 32) ? 0xffffffffUL :
 					~(0xffffffffUL >> entry->reach_metric[cnt].prefix.prefixlen));
 
           isis_dgram_ptr += sizeof(struct ipv4_reachability);
@@ -708,7 +758,35 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 	tlvs_cnt++;
       }
 
-      // XXX: handle entry->reach6_metric_num here 
+#ifdef ENABLE_IPV6
+      if (entry->reach6_metric_num) {
+	int prefix_len = 0;
+
+        reach_v6_hdr = (struct idrp_info *) isis_dgram_ptr;
+        reach_v6_hdr->value = IPV6_REACHABILITY;
+        reach_v6_hdr->len = 0;
+
+        isis_dgram_ptr += sizeof(struct idrp_info);
+        if (igp_daemon_map_handle_len(&rem_len, sizeof(struct idrp_info), req, filename)) return;
+
+        for (cnt = 0; cnt < entry->reach6_metric_num; cnt++) {
+          reach_v6 = (struct ipv6_reachability *) isis_dgram_ptr;
+	  reach_v6->metric = htonl(entry->reach6_metric[cnt].metric);
+	  reach_v6->control_info = 0;
+	  reach_v6->prefix_len = entry->reach6_metric[cnt].prefix.prefixlen;
+	  prefix_len = reach_v6->prefix_len / 8;
+	  memcpy(&reach_v6->prefix, &entry->reach6_metric[cnt].prefix.u.prefix6, prefix_len);
+
+          reach_v6_hdr->len += 6 + prefix_len; 
+          isis_dgram_ptr += 6 + prefix_len;
+          if (igp_daemon_map_handle_len(&rem_len, 6 + prefix_len, req, filename)) return;
+        }
+
+        pdu_len += reach_v6_hdr->len;
+
+        tlvs_cnt++;
+      }
+#endif
 
       /* wrapping up: fix lsp length */
       pdu_len += sizeof(struct isis_fixed_hdr)+ISIS_LSP_HDR_LEN+(ISIS_TLV_HDR_LEN*tlvs_cnt);

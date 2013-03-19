@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -870,6 +870,38 @@ int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, 
   else return TRUE; 
 }
 
+int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0, len;
+  char *endptr;
+
+  e->set_tos.set = TRUE;
+  len = strlen(value);
+
+  while (x < len) {
+    if (!isdigit(value[x])) {
+      Log(LOG_ERR, "ERROR ( %s ): bad 'set_tos' value: '%s'. ", filename, value);
+      return TRUE;
+    }
+    x++;
+  }
+
+  e->set_tos.n = strtoul(value, &endptr, 10);
+  for (x = 0; e->set_func[x]; x++) {
+    if (e->set_func_type[x] == PRETAG_SET_TOS) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_tos' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  /* feature currently only supported in nfacctd */
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_set_tos_handler;
+
+  if (e->set_func[x]) e->set_func_type[x] = PRETAG_SET_TOS;
+
+  return FALSE;
+}
+
 int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   strlcpy(e->label, value, MAX_LABEL_LEN); 
@@ -1576,6 +1608,15 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (!ret) return (FALSE | entry->mpls_vpn_rd.neg);
   else return (TRUE ^ entry->mpls_vpn_rd.neg);
+}
+
+int pretag_set_tos_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+
+  memcpy(&pptrs->set_tos, &entry->set_tos, sizeof(s_uint8_t));
+
+  return FALSE;
 }
 
 int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)

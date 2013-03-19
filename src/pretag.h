@@ -20,7 +20,7 @@
 */
 
 /* Pre-Tag map stuff */
-#define N_MAP_HANDLERS 16
+#define N_MAP_HANDLERS N_PRIMITIVES
 #define MAX_LABEL_LEN 32
 #define MAX_PRETAG_MAP_ENTRIES 384 
 
@@ -45,6 +45,7 @@
 #define PRETAG_STD_COMM		0x00040000
 #define PRETAG_MPLS_VPN_RD	0x00080000
 #define PRETAG_SAMPLE_TYPE      0x00100000
+#define PRETAG_SET_TOS		0x00200000
 
 #define PRETAG_MAP_RCODE_ID	100
 #define PRETAG_MAP_RCODE_ID2	101
@@ -117,6 +118,7 @@ struct id_entry {
   pt_uint32_t peer_dst_as;
   pt_uint32_t src_local_pref;
   pt_uint32_t local_pref;
+  s_uint8_t set_tos;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   pt_rd_t mpls_vpn_rd;
@@ -124,6 +126,8 @@ struct id_entry {
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];
   u_int32_t func_type[N_MAP_HANDLERS];
+  pretag_handler set_func[N_MAP_HANDLERS];
+  u_int32_t set_func_type[N_MAP_HANDLERS];
   char label[MAX_LABEL_LEN];
   pt_jeq_t jeq;
   u_int8_t ret;

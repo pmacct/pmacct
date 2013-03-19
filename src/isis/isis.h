@@ -63,9 +63,12 @@ struct igp_map_entry {
   u_int16_t area_id;
   struct igp_map_metric adj_metric[MAX_IGP_MAP_ELEM];
   struct igp_map_metric reach_metric[MAX_IGP_MAP_ELEM];
+#ifdef ENABLE_IPV6
   struct igp_map_metric reach6_metric[MAX_IGP_MAP_ELEM];
+#endif
   u_int8_t adj_metric_num;
   u_int8_t reach_metric_num;
+  u_int8_t reach6_metric_num;
 };
 
 /* prototypes */
@@ -83,7 +86,9 @@ EXT int igp_daemon_map_node_handler(char *, struct id_entry *, char *, struct pl
 EXT int igp_daemon_map_area_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int igp_daemon_map_adj_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int igp_daemon_map_reach_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+#ifdef ENABLE_IPV6
 EXT int igp_daemon_map_reach6_metric_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+#endif
 EXT void igp_daemon_map_validate(char *, struct plugin_requests *);
 EXT void igp_daemon_map_initialize(char *, struct plugin_requests *);
 EXT void igp_daemon_map_finalize(char *, struct plugin_requests *);
