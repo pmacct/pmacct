@@ -2519,8 +2519,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   SFSample *sample = (SFSample *)pptrs->f_data; 
-  int x, j, stop;
-  pm_id_t id;
+  int x, j;
+  pm_id_t id, stop, ret;
 
   if (!t) return 0;
 
@@ -2529,20 +2529,26 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
      part (x+1..end)
   */
 
+  pretag_init_vars(pptrs);
   id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;
+
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
     for (x = 0; x < t->ipv4_num; x++) {
       if (t->e[x].agent_ip.a.address.ipv4.s_addr == sample->agent_addr.address.ip_v4.s_addr) {
 	t->e[x].last_matched = FALSE;
-        for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-        if (id) {
-          if (stop == PRETAG_MAP_RCODE_ID) {
+        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+          ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+          if (ret > TRUE) stop |= ret;
+          else stop = ret;
+        }
+        if (!stop || stop > TRUE) {
+          if (stop & PRETAG_MAP_RCODE_ID) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
             *tag = id;
           }
-          else if (stop == PRETAG_MAP_RCODE_ID2) {
+          else if (stop & PRETAG_MAP_RCODE_ID2) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
             *tag2 = id;
           }
@@ -2572,13 +2578,17 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) { 
     for (x = (t->num-t->ipv6_num); x < t->num; x++) {
       if (!ip6_addr_cmp(&t->e[x].agent_ip.a.address.ipv6, &sample->agent_addr.address.ip_v6)) {
-        for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-        if (id) {
-          if (stop == PRETAG_MAP_RCODE_ID) {
+        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+          ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+          if (ret > TRUE) stop |= ret;
+          else stop = ret;
+        }
+        if (!stop || stop > TRUE) {
+          if (stop & PRETAG_MAP_RCODE_ID) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
             *tag = id;
           }
-          else if (stop == PRETAG_MAP_RCODE_ID2) {
+          else if (stop & PRETAG_MAP_RCODE_ID2) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
             *tag2 = id;
           }
@@ -2595,6 +2605,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 	      *tag = 0;
 	      *tag2 = 0;
 	    }
+
             x = t->e[x].jeq.ptr->pos;
             x--; /* yes, it will be automagically incremented by the for() cycle */
             id = 0;

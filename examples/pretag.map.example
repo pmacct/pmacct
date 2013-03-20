@@ -3,24 +3,23 @@
 ! File syntax is key-based. Position of keys inside the same row (rule) is not
 ! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full
 ! match wins (like in firewall rules). Negative values mean negations (ie. match
-! data NOT entering interface 2: 'in=-2'); 'id', 'id2', 'ip' and 'filter' keys
-! don't support negative values. 'label', 'jeq', 'return' and 'stack' keys can
-! be used to alter the standard rule evaluation flow.
+! data NOT entering interface 2: 'in=-2'); 'set_tag', 'set_tag2', 'filter' and
+! 'ip' keys don't support negative values. 'label', 'jeq', 'return' and 'stack'
+! keys can be used to alter the standard rule evaluation flow.
 !
-! nfacctd: valid keys: id, id2, ip, in, out, engine_type, engine_id, nexthop,
-! bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate,  filter and
-! set_qos;
-! mandatory keys for each rule: id or id2 and ip.
+! nfacctd: valid keys: set_tag, set_tag2, ip, in, out, engine_type, engine_id,
+! nexthop, bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate, filter
+! and set_qos;
+! mandatory keys for each rule: ip.
 !
-! sfacctd: valid keys: id, id2, ip, in, out, agent_id, nexthop, bgp_nexthop,
-! src_as, dst_as, sampling_rate, sample_type and filter; mandatory keys for
-! each rule: id or id2 and ip.
+! sfacctd: valid keys: set_tag, set_tag2, ip, in, out, agent_id, bgp_nexthop,
+! nexthop, src_as, dst_as, sampling_rate, sample_type and filter; mandatory
+! keys for each rule: ip.
 !
-! pmacctd: valid keys: id, id2, src_as, dst_as and filter. Only either id or id2
-! are mandatory for each rule. 
+! pmacctd: valid keys: set_tag, set_tag2, src_as, dst_as and filter.
 !
-! sfacctd, nfacctd when in 'tee' mode: valid keys: id, id2, ip;  mandatory keys
-! for each rule: id or id2 and ip.
+! sfacctd, nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, ip;
+! mandatory keys for each rule: ip.
 !
 ! BGP-related keys are independent of the collection method in use, hence apply
 ! to all daemons (BGP daemon must be enabled): src_as, dst_as, src_comms, comms,
@@ -28,16 +27,18 @@
 !
 ! list of currently supported keys follows:
 !
-! 'id'			tag assigned to a matching packet, flow or sample; its
-!			use is mutually exclusive with id2. The resulting label
-!			is written to the 'tag' field when using memory tables
-!			and 'agent_id' when using a SQL plugin. 
-! 'id2'			tag assigned to a matching packet, flow or sample; its
-!			use within a rule is mutually exclusive with 'id'. The
-!			resulting label is written to the 'tag2' field when
+! 'set_tag'		tag assigned to a matching packet, flow or sample; its
+!			use is mutually exclusive with set_tag2. The resulting
+!			label is written to the 'tag' field when using memory
+!			tables and 'agent_id' when using a SQL plugin. Legacy
+!			name for this primitive is 'id'. 
+! 'set_tag2'		tag assigned to a matching packet, flow or sample; its
+!			use within a rule is mutually exclusive with 'set_tag'.
+!			The resulting label is written to the 'tag2' field when
 !			using memory tables and 'agent_id2' when using a SQL
 !			plugin. If using a SQL plugin, read more about the
-!			'agent_id2' field in the 'sql/README.agent_id2' document
+!			'agent_id2' field in the 'sql/README.agent_id2' document.
+!			Legacy name for this primitive is 'id2'.
 ! 'set_qos'             Matching packets are set their 'tos' primitive to the
 !			specified value. Valid only in nfacctd. When collecting
 !			ingress NetFlow at both trusted and untrusted borders,
@@ -146,41 +147,41 @@
 !
 ! Some examples applicable to NetFlow.
 !
-id=1	ip=192.168.2.1	in=4
-id=10	ip=192.168.1.1 	in=5	out=3
-id=11	ip=192.168.1.1 	in=3	out=5
-id=12	ip=192.168.1.1	in=3 
-id=13	ip=192.168.1.1  nexthop=10.0.0.254
-id=14	ip=192.168.1.1  engine_type=1 engine_id=0
-id=15	ip=192.168.1.1  in=3 filter='src net 192.168.0.0/24' 
+set_tag=1	ip=192.168.2.1	in=4
+set_tag=10	ip=192.168.1.1 	in=5	out=3
+set_tag=11	ip=192.168.1.1 	in=3	out=5
+set_tag=12	ip=192.168.1.1	in=3 
+set_tag=13	ip=192.168.1.1  nexthop=10.0.0.254
+set_tag=14	ip=192.168.1.1  engine_type=1 engine_set_tag=0
+set_tag=15	ip=192.168.1.1  in=3 filter='src net 192.168.0.0/24' 
 
 !
 ! The following rule applies to 'pmacctd'; it will return an error if applied to either
 ! 'nfacctd' or 'sfacctd'
 !
-id=21	filter='src net 192.168.0.0/16'
+set_tag=21	filter='src net 192.168.0.0/16'
 
 !
 ! A few examples sFlow-related. The format of the rules is the same of 'nfacctd' ones
 ! but some keys don't apply to it. 
 !
-id=30 ip=192.168.1.1 
-id=31 ip=192.168.1.1 out=50
-id=32 ip=192.168.1.1 out=50 agent_id=0 sampling_rate=512
+set_tag=30 ip=192.168.1.1 
+set_tag=31 ip=192.168.1.1 out=50
+set_tag=32 ip=192.168.1.1 out=50 agent_set_tag=0 sampling_rate=512
 
 !
 ! === JEQ example #1:
 ! - implicit 'return' defaults to false
-! - 'id' used to store input interface tags
-! - 'id2' used to store output interface tags
+! - 'set_tag' used to store input interface tags
+! - 'set_tag2' used to store output interface tags
 !
-id=1000 ip=192.168.1.1 in=1 jeq=eval_out 
-id=1001 ip=192.168.1.1 in=2 jeq=eval_out
-id=1002 ip=192.168.1.1 in=3 jeq=eval_out
+set_tag=1000 ip=192.168.1.1 in=1 jeq=eval_out 
+set_tag=1001 ip=192.168.1.1 in=2 jeq=eval_out
+set_tag=1002 ip=192.168.1.1 in=3 jeq=eval_out
 ! ... further INs
-id2=1000 ip=192.168.1.1 out=1 label=eval_out
-id2=1001 ip=192.168.1.1 out=2 
-id2=1002 ip=192.168.1.1 out=3 
+set_tag2=1000 ip=192.168.1.1 out=1 label=eval_out
+set_tag2=1001 ip=192.168.1.1 out=2 
+set_tag2=1002 ip=192.168.1.1 out=3 
 ! ... further OUTs
 !
 ! ===
@@ -189,13 +190,13 @@ id2=1002 ip=192.168.1.1 out=3
 ! - implicit 'return' defaults to false
 ! - 'id' structured hierarchically to store both input and output interface tags
 !
-id=11000 ip=192.168.1.1 in=1 jeq=eval_out
-id=12000 ip=192.168.1.1 in=2 jeq=eval_out
-id=13000 ip=192.168.1.1 in=3 jeq=eval_out
+set_tag=11000 ip=192.168.1.1 in=1 jeq=eval_out
+set_tag=12000 ip=192.168.1.1 in=2 jeq=eval_out
+set_tag=13000 ip=192.168.1.1 in=3 jeq=eval_out
 ! ... further INs
-id=100 ip=192.168.1.1 out=1 label=eval_out stack=+
-id=101 ip=192.168.1.1 out=2 stack=+
-id=102 ip=192.168.1.1 out=3 stack=+
+set_tag=100 ip=192.168.1.1 out=1 label=eval_out stack=+
+set_tag=101 ip=192.168.1.1 out=2 stack=+
+set_tag=102 ip=192.168.1.1 out=3 stack=+
 ! ... further OUTs 
 !
 ! ===
@@ -206,13 +207,13 @@ id=102 ip=192.168.1.1 out=3 stack=+
 ! - The above leads to duplicates. Hence a pre_tag_filter should be used to split packets among plugins.  
 ! - 'id' used to temporarily store both input and output interface tags
 !
-id=1001 ip=192.168.1.1 in=1 jeq=eval_out return=true
-id=1002 ip=192.168.1.1 in=2 jeq=eval_out return=true
-id=1003 ip=192.168.1.1 in=3 jeq=eval_out return=true
+set_tag=1001 ip=192.168.1.1 in=1 jeq=eval_out return=true
+set_tag=1002 ip=192.168.1.1 in=2 jeq=eval_out return=true
+set_tag=1003 ip=192.168.1.1 in=3 jeq=eval_out return=true
 ! ... further INs
-id=2001 ip=192.168.1.1 out=1 label=eval_out 
-id=2002 ip=192.168.1.1 out=2 
-id=2003 ip=192.168.1.1 out=3 
+set_tag=2001 ip=192.168.1.1 out=1 label=eval_out 
+set_tag=2002 ip=192.168.1.1 out=2 
+set_tag=2003 ip=192.168.1.1 out=3 
 ! ... further OUTs
 !
 ! pre_tag_filter[in]: 1001-1003
@@ -223,7 +224,7 @@ id=2003 ip=192.168.1.1 out=3
 ! === BGP standard communities example #1
 ! - check is successful if matches either 65000:1234 or 65000:2345
 !
-id=100 ip=192.168.1.1 comms=65000:1234,65000:2345
+set_tag=100 ip=192.168.1.1 comms=65000:1234,65000:2345
 !
 ! ===
 !
@@ -233,17 +234,17 @@ id=100 ip=192.168.1.1 comms=65000:1234,65000:2345
 !   > tag=200 is considered a successful check;
 !   > tag=0 or tag=100 is considered unsuccessful
 !
-id=100 ip=192.168.1.1 comms=65000:1234 label=65000:1234 jeq=65000:2345
-id=100 ip=192.168.1.1 comms=65000:2345 label=65000:2345 jeq=65000:3456
-! ... further id=100 
-id=200 ip=192.168.1.1 comms=65000:3456 label=65000:3456
+set_tag=100 ip=192.168.1.1 comms=65000:1234 label=65000:1234 jeq=65000:2345
+set_tag=100 ip=192.168.1.1 comms=65000:2345 label=65000:2345 jeq=65000:3456
+! ... further set_tag=100 
+set_tag=200 ip=192.168.1.1 comms=65000:3456 label=65000:3456
 !
 ! ===
 !
 ! === BGP/MPLS VPN Route Distinguisher (RD) example
 ! - check is successful if matches encoding type #0 with value 65512:1
 !
-id=100 ip=192.168.1.1 mpls_vpn_rd=0:65512:1
+set_tag=100 ip=192.168.1.1 mpls_vpn_rd=0:65512:1
 !
 ! ===
 !
@@ -257,15 +258,15 @@ id=100 ip=192.168.1.1 mpls_vpn_rd=0:65512:1
 !   nfprobe_ifindex: tag2
 !   ...
 !
-id=1 filter='ether dst 00:11:22:33:44:55' jeq=fivefive
-id=1 filter='ether dst 00:11:22:33:44:66' jeq=sixsix
-id=1 filter='ether dst 00:11:22:33:44:77' jeq=sevenseven
-id=2 filter='ether src 00:11:22:33:44:55' jeq=fivefive
-id=2 filter='ether src 00:11:22:33:44:66' jeq=sixsix
-id=2 filter='ether src 00:11:22:33:44:77' jeq=sevenseven
+set_tag=1 filter='ether dst 00:11:22:33:44:55' jeq=fivefive
+set_tag=1 filter='ether dst 00:11:22:33:44:66' jeq=sixsix
+set_tag=1 filter='ether dst 00:11:22:33:44:77' jeq=sevenseven
+set_tag=2 filter='ether src 00:11:22:33:44:55' jeq=fivefive
+set_tag=2 filter='ether src 00:11:22:33:44:66' jeq=sixsix
+set_tag=2 filter='ether src 00:11:22:33:44:77' jeq=sevenseven
 !
-id2=5 label=fivefive
-id2=6 label=sixsix
-id2=7 label=sevenseven
+set_tag2=5 label=fivefive
+set_tag2=6 label=sixsix
+set_tag2=7 label=sevenseven
 ! 
 ! ===

@@ -1996,9 +1996,9 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
 
 int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  int x, j, stop;
+  int x, j;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
-  pm_id_t id;
+  pm_id_t id, stop, ret;
 
   if (!t) return 0;
 
@@ -2007,20 +2007,26 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
      part (x+1..end)
   */
 
+  pretag_init_vars(pptrs);
   id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;
+
   if (sa->sa_family == AF_INET) {
     for (x = 0; x < t->ipv4_num; x++) {
       if (t->e[x].agent_ip.a.address.ipv4.s_addr == ((struct sockaddr_in *)sa)->sin_addr.s_addr) {
 	t->e[x].last_matched = FALSE; 
-        for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-        if (id) {
-	  if (stop == PRETAG_MAP_RCODE_ID) {
+        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+	  ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+	  if (ret > TRUE) stop |= ret;
+	  else stop = ret;
+	}
+        if (!stop || stop > TRUE) {
+	  if (stop & PRETAG_MAP_RCODE_ID) {
 	    if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
 	    *tag = id;
 	  }
-	  else if (stop == PRETAG_MAP_RCODE_ID2) {
+	  else if (stop & PRETAG_MAP_RCODE_ID2) {
 	    if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
 	    *tag2 = id;
 	  }
@@ -2050,13 +2056,17 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   else if (sa->sa_family == AF_INET6) {
     for (x = (t->num-t->ipv6_num); x < t->num; x++) {
       if (!ip6_addr_cmp(&t->e[x].agent_ip.a.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr)) {
-        for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-        if (id) {
-          if (stop == PRETAG_MAP_RCODE_ID) {
+        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+	  ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+	  if (ret > TRUE) stop |= ret;
+	  else stop = ret;
+	}
+        if (!stop || stop > TRUE) {
+          if (stop & PRETAG_MAP_RCODE_ID) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
             *tag = id;
           }
-          else if (stop == PRETAG_MAP_RCODE_ID2) {
+          else if (stop & PRETAG_MAP_RCODE_ID2) {
             if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
             *tag2 = id;
           }

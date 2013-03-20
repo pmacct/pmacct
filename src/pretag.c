@@ -282,17 +282,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
               /* verifying errors and required fields */
 	      if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2) 
-		   Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
+		   Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id) and set_tag2 (id2) are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
-                else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2) && tmp.e[tmp.num].agent_ip.a.family) {
+                else if (!err && tmp.e[tmp.num].agent_ip.a.family) {
                   int j, z;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
 		  for (z = 0; tmp.e[tmp.num].set_func[z]; z++, j++) {
 		    tmp.e[tmp.num].func[j] = tmp.e[tmp.num].set_func[z];
+		    tmp.e[tmp.num].func_type[j] = tmp.e[tmp.num].set_func_type[z];
 		  }
-                  if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
-                  else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
 
 	          if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
@@ -302,29 +301,28 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                 }
 	        /* if any required field is missing and other errors have been signalled
 	           before we will trap an error message */
-	        else if (((!tmp.e[tmp.num].id && !tmp.e[tmp.num].id2) || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-	          Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
+	        else if (!err && !tmp.e[tmp.num].agent_ip.a.family)
+	          Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required key is: 'ip'.\n",
 			config.name, config.type, tot_lines, filename); 
 	      }
 	      else if (acct_type == ACCT_PM) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2)
-                   Log(LOG_ERR, "ERROR ( %s/%s ): 'id' and 'id2' are mutual exclusive at line %d in map '%s'.\n", 
+                   Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id) and set_tag2 (id2) are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
 	        else if (tmp.e[tmp.num].agent_ip.a.family)
 		  Log(LOG_ERR, "ERROR ( %s/%s ): key 'ip' not applicable here. Invalid line %d in map '%s'.\n",
 			config.name, config.type, tot_lines, filename);
-	        else if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2)) {
+	        else if (!err) {
                   int j, z;
 
 		  for (j = 0; tmp.e[tmp.num].func[j]; j++);
 		  for (z = 0; tmp.e[tmp.num].set_func[z]; z++, j++) {
 		    tmp.e[tmp.num].func[j] = tmp.e[tmp.num].set_func[z];
+		    tmp.e[tmp.num].func_type[j] = tmp.e[tmp.num].set_func_type[z];
 		  }
 		  tmp.e[tmp.num].agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
-		  if (tmp.e[tmp.num].id) tmp.e[tmp.num].func[j] = pretag_id_handler;
-		  else if (tmp.e[tmp.num].id2) tmp.e[tmp.num].func[j] = pretag_id2_handler;
 		  v4_num++; tmp.num++;
-	        } 
+	        }
 	      }
 	      else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
 	  	       acct_type == MAP_BGP_SRC_MED) {
@@ -520,4 +518,9 @@ char *pt_check_range(char *str)
     return ptr;
   }
   else return NULL;
+}
+
+void pretag_init_vars(struct packet_ptrs *pptrs)
+{
+  memset(&pptrs->set_tos, 0, sizeof(s_uint8_t));
 }

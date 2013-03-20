@@ -339,23 +339,29 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 
 int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  int x, j, stop;
-  pm_id_t id;
+  int x, j;
+  pm_id_t id, stop, ret;
 
   if (!t) return 0;
 
+  pretag_init_vars(pptrs);
   id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;
+
   for (x = 0; x < t->ipv4_num; x++) {
     t->e[x].last_matched = FALSE;
-    for (j = 0, stop = 0; !stop; j++) stop = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-    if (id) {
-      if (stop == PRETAG_MAP_RCODE_ID) {
+    for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+      ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+      if (ret > TRUE) stop |= ret;
+      else stop = ret;
+    }
+    if (!stop || stop > TRUE) {
+      if (stop & PRETAG_MAP_RCODE_ID) {
         if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
         *tag = id;
       }
-      else if (stop == PRETAG_MAP_RCODE_ID2) {
+      else if (stop & PRETAG_MAP_RCODE_ID2) {
         if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
         *tag2 = id;
       }

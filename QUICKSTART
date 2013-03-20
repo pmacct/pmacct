@@ -627,16 +627,17 @@ pre_tag_map: /path/to/pretag.map
 
    then edit the tag map as follows. A return value of '1' means ingress while '2' is
    translated to egress. It is possible to employ L2 and/or L3 addresses to recognize
-   flow directions. The 'id2' primitive (tag2) will be used to carry the return value:
+   flow directions. The 'set_tag2' primitive (tag2) will be used to carry the return
+   value:
 
-id=1 filter='dst host XXX.XXX.XXX.XXX'
-id=2 filter='src host XXX.XXX.XXX.XXX'
+set_tag=1 filter='dst host XXX.XXX.XXX.XXX'
+set_tag=2 filter='src host XXX.XXX.XXX.XXX'
 
-id=1 filter='ether src XX:XX:XX:XX:XX:XX'
-id=2 filter='ether dst XX:XX:XX:XX:XX:XX'
+set_tag=1 filter='ether src XX:XX:XX:XX:XX:XX'
+set_tag=2 filter='ether dst XX:XX:XX:XX:XX:XX'
 
-   Indeed in such a case, the 'id' primitive (tag) can be leveraged to other uses (ie.
-   filter sub-set of the traffic for flow export); 4) add interface (input, output)
+   Indeed in such a case, the 'set_tag' primitive (tag) can be leveraged to other uses
+   (ie. filter sub-set of the traffic for flow export); 4) add interface (input, output)
    awareness to measured IP traffic flowsi - in addition to direction awareness, as
    just discussed. Interface can be inferred either statically (<1-4294967295>) or
    dynamically (tag, tag2) via nfprobe_ifindex directive. Let's look at a dynamic
@@ -646,16 +647,16 @@ nfprobe_direction: tag
 pre_tag_map: /path/to/pretag.map 
 
    then edit the tag map as follows. It is possible to employ L2 and/or L3 addresses
-   to recognize flow directions. The 'id' primitive (tag) will be used to carry the
-   return value:
+   to recognize flow directions. The 'set_tag' primitive (tag) will be used to carry
+   the return value:
 
-id=100 filter='dst host XXX.XXX.XXX.XXX'
-id=100 filter='src host XXX.XXX.XXX.XXX'
-id=200 filter='dst host YYY.YYY.YYY.YYY'
-id=200 filter='src host YYY.YYY.YYY.YYY'
+set_tag=100 filter='dst host XXX.XXX.XXX.XXX'
+set_tag=100 filter='src host XXX.XXX.XXX.XXX'
+set_tag=200 filter='dst host YYY.YYY.YYY.YYY'
+set_tag=200 filter='src host YYY.YYY.YYY.YYY'
 
-id=200 filter='ether src YY:YY:YY:YY:YY:YY'
-id=200 filter='ether dst YY:YY:YY:YY:YY:YY'
+set_tag=200 filter='ether src YY:YY:YY:YY:YY:YY'
+set_tag=200 filter='ether dst YY:YY:YY:YY:YY:YY'
 
 c) build NetFlow collector configuration, using nfacctd:
 !

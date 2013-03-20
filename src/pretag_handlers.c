@@ -34,6 +34,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   struct host_addr a;
   char *endptr = NULL;
   pm_id_t j = 0, z = 0;
+  int x;
 
   e->id = 0;
   e->flags = FALSE;
@@ -80,14 +81,27 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   }
   else {
     j = strtoull(value, &endptr, 10);
-    if (!j || j > UINT32_MAX) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid ID specified. ", filename);
+    if (j > UINT32_MAX) {
+      Log(LOG_ERR, "ERROR ( %s ): Invalid TAG/ID specified. ", filename);
       return TRUE;
     } 
   }
 
   e->id = j; 
   if (z) e->id2 = z;
+
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
+    for (x = 0; e->set_func[x]; x++) {
+      if (e->set_func_type[x] == PRETAG_SET_TAG) {
+        Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_tag' (id) clauses part of the same statement. ", filename);
+        return TRUE;
+      }
+    }
+
+    /* feature currently only supported in nfacctd */
+    e->set_func[x] = pretag_id_handler;
+    e->set_func_type[x] = PRETAG_SET_TAG;
+  }
 
   return FALSE;
 }
@@ -96,13 +110,27 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 {
   char *endptr = NULL;
   pm_id_t j;
+  int x;
 
   j = strtoull(value, &endptr, 10);
-  if (!j || j > UINT32_MAX) {
-    Log(LOG_ERR, "ERROR ( %s ): Invalid ID2 specified. ", filename);
+  if (j > UINT32_MAX) {
+    Log(LOG_ERR, "ERROR ( %s ): Invalid TAG2/ID2 specified. ", filename);
     return TRUE;
   }
   e->id2 = j;
+
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
+    for (x = 0; e->set_func[x]; x++) {
+      if (e->set_func_type[x] == PRETAG_SET_TAG2) {
+        Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_tag2' (id2) clauses part of the same statement. ", filename);
+        return TRUE;
+      }
+    }
+
+    /* feature currently only supported in nfacctd */
+    e->set_func[x] = pretag_id2_handler;
+    e->set_func_type[x] = PRETAG_SET_TAG2;
+  }
 
   return FALSE;
 }
@@ -895,7 +923,7 @@ int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, stru
   }
 
   /* feature currently only supported in nfacctd */
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_set_tos_handler;
+  if (config.acct_type == ACCT_NF) e->set_func[x] = pretag_set_tos_handler;
 
   if (e->set_func[x]) e->set_func_type[x] = PRETAG_SET_TOS;
 
@@ -1616,7 +1644,7 @@ int pretag_set_tos_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   memcpy(&pptrs->set_tos, &entry->set_tos, sizeof(s_uint8_t));
 
-  return FALSE;
+  return PRETAG_MAP_RCODE_SET_TOS;
 }
 
 int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
