@@ -94,6 +94,7 @@ void skinny_isis_daemon()
   memset(&ime, 0, sizeof(ime));
   memset(&req, 0, sizeof(req));
   reload_map = FALSE;
+  glob_isis_seq_num = 0;
 
   /* initializing IS-IS structures */
   isis_init();
@@ -136,7 +137,9 @@ void skinny_isis_daemon()
   if (config.igp_daemon_map) {
     int igp_map_allocated = FALSE;
 
+    glob_isis_seq_num++;
     req.key_value_table = (void *) &ime;
+    memset(&sysid_fragment_table, 0, sizeof(sysid_fragment_table));
     load_id_file(MAP_IGP, config.igp_daemon_map, NULL, &req, &igp_map_allocated);
   }
 
@@ -217,6 +220,8 @@ void skinny_isis_daemon()
       if (reload_map) {
         int igp_map_allocated = FALSE;
 
+	glob_isis_seq_num++;
+	memset(&sysid_fragment_table, 0, sizeof(sysid_fragment_table));
         load_id_file(MAP_IGP, config.igp_daemon_map, NULL, &req, &igp_map_allocated);
 	reload_map = FALSE;
       }
@@ -624,7 +629,8 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 
   if (entry) {
     if (entry->node.family && entry->area_id && (entry->adj_metric_num || entry->reach_metric_num || entry->reach6_metric_num)) {
-      char isis_dgram[65535], *isis_dgram_ptr = isis_dgram;
+      char isis_dgram[RECEIVE_LSP_BUFFER_SIZE+sizeof(struct chdlc_header)+sizeof(struct isis_fixed_hdr)];
+      char *isis_dgram_ptr = isis_dgram;
       struct chdlc_header *chdlc_hdr;
       struct isis_fixed_hdr *isis_hdr;
       struct isis_link_state_hdr *lsp_hdr;
@@ -660,7 +666,8 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 
       lsp_hdr = (struct isis_link_state_hdr *) isis_dgram_ptr;
       lsp_hdr->pdu_len = 0; /* updated later */ 
-      memcpy(&lsp_hdr->lsp_id, &entry->node.address.ipv4, 4);  
+      if (igp_daemon_map_handle_lsp_id(lsp_hdr->lsp_id, &entry->node)) return;
+      lsp_hdr->seq_num = htonl(glob_isis_seq_num);
       lsp_hdr->rem_lifetime = htons(-1); /* maximum lifetime possible */
       lsp_hdr->lsp_bits = 0x03; /* IS Type = L2 */
 
@@ -812,7 +819,7 @@ void igp_daemon_map_initialize(char *filename, struct plugin_requests *req)
   pcap_t *p;
 
   if (config.debug && config.igp_daemon_map_msglog) {
-    p = pcap_open_dead(DLT_CHDLC, 65535);
+    p = pcap_open_dead(DLT_CHDLC, RECEIVE_LSP_BUFFER_SIZE+sizeof(struct chdlc_header)+sizeof(struct isis_fixed_hdr));
 
     if ((idmm_fd = pcap_dump_open(p, config.igp_daemon_map_msglog)) == NULL) {
       Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can not open igp_daemon_map_msglog '%s' (%s).\n",
@@ -831,9 +838,57 @@ int igp_daemon_map_handle_len(int *rem_len, int len, struct plugin_requests *req
 {
   *rem_len -= len;
   if (*rem_len < 0) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): Not enough space. Ignoring line %d in map '%s'.\n", req->line_num, filename);
+    Log(LOG_ERR, "ERROR ( default/core/ISIS ): Resulting LSP longer than %u. Ignoring line %d in map '%s'.\n",
+		RECEIVE_LSP_BUFFER_SIZE, req->line_num, filename);
     return TRUE;
   }
 
   return FALSE;
+}
+
+int igp_daemon_map_handle_lsp_id(char *lsp_id, struct host_addr *addr)
+{
+  u_char sysid[ISIS_SYS_ID_LEN];
+  int idx;
+
+  memset(sysid, 0, sizeof(sysid));
+  memcpy(sysid, &addr->address.ipv4, 4);
+
+  for (idx = 0; idx < MAX_IGP_MAP_NODES && sysid_fragment_table[idx].valid; idx++) {
+    if (!memcmp(sysid, sysid_fragment_table[idx].sysid, ISIS_SYS_ID_LEN)) {
+      /* check if maximum segment number reached */
+      if (sysid_fragment_table[idx].frag_num == 255) {
+	Log(LOG_WARNING, "WARN ( default/core/ISIS ): Maximum segment number (255) reached for sysid: '%s'\n", sysid);
+	memset(lsp_id, 0, ISIS_SYS_ID_LEN + 2);
+
+	return TRUE;
+      }
+      else {
+        memcpy(lsp_id, sysid_fragment_table[idx].sysid, 4); 
+        memcpy(lsp_id + ISIS_SYS_ID_LEN + 1, &sysid_fragment_table[idx].frag_num, 1);
+	sysid_fragment_table[idx].frag_num++;
+
+	return FALSE;
+      }
+    }
+  }
+
+  /* sys id not found: let's insert it */
+  if (idx < MAX_IGP_MAP_NODES) {
+    memcpy(sysid_fragment_table[idx].sysid, sysid, ISIS_SYS_ID_LEN);
+    sysid_fragment_table[idx].frag_num = 0;
+    sysid_fragment_table[idx].valid = TRUE;
+
+    memcpy(lsp_id, sysid_fragment_table[idx].sysid, 4);
+    memcpy(lsp_id + ISIS_SYS_ID_LEN + 1, &sysid_fragment_table[idx].frag_num, 1);
+    sysid_fragment_table[idx].frag_num++;
+
+    return FALSE;
+  }
+  else {
+    Log(LOG_WARNING, "WARN ( default/core/ISIS ): Maximum number of nodes (%u) reached in igp_daemon_map\n", MAX_IGP_MAP_NODES);
+    memset(lsp_id, 0, ISIS_SYS_ID_LEN + 2);
+
+    return TRUE;
+  }
 }

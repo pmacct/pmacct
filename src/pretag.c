@@ -42,9 +42,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   struct id_table tmp;
   struct id_entry *ptr, *ptr2;
   FILE *file;
-  char buf[SRVBUFLEN];
+  char buf[LARGEBUFLEN];
   int v4_num = 0, x, tot_lines = 0, err, index, label_solved, sz;
-  int ignoring;
+  int ignoring, read_len;
   struct stat st;
 
 #if defined ENABLE_IPV6
@@ -93,7 +93,11 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     memset(tmp.e, 0, sz);
     if (t) memset(t->e, 0, sz);
 
-    if (acct_type == MAP_IGP) igp_daemon_map_initialize(filename, req);
+    if (acct_type == MAP_IGP) {
+      igp_daemon_map_initialize(filename, req);
+      read_len = LARGEBUFLEN;
+    }
+    else read_len = SRVBUFLEN;
 
     /* first stage: reading Agent ID file and arranging it in a temporary memory table */
     while (!feof(file)) {
@@ -105,9 +109,14 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		config.name, config.type, filename, config.pre_tag_map_entries);
 	break;
       }
-      memset(buf, 0, SRVBUFLEN);
-      if (fgets(buf, SRVBUFLEN, file)) {
+      memset(buf, 0, read_len);
+      if (fgets(buf, read_len, file)) {
         if (!iscomment(buf) && !isblankline(buf)) {
+	  if (strlen(buf) == (read_len-1) && !strchr(buf, '\n')) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): line too long (max %u chars). Line %d in map '%s' ignored.\n",
+			config.name, config.type, read_len, tot_lines, filename);
+	    continue;
+	  }
           if (!check_not_valid_char(filename, buf, '|')) {
             mark_columns(buf);
             trim_all_spaces(buf);

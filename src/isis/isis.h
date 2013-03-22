@@ -25,9 +25,11 @@
 /* includes */
 #include "isis_ll.h"
 #include "prefix.h"
+#include "isis_constants.h"
 
 /* defines */
-#define MAX_IGP_MAP_ELEM 4
+#define MAX_IGP_MAP_ELEM 64
+#define MAX_IGP_MAP_NODES 4096
 
 typedef u_int16_t afi_t;
 typedef u_int8_t safi_t;
@@ -71,6 +73,12 @@ struct igp_map_entry {
   u_int8_t reach6_metric_num;
 };
 
+struct sysid_fragment {
+  u_char sysid[ISIS_SYS_ID_LEN];
+  u_char frag_num;
+  u_char valid;
+};
+
 /* prototypes */
 #if (!defined __ISIS_C)
 #define EXT extern
@@ -93,6 +101,7 @@ EXT void igp_daemon_map_validate(char *, struct plugin_requests *);
 EXT void igp_daemon_map_initialize(char *, struct plugin_requests *);
 EXT void igp_daemon_map_finalize(char *, struct plugin_requests *);
 EXT int igp_daemon_map_handle_len(int *, int, struct plugin_requests *, char *);
+EXT int igp_daemon_map_handle_lsp_id(char *, struct host_addr *);
 
 /* global variables */
 EXT struct thread_master *master;
@@ -101,6 +110,8 @@ EXT struct in_addr router_id_zebra; /* XXX: do something with this eventually */
 EXT struct timeval isis_now, isis_spf_deadline, isis_psnp_deadline;
 EXT struct igp_map_entry ime;
 EXT pcap_dumper_t *idmm_fd; /* igp_daemon_map : file descriptor for igp_daemon_map_msglog */
+EXT u_int32_t glob_isis_seq_num; 
+EXT struct sysid_fragment sysid_fragment_table[MAX_IGP_MAP_NODES];
 
 #undef EXT
 #endif
