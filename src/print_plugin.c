@@ -43,6 +43,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int timeout, ret, num; 
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct networks_file_data nfd;
   char default_separator[] = ",";
@@ -51,10 +52,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
 
+  struct extra_primitives extras;
   struct pkt_bgp_primitives *pbgp;
+  struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
+  memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "Print Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
@@ -99,14 +103,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = P_sum_mac_insert;
 #endif
   else insert_func = P_cache_insert;
-
-  /* Dirty but allows to save some IFs, centralizes
-     checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)))
-    PbgpSz = 0;
 
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
@@ -267,8 +263,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
-        else pbgp = NULL;
+        if (extras.off_pkt_bgp_primitives)
+	  pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
+        else
+	  pbgp = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -282,12 +280,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
           evaluate_pkt_len_distrib(data);
 
-        (*insert_func)(data, pbgp);
+        prim_ptrs.data = data;
+        prim_ptrs.pbgp = pbgp;
+        prim_ptrs.pnat = NULL; // XXX
+        (*insert_func)(&prim_ptrs);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
           dataptr = (unsigned char *) data;
-          dataptr += PdataSz + PbgpSz;
+          dataptr += datasize;
           data = (struct pkt_data *) dataptr;
 	}
       }
@@ -296,21 +297,25 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 }
 
-unsigned int P_cache_modulo(struct pkt_primitives *srcdst, struct pkt_bgp_primitives *pbgp)
+unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *pdata = prim_ptrs->data;
+  struct pkt_primitives *srcdst = &pdata->primitives;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   register unsigned int modulo;
 
   modulo = cache_crc32((unsigned char *)srcdst, pp_size);
-  if (PbgpSz) {
-    if (pbgp) modulo ^= cache_crc32((unsigned char *)pbgp, pb_size);
-  }
+  if (pbgp) modulo ^= cache_crc32((unsigned char *)pbgp, pb_size);
   
   return modulo %= config.print_cache_entries;
 }
 
-struct chained_cache *P_cache_search(struct pkt_primitives *data, struct pkt_bgp_primitives *pbgp)
+struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
 {
-  unsigned int modulo = P_cache_modulo(data, pbgp);
+  struct pkt_data *pdata = prim_ptrs->data;
+  struct pkt_primitives *data = &pdata->primitives;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   int res_data = TRUE, res_bgp = TRUE, res_time = TRUE;
 
@@ -322,7 +327,7 @@ struct chained_cache *P_cache_search(struct pkt_primitives *data, struct pkt_bgp
   }
   else res_time = FALSE;
 
-  if (PbgpSz) {
+  if (pbgp) {
     if (cache_ptr->pbgp) res_bgp = memcmp(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
   }
   else res_bgp = FALSE;
@@ -340,9 +345,11 @@ struct chained_cache *P_cache_search(struct pkt_primitives *data, struct pkt_bgp
   return NULL;
 }
 
-void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 {
-  unsigned int modulo = P_cache_modulo(&data->primitives, pbgp);
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   struct pkt_primitives *srcdst = &data->primitives;
   int res_data, res_bgp, res_time;
@@ -360,7 +367,7 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
     pm_class_t lclass = data->primitives.class;
 
     data->primitives.class = 0;
-    Cursor = P_cache_search(&data->primitives, pbgp);
+    Cursor = P_cache_search(prim_ptrs);
     data->primitives.class = lclass;
 
     /* We can assign the flow to a new class only if we are able to subtract
@@ -390,7 +397,7 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
   }
   else res_time = FALSE;
 
-  if (PbgpSz) {
+  if (pbgp) {
     if (cache_ptr->pbgp) res_bgp = memcmp(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
   }
   else res_bgp = FALSE;
@@ -422,7 +429,7 @@ void P_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
 
     /* we add the new entry in the cache */
     memcpy(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives));
-    if (PbgpSz) {
+    if (pbgp) {
       if (!cache_ptr->pbgp) cache_ptr->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
       memcpy(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
     }
@@ -904,8 +911,10 @@ void P_write_stats_header_csv(FILE *f)
   fprintf(f, "BYTES\n");
 }
 
-void P_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void P_sum_host_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct in_addr ip;
 #if defined ENABLE_IPV6
   struct in6_addr ip6;
@@ -915,55 +924,61 @@ void P_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
     ip.s_addr = data->primitives.dst_ip.address.ipv4.s_addr;
     data->primitives.dst_ip.address.ipv4.s_addr = 0;
     data->primitives.dst_ip.family = 0;
-    P_cache_insert(data, pbgp);
+    P_cache_insert(prim_ptrs);
     data->primitives.src_ip.address.ipv4.s_addr = ip.s_addr;
-    P_cache_insert(data, pbgp);
+    P_cache_insert(prim_ptrs);
   }
 #if defined ENABLE_IPV6
   if (data->primitives.dst_ip.family == AF_INET6) {
     memcpy(&ip6, &data->primitives.dst_ip.address.ipv6, sizeof(struct in6_addr));
     memset(&data->primitives.dst_ip.address.ipv6, 0, sizeof(struct in6_addr));
     data->primitives.dst_ip.family = 0;
-    P_cache_insert(data, pbgp);
+    P_cache_insert(prim_ptrs);
     memcpy(&data->primitives.src_ip.address.ipv6, &ip6, sizeof(struct in6_addr));
-    P_cache_insert(data, pbgp);
+    P_cache_insert(prim_ptrs);
     return;
   }
 #endif
 }
 
-void P_sum_port_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void P_sum_port_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   u_int16_t port;
 
   port = data->primitives.dst_port;
   data->primitives.dst_port = 0;
-  P_cache_insert(data, pbgp);
+  P_cache_insert(prim_ptrs);
   data->primitives.src_port = port;
-  P_cache_insert(data, pbgp);
+  P_cache_insert(prim_ptrs);
 }
 
-void P_sum_as_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void P_sum_as_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   as_t asn;
 
   asn = data->primitives.dst_as;
   data->primitives.dst_as = 0;
-  P_cache_insert(data, pbgp);
+  P_cache_insert(prim_ptrs);
   data->primitives.src_as = asn;
-  P_cache_insert(data, pbgp);
+  P_cache_insert(prim_ptrs);
 }
 
 #if defined (HAVE_L2)
-void P_sum_mac_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   u_char macaddr[ETH_ADDR_LEN];
 
   memcpy(macaddr, &data->primitives.eth_dhost, ETH_ADDR_LEN);
   memset(data->primitives.eth_dhost, 0, ETH_ADDR_LEN);
-  P_cache_insert(data, pbgp);
+  P_cache_insert(prim_ptrs);
   memcpy(&data->primitives.eth_shost, macaddr, ETH_ADDR_LEN);
-  P_cache_insert(data, pbgp);
+  P_cache_insert(prim_ptrs);
 }
 #endif
 

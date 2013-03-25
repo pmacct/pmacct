@@ -42,6 +42,7 @@ void load_plugins(struct plugin_requests *req)
   int x, v, socklen, nfprobe_id = 0, min_sz = 0;
   struct plugins_list_entry *list = plugins_list;
   int l = sizeof(list->cfg.pipe_size);
+  int offset = sizeof(struct pkt_data);
   struct channels_list_entry *chptr = NULL;
 
   init_random_seed(); 
@@ -62,8 +63,9 @@ void load_plugins(struct plugin_requests *req)
 	else min_sz += (PpayloadSz+DEFAULT_PLOAD_SIZE); 
       }
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) min_sz += PextrasSz; 
-      if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += PbgpSz; 
       if (list->cfg.data_type & PIPE_TYPE_MSG) min_sz += PmsgSz; 
+      if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += sizeof(struct pkt_bgp_primitives);
+      if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
 
       /* If nothing is supplied, let's hint some working default values */
       if (list->cfg.pcap_savefile && !list->cfg.pipe_size && !list->cfg.buffer_size) {
@@ -150,8 +152,19 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_METADATA) chptr->clean_func = pkt_data_clean;
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) chptr->clean_func = pkt_payload_clean;
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) chptr->clean_func = pkt_extras_clean;
-      if (list->cfg.data_type & PIPE_TYPE_BGP) chptr->clean_func = pkt_bgp_clean;
       if (list->cfg.data_type & PIPE_TYPE_MSG) chptr->clean_func = pkt_msg_clean;
+      if (list->cfg.data_type & PIPE_TYPE_BGP) {
+        chptr->extras.off_pkt_bgp_primitives = offset;
+	offset += sizeof(struct pkt_bgp_primitives);
+      }
+      else chptr->extras.off_pkt_bgp_primitives = 0; 
+      if (list->cfg.data_type & PIPE_TYPE_NAT) {
+        chptr->extras.off_pkt_nat_primitives = offset;
+        offset += sizeof(struct pkt_nat_primitives);
+      }
+      else chptr->extras.off_pkt_nat_primitives = 0; 
+
+      chptr->datasize = min_sz-ChBufHdrSz;
 
       /* sets nfprobe ID */
       if (list->type.id == PLUGIN_ID_NFPROBE) {
@@ -211,7 +224,7 @@ reprocess:
       /* rg.ptr points to slot's base address into the ring (shared memory); bufptr works
 	 as a displacement into the slot to place sequentially packets */
       bptr = channels_list[index].rg.ptr+ChBufHdrSz+channels_list[index].bufptr; 
-      size = (*channels_list[index].clean_func)(bptr);
+      size = (*channels_list[index].clean_func)(bptr, channels_list[index].datasize);
       savedptr = channels_list[index].bufptr;
       reset_fallback_status(pptrs);
       
@@ -574,37 +587,30 @@ void load_plugin_filters(int link_type)
   }
 }
 
-int pkt_data_clean(void *pdata)
+int pkt_data_clean(void *pdata, int len)
 {
-  memset(pdata, 0, PdataSz);
+  memset(pdata, 0, len);
 
-  return PdataSz;
+  return len;
 }
 
-int pkt_payload_clean(void *ppayload)
+int pkt_payload_clean(void *ppayload, int len)
 {
   memset(ppayload, 0, PpayloadSz);
 
   return PpayloadSz;
 }
 
-int pkt_msg_clean(void *ppayload)
+int pkt_msg_clean(void *ppayload, int len)
 {
   memset(ppayload, 0, PmsgSz);
 
   return PmsgSz;
 }
 
-int pkt_extras_clean(void *pextras)
+int pkt_extras_clean(void *pextras, int len)
 {
   memset(pextras, 0, PdataSz+PextrasSz);
 
   return PdataSz+PextrasSz;
-}
-
-int pkt_bgp_clean(void *pbgp)
-{
-  memset(pbgp, 0, PdataSz+PbgpSz);
-
-  return PdataSz+PbgpSz;
 }

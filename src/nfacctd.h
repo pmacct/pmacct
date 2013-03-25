@@ -497,10 +497,14 @@ struct data_hdr_v9 {
 #define NF9_CUST_TAG			201
 #define NF9_CUST_TAG2			202
 /* ... */
-#define NF9_ETHERTYPE			256
+#define NF9_POST_NAT_IPV4_SRC_ADDR	225
+#define NF9_POST_NAT_IPV4_DST_ADDR	226
+#define NF9_POST_NAT_IPV4_SRC_PORT	227
+#define NF9_POST_NAT_IPV4_DST_PORT	228
 /* ... */
-#define NF9_XLATE_IPV6_SRC_ADDR         281
-#define NF9_XLATE_IPV6_DST_ADDR         282
+#define NF9_NAT_EVENT			230
+/* ... */
+#define NF9_ETHERTYPE			256
 /* ... */
 #define NF9_OBSERVATION_TIME_SEC	322
 #define NF9_OBSERVATION_TIME_MSEC	323
@@ -521,6 +525,7 @@ struct data_hdr_v9 {
 #define NF9_FTYPE_VLAN_MPLS		15	
 #define NF9_FTYPE_VLAN_MPLS_IPV4	15
 #define NF9_FTYPE_VLAN_MPLS_IPV6	16
+#define NF9_FTYPE_NAT_EVENT		100
 
 /* Sampling */
 #define NF9_SAMPLING_INTERVAL		34

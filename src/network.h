@@ -437,6 +437,17 @@ struct pkt_msg {
 #define MAX_BGP_EXT_COMMS       96
 #define MAX_BGP_ASPATH          128
 
+struct extra_primitives {
+  u_int16_t off_pkt_bgp_primitives;
+  u_int16_t off_pkt_nat_primitives;
+};
+
+struct primitives_ptrs {
+  struct pkt_data *data;
+  struct pkt_bgp_primitives *pbgp;
+  struct pkt_nat_primitives *pnat;
+};
+
 struct pkt_bgp_primitives {
   as_t peer_src_as;
   as_t peer_dst_as;
@@ -454,6 +465,14 @@ struct pkt_bgp_primitives {
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
   u_int32_t pad;
+};
+
+struct pkt_nat_primitives {
+  struct host_addr post_nat_src_host;
+  struct host_addr post_nat_dst_host;
+  u_int16_t post_nat_src_port;
+  u_int16_t post_nat_dst_port;
+  u_int8_t nat_event;
 };
 
 /* same as above but pointers in place of strings */

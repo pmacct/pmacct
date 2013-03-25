@@ -43,6 +43,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   short int go_to_clear = FALSE;
   u_int32_t request, sz;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  int datasize = ((struct channels_list_entry *)ptr)->datasize;
+  struct extra_primitives extras;
   unsigned char *rgptr;
   int pollagain = 0;
   u_int32_t seq = 0;
@@ -50,6 +52,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_bgp_primitives *pbgp;
   struct networks_file_data nfd;
   struct timeval select_timeout;
+  struct primitives_ptrs prim_ptrs;
 
   fd_set read_descs, bkp_read_descs; /* select() stuff */
   int select_fd, lock = FALSE;
@@ -57,6 +60,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *dataptr;
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
+  memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "IMT Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
@@ -83,14 +87,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = sum_mac_insert;
 #endif
   else insert_func = insert_accounting_structure;
-
-  /* Dirty but allows to save some IFs, centralizes
-     checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-				COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD))) 
-    PbgpSz = 0;
 
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
@@ -253,7 +249,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (request & WANT_ERASE) {
 	request ^= WANT_ERASE;
 	if (request) {
-	  if (num > 0) process_query_data(sd2, srvbuf, num, FALSE);
+	  if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
 	  else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. Errno: %d\n", config.name, config.type, num, errno);
 	}
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
@@ -261,23 +257,23 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       else if (((request == WANT_COUNTER) || (request == WANT_MATCH)) &&
 	(qh->num == 1) && (qh->what_to_count == config.what_to_count)) {
-	if (num > 0) process_query_data(sd2, srvbuf, num, FALSE);
+	if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
         else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. ERRNO: %d\n", config.name, config.type, num, errno);
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
       } 
       else if (request == WANT_CLASS_TABLE) {
-	if (num > 0) process_query_data(sd2, srvbuf, num, FALSE);
+	if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
         else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. ERRNO: %d\n", config.name, config.type, num, errno);
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
       }
       else if (request == WANT_PKT_LEN_DISTRIB_TABLE) {
-        if (num > 0) process_query_data(sd2, srvbuf, num, FALSE);
+        if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
         else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. ERRNO: %d\n", config.name, config.type, num, errno);
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
       }
       else {
 	if (lock) {
-	  if (num > 0) process_query_data(sd2, srvbuf, num, FALSE);
+	  if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
           else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. Errno: %d\n", config.name, config.type, num, errno);
           Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
 	}
@@ -289,7 +285,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           case 0: /* Child */
             close(sd);
 	    pm_setproctitle("%s [%s]", "IMT Plugin -- serving client", config.name);
-            if (num > 0) process_query_data(sd2, srvbuf, num, TRUE);
+            if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, TRUE);
 	    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. Errno: %d\n", config.name, config.type, num, errno);
             Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
             close(sd2);
@@ -306,7 +302,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (go_to_clear) {
       /* When using extended BGP features we need to
 	 free() up memory allocations before erasing */ 
-      if (PbgpSz) free_bgp_allocs(); 
+      if (extras.off_pkt_bgp_primitives) free_bgp_allocs(); 
       clear_memory_pool_table();
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
       if (current_pool == NULL) {
@@ -357,8 +353,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
 	while (((struct ch_buf_hdr *)pipebuf)->num) {
-          if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
-          else pbgp = NULL;
+          if (extras.off_pkt_bgp_primitives)
+	    pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
+          else
+	    pbgp = NULL;
 
 	  for (num = 0; net_funcs[num]; num++)
 	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -372,12 +370,15 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	      config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
 	    evaluate_pkt_len_distrib(data);
 
-          (*insert_func)(data, pbgp);
+	  prim_ptrs.data = data; 
+	  prim_ptrs.pbgp = pbgp; 
+	  prim_ptrs.pnat = NULL; // XXX 
+          (*insert_func)(&prim_ptrs);
 
 	  ((struct ch_buf_hdr *)pipebuf)->num--;
 	  if (((struct ch_buf_hdr *)pipebuf)->num) {
             dataptr = (unsigned char *) data;
-            dataptr += PdataSz + PbgpSz;
+            dataptr += datasize;
             data = (struct pkt_data *) dataptr;
 	  }
         }
@@ -397,8 +398,10 @@ void exit_now(int signum)
   exit_plugin(0);
 }
 
-void sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void sum_host_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
+
   struct in_addr ip;
 #if defined ENABLE_IPV6
   struct in6_addr ip6;
@@ -408,9 +411,9 @@ void sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
     ip.s_addr = data->primitives.dst_ip.address.ipv4.s_addr;
     data->primitives.dst_ip.address.ipv4.s_addr = 0;
     data->primitives.dst_ip.family = 0;
-    insert_accounting_structure(data, pbgp);
+    insert_accounting_structure(prim_ptrs);
     data->primitives.src_ip.address.ipv4.s_addr = ip.s_addr;
-    insert_accounting_structure(data, pbgp);
+    insert_accounting_structure(prim_ptrs);
     return;
   }
 #if defined ENABLE_IPV6
@@ -418,46 +421,49 @@ void sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
     memcpy(&ip6, &data->primitives.dst_ip.address.ipv6, sizeof(struct in6_addr));
     memset(&data->primitives.dst_ip.address.ipv6, 0, sizeof(struct in6_addr));
     data->primitives.dst_ip.family = 0;
-    insert_accounting_structure(data, pbgp);
+    insert_accounting_structure(prim_ptrs);
     memcpy(&data->primitives.src_ip.address.ipv6, &ip6, sizeof(struct in6_addr));
-    insert_accounting_structure(data, pbgp);
+    insert_accounting_structure(prim_ptrs);
     return;
   }
 #endif
 }
 
-void sum_port_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void sum_port_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
   u_int16_t port;
 
   port = data->primitives.dst_port;
   data->primitives.dst_port = 0;
-  insert_accounting_structure(data, pbgp);
+  insert_accounting_structure(prim_ptrs);
   data->primitives.src_port = port;
-  insert_accounting_structure(data, pbgp);
+  insert_accounting_structure(prim_ptrs);
 }
 
-void sum_as_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void sum_as_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
   as_t asn;
 
   asn = data->primitives.dst_as;
   data->primitives.dst_as = 0;
-  insert_accounting_structure(data, pbgp);
+  insert_accounting_structure(prim_ptrs);
   data->primitives.src_as = asn;
-  insert_accounting_structure(data, pbgp);
+  insert_accounting_structure(prim_ptrs);
 }
 
 #if defined (HAVE_L2)
-void sum_mac_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp)
+void sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
   u_char macaddr[ETH_ADDR_LEN];
 
   memcpy(macaddr, &data->primitives.eth_dhost, ETH_ADDR_LEN);
   memset(data->primitives.eth_dhost, 0, ETH_ADDR_LEN);
-  insert_accounting_structure(data, pbgp);
+  insert_accounting_structure(prim_ptrs);
   memcpy(&data->primitives.eth_shost, macaddr, ETH_ADDR_LEN);
-  insert_accounting_structure(data, pbgp);
+  insert_accounting_structure(prim_ptrs);
 }
 #endif
 

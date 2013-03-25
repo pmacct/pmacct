@@ -748,10 +748,8 @@ void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_info *nh_info;
-
-  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
@@ -805,9 +803,7 @@ void igp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct route_node *ret = (struct route_node *) pptrs->igp_dst;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
@@ -1178,11 +1174,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_ASA_XLATE_IPV4_SRC_ADDR].len) {
-        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_ASA_XLATE_IPV4_SRC_ADDR].len, 4));
-        src_mask = 32; /* no xlate mask field exists atm */
-      }
-      else memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
+      memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
       pdata->primitives.src_ip.family = AF_INET;
       break;
     }
@@ -1248,11 +1240,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_ASA_XLATE_IPV4_DST_ADDR].len) {
-        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_ASA_XLATE_IPV4_DST_ADDR].len, 4));
-        dst_mask = 32; /* no xlate mask field exists atm */
-      }
-      else memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+      memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
       pdata->primitives.dst_ip.family = AF_INET;
       break;
     }
@@ -1420,11 +1408,9 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
-
-  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -1482,11 +1468,9 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
-
-  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -1544,11 +1528,9 @@ void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
-
-  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -1576,11 +1558,9 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
-
-  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -1608,10 +1588,8 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
-
-  --pdata; /* Bringing back to original place */
 
   if (sa->sa_family == AF_INET) {
     pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
@@ -1630,9 +1608,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
@@ -1673,9 +1649,7 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
     if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) { 
-      if (chptr->plugin->cfg.xlate_src && tpl->tpl[NF9_ASA_XLATE_L4_SRC_PORT].len)
-	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_ASA_XLATE_L4_SRC_PORT].len, 2));
-      else if (tpl->tpl[NF9_L4_SRC_PORT].len) 
+      if (tpl->tpl[NF9_L4_SRC_PORT].len) 
 	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
       else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_SRC_PORT].len) 
 	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_UDP_SRC_PORT].off, MIN(tpl->tpl[NF9_UDP_SRC_PORT].len, 2));
@@ -1737,9 +1711,7 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
     if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
-      if (chptr->plugin->cfg.xlate_dst && tpl->tpl[NF9_ASA_XLATE_L4_DST_PORT].len)
-	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_ASA_XLATE_L4_DST_PORT].off, MIN(tpl->tpl[NF9_ASA_XLATE_L4_DST_PORT].len, 2));
-      else if (tpl->tpl[NF9_L4_DST_PORT].len)
+      if (tpl->tpl[NF9_L4_DST_PORT].len)
 	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
       else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_DST_PORT].len)
         memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_UDP_DST_PORT].off, MIN(tpl->tpl[NF9_UDP_DST_PORT].len, 2));
@@ -2703,13 +2675,11 @@ void NF_counters_map_renormalize_handler(struct channels_list_entry *chptr, stru
 void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src; 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
-
-  --pdata; /* Bringing back to original place */
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
@@ -2932,12 +2902,10 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
 void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
-
-  --pdata; /* Bringing back to original place */
 
   pbgp->peer_src_as = pptrs->bpas;
 
@@ -2960,10 +2928,8 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
 void bgp_src_local_pref_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-
-  --pdata; /* Bringing back to original place */
 
   pbgp->src_local_pref = pptrs->blp;
 }
@@ -2971,10 +2937,8 @@ void bgp_src_local_pref_frommap_handler(struct channels_list_entry *chptr, struc
 void bgp_src_med_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-
-  --pdata; /* Bringing back to original place */
 
   pbgp->src_med = pptrs->bmed;
 }
@@ -3218,9 +3182,7 @@ void SF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3237,9 +3199,7 @@ void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3256,9 +3216,7 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3275,9 +3233,7 @@ void SF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3289,9 +3245,7 @@ void SF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3303,9 +3257,7 @@ void SF_local_pref_handler(struct channels_list_entry *chptr, struct packet_ptrs
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3317,9 +3269,7 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
-
-  --pdata; /* Bringing back to original place */
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
@@ -3330,10 +3280,8 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
-
-  --pdata; /* Bringing back to original place */
 
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_src_ip.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
@@ -3350,10 +3298,8 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
-
-  --pdata; /* Bringing back to original place */
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
@@ -3466,7 +3412,7 @@ void sfprobe_sampling_handler(struct channels_list_entry *chptr, struct packet_p
 void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   pbgp->peer_src_as = 0;
 
@@ -3476,7 +3422,7 @@ void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struc
 void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ++pdata;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   pbgp->peer_src_as = 0;
 

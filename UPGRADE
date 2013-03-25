@@ -22,6 +22,11 @@ DESC:	In previous releases defining a networks_file in conjunction with host
 	primitives, and in order to keep the same behaviour while upgrading, a
 	line should be added to the configuration: "networks_file_filter: true".
 
+TOPIC:	xlate_src and xlate_dst
+DESC:	Feature has been obsoleted and replaced by proper aggregation primitives
+	(nat_event, post_nat_*) to support NEL (NetFlow Event Logging) as currently
+	implemented on Cisco ASR devices and to support CGNAT kind of scenarios.
+
 TO:     >= 0.14.0
 FROM:   <= 0.14.0rc3
 TOPIC:  peer_dst_ip

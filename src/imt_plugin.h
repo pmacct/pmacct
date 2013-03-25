@@ -56,13 +56,15 @@ struct memory_pool_desc {
 };
 
 struct query_header {
-  int type;			/* type of query */
-  u_int64_t what_to_count;	/* aggregation */
-  u_int64_t what_to_count_2;	/* aggregation */
-  unsigned int num;		/* number of queries */
-  unsigned int ip_sz;		/* IP addresses size (in bytes) */
-  unsigned int cnt_sz;		/* counters size (in bytes) */
-  char passwd[12];		/* OBSOLETED: password */
+  int type;				/* type of query */
+  u_int64_t what_to_count;		/* aggregation */
+  u_int64_t what_to_count_2;		/* aggregation */
+  unsigned int num;			/* number of queries */
+  unsigned int ip_sz;			/* IP addresses size (in bytes) */
+  unsigned int cnt_sz;			/* counters size (in bytes) */
+  struct extra_primitives extras;	/* offsets for non-standard aggregation primitives structures */
+  int datasize;				/* total length of aggregation primitives structures */
+  char passwd[12];			/* OBSOLETED: password */
 };
 
 struct query_entry {
@@ -94,9 +96,9 @@ struct stripped_pkt_len_distrib {
 #else
 #define EXT
 #endif
-EXT void insert_accounting_structure(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT struct acc *search_accounting_structure(struct pkt_primitives *, struct pkt_bgp_primitives *);
-EXT int compare_accounting_structure(struct acc *, struct pkt_primitives *, struct pkt_bgp_primitives *);
+EXT void insert_accounting_structure(struct primitives_ptrs *);
+EXT struct acc *search_accounting_structure(struct primitives_ptrs *);
+EXT int compare_accounting_structure(struct acc *, struct primitives_ptrs *);
 #undef EXT
 
 #if (!defined __MEMORY_C)
@@ -117,8 +119,8 @@ EXT struct memory_pool_desc *request_memory_pool(int);
 EXT void set_reset_flag(struct acc *);
 EXT void reset_counters(struct acc *);
 EXT int build_query_server(char *);
-EXT void process_query_data(int, unsigned char *, int, int);
-EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct acc *, u_int64_t, u_int64_t);
+EXT void process_query_data(int, unsigned char *, int, struct extra_primitives *, int, int);
+EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct acc *, u_int64_t, u_int64_t, struct extra_primitives *);
 EXT void enQueue_elem(int, struct reply_buffer *, void *, int, int);
 EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
 #undef EXT
@@ -128,11 +130,11 @@ EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
 #else
 #define EXT
 #endif
-EXT void sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT void sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT void sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT void sum_host_insert(struct primitives_ptrs *);
+EXT void sum_port_insert(struct primitives_ptrs *);
+EXT void sum_as_insert(struct primitives_ptrs *);
 #if defined HAVE_L2
-EXT void sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT void sum_mac_insert(struct primitives_ptrs *);
 #endif
 EXT void exit_now(int);
 EXT void free_bgp_allocs();
@@ -144,7 +146,7 @@ EXT void free_bgp_allocs();
 #else
 #define EXT
 #endif
-EXT void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *); /* pointer to INSERT function */
+EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
 EXT unsigned char *mpd;  /* memory pool descriptors table */
 EXT unsigned char *a;  /* accounting in-memory table */
 EXT struct memory_pool_desc *current_pool; /* pointer to currently used memory pool */

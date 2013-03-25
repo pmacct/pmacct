@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -56,15 +56,15 @@ struct chained_cache {
 #endif
 EXT void print_plugin(int, struct configuration *, void *);
 EXT struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
-EXT unsigned int P_cache_modulo(struct pkt_primitives *, struct pkt_bgp_primitives *);
-EXT void P_sum_host_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT void P_sum_port_insert(struct pkt_data *, struct pkt_bgp_primitives *);
-EXT void P_sum_as_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT unsigned int P_cache_modulo(struct primitives_ptrs *);
+EXT void P_sum_host_insert(struct primitives_ptrs *);
+EXT void P_sum_port_insert(struct primitives_ptrs *);
+EXT void P_sum_as_insert(struct primitives_ptrs *);
 #if defined (HAVE_L2)
-EXT void P_sum_mac_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT void P_sum_mac_insert(struct primitives_ptrs *);
 #endif
-EXT struct chained_cache *P_cache_search(struct pkt_primitives *, struct pkt_bgp_primitives *);
-EXT void P_cache_insert(struct pkt_data *, struct pkt_bgp_primitives *);
+EXT struct chained_cache *P_cache_search(struct primitives_ptrs *);
+EXT void P_cache_insert(struct primitives_ptrs *);
 EXT void P_cache_flush(struct chained_cache *[], int);
 EXT void P_cache_purge(struct chained_cache *[], int);
 EXT void P_write_stats_header_formatted(FILE *);
@@ -73,7 +73,7 @@ EXT void P_exit_now(int);
 EXT int P_trigger_exec(char *);
 
 /* global vars */
-EXT void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *); /* pointer to INSERT function */
+EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;

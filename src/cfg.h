@@ -211,8 +211,6 @@ struct configuration {
   int uacctd_group;
   int uacctd_nl_size;
   char *tunnel0;
-  int xlate_src;
-  int xlate_dst;
   char *pkt_len_distrib_bins_str;
   char *pkt_len_distrib_bins[MAX_PKT_LEN_DISTRIB_BINS];
   u_int16_t pkt_len_distrib_bins_lookup[ETHER_JUMBO_MTU+1];

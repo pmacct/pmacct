@@ -39,7 +39,9 @@ VALUES:		[src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_n
 		 tcpflags, in_iface, out_iface, std_comm, ext_comm, as_path, peer_src_ip,
 		 peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med, src_as_path,
 		 src_std_comm, src_ext_comm, src_local_pref, src_med, mpls_vpn_rd,
-		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib]
+		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib,
+		 nat_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
+		 post_nat_dst_port]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -1309,18 +1311,6 @@ KEY:            tee_max_receivers
 DESC:           tee receivers list is organized in pools (for present and future features that require
                 grouping) of receivers. This directive defines the amount of receivers per pool to be
 		allocated and cannot be changed at runtime. (default: 32)
-
-KEY:            xlate_src
-VALUES:         [true|false]
-DESC:           Copies NAT L3/L4 field values in place of the original ones (ie. src_host, src_port,
-		src_net) when available; alternatively it falls back to original values. At time of
-		writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have support for this (default: false)
-
-KEY:            xlate_dst
-VALUES:         [true|false]
-DESC:           Copies NAT L3/L4 field values in place of the original ones (ie. dst_host, dst_port,
-                dst_net) when available; alternatively it falls back to original values. At time of
-                writing only IPFIX and Cisco ASA NetFlow v9 (NSEL) have support for this (default: false)
 
 KEY:		pkt_len_distrib_bins
 DESC:		Defines a list of packet length distributions, comma-separated, which is then used to

@@ -41,6 +41,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int ret, num;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct pkt_bgp_primitives *pbgp;
   struct networks_file_data nfd;
@@ -50,7 +51,11 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0; 
 
+  struct extra_primitives extras;
+  struct primitives_ptrs prim_ptrs;
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
+  memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "SQLite3 Plugin", config.name);
   memset(&idata, 0, sizeof(idata));
@@ -61,7 +66,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 
   sql_set_signals();
-  sql_init_default_values();
+  sql_init_default_values(&extras);
   SQLI_init_default_values(&idata);
   SQLI_set_callbacks(&sqlfunc_cbr);
   sql_set_insert_func();
@@ -277,8 +282,10 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
-        else pbgp = NULL;
+        if (extras.off_pkt_bgp_primitives)
+          pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
+        else
+          pbgp = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -292,7 +299,10 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
           evaluate_pkt_len_distrib(data);
 
-        (*insert_func)(data, pbgp, &idata);
+        prim_ptrs.data = data;
+        prim_ptrs.pbgp = pbgp;
+        prim_ptrs.pnat = NULL; // XXX
+        (*insert_func)(&prim_ptrs, &idata);
 
         ((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {

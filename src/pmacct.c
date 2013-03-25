@@ -477,10 +477,10 @@ int main(int argc,char **argv)
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
   int want_output, want_ipproto_num, want_pkt_len_distrib_table;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
+  int datasize;
   u_int64_t what_to_count, what_to_count_2, have_wtc;
   u_int32_t tmpnum;
-
-  int PbgpSz = FALSE;
+  struct extra_primitives extras;
 
   /* Administrativia */
   memset(&q, 0, sizeof(struct query_header));
@@ -1362,6 +1362,8 @@ int main(int argc,char **argv)
     else have_wtc = TRUE; 
     what_to_count = ((struct query_header *)largebuf)->what_to_count;
     what_to_count_2 = ((struct query_header *)largebuf)->what_to_count_2;
+    datasize = ((struct query_header *)largebuf)->datasize;
+    memcpy(&extras, &((struct query_header *)largebuf)->extras, sizeof(struct extra_primitives));
     if (check_data_sizes((struct query_header *)largebuf, acc_elem)) exit(1);
 
     /* Before going on with the output, we need to retrieve the class strings
@@ -1418,12 +1420,6 @@ int main(int argc,char **argv)
       }
     }
 
-    if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                         COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-			 COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_MED|
-			 COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD))
-      PbgpSz = TRUE;
-
     if (want_output == PRINT_OUTPUT_FORMATTED)
       write_stats_header_formatted(what_to_count, what_to_count_2, have_wtc);
     else if (want_output == PRINT_OUTPUT_CSV)
@@ -1434,24 +1430,15 @@ int main(int argc,char **argv)
 
     acc_elem = (struct pkt_data *) elem;
     if (topN_counter) {
-      int num, size;
- 
-      if (PbgpSz) {
-	num = unpacked/(sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
-	size = sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives);
-      }
-      else {
-	num = unpacked/sizeof(struct pkt_data);
-	size = sizeof(struct pkt_data);
-      }
+      int num = unpacked/datasize;
 
-      client_counters_merge_sort((void *)acc_elem, 0, num, size, topN_counter);
+      client_counters_merge_sort((void *)acc_elem, 0, num, datasize, topN_counter);
     }
 
     while (printed < unpacked) {
       acc_elem = (struct pkt_data *) elem;
 
-      if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem+sizeof(struct pkt_data)); 
+      if (extras.off_pkt_bgp_primitives) pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem + extras.off_pkt_bgp_primitives);
       else pbgp = &empty_pbgp;
 
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
@@ -1844,14 +1831,8 @@ int main(int argc,char **argv)
 #endif
         counter++;
       }
-      if (PbgpSz) {
-	elem += (sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
-	printed += (sizeof(struct pkt_data)+sizeof(struct pkt_bgp_primitives));
-      }
-      else {
-	elem += sizeof(struct pkt_data);
-	printed += sizeof(struct pkt_data);
-      }
+      elem += datasize;
+      printed += datasize;
     }
     if (want_output == PRINT_OUTPUT_FORMATTED) printf("\nFor a total of: %d entries\n", counter);
   }

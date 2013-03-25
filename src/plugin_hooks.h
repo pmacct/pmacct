@@ -29,7 +29,7 @@
 
 struct channels_list_entry;
 typedef void (*pkt_handler) (struct channels_list_entry *, struct packet_ptrs *, char **);
-typedef int (*ring_cleaner) (void *);
+typedef int (*ring_cleaner) (void *, int);
 typedef pm_counter_t (*skip_func) (pm_counter_t);
 
 struct ring {
@@ -74,6 +74,7 @@ struct channels_list_entry {
   ring_cleaner clean_func;
   u_int8_t request;					/* does the plugin support on-request wakeup ? */
   u_int8_t reprocess;					/* do we need to jump back for packet reprocessing ? */
+  int datasize;
   int bufsize;		
   int same_aggregate;
   pkt_handler phandler[N_PRIMITIVES];
@@ -84,6 +85,7 @@ struct channels_list_entry {
   struct aggregate_filter agg_filter; 			/* filter aggregates basing on L2-L4 primitives */
   struct sampling s;
   struct plugins_list_entry *plugin;			/* backpointer to the plugin the actual channel belongs to */
+  struct extra_primitives extras;			/* offset for non-standard aggregation primitives structures */
 };
 
 #if (defined __PLUGIN_HOOKS_C)
@@ -108,11 +110,10 @@ EXT void recollect_pipe_memory(struct channels_list_entry *);
 EXT void init_random_seed();
 EXT void fill_pipe_buffer();
 EXT int check_shadow_status(struct packet_ptrs *, struct channels_list_entry *);
-EXT int pkt_data_clean(void *);
-EXT int pkt_payload_clean(void *);
-EXT int pkt_msg_clean(void *);
-EXT int pkt_extras_clean(void *);
-EXT int pkt_bgp_clean(void *);
+EXT int pkt_data_clean(void *, int);
+EXT int pkt_payload_clean(void *, int);
+EXT int pkt_msg_clean(void *, int);
+EXT int pkt_extras_clean(void *, int);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);

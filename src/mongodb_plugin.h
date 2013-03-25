@@ -45,7 +45,7 @@ EXT void MongoDB_exit_now(int);
 EXT int MongoDB_trigger_exec(char *);
 
 /* global vars */
-EXT void (*insert_func)(struct pkt_data *, struct pkt_bgp_primitives *); /* pointer to INSERT function */
+EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;

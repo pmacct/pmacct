@@ -104,19 +104,11 @@ void sql_init_global_buffers()
 /* being the first routine to be called by each SQL plugin, this is
    also the place for some initial common configuration consistency
    check */ 
-void sql_init_default_values()
+void sql_init_default_values(struct extra_primitives *extras)
 {
-  /* Dirty but allows to save some IFs, centralizes
-     checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)))
-    PbgpSz = 0;
-
   if ( (config.what_to_count & COUNT_CLASS ||
 	config.what_to_count & COUNT_TCPFLAGS ||
-	PbgpSz || /* In short: any BGP primitives */
+	extras->off_pkt_bgp_primitives ||
 	config.nfacctd_sql_log) &&
        config.sql_recovery_logfile) {
     Log(LOG_ERR, "ERROR ( %s/%s ): sql_recovery_logfile is not compatible with: classifiers, BGP-related primitives, TCP flags and nfacctd_sql_log. Try configuring a backup DB.\n", config.name, config.type);
@@ -144,10 +136,7 @@ void sql_init_default_values()
     }
   }
   else {
-    /* PbgpSz is non-zero if at least one of the BGP-related
-       primitives is enabled. This helps putting ASNs in the
-       right field */
-    if (PbgpSz) {
+    if (extras->off_pkt_bgp_primitives) {
       config.sql_table_version += SQL_TABLE_VERSION_BGP;
       Log(LOG_INFO, "INFO ( %s/%s ): sql_table_type set to 'bgp' (aggregate includes one or more BGP primitives).\n", config.name, config.type);
     }
@@ -277,12 +266,14 @@ void sql_link_backend_descriptors(struct BE_descs *registry, struct DBdesc *p, s
   }
 }
 
-void sql_cache_modulo(struct pkt_primitives *srcdst, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
+void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
+  struct pkt_data *pdata = prim_ptrs->data;
+  struct pkt_primitives *srcdst = &pdata->primitives;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+
   idata->hash = cache_crc32((unsigned char *)srcdst, pp_size);
-  if (PbgpSz) {
-    if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
-  }
+  if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   idata->modulo = idata->hash % config.sql_cache_entries;
 }
 
@@ -415,14 +406,17 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
   }
 }
 
-struct db_cache *sql_cache_search(struct pkt_primitives *data, struct pkt_bgp_primitives *pbgp, time_t basetime)
+struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t basetime)
 {
+  struct pkt_data *pdata = prim_ptrs->data;
+  struct pkt_primitives *data = &pdata->primitives;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   unsigned int modulo;
   struct db_cache *Cursor;
   struct insert_data idata;
   int res_data = TRUE, res_bgp = TRUE;
 
-  sql_cache_modulo(data, pbgp, &idata);
+  sql_cache_modulo(prim_ptrs, &idata);
   modulo = idata.modulo;
 
   Cursor = &cache[idata.modulo];
@@ -441,7 +435,7 @@ struct db_cache *sql_cache_search(struct pkt_primitives *data, struct pkt_bgp_pr
     if (Cursor->valid == SQL_CACHE_INUSE) {
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, data, sizeof(struct pkt_primitives));
-      if (PbgpSz) {
+      if (pbgp) {
 	if (Cursor->cbgp) {
 	  struct pkt_bgp_primitives tmp_pbgp;
 
@@ -464,8 +458,10 @@ struct db_cache *sql_cache_search(struct pkt_primitives *data, struct pkt_bgp_pr
   return NULL;
 }
 
-void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
+void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   unsigned int modulo;
   unsigned long int basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;
@@ -497,7 +493,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
     pm_class_t lclass = data->primitives.class;
 
     data->primitives.class = 0;
-    Cursor = sql_cache_search(&data->primitives, pbgp, basetime);
+    Cursor = sql_cache_search(prim_ptrs, basetime);
     data->primitives.class = lclass;
 
     /* We can assign the flow to a new class only if we are able to subtract
@@ -516,7 +512,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
     else memset(&data->cst, 0, CSSz); 
   }
 
-  sql_cache_modulo(&data->primitives, pbgp, idata);
+  sql_cache_modulo(prim_ptrs, idata);
   modulo = idata->modulo;
 
   /* housekeeping */
@@ -568,7 +564,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
 
-      if (PbgpSz) {
+      if (pbgp) {
         if (Cursor->cbgp) {
 	  struct pkt_bgp_primitives tmp_pbgp;
 
@@ -605,7 +601,7 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
 
   /* we add the new entry in the cache */
   memcpy(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
-  if (PbgpSz) {
+  if (pbgp) {
     if (!Cursor->cbgp) {
       Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
       memset(Cursor->cbgp, 0, cb_size);
@@ -693,8 +689,10 @@ void sql_cache_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, st
   }
 }
 
-void sql_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
+void sql_sum_host_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct in_addr ip;
 #if defined ENABLE_IPV6
   struct in6_addr ip6;
@@ -704,55 +702,61 @@ void sql_sum_host_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp,
     ip.s_addr = data->primitives.dst_ip.address.ipv4.s_addr;
     data->primitives.dst_ip.address.ipv4.s_addr = 0;
     data->primitives.dst_ip.family = 0;
-    sql_cache_insert(data, pbgp, idata);
+    sql_cache_insert(prim_ptrs, idata);
     data->primitives.src_ip.address.ipv4.s_addr = ip.s_addr;
-    sql_cache_insert(data, pbgp, idata);
+    sql_cache_insert(prim_ptrs, idata);
   }
 #if defined ENABLE_IPV6
   if (data->primitives.dst_ip.family == AF_INET6) {
     memcpy(&ip6, &data->primitives.dst_ip.address.ipv6, sizeof(struct in6_addr));
     memset(&data->primitives.dst_ip.address.ipv6, 0, sizeof(struct in6_addr));
     data->primitives.dst_ip.family = 0;
-    sql_cache_insert(data, pbgp, idata);
+    sql_cache_insert(prim_ptrs, idata);
     memcpy(&data->primitives.src_ip.address.ipv6, &ip6, sizeof(struct in6_addr));
-    sql_cache_insert(data, pbgp, idata);
+    sql_cache_insert(prim_ptrs, idata);
     return;
   }
 #endif
 }
 
-void sql_sum_port_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
+void sql_sum_port_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   u_int16_t port;
 
   port = data->primitives.dst_port;
   data->primitives.dst_port = 0;
-  sql_cache_insert(data, pbgp, idata);
+  sql_cache_insert(prim_ptrs, idata);
   data->primitives.src_port = port;
-  sql_cache_insert(data, pbgp, idata);
+  sql_cache_insert(prim_ptrs, idata);
 }
 
-void sql_sum_as_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
+void sql_sum_as_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
+  struct pkt_data *data = prim_ptrs->data; 
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   as_t asn;
 
   asn = data->primitives.dst_as;
   data->primitives.dst_as = 0;
-  sql_cache_insert(data, pbgp, idata);
+  sql_cache_insert(prim_ptrs, idata);
   data->primitives.src_as = asn;
-  sql_cache_insert(data, pbgp, idata);
+  sql_cache_insert(prim_ptrs, idata);
 }
 
 #if defined (HAVE_L2)
-void sql_sum_mac_insert(struct pkt_data *data, struct pkt_bgp_primitives *pbgp, struct insert_data *idata)
+void sql_sum_mac_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   u_char macaddr[ETH_ADDR_LEN];
 
   memcpy(macaddr, &data->primitives.eth_dhost, ETH_ADDR_LEN);
   memset(data->primitives.eth_dhost, 0, ETH_ADDR_LEN);
-  sql_cache_insert(data, pbgp, idata);
+  sql_cache_insert(prim_ptrs, idata);
   memcpy(&data->primitives.eth_shost, macaddr, ETH_ADDR_LEN);
-  sql_cache_insert(data, pbgp, idata);
+  sql_cache_insert(prim_ptrs, idata);
 }
 #endif
 

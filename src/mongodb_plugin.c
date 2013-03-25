@@ -44,6 +44,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int timeout, ret, num; 
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct networks_file_data nfd;
 
@@ -52,9 +53,12 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 1, rg_err_count = 0;
 
   struct pkt_bgp_primitives *pbgp;
+  struct extra_primitives extras;
+  struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
+  memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "MongoDB Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
@@ -101,14 +105,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = P_sum_mac_insert;
 #endif
   else insert_func = P_cache_insert;
-
-  /* Dirty but allows to save some IFs, centralizes
-     checks and makes later comparison statements lean */
-  if (!(config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
-                                COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-				COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-				COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)))
-    PbgpSz = 0;
 
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
@@ -284,8 +280,10 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        if (PbgpSz) pbgp = (struct pkt_bgp_primitives *) ((u_char *)data+PdataSz);
-        else pbgp = NULL;
+        if (extras.off_pkt_bgp_primitives)
+          pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
+        else
+          pbgp = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -299,12 +297,15 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
           evaluate_pkt_len_distrib(data);
 
-        (*insert_func)(data, pbgp);
+        prim_ptrs.data = data;
+        prim_ptrs.pbgp = pbgp;
+        prim_ptrs.pnat = NULL; // XXX
+        (*insert_func)(&prim_ptrs);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
           dataptr = (unsigned char *) data;
-          dataptr += PdataSz + PbgpSz;
+	  dataptr += datasize;
           data = (struct pkt_data *) dataptr;
 	}
       }
