@@ -41,7 +41,7 @@ VALUES:		[src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_n
 		 src_std_comm, src_ext_comm, src_local_pref, src_med, mpls_vpn_rd,
 		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib,
 		 nat_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
-		 post_nat_dst_port]
+		 post_nat_dst_port, timestamp_start, timestamp_end]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -70,6 +70,10 @@ NOTES:		* Some primitives (ie. tag2, src_as_path, src_std_comm, src_ext_comm, sr
 		* sampling_rate: if counters renormalization is enabled this field will report
 		  a value of 1; otherwise it will report the rate pmacct would have applied if
 		  renormalize counters was enabled.  
+		* timestamp_start and timestamp_end should not be mixed with pmacct support
+		  for historical accounting, ie. breakdown of traffic in time-bins via the
+		  sql_history feature; the two primitives have the effect of letting pmacct
+		  act as a logger up to the msec level (if reported by the capturing method).
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
@@ -763,15 +767,6 @@ VALUES:         [true|false]
 DESC:           both nfacctd and sfacctd check health of incoming NetFlow/sFlow datagrams - actually this is
 		limited to just verifying sequence numbers progression. You may want to disable such feature
 		because of non-standard implementations. By default checks are enabled (default: false)
-
-KEY:		nfacctd_sql_log [NO_PMACCTD]
-VALUES:		[true|false]
-DESC:		under the NetFlow accounting daemon (nfacctd), it makes the SQL plugin to use a) NetFlow's
-		First Switched timestamp as "stamp_inserted" value and b) NetFlow's Last Switched timestamp
-		as "stamp_updated" value. By not encapsulating traffic into fixed timeslots, this directive
-		is meant to be employed in scenarios in which it's required to log each micro-flow in the
-		SQL database. It's not compatible with nfacctd_time_new and sql_recovery_logfile directives.
-		It can be applied in conjunction with sql_history_since_epoch directive. (default: false)
 
 KEY:		pre_tag_map [GLOBAL]
 DESC:		full pathname to a file containing tag mappings. Enables the use of Pre-Tagging. When used

@@ -25,7 +25,7 @@
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:R"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:OE:uD"
-#define N_PRIMITIVES 55
+#define N_PRIMITIVES 57
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
 #define PROTO_LEN 12
@@ -167,6 +167,8 @@
 #define COUNT_INT_POST_NAT_SRC_PORT	0x0002000000000040ULL
 #define COUNT_INT_POST_NAT_DST_PORT	0x0002000000000080ULL
 #define COUNT_INT_NAT_EVENT		0x0002000000000100ULL
+#define COUNT_INT_TIMESTAMP_START	0x0002000000000200ULL
+#define COUNT_INT_TIMESTAMP_END		0x0002000000000400ULL
 
 #define COUNT_INDEX_MASK	0xFFFF
 #define COUNT_REGISTRY_MASK	0xFFFFFFFFFFFFULL
@@ -232,6 +234,8 @@
 #define COUNT_POST_NAT_SRC_PORT		(COUNT_INT_POST_NAT_SRC_PORT & COUNT_REGISTRY_MASK)
 #define COUNT_POST_NAT_DST_PORT		(COUNT_INT_POST_NAT_DST_PORT & COUNT_REGISTRY_MASK)	
 #define COUNT_NAT_EVENT			(COUNT_INT_NAT_EVENT & COUNT_REGISTRY_MASK)
+#define COUNT_TIMESTAMP_START		(COUNT_INT_TIMESTAMP_START & COUNT_REGISTRY_MASK)
+#define COUNT_TIMESTAMP_END		(COUNT_INT_TIMESTAMP_END & COUNT_REGISTRY_MASK)
 /* PRIMITIVES DEFINITION: END */
 
 /* BYTES and PACKETS are used into templates; we let their values to
@@ -326,3 +330,17 @@ typedef u_int32_t pm_counter_t;
 #define NF_NET_STATIC   0x00000008 /* Determine IP network prefixes from static mask */
 #define NF_NET_IGP	0x00000010 /* Determine IP network prefixes from IGP */
 #define NF_NET_FALLBACK	0x80000000 /* Fallback flag */
+
+/* flow type */
+#define NF9_FTYPE_IPV4                  0
+#define NF9_FTYPE_IPV6                  1
+#define NF9_FTYPE_VLAN                  5
+#define NF9_FTYPE_VLAN_IPV4             5
+#define NF9_FTYPE_VLAN_IPV6             6
+#define NF9_FTYPE_MPLS                  10
+#define NF9_FTYPE_MPLS_IPV4             10
+#define NF9_FTYPE_MPLS_IPV6             11
+#define NF9_FTYPE_VLAN_MPLS             15      
+#define NF9_FTYPE_VLAN_MPLS_IPV4        15
+#define NF9_FTYPE_VLAN_MPLS_IPV6        16
+#define NF9_FTYPE_NAT_EVENT             100

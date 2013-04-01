@@ -57,6 +57,7 @@ EXT void class_handler(struct channels_list_entry *, struct packet_ptrs *, char 
 EXT void in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -89,6 +90,13 @@ EXT void NF_class_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void NF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_post_nat_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_post_nat_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_post_nat_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_post_nat_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_nat_event_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -136,6 +144,7 @@ EXT void SF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *,
 EXT void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_as_path_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

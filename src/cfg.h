@@ -104,7 +104,6 @@ struct configuration {
   u_int32_t nfacctd_net;
   int sfacctd_renormalize;
   int nfacctd_disable_checks;
-  int nfacctd_sql_log;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog;
   char *nfacctd_bgp_ip;

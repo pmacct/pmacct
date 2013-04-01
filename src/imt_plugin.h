@@ -33,11 +33,13 @@ struct acc {
   pm_counter_t bytes_counter;
   pm_counter_t packet_counter;
   pm_counter_t flow_counter;
+  u_int8_t flow_type; 
   u_int32_t tcp_flags; 
   unsigned int signature;
   u_int8_t reset_flag;
   struct timeval rstamp;	/* classifiers: reset timestamp */
   struct cache_bgp_primitives *cbgp;
+  struct pkt_nat_primitives *pnat;
   struct acc *next;
 };
 
@@ -72,6 +74,7 @@ struct query_entry {
   u_int64_t what_to_count_2;	/* aggregation */
   struct pkt_primitives data;	/* actual data */
   struct pkt_bgp_primitives pbgp; /* extended BGP data */
+  struct pkt_nat_primitives pnat; /* extended NAT + timestamp data */
 };
 
 struct reply_buffer {
@@ -120,9 +123,11 @@ EXT void set_reset_flag(struct acc *);
 EXT void reset_counters(struct acc *);
 EXT int build_query_server(char *);
 EXT void process_query_data(int, unsigned char *, int, struct extra_primitives *, int, int);
-EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct acc *, u_int64_t, u_int64_t, struct extra_primitives *);
+EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
+			struct acc *, u_int64_t, u_int64_t, struct extra_primitives *);
 EXT void enQueue_elem(int, struct reply_buffer *, void *, int, int);
 EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
+EXT int test_zero_elem(struct acc *);
 #undef EXT
 
 #if (!defined __IMT_PLUGIN_C)
@@ -138,6 +143,7 @@ EXT void sum_mac_insert(struct primitives_ptrs *);
 #endif
 EXT void exit_now(int);
 EXT void free_bgp_allocs();
+EXT void free_nat_allocs();
 #undef EXT
 
 /* global vars */

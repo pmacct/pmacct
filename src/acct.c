@@ -32,13 +32,16 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_primitives *addr = &data->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct acc *elem_acc;
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives); 
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
+  unsigned int pn_size = sizeof(struct pkt_nat_primitives);
 
   hash = cache_crc32((unsigned char *)addr, pp_size);
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
+  if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   pos = hash % config.buckets;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -61,7 +64,8 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   struct pkt_data *pdata = prim_ptrs->data;
   struct pkt_primitives *data = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  int res_data = TRUE, res_bgp = TRUE; 
+  struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE; 
 
   res_data = memcmp(&elem->primitives, data, sizeof(struct pkt_primitives));
 
@@ -75,7 +79,10 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   }
   else res_bgp = FALSE;
 
-  return res_data | res_bgp;
+  if (pnat && elem->pnat) res_nat = memcmp(elem->pnat, pnat, sizeof(struct pkt_nat_primitives));
+  else res_nat = FALSE;
+
+  return res_data | res_bgp | res_nat;
 }
 
 void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
@@ -83,12 +90,14 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_primitives *addr = &data->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct acc *elem_acc;
   unsigned char *elem, *new_elem;
   int solved = FALSE;
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives);
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
+  unsigned int pn_size = sizeof(struct pkt_nat_primitives);
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
 
   /* We are classifing packets. We have a non-zero bytes accumulator (ba)
@@ -122,6 +131,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 
   hash = cache_crc32((unsigned char *)addr, pp_size);
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
+  if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   pos = hash % config.buckets;
       
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -138,6 +148,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->flo_num;
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
+        elem_acc->flow_type = data->flow_type; // XXX
         if (config.what_to_count & COUNT_CLASS) {
           elem_acc->packet_counter += data->cst.pa;
           elem_acc->bytes_counter += data->cst.ba;
@@ -159,6 +170,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->flo_num;
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
+        elem_acc->flow_type = data->flow_type; // XXX
 	if (config.what_to_count & COUNT_CLASS) {
 	  elem_acc->packet_counter += data->cst.pa;
 	  elem_acc->bytes_counter += data->cst.ba;
@@ -187,10 +199,16 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
 
+      if (pnat) {
+        elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
+	memcpy(elem_acc->pnat, pnat, pn_size);
+      }
+
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
       elem_acc->tcp_flags |= data->tcp_flags;
+      elem_acc->flow_type = data->flow_type; // XXX
       elem_acc->signature = hash;
       if (config.what_to_count & COUNT_CLASS) {
         elem_acc->packet_counter += data->cst.pa;
@@ -245,10 +263,17 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       }
       else elem_acc->cbgp = NULL;
 
+      if (pnat) {
+        elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
+        memcpy(elem_acc->pnat, pnat, pn_size);
+      }
+      else elem_acc->pnat = NULL;
+
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
       elem_acc->tcp_flags = data->tcp_flags;
+      elem_acc->flow_type = data->flow_type;
       elem_acc->signature = hash; 
       if (config.what_to_count & COUNT_CLASS) {
         elem_acc->packet_counter += data->cst.pa;
@@ -273,5 +298,6 @@ void reset_counters(struct acc *elem)
   elem->packet_counter = 0;
   elem->bytes_counter = 0;
   elem->tcp_flags = 0;
+  elem->flow_type = 0;
   memcpy(&elem->rstamp, &cycle_stamp, sizeof(struct timeval));
 }

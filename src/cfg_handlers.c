@@ -186,6 +186,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "post_nat_src_port")) cfg_set_aggregate(filename, value, COUNT_INT_POST_NAT_SRC_PORT, count_token);
     else if (!strcmp(count_token, "post_nat_dst_port")) cfg_set_aggregate(filename, value, COUNT_INT_POST_NAT_DST_PORT, count_token);
     else if (!strcmp(count_token, "nat_event")) cfg_set_aggregate(filename, value, COUNT_INT_NAT_EVENT, count_token);
+    else if (!strcmp(count_token, "timestamp_start")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_START, count_token);
+    else if (!strcmp(count_token, "timestamp_end")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_END, count_token);
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
   }
 
@@ -1894,28 +1896,6 @@ int cfg_key_nfacctd_mcast_groups(char *filename, char *name, char *value_ptr)
 		  filename);
   if (more) Log(LOG_WARNING, "WARN ( %s ): Only the first %u (on a total of %u) multicast groups will be joined.\n",
 		  filename, MAX_MCAST_GROUPS, MAX_MCAST_GROUPS+more);
-
-  return changes;
-}
-
-int cfg_key_nfacctd_sql_log(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.nfacctd_sql_log = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.nfacctd_sql_log = value;
-        changes++;
-	break;
-      }
-    }
-  }
 
   return changes;
 }

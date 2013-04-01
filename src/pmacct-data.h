@@ -298,7 +298,6 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_as_new", cfg_key_nfacctd_as_new},
   {"nfacctd_net", cfg_key_nfacctd_net},
   {"nfacctd_mcast_groups", cfg_key_nfacctd_mcast_groups},
-  {"nfacctd_sql_log", cfg_key_nfacctd_sql_log},
   {"nfacctd_peer_as", cfg_key_nfprobe_peer_as},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"pmacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},

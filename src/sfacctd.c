@@ -61,7 +61,7 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified UDP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | none ]\n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | timestamp_start |\n\t none ]\n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
@@ -384,6 +384,12 @@ int main(int argc,char **argv, char **envp)
       }
       else {
 	list->cfg.data_type = PIPE_TYPE_METADATA;
+
+        if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
+                        COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
+                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END))
+          list->cfg.data_type |= PIPE_TYPE_NAT;
+
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
 	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
@@ -1030,6 +1036,7 @@ void compute_once()
   PmsgSz = sizeof(struct pkt_msg);
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
+  PnatSz = sizeof(struct pkt_nat_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);
   CharPtrSz = sizeof(char *);
   IP4HdrSz = sizeof(struct my_iphdr);
@@ -2157,7 +2164,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   u_int8_t dcd_ipProtocol = sample->dcd_ipProtocol, dcd_ipTos = sample->dcd_ipTos;
   u_int8_t dcd_tcpFlags = sample->dcd_tcpFlags;
   u_int16_t vlan = htons(sample->in_vlan);
-  u_int16_t flow_type;
 
   /* check for out_vlan */
   if (!vlan && sample->out_vlan) vlan = htons(sample->out_vlan); 
@@ -2169,10 +2175,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   */
   if (sample->gotIPV4 || sample->gotIPV6 || !sample->eth_type) {
     reset_net_status_v(pptrsv);
-    flow_type = SF_evaluate_flow_type(pptrs);
+    pptrs->flow_type = SF_evaluate_flow_type(pptrs);
 
     /* we need to understand the IP protocol version in order to build the fake packet */
-    switch (flow_type) {
+    switch (pptrs->flow_type) {
     case NF9_FTYPE_IPV4:
       if (req->bpf_filter) {
         reset_mac(pptrs);
@@ -2209,6 +2215,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #if defined ENABLE_IPV6
     case NF9_FTYPE_IPV6:
+      pptrsv->v6.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         reset_mac(&pptrsv->v6);
         reset_ip6(&pptrsv->v6);
@@ -2244,6 +2252,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #endif
     case NF9_FTYPE_VLAN_IPV4:
+      pptrsv->vlan4.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         reset_mac_vlan(&pptrsv->vlan4);
         reset_ip4(&pptrsv->vlan4);
@@ -2280,6 +2290,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #if defined ENABLE_IPV6
     case NF9_FTYPE_VLAN_IPV6:
+      pptrsv->vlan6.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         reset_mac_vlan(&pptrsv->vlan6);
         reset_ip6(&pptrsv->vlan6);
@@ -2316,6 +2328,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #endif
     case NF9_FTYPE_MPLS_IPV4:
+      pptrsv->mpls4.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->mpls4.mpls_ptr;
         u_int32_t label, idx;
@@ -2365,6 +2379,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #if defined ENABLE_IPV6
     case NF9_FTYPE_MPLS_IPV6:
+      pptrsv->mpls6.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->mpls6.mpls_ptr;
         u_int32_t label, idx;
@@ -2413,6 +2429,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #endif
     case NF9_FTYPE_VLAN_MPLS_IPV4:
+      pptrsv->vlanmpls4.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->vlanmpls4.mpls_ptr;
         u_int32_t label, idx;
@@ -2462,6 +2480,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       break;
 #if defined ENABLE_IPV6
     case NF9_FTYPE_VLAN_MPLS_IPV6:
+      pptrsv->vlanmpls6.flow_type = pptrs->flow_type;
+
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->vlanmpls6.mpls_ptr;
         u_int32_t label, idx;

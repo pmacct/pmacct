@@ -44,6 +44,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct pkt_bgp_primitives *pbgp;
+  struct pkt_nat_primitives *pnat;
   struct networks_file_data nfd;
   char *dataptr;
 
@@ -286,6 +287,9 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
         else
           pbgp = NULL;
+        if (extras.off_pkt_nat_primitives)
+          pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
+        else pnat = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -301,13 +305,13 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         prim_ptrs.data = data;
         prim_ptrs.pbgp = pbgp;
-        prim_ptrs.pnat = NULL; // XXX
+        prim_ptrs.pnat = pnat;
         (*insert_func)(&prim_ptrs, &idata);
 
         ((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
           dataptr = (unsigned char *) data;
-          dataptr += PdataSz + PbgpSz;
+	  dataptr += datasize;
           data = (struct pkt_data *) dataptr;
         }
       }
@@ -504,7 +508,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 
 int SQLI_evaluate_history(int primitive)
 {
-  if (config.sql_history || config.nfacctd_sql_log) {
+  if (config.sql_history) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
@@ -566,38 +570,20 @@ int SQLI_compose_static_queries()
 
   set_primitives = sql_compose_static_set(have_flows);
 
-  if (config.sql_history || config.nfacctd_sql_log) {
-    if (!config.nfacctd_sql_log) {
-      if (!config.sql_history_since_epoch) {
-	strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-	strncat(set[set_primitives].string, "stamp_updated=DATETIME('now', 'localtime')", SPACELEFT(set[set_primitives].string));
-	set[set_primitives].type = TIMESTAMP;
-	set[set_primitives].handler = count_noop_setclause_handler;
-	set_primitives++;
-      }
-      else {
-	strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-	strncat(set[set_primitives].string, "stamp_updated=STRFTIME('%%s', 'now')", SPACELEFT(set[set_primitives].string));
-	set[set_primitives].type = TIMESTAMP;
-	set[set_primitives].handler = count_noop_setclause_handler;
-	set_primitives++;
-      }
+  if (config.sql_history) {
+    if (!config.sql_history_since_epoch) {
+      strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
+      strncat(set[set_primitives].string, "stamp_updated=DATETIME('now', 'localtime')", SPACELEFT(set[set_primitives].string));
+      set[set_primitives].type = TIMESTAMP;
+      set[set_primitives].handler = count_noop_setclause_handler;
+      set_primitives++;
     }
     else {
-      if (!config.sql_history_since_epoch) {
-	strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-	strncat(set[set_primitives].string, "stamp_updated=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(set[set_primitives].string));
-	set[set_primitives].type = TIMESTAMP;
-	set[set_primitives].handler = count_timestamp_setclause_handler;
-	set_primitives++;
-      }
-      else {
-	strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-	strncat(set[set_primitives].string, "stamp_updated=%u", SPACELEFT(set[set_primitives].string));
-	set[set_primitives].type = TIMESTAMP;
-	set[set_primitives].handler = count_timestamp_setclause_handler;
-	set_primitives++;
-      }
+      strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
+      strncat(set[set_primitives].string, "stamp_updated=STRFTIME('%%s', 'now')", SPACELEFT(set[set_primitives].string));
+      set[set_primitives].type = TIMESTAMP;
+      set[set_primitives].handler = count_noop_setclause_handler;
+      set_primitives++;
     }
   }
 

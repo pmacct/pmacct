@@ -294,6 +294,7 @@ struct packet_ptrs {
   u_int16_t l3_proto; /* layer-3 protocol: IPv4, IPv6 */
   int (*l3_handler)(register struct packet_ptrs *); /* layer-3 protocol handler */
   u_int16_t l4_proto; /* layer-4 protocol */
+  u_int8_t flow_type; /* Flow, NAT event, etc. */
   pm_id_t tag; /* pre tag id */
   pm_id_t tag2; /* pre tag id2 */
   pm_id_t bpas; /* bgp_peer_as_src */
@@ -387,6 +388,7 @@ struct pkt_data {
   pm_counter_t pkt_len;
   pm_counter_t pkt_num;
   pm_counter_t flo_num;
+  u_int8_t flow_type;
   u_int32_t tcp_flags; /* XXX */
   struct timeval time_start;
   struct timeval time_end;
@@ -468,11 +470,13 @@ struct pkt_bgp_primitives {
 };
 
 struct pkt_nat_primitives {
-  struct host_addr post_nat_src_host;
-  struct host_addr post_nat_dst_host;
+  struct host_addr post_nat_src_ip;
+  struct host_addr post_nat_dst_ip;
   u_int16_t post_nat_src_port;
   u_int16_t post_nat_dst_port;
   u_int8_t nat_event;
+  struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
+  struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
 };
 
 /* same as above but pointers in place of strings */

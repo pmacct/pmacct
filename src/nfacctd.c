@@ -55,7 +55,7 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified UDP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | post_nat_src_host |\n\t post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event | none ]\n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | post_nat_src_host |\n\t post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event | timestamp_start |\n\t timestamp_end | none ]\n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
@@ -378,7 +378,8 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type = PIPE_TYPE_METADATA;
 
 	if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
-			COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT))
+			COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
+			COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
@@ -1094,7 +1095,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   struct template_cache_entry *tpl;
   struct data_hdr_v9 *data_hdr;
   struct packet_ptrs *pptrs = &pptrsv->v4;
-  u_int16_t fid, off = 0, flowoff, flowsetlen, flow_type, direction, FlowSeqInc = 0; 
+  u_int16_t fid, off = 0, flowoff, flowsetlen, direction, FlowSeqInc = 0; 
   u_int32_t HdrSz = 0, SourceId = 0, FlowSeq = 0;
 
   if (version == 9) {
@@ -1310,11 +1311,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         pptrs->f_data = pkt;
 	pptrs->f_tpl = (u_char *) tpl;
 	reset_net_status_v(pptrsv);
-	flow_type = NF_evaluate_flow_type(tpl, pptrs);
+	pptrs->flow_type = NF_evaluate_flow_type(tpl, pptrs);
 	direction = NF_evaluate_direction(tpl, pptrs);
 
 	/* we need to understand the IP protocol version in order to build the fake packet */ 
-	switch (flow_type) {
+	switch (pptrs->flow_type) {
 	case NF9_FTYPE_IPV4:
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
@@ -1370,6 +1371,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
 	  pptrsv->v6.f_tpl = pptrs->f_tpl;
+	  pptrsv->v6.flow_type = pptrs->flow_type;
 
 	  if (req->bpf_filter) {
 	    reset_mac(&pptrsv->v6);
@@ -1425,6 +1427,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlan4.f_header = pptrs->f_header;
 	  pptrsv->vlan4.f_data = pptrs->f_data;
 	  pptrsv->vlan4.f_tpl = pptrs->f_tpl;
+	  pptrsv->vlan4.flow_type = pptrs->flow_type;
 
 	  if (req->bpf_filter) {
 	    reset_mac_vlan(&pptrsv->vlan4); 
@@ -1482,6 +1485,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlan6.f_header = pptrs->f_header;
 	  pptrsv->vlan6.f_data = pptrs->f_data;
 	  pptrsv->vlan6.f_tpl = pptrs->f_tpl;
+	  pptrsv->vlan6.flow_type = pptrs->flow_type;
 
 	  if (req->bpf_filter) {
 	    reset_mac_vlan(&pptrsv->vlan6);
@@ -1539,6 +1543,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           pptrsv->mpls4.f_header = pptrs->f_header;
           pptrsv->mpls4.f_data = pptrs->f_data;
           pptrsv->mpls4.f_tpl = pptrs->f_tpl;
+	  pptrsv->mpls4.flow_type = pptrs->flow_type;
 
           if (req->bpf_filter) {
 	    u_char *ptr = pptrsv->mpls4.mpls_ptr;
@@ -1606,6 +1611,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->mpls6.f_header = pptrs->f_header;
 	  pptrsv->mpls6.f_data = pptrs->f_data;
 	  pptrsv->mpls6.f_tpl = pptrs->f_tpl;
+	  pptrsv->mpls6.flow_type = pptrs->flow_type;
 
 	  if (req->bpf_filter) {
 	    u_char *ptr = pptrsv->mpls6.mpls_ptr;
@@ -1672,6 +1678,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlanmpls4.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls4.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls4.f_tpl = pptrs->f_tpl;
+	  pptrsv->vlanmpls4.flow_type = pptrs->flow_type;
 
           if (req->bpf_filter) {
             u_char *ptr = pptrsv->vlanmpls4.mpls_ptr;
@@ -1741,6 +1748,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlanmpls6.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls6.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls6.f_tpl = pptrs->f_tpl;
+	  pptrsv->vlanmpls6.flow_type = pptrs->flow_type;
 
           if (req->bpf_filter) {
             u_char *ptr = pptrsv->vlanmpls6.mpls_ptr;

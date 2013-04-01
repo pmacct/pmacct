@@ -104,11 +104,12 @@ struct db_cache {
   pm_counter_t bytes_counter;
   pm_counter_t packet_counter;
   pm_counter_t flows_counter;
+  u_int8_t flow_type;
   u_int32_t tcp_flags;
   u_int8_t tentatives;	/* support to classifiers: tentatives remaining */
   time_t basetime;
-  time_t endtime;
   struct cache_bgp_primitives *cbgp;
+  struct pkt_nat_primitives *pnat;
   u_int8_t valid;
   u_int8_t prep_valid;
   unsigned int signature;
@@ -239,6 +240,15 @@ EXT void count_id_handler(const struct db_cache *, const struct insert_data *, i
 EXT void count_id2_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_class_id_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_tcpflags_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_post_nat_src_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_post_nat_dst_ip_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_post_nat_src_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_post_nat_dst_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_nat_event_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_timestamp_start_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_timestamp_start_residual_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_timestamp_end_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_timestamp_end_residual_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_as_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -253,7 +263,6 @@ EXT void count_dst_host_country_handler(const struct db_cache *, const struct in
 
 EXT void count_counters_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_flows_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
-EXT void count_timestamp_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_tcpflags_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_noop_setclause_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 #undef EXT
@@ -327,7 +336,7 @@ EXT unsigned char *pipebuf;
 EXT struct db_cache *cache;
 EXT struct db_cache **queries_queue, **pending_queries_queue;
 EXT struct db_cache *collision_queue;
-EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, dbc_size, cq_size, pqq_ptr;
+EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, dbc_size, cq_size, pqq_ptr;
 EXT struct db_cache lru_head, *lru_tail;
 EXT struct frags where[N_PRIMITIVES+2];
 EXT struct frags values[N_PRIMITIVES+2];
@@ -338,7 +347,6 @@ EXT int glob_basetime; /* last resort for signal handling */
 EXT time_t glob_new_basetime; /* last resort for signal handling */
 EXT time_t glob_committed_basetime; /* last resort for signal handling */
 EXT int glob_dyn_table; /* last resort for signal handling */
-EXT int glob_nfacctd_sql_log; /* last resort for sql handlers */
 EXT int glob_timeslot; /* last resort for sql handlers */
 
 EXT struct sqlfunc_cb_registry sqlfunc_cbr; 

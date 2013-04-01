@@ -53,6 +53,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 1, rg_err_count = 0;
 
   struct pkt_bgp_primitives *pbgp;
+  struct pkt_nat_primitives *pnat;
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
@@ -124,6 +125,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
+  pn_size = sizeof(struct pkt_nat_primitives);
   dbc_size = sizeof(struct chained_cache);
   if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES; 
   memset(&sa, 0, sizeof(struct scratch_area));
@@ -284,6 +286,9 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
         else
           pbgp = NULL;
+        if (extras.off_pkt_nat_primitives)
+          pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
+        else pnat = NULL;
 
 	for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -299,7 +304,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         prim_ptrs.data = data;
         prim_ptrs.pbgp = pbgp;
-        prim_ptrs.pnat = NULL; // XXX
+        prim_ptrs.pnat = pnat;
         (*insert_func)(&prim_ptrs);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
@@ -331,7 +336,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 {
   struct pkt_primitives *data = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;
+  struct pkt_nat_primitives *pnat = NULL;
   struct pkt_bgp_primitives empty_pbgp;
+  struct pkt_nat_primitives empty_pnat;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
@@ -365,6 +372,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   else Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection succeeded (MONGO_OK) to MongoDB\n", config.name, config.type);
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
+  memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
 
   if (!config.sql_table) config.sql_table = default_table;
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
@@ -397,8 +405,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
     else pbgp = &empty_pbgp;
 
-    if (!queue[j]->bytes_counter && !queue[j]->packet_counter && !queue[j]->flow_counter)
-      continue;
+    if (queue[j]->pnat) pnat = queue[j]->pnat;
+    else pnat = &empty_pnat;
+
+    if (P_test_zero_elem(queue[j])) continue;
 
     if (config.what_to_count & COUNT_ID) bson_append_long(bson_elem, "tag", data->id);
     if (config.what_to_count & COUNT_ID2) bson_append_long(bson_elem, "tag2", data->id2);
@@ -536,6 +546,42 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
     if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
       bson_append_string(bson_elem, "pkt_len_distrib", config.pkt_len_distrib_bins[data->pkt_len_distrib]);
+
+    if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
+      addr_to_str(src_host, &pnat->post_nat_src_ip);
+      bson_append_string(bson_elem, "post_nat_ip_src", src_host);
+    }
+    if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) {
+      addr_to_str(dst_host, &pnat->post_nat_dst_ip);
+      bson_append_string(bson_elem, "post_nat_ip_dst", dst_host);
+    }
+    if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) {
+      sprintf(misc_str, "%u", pnat->post_nat_src_port);
+      bson_append_string(bson_elem, "post_nat_port_src", misc_str);
+    }
+    if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) {
+      sprintf(misc_str, "%u", pnat->post_nat_dst_port);
+      bson_append_string(bson_elem, "post_nat_port_dst", misc_str);
+    }
+    if (config.what_to_count_2 & COUNT_NAT_EVENT) {
+      sprintf(misc_str, "%u", pnat->nat_event);
+      bson_append_string(bson_elem, "nat_event", misc_str);
+    }
+
+    if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
+      bson_timestamp_t bts;
+
+      bts.t = pnat->timestamp_start.tv_sec;
+      bts.i = pnat->timestamp_start.tv_usec;
+      bson_append_timestamp(bson_elem, "timestamp_start", &bts);
+    }
+    if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
+      bson_timestamp_t bts;
+
+      bts.t = pnat->timestamp_end.tv_sec;
+      bts.i = pnat->timestamp_end.tv_usec;
+      bson_append_timestamp(bson_elem, "timestamp_end", &bts);
+    }
 
     if (config.sql_history) {
       bson_append_date(bson_elem, "stamp_inserted", (bson_date_t) 1000*queue[j]->basetime.tv_sec);

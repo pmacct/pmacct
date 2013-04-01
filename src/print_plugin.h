@@ -41,8 +41,10 @@ struct chained_cache {
   pm_counter_t bytes_counter;
   pm_counter_t packet_counter;
   pm_counter_t flow_counter;
+  u_int8_t flow_type;
   u_int32_t tcp_flags;
   struct pkt_bgp_primitives *pbgp;
+  struct pkt_nat_primitives *pnat;
   int valid;
   struct timeval basetime;
   struct chained_cache *next;
@@ -78,7 +80,7 @@ EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
-EXT int qq_ptr, pp_size, pb_size, dbc_size, quit; 
+EXT int qq_ptr, pp_size, pb_size, pn_size, dbc_size, quit; 
 EXT time_t refresh_deadline;
 
 EXT void (*basetime_init)(time_t);
@@ -90,4 +92,5 @@ EXT time_t timeslot;
 EXT void P_init_historical_acct(time_t);
 EXT void P_eval_historical_acct(struct timeval *, struct timeval *, time_t);
 EXT int P_cmp_historical_acct(struct timeval *, struct timeval *);
+EXT int P_test_zero_elem(struct chained_cache *);
 #undef EXT

@@ -75,10 +75,12 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   unsigned int idx;
   struct pkt_data dummy;
   struct pkt_bgp_primitives dummy_pbgp;
+  struct pkt_nat_primitives dummy_pnat;
   int reset_counter, offset = PdataSz;
 
   memset(&dummy, 0, sizeof(struct pkt_data));
   memset(&dummy_pbgp, 0, sizeof(struct pkt_bgp_primitives));
+  memset(&dummy_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&rb, 0, sizeof(struct reply_buffer));
   memcpy(rb.buf, buf, sizeof(struct query_header));
   rb.len = LARGEBUFLEN-sizeof(struct query_header);
@@ -120,8 +122,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     q->what_to_count_2 = config.what_to_count_2; 
     for (idx = 0; idx < config.buckets; idx++) {
       if (!following_chain) acc_elem = (struct acc *) elem;
-      if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
+      if (!test_zero_elem(acc_elem)) {
 	enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize);
+
 	/* XXX: to be optimized ? */
 	if (extras->off_pkt_bgp_primitives) {
 	  if (acc_elem->cbgp) {
@@ -132,6 +135,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	  }
 	  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	}
+
+        if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
+          enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+	}
+        else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
       } 
       if (acc_elem->next != NULL) {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Following chain in reply ...\n", config.name, config.type);
@@ -157,7 +165,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
       do {
         if (following_chain) acc_elem = acc_elem->next;
-        if (acc_elem->bytes_counter && !acc_elem->reset_flag) bd.howmany++;
+        if (!test_zero_elem(acc_elem)) bd.howmany++;
         bd.num = idx; /* we need to avoid this redundancy */
         following_chain = TRUE;
       } while (acc_elem->next != NULL);
@@ -184,12 +192,13 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	memcpy(&pd_dummy.primitives, &request.data, sizeof(struct pkt_primitives));
 	prim_ptrs.data = &pd_dummy;
 	prim_ptrs.pbgp = &request.pbgp;
-	prim_ptrs.pnat = NULL; // XXX
+	prim_ptrs.pnat = &request.pnat;
 
         acc_elem = search_accounting_structure(&prim_ptrs);
         if (acc_elem) { 
-	  if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
+	  if (!test_zero_elem(acc_elem)) {
 	    enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize);
+
 	    /* XXX: to be optimized ? */
 	    if (extras->off_pkt_bgp_primitives) {
 	      if (acc_elem->cbgp) {
@@ -200,6 +209,12 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	      }
 	      else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	    }
+
+            if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
+              enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+            }
+            else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+
 	    if (reset_counter) {
 	      if (forked) set_reset_flag(acc_elem);
 	      else reset_counters(acc_elem);
@@ -208,22 +223,31 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	  else {
 	    if (q->type & WANT_COUNTER) {
 	      enQueue_elem(sd, &rb, &dummy, PdataSz, datasize);
+
 	      if (extras->off_pkt_bgp_primitives)
 		enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+
+	      if (extras->off_pkt_nat_primitives)
+		enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 	    }
 	  }
         }
 	else {
 	  if (q->type & WANT_COUNTER) {
 	    enQueue_elem(sd, &rb, &dummy, PdataSz, datasize);
+
 	    if (extras->off_pkt_bgp_primitives)
 	      enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+
+	    if (extras->off_pkt_nat_primitives)
+	      enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 	  }
 	}
       }
       else {
         struct pkt_primitives tbuf;  
 	struct pkt_bgp_primitives bbuf;
+	struct pkt_nat_primitives nbuf;
 	struct pkt_data abuf;
         following_chain = FALSE;
 	elem = (unsigned char *) a;
@@ -231,13 +255,15 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
         for (idx = 0; idx < config.buckets; idx++) {
           if (!following_chain) acc_elem = (struct acc *) elem;
-	  if (acc_elem->bytes_counter && !acc_elem->reset_flag) {
-	    mask_elem(&tbuf, &bbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
+	  if (!test_zero_elem(acc_elem)) {
+	    mask_elem(&tbuf, &bbuf, &nbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
-		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives))) {
+		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives)) &&
+		!memcmp(&nbuf, &request.pnat, sizeof(struct pkt_nat_primitives))) {
 	      if (q->type & WANT_COUNTER) Accumulate_Counters(&abuf, acc_elem); 
 	      else {
 		enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize); /* q->type == WANT_MATCH */
+
 		if (extras->off_pkt_bgp_primitives) {
 		  if (acc_elem->cbgp) {
 		    struct pkt_bgp_primitives tmp_pbgp;
@@ -247,6 +273,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		  }
 		  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 		}
+
+                if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
+                  enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+                }
+                else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 	      }
 	      if (reset_counter) set_reset_flag(acc_elem);
 	    }
@@ -304,16 +335,19 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   }
 }
 
-void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct acc *src, u_int64_t w, u_int64_t w2, struct extra_primitives *extras)
+void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct pkt_nat_primitives *d3,
+		struct acc *src, u_int64_t w, u_int64_t w2, struct extra_primitives *extras)
 {
   struct pkt_primitives *s1 = &src->primitives;
   struct pkt_bgp_primitives tmp_pbgp;
   struct pkt_bgp_primitives *s2 = &tmp_pbgp;
+  struct pkt_nat_primitives *s3 = src->pnat;
 
   cache_to_pkt_bgp_primitives(s2, src->cbgp);
 
   memset(d1, 0, sizeof(struct pkt_primitives));
   memset(d2, 0, sizeof(struct pkt_bgp_primitives));
+  memset(d3, 0, sizeof(struct pkt_nat_primitives));
 
 #if defined (HAVE_L2)
   if (w & COUNT_SRC_MAC) memcpy(d1->eth_shost, s1->eth_shost, ETH_ADDR_LEN); 
@@ -386,6 +420,28 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     }
     if (w & COUNT_MPLS_VPN_RD) memcpy(&d2->mpls_vpn_rd, &s2->mpls_vpn_rd, sizeof(rd_t)); 
   }
+
+  if (extras->off_pkt_nat_primitives && s3) {
+    if (w2 & COUNT_POST_NAT_SRC_HOST) {
+      if (s3->post_nat_src_ip.family == AF_INET) d3->post_nat_src_ip.address.ipv4.s_addr = s3->post_nat_src_ip.address.ipv4.s_addr;
+#if defined ENABLE_IPV6
+      else if (s3->post_nat_src_ip.family == AF_INET6) memcpy(&d3->post_nat_src_ip.address.ipv6,  &s3->post_nat_src_ip.address.ipv6, sizeof(struct in6_addr));
+#endif
+      d3->post_nat_src_ip.family = s3->post_nat_src_ip.family;
+    }
+    if (w2 & COUNT_POST_NAT_DST_HOST) {
+      if (s3->post_nat_dst_ip.family == AF_INET) d3->post_nat_dst_ip.address.ipv4.s_addr = s3->post_nat_dst_ip.address.ipv4.s_addr;
+#if defined ENABLE_IPV6
+      else if (s3->post_nat_dst_ip.family == AF_INET6) memcpy(&d3->post_nat_dst_ip.address.ipv6,  &s3->post_nat_dst_ip.address.ipv6, sizeof(struct in6_addr));
+#endif
+      d3->post_nat_dst_ip.family = s3->post_nat_dst_ip.family;
+    }
+    if (w2 & COUNT_POST_NAT_SRC_PORT) d3->post_nat_src_port = s3->post_nat_src_port;
+    if (w2 & COUNT_POST_NAT_DST_PORT) d3->post_nat_dst_port = s3->post_nat_dst_port;
+    if (w2 & COUNT_NAT_EVENT) d3->nat_event = s3->nat_event;
+    if (w2 & COUNT_TIMESTAMP_START) memcpy(&d3->timestamp_start, &s3->timestamp_start, sizeof(struct timeval));
+    if (w2 & COUNT_TIMESTAMP_END) memcpy(&d3->timestamp_end, &s3->timestamp_end, sizeof(struct timeval));
+  }
 }
 
 void enQueue_elem(int sd, struct reply_buffer *rb, void *elem, int size, int tot_size)
@@ -413,4 +469,20 @@ void Accumulate_Counters(struct pkt_data *abuf, struct acc *elem)
   abuf->pkt_num += elem->packet_counter;
   abuf->flo_num += elem->flow_counter;
   abuf->time_start.tv_sec++; /* XXX: this unused field works as counter of how much entries we are accumulating */
+}
+
+int test_zero_elem(struct acc *elem)
+{
+  if (elem) {
+    if (elem->flow_type == NF9_FTYPE_NAT_EVENT) {
+      if (elem->pnat && elem->pnat->nat_event) return FALSE;
+      else return TRUE;
+    }
+    else {
+      if (elem->bytes_counter && !elem->reset_flag) return FALSE;
+      else return TRUE;
+    }
+  }
+
+  return TRUE;
 }

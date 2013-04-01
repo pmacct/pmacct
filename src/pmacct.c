@@ -68,7 +68,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -179,6 +179,20 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     printf("SAMPLING_RATE ");
     printf("PKT_LEN_DISTRIB ");
 
+#if defined ENABLE_IPV6
+    printf("POST_NAT_SRC_IP                                ");
+    printf("POST_NAT_DST_IP                                ");
+#else
+    printf("POST_NAT_SRC_IP  ");
+    printf("POST_NAT_DST_IP  ");
+#endif
+    printf("POST_NAT_SRC_PORT  ");
+    printf("POST_NAT_DST_PORT  ");
+    printf("NAT_EVENT ");
+
+    printf("TIMESTAMP_START               ");
+    printf("TIMESTAMP_END                 ");
+
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
     printf("FLOWS                 ");
@@ -247,6 +261,21 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
 #endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
     if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("PKT_LEN_DISTRIB ");
+
+#if defined ENABLE_IPV6
+    if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("POST_NAT_SRC_IP                                ");
+    if (what_to_count_2 & COUNT_POST_NAT_DST_HOST) printf("POST_NAT_DST_IP                                ");
+#else
+    if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("POST_NAT_SRC_IP  ");
+    if (what_to_count_2 & COUNT_POST_NAT_DST_HOST) printf("POST_NAT_DST_IP  ");
+#endif
+    if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT  ");
+    if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
+    if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
+
+    if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START               ");
+    if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                 ");
+
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
     if (what_to_count & COUNT_FLOWS) printf("FLOWS                 ");
@@ -314,6 +343,13 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
 #endif
     printf("SAMPLING_RATE%s", sep);
     printf("PKT_LEN_DISTRIB%s", sep);
+    printf("POST_NAT_SRC_IP%s", sep);
+    printf("POST_NAT_DST_IP%s", sep);
+    printf("POST_NAT_SRC_PORT%s", sep);
+    printf("POST_NAT_DST_PORT%s", sep);
+    printf("NAT_EVENT%s", sep);
+    printf("TIMESTAMP_START%s", sep);
+    printf("TIMESTAMP_END%s", sep);
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS%s", sep);
     printf("FLOWS%s", sep);
@@ -383,6 +419,15 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE%s", sep);
     if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("PKT_LEN_DISTRIB%s", sep);
 
+    if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("POST_NAT_SRC_IP%s", sep);
+    if (what_to_count_2 & COUNT_POST_NAT_DST_HOST) printf("POST_NAT_DST_IP%s", sep);
+    if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT%s", sep);
+    if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT%s", sep);
+    if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT%s", sep);
+
+    if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START%s", sep);
+    if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END%s", sep);
+
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS%s", sep);
     if (what_to_count & COUNT_FLOWS) printf("FLOWS%s", sep);
@@ -450,9 +495,11 @@ int main(int argc,char **argv)
   struct query_header q; 
   struct pkt_primitives empty_addr;
   struct pkt_bgp_primitives empty_pbgp;
+  struct pkt_nat_primitives empty_pnat;
   struct query_entry request;
   struct stripped_class *class_table = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;
+  struct pkt_nat_primitives *pnat= NULL;
   char clibuf[clibufsz], *bufptr;
   char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
   unsigned char *largebuf, *elem, *ct, *pldt;
@@ -486,6 +533,7 @@ int main(int argc,char **argv)
   memset(&q, 0, sizeof(struct query_header));
   memset(&empty_addr, 0, sizeof(struct pkt_primitives));
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
+  memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
@@ -724,6 +772,34 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "mpls_vpn_rd")) {
           count_token_int[count_index] = COUNT_MPLS_VPN_RD;
           what_to_count |= COUNT_MPLS_VPN_RD;
+        }
+        else if (!strcmp(count_token[count_index], "post_nat_src_host")) {
+          count_token_int[count_index] = COUNT_POST_NAT_SRC_HOST;
+          what_to_count_2 |= COUNT_POST_NAT_SRC_HOST;
+        }
+        else if (!strcmp(count_token[count_index], "post_nat_dst_host")) {
+          count_token_int[count_index] = COUNT_POST_NAT_DST_HOST;
+          what_to_count_2 |= COUNT_POST_NAT_DST_HOST;
+        }
+        else if (!strcmp(count_token[count_index], "post_nat_src_port")) {
+          count_token_int[count_index] = COUNT_POST_NAT_SRC_PORT;
+          what_to_count_2 |= COUNT_POST_NAT_SRC_PORT;
+        }
+        else if (!strcmp(count_token[count_index], "post_nat_dst_port")) {
+          count_token_int[count_index] = COUNT_POST_NAT_DST_PORT;
+          what_to_count_2 |= COUNT_POST_NAT_DST_HOST;
+        }
+        else if (!strcmp(count_token[count_index], "nat_event")) {
+          count_token_int[count_index] = COUNT_NAT_EVENT;
+          what_to_count_2 |= COUNT_NAT_EVENT;
+        }
+        else if (!strcmp(count_token[count_index], "timestamp_start")) {
+          count_token_int[count_index] = COUNT_TIMESTAMP_START;
+          what_to_count_2 |= COUNT_TIMESTAMP_START;
+        }
+        else if (!strcmp(count_token[count_index], "timestamp_end")) {
+          count_token_int[count_index] = COUNT_TIMESTAMP_END;
+          what_to_count_2 |= COUNT_TIMESTAMP_END;
         }
         else printf("WARN: ignoring unknown aggregation method: %s.\n", count_token[count_index]);
 	what_to_count |= COUNT_COUNTERS; /* we always count counters ;-) */
@@ -1336,6 +1412,33 @@ int main(int argc,char **argv)
             exit(1);
           }
         }
+        else if (!strcmp(count_token[match_string_index], "post_nat_src_host")) {
+          if (!str_to_addr(match_string_token, &request.pnat.post_nat_src_ip)) {
+            printf("ERROR: src_host: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
+        else if (!strcmp(count_token[match_string_index], "post_nat_dst_host")) {
+          if (!str_to_addr(match_string_token, &request.pnat.post_nat_dst_ip)) {
+            printf("ERROR: dst_host: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
+        else if (!strcmp(count_token[match_string_index], "post_nat_src_port")) {
+          request.pnat.post_nat_src_port = atoi(match_string_token);
+        }
+        else if (!strcmp(count_token[match_string_index], "post_nat_dst_port")) {
+          request.pnat.post_nat_dst_port = atoi(match_string_token);
+        }
+        else if (!strcmp(count_token[match_string_index], "nat_event")) {
+          request.pnat.nat_event = atoi(match_string_token);
+        }
+        else if (!strcmp(count_token[match_string_index], "timestamp_start")) {
+	  // XXX
+        }
+        else if (!strcmp(count_token[match_string_index], "timestamp_end")) {
+	  // XXX
+        }
         else printf("WARN: ignoring unknown aggregation method: '%s'.\n", *count_token);
         match_string_index++;
       }
@@ -1441,8 +1544,12 @@ int main(int argc,char **argv)
       if (extras.off_pkt_bgp_primitives) pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem + extras.off_pkt_bgp_primitives);
       else pbgp = &empty_pbgp;
 
+      if (extras.off_pkt_nat_primitives) pnat = (struct pkt_nat_primitives *) ((u_char *)elem + extras.off_pkt_nat_primitives);
+      else pnat = &empty_pnat;
+
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
-	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0) {
+	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0 ||
+	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_ID)) {
 	  if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id);
 	  else if (want_output == PRINT_OUTPUT_CSV) printf("%llu%s", acc_elem->primitives.id, sep_ptr);
@@ -1806,6 +1913,95 @@ int main(int argc,char **argv)
 
           if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-10s      ", pkt_len_distrib_table_ptr);
           else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", pkt_len_distrib_table_ptr, sep_ptr);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_SRC_HOST)) {
+          addr_to_str(ip_address, &pnat->post_nat_src_ip);
+
+#if defined ENABLE_IPV6
+          if (strlen(ip_address)) {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", ip_address, sep_ptr);
+          }
+          else {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", 0, sep_ptr);
+          }
+#else
+          if (strlen(ip_address)) {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", ip_address, sep_ptr);
+          }
+          else {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", 0, sep_ptr);
+          }
+#endif
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_DST_HOST)) {
+          addr_to_str(ip_address, &pnat->post_nat_dst_ip);
+
+#if defined ENABLE_IPV6
+          if (strlen(ip_address)) {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", ip_address, sep_ptr);
+          }
+          else {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", 0, sep_ptr);
+          }
+#else
+          if (strlen(ip_address)) {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", ip_address, sep_ptr);
+          }
+          else {
+            if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
+            else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", 0, sep_ptr);
+          }
+#endif
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_SRC_PORT)) {
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5u              ", pnat->post_nat_src_port);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", pnat->post_nat_src_port, sep_ptr);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_DST_PORT)) {
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-5u              ", pnat->post_nat_dst_port);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", pnat->post_nat_dst_port, sep_ptr);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_NAT_EVENT)) {
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-3u       ", pnat->nat_event);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%u%s", pnat->nat_event, sep_ptr);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
+	  char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+	  time_t time1;
+	  struct tm *time2;
+
+	  time1 = pnat->timestamp_start.tv_sec;
+	  time2 = localtime(&time1);
+	  strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+	  snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-26s ", buf2);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", buf2, sep_ptr);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_END)) {
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
+
+          time1 = pnat->timestamp_end.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-26s ", buf2);
+          else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", buf2, sep_ptr);
         }
 
 #if defined HAVE_64BIT_COUNTERS

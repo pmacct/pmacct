@@ -27,6 +27,11 @@ DESC:	Feature has been obsoleted and replaced by proper aggregation primitives
 	(nat_event, post_nat_*) to support NEL (NetFlow Event Logging) as currently
 	implemented on Cisco ASR devices and to support CGNAT kind of scenarios.
 
+TOPIC:	nfacctd_sql_log
+DESC:	Feature has been obsoleted and replaced by proper aggregation primitives
+	(timestamp_start, timestamp_end) that effectively convert pmacct into a
+	logger if enabled.
+
 TO:     >= 0.14.0
 FROM:   <= 0.14.0rc3
 TOPIC:  peer_dst_ip

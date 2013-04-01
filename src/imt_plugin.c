@@ -50,6 +50,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 0;
   int rg_err_count = 0;
   struct pkt_bgp_primitives *pbgp;
+  struct pkt_nat_primitives *pnat;
   struct networks_file_data nfd;
   struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
@@ -303,6 +304,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       /* When using extended BGP features we need to
 	 free() up memory allocations before erasing */ 
       if (extras.off_pkt_bgp_primitives) free_bgp_allocs(); 
+      if (extras.off_pkt_nat_primitives) free_nat_allocs(); 
       clear_memory_pool_table();
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
       if (current_pool == NULL) {
@@ -355,8 +357,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	while (((struct ch_buf_hdr *)pipebuf)->num) {
           if (extras.off_pkt_bgp_primitives)
 	    pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
-          else
-	    pbgp = NULL;
+          else pbgp = NULL;
+          if (extras.off_pkt_nat_primitives) 
+            pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
+          else pnat = NULL;
 
 	  for (num = 0; net_funcs[num]; num++)
 	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -372,7 +376,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 	  prim_ptrs.data = data; 
 	  prim_ptrs.pbgp = pbgp; 
-	  prim_ptrs.pnat = NULL; // XXX 
+	  prim_ptrs.pnat = pnat;
           (*insert_func)(&prim_ptrs);
 
 	  ((struct ch_buf_hdr *)pipebuf)->num--;
@@ -487,6 +491,30 @@ void free_bgp_allocs()
       if (acc_elem->cbgp->src_as_path) free(acc_elem->cbgp->src_as_path);
       free(acc_elem->cbgp);
     }
+    if (acc_elem->next) {
+      acc_elem = acc_elem->next;
+      following_chain = TRUE;
+      idx--;
+    }
+    else {
+      elem += sizeof(struct acc);
+      following_chain = FALSE;
+    }
+  }
+}
+
+void free_nat_allocs()
+{
+  struct acc *acc_elem = NULL;
+  unsigned char *elem;
+  int following_chain = FALSE;
+  unsigned int idx;
+
+  elem = (unsigned char *) a;
+
+  for (idx = 0; idx < config.buckets; idx++) {
+    if (!following_chain) acc_elem = (struct acc *) elem;
+    if (acc_elem->pnat) free(acc_elem->pnat);
     if (acc_elem->next) {
       acc_elem = acc_elem->next;
       following_chain = TRUE;
