@@ -110,12 +110,24 @@ mode. Since v6 unified mode is no longer supported.
   * tcpflags => tcp_flags (SMALLINT NOT NULL DEFAULT 0)
   * proto => ip_proto (SMALLINT NOT NULL DEFAULT 0)
   * tos => tos (INT NOT NULL DEFAULT 0)
+  * post_nat_src_host => post_nat_ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * post_nat_dst_host => post_nat_ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * post_nat_src_port => post_nat_port_src (INT NOT NULL DEFAULT 0)
+  * post_nat_dst_port => post_nat_port_dst (INT NOT NULL DEFAULT 0)
+  * nat_event => nat_event (INT NOT NULL DEFAULT 0)
+  * timestamp_start => timestamp_start, timestamp_start_residual:
+    - timestamp_start timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
+    - timestamp_start_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * timestamp_end => timestamp_end, timestamp_end_residual:
+    - timestamp_end timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
+    - timestamp_end_residual INT NOT NULL DEFAULT 0, see README.timestamp)
 
-- Counters and time reference need always to be defined as part of the SQL schema:
-  * packets (INT UNSIGNED NOT NULL)
-  * bytes (BIGINT UNSIGNED NOT NULL)
-  * stamp_inserted (timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', enabled by sql_history)
-  * stamp_updated (timestamp without time zone, enabled by sql_history)
+- Counters need always to be defined as part of the SQL schema; time references
+  are mandatory only if temporal aggregation (sql_history) is enabled:
+  * packets (INT NOT NULL)
+  * bytes (BIGINT NOT NULL)
+  * stamp_inserted (timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00')
+  * stamp_updated (timestamp without time zone)
 
 - What is the difference between 'typed' and 'unified' modes ? 
 It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses

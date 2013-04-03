@@ -1,0 +1,33 @@
+This document doesn't replace documentation relevant to the database software you are
+using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'post_nat_ip_src', 'post_nat_ip_dst', 'post_nat_port_src', 'post_nat_port_dst'and
+'nat_event' fields.
+Such fields are being introduced to support NAT primitives as implemented, for example,
+by Cisco NEL implementation. The guidelines below (typically in MySQL format) are to
+add such primitives to the SQL schema:
+
+* post_nat_ip_src field:
+  - "post_nat_ip_src CHAR(15) NOT NULL," to declare the field itself (*)
+  - "PRIMARY KEY (..., post_nat_ip_src, ...)" to put it in the primary key 
+
+* post_nat_ip_dst field:
+  - "post_nat_ip_dst CHAR(15) NOT NULL," to declare the field itself (*)
+  - "PRIMARY KEY (..., post_nat_ip_dst, ...)" to put it in the primary key
+
+* post_nat_port_src field:
+  - "post_nat_port_src INT(2) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., post_nat_port_src, ...)" to put it in the primary key 
+
+* post_nat_port_dst field:
+  - "post_nat_port_dst INT(2) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., post_nat_port_dst, ...)" to put it in the primary key
+
+* nat_event field:
+  - "nat_event INT(1) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., nat_event, ...)" to put it in the primary key
+
+The primitive is not declared as part of any default table version; yet will not fail
+version checks which are enabled when 'sql_optimize_clauses' feature is disabled.
+
+(*) Field must be longer for IPv6 addresses. See README.IPv6 

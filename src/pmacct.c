@@ -190,8 +190,8 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     printf("POST_NAT_DST_PORT  ");
     printf("NAT_EVENT ");
 
-    printf("TIMESTAMP_START               ");
-    printf("TIMESTAMP_END                 ");
+    printf("TIMESTAMP_START                ");
+    printf("TIMESTAMP_END                  ");
 
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
@@ -273,8 +273,8 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
 
-    if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START               ");
-    if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                 ");
+    if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
+    if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                  "); 
 
 #if defined HAVE_64BIT_COUNTERS
     printf("PACKETS               ");
@@ -1987,7 +1987,7 @@ int main(int argc,char **argv)
 	  time2 = localtime(&time1);
 	  strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
 	  snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-26s ", buf2);
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-30s ", buf2);
           else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", buf2, sep_ptr);
         }
 
@@ -2000,7 +2000,7 @@ int main(int argc,char **argv)
           time2 = localtime(&time1);
           strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
           snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-26s ", buf2);
+          if (want_output == PRINT_OUTPUT_FORMATTED) printf("%-30s ", buf2);
           else if (want_output == PRINT_OUTPUT_CSV) printf("%s%s", buf2, sep_ptr);
         }
 

@@ -764,7 +764,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time2 = localtime(&time1);
           strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
           snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-          fprintf(f, "%-26s ", buf2);
+          fprintf(f, "%-30s ", buf2);
         }
 
       if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
@@ -776,16 +776,16 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time2 = localtime(&time1);
           strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
           snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-          fprintf(f, "%-26s ", buf2);
+          fprintf(f, "%-30s ", buf2);
         }
 
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%-20llu  ", queue[j]->packet_counter);
-      fprintf(f, "%-20llu  ", queue[j]->flow_counter);
+      if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20llu  ", queue[j]->flow_counter);
       fprintf(f, "%llu\n", queue[j]->bytes_counter);
 #else
       fprintf(f, "%-10lu  ", queue[j]->packet_counter);
-      fprintf(f, "%-10lu  ", queue[j]->flow_counter);
+      if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-10lu  ", queue[j]->flow_counter);
       fprintf(f, "%lu\n", queue[j]->bytes_counter);
 #endif
     }
@@ -921,11 +921,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
 #if defined HAVE_64BIT_COUNTERS
       fprintf(f, "%llu%s", queue[j]->packet_counter, sep);
-      fprintf(f, "%llu%s", queue[j]->flow_counter, sep);
+      if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%llu%s", queue[j]->flow_counter, sep);
       fprintf(f, "%llu\n", queue[j]->bytes_counter);
 #else
       fprintf(f, "%lu%s", queue[j]->packet_counter, sep);
-      fprintf(f, "%lu%s", queue[j]->flow_counter, sep);
+      if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%lu%s", queue[j]->flow_counter, sep);
       fprintf(f, "%lu\n", queue[j]->bytes_counter);
 #endif
     }
@@ -993,15 +993,15 @@ void P_write_stats_header_formatted(FILE *f)
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "POST_NAT_SRC_PORT  ");
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "POST_NAT_DST_PORT  ");
   if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "NAT_EVENT ");
-  if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START               ");
-  if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                 ");
+  if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
+  if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
 #if defined HAVE_64BIT_COUNTERS
   fprintf(f, "PACKETS               ");
-  fprintf(f, "FLOWS                 ");
+  if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS                 ");
   fprintf(f, "BYTES\n");
 #else
   fprintf(f, "PACKETS     ");
-  fprintf(f, "FLOWS       ");
+  if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS       ");
   fprintf(f, "BYTES\n");
 #endif
 }
@@ -1057,7 +1057,7 @@ void P_write_stats_header_csv(FILE *f)
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END%s", sep);
 
   fprintf(f, "PACKETS%s", sep);
-  fprintf(f, "FLOWS%s", sep);
+  if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS%s", sep);
   fprintf(f, "BYTES\n");
 }
 

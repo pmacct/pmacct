@@ -46,12 +46,15 @@ A: Yes, but in a specific way. In other tools flat-files are typically used to l
 
 Q6: Is it feasible for pmacct to scale by making use of either memory tables or RDBMS
     as backend for logging network traffic?
-A: pmacct doesn't log network traffic at packet/micro-flow level: it allows to get an
-   aggregated view of the traffic -- both in space and in time. On top of that, there
-   are layers of filtering, sampling and tagging. These are the keys to scale. As
-   these features are fully configurable, data granularity and resolution can be, at
-   any given moment, traded off in favour of increased scalability or less resources
-   consumption. 
+A: pmacct was not originally meant to log network traffic at packet/micro-flow level: it
+   allows to get an aggregated view of the traffic -- both in space and in time. On top
+   of that, there are layers of filtering, sampling and tagging. These are the keys to
+   scale. As these features are fully configurable, data granularity and resolution can
+   be traded off in favour of increased scalability or less resources consumption. More
+   recently, logging has been introduced, by means of two new primitives timestamp_start
+   and timestamp_end, fostered by the development of NetFlow/IPFIX as generic transport
+   protocol, ie. as a replacement of syslog; it was then intuitive to generalize the 
+   logging support to the more traditional traffic accounting part.
 
 
 Q7: When using pmacctd, i feel a high CPU usage: i see the process getting a great

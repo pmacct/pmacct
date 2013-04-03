@@ -74,6 +74,10 @@ NOTES:		* Some primitives (ie. tag2, src_as_path, src_std_comm, src_ext_comm, sr
 		  for historical accounting, ie. breakdown of traffic in time-bins via the
 		  sql_history feature; the two primitives have the effect of letting pmacct
 		  act as a logger up to the msec level (if reported by the capturing method).
+		  timestamp_start records the likes of libpcap packet timestamp, sFlow sample
+		  arrival time, NetFlow/IPFIX observation time and flow first switched time;
+		  timestamp_end currently only makes sense for logging flows via NetFlow and
+		  IPFIX. 
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation

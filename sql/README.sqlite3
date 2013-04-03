@@ -110,12 +110,26 @@ Similarly, BGP tables:
   * proto => ip_proto (CHAR(6) NOT NULL DEFAULT ' ')
     - proto => ip_proto (INT(2) DEFAULT 0, if sql_num_protos: true)
   * tos => tos (INT(4) NOT NULL DEFAULT 0)
+  * post_nat_src_host => post_nat_ip_src (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+    - or (INT(8) NOT NULL DEFAULT 0, if sql_num_hosts: true)
+  * post_nat_dst_host => post_nat_ip_dst (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+    - or (INT(8) NOT NULL DEFAULT 0, if sql_num_hosts: true)
+  * post_nat_src_port => post_nat_port_src (INT(4) NOT NULL DEFAULT 0)
+  * post_nat_dst_port => post_nat_port_dst (INT(4) NOT NULL DEFAULT 0)
+  * nat_event => nat_event (INT(2) NOT NULL DEFAULT 0)
+  * timestamp_start => timestamp_start, timestamp_start_residual:
+    - timestamp_start DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00', see README.timestamp)
+    - timestamp_start_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * timestamp_end => timestamp_end, timestamp_end_residual:
+    - timestamp_end DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00', see README.timestamp)
+    - timestamp_end_residual INT NOT NULL DEFAULT 0, see README.timestamp)
 
-- Counters and time reference need always to be defined as part of the SQL schema:
-  * packets (INT(4) UNSIGNED NOT NULL)
-  * bytes (INT(8) UNSIGNED NOT NULL)
-  * stamp_inserted (DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00', enabled by sql_history)
-  * stamp_updated (DATETIME, enabled by sql_history)
+- Counters need always to be defined as part of the SQL schema; time references
+  are mandatory only if temporal aggregation (sql_history) is enabled:
+  * packets (INT(8) NOT NULL DEFAULT 0)
+  * bytes (INT(8) NOT NULL DEFAULT 0)
+  * stamp_inserted (DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00')
+  * stamp_updated (DATETIME)
 
 NOTE: mind to specify EVERYTIME which SQL table version you
 intend to adhere to by using either of the following rules:
