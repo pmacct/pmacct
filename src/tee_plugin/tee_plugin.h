@@ -82,5 +82,6 @@ EXT struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
 /* global variables */
 EXT char tee_send_buf[65535];
 EXT struct tee_receivers receivers; 
+EXT int err_cant_bridge_af;
 
 #undef EXT

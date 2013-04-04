@@ -133,13 +133,13 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
 	    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	  }
-	  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+	  // else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	}
 
         if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
           enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 	}
-        else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+        // else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
       } 
       if (acc_elem->next != NULL) {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Following chain in reply ...\n", config.name, config.type);
@@ -207,13 +207,13 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
 		enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	      }
-	      else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+	      // else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	    }
 
             if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
               enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
             }
-            else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+            // else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 
 	    if (reset_counter) {
 	      if (forked) set_reset_flag(acc_elem);
@@ -271,13 +271,13 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
 		    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 		  }
-		  else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+		  // else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 		}
 
                 if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
                   enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
                 }
-                else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+                // else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 	      }
 	      if (reset_counter) set_reset_flag(acc_elem);
 	    }

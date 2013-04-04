@@ -423,7 +423,8 @@ struct pkt_extras {
   struct host_addr bgp_next_hop;
 };
 
-#define PKT_MSG_SIZE 1550
+// #define PKT_MSG_SIZE 1550
+#define PKT_MSG_SIZE 10000
 struct pkt_msg {
   struct sockaddr agent;
   u_int32_t seqno;

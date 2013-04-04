@@ -379,7 +379,7 @@ struct data_hdr_v9 {
 
 /* defines */
 #define DEFAULT_NFACCTD_PORT 2100
-#define NETFLOW_MSG_SIZE 1550
+#define NETFLOW_MSG_SIZE PKT_MSG_SIZE
 #define V1_MAXFLOWS 24  /* max records in V1 packet */
 #define V5_MAXFLOWS 30  /* max records in V5 packet */
 #define V7_MAXFLOWS 27  /* max records in V7 packet */

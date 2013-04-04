@@ -317,10 +317,10 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->bufptr = chptr->buf;
       chptr->bufend = cfg->buffer_size-sizeof(struct ch_buf_hdr);
 
-      /* +1550 (NETFLOW_MSG_SIZE) has been introduced as a margin as a
+      /* +PKT_MSG_SIZE has been introduced as a margin as a
          countermeasure against the reception of malicious NetFlow v9
 	 templates */
-      chptr->rg.base = map_shared(0, cfg->pipe_size+1550, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+      chptr->rg.base = map_shared(0, cfg->pipe_size+PKT_MSG_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
       if (chptr->rg.base == MAP_FAILED) {
         Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate pipe buffer. Exiting ...\n", cfg->name, cfg->type); 
 	exit_all(1);
@@ -506,7 +506,7 @@ void recollect_pipe_memory(struct channels_list_entry *mychptr)
   while (index < MAX_N_PLUGINS) {
     chptr = &channels_list[index];
     if (mychptr->rg.base != chptr->rg.base) {
-      munmap(chptr->rg.base, (chptr->rg.end-chptr->rg.base)+1550);
+      munmap(chptr->rg.base, (chptr->rg.end-chptr->rg.base)+PKT_MSG_SIZE);
       munmap(chptr->status, sizeof(struct ch_status));
     }
     index++;

@@ -131,6 +131,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   setnonblocking(pipe_fd);
 
   memset(pipebuf, 0, config.buffer_size);
+  err_cant_bridge_af = 0;
 
   /* Arrange send socket */
   Tee_init_socks();
@@ -325,8 +326,12 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
       }
     }
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode. Exiting ...\n", config.name, config.type);
-      exit_plugin(1);
+      time_t now = time(NULL);
+
+      if (now > err_cant_bridge_af + 60) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode\n", config.name, config.type);
+	err_cant_bridge_af = now;
+      }
     }
   }
 }
