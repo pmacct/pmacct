@@ -871,6 +871,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   exp_v1 = (struct struct_export_v1 *)pkt;
 
   reset_mac(pptrs);
+  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
   if ((count <= V1_MAXFLOWS) && ((count*NfDataV1Sz)+NfHdrV1Sz == len)) {
     while (count) {
@@ -927,6 +928,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
+  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
   if ((count <= V5_MAXFLOWS) && ((count*NfDataV5Sz)+NfHdrV5Sz == len)) {
     while (count) {
@@ -990,6 +992,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
+  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
   if ((count <= V7_MAXFLOWS) && ((count*NfDataV7Sz)+NfHdrV7Sz == len)) {
     while (count) {
@@ -1054,6 +1057,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   reset_mac(pptrs);
   reset_ip4(pptrs);
+  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
   if ((count <= v8_handlers[hdr_v8->aggregation].max_flows) && ((count*v8_handlers[hdr_v8->aggregation].exp_size)+NfHdrV8Sz <= len)) {
     while (count) {

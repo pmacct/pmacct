@@ -203,6 +203,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
 	memcpy(elem_acc->pnat, pnat, pn_size);
       }
+      else elem_acc->pnat = NULL;
 
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;

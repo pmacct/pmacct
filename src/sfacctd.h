@@ -3,20 +3,6 @@
 #define SFLOW_MIN_MSG_SIZE 200 
 #define SFLOW_MAX_MSG_SIZE 65536 /* inflated ? */
 
-#if (!defined NF9_FTYPE_IPV4)
-#define NF9_FTYPE_IPV4                  0
-#define NF9_FTYPE_IPV6                  1
-#define NF9_FTYPE_VLAN                  5
-#define NF9_FTYPE_VLAN_IPV4             5
-#define NF9_FTYPE_VLAN_IPV6             6
-#define NF9_FTYPE_MPLS                  10
-#define NF9_FTYPE_MPLS_IPV4             10
-#define NF9_FTYPE_MPLS_IPV6             11
-#define NF9_FTYPE_VLAN_MPLS             15
-#define NF9_FTYPE_VLAN_MPLS_IPV4        15
-#define NF9_FTYPE_VLAN_MPLS_IPV6        16
-#endif
-
 enum INMPacket_information_type {
   INMPACKETTYPE_HEADER  = 1,      /* Packet headers are sampled */
   INMPACKETTYPE_IPV4    = 2,      /* IP version 4 data */

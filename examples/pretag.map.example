@@ -76,6 +76,9 @@
 !			and IPFIX are unsupported instead.
 ! 'sample_type'         In sFlow v2/v4/v5 this is compared against the sample
 !			type field. Expected in <Enterprise>:<Format> notation.
+!			In NetFlow/IPIX two keywords are supported: "flow" to
+!			denote templates suitable to transport flow traffic data
+!			and "event" to denote templates suitable to flag events. 
 ! 'direction'		In NetFlow v9 and IPFIX this is compared against the
 !			direction (61) field, which only valid values are 0
 !			(ingress) and 1 (egress) flow.

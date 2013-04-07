@@ -533,32 +533,45 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
 
   e->sample_type.neg = pt_check_neg(&value);
 
-  while (token = extract_token(&value, ':')) {
-    switch (x) {
-    case 0:
-      tmp = atoi(token);
-      if (tmp > 1048575) { // 2^20-1: 20 bit Enterprise value
+  if (acct_type == ACCT_SF && strchr(value, ':')) {
+    while (token = extract_token(&value, ':')) {
+      switch (x) {
+      case 0:
+        tmp = atoi(token);
+        if (tmp > 1048575) { // 2^20-1: 20 bit Enterprise value
+          Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+          return TRUE;
+        }
+        e->sample_type.n = tmp;
+        e->sample_type.n <<= 12;
+        break;
+      case 1:
+        tmp = atoi(token);
+        if (tmp > 4095) { // 2^12-1: 12 bit Format value
+          Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+          return TRUE;
+        }
+        e->sample_type.n |= tmp;
+        break;
+      default:
         Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
         return TRUE;
       }
-      e->sample_type.n = tmp;
-      e->sample_type.n <<= 12;
-      break;
-    case 1:
-      tmp = atoi(token);
-      if (tmp > 4095) { // 2^12-1: 12 bit Format value
-        Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
-        return TRUE;
-      }
-      e->sample_type.n |= tmp;
-      break;
-    default:
+
+      x++;
+    }
+  }
+  else if (acct_type == ACCT_NF) {
+    if (!strncmp(value, "flow", strlen("flow")))
+      e->sample_type.n = NF9_FTYPE_TRAFFIC;
+    else if (!strncmp(value, "event", strlen("event")))
+      e->sample_type.n = NF9_FTYPE_EVENT;
+    else {
       Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
       return TRUE;
     }
-
-    x++;
   }
+  else return FALSE; /* silently ignore */
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SAMPLE_TYPE) {
@@ -568,6 +581,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
   }
 
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sample_type_handler;
+  else if (config.acct_type == ACCT_NF) e->func[x] = pretag_sample_type_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SAMPLE_TYPE;
 
   return FALSE;
@@ -1578,6 +1592,17 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (strlen(tmp_stdcomms)) return FALSE;
   else return TRUE;
+}
+
+int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (entry->sample_type.n == pptrs->flow_type) return (FALSE | entry->sample_type.neg); 
+  else return (TRUE ^ entry->sample_type.neg);
 }
 
 int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)

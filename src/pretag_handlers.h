@@ -83,6 +83,7 @@ EXT int pretag_src_local_pref_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_local_pref_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_comms_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_comms_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_sample_type_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_sampling_rate_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_direction_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_mpls_vpn_rd_handler(struct packet_ptrs *, void *, void *);

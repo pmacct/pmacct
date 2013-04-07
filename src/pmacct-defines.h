@@ -332,6 +332,7 @@ typedef u_int32_t pm_counter_t;
 #define NF_NET_FALLBACK	0x80000000 /* Fallback flag */
 
 /* flow type */
+#define NF9_FTYPE_TRAFFIC		0  /* temporary: re-coding needed */
 #define NF9_FTYPE_IPV4                  0
 #define NF9_FTYPE_IPV6                  1
 #define NF9_FTYPE_VLAN                  5
@@ -343,4 +344,5 @@ typedef u_int32_t pm_counter_t;
 #define NF9_FTYPE_VLAN_MPLS             15      
 #define NF9_FTYPE_VLAN_MPLS_IPV4        15
 #define NF9_FTYPE_VLAN_MPLS_IPV6        16
+#define NF9_FTYPE_EVENT			100 /* temporary: re-coding needed */
 #define NF9_FTYPE_NAT_EVENT             100

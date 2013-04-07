@@ -19,6 +19,7 @@ XIII.	Quickstart guide to setup a NetFlow/sFlow replicator
 XIV.	Quickstart guide to setup the IS-IS daemon
 XV.	Running the print plugin to write to flat-files
 XVI.	Quickstart guide to setup GeoIP lookups
+XVII.	Using pmacct as traffic/event logger
 
 
 I. Plugins included with pmacct distribution
@@ -597,9 +598,9 @@ bgp_daemon_port: 17917
    co-exist with other BGP routing software which might be running on the same host.
    Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
-   the BGP peer (ie. 127.0.0.1: 'id=127.0.0.1 ip=0.0.0.0'); this setup, while generic,
-   was tested working in conjunction with Quagga 0.99.14. Following a relevant fragment
-   of the Quagga configuration:
+   the BGP peer (ie. 127.0.0.1: 'set_tag=127.0.0.1 ip=0.0.0.0'); this setup, while
+   generic, was tested working in conjunction with Quagga 0.99.14. Following a relevant
+   fragment of the Quagga configuration:
 
 router bgp Y 
  bgp router-id X.X.X.X
@@ -767,11 +768,11 @@ bgp_peer_src_as_type: map
 bgp_peer_src_as_map: /path/to/peers.map
 
 [/path/to/peers.map]
-id=12345 ip=1.2.3.4 in=10 bgp_nexthop=3.4.5.6
-id=34567 ip=1.2.3.4 in=10
+set_tag=12345 ip=A.A.A.A in=10 bgp_nexthop=X.X.X.X
+set_tag=34567 ip=A.A.A.A in=10
 
-id=45678 ip=2.3.4.5 in=20 src_mac=00:11:22:33:44:55
-id=56789 ip=2.3.4.5 in=20 src_mac=00:22:33:44:55:66
+set_tag=45678 ip=B.B.B.B in=20 src_mac=00:11:22:33:44:55
+set_tag=56789 ip=B.B.B.B in=20 src_mac=00:22:33:44:55:66
 
 Even though all this mapping is static, it can be auto-provisioned to a good degree
 by means of external scripts running at regular intervals and, for example, querying
@@ -977,10 +978,10 @@ An example of content of a tee_receivers map, ie. /path/to/tee_receivers_a.lst,
 is as follows ('id' is the pool ID and 'ip' a comma-separated list of receivers
 for that pool):
 
-id=1	ip=X.X.X.X:2100
-id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
-! id=1	ip=X.X.X.X:2100			tag=0
-! id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
+set_tag=1	ip=X.X.X.X:2100
+set_tag=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
+! set_tag=1	ip=X.X.X.X:2100			tag=0
+! set_tag=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
 
 Selective teeing allows to filter which pool of receivers has to receive which
 datagrams. Tags are applied via a pre_tag_map, the one illustrated below applies
@@ -993,9 +994,9 @@ definition would cause untagged packets (tag=0) to be replicated only to pool
 More examples in the pretag.map.example and tee_receivers.lst.example files in
 the examples/ sub-tree:
 
-id=100	ip=A.A.A.A
-id=100	ip=B.B.B.B
-id=100	ip=C.C.C.C
+set_tag=100	ip=A.A.A.A
+set_tag=100	ip=B.B.B.B
+set_tag=100	ip=C.C.C.C
 
 To enable the transparent mode, the tee_transparent should be commented out. It
 preserves the original IP address of the NetFlow/sFlow sender while replicating
@@ -1088,7 +1089,7 @@ Which, over time, would produce a would produce a series of files as follows:
 
 
 XVI. Quickstart guide to setup GeoIP lookups
-From pmacct 0.14.2 is possible to perform GeoIP country lookups against a
+From pmacct 0.14.2 it is possible to perform GeoIP country lookups against a
 Maxmind library database - and as a result of that two new traffic aggregation
 primitives have been added to the set: src_host_country and dst_host_country. 
 Pre-requisite for the feature to work are: a) a working installed Maxmind GeoIP
@@ -1110,3 +1111,41 @@ Two steps to quickly start with GeoIP lookups in pmacct:
 Concluding note: more fine-grained GeoIP lookup primitives (ie. cities, states,
 counties, metro areas, zip codes, etc.) are not yet supported: should you be
 interested into any of these, please get in touch.  
+
+
+XVII. Using pmacct as traffic/event logger
+pmacct was originally conceived as a traffic aggregator. From pmacct 0.14.3 
+it is now possible to use pmacct as a traffic/event logger, such development
+being fostered particularly by the use of NetFlow/IPFIX as generic transport,
+ie. see Cisco NEL. Key to logging are the first two time-related aggregation
+primitives, timestamp_start and timestamp_end: the former records the likes
+of libpcap packet timestamp, sFlow sample arrival time, NetFlow observation
+time and flow first switched time; timestamp_end currently only makes sense
+for logging flows via NetFlow. Still, the exact boundary between aggregation
+and logging can be defined via the aggregation method, ie. no assumptions are
+made. A composite but rather intuitive example follows to aggregate network
+traffic and in parallel log events, specifically CGNAT (Carrier Grade NAT)
+events, within a single collector instance:
+
+! ...
+!
+pre_tag_map: /path/to/pretag.map
+!
+plugins: memory[traffic], memory[nat]
+!
+pre_tag_filter[traffic]: 10
+aggregate[traffic]: src_host, dst_host, src_port, dst_port, tos, proto
+!
+pre_tag_filter[nat]: 20
+aggregate[nat]: src_host, post_nat_src_host, src_port, post_nat_src_port, proto, nat_event, timestamp_start 
+!
+! ...
+
+This is a snippet from /path/to/pretag.map referred above:
+
+set_tag=10      ip=A.A.A.A	sample_type=flow
+set_tag=20      ip=A.A.A.A	sample_type=event
+set_tag=10      ip=B.B.B.B	sample_type=flow
+set_tag=20      ip=B.B.B.B	sample_type=event
+!
+! ...

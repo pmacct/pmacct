@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -60,6 +60,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.ifindex_in = cb_data->ifindex_in;
     pptrs.ifindex_out = cb_data->ifindex_out;
     pptrs.f_status = NULL;
+    pptrs.flow_type = NF9_FTYPE_TRAFFIC;
 
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
