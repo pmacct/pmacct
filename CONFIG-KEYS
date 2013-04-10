@@ -678,9 +678,10 @@ DESC:		Enables the use of START/END markers each time data is written to 'stdout
 		additional information about current time-bin and configured refresh time (default: false).
 
 KEY:		print_output
-VALUES:		[ formatted | csv ]
+VALUES:		[ formatted | csv | event_formatted | event_csv ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
-		comma-separated values format, suitable for injection into 3rd party tools. (default: formatted)
+		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions
+		of the output strip trailing bytes and packets counters (default: formatted)
 
 KEY:            print_output_separator
 DESC:           Defines the print plugin output separator. Value is expected to be a single character and

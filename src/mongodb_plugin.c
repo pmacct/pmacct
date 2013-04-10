@@ -588,15 +588,17 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       bson_append_date(bson_elem, "stamp_updated", (bson_date_t) 1000*time(NULL));
     }
 
+    if (queue[j]->flow_type != NF9_FTYPE_EVENT) {
 #if defined HAVE_64BIT_COUNTERS
-    bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
-    bson_append_long(bson_elem, "flows", queue[j]->flow_counter);
-    bson_append_long(bson_elem, "bytes", queue[j]->bytes_counter);
+      bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
+      bson_append_long(bson_elem, "flows", queue[j]->flow_counter);
+      bson_append_long(bson_elem, "bytes", queue[j]->bytes_counter);
 #else
-    bson_append_int(bson_elem, "packets", queue[j]->packet_counter);
-    bson_append_int(bson_elem, "flows", queue[j]->flow_counter);
-    bson_append_int(bson_elem, "bytes", queue[j]->bytes_counter);
+      bson_append_int(bson_elem, "packets", queue[j]->packet_counter);
+      bson_append_int(bson_elem, "flows", queue[j]->flow_counter);
+      bson_append_int(bson_elem, "bytes", queue[j]->bytes_counter);
 #endif
+    }
 
     bson_finish(bson_elem);
     bson_batch[j] = bson_elem;

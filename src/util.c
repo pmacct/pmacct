@@ -1455,3 +1455,14 @@ void evaluate_pkt_len_distrib(struct pkt_data *data)
   if (avg_len > 0 && avg_len < ETHER_JUMBO_MTU) data->primitives.pkt_len_distrib = config.pkt_len_distrib_bins_lookup[avg_len];
   else data->primitives.pkt_len_distrib = 0;
 }
+
+char *write_sep(char *sep, int *count)
+{
+  static char empty_sep[] = "";
+
+  if (*count) return sep;
+  else {
+    (*count)++;
+    return empty_sep;
+  }
+}

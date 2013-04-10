@@ -246,8 +246,10 @@ EXT void count_post_nat_src_port_handler(const struct db_cache *, const struct i
 EXT void count_post_nat_dst_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_nat_event_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void PG_copy_count_timestamp_start_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_residual_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_end_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void PG_copy_count_timestamp_end_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_end_residual_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_mac_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void fake_host_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -302,6 +304,7 @@ EXT void sql_create_table(struct DBdesc *, time_t *);
 EXT void sql_invalidate_shadow_entries(struct db_cache *[], int *);
 EXT int sql_select_locking_style(char *);
 EXT int sql_compose_static_set(int); 
+EXT int sql_compose_static_set_event(); 
 
 EXT void sql_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
 EXT void sql_sum_port_insert(struct primitives_ptrs *, struct insert_data *);
@@ -329,6 +332,9 @@ EXT char update_clause[LONGSRVBUFLEN];
 EXT char set_clause[LONGSRVBUFLEN];
 EXT char copy_clause[LONGSRVBUFLEN];
 EXT char insert_clause[LONGSRVBUFLEN];
+EXT char insert_counters_clause[LONGSRVBUFLEN];
+EXT char insert_nocounters_clause[LONGSRVBUFLEN];
+EXT char insert_full_clause[LONGSRVBUFLEN];
 EXT char values_clause[LONGLONGSRVBUFLEN];
 EXT char *multi_values_buffer;
 EXT char where_clause[LONGLONGSRVBUFLEN];
@@ -342,6 +348,7 @@ EXT struct frags where[N_PRIMITIVES+2];
 EXT struct frags values[N_PRIMITIVES+2];
 EXT struct frags copy_values[N_PRIMITIVES+2];
 EXT struct frags set[N_PRIMITIVES+2];
+EXT struct frags set_event[N_PRIMITIVES+2];
 EXT int glob_num_primitives; /* last resort for signal handling */
 EXT int glob_basetime; /* last resort for signal handling */
 EXT time_t glob_new_basetime; /* last resort for signal handling */

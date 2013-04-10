@@ -69,8 +69,8 @@ EXT struct chained_cache *P_cache_search(struct primitives_ptrs *);
 EXT void P_cache_insert(struct primitives_ptrs *);
 EXT void P_cache_flush(struct chained_cache *[], int);
 EXT void P_cache_purge(struct chained_cache *[], int);
-EXT void P_write_stats_header_formatted(FILE *);
-EXT void P_write_stats_header_csv(FILE *);
+EXT void P_write_stats_header_formatted(FILE *, int);
+EXT void P_write_stats_header_csv(FILE *, int);
 EXT void P_exit_now(int);
 EXT int P_trigger_exec(char *);
 

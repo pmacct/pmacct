@@ -123,8 +123,11 @@ Similarly, BGP tables:
     - timestamp_end DATETIME NOT NULL, see README.timestamp)
     - timestamp_end_residual INT NOT NULL, see README.timestamp)
 
-- Counters need always to be defined as part of the SQL schema; time references
-  are mandatory only if temporal aggregation (sql_history) is enabled:
+- 'packets' and 'bytes' counters need to be defined as part of the SQL schema
+  whenever traffic flows are being accounted for; they are not required, and
+  are zeroed, if accounting for events, ie. using Cisco NEL; 'stamp_inserted'
+  and 'stamp_updated' time references are mandatory only if temporal aggregation
+  (sql_history) is enabled:
   * packets (INT UNSIGNED NOT NULL)
   * bytes (BIGINT UNSIGNED NOT NULL)
   * stamp_inserted (DATETIME NOT NULL)

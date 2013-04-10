@@ -1602,6 +1602,14 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_FORMATTED;
   else if (!strcmp(value_ptr, "csv"))
     value = PRINT_OUTPUT_CSV;
+  else if (!strcmp(value_ptr, "event_formatted")) {
+    value = PRINT_OUTPUT_FORMATTED;
+    value |= PRINT_OUTPUT_EVENT;
+  }
+  else if (!strcmp(value_ptr, "event_csv")) {
+    value = PRINT_OUTPUT_CSV;
+    value |= PRINT_OUTPUT_EVENT;
+  }
   else {
     Log(LOG_WARNING, "WARN ( %s ): Invalid print output value '%s'\n", filename, value_ptr);
     return ERR;

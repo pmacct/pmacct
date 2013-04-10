@@ -122,8 +122,13 @@ mode. Since v6 unified mode is no longer supported.
     - timestamp_end timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_end_residual INT NOT NULL DEFAULT 0, see README.timestamp)
 
-- Counters need always to be defined as part of the SQL schema; time references
-  are mandatory only if temporal aggregation (sql_history) is enabled:
+- If not using COPY statements (sql_use_copy, sql_dont_try_update both enabled)
+  'packets' and 'bytes' counters need to be defined as part of the SQL schema
+  whenever traffic flows are being accounted for; they are not required, and
+  are zeroed, if accounting for events, ie. using Cisco NEL; if instead COPY
+  is in use, 'packets' and 'bytes' counters are mandatory. 'stamp_inserted' and
+  'stamp_updated' time references are mandatory only if temporal aggregation
+  (sql_history) is enabled:
   * packets (INT NOT NULL)
   * bytes (BIGINT NOT NULL)
   * stamp_inserted (timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00')

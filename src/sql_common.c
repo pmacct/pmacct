@@ -84,9 +84,12 @@ void sql_init_global_buffers()
   memset(set_clause, 0, sizeof(set_clause));
   memset(copy_clause, 0, sizeof(copy_clause));
   memset(insert_clause, 0, sizeof(insert_clause));
+  memset(insert_counters_clause, 0, sizeof(insert_counters_clause));
+  memset(insert_nocounters_clause, 0, sizeof(insert_nocounters_clause));
   memset(where, 0, sizeof(where));
   memset(values, 0, sizeof(values));
   memset(set, 0, sizeof(set));
+  memset(set_event, 0, sizeof(set_event));
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
@@ -1881,6 +1884,8 @@ int sql_evaluate_primitives(int primitive)
   }
 
   if (what_to_count_2 & COUNT_TIMESTAMP_START) {
+    int use_copy=0;
+
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
@@ -1897,15 +1902,22 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, "FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
       }
       else if (!strcmp(config.type, "pgsql")) {
-        strncat(where[primitive].string, "timestamp_start=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+	if (config.sql_use_copy) {
+          strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+	  use_copy = TRUE;
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_start=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+	}
       }
       else if (!strcmp(config.type, "sqlite3")) {
         strncat(where[primitive].string, "timestamp_start=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
         strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
       }
     }
-    values[primitive].handler = where[primitive].handler = count_timestamp_start_handler;
+    if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_start_handler;
+    else values[primitive].handler = where[primitive].handler = PG_copy_count_timestamp_start_handler;
     values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_START;
     primitive++;
 
@@ -1922,6 +1934,8 @@ int sql_evaluate_primitives(int primitive)
   }
 
   if (what_to_count_2 & COUNT_TIMESTAMP_END) {
+    int use_copy=0;
+
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
@@ -1938,15 +1952,22 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, "FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
       }
       else if (!strcmp(config.type, "pgsql")) {
-        strncat(where[primitive].string, "timestamp_end=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+        if (config.sql_use_copy) {
+          strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+          use_copy = TRUE;
+        }
+        else {
+          strncat(where[primitive].string, "timestamp_end=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+        }
       }
       else if (!strcmp(config.type, "sqlite3")) {
         strncat(where[primitive].string, "timestamp_end=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
         strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
       }
     }
-    values[primitive].handler = where[primitive].handler = count_timestamp_end_handler;
+    if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_end_handler;
+    else values[primitive].handler = where[primitive].handler = PG_copy_count_timestamp_end_handler; 
     values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_END;
     primitive++;
 
@@ -2541,6 +2562,21 @@ int sql_select_locking_style(char *lock)
   Log(LOG_WARNING, "WARN ( %s/%s ): sql_locking_style value '%s' is unknown. Ignored.\n", config.name, config.type, lock);
 
   return PM_LOCK_EXCLUSIVE;
+}
+
+int sql_compose_static_set_event()
+{
+  int set_primitives=0;
+
+  if (config.what_to_count & COUNT_TCPFLAGS) {
+    strncpy(set_event[set_primitives].string, ", ", SPACELEFT(set_event[set_primitives].string));
+    strncat(set_event[set_primitives].string, "tcp_flags=tcp_flags|%u", SPACELEFT(set_event[set_primitives].string));
+    set_event[set_primitives].type = COUNT_TCPFLAGS;
+    set_event[set_primitives].handler = count_tcpflags_setclause_handler;
+    set_primitives++;
+  }
+
+  return set_primitives;
 }
 
 int sql_compose_static_set(int have_flows)

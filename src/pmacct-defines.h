@@ -24,7 +24,7 @@
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uR"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:R"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:"
-#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:OE:uD"
+#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uD"
 #define N_PRIMITIVES 57
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
@@ -290,6 +290,7 @@
 
 #define PRINT_OUTPUT_FORMATTED	0x00000001
 #define PRINT_OUTPUT_CSV	0x00000002
+#define PRINT_OUTPUT_EVENT	0x00000004
 
 #define DIRECTION_UNKNOWN	0x00000000
 #define DIRECTION_IN		0x00000001

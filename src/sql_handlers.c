@@ -246,6 +246,20 @@ void count_nat_event_handler(const struct db_cache *cache_elem, const struct ins
   *ptr_values += strlen(*ptr_values);
 }
 
+void PG_copy_count_timestamp_start_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  static char time_str[LONGSRVBUFLEN];
+  struct tm *tme;
+
+  tme = localtime(&cache_elem->pnat->timestamp_start.tv_sec);
+  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_start.tv_sec); // dummy
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_timestamp_start_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_start.tv_sec);
@@ -258,6 +272,20 @@ void count_timestamp_start_residual_handler(const struct db_cache *cache_elem, c
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_start.tv_usec);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pnat->timestamp_start.tv_usec);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void PG_copy_count_timestamp_end_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  static char time_str[LONGSRVBUFLEN];
+  struct tm *tme;
+
+  tme = localtime(&cache_elem->pnat->timestamp_end.tv_sec);
+  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_end.tv_sec); // dummy
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
