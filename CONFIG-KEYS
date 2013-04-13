@@ -25,15 +25,15 @@ NO_SFACCTD	Does not apply to 'sfacctd'
 LIST OF DIRECTIVES:
 
 KEY: 		debug (-d)
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		enables debug (default: false).
 
 KEY:		daemonize (-D) [GLOBAL]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		daemonizes the process (default: false).
 
 KEY:		aggregate (-c)
-VALUES:		[src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_net,
+VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_net,
 		 src_mask, dst_mask, src_as, dst_as, src_port, dst_port, tos, proto, none,
 		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, class,
 		 tcpflags, in_iface, out_iface, std_comm, ext_comm, as_path, peer_src_ip,
@@ -41,7 +41,7 @@ VALUES:		[src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_n
 		 src_std_comm, src_ext_comm, src_local_pref, src_med, mpls_vpn_rd,
 		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib,
 		 nat_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
-		 post_nat_dst_port, timestamp_start, timestamp_end]
+		 post_nat_dst_port, timestamp_start, timestamp_end ]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -198,21 +198,21 @@ DESC:		file in libpcap savefile format from which read data (this is in alternat
 		with 'interface' (-i). 
 
 KEY:		interface_wait (-w) [GLOBAL, NO_NFACCTD]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		if set to true, this option causes 'pmacctd' to wait for the listening device to become
 		available; it will try to open successfully the device each few seconds. Whenever set to
 		false, 'pmacctd' will exit as soon as any error (related to the listening interface) is
 		detected. (default: false) 
 
 KEY:            savefile_wait (-W) [GLOBAL, NO_NFACCTD]
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:           if set to true, this option will cause 'pmacctd' to wait indefinitely for a signal (ie.
 		CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished with
 		the supplied libpcap savefile (pcap_savefile). It's particularly useful when inserting
 		fixed amounts of data into memory tables by keeping the daemon alive. (default: false)
 
 KEY:		promisc (-N) [GLOBAL, NO_NFACCTD]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		if set to true, puts the listening interface in promiscuous mode. It's mostly useful when
 		running 'pmacctd' in a box which is not a router, for example, when listening for traffic
 		on a mirroring port. (default: true) 
@@ -243,7 +243,7 @@ DESC:		defines the size of each memory pool. For further details read INTERNALS 
 		(default: 8192).
 
 KEY:		syslog (-S)
-VALUES:		[auth | mail | daemon | kern | user | local[0-7] ]
+VALUES:		[ auth | mail | daemon | kern | user | local[0-7] ]
 DESC:		enables syslog logging, using the specified facility. (default: none, console logging)
 
 KEY:		logfile 
@@ -265,7 +265,7 @@ DESC:		full pathname to a file containing a list of networks - and optionally AS
 		self-defined one.
 
 KEY:		networks_file_filter
-VALUES          [true|false]
+VALUES          [ true | false ]
 DESC:           Makes networks_file work as a filter in addition to its basic resolver functionality:
 		networks and hosts not belonging to defined networks are zeroed out. (default: false)
 
@@ -433,7 +433,7 @@ DESC:		defines the time, in seconds, the first SQL cache scan event has to be de
 		>= 2x the value) of the NetFlow active flow timeout. (default: 0)
 
 KEY:		sql_optimize_clauses
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		enables the optimization of the statements sent to the RDBMS essentially allowing to a)
 		run stripped-down variants of the default SQL tables or b) totally customized SQL tables
 		by a free mix-and-match of the available primitives. Either case, you will need to build
@@ -466,7 +466,7 @@ DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w)
 		date to the first day of the month. 
 
 KEY:            sql_history_since_epoch
-VALUES          [true|false]
+VALUES          [ true | false ]
 DESC:		enables the use of timestamps (stamp_inserted, stamp_updated) in the standard seconds since
 		the Epoch format. This directive requires changes to the default types for timestamp fields
 		in the SQL schema. (default: false)
@@ -516,7 +516,7 @@ DESC:		SQL and other plugins sport a Plugin Memory Cache (PMC) meant to accumula
 		(default: sql_cache_entries: 32771, print_cache_entries: 16411)
 
 KEY:		sql_dont_try_update
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:		by default pmacct uses an UPDATE-then-INSERT mechanism to write data to the RDBMS; this
 		directive instructs pmacct to use a more efficient INSERT-only mechanism. This directive
 		is useful for gaining performances by avoiding UPDATE queries. Using this directive puts
@@ -525,7 +525,7 @@ DESC:		by default pmacct uses an UPDATE-then-INSERT mechanism to write data to t
 		requires nfacctd_time_new to be enabled. (default: false)
 
 KEY:            sql_use_copy
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:		instructs the plugin to build non-UPDATE SQL queries using COPY (in place of INSERT). While
 		providing same functionalities of INSERT, COPY is also more efficient. To have effect, this
 		directive requires 'sql_dont_try_update' to be set to true. It applies to PostgreSQL plugin
@@ -664,16 +664,22 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 		      'recover' value makes the packet to be handled through the recovery mechanism (if enabled).  
 
 KEY:		sql_preprocess_type
-VALUES:		[any|all]
+VALUES:		[ any | all ]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
 		are valid if they just match one of the checks (any) or all of them (all) (default: any).
+
+KEY:		sql_timestamps_secs
+VALUES:		[ true | false ]
+DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to seconds, ie. prevents
+		timestamp_start_residual, timestamp_end_residual fields to be populated (default: false).
+
 
 KEY:		mongo_insert_batch
 DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per batch
 		(default: 10000)
 		
 KEY:		print_markers
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		Enables the use of START/END markers each time data is written to 'stdout'. Start marker returns 
 		additional information about current time-bin and configured refresh time (default: false).
 
@@ -689,12 +695,12 @@ DESC:           Defines the print plugin output separator. Value is expected to 
 		natural choice) (default: ,). 
 
 KEY:            [ print_num_protos | sql_num_protos ]
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
 		or left numerical. The default is to look protocol names up. (default: false)
 
 KEY:            sql_num_hosts
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:           Defines whether IP addresses should be left numerical (in network bytes ordering) or converted
 		into human-readable strings. Applies to MySQL and SQLite plugins only and assumes the INET_NTOA()
 		function is defined in the RDBMS (which for MySQL is always the case, while for SQLite it is not
@@ -717,13 +723,13 @@ DESC:		full pathname to a file containing the list of IPv4/IPv6 addresses (one f
 		to long ACLs. (default: allow all) 
 
 KEY:		nfacctd_time_secs [GLOBAL, NO_PMACCTD]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		makes 'nfacctd' expect times included in NetFlow header to be in seconds rather than msecs. This
 		knob makes sense for NetFlow up to v8 - as in NetFlow v9 and IPFIX different fields are reserved
 		for secs and msecs timestamps, increasing collector awareness. (default: false)
 
 KEY:		nfacctd_time_new [GLOBAL, NO_PMACCTD]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build new ones. This gets
 		particularly useful to assign flows to time-bins based on the flow arrival time at the collector
 		rather than the flow start time. An application for it is when historical accounting is enabled
@@ -768,7 +774,7 @@ DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon
 		to bind to which - in turn - can be supplied declaring an IP address ('nfacctd_ip' key). 
 
 KEY:            [ nfacctd_disable_checks | sfacctd_disable_checks ] [GLOBAL, NO_PMACCTD]
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:           both nfacctd and sfacctd check health of incoming NetFlow/sFlow datagrams - actually this is
 		limited to just verifying sequence numbers progression. You may want to disable such feature
 		because of non-standard implementations. By default checks are enabled (default: false)
@@ -789,7 +795,7 @@ DESC:		defines the maximum number of entries the Pre-Tagging map can contain. Th
 		to see which are affected by this setting. (default: 384) 
 
 KEY:		refresh_maps [GLOBAL]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		when enabled, this directive allows to reload map files without restarting the daemon instance. 
 		For example, it may result particularly useful to reload Pre-Tagging entries or Networks map in
 		order to reflect some change in the network. After having modified the map files, a SIGUSR2 has
@@ -814,13 +820,13 @@ DESC:		it expects one or more tags (when multiple tags are supplied, they need t
 		makes sense if coupled with 'pre_tag_map'; it could be used in conjunction with 'aggregate_filter'.
 
 KEY:            post_tag 
-VALUES:         [1-4294967295]
+VALUES:         [ 1-4294967295 ]
 DESC:           it expects an ID as its value. Enables the use of Post-Tagging. Once the aggregate has passed
 		all filters and is on the final way to the plugin, this directive allows to statically tag it
 		using the specified value. The tag is sticked to the 'tag' aggregate field. 
 
 KEY:		sampling_rate
-VALUES:		[>= 1]
+VALUES:		[ >= 1 ]
 DESC:		enables packet sampling. It expects a number which is the mean ratio of packets to be sampled
 		(1 out of N). The currently implemented sampling algorithm is a simple randomic one. If using 
 		any SQL plugin, look also to the powerful 'sql_preprocess' layer and the more advanced sampling
@@ -838,7 +844,7 @@ DESC:           full pathname to a file containing traffic sampling mappings. It
 		supported keys and detailed examples.
 
 KEY:		[ pmacctd_force_frag_handling | uacctd_force_frag_handling ] [GLOBAL, NO_NFACCTD]
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		forces 'pmacctd' to join together IPv4/IPv6 fragments: 'pmacctd' does this only whether any of
 		the port primitives are selected (src_port, dst_port, sum_port); in fact, when not dealing with
 		any upper layer primitive, fragments are just handled as normal packets. However, available
@@ -881,7 +887,7 @@ KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampl
 		rate reported by the NetFlow/sFlow agent is missing or not correct. (default: no sampling) 
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		automatically renormalizes byte/packet counters value basing on information acquired from 
 		either the NetFlow data unit or sFlow packet. In particular, it allows to deal with scenarios
 		in which multiple interfaces have been configured at different sampling rates. The feature also
@@ -903,7 +909,7 @@ DESC:		full path to a spool directory containing the packet classification patte
 		use (ie. 'aggregate: class'). It's supported only by pmacctd. 
 
 KEY:		sql_aggressive_classification 
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		usually 5 to 10 packets are required to classify a stream by the 'classifiers' feature. Until
 		the flow is not classified, such packets join the 'unknown' class. As soon as classification
 		engine is successful identifying the stream, the packets are moved to their correct class if
@@ -949,7 +955,7 @@ DESC:		allows to tune a set of timeouts to be applied over collected packets. Th
 		expint	(expiry interval)	60
 
 KEY:		nfprobe_hoplimit
-VALUES:		[1-255]
+VALUES:		[ 1-255 ]
 DESC:		value of TTL for the newly generated NetFlow datagrams. (default: 0, leave default OS settings) 
 
 KEY:		nfprobe_maxflows
@@ -966,7 +972,7 @@ DESC:           defines the local IP address from which NetFlow dagagrams are to
 		IPFIX option scoping. (default: IP address is selected by the OS)
 
 KEY:		nfprobe_version
-VALUES:		[5,9,10]
+VALUES:		[ 5, 9, 10 ]
 DESC:		version of outgoing NetFlow datagrams. NetFlow v5/v9 and IPFIX (v10) are supported. NetFlow v5
 		features a fixed record structure and if not specifying an 'aggregate' directive it gets
 		populated as much as possible; NetFlow v9 and IPFIX feature a dynamic template-based structure
@@ -982,7 +988,7 @@ DESC:           allows to define Engine ID and Engine Type fields. It applies on
 		selected only inside single daemon instances. (default: 0:0)
 
 KEY:		[ nfacctd_peer_as | sfacctd_peer_as | nfprobe_peer_as | sfprobe_peer_as ]
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:		When applied to [ns]fprobe src_as and dst_as fields are valued with peer-AS rather than origin-AS
 		as part of the NetFlow/sFlow export. Requirements to enable this feature on the probes are: a) one
 		of the nfacctd_as_new/sfacctd_as_new/pmacctd_as/uacctd_as set to 'bgp' and b) a fully functional
@@ -994,7 +1000,7 @@ DESC:           marks self-originated NetFlow (nfprobe) and sFlow (sfprobe) mess
 		precedence value. (default: 0)
 
 KEY:            [ nfprobe_direction | sfprobe_direction ]
-VALUES:		[in,out,tag,tag2]
+VALUES:		[ in, out, tag, tag2 ]
 DESC:           defines traffic direction. Can be statically defined via 'in' and 'out' keywords. It can also
 		be dynamically determined via lookup to either 'tag' or 'tag2' values. Tag value of 1 will be
 		mapped to 'in' direction, whereas tag value of 2 will be mapped to 'out'. The idea underlying
@@ -1004,7 +1010,7 @@ DESC:           defines traffic direction. Can be statically defined via 'in' an
 		'examples/pretag.map.example') (default: none)
 
 KEY:            [ nfprobe_ifindex | sfprobe_ifindex ]
-VALUES:		[tag,tag2,<1-4294967295>]
+VALUES:		[ tag, tag2, <1-4294967295> ]
 DESC:           associates an interface index (ifIndex) to a given nfprobe or sfprobe plugin. This is meant as
 		an add-on to [ns]probe_direction directive, ie. when multiplexing mirrored traffic from different
 		sources on the same interface (ie. split by VLAN). Can be statically defined via a 32-bit integer
@@ -1026,7 +1032,7 @@ KEY:            sfprobe_ifspeed
 DESC:           statically associates an interface speed to a given sfprobe plugin. (default: 100000000)
 
 KEY:		bgp_daemon
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		enables the skinny BGP daemon thread. This feature requires the package to be supporting multi-
 		threading (--enable-threads). Neighbors are not defined explicitely via a piece of configuration
 		(see bgp_daemon_max_peers directive); also, for security purposes, the daemon doesn't implement
@@ -1057,7 +1063,7 @@ DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon rea
 		(default: 10)
 
 KEY:		bgp_daemon_msglog
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		enables BGP messages logging: as this can get easily verbose, it is intended for debug and
 		troubleshooting purposes only. (default: false)
 
@@ -1086,7 +1092,7 @@ DESC:           filters BGP standard communities against the supplied pattern. T
 		Peer-AS=XXXXX, Origin-AS=YYYYY.
 
 KEY:		bgp_peer_as_skip_subas
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		When determining the peer AS (source and destination), skip potential confederated sub-AS
 		and report the first ASN external to the routing domain. When enabled if no external ASNs
 		are found on the AS-PATH except the confederated sub-ASes, the first sub-AS is reported.
@@ -1224,7 +1230,7 @@ DESC:		From version 0.12.4, a shared BGP RIB is worked out from announcements se
 		footprint - and vice-versa. (default: 13)
 
 KEY:		isis_daemon
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:		Enables the skinny IS-IS daemon thread. This feature requires the package to be supporting
 		multi-threading (--enable-threads). It implements P2P Hellos, CSNP and PSNP - and does not
 		send any LSP information out. It currently supports a single L2 P2P neighborship. Testing
@@ -1252,11 +1258,11 @@ DESC:		Defines the available MTU for the IS-IS daemon. P2P HELLOs will be padded
 		value should match the value of the "clns mtu" IOS directive. (default: 1476) 
 
 KEY:		isis_daemon_msglog
-VALUES:		[true|false]
+VALUES:		[ true | false ]
 DESC:	 	enables IS-IS messages logging: as this can get easily verbose, it is intended for debug
 		and troubleshooting purposes only. (default: false)
 
-KEY:		[ geoip_ipv4 | geoip_ipv6 ]
+KEY:		[ geoip_ipv4_file | geoip_ipv6_file ]
 DESC:		If pmacct is compiled with --enable-geoip, this defines full pathname to the Maxmind GeoIP
 		IPv4/IPv6 database file to use.  
 
@@ -1298,7 +1304,7 @@ DESC:           defines the local IP address from which NetFlow/sFlow dagagrams 
 		is enabled. (default: IP address is selected by the OS)
 
 KEY:		tee_transparent
-VALUES:         [true|false]
+VALUES:         [ true | false ]
 DESC:		Enables transparent replication mode. It essentially spoofs the source IP address to the
 		original sender of the datagram. It requires super-user permissions. (default: false)
 

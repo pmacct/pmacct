@@ -273,6 +273,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_use_copy", cfg_key_sql_use_copy},
   {"sql_num_protos", cfg_key_num_protos},
   {"sql_num_hosts", cfg_key_num_hosts},
+  {"sql_timestamps_secs", cfg_key_sql_timestamps_secs},
   {"print_refresh_time", cfg_key_sql_refresh_time},
   {"print_cache_entries", cfg_key_print_cache_entries},
   {"print_markers", cfg_key_print_markers},

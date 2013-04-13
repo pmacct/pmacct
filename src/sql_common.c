@@ -1921,16 +1921,18 @@ int sql_evaluate_primitives(int primitive)
     values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_START;
     primitive++;
 
-    strncat(insert_clause, ", ", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    if (!config.sql_timestamps_secs) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
 
-    strncat(insert_clause, "timestamp_start_residual", SPACELEFT(insert_clause));
-    strncat(where[primitive].string, "timestamp_start_residual=%u", SPACELEFT(where[primitive].string));
-    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_START;
-    values[primitive].handler = where[primitive].handler = count_timestamp_start_residual_handler;
-    primitive++;
+      strncat(insert_clause, "timestamp_start_residual", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "timestamp_start_residual=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_START;
+      values[primitive].handler = where[primitive].handler = count_timestamp_start_residual_handler;
+      primitive++;
+    }
   }
 
   if (what_to_count_2 & COUNT_TIMESTAMP_END) {
@@ -1971,16 +1973,18 @@ int sql_evaluate_primitives(int primitive)
     values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_END;
     primitive++;
 
-    strncat(insert_clause, ", ", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    if (!config.sql_timestamps_secs) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
 
-    strncat(insert_clause, "timestamp_end_residual", SPACELEFT(insert_clause));
-    strncat(where[primitive].string, "timestamp_end_residual=%u", SPACELEFT(where[primitive].string));
-    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_END;
-    values[primitive].handler = where[primitive].handler = count_timestamp_end_residual_handler;
-    primitive++;
+      strncat(insert_clause, "timestamp_end_residual", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "timestamp_end_residual=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_END;
+      values[primitive].handler = where[primitive].handler = count_timestamp_end_residual_handler;
+      primitive++;
+    }
   }
 
   if (what_to_count & COUNT_ID) {

@@ -3,12 +3,15 @@ using, ie. README.mysql, README.pgsql or README.sqlite3.
 
 The 'timestamp_start' and 'timestamp_end' fields.
 Such fields are being introduced to support logging of traffic and events via pmacct.
-Timestamps resolution is up to the msec level reason for which two additional fields,
-'timestamp_start_residual' and 'timestamp_end_residual' are being introduced aswell:
-support for resolutions beyond the secs level is something not popular among the
-supported RDBMS, ie. only recent versions of MySQL >= 5.6.4 appear to support it.
-Hence the choice to go for two separate fields. The guidelines below (typically in
-MySQL format) are to add such primitives to the SQL schema:
+Timestamps resolution is up to the msec level reason for which two additional fields
+are optionally introduced aswell 'timestamp_start_residual', 'timestamp_end_residual':
+this is because support for resolutions beyond the secs level is something not popular
+among the supported RDBMS, ie. only recent versions of MySQL >= 5.6.4 appear to support
+it, hence the choice to go for two separate fields. Timestamp resolution can be cut to
+secs level by setting sql_timestamps_secs config directive to 'true': in this case the
+two fields timestamp_start_residual, timestamp_end_residual can be indeed omitted in
+the table schema. The guidelines below (typically in MySQL format) are to add all the
+described primitives to the SQL schema:
 
 * timestamp_start and timestamp_start_residual fields:
   - To declare the fields:
