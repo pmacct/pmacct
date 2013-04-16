@@ -8,9 +8,9 @@ are optionally introduced aswell 'timestamp_start_residual', 'timestamp_end_resi
 this is because support for resolutions beyond the secs level is something not popular
 among the supported RDBMS, ie. only recent versions of MySQL >= 5.6.4 appear to support
 it, hence the choice to go for two separate fields. Timestamp resolution can be cut to
-secs level by setting sql_timestamps_secs config directive to 'true': in this case the
-two fields timestamp_start_residual, timestamp_end_residual can be indeed omitted in
-the table schema. The guidelines below (typically in MySQL format) are to add all the
+secs level by setting timestamps_secs config directive to 'true': in this case the two
+fields timestamp_start_residual, timestamp_end_residual can be indeed omitted in the
+table schema. The guidelines below (typically in MySQL format) are to add all the
 described primitives to the SQL schema:
 
 * timestamp_start and timestamp_start_residual fields:

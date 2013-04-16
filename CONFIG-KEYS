@@ -668,7 +668,7 @@ VALUES:		[ any | all ]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
 		are valid if they just match one of the checks (any) or all of them (all) (default: any).
 
-KEY:		sql_timestamps_secs
+KEY:		timestamps_secs
 VALUES:		[ true | false ]
 DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to seconds, ie. prevents
 		timestamp_start_residual, timestamp_end_residual fields to be populated (default: false).

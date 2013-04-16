@@ -103,9 +103,9 @@ Similarly, BGP tables:
   * dst_net => ip_dst (CHAR(15) NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
     - dst_net => ip_dst (INT(8) DEFAULT 0, if sql_num_hosts: true)
   * src_port => src_port (INT(4) NOT NULL DEFAULT 0)
-    - src_port => port_src (INT(4) NOT NULL DEFAULT 0, if sql_table_version: 8)
+    - src_port => port_src (INT(4) NOT NULL DEFAULT 0, if sql_table_version >= 8 or sql_table_type == bgp)
   * dst_port => dst_port (INT(4) NOT NULL DEFAULT 0)
-    - dst_port => port_dst (INT(4) NOT NULL DEFAULT 0, if sql_table_version: 8)
+    - dst_port => port_dst (INT(4) NOT NULL DEFAULT 0, if sql_table_version >= 8 or sql_table_type == bgp 
   * tcpflags => tcp_flags (INT(2) NOT NULL DEFAULT 0)
   * proto => ip_proto (CHAR(6) NOT NULL DEFAULT ' ')
     - proto => ip_proto (INT(2) DEFAULT 0, if sql_num_protos: true)

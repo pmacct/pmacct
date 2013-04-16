@@ -90,7 +90,7 @@ struct configuration {
   char *sql_locking_style;
   int sql_use_copy;
   char *sql_delimiter;
-  int sql_timestamps_secs;
+  int timestamps_secs;
   int mongo_insert_batch;
   int print_cache_entries;
   int print_markers;

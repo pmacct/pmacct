@@ -1601,7 +1601,7 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
         strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
-      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && config.sql_table_version != 8) {
+      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && config.sql_table_version < 8) {
         strncat(insert_clause, "src_port", SPACELEFT(insert_clause));
         strncat(where[primitive].string, "src_port=%u", SPACELEFT(where[primitive].string));
       }
@@ -1634,7 +1634,7 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
         strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
-      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && config.sql_table_version != 8) {
+      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && config.sql_table_version < 8) {
         strncat(insert_clause, "dst_port", SPACELEFT(insert_clause));
         strncat(where[primitive].string, "dst_port=%u", SPACELEFT(where[primitive].string));
       }
@@ -1921,7 +1921,7 @@ int sql_evaluate_primitives(int primitive)
     values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_START;
     primitive++;
 
-    if (!config.sql_timestamps_secs) {
+    if (!config.timestamps_secs) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
@@ -1973,7 +1973,7 @@ int sql_evaluate_primitives(int primitive)
     values[primitive].type = where[primitive].type = COUNT_TIMESTAMP_END;
     primitive++;
 
-    if (!config.sql_timestamps_secs) {
+    if (!config.timestamps_secs) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));

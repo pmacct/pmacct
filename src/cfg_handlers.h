@@ -79,7 +79,7 @@ EXT int cfg_key_sql_aggressive_classification(char *, char *, char *);
 EXT int cfg_key_sql_locking_style(char *, char *, char *);
 EXT int cfg_key_sql_use_copy(char *, char *, char *);
 EXT int cfg_key_sql_delimiter(char *, char *, char *);
-EXT int cfg_key_sql_timestamps_secs(char *, char *, char *);
+EXT int cfg_key_timestamps_secs(char *, char *, char *);
 EXT int cfg_key_mongo_insert_batch(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);

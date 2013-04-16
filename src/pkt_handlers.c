@@ -1128,7 +1128,9 @@ void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_pt
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
   pnat->timestamp_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
-  pnat->timestamp_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
+  if (!chptr->plugin->cfg.timestamps_secs) {
+    pnat->timestamp_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
+  }
 }
 
 #if defined (HAVE_L2)
@@ -2623,6 +2625,8 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->First))/1000);
     break;
   }
+
+  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_start.tv_usec = 0;
 }
 
 void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2684,6 +2688,8 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->Last))/1000); 
     break;
   }
+
+  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_end.tv_usec = 0;
 }
 
 void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3670,6 +3676,7 @@ void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   gettimeofday(&pnat->timestamp_start, NULL);
+  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_start.tv_usec = 0;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

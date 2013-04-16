@@ -1340,7 +1340,7 @@ int cfg_key_sql_delimiter(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_sql_timestamps_secs(char *filename, char *name, char *value_ptr)
+int cfg_key_timestamps_secs(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -1348,11 +1348,11 @@ int cfg_key_sql_timestamps_secs(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_timestamps_secs = value;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.timestamps_secs = value;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.sql_timestamps_secs = value;
+        list->cfg.timestamps_secs = value;
         changes++;
         break;
       }
