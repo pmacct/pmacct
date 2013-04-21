@@ -576,6 +576,12 @@ void count_noop_setclause_handler(const struct db_cache *cache_elem, const struc
   *ptr_set  += strlen(*ptr_set);
 }
 
+void count_noop_setclause_event_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_set, char **ptr_none)
+{
+  strncpy(*ptr_set, set_event[num].string, SPACELEFT(set_clause));
+  *ptr_set  += strlen(*ptr_set);
+}
+
 /* Fake handlers next */ 
 void fake_mac_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {

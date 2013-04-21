@@ -705,7 +705,8 @@ int PG_compose_static_queries()
       set[set_primitives].handler = count_noop_setclause_handler;
       set_primitives++;
 
-      strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      if (set_event_primitives) strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      else strncpy(set_event[set_event_primitives].string, "SET ", SPACELEFT(set_event[set_event_primitives].string));
       strncat(set_event[set_event_primitives].string, "stamp_updated=CURRENT_TIMESTAMP(0)", SPACELEFT(set_event[set_event_primitives].string));
       set_event[set_event_primitives].type = TIMESTAMP;
       set_event[set_event_primitives].handler = count_noop_setclause_handler;
@@ -718,7 +719,8 @@ int PG_compose_static_queries()
       set[set_primitives].handler = count_noop_setclause_handler;
       set_primitives++;
 
-      strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      if (set_event_primitives) strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      else strncpy(set_event[set_event_primitives].string, "SET ", SPACELEFT(set_event[set_event_primitives].string));
       strncat(set_event[set_event_primitives].string, "stamp_updated=DATE_PART('epoch',NOW())::BIGINT", SPACELEFT(set_event[set_event_primitives].string));
       set_event[set_event_primitives].type = TIMESTAMP;
       set_event[set_event_primitives].handler = count_noop_setclause_handler;

@@ -2573,8 +2573,7 @@ int sql_compose_static_set_event()
   int set_primitives=0;
 
   if (config.what_to_count & COUNT_TCPFLAGS) {
-    strncpy(set_event[set_primitives].string, ", ", SPACELEFT(set_event[set_primitives].string));
-    strncat(set_event[set_primitives].string, "tcp_flags=tcp_flags|%u", SPACELEFT(set_event[set_primitives].string));
+    strncat(set_event[set_primitives].string, "SET tcp_flags=tcp_flags|%u", SPACELEFT(set_event[set_primitives].string));
     set_event[set_primitives].type = COUNT_TCPFLAGS;
     set_event[set_primitives].handler = count_tcpflags_setclause_handler;
     set_primitives++;

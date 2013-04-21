@@ -610,10 +610,11 @@ int MY_compose_static_queries()
       set[set_primitives].handler = count_noop_setclause_handler;
       set_primitives++;
 
-      strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      if (set_event_primitives) strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      else strncpy(set_event[set_event_primitives].string, "SET ", SPACELEFT(set_event[set_event_primitives].string));
       strncat(set_event[set_event_primitives].string, "stamp_updated=NOW()", SPACELEFT(set_event[set_event_primitives].string));
       set_event[set_event_primitives].type = TIMESTAMP;
-      set_event[set_event_primitives].handler = count_noop_setclause_handler;
+      set_event[set_event_primitives].handler = count_noop_setclause_event_handler;
       set_event_primitives++;
     }
     else {
@@ -623,10 +624,11 @@ int MY_compose_static_queries()
       set[set_primitives].handler = count_noop_setclause_handler;
       set_primitives++;
 
-      strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      if (set_event_primitives) strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
+      else strncpy(set_event[set_event_primitives].string, "SET ", SPACELEFT(set_event[set_event_primitives].string));
       strncat(set_event[set_event_primitives].string, "stamp_updated=UNIX_TIMESTAMP(NOW())", SPACELEFT(set_event[set_event_primitives].string));
       set_event[set_event_primitives].type = TIMESTAMP;
-      set_event[set_event_primitives].handler = count_noop_setclause_handler;
+      set_event[set_event_primitives].handler = count_noop_setclause_event_handler;
       set_event_primitives++;
     }
   }
