@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -27,9 +27,9 @@
 #include "nfacctd.h"
 #include "pmacct-data.h"
 
-void handle_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens)
+struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int16_t len)
 {
-  struct template_cache_entry *tpl;
+  struct template_cache_entry *tpl = NULL;
   u_int8_t version = 0;
 
   if (pens) *pens = FALSE;
@@ -40,15 +40,17 @@ void handle_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_i
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
     if (tpl = find_template(hdr->template_id, pptrs, tpl_type, sid))
-      refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version);
-    else insert_template(hdr, pptrs, tpl_type, sid, pens, version);
+      tpl = refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len);
+    else tpl = insert_template(hdr, pptrs, tpl_type, sid, pens, version, len);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
     if (tpl = find_template(hdr->template_id, pptrs, tpl_type, sid))
-      refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, version);
-    else insert_opt_template(hdr, pptrs, tpl_type, sid, version);
+      tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, version, len);
+    else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, version, len);
   }
+
+  return tpl;
 }
 
 struct template_cache_entry *find_template(u_int16_t id, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid)
@@ -68,12 +70,12 @@ struct template_cache_entry *find_template(u_int16_t id, struct packet_ptrs *ppt
   return NULL;
 }
 
-struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version)
+struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len)
 {
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
   u_int16_t modulo = (ntohs(hdr->template_id)%tpl_cache.num), count;
-  u_int16_t num = ntohs(hdr->num), type, port;
+  u_int16_t num = ntohs(hdr->num), type, port, off;
   u_int32_t *pen;
   u_int8_t ipfix_ebit;
   u_char *tpl;
@@ -100,11 +102,21 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
 
   log_template_header(ptr, pptrs, tpl_type, sid, version);
 
-  count = 0;
+  count = off = 0;
   tpl = (u_char *) hdr;
   tpl += NfTplHdrV9Sz;
+  off += NfTplHdrV9Sz;
   field = (struct template_field_v9 *)tpl;
+
   while (count < num) {
+    if (off >= len) {
+      notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
+                        (struct sockaddr *) pptrs->f_agent);
+      xflow_tot_bad_datagrams++;
+      free(ptr);
+      return NULL;
+    }
+
     pen = NULL; 
     ipfix_ebit = FALSE;
     type = ntohs(field->type);
@@ -174,7 +186,11 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
     }
 
     count++;
-    if (ipfix_ebit) field++; /* skip 32-bits ahead */ 
+    off += NfTplFieldV9Sz;
+    if (ipfix_ebit) {
+      field++; /* skip 32-bits ahead */ 
+      off += sizeof(u_int32_t);
+    }
     field++;
   }
 
@@ -186,16 +202,17 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
   return ptr;
 }
 
-void refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version)
+struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len)
 {
-  struct template_cache_entry *next;
+  struct template_cache_entry backup, *next;
   struct template_field_v9 *field;
-  u_int16_t count, num = ntohs(hdr->num), type, port;
+  u_int16_t count, num = ntohs(hdr->num), type, port, off;
   u_int32_t *pen;
   u_int8_t ipfix_ebit;
   u_char *ptr;
 
   next = tpl->next;
+  memcpy(&backup, tpl, sizeof(struct template_cache_entry));
   memset(tpl, 0, sizeof(struct template_cache_entry));
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
   tpl->source_id = sid;
@@ -206,11 +223,21 @@ void refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *
 
   log_template_header(tpl, pptrs, tpl_type, sid, version);
 
-  count = 0;
+  count = off = 0;
   ptr = (u_char *) hdr;
   ptr += NfTplHdrV9Sz;
+  off += NfTplHdrV9Sz;
   field = (struct template_field_v9 *)ptr;
+
   while (count < num) {
+    if (off >= len) {
+      notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
+                        (struct sockaddr *) pptrs->f_agent);
+      xflow_tot_bad_datagrams++;
+      memcpy(tpl, &backup, sizeof(struct template_cache_entry));
+      return NULL;
+    }
+
     pen = NULL;
     ipfix_ebit = FALSE;
     type = ntohs(field->type);
@@ -275,11 +302,17 @@ void refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *
     }
 
     count++;
-    if (ipfix_ebit) field++; /* skip 32-bits ahead */
+    off += NfTplFieldV9Sz;
+    if (ipfix_ebit) {
+      field++; /* skip 32-bits ahead */
+      off += sizeof(u_int32_t);
+    }
     field++;
   }
 
   log_template_footer(tpl->len, version);
+
+  return tpl;
 }
 
 void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
@@ -347,13 +380,13 @@ void log_template_footer(u_int16_t size, u_int8_t version)
   Log(LOG_DEBUG, "DEBUG ( default/core ): \n");
 }
 
-struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
+struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version, u_int16_t len)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
-  u_int16_t modulo, count, slen, olen, type, port, tid;
+  u_int16_t modulo, count, slen, olen, type, port, tid, off;
   u_char *tpl;
 
   /* NetFlow v9 */
@@ -393,11 +426,22 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 
   log_template_header(ptr, pptrs, tpl_type, sid, version);
 
+  off = 0;
   count = ptr->num;
   tpl = (u_char *) hdr;
   tpl += NfOptTplHdrV9Sz;
+  off += NfOptTplHdrV9Sz;
   field = (struct template_field_v9 *)tpl;
+
   while (count) {
+    if (off >= len) {
+      notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
+                        (struct sockaddr *) pptrs->f_agent);
+      xflow_tot_bad_datagrams++;
+      free(ptr);
+      return NULL;
+    }
+
     type = ntohs(field->type);
     log_opt_template_field(type, ptr->len, ntohs(field->len), version);
     if (type < NF9_MAX_DEFINED_FIELD) { 
@@ -409,6 +453,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 
     count--;
     field++;
+    off += NfTplFieldV9Sz;
   }
 
   if (prevptr) prevptr->next = ptr;
@@ -419,13 +464,13 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
   return ptr;
 }
 
-void refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
+struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version, u_int16_t len)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
-  struct template_cache_entry *next;
+  struct template_cache_entry backup, *next;
   struct template_field_v9 *field;
-  u_int16_t slen, olen, count, type, port, tid;
+  u_int16_t slen, olen, count, type, port, tid, off;
   u_char *ptr;
 
   /* NetFlow v9 */
@@ -442,6 +487,7 @@ void refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct pa
   }
 
   next = tpl->next;
+  memcpy(&backup, tpl, sizeof(struct template_cache_entry));
   memset(tpl, 0, sizeof(struct template_cache_entry));
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
   tpl->source_id = sid;
@@ -452,11 +498,22 @@ void refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct pa
 
   log_template_header(tpl, pptrs, tpl_type, sid, version);  
 
+  off = 0;
   count = tpl->num;
   ptr = (u_char *) hdr;
   ptr += NfOptTplHdrV9Sz;
+  off += NfOptTplHdrV9Sz;
   field = (struct template_field_v9 *)ptr;
+
   while (count) {
+    if (off >= len) {
+      notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
+                        (struct sockaddr *) pptrs->f_agent);
+      xflow_tot_bad_datagrams++;
+      memcpy(tpl, &backup, sizeof(struct template_cache_entry));
+      return NULL;
+    }
+
     type = ntohs(field->type);
     log_opt_template_field(type, tpl->len, ntohs(field->len), version);
     if (type < NF9_MAX_DEFINED_FIELD) {
@@ -468,9 +525,12 @@ void refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct pa
 
     count--;
     field++;
+    off += NfTplFieldV9Sz;
   }
 
   log_template_footer(tpl->len, version);
+
+  return tpl;
 }
 
 void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)

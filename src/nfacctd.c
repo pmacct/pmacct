@@ -1128,7 +1128,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   process_flowset:
   if (off+NfDataHdrV9Sz >= len) { 
-    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset; incomplete NetFlow v9/IPFIX packet",
+    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
 			(struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     return;
@@ -1137,7 +1137,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   data_hdr = (struct data_hdr_v9 *)pkt;
 
   if (data_hdr->flow_len == 0) {
-    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset; NetFlow v9/IPFIX packet claiming flow_len 0!",
+    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
 			(struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     return;
@@ -1156,13 +1156,14 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     while (flowoff < flowsetlen) {
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) { 
-        notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset; incomplete NetFlow v9/IPFIX packet",
+        notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent);
         xflow_tot_bad_datagrams++;
         return;
       }
 
-      handle_template(template_hdr, pptrs, fid, SourceId, &pens);
+      tpl = handle_template(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff);
+      if (!tpl) return;
 
       tpl_ptr += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
       flowoff += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
@@ -1182,13 +1183,14 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     while (flowoff < flowsetlen) {
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) {
-        notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset; incomplete NetFlow v9/IPFIX packet",
+        notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent);
         xflow_tot_bad_datagrams++;
         return;
       }
 
-      handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL);
+      tpl = handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL, flowsetlen-flowoff);
+      if (!tpl) return;
 
       /* Increment is not precise for NetFlow v9 but will work */
       tpl_ptr += sizeof(struct options_template_hdr_v9)+((ntohs(opt_template_hdr->scope_len)+ntohs(opt_template_hdr->option_len))*sizeof(struct template_field_v9));
@@ -1960,6 +1962,7 @@ void compute_once()
   NfHdrV9Sz = sizeof(struct struct_header_v9);
   NfDataHdrV9Sz = sizeof(struct data_hdr_v9);
   NfTplHdrV9Sz = sizeof(struct template_hdr_v9);
+  NfTplFieldV9Sz = sizeof(struct template_field_v9);
   NfOptTplHdrV9Sz = sizeof(struct options_template_hdr_v9);
   NfDataV1Sz = sizeof(struct struct_export_v1);
   NfDataV5Sz = sizeof(struct struct_export_v5);
