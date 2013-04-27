@@ -285,7 +285,7 @@ int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        load_tags(filename, &list->cfg.pt2f, value_ptr);
+        changes = load_tags(filename, &list->cfg.pt2f, value_ptr);
         break;
       }
     }

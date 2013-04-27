@@ -692,7 +692,7 @@ DESC:		Defines the print plugin output format. 'formatted' enables tabular outpu
 KEY:            print_output_separator
 DESC:           Defines the print plugin output separator. Value is expected to be a single character and
 		cannot be a spacing (if spacing separator is wanted then 'formatted' output should be the
-		natural choice) (default: ,). 
+		natural choice) (default: ','). 
 
 KEY:            [ print_num_protos | sql_num_protos ]
 VALUES:         [ true | false ]

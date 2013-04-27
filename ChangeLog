@@ -1,6 +1,76 @@
 pmacct (Promiscuous mode IP Accounting package) v0.14.3
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
+0.14.3 -- XX-05-2013
+  + tee plugin: a new tee_receivers configuration directive allows multiple
+    receivers to be defined. Receivers can be optionally grouped, for example
+    for load-balancing (rr, hash) purposes, and attached a list of filters
+    (via tagging). The list is fully reloadable at runtime.
+  + A new pkt_len_distrib aggregation primitive is introduced: it works by
+    defining length distribution bins, ie. "0-999,1000-1499,1500-9000" via
+    the new pkt_len_distrib_bins configuration directive. Maximum amount
+    of bins that can be defined is 255; lengths must be within the range
+    0-9000.
+  + Introduced NAT primitives to support Cisco NetFlow Event Logging (NEL),
+    for Carrier Grade NAT (CGNAT) scenarios: nat_event, post_nat_src_host,
+    post_nat_dst_host, post_nat_src_port and post_nat_dst_port. Thanks to
+    Simon Lockhart for his input and support developing the feature.
+  + Introduced timestamp primitives (to msec resolution) to support generic
+    logging functions: timestamp_start, timestamp_end (timestamp_end being
+    currently applicable only to traffic flows). These primitives must not
+    be confused with existing sql_history timestamps which are meant for the
+    opposite function instead, temporal aggregation.
+  + networks_file: introduced support for (BGP) next-hop (peer_dst_ip) in
+    addition to existing fields. Improved debug output. Also introduced a
+    new networks_file_filter feature to make networks_file work as a filter
+    in addition to its resolver functionality: if set to true net and host
+    values not belonging to defined networks are zeroed out. See UPGRADE
+    document for backward compatibility.
+  + BGP daemon: added support for IPv6 NLRI and IPv6 BGP next-hop elements
+    for rfc4364 BGP/MPLS Virtual Private Networks.
+  + MongoDB plugin: introduced mongo_insert_batch directive to define the
+    amount of elements to be inserted per batch - allowing the plugin to
+    scale better. Thanks for the strong support to Michiel Muhlenbaumer and
+    Job Snijders.
+  + pre_tag_map: 'set_qos' feature introduced: matching network traffic is
+    set 'tos' primitive to the specified value. This is useful if collecting
+    ingress NetFlow/IPFIX at both trusted and untrusted borders, allowing to
+    selectively override ToS values at untrusted ones. For consistency,
+    pre_tag_map keys id and id2 have been renamed to set_tag and set_tag2;
+    legacy jargon is still supported for backward compatibility.
+  + sfacctd: improved support for L2 accounting, ethernet length is being
+    committed as packet length; this information gets replaced by any length
+    information will come from upper layers, if any is reported. Thanks to
+    Daniel Swarbrick for his support.
+  + nfacctd: introduced nfacctd_peer_as directive to value peer_src_as and
+    peer_dst_as primitives from NetFlow/IPFIX export src_as and dst_as
+    values respectively (ie. as a result of a "ip flow-export .. peer-as"
+    config on the exporter). The directive can be plugin-specific.
+  + print, memory plugins: print_output_separator allows to select separator
+    for CSV outputs. Default comma separator is generally fine except for
+    BGP AS-SET representation.
+  ! Building sub-system: two popular configure switches, --enable-threads
+    and --enable-64bit, are now set to true by default.
+  ! fix, print & mongodb plugins: added missing cases for src_net and dst_net
+    primitives. Thanks to John Hess for his support.
+  ! fix, SQL plugins: improved handling of fork() calls when return value
+    is -1 (fork failed). Many thanks to Stefano Birmani for his valuable
+    support troubleshooting the issue.
+  ! fix, ISIS daemon: linked list functions got isis_ prefix in order to
+    prevent namespace clashes with other libraries (ie. MySQL) we link
+    against. Thanks to Stefano Birmani for reporting the issue.
+  ! fix, tee plugin: can't bridge AFs when in transparent mode is not fatal
+    error condition anymore to tackle transient interface conditions. Error
+    message is throttled to once per 60 secs. Thanks to Evgeniy Kozhuhovskiy
+    for his support troubleshooting the issue.
+  ! fix, nfacctd: extra length checks introduced when parsing NetFlow v9/
+    IPFIX options and data template flowsets. Occasional daemon crashes were
+    verified upon receipt of malformed/incomplete template data.
+  ! fix: plugins now bail out with an error message if core process is found
+    dead via a getppid() check.
+  - nfacctd_sql_log feature removed. The same can now be achieved with the
+    use of proper timestamp primitives (see above).
+
 0.14.2 -- 14-01-2013
   + pmacct opens to MongoDB, a leading noSQL document-oriented database
     via a new 'mongodb' plugin. Feature parity is maintained with all
