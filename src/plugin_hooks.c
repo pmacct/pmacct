@@ -41,8 +41,7 @@ void load_plugins(struct plugin_requests *req)
 {
   int x, v, socklen, nfprobe_id = 0, min_sz = 0;
   struct plugins_list_entry *list = plugins_list;
-  int l = sizeof(list->cfg.pipe_size);
-  int offset = sizeof(struct pkt_data);
+  int l = sizeof(list->cfg.pipe_size), offset;
   struct channels_list_entry *chptr = NULL;
 
   init_random_seed(); 
@@ -149,7 +148,10 @@ void load_plugins(struct plugin_requests *req)
       /* sets cleaner routine; XXX: we should definitely refine the way it works, maybe
          by looking at stacking more of them, ie. extras assumes it's automagically piled
 	 with metadata */
-      if (list->cfg.data_type & PIPE_TYPE_METADATA) chptr->clean_func = pkt_data_clean;
+      if (list->cfg.data_type & PIPE_TYPE_METADATA) {
+	chptr->clean_func = pkt_data_clean;
+	offset = sizeof(struct pkt_data);
+      }
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) chptr->clean_func = pkt_payload_clean;
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) chptr->clean_func = pkt_extras_clean;
       if (list->cfg.data_type & PIPE_TYPE_MSG) chptr->clean_func = pkt_msg_clean;
