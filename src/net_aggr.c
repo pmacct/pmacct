@@ -1157,9 +1157,9 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
             nh = bufptr;
             *delim = '\0';
             bufptr = delim+1;
-            str_to_addr(nh, &tmpt->table[eff_rows].nh);
+            str_to_addr(nh, &tmpt->table6[eff_rows].nh);
           }
-          else memset(&tmpt->table[eff_rows].nh, 0, sizeof(struct host_addr));
+          else memset(&tmpt->table6[eff_rows].nh, 0, sizeof(struct host_addr));
 
           if (fields >= 1) {
 	    char *endptr;
@@ -1306,7 +1306,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         if (config.debug) {
           char nh_string[INET6_ADDRSTRLEN];
 
-          addr_to_str(nh_string, &nt->table[index].nh);
+          addr_to_str(nh_string, &nt->table6[index].nh);
 
           Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] nh: %s asn: %u net: %x:%x:%x:%x mask: %u\n", filename,
 	    nh_string, nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1], nt->table6[index].net[2],
