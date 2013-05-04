@@ -1,7 +1,7 @@
-pmacct (Promiscuous mode IP Accounting package) v0.14.3
+pmacct (Promiscuous mode IP Accounting package) v0.14.4
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
-0.14.3 -- XX-05-2013
+0.14.3 -- 03-05-2013
   + tee plugin: a new tee_receivers configuration directive allows multiple
     receivers to be defined. Receivers can be optionally grouped, for example
     for load-balancing (rr, hash) purposes, and attached a list of filters

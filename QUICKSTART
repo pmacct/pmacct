@@ -609,6 +609,11 @@ router bgp Y
  neighbor 127.0.0.1 update-source X.X.X.X
 !
 
+   NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
+   message is returned: "% Can not configure the local system as neighbor". This
+   is not returned when configuring the neighborship directly in the bgpd config
+   file.
+
    2) encode flow classification information in NetFlow v9 like Cisco does with its
    NBAR/NetFlow v9 tie-up. This can be done by introducing the 'class' primitive to
    the afore mentioned 'aggregate' and add the extra configuration directives:
@@ -623,7 +628,7 @@ snaplen: 700
    (tag, tag2) via nfprobe_direction directive. Let's look at a dynamic example using
    tag2; first, add the following lines to the daemon configuration:
 
-nfprobe_direction: tag2
+nfprobe_direction[plugin_name]: tag2
 pre_tag_map: /path/to/pretag.map
 
    then edit the tag map as follows. A return value of '1' means ingress while '2' is
@@ -644,7 +649,7 @@ set_tag=2 filter='ether dst XX:XX:XX:XX:XX:XX'
    dynamically (tag, tag2) via nfprobe_ifindex directive. Let's look at a dynamic
    example using tag; first add the following lines to the daemon configuration:
 
-nfprobe_direction: tag
+nfprobe_ifindex[plugin_name]: tag
 pre_tag_map: /path/to/pretag.map 
 
    then edit the tag map as follows. It is possible to employ L2 and/or L3 addresses
