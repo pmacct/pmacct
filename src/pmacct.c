@@ -81,9 +81,17 @@ void usage_client(char *prog)
   printf("  -O\tSet output [ csv | event_formatted | event_csv ] (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
+  printf("  -V\tPrint version and exit\n");
   printf("\n");
   printf("  See QUICKSTART file in the distribution for examples\n");
   printf("\n");
+  printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
+}
+
+void version_client(char *prog)
+{
+  printf("%s (%s)\n", PMACCT_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s\n\n", PMACCT_COMPILE_ARGS);
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
@@ -923,12 +931,16 @@ int main(int argc,char **argv)
     case 'u':
       want_ipproto_num = TRUE;
       break;
+    case 'V':
+      version_client(argv[0]);
+      exit(0);
+      break;
     default:
       printf("ERROR: parameter %c unknown! \n  Exiting...\n\n", cp);
       usage_client(argv[0]);
       exit(1);
       break;
-    } 
+    }
   }
 
   /* some post-getopt-processing task */

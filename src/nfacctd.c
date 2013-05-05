@@ -290,6 +290,10 @@ int main(int argc,char **argv, char **envp)
       usage_daemon(argv[0]);
       exit(0);
       break;
+    case 'V':
+      version_daemon(NFACCTD_USAGE_HEADER);
+      exit(0);
+      break;
     default:
       usage_daemon(argv[0]);
       exit(1);

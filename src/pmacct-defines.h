@@ -20,11 +20,11 @@
 */
 
 /* defines */
-#define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uR"
-#define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uR"
-#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:R"
-#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:"
-#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uD"
+#define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uRV"
+#define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uRV"
+#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:RV"
+#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:V"
+#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDV"
 #define N_PRIMITIVES 57
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
@@ -64,13 +64,13 @@
 
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 0.14.4-cvs"
-#define UACCTD_USAGE_HEADER "Linux NetFilter ULOG Accounting Daemon, pmacctd 0.14.4-cvs"
+#define UACCTD_USAGE_HEADER "Linux NetFilter ULOG Accounting Daemon, uacctd 0.14.4-cvs"
 #define PMACCT_USAGE_HEADER "pmacct, pmacct client 0.14.4-cvs"
 #define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 0.14.4-cvs"
 #define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 0.14.4-cvs"
 #define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 0.14.4-cvs"
 #define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 0.14.4-cvs"
-
+#define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
 #define FALSE 0

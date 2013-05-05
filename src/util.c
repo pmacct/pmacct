@@ -1466,3 +1466,10 @@ char *write_sep(char *sep, int *count)
     return empty_sep;
   }
 }
+
+void version_daemon(char *header)
+{
+  printf("%s (%s)\n", header, PMACCT_BUILD);
+  printf("%s\n\n", PMACCT_COMPILE_ARGS);
+  printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
+} 

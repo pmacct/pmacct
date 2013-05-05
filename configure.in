@@ -5,6 +5,9 @@ AC_INIT([src/pmacctd.c], [0.14.4-cvs], [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([pmacctd], [0.14.4-cvs])
 AC_PREFIX_DEFAULT([/usr/local])
 
+COMPILE_ARGS="${ac_configure_args}"
+AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
+
 dnl Checks for programs.
 AC_PROG_CC
 host_os=`uname`
@@ -1107,7 +1110,7 @@ dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
 dnl AC_CHECK_FUNCS(inet_ntoa socket)
-AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle])
+AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt])
 
 dnl final checks
 dnl trivial solution to portability issue 

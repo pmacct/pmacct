@@ -93,6 +93,7 @@ EXT int evaluate_tags(struct pretag_filter *, pm_id_t);
 EXT void load_pkt_len_distrib_bins();
 EXT void evaluate_pkt_len_distrib(struct pkt_data *);
 EXT char *write_sep(char *, int *);
+EXT void version_daemon(char *);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
