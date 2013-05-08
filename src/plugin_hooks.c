@@ -187,6 +187,11 @@ void load_plugins(struct plugin_requests *req)
 #else
 	signal(SIGCHLD, ignore_falling_child);
 #endif
+
+#if defined HAVE_MALLOPT
+  mallopt(M_CHECK_ACTION, 0);
+#endif
+
 	close(config.sock);
 	close(list->pipe[1]);
 	(*list->type.func)(list->pipe[0], &list->cfg, chptr);

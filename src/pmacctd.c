@@ -119,6 +119,9 @@ int main(int argc,char **argv, char **envp)
   struct sockaddr client;
 #endif
 
+#if defined HAVE_MALLOPT
+  mallopt(M_CHECK_ACTION, 0);
+#endif
 
   umask(077);
   compute_once();

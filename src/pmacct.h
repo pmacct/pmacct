@@ -41,6 +41,10 @@
 #include <getopt.h> 
 #endif
 
+#if defined HAVE_MALLOPT
+#include <malloc.h>
+#endif
+
 #include <ctype.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
