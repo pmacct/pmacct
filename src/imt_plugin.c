@@ -49,8 +49,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = 0;
   u_int32_t seq = 0;
   int rg_err_count = 0;
-  struct pkt_bgp_primitives *pbgp;
-  struct pkt_nat_primitives *pnat;
+  struct pkt_bgp_primitives *pbgp, empty_pbgp;
+  struct pkt_nat_primitives *pnat, empty_pnat;
   struct networks_file_data nfd;
   struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
@@ -155,6 +155,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #else
   signal(SIGCHLD, ignore_falling_child); 
 #endif
+
+  memset(&empty_pbgp, 0, sizeof(empty_pbgp));
+  memset(&empty_pnat, 0, sizeof(empty_pnat));
 
   /* building a server for interrogations by clients */
   sd = build_query_server(config.imt_plugin_path);
@@ -357,10 +360,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	while (((struct ch_buf_hdr *)pipebuf)->num) {
           if (extras.off_pkt_bgp_primitives)
 	    pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
-          else pbgp = NULL;
+	  else pbgp = (struct pkt_bgp_primitives *) &empty_pbgp;
           if (extras.off_pkt_nat_primitives) 
             pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
-          else pnat = NULL;
+          else pnat = (struct pkt_nat_primitives *) &empty_pnat;
 
 	  for (num = 0; net_funcs[num]; num++)
 	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
