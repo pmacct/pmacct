@@ -983,6 +983,103 @@ AC_ARG_ENABLE(geoip,
 AC_MSG_RESULT(no))
 dnl finish: GeoIP handling
 
+dnl start: Jansson handling
+AC_MSG_CHECKING(whether to enable Jansson support)
+AC_ARG_ENABLE(jansson,
+  [  --enable-jansson                 Enable Jansson support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+
+    AC_ARG_WITH(jansson-libs,
+      [  --with-jansson-libs=DIR          Search for Jansson libs in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	LIBS="${LIBS} -L$withval"
+	JANSSONLIB=$withval
+	JANSSONLIBFOUND=1
+      ]) 
+
+    if test x"$JANSSONLIB" != x""; then
+      AC_MSG_CHECKING(your own Jansson library)
+      if test -r $JANSSONLIB/libjansson.a -o -r $JANSSONLIB/libjansson.so; then
+        AC_MSG_RESULT(ok)
+      else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Jansson library in $JANSSONLIB)
+      fi
+    fi
+
+    if test x"$JANSSONLIBFOUND" = x""; then
+      AC_MSG_CHECKING([default locations for Jansson library])
+      if test -r /usr/lib/libjansson.a -o -r /usr/lib/libjansson.so; then
+	AC_MSG_RESULT([found in /usr/lib])
+	JANSSONLIBFOUND=1
+      elif test -r /usr/local/lib/libjansson.a -o -r /usr/local/lib/libjansson.so; then
+	LIBS="${LIBS} -L/usr/local/lib"
+	AC_MSG_RESULT([found in /usr/local/lib])
+	JANSSONLIBFOUND=1
+      else 
+        AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$JANSSONLIBFOUND" = x""; then
+      AC_CHECK_LIB([jansson], [json_object], [], [AC_MSG_ERROR([
+	ERROR: missing Jansson library. Refer to: http://www.digip.org/jansson/ 
+      ])])
+    else 
+      LIBS="${LIBS} -ljansson"
+    fi 
+
+    AC_ARG_WITH(jansson-includes,
+      [  --with-jansson-includes=DIR      Search for Jansson includes in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	INCLUDES="${INCLUDES} -I$withval"
+	JANSSONINCLUDES=$withval
+	JANSSONINCLUDESFOUND=1
+      ])
+
+    if test x"$JANSSONINCLUDES" != x""; then
+      AC_MSG_CHECKING(your own Jansson headers)
+      if test -r $JANSSONINCLUDES/jansson.h; then
+        AC_MSG_RESULT(ok)
+      else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Jansson headers in $JANSSONINCLUDES)
+      fi
+    fi
+
+    if test x"$JANSSONINCLUDESFOUND" = x""; then 
+      AC_MSG_CHECKING([default locations for jansson.h])
+      if test -r /usr/include/jansson.h; then
+	AC_MSG_RESULT([found in /usr/include])
+	JANSSONINCLUDESFOUND=1;
+      elif test -r /usr/local/include/jansson.h; then
+	INCLUDES="${INCLUDES} -I/usr/local/include"
+	AC_MSG_RESULT([found in /usr/local/include])
+	JANSSONINCLUDESFOUND=1;
+      fi
+      if test x"$JANSSONINCLUDESFOUND" = x""; then
+	AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$JANSSONINCLUDESFOUND" = x""; then
+      AC_CHECK_HEADER([jansson.h],,
+      [AC_MSG_ERROR(ERROR: missing Jansson headers)])      
+    fi
+
+    AC_DEFINE(WITH_JANSSON, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
+dnl finish: Jansson handling
+
 AC_MSG_CHECKING([whether to disable shared objects])
 AC_ARG_ENABLE(so,
         [  --disable-so                     Disable shared objects (default: no)],

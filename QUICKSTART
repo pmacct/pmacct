@@ -733,7 +733,7 @@ bgp_daemon_max_peers: 100
 nfacctd_as_new: bgp
 [ ... ]
 plugins: memory
-aggregation: src_as, dst_as, local_pref, med, as_path, peer_dst_as 
+aggregate: src_as, dst_as, local_pref, med, as_path, peer_dst_as 
 
 The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically
 presents itself as part of the same Autonomous System - to ensure an iBGP relationship

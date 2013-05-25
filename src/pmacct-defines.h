@@ -93,6 +93,7 @@
 #define ACCT_NF		2	/* NetFlow */
 #define ACCT_SF		3	/* sFlow */
 #define ACCT_UL		4	/* Linux NetFilter ULOG */
+#define ACCT_MEMCLIENT	5	/* pmacct memroy client */
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
@@ -290,7 +291,8 @@
 
 #define PRINT_OUTPUT_FORMATTED	0x00000001
 #define PRINT_OUTPUT_CSV	0x00000002
-#define PRINT_OUTPUT_EVENT	0x00000004
+#define PRINT_OUTPUT_JSON	0x00000004
+#define PRINT_OUTPUT_EVENT	0x00000008
 
 #define DIRECTION_UNKNOWN	0x00000000
 #define DIRECTION_IN		0x00000001

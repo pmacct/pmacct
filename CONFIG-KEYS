@@ -681,13 +681,17 @@ DESC:		When purging data in a MongoDB database, defines the amount of elements t
 KEY:		print_markers
 VALUES:		[ true | false ]
 DESC:		Enables the use of START/END markers each time data is written to 'stdout'. Start marker returns 
-		additional information about current time-bin and configured refresh time (default: false).
+		additional information about current time-bin and configured refresh time (default: false)
 
 KEY:		print_output
-VALUES:		[ formatted | csv | event_formatted | event_csv ]
+VALUES:		[ formatted | csv | json | event_formatted | event_csv ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
-		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions
-		of the output strip trailing bytes and packets counters (default: formatted)
+		comma-separated values format, suitable for injection into 3rd party tools. 'json' is to enable
+		JavaScript Object Notation format, also suitable for injection into 3rd party tools and having
+		the extra benefit over 'csv' format of not requiring an 'event' version of the output ('json'
+		not requiring a table title). 'event' versions of the output strip trailing bytes and packets
+		counters. 'json' format requires compiling the package against Jansson library (downloadable at
+		the following URL: http://www.digip.org/jansson/) (default: formatted)
 
 KEY:            print_output_separator
 DESC:           Defines the print plugin output separator. Value is expected to be a single character and

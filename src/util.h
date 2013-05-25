@@ -95,6 +95,12 @@ EXT void evaluate_pkt_len_distrib(struct pkt_data *);
 EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
 
+EXT char *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
+		      struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
+		      pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t,
+		      struct timeval *);
+EXT void compose_timestamp(char *, int, struct timeval *, int);
+
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
 #undef EXT

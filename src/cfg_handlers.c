@@ -1624,6 +1624,8 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_FORMATTED;
   else if (!strcmp(value_ptr, "csv"))
     value = PRINT_OUTPUT_CSV;
+  else if (!strcmp(value_ptr, "json"))
+    value = PRINT_OUTPUT_JSON;
   else if (!strcmp(value_ptr, "event_formatted")) {
     value = PRINT_OUTPUT_FORMATTED;
     value |= PRINT_OUTPUT_EVENT;
