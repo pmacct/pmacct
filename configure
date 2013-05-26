@@ -4262,7 +4262,7 @@ case "$host_os" in
     ;;
 esac
 
-LIBS="${LIBS} -lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/"
+SERVER_LIBS="-lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/"
 
 echo "
 PLATFORM ..... : `uname -m`
@@ -4270,6 +4270,7 @@ OS ........... : `uname -rs` (`uname -n`)
 COMPILER ..... : ${CC}
 CFLAGS ....... : ${CFLAGS}
 LIBS ......... : ${LIBS}
+SERVER_LIBS ...: ${SERVER_LIBS}
 LDFLAGS ...... : ${LDFLAGS}
 
 Now type 'make' to compile the source code.
@@ -4281,6 +4282,7 @@ Need for documentation and examples?
 Read the README file or go to http://wiki.pmacct.net/
 
 "
+
 
 
 
@@ -4450,6 +4452,7 @@ s%@CPP@%$CPP%g
 s%@PLUGINS@%$PLUGINS%g
 s%@THREADS_SOURCES@%$THREADS_SOURCES%g
 s%@EXTRABIN@%$EXTRABIN%g
+s%@SERVER_LIBS@%$SERVER_LIBS%g
 
 CEOF
 EOF

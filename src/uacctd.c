@@ -77,7 +77,7 @@ void usage_daemon(char *prog_name)
   printf("  -v  \t[ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ] \n\tTable version\n");
   printf("\nPrint plugin (-P print) plugin options:\n");
   printf("  -r  \tRefresh time (in seconds)\n");
-  printf("  -O  \t[ formatted | csv ] \n\tOutput format\n");
+  printf("  -O  \t[ formatted | csv | json ] \n\tOutput format\n");
   printf("\n");
   printf("  See QUICKSTART or visit http://wiki.pmacct.net/ for examples.\n");
   printf("\n");
