@@ -44,7 +44,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   struct networks_table tmp, *tmpt = &tmp; 
   struct networks_table bkt;
   struct networks_table_metadata *mdt = NULL;
-  char buf[SRVBUFLEN], *bufptr, *delim, *as, *net, *mask, *nh;
+  char buf[SRVBUFLEN], *bufptr, *delim, *peer_as, *as, *net, *mask, *nh;
   int rows, eff_rows = 0, j, buflen, fields;
   unsigned int index, fake_row = 0;
   struct stat st;
@@ -140,15 +140,34 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	  else memset(&tmpt->table[eff_rows].nh, 0, sizeof(struct host_addr));
 
 	  if (fields >= 1) {
-	    char *endptr;
+	    char *endptr, *endptr2;
 
+	    peer_as = as = NULL;
 	    delim = strchr(bufptr, ',');
-	    as = bufptr;
-	    *delim = '\0';
-	    bufptr = delim+1;
-	    tmpt->table[eff_rows].as = strtoul(as, &endptr, 10);
+	    if (delim) {
+	      as = bufptr;
+	      *delim = '\0';
+	      bufptr = delim+1;
+
+	      delim = strchr(as, '_');
+	      if (delim) {
+	        *delim = '\0';
+	        peer_as = as;
+	        as = delim+1;
+	      }
+	    }
+	    else tmpt->table[eff_rows].peer_as = 0;
+
+	    if (as) tmpt->table[eff_rows].as = strtoul(as, &endptr, 10);
+	    else tmpt->table[eff_rows].as = 0;
+
+	    if (peer_as) tmpt->table[eff_rows].peer_as = strtoul(peer_as, &endptr2, 10);
+	    else tmpt->table[eff_rows].peer_as = 0;
 	  }
-	  else tmpt->table[eff_rows].as = 0;
+	  else {
+	    tmpt->table[eff_rows].peer_as = 0;
+	    tmpt->table[eff_rows].as = 0;
+	  }
 
 	  if (!sanitize_buf_net(filename, bufptr, rows)) {
 	    delim = strchr(bufptr, '/');
@@ -281,8 +300,8 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	  net_bin.address.ipv4.s_addr = htonl(nt->table[index].net);
 	  addr_to_str(net_string, &net_bin);
 
-	  Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv4] nh: %s asn: %u net: %s mask: %u\n", 
-	  	  filename, nh_string, nt->table[index].as, net_string, nt->table[index].masknum); 
+	  Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv4] nh: %s peer asn: %u asn: %u net: %s mask: %u\n", 
+	  	  filename, nh_string, nt->table[index].peer_as, nt->table[index].as, net_string, nt->table[index].masknum); 
 	}
 	if (!nt->table[index].mask) {
 	  Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv4] contains a default route\n", filename);
@@ -516,7 +535,7 @@ void set_net_funcs(struct networks_table *nt)
   }
 
   if (config.nfacctd_as & NF_AS_NEW) {
-    if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) {
+    if (config.what_to_count & (COUNT_PEER_SRC_AS|COUNT_SRC_AS|COUNT_SUM_AS)) {
       net_funcs[count] = search_src_as;
       count++;
     }
@@ -538,6 +557,11 @@ void set_net_funcs(struct networks_table *nt)
     count++;
   }
 
+  if (!(config.what_to_count & COUNT_PEER_SRC_AS)) {
+    net_funcs[count] = clear_peer_src_as;
+    count++;
+  }
+
   if (config.what_to_count & (COUNT_DST_HOST|COUNT_SUM_HOST)) {
     net_funcs[count] = search_dst_host;
     count++;
@@ -549,7 +573,7 @@ void set_net_funcs(struct networks_table *nt)
   }
 
   if (config.nfacctd_as & NF_AS_NEW) {
-    if (config.what_to_count & (COUNT_DST_AS|COUNT_SUM_AS)) {
+    if (config.what_to_count & (COUNT_PEER_DST_AS|COUNT_DST_AS|COUNT_SUM_AS)) {
       net_funcs[count] = search_dst_as;
       count++;
     }
@@ -575,6 +599,11 @@ void set_net_funcs(struct networks_table *nt)
 
   if (!(config.what_to_count & COUNT_DST_NMASK)) {
     net_funcs[count] = clear_dst_nmask;
+    count++;
+  }
+
+  if (!(config.what_to_count & COUNT_PEER_DST_AS)) {
+    net_funcs[count] = clear_peer_dst_as;
     count++;
   }
 
@@ -901,9 +930,13 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
     if (res) {
       if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
         p->src_as = res->as;
+	if (pbgp) pbgp->peer_src_as = res->peer_as;
       }
       else {
-        if (res->masknum >= p->src_nmask) p->src_as = res->as;
+        if (res->masknum >= p->src_nmask) {
+	  p->src_as = res->as;
+	  if (pbgp) pbgp->peer_src_as = res->peer_as;
+	}
       }
     }
   }
@@ -913,9 +946,13 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
     if (res6) {
       if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
 	p->src_as = res6->as;
+	if (pbgp) pbgp->peer_src_as = res->peer_as;
       }
       else {
-        if (res6->masknum >= p->src_nmask) p->src_as = res6->as;
+        if (res6->masknum >= p->src_nmask) {
+	  p->src_as = res6->as;
+	  if (pbgp) pbgp->peer_src_as = res->peer_as;
+	}
       }
     }
   }
@@ -935,9 +972,13 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
     if (res) {
       if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
         p->dst_as = res->as;
+	if (pbgp) pbgp->peer_dst_as = res->peer_as;
       }
       else {
-	if (res->masknum >= p->dst_nmask) p->dst_as = res->as;
+	if (res->masknum >= p->dst_nmask) {
+	  p->dst_as = res->as;
+	  if (pbgp) pbgp->peer_dst_as = res->peer_as;
+	}
       }
     }
   }
@@ -947,9 +988,13 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
     if (res6) {
       if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
 	p->dst_as = res6->as;
+	if (pbgp) pbgp->peer_dst_as = res->peer_as;
       }
       else {
-	if (res6->masknum >= p->dst_nmask) p->dst_as = res6->as;
+	if (res6->masknum >= p->dst_nmask) {
+	  p->dst_as = res6->as;
+	  if (pbgp) pbgp->peer_dst_as = res->peer_as;
+	}
       }
     }
   }
@@ -1004,6 +1049,18 @@ void clear_dst_host(struct networks_table *nt, struct networks_cache *nc, struct
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   memset(&p->dst_ip, 0, HostAddrSz);
+}
+
+void clear_peer_src_as(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
+                        struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
+{
+  if (pbgp) pbgp->peer_src_as = 0;
+}
+
+void clear_peer_dst_as(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
+                        struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
+{
+  if (pbgp) pbgp->peer_dst_as = 0;
 }
 
 as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, struct packet_ptrs *pptrs)
@@ -1065,7 +1122,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   struct networks_table tmp, *tmpt = &tmp;
   struct networks_table bkt;
   struct networks_table_metadata *mdt = 0;
-  char buf[SRVBUFLEN], *bufptr, *delim, *as, *net, *mask, *nh;
+  char buf[SRVBUFLEN], *bufptr, *delim, *peer_as, *as, *net, *mask, *nh;
   int rows, eff_rows = 0, j, buflen, fields;
   unsigned int index, fake_row = 0;
   u_int32_t tmpmask[4], tmpnet[4];
@@ -1162,15 +1219,34 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
           else memset(&tmpt->table6[eff_rows].nh, 0, sizeof(struct host_addr));
 
           if (fields >= 1) {
-	    char *endptr;
+            char *endptr, *endptr2;
 
+            peer_as = as = NULL;
             delim = strchr(bufptr, ',');
-            as = bufptr;
-            *delim = '\0';
-            bufptr = delim+1;
-            tmpt->table6[eff_rows].as = strtoul(as, &endptr, 10);
+            if (delim) {
+              as = bufptr;
+              *delim = '\0';
+              bufptr = delim+1;
+
+              delim = strchr(as, '_');
+              if (delim) {
+                *delim = '\0';
+                peer_as = as;
+                as = delim+1;
+              }
+            }
+            else tmpt->table6[eff_rows].peer_as = 0;
+
+            if (as) tmpt->table6[eff_rows].as = strtoul(as, &endptr, 10);
+            else tmpt->table6[eff_rows].as = 0;
+
+            if (peer_as) tmpt->table6[eff_rows].peer_as = strtoul(peer_as, &endptr2, 10);
+            else tmpt->table6[eff_rows].peer_as = 0;
           }
-          else tmpt->table6[eff_rows].as = 0;
+          else {
+            tmpt->table6[eff_rows].peer_as = 0;
+            tmpt->table6[eff_rows].as = 0;
+          }
 
           if (!sanitize_buf_net(filename, bufptr, rows)) {
             delim = strchr(bufptr, '/');
@@ -1308,9 +1384,9 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
           addr_to_str(nh_string, &nt->table6[index].nh);
 
-          Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] nh: %s asn: %u net: %x:%x:%x:%x mask: %u\n", filename,
-	    nh_string, nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1], nt->table6[index].net[2],
-	    nt->table6[index].net[3], nt->table6[index].masknum);
+          Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] nh: %s peer_asn: %u asn: %u net: %x:%x:%x:%x mask: %u\n", filename,
+	    nh_string, nt->table6[index].peer_as,  nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1],
+	    nt->table6[index].net[2], nt->table6[index].net[3], nt->table6[index].masknum);
 	}
 	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
 	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])

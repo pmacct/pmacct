@@ -326,7 +326,7 @@ int main(int argc,char **argv, char **envp)
 
   if (!config.pcap_savefile) {
     if (getuid() != 0) {
-      printf("%s\n\n", PMACCTD_USAGE_HEADER);
+      printf("%s (%s)\n\n", PMACCTD_USAGE_HEADER, PMACCT_BUILD);
       printf("ERROR ( default/core ): You need superuser privileges to run this command.\nExiting ...\n\n");
       exit(1);
     }

@@ -260,9 +260,9 @@ KEY:		networks_file (-n)
 DESC:		full pathname to a file containing a list of networks - and optionally ASN information
 		and BGP next-hop (peer_dst_ip) (one for each line, read more about the file syntax in
 		examples/networks.lst.example). Purpose of the feature is to act as a resolver when
-		network, next-hop and/or ASN information is not available through other means (ie. BGP,
-		IGP, telemetry protocol) or for the purpose of overriding such information with custom/
-		self-defined one.
+		network, next-hop and/or peer/origin ASN information is not available through other
+		means (ie. BGP, IGP, telemetry protocol) or for the purpose of overriding such
+		information with custom/self-defined one.
 
 KEY:		networks_file_filter
 VALUES          [ true | false ]
@@ -1106,8 +1106,8 @@ KEY:		bgp_peer_src_as_type
 VALUES:		[ netflow | sflow | map | bgp ]
 DESC:		Defines the method to use to map incoming traffic to a source peer ASN. "map" selects a
 		map, reloadable at runtime, specified by the bgp_peer_src_as_map directive (refer to it for
-		further information); "bgp" implements naive BGP RIB lookups. BGP lookups assume traffic is
-		symmtric, which is often not the case, affecting their accuracy. (default: netflow, sflow)
+		further information); "bgp" implements native BGP RIB lookups. BGP lookups assume traffic is
+		symmetric, which is often not the case, affecting their accuracy. (default: netflow, sflow)
 
 KEY:		bgp_peer_src_as_map
 DESC:		full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
@@ -1119,25 +1119,25 @@ DESC:		full pathname to a file containing source peer AS mappings. The AS can be
 KEY:            bgp_src_std_comm_type
 VALUES:         [ bgp ]
 DESC:		Defines the method to use to map incoming traffic to a set of standard communities. Only
-		naive BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
+		native BGP RIB lookups are currently supported. BGP lookups assume traffic is symmetric,
 		which is often not the case, affecting their accuracy.
 
 KEY:            bgp_src_ext_comm_type
 VALUES:         [ bgp ]
 DESC:           Defines the method to use to map incoming traffic to a set of extended communities. Only
-                naive BGP RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric,
+                native BGP RIB lookups are currently supported. BGP lookups assume traffic is symmetric,
                 which is often not the case, affecting their accuracy.
 
 KEY:            bgp_src_as_path_type
 VALUES:         [ bgp ]
-DESC:           Defines the method to use to map incoming traffic to an AS-PATH. Only naive BGP RIB lookups
-		are currenntly supported. BGP lookups assume traffic is symmtric, which is often not the
+DESC:           Defines the method to use to map incoming traffic to an AS-PATH. Only native BGP RIB lookups
+		are currently supported. BGP lookups assume traffic is symmetric, which is often not the
 		case, affecting their accuracy.
 
 KEY:            bgp_src_local_pref_type
 VALUES:         [ map | bgp ]
-DESC:           Defines the method to use to map incoming traffic to a local preference. Only naive BGP
-		RIB lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is
+DESC:           Defines the method to use to map incoming traffic to a local preference. Only native BGP
+		RIB lookups are currently supported. BGP lookups assume traffic is symmetric, which is
 		often not the case, affecting their accuracy.
 
 KEY:            bgp_src_local_pref_map
@@ -1148,9 +1148,9 @@ DESC:           full pathname to a file containing source local preference mappi
 
 KEY:            bgp_src_med_type
 VALUES:         [ map | bgp ]
-DESC:           Defines the method to use to map incoming traffic to a MED value. Only naive BGP RIB
-                lookups are currenntly supported. BGP lookups assume traffic is symmtric, which is often
-                not the case, affecting their accuracy.
+DESC:           Defines the method to use to map incoming traffic to a MED value. Only native BGP RIB
+                lookups are currently supported. BGP lookups assume traffic is symmetric, which is often
+		not the case, affecting their accuracy.
 
 KEY:            bgp_src_med_map
 DESC:           full pathname to a file containing source MED (Multi Exit Discriminator) mappings. The

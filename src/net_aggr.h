@@ -56,6 +56,7 @@ struct networks_table_entry {
   u_int32_t net;
   u_int32_t mask;
   u_int8_t masknum;
+  as_t peer_as;
   as_t as;
   struct host_addr nh;
   struct networks_table childs_table;
@@ -71,6 +72,7 @@ struct networks6_table_entry {
   u_int32_t net[4];
   u_int32_t mask[4];
   u_int8_t masknum;
+  as_t peer_as;
   as_t as;
   struct host_addr nh;
   struct networks_table childs_table;
@@ -115,6 +117,8 @@ EXT void clear_src_host(struct networks_table *, struct networks_cache *, struct
 EXT void clear_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
 EXT void clear_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
 EXT void clear_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
+EXT void clear_peer_src_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
+EXT void clear_peer_dst_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
 EXT as_t search_pretag_src_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
 EXT as_t search_pretag_dst_as(struct networks_table *, struct networks_cache *, struct packet_ptrs *);
 
