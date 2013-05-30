@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -383,3 +383,16 @@ void clean_sin_addr(struct sockaddr *sa)
   if (sa->sa_family == AF_INET6) memset(&sa6->sin6_addr, 0, 16);
 #endif
 }
+
+#if defined ENABLE_PLABEL
+/*
+ * label_to_addr() converts a label into a supported family address
+ */
+unsigned int label_to_addr(const char *label, struct host_addr *a, int len)
+{
+  strlcpy(a->address.plabel, label, len);
+  a->family = AF_PLABEL;
+
+  return 0;
+}
+#endif

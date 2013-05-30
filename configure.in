@@ -312,6 +312,15 @@ AC_ARG_ENABLE(v4-mapped,
 )
 fi
 
+AC_MSG_CHECKING([whether to enable IP prefix labels])
+AC_ARG_ENABLE(plabel,
+  [  --enable-plabel                  Enable IP prefix labels (default: no)],
+  [
+        AC_MSG_RESULT(yes)
+
+        AC_DEFINE(ENABLE_PLABEL, 1)
+  ])
+
 AC_ARG_WITH(pcap-includes,
   [  --with-pcap-includes=DIR         Search the specified directories for header files],
   [

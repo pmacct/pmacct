@@ -41,6 +41,10 @@
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
 #define ROUTING_SEGMENT_MAX	16
+#define PREFIX_LABEL_LEN	16
+#if defined ENABLE_PLABEL
+#define AF_PLABEL		255
+#endif
 
 /* 10Mb/s ethernet header */
 struct eth_header
@@ -348,6 +352,9 @@ struct host_addr {
     struct in_addr ipv4;
 #if defined ENABLE_IPV6
     struct in6_addr ipv6;
+#endif
+#if defined ENABLE_PLABEL
+    u_char plabel[PREFIX_LABEL_LEN];
 #endif
   } address;
 };

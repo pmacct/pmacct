@@ -1,3 +1,24 @@
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+*/
+
+/*
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
 /* defines */
 #if defined IM_LITTLE_ENDIAN
 #define IS_IPV4_MULTICAST(a) ((((u_int32_t)(a)) & 0x000000f0) == 0x000000e0)
@@ -28,5 +49,6 @@ EXT void etheraddr_string(const u_char *, char *);
 EXT int string_etheraddr(const u_char *, char *);
 EXT int is_multicast(struct host_addr *);
 EXT void clean_sin_addr(struct sockaddr *);
+EXT unsigned int label_to_addr(const char *, struct host_addr *, int);
 
 #undef EXT
