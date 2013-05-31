@@ -47,7 +47,7 @@ unsigned int str_to_addr(const char *str, struct host_addr *a)
 
 /*
  * addr_to_str() converts a supported family addres into a string
- * NOTE: 'str' length is not checked ! 
+ * 'str' length is not checked and assumed to be INET6_ADDRSTRLEN 
  */
 unsigned int addr_to_str(char *str, const struct host_addr *a)
 {
@@ -58,6 +58,12 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
 #if defined ENABLE_IPV6
   if (a->family == AF_INET6) {
     inet_ntop(AF_INET6, &a->address.ipv6, str, INET6_ADDRSTRLEN); 
+    return a->family;
+  }
+#endif
+#if defined ENABLE_PLABEL
+  if (a->family == AF_PLABEL) {
+    strlcpy(str, a->address.plabel, INET6_ADDRSTRLEN);
     return a->family;
   }
 #endif

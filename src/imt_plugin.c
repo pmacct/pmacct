@@ -408,32 +408,13 @@ void exit_now(int signum)
 void sum_host_insert(struct primitives_ptrs *prim_ptrs)
 {
   struct pkt_data *data = prim_ptrs->data;
+  struct host_addr tmp;
 
-  struct in_addr ip;
-#if defined ENABLE_IPV6
-  struct in6_addr ip6;
-#endif
-
-  if (data->primitives.dst_ip.family == AF_INET) {
-    ip.s_addr = data->primitives.dst_ip.address.ipv4.s_addr;
-    data->primitives.dst_ip.address.ipv4.s_addr = 0;
-    data->primitives.dst_ip.family = 0;
-    insert_accounting_structure(prim_ptrs);
-    data->primitives.src_ip.address.ipv4.s_addr = ip.s_addr;
-    insert_accounting_structure(prim_ptrs);
-    return;
-  }
-#if defined ENABLE_IPV6
-  if (data->primitives.dst_ip.family == AF_INET6) {
-    memcpy(&ip6, &data->primitives.dst_ip.address.ipv6, sizeof(struct in6_addr));
-    memset(&data->primitives.dst_ip.address.ipv6, 0, sizeof(struct in6_addr));
-    data->primitives.dst_ip.family = 0;
-    insert_accounting_structure(prim_ptrs);
-    memcpy(&data->primitives.src_ip.address.ipv6, &ip6, sizeof(struct in6_addr));
-    insert_accounting_structure(prim_ptrs);
-    return;
-  }
-#endif
+  memcpy(&tmp, &data->primitives.dst_ip, HostAddrSz);
+  memset(&data->primitives.dst_ip, 0, HostAddrSz);
+  insert_accounting_structure(prim_ptrs);
+  memcpy(&data->primitives.src_ip, &tmp, HostAddrSz);
+  insert_accounting_structure(prim_ptrs);
 }
 
 void sum_port_insert(struct primitives_ptrs *prim_ptrs)

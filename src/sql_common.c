@@ -713,30 +713,13 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 void sql_sum_host_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
   struct pkt_data *data = prim_ptrs->data;
-  struct in_addr ip;
-#if defined ENABLE_IPV6
-  struct in6_addr ip6;
-#endif
+  struct host_addr tmp;
 
-  if (data->primitives.dst_ip.family == AF_INET) {
-    ip.s_addr = data->primitives.dst_ip.address.ipv4.s_addr;
-    data->primitives.dst_ip.address.ipv4.s_addr = 0;
-    data->primitives.dst_ip.family = 0;
-    sql_cache_insert(prim_ptrs, idata);
-    data->primitives.src_ip.address.ipv4.s_addr = ip.s_addr;
-    sql_cache_insert(prim_ptrs, idata);
-  }
-#if defined ENABLE_IPV6
-  if (data->primitives.dst_ip.family == AF_INET6) {
-    memcpy(&ip6, &data->primitives.dst_ip.address.ipv6, sizeof(struct in6_addr));
-    memset(&data->primitives.dst_ip.address.ipv6, 0, sizeof(struct in6_addr));
-    data->primitives.dst_ip.family = 0;
-    sql_cache_insert(prim_ptrs, idata);
-    memcpy(&data->primitives.src_ip.address.ipv6, &ip6, sizeof(struct in6_addr));
-    sql_cache_insert(prim_ptrs, idata);
-    return;
-  }
-#endif
+  memcpy(&tmp, &data->primitives.dst_ip, HostAddrSz);
+  memset(&data->primitives.dst_ip, 0, HostAddrSz);
+  sql_cache_insert(prim_ptrs, idata);
+  memcpy(&data->primitives.src_ip, &tmp, HostAddrSz);
+  sql_cache_insert(prim_ptrs, idata);
 }
 
 void sql_sum_port_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)

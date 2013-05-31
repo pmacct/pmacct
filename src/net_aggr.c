@@ -132,13 +132,24 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
           if (fields >= 3) {
             char *plabel, *endptr;
 
-            delim = strchr(bufptr, ',');
-            plabel = bufptr;
-            *delim = '\0';
-            bufptr = delim+1;
-            strlcpy(tmpt->table[eff_rows].plabel, plabel, PREFIX_LABEL_LEN);
+	    memset(tmpt->table[eff_rows].plabel, 0, PREFIX_LABEL_LEN);
+
+	    /* If the specific plugin does not support IP prefix labels (yet?)
+	       then just skip the field */ 
+	    if (config.type_id != PLUGIN_ID_CORE && config.type_id != PLUGIN_ID_NFPROBE &&
+		config.type_id != PLUGIN_ID_SFPROBE && config.type_id != PLUGIN_ID_TEE) {
+              delim = strchr(bufptr, ',');
+              plabel = bufptr;
+              *delim = '\0';
+              bufptr = delim+1;
+              strlcpy(tmpt->table[eff_rows].plabel, plabel, PREFIX_LABEL_LEN);
+	    }
+	    else {
+              delim = strchr(bufptr, ',');
+              *delim = '\0';
+              bufptr = delim+1;
+	    }
           }
-          else memset(tmpt->table[eff_rows].plabel, 0, PREFIX_LABEL_LEN);
 #else
           if (fields >= 3) {
             delim = strchr(bufptr, ',');

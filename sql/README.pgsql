@@ -44,11 +44,14 @@ Similarly, BGP tables:
   * Add 'sql_table_version: 1' line to your configuration.
   * Add 'sql_table_type: bgp' line to your configuration.
 
-Until v5 a few tables are created in the 'pmacct' database. 'acct' (or 'acct_vN')
-table is the default table where data will be written when in 'typed' mode (see
-'sql_data' option in CONFIG-KEYS text file; default value is 'typed'); 'acct_uni'
-(or 'acct_uni_vN') is the default table where data will be written when in 'unified'
-mode. Since v6 unified mode is no longer supported.
+Until SQL table schemas v5 a few tables are created in the 'pmacct' database:
+'acct' (or 'acct_vN') table is the default table where data will be written
+when in 'typed' mode (see 'sql_data' option in CONFIG-KEYS text file; default
+value is 'typed'); 'acct_uni' (or 'acct_uni_vN') is the default table where
+data will be written when in 'unified' mode. Starting with v6 unified schemas
+are no longer supplied as part of the PostgreSQL table creation script: the
+'typed' schema instead can still be customized, ie. to write IP addresses in
+CHAR fields because making use of IP prefix labels, transparently to pmacct.
 
 - To understand difference between the various table versions: 
   * Do you need any of the BGP primitives ? Then look the next section.
@@ -135,11 +138,13 @@ mode. Since v6 unified mode is no longer supported.
   * stamp_updated (timestamp without time zone)
 
 - What is the difference between 'typed' and 'unified' modes ? 
-It applies to IP tables only (ie. not to BGP ones). The 'unified' table has IP addresses
-and MAC addresses specified as standard CHAR strings, slower but flexible (in the sense it
-may store each kind of strings); 'typed' tables sport PostgreSQL own types (inet, mac, etc.),
+Read this section only if using a table schema v5 or below and does not apply to BGP table
+schemas. The 'unified' table has IP addresses and MAC addresses specified as standard CHAR
+strings, slower but flexible; 'typed' tables sport PostgreSQL own types (inet, mac, etc.),
 faster but rigid. When not specifying your own 'sql_table', this switch instructs the plugin
-which tables has to use. (default: 'typed'). Since v6 unified mode is not supported anymore.
+which tables has to use, default being 'typed'. Since v6 this is all deprecated but default
+typed schemas, the only still supplied as part of the PostgreSQL table creation script, can
+still be customized transparently to pmacct.
 
 - What is the 'proto' table ?
 The auxiliar 'proto' table will be created by default. Its tuples are simply number-string

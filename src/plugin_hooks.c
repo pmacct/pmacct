@@ -135,6 +135,7 @@ void load_plugins(struct plugin_requests *req)
 
       list->cfg.name = list->name;
       list->cfg.type = list->type.string;
+      list->cfg.type_id = list->type.id;
       chptr = insert_pipe_channel(list->type.id, &list->cfg, list->pipe[1]);
       if (!chptr) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Unable to setup a new Core Process <-> Plugin channel.\nExiting.\n", list->name, list->type.string);

@@ -1,7 +1,7 @@
 !
 ! Sample networks-list; enabled by 'networks_file' key.
 !
-! Format supported: [<next-hop>','][[<peer AS number>'_']<origin AS number>',']<Network>'/'<numeric mask>
+! Format supported: [<label>','][<next-hop>','][[<peer AS number>'_']<origin AS number>',']<Network>'/'<numeric mask>
 !
 !
 ! <Network>'/'<numeric mask> examples
@@ -31,3 +31,10 @@
 10.0.0.1,65500,192.168.1.0/24
 10.0.0.2,65501,192.168.2.0/25
 10.0.0.3,65502,192.168.4.0/23
+!
+! <label>','<Network>'/'<numeric mask> examples
+! NOTE: labels can be up to 15 characters long.
+!
+CustID#1,,,192.168.1.0/24
+CustID#2,,,192.168.2.0/25
+CustID#3,,,192.168.4.0/23

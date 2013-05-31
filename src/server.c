@@ -356,20 +356,8 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_COS) d1->cos = s1->cos; 
   if (w & COUNT_ETHERTYPE) d1->etype = s1->etype; 
 #endif
-  if (w & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
-    if (s1->src_ip.family == AF_INET) d1->src_ip.address.ipv4.s_addr = s1->src_ip.address.ipv4.s_addr; 
-#if defined ENABLE_IPV6
-    else if (s1->src_ip.family == AF_INET6) memcpy(&d1->src_ip.address.ipv6,  &s1->src_ip.address.ipv6, sizeof(struct in6_addr));
-#endif
-    d1->src_ip.family = s1->src_ip.family;
-  }
-  if (w & (COUNT_DST_HOST|COUNT_DST_NET)) {
-    if (s1->dst_ip.family == AF_INET) d1->dst_ip.address.ipv4.s_addr = s1->dst_ip.address.ipv4.s_addr; 
-#if defined ENABLE_IPV6
-    else if (s1->dst_ip.family == AF_INET6) memcpy(&d1->dst_ip.address.ipv6,  &s1->dst_ip.address.ipv6, sizeof(struct in6_addr));
-#endif
-    d1->dst_ip.family = s1->dst_ip.family;
-  }
+  if (w & (COUNT_SRC_HOST|COUNT_SRC_NET)) memcpy(&d1->src_ip, &s1->src_ip, sizeof(d1->src_ip));
+  if (w & (COUNT_DST_HOST|COUNT_DST_NET)) memcpy(&d1->dst_ip, &s1->dst_ip, sizeof(d1->dst_ip));
   if (w & COUNT_SRC_NMASK) d1->src_nmask = s1->src_nmask; 
   if (w & COUNT_DST_NMASK) d1->dst_nmask = s1->dst_nmask; 
   if (w & COUNT_SRC_AS) d1->src_as = s1->src_as; 
@@ -404,38 +392,14 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w & COUNT_SRC_MED) d2->src_med = s2->src_med;
     if (w & COUNT_PEER_SRC_AS) d2->peer_src_as = s2->peer_src_as;
     if (w & COUNT_PEER_DST_AS) d2->peer_dst_as = s2->peer_dst_as;
-    if (w & COUNT_PEER_SRC_IP) {
-      if (s2->peer_src_ip.family == AF_INET) d2->peer_src_ip.address.ipv4.s_addr = s2->peer_src_ip.address.ipv4.s_addr;
-#if defined ENABLE_IPV6
-      else if (s2->peer_src_ip.family == AF_INET6) memcpy(&d2->peer_src_ip.address.ipv6,  &s2->peer_src_ip.address.ipv6, sizeof(struct in6_addr));
-#endif
-      d2->peer_src_ip.family = s2->peer_src_ip.family;
-    }
-    if (w & COUNT_PEER_DST_IP) {
-      if (s2->peer_dst_ip.family == AF_INET) d2->peer_dst_ip.address.ipv4.s_addr = s2->peer_dst_ip.address.ipv4.s_addr;
-#if defined ENABLE_IPV6
-      else if (s2->peer_dst_ip.family == AF_INET6) memcpy(&d2->peer_dst_ip.address.ipv6,  &s2->peer_dst_ip.address.ipv6, sizeof(struct in6_addr));
-#endif
-      d2->peer_dst_ip.family = s2->peer_dst_ip.family;
-    }
+    if (w & COUNT_PEER_SRC_IP) memcpy(&d2->peer_src_ip, &s2->peer_src_ip, sizeof(d2->peer_src_ip));
+    if (w & COUNT_PEER_DST_IP) memcpy(&d2->peer_dst_ip, &s2->peer_dst_ip, sizeof(d2->peer_dst_ip));
     if (w & COUNT_MPLS_VPN_RD) memcpy(&d2->mpls_vpn_rd, &s2->mpls_vpn_rd, sizeof(rd_t)); 
   }
 
   if (extras->off_pkt_nat_primitives && s3) {
-    if (w2 & COUNT_POST_NAT_SRC_HOST) {
-      if (s3->post_nat_src_ip.family == AF_INET) d3->post_nat_src_ip.address.ipv4.s_addr = s3->post_nat_src_ip.address.ipv4.s_addr;
-#if defined ENABLE_IPV6
-      else if (s3->post_nat_src_ip.family == AF_INET6) memcpy(&d3->post_nat_src_ip.address.ipv6,  &s3->post_nat_src_ip.address.ipv6, sizeof(struct in6_addr));
-#endif
-      d3->post_nat_src_ip.family = s3->post_nat_src_ip.family;
-    }
-    if (w2 & COUNT_POST_NAT_DST_HOST) {
-      if (s3->post_nat_dst_ip.family == AF_INET) d3->post_nat_dst_ip.address.ipv4.s_addr = s3->post_nat_dst_ip.address.ipv4.s_addr;
-#if defined ENABLE_IPV6
-      else if (s3->post_nat_dst_ip.family == AF_INET6) memcpy(&d3->post_nat_dst_ip.address.ipv6,  &s3->post_nat_dst_ip.address.ipv6, sizeof(struct in6_addr));
-#endif
-      d3->post_nat_dst_ip.family = s3->post_nat_dst_ip.family;
-    }
+    if (w2 & COUNT_POST_NAT_SRC_HOST) memcpy(&d3->post_nat_src_ip, &s3->post_nat_src_ip, sizeof(d3->post_nat_src_ip));
+    if (w2 & COUNT_POST_NAT_DST_HOST) memcpy(&d3->post_nat_src_ip, &s3->post_nat_dst_ip, sizeof(d3->post_nat_dst_ip));
     if (w2 & COUNT_POST_NAT_SRC_PORT) d3->post_nat_src_port = s3->post_nat_src_port;
     if (w2 & COUNT_POST_NAT_DST_PORT) d3->post_nat_dst_port = s3->post_nat_dst_port;
     if (w2 & COUNT_NAT_EVENT) d3->nat_event = s3->nat_event;

@@ -1097,30 +1097,13 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 void P_sum_host_insert(struct primitives_ptrs *prim_ptrs)
 {
   struct pkt_data *data = prim_ptrs->data;
-  struct in_addr ip;
-#if defined ENABLE_IPV6
-  struct in6_addr ip6;
-#endif
+  struct host_addr tmp;
 
-  if (data->primitives.dst_ip.family == AF_INET) {
-    ip.s_addr = data->primitives.dst_ip.address.ipv4.s_addr;
-    data->primitives.dst_ip.address.ipv4.s_addr = 0;
-    data->primitives.dst_ip.family = 0;
-    P_cache_insert(prim_ptrs);
-    data->primitives.src_ip.address.ipv4.s_addr = ip.s_addr;
-    P_cache_insert(prim_ptrs);
-  }
-#if defined ENABLE_IPV6
-  if (data->primitives.dst_ip.family == AF_INET6) {
-    memcpy(&ip6, &data->primitives.dst_ip.address.ipv6, sizeof(struct in6_addr));
-    memset(&data->primitives.dst_ip.address.ipv6, 0, sizeof(struct in6_addr));
-    data->primitives.dst_ip.family = 0;
-    P_cache_insert(prim_ptrs);
-    memcpy(&data->primitives.src_ip.address.ipv6, &ip6, sizeof(struct in6_addr));
-    P_cache_insert(prim_ptrs);
-    return;
-  }
-#endif
+  memcpy(&tmp, &data->primitives.dst_ip, HostAddrSz);
+  memset(&data->primitives.dst_ip, 0, HostAddrSz);
+  P_cache_insert(prim_ptrs);
+  memcpy(&data->primitives.src_ip, &tmp, HostAddrSz);
+  P_cache_insert(prim_ptrs);
 }
 
 void P_sum_port_insert(struct primitives_ptrs *prim_ptrs)

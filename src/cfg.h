@@ -38,6 +38,7 @@ struct configuration {
   u_int64_t nfprobe_what_to_count_2;
   char *name;
   char *type;
+  int type_id;
   int sock;
   int acct_type; 
   int data_type; 

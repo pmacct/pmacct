@@ -257,12 +257,14 @@ DESC:		writes PID of Core process to the specified file. PIDs of the active plug
 		pmacct does not support the setproctitle() function. (default: none)
 
 KEY:		networks_file (-n)
-DESC:		full pathname to a file containing a list of networks - and optionally ASN information
-		and BGP next-hop (peer_dst_ip) (one for each line, read more about the file syntax in
+DESC:		full pathname to a file containing a list of networks - and optionally ASN information,
+		BGP next-hop (peer_dst_ip) and IP prefix labels (read more about the file syntax in
 		examples/networks.lst.example). Purpose of the feature is to act as a resolver when
 		network, next-hop and/or peer/origin ASN information is not available through other
 		means (ie. BGP, IGP, telemetry protocol) or for the purpose of overriding such
-		information with custom/self-defined one.
+		information with custom/self-defined one. IP prefix labels rewrite the resolved
+		source and/or destination IP prefix into the supplied label; labels can be up to 15
+		characters long.
 
 KEY:		networks_file_filter
 VALUES          [ true | false ]
@@ -395,12 +397,15 @@ DESC:		optionally combined with "sql_table_version", defines one of the supporte
 
 KEY:		sql_data
 VALUES:		[ typed | unified ]
-DESC:		this switch makes sense only when using PostgreSQL plugin; each of the pgsql scripts in
-		the sql/ tree will create one 'unified' table and multiple 'typed' tables. The 'unified'
-		table has IP and MAC addresses specified as standard CHAR strings, slower and not space
-		savy but flexible; 'typed' tables sport PostgreSQL own types (inet, mac, etc.), resulting
-		in a faster but more rigid structure. Since v6 unified mode is being discontinued leading
-		to efficiency and simplification. (default: 'typed').
+DESC:		this switch makes sense only when using PostgreSQL plugin and supplied default tables
+		up to v5: the pgsql scripts in the sql/ tree, up to v5, will in fact create a 'unified'
+		table along with multiple 'typed' tables. The 'unified' table has IP and MAC addresses
+		specified as standard CHAR strings, slower and not space savy but flexible; 'typed'
+		tables sport PostgreSQL own types (inet, mac, etc.), resulting in a faster but more
+		rigid structure. Since v6 unified mode is being discontinued leading to simplification.
+		The supplied 'typed' schema can still be customized, ie. to write IP addresses in CHAR
+		fields because making use of IP prefix labels, transparently to pmacct - making this
+		configuration switch deprecated. (default: 'typed').
 
 KEY:	 	[ sql_host | mongo_host ]
 DESC:		defines the backend server IP/hostname (default: localhost).
@@ -709,8 +714,8 @@ DESC:           Defines whether IP addresses should be left numerical (in networ
 		into human-readable strings. Applies to MySQL and SQLite plugins only and assumes the INET_NTOA()
 		function is defined in the RDBMS (which for MySQL is always the case, while for SQLite it is not
 		by default). Since INET_NTOA() is used, unless redefined to some custom-made variant, this feature
-		works for IPv4 addresses only. Default setting is to convert IP addresses into strings. (default:
-		false)
+		works for IPv4 addresses only. The feature is also not compatible with making use of IP prefix
+		labels. Default setting is to convert IP addresses into strings. (default: false)
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD]
 DESC:		defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons
