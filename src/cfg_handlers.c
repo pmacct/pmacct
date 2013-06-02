@@ -186,6 +186,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "post_nat_src_port")) cfg_set_aggregate(filename, value, COUNT_INT_POST_NAT_SRC_PORT, count_token);
     else if (!strcmp(count_token, "post_nat_dst_port")) cfg_set_aggregate(filename, value, COUNT_INT_POST_NAT_DST_PORT, count_token);
     else if (!strcmp(count_token, "nat_event")) cfg_set_aggregate(filename, value, COUNT_INT_NAT_EVENT, count_token);
+    else if (!strcmp(count_token, "fw_event")) cfg_set_aggregate(filename, value, COUNT_INT_NAT_EVENT, count_token);
     else if (!strcmp(count_token, "timestamp_start")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_START, count_token);
     else if (!strcmp(count_token, "timestamp_end")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_END, count_token);
     else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);

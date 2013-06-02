@@ -1128,7 +1128,7 @@ XVII. Using pmacct as traffic/event logger
 pmacct was originally conceived as a traffic aggregator. From pmacct 0.14.3 
 it is now possible to use pmacct as a traffic/event logger, such development
 being fostered particularly by the use of NetFlow/IPFIX as generic transport,
-ie. see Cisco NEL. Key to logging are the first two time-related aggregation
+see for example Cisco NEL and Cisco NSEL. Key to logging are time-stamping
 primitives, timestamp_start and timestamp_end: the former records the likes
 of libpcap packet timestamp, sFlow sample arrival time, NetFlow observation
 time and flow first switched time; timestamp_end currently only makes sense

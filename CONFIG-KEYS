@@ -41,7 +41,7 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 src_std_comm, src_ext_comm, src_local_pref, src_med, mpls_vpn_rd,
 		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib,
 		 nat_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
-		 post_nat_dst_port, timestamp_start, timestamp_end ]
+		 post_nat_dst_port, fw_event, timestamp_start, timestamp_end ]
 FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming

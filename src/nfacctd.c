@@ -55,7 +55,7 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified UDP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | post_nat_src_host |\n\t post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event | timestamp_start |\n\t timestamp_end | none ]\n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | post_nat_src_host |\n\t post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event | fw_event |\n\t timestamp_start | timestamp_end | none ]\n\tAggregation string (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
@@ -786,6 +786,9 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_INFO, "INFO ( default/core ): waiting for NetFlow data on %s:%u\n", srv_string, srv_port);
     allowed = TRUE;
   }
+
+  /* fixing NetFlow v9/IPFIX template func pointers */
+  get_ext_db_ie_by_type = &ext_db_get_ie;
 
   /* Main loop */
   for(;;) {
