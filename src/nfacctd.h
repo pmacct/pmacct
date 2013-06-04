@@ -454,6 +454,8 @@ struct data_hdr_v9 {
 #define NF9_ENGINE_TYPE                 38
 #define NF9_ENGINE_ID                   39
 /* ... */
+#define NF9_MPLS_TOP_LABEL_ADDR		47
+/* ... */
 #define NF9_IN_SRC_MAC                  56
 #define NF9_OUT_DST_MAC                 57
 #define NF9_IN_VLAN                     58

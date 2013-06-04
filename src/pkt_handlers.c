@@ -1673,14 +1673,26 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len, 4));
-      pbgp->peer_dst_ip.family = AF_INET;
+      if (tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len) {
+        memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len, 4));
+        pbgp->peer_dst_ip.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
+        memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 4));
+        pbgp->peer_dst_ip.family = AF_INET;
+      }
       break;
     }
 #if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len, 16));
-      pbgp->peer_dst_ip.family = AF_INET6;
+      if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
+        memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len, 16));
+        pbgp->peer_dst_ip.family = AF_INET6;
+      }
+      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
+        memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 16));
+        pbgp->peer_dst_ip.family = AF_INET6;
+      }
       break;
     }
 #endif
