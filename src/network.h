@@ -424,6 +424,7 @@ struct pkt_payload {
   struct host_addr bgp_next_hop;
 };
 
+// XXX: eventually deprecate pkt_extras
 struct pkt_extras {
   u_int8_t tcp_flags;
   u_int32_t mpls_top_label;
@@ -450,12 +451,14 @@ struct pkt_msg {
 struct extra_primitives {
   u_int16_t off_pkt_bgp_primitives;
   u_int16_t off_pkt_nat_primitives;
+  u_int16_t off_pkt_mpls_primitives;
 };
 
 struct primitives_ptrs {
   struct pkt_data *data;
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
+  struct pkt_mpls_primitives *pmpls;
 };
 
 struct pkt_bgp_primitives {
@@ -474,7 +477,6 @@ struct pkt_bgp_primitives {
   u_int32_t src_local_pref;
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
-  u_int32_t pad;
 };
 
 struct pkt_nat_primitives {
@@ -485,6 +487,12 @@ struct pkt_nat_primitives {
   u_int8_t nat_event;
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
+};
+
+struct pkt_mpls_primitives {
+  char mpls_label_top[3];
+  char mpls_label_bottom[3];
+  u_int8_t mpls_stack_depth;
 };
 
 /* same as above but pointers in place of strings */

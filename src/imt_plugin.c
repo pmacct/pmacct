@@ -51,6 +51,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int rg_err_count = 0;
   struct pkt_bgp_primitives *pbgp, empty_pbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
+  struct pkt_mpls_primitives *pmpls, empty_pmpls;
   struct networks_file_data nfd;
   struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
@@ -158,6 +159,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   memset(&empty_pbgp, 0, sizeof(empty_pbgp));
   memset(&empty_pnat, 0, sizeof(empty_pnat));
+  memset(&empty_pmpls, 0, sizeof(empty_pmpls));
 
   /* building a server for interrogations by clients */
   sd = build_query_server(config.imt_plugin_path);
@@ -306,8 +308,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (go_to_clear) {
       /* When using extended BGP features we need to
 	 free() up memory allocations before erasing */ 
-      if (extras.off_pkt_bgp_primitives) free_bgp_allocs(); 
-      if (extras.off_pkt_nat_primitives) free_nat_allocs(); 
+      if (extras.off_pkt_bgp_primitives || extras.off_pkt_nat_primitives ||
+	  extras.off_pkt_mpls_primitives) free_extra_allocs(); 
       clear_memory_pool_table();
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
       if (current_pool == NULL) {
@@ -364,6 +366,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (extras.off_pkt_nat_primitives) 
             pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
           else pnat = (struct pkt_nat_primitives *) &empty_pnat;
+          if (extras.off_pkt_mpls_primitives) 
+            pmpls = (struct pkt_mpls_primitives *) ((u_char *)data + extras.off_pkt_mpls_primitives);
+          else pmpls = (struct pkt_mpls_primitives *) &empty_pmpls;
 
 	  for (num = 0; net_funcs[num]; num++)
 	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -380,6 +385,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  prim_ptrs.data = data; 
 	  prim_ptrs.pbgp = pbgp; 
 	  prim_ptrs.pnat = pnat;
+	  prim_ptrs.pmpls = pmpls;
+
           (*insert_func)(&prim_ptrs);
 
 	  ((struct ch_buf_hdr *)pipebuf)->num--;
@@ -455,7 +462,7 @@ void sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 }
 #endif
 
-void free_bgp_allocs()
+void free_extra_allocs()
 {
   struct acc *acc_elem = NULL;
   unsigned char *elem;
@@ -476,32 +483,13 @@ void free_bgp_allocs()
       free(acc_elem->cbgp);
       acc_elem->cbgp = NULL;
     }
-    if (acc_elem->next) {
-      acc_elem = acc_elem->next;
-      following_chain++;
-      idx--;
-    }
-    else {
-      elem += sizeof(struct acc);
-      following_chain = FALSE;
-    }
-  }
-}
-
-void free_nat_allocs()
-{
-  struct acc *acc_elem = NULL;
-  unsigned char *elem;
-  int following_chain = FALSE;
-  unsigned int idx;
-
-  elem = (unsigned char *) a;
-
-  for (idx = 0; idx < config.buckets; idx++) {
-    if (!following_chain) acc_elem = (struct acc *) elem;
     if (acc_elem->pnat) {
       free(acc_elem->pnat);
       acc_elem->pnat = NULL;
+    }
+    if (acc_elem->pmpls) {
+      free(acc_elem->pmpls);
+      acc_elem->pmpls = NULL;
     }
     if (acc_elem->next) {
       acc_elem = acc_elem->next;

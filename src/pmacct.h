@@ -226,6 +226,15 @@ struct _devices_struct {
   int link_type;
 };
 
+struct _primitives_matrix_struct {
+  char name[PRIMITIVE_LEN];
+  u_int8_t pmacctd;
+  u_int8_t uacctd;
+  u_int8_t nfacctd;
+  u_int8_t sfacctd;
+  char desc[PRIMITIVE_DESC_LEN];
+};
+
 struct smallbuf {
   u_char base[SRVBUFLEN];
   u_char *end;

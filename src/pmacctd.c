@@ -52,8 +52,10 @@ void usage_daemon(char *prog_name)
   printf("       %s [ -h ]\n", prog_name);
   printf("\nGeneral options:\n");
   printf("  -h  \tShow this page\n");
+  printf("  -V  \tShow version and compile-time options and exit\n");
   printf("  -f  \tLoad configuration from the specified file\n");
-  printf("  -c  \t[ src_mac | dst_mac | vlan | src_host | dst_host | src_net | dst_net | src_port | dst_port |\n\t proto | tos | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | sum_port | tag |\n\t tag2 | flows | class | tcpflags | in_iface | out_iface | src_mask | dst_mask | cos | etype |\n\t sampling_rate | src_host_country | dst_host_country | pkt_len_distrib | timestamp_start |\n\t none ]\n\tAggregation string (DEFAULT: src_host)\n");
+  printf("  -a  \tPrint list of supported aggregation primitives\n");
+  printf("  -c  \tAggregation method, see full list of primitives with -a (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -N  \tDisable promiscuous mode\n");
   printf("  -n  \tPath to a file containing Network definitions\n");
@@ -287,6 +289,10 @@ int main(int argc,char **argv, char **envp)
       version_daemon(PMACCTD_USAGE_HEADER);
       exit(0);
       break;
+    case 'a':
+      print_primitives(config.acct_type, PMACCTD_USAGE_HEADER);
+      exit(0);
+      break;
     default:
       usage_daemon(argv[0]);
       exit(1);
@@ -485,6 +491,10 @@ int main(int argc,char **argv, char **envp)
                         COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
                         COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END))
           list->cfg.data_type |= PIPE_TYPE_NAT;
+
+        if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
+                        COUNT_MPLS_STACK_DEPTH))
+          list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
 	if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS))

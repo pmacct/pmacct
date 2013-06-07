@@ -62,6 +62,9 @@ EXT int file_unlock(int);
 EXT void strftime_same(char *, int, char *, const time_t *);
 EXT int read_SQLquery_from_file(char *, char *, int);
 EXT void stick_bosbit(u_char *);
+EXT int check_bosbit(u_char *);
+EXT u_int32_t decode_mpls_label(char *);
+EXT void encode_mpls_label(char *, u_int32_t);
 EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
 EXT void exit_plugin(int);
@@ -103,6 +106,7 @@ EXT void compose_timestamp(char *, int, struct timeval *, int);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
+EXT void print_primitives(int, char *);
 #undef EXT
 
 /* Timing Stuff */

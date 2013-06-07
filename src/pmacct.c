@@ -50,9 +50,11 @@ int pmc_bgp_rd2str(char *, rd_t *);
 int pmc_bgp_str2rd(rd_t *, char *);
 char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
-			pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t,
-			struct timeval *);
+			struct pkt_mpls_primitives *, pm_counter_t, pm_counter_t,
+			pm_counter_t, u_int32_t, struct timeval *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int);
+u_int32_t pmc_decode_mpls_label(char *);
+void pmc_encode_mpls_label(char *, u_int32_t);
 
 /* vars */
 struct stripped_class *class_table = NULL;
@@ -82,7 +84,7 @@ void usage_client(char *prog)
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end ] \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth ] \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -211,6 +213,9 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     printf("POST_NAT_SRC_PORT  ");
     printf("POST_NAT_DST_PORT  ");
     printf("NAT_EVENT ");
+    printf("MPLS_LABEL_TOP  ");
+    printf("MPLS_LABEL_BOTTOM  ");
+    printf("MPLS_STACK_DEPTH  ");
 
     printf("TIMESTAMP_START                ");
     printf("TIMESTAMP_END                  ");
@@ -297,6 +302,9 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT  ");
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
+    if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("MPLS_LABEL_TOP  ");
+    if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("MPLS_LABEL_BOTTOM  ");
+    if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("MPLS_STACK_DEPTH  ");
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                  "); 
@@ -389,6 +397,9 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     printf("%sNAT_EVENT", write_sep(sep, &count));
+    printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
+    printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
+    printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
     printf("%sTIMESTAMP_START", write_sep(sep, &count));
     printf("%sTIMESTAMP_END", write_sep(sep, &count));
     if (!is_event) {
@@ -468,6 +479,9 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("%sNAT_EVENT", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("%sTIMESTAMP_END", write_sep(sep, &count));
@@ -543,9 +557,11 @@ int main(int argc,char **argv)
   struct pkt_primitives empty_addr;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
+  struct pkt_mpls_primitives empty_pmpls;
   struct query_entry request;
   struct pkt_bgp_primitives *pbgp = NULL;
-  struct pkt_nat_primitives *pnat= NULL;
+  struct pkt_nat_primitives *pnat = NULL;
+  struct pkt_mpls_primitives *pmpls = NULL;
   char clibuf[clibufsz], *bufptr;
   unsigned char *largebuf, *elem, *ct, *pldt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
@@ -579,6 +595,7 @@ int main(int argc,char **argv)
   memset(&empty_addr, 0, sizeof(struct pkt_primitives));
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
+  memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
@@ -838,6 +855,18 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "nat_event")) {
           count_token_int[count_index] = COUNT_NAT_EVENT;
           what_to_count_2 |= COUNT_NAT_EVENT;
+        }
+        else if (!strcmp(count_token[count_index], "mpls_label_top")) {
+          count_token_int[count_index] = COUNT_MPLS_LABEL_TOP;
+          what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
+        }
+        else if (!strcmp(count_token[count_index], "mpls_label_bottom")) {
+          count_token_int[count_index] = COUNT_MPLS_LABEL_BOTTOM;
+          what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
+        }
+        else if (!strcmp(count_token[count_index], "mpls_stack_depth")) {
+          count_token_int[count_index] = COUNT_MPLS_STACK_DEPTH;
+          what_to_count_2 |= COUNT_MPLS_STACK_DEPTH;
         }
         else if (!strcmp(count_token[count_index], "timestamp_start")) {
           count_token_int[count_index] = COUNT_TIMESTAMP_START;
@@ -1499,11 +1528,48 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "nat_event")) {
           request.pnat.nat_event = atoi(match_string_token);
         }
+        else if (!strcmp(count_token[match_string_index], "mpls_label_top")) {
+	  u_int32_t label = atoi(match_string_token);
+	  pmc_encode_mpls_label(request.pmpls.mpls_label_top, label);
+        }
+        else if (!strcmp(count_token[match_string_index], "mpls_label_bottom")) {
+	  u_int32_t label = atoi(match_string_token);
+	  pmc_encode_mpls_label(request.pmpls.mpls_label_bottom, label);
+        }
+        else if (!strcmp(count_token[match_string_index], "mpls_stack_depth")) {
+          request.pmpls.mpls_stack_depth = atoi(match_string_token);
+        }
         else if (!strcmp(count_token[match_string_index], "timestamp_start")) {
-	  // XXX
+	  struct tm tmp;
+	  char *delim = strchr(match_string_token, '.');
+	  u_int32_t residual = 0;
+
+	  if (delim) {
+	    /* we have residual time after secs */
+	    *delim = '\0';
+	    delim++;
+	    residual = strtol(delim, NULL, 0); 
+	  }
+
+	  strptime(match_string_token, "%Y-%m-%d %H:%M:%S", &tmp);
+	  request.pnat.timestamp_start.tv_sec = mktime(&tmp);
+	  request.pnat.timestamp_start.tv_usec = residual;
         }
         else if (!strcmp(count_token[match_string_index], "timestamp_end")) {
-	  // XXX
+	  struct tm tmp;
+          char *delim = strchr(match_string_token, '.');
+          u_int32_t residual = 0;
+
+          if (delim) {
+            /* we have residual time after secs */
+            *delim = '\0';
+            delim++;
+            residual = strtol(delim, NULL, 0);
+          }
+
+	  strptime(match_string_token, "%Y-%m-%d %H:%M:%S", &tmp);
+	  request.pnat.timestamp_end.tv_sec = mktime(&tmp);
+	  request.pnat.timestamp_end.tv_usec = residual;
         }
         else printf("WARN: ignoring unknown aggregation method: '%s'.\n", *count_token);
         match_string_index++;
@@ -1615,9 +1681,13 @@ int main(int argc,char **argv)
       if (extras.off_pkt_nat_primitives) pnat = (struct pkt_nat_primitives *) ((u_char *)elem + extras.off_pkt_nat_primitives);
       else pnat = &empty_pnat;
 
+      if (extras.off_pkt_mpls_primitives) pmpls = (struct pkt_mpls_primitives *) ((u_char *)elem + extras.off_pkt_mpls_primitives);
+      else pmpls = &empty_pmpls;
+
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0 ||
-	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0) {
+	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
+	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_ID)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.id);
@@ -2047,6 +2117,25 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pnat->nat_event);
         }
 
+        if (!have_wtc || (what_to_count_2 & COUNT_MPLS_LABEL_TOP)) {
+	  u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_top);
+
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u         ", label);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), label);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM)) {
+          u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_bottom);
+
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u            ", label);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), label);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_MPLS_STACK_DEPTH)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-2u                ", pmpls->mpls_stack_depth);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_stack_depth);
+        }
+
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
 	  char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
 	  time_t time1;
@@ -2104,7 +2193,7 @@ int main(int argc,char **argv)
 	  char *json_str;
 
 	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
-				      &acc_elem->primitives, pbgp, pnat, acc_elem->pkt_len, acc_elem->pkt_num,
+				      &acc_elem->primitives, pbgp, pnat, pmpls, acc_elem->pkt_len, acc_elem->pkt_num,
 				      acc_elem->flo_num, acc_elem->tcp_flags, NULL);
 
 	  if (json_str) {
@@ -2539,8 +2628,9 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
 
 #ifdef WITH_JANSSON 
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, pm_counter_t bytes_counter,
-		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
+		  struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", *tmpbuf;
@@ -2829,6 +2919,28 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_decref(kv);
   }
 
+  if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
+    u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_top);
+
+    kv = json_pack("{sI}", "mpls_label_top", label);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
+    u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_bottom);
+
+    kv = json_pack("{sI}", "mpls_label_bottom", label);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
+    kv = json_pack("{sI}", "mpls_stack_depth", pmpls->mpls_stack_depth);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE);
     kv = json_pack("{ss}", "timestamp_start", tstamp_str);
@@ -2866,8 +2978,9 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 }
 #else
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-                  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, pm_counter_t bytes_counter,
-                  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+                  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   return NULL;
 }
@@ -2885,4 +2998,27 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec)
 
   if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
   else snprintf(buf, buflen, "%s", tmpbuf);
+}
+
+u_int32_t pmc_decode_mpls_label(char *label)
+{
+  u_int32_t ret = 0;
+  u_char label_ttl[4];
+
+  memset(label_ttl, 0, 4);
+  memcpy(label_ttl, label, 3);
+  ret = ntohl(*(uint32_t *)(label_ttl));
+  ret = ((ret & 0xfffff000 /* label mask */) >> 12 /* label shift */); 
+
+  return ret;
+}
+
+void pmc_encode_mpls_label(char *label, u_int32_t value)
+{
+  u_int32_t new_value;
+
+  value <<= 12 /* label shift */;
+  value &= 0xfffff000 /* label mask */;
+  new_value = htonl(value);
+  memcpy(label, &new_value, 3);
 }

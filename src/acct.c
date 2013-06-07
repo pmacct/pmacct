@@ -33,15 +33,18 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_primitives *addr = &data->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   struct acc *elem_acc;
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives); 
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
   unsigned int pn_size = sizeof(struct pkt_nat_primitives);
+  unsigned int pm_size = sizeof(struct pkt_mpls_primitives);
 
   hash = cache_crc32((unsigned char *)addr, pp_size);
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
+  if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   pos = hash % config.buckets;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -65,7 +68,8 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   struct pkt_primitives *data = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
-  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE; 
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE; 
 
   res_data = memcmp(&elem->primitives, data, sizeof(struct pkt_primitives));
 
@@ -82,7 +86,10 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   if (pnat && elem->pnat) res_nat = memcmp(elem->pnat, pnat, sizeof(struct pkt_nat_primitives));
   else res_nat = FALSE;
 
-  return res_data | res_bgp | res_nat;
+  if (pmpls && elem->pmpls) res_mpls = memcmp(elem->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+  else res_mpls = FALSE;
+
+  return res_data | res_bgp | res_nat | res_mpls;
 }
 
 void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
@@ -91,6 +98,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_primitives *addr = &data->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   struct acc *elem_acc;
   unsigned char *elem, *new_elem;
   int solved = FALSE;
@@ -98,6 +106,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   unsigned int pp_size = sizeof(struct pkt_primitives);
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
   unsigned int pn_size = sizeof(struct pkt_nat_primitives);
+  unsigned int pm_size = sizeof(struct pkt_mpls_primitives);
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
 
   /* We are classifing packets. We have a non-zero bytes accumulator (ba)
@@ -132,6 +141,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   hash = cache_crc32((unsigned char *)addr, pp_size);
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
+  if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   pos = hash % config.buckets;
       
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -205,6 +215,12 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       }
       else elem_acc->pnat = NULL;
 
+      if (pmpls) {
+        elem_acc->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
+        memcpy(elem_acc->pmpls, pmpls, pm_size);
+      }
+      else elem_acc->pmpls = NULL;
+
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
@@ -269,6 +285,12 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         memcpy(elem_acc->pnat, pnat, pn_size);
       }
       else elem_acc->pnat = NULL;
+
+      if (pmpls) {
+        elem_acc->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
+        memcpy(elem_acc->pmpls, pmpls, pm_size);
+      }
+      else elem_acc->pmpls = NULL;
 
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;

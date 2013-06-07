@@ -400,6 +400,7 @@ void compute_once()
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
   PnatSz = sizeof(struct pkt_nat_primitives);
+  PmplsSz = sizeof(struct pkt_mpls_primitives);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);
   CharPtrSz = sizeof(char *);
   IP4HdrSz = sizeof(struct my_iphdr);

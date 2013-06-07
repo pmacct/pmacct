@@ -904,6 +904,39 @@ void stick_bosbit(u_char *label)
   *ptr |= 0x1;
 }
 
+int check_bosbit(u_char *label)
+{
+  u_char *ptr;
+
+  ptr = label+2;
+
+  if (*ptr & 0x1) return TRUE;
+  else return FALSE;
+}
+
+u_int32_t decode_mpls_label(char *label)
+{
+  u_int32_t ret = 0;
+  u_char label_ttl[4];
+
+  memset(label_ttl, 0, 4);
+  memcpy(label_ttl, label, 3);
+  ret = ntohl(*(uint32_t *)(label_ttl));
+  ret = ((ret & 0xfffff000 /* label mask */) >> 12 /* label shift */);
+
+  return ret;
+}
+
+void encode_mpls_label(char *label, u_int32_t value)
+{
+  u_int32_t new_value;
+
+  value <<= 12 /* label shift */;
+  value &= 0xfffff000 /* label mask */;
+  new_value = htonl(value);
+  memcpy(label, &new_value, 3);
+}
+
 /*
  * timeval_cmp(): returns > 0 if a > b; < 0 if a < b; 0 if a == b.
  */
@@ -1840,4 +1873,22 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec)
 
   if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
   else snprintf(buf, buflen, "%s", tmpbuf);
+}
+
+void print_primitives(int acct_type, char *header)
+{
+  int idx;
+
+  printf("%s (%s)\n", header, PMACCT_BUILD);
+
+  for (idx = 0; strcmp(_primitives_matrix[idx].name, ""); idx++) {
+    if ((acct_type == ACCT_NF && _primitives_matrix[idx].nfacctd) ||
+	(acct_type == ACCT_SF && _primitives_matrix[idx].sfacctd) ||
+	(acct_type == ACCT_PM && _primitives_matrix[idx].pmacctd)) {
+      if (strcmp(_primitives_matrix[idx].desc, "")) /* entry */
+        printf("%-32s : %-64s\n", _primitives_matrix[idx].name, _primitives_matrix[idx].desc);
+      else /* title */
+        printf("\n%s\n", _primitives_matrix[idx].name);
+    }
+  }
 }

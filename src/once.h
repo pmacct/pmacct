@@ -15,6 +15,6 @@ EXT u_int32_t IP4HdrSz, IP4TlSz, IP6HdrSz, IP6AddrSz, IP6TlSz;
 EXT u_int32_t MyTLHdrSz, TCPFlagOff;
 EXT u_int32_t SFSampleSz, SFLAddressSz, SFrenormEntrySz;
 EXT u_int32_t PptrsSz, UDPHdrSz, CSSz, MyTCPHdrSz, IpFlowCmnSz; 
-EXT u_int16_t PbgpSz, PnatSz;
+EXT u_int16_t PbgpSz, PnatSz, PmplsSz;
 
 #undef EXT

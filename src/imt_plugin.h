@@ -40,6 +40,7 @@ struct acc {
   struct timeval rstamp;	/* classifiers: reset timestamp */
   struct cache_bgp_primitives *cbgp;
   struct pkt_nat_primitives *pnat;
+  struct pkt_mpls_primitives *pmpls;
   struct acc *next;
 };
 
@@ -70,11 +71,12 @@ struct query_header {
 };
 
 struct query_entry {
-  u_int64_t what_to_count;	/* aggregation */
-  u_int64_t what_to_count_2;	/* aggregation */
-  struct pkt_primitives data;	/* actual data */
-  struct pkt_bgp_primitives pbgp; /* extended BGP data */
-  struct pkt_nat_primitives pnat; /* extended NAT + timestamp data */
+  u_int64_t what_to_count;		/* aggregation */
+  u_int64_t what_to_count_2;		/* aggregation */
+  struct pkt_primitives data;		/* actual data */
+  struct pkt_bgp_primitives pbgp;	/* extended BGP data */
+  struct pkt_nat_primitives pnat;	/* extended NAT + timestamp data */
+  struct pkt_mpls_primitives pmpls;	/* extended MPLS data */
 };
 
 struct reply_buffer {
@@ -124,7 +126,8 @@ EXT void reset_counters(struct acc *);
 EXT int build_query_server(char *);
 EXT void process_query_data(int, unsigned char *, int, struct extra_primitives *, int, int);
 EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
-			struct acc *, u_int64_t, u_int64_t, struct extra_primitives *);
+			struct pkt_mpls_primitives *, struct acc *, u_int64_t, u_int64_t,
+			struct extra_primitives *);
 EXT void enQueue_elem(int, struct reply_buffer *, void *, int, int);
 EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
 EXT int test_zero_elem(struct acc *);
@@ -142,8 +145,7 @@ EXT void sum_as_insert(struct primitives_ptrs *);
 EXT void sum_mac_insert(struct primitives_ptrs *);
 #endif
 EXT void exit_now(int);
-EXT void free_bgp_allocs();
-EXT void free_nat_allocs();
+EXT void free_extra_allocs();
 #undef EXT
 
 /* global vars */

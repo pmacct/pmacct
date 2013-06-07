@@ -579,6 +579,24 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_TOP) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_top_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_BOTTOM) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_bottom_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_MPLS_STACK_DEPTH) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_stack_depth_handler;
+      else primitives--;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_START) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_start_handler;
@@ -1690,7 +1708,11 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->peer_dst_ip.family = AF_INET6;
       }
       else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
-        memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 16));
+        memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 4));
+        pbgp->peer_dst_ip.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len) {
+        memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len, 16));
         pbgp->peer_dst_ip.family = AF_INET6;
       }
       break;
@@ -2831,6 +2853,73 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       memcpy(&pnat->nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, MIN(tpl->tpl[NF9_NAT_EVENT].len, 1));
     else if (utpl = (*get_ext_db_ie_by_type)(tpl, NF9_ASA_XLATE_EVENT))
       memcpy(&pnat->nat_event, pptrs->f_data+utpl->off, MIN(utpl->len, 1));
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len)
+      memcpy(pmpls->mpls_label_top, pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off, MIN(tpl->tpl[NF9_MPLS_LABEL_1].len, 3));
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  int label_idx;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_9; label_idx++) { 
+      if (tpl->tpl[label_idx].len == 3 && check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+        memcpy(pmpls->mpls_label_bottom, pptrs->f_data+tpl->tpl[label_idx].off, MIN(tpl->tpl[label_idx].len, 3));
+	break;
+      } 
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  int label_idx, stack_depth;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    for (label_idx = NF9_MPLS_LABEL_1, stack_depth = 0; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
+      if (tpl->tpl[label_idx].len == 3) {
+	stack_depth++;
+	if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) break;
+      }
+    }
+
+    pmpls->mpls_stack_depth = stack_depth;
+
     break;
   default:
     break;

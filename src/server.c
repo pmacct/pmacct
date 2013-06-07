@@ -76,11 +76,13 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   struct pkt_data dummy;
   struct pkt_bgp_primitives dummy_pbgp;
   struct pkt_nat_primitives dummy_pnat;
+  struct pkt_mpls_primitives dummy_pmpls;
   int reset_counter, offset = PdataSz;
 
   memset(&dummy, 0, sizeof(struct pkt_data));
   memset(&dummy_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&dummy_pnat, 0, sizeof(struct pkt_nat_primitives));
+  memset(&dummy_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(&rb, 0, sizeof(struct reply_buffer));
   memcpy(rb.buf, buf, sizeof(struct query_header));
   rb.len = LARGEBUFLEN-sizeof(struct query_header);
@@ -105,6 +107,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     offset += sizeof(struct pkt_nat_primitives);
   }
   else q->extras.off_pkt_nat_primitives = 0;
+  if (extras->off_pkt_mpls_primitives) {
+    q->extras.off_pkt_mpls_primitives = offset;
+    offset += sizeof(struct pkt_mpls_primitives);
+  }
+  else q->extras.off_pkt_mpls_primitives = 0;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Processing data received from client ...\n", config.name, config.type);
 
@@ -133,13 +140,15 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
 	    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	  }
-	  // else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	}
 
         if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
           enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
 	}
-        // else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+
+        if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
+          enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
+	}
       } 
       if (acc_elem->next != NULL) {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Following chain in reply ...\n", config.name, config.type);
@@ -193,6 +202,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	prim_ptrs.data = &pd_dummy;
 	prim_ptrs.pbgp = &request.pbgp;
 	prim_ptrs.pnat = &request.pnat;
+	prim_ptrs.pmpls = &request.pmpls;
 
         acc_elem = search_accounting_structure(&prim_ptrs);
         if (acc_elem) { 
@@ -207,13 +217,15 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
 		enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	      }
-	      // else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	    }
 
             if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
               enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
             }
-            // else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+
+	    if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
+	      enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
+	    }
 
 	    if (reset_counter) {
 	      if (forked) set_reset_flag(acc_elem);
@@ -229,6 +241,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
 	      if (extras->off_pkt_nat_primitives)
 		enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+
+	      if (extras->off_pkt_mpls_primitives)
+		enQueue_elem(sd, &rb, &dummy_pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 	    }
 	  }
         }
@@ -241,6 +256,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
 	    if (extras->off_pkt_nat_primitives)
 	      enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+
+	    if (extras->off_pkt_mpls_primitives)
+	      enQueue_elem(sd, &rb, &dummy_pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 	  }
 	}
       }
@@ -248,6 +266,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
         struct pkt_primitives tbuf;  
 	struct pkt_bgp_primitives bbuf;
 	struct pkt_nat_primitives nbuf;
+	struct pkt_mpls_primitives mbuf;
 	struct pkt_data abuf;
         following_chain = FALSE;
 	elem = (unsigned char *) a;
@@ -256,10 +275,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
         for (idx = 0; idx < config.buckets; idx++) {
           if (!following_chain) acc_elem = (struct acc *) elem;
 	  if (!test_zero_elem(acc_elem)) {
-	    mask_elem(&tbuf, &bbuf, &nbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
+	    mask_elem(&tbuf, &bbuf, &nbuf, &mbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives)) &&
-		!memcmp(&nbuf, &request.pnat, sizeof(struct pkt_nat_primitives))) {
+		!memcmp(&nbuf, &request.pnat, sizeof(struct pkt_nat_primitives)) &&
+		!memcmp(&mbuf, &request.pmpls, sizeof(struct pkt_mpls_primitives))) {
 	      if (q->type & WANT_COUNTER) Accumulate_Counters(&abuf, acc_elem); 
 	      else {
 		enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize); /* q->type == WANT_MATCH */
@@ -271,13 +291,14 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
 		    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 		  }
-		  // else enQueue_elem(sd, &rb, &dummy_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 		}
 
                 if (extras->off_pkt_nat_primitives && acc_elem->pnat) {
                   enQueue_elem(sd, &rb, acc_elem->pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
                 }
-                // else enQueue_elem(sd, &rb, &dummy_pnat, PnatSz, datasize - extras->off_pkt_nat_primitives);
+		if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
+		  enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
+		}
 	      }
 	      if (reset_counter) set_reset_flag(acc_elem);
 	    }
@@ -336,18 +357,21 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 }
 
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct pkt_nat_primitives *d3,
-		struct acc *src, u_int64_t w, u_int64_t w2, struct extra_primitives *extras)
+		struct pkt_mpls_primitives *d4, struct acc *src, u_int64_t w, u_int64_t w2,
+		struct extra_primitives *extras)
 {
   struct pkt_primitives *s1 = &src->primitives;
   struct pkt_bgp_primitives tmp_pbgp;
   struct pkt_bgp_primitives *s2 = &tmp_pbgp;
   struct pkt_nat_primitives *s3 = src->pnat;
+  struct pkt_mpls_primitives *s4 = src->pmpls;
 
   cache_to_pkt_bgp_primitives(s2, src->cbgp);
 
   memset(d1, 0, sizeof(struct pkt_primitives));
   memset(d2, 0, sizeof(struct pkt_bgp_primitives));
   memset(d3, 0, sizeof(struct pkt_nat_primitives));
+  memset(d4, 0, sizeof(struct pkt_mpls_primitives));
 
 #if defined (HAVE_L2)
   if (w & COUNT_SRC_MAC) memcpy(d1->eth_shost, s1->eth_shost, ETH_ADDR_LEN); 
@@ -405,6 +429,18 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w2 & COUNT_NAT_EVENT) d3->nat_event = s3->nat_event;
     if (w2 & COUNT_TIMESTAMP_START) memcpy(&d3->timestamp_start, &s3->timestamp_start, sizeof(struct timeval));
     if (w2 & COUNT_TIMESTAMP_END) memcpy(&d3->timestamp_end, &s3->timestamp_end, sizeof(struct timeval));
+  }
+
+  if (extras->off_pkt_mpls_primitives && s4) {
+    if (w2 & COUNT_MPLS_LABEL_TOP) {
+      u_int32_t label = decode_mpls_label(s4->mpls_label_top); 
+      encode_mpls_label(d4->mpls_label_top, label);
+    }
+    if (w2 & COUNT_MPLS_LABEL_BOTTOM) {
+      u_int32_t label = decode_mpls_label(s4->mpls_label_bottom); 
+      encode_mpls_label(d4->mpls_label_bottom, label);
+    }
+    if (w2 & COUNT_MPLS_STACK_DEPTH) d4->mpls_stack_depth = s4->mpls_stack_depth;
   }
 }
 
