@@ -56,8 +56,12 @@ void sql_set_insert_func()
   else insert_func = sql_cache_insert;
 }
 
-void sql_init_maps(struct networks_table *nt, struct networks_cache *nc, struct ports_table *pt)
+void sql_init_maps(struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs,
+		   struct networks_table *nt, struct networks_cache *nc, struct ports_table *pt)
 {
+  memset(prim_ptrs, 0, sizeof(struct primitives_ptrs));
+  set_primptrs_funcs(extras);
+
   memset(nt, 0, sizeof(struct networks_table));
   memset(nc, 0, sizeof(struct networks_cache));
   memset(pt, 0, sizeof(struct ports_table));
@@ -149,6 +153,7 @@ void sql_init_default_values(struct extra_primitives *extras)
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
+  pm_size = sizeof(struct pkt_mpls_primitives);
   dbc_size = sizeof(struct db_cache);
 
   memset(&sql_writers, 0, sizeof(sql_writers));
@@ -273,10 +278,12 @@ void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_primitives *srcdst = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
 
   idata->hash = cache_crc32((unsigned char *)srcdst, pp_size);
   if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) idata->hash ^= cache_crc32((unsigned char *)pnat, pn_size);
+  if (pmpls) idata->hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   idata->modulo = idata->hash % config.sql_cache_entries;
 }
 
@@ -399,6 +406,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             Cursor->lru_tag = PendingElem->lru_tag;
 	    if (PendingElem->cbgp) PendingElem->cbgp = NULL;
 	    if (PendingElem->pnat) PendingElem->pnat = NULL;
+	    if (PendingElem->pmpls) PendingElem->pmpls = NULL;
             RetireElem(PendingElem);
             queue[j] = Cursor;
           }
@@ -416,10 +424,11 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
   struct pkt_primitives *data = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   unsigned int modulo;
   struct db_cache *Cursor;
   struct insert_data idata;
-  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE;
+  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE;
 
   sql_cache_modulo(prim_ptrs, &idata);
   modulo = idata.modulo;
@@ -455,7 +464,12 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
       }
       else res_nat = FALSE;
 
-      if (!res_data && !res_bgp && !res_nat) {
+      if (pmpls && Cursor->pmpls) {
+        res_mpls = memcmp(Cursor->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+      }
+      else res_mpls = FALSE;
+
+      if (!res_data && !res_bgp && !res_nat && !res_mpls) {
         /* additional check: time */
         if ((Cursor->basetime < basetime) && config.sql_history)
           goto follow_chain;
@@ -473,6 +487,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   unsigned int modulo;
   unsigned long int basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;
@@ -570,7 +585,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   }
   else {
     if (Cursor->valid == SQL_CACHE_INUSE) {
-      int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE;
+      int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE;
 
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
@@ -590,7 +605,12 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
       }
       else res_nat = FALSE;
 
-      if (!res_data && !res_bgp && !res_nat) {
+      if (pmpls && Cursor->pmpls) {
+        res_mpls = memcmp(Cursor->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+      }
+      else res_mpls = FALSE;
+
+      if (!res_data && !res_bgp && !res_nat && !res_mpls) {
         /* additional check: time */
         if ((Cursor->basetime < basetime) && config.sql_history) {
           if (!staleElem && Cursor->chained) staleElem = Cursor;
@@ -634,6 +654,14 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     memcpy(Cursor->pnat, pnat, pn_size);
   }
   else Cursor->pnat = NULL;
+
+  if (pmpls) {
+    if (!Cursor->pmpls) {
+      Cursor->pmpls= (struct pkt_mpls_primitives *) malloc(pm_size);
+    }
+    memcpy(Cursor->pmpls, pmpls, pm_size);
+  }
+  else Cursor->pmpls = NULL;
 
   Cursor->packet_counter = data->pkt_num;
   Cursor->flows_counter = data->flo_num;
@@ -1863,6 +1891,48 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_NAT_EVENT;
     values[primitive].handler = where[primitive].handler = count_nat_event_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "mpls_label_top", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "mpls_label_top=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_MPLS_LABEL_TOP;
+    values[primitive].handler = where[primitive].handler = count_mpls_label_top_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "mpls_label_bottom", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "mpls_label_bottom=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_MPLS_LABEL_BOTTOM;
+    values[primitive].handler = where[primitive].handler = count_mpls_label_bottom_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "mpls_stack_depth", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "mpls_stack_depth=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_MPLS_STACK_DEPTH;
+    values[primitive].handler = where[primitive].handler = count_mpls_stack_depth_handler;
     primitive++;
   }
 

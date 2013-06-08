@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -796,7 +796,7 @@ void MY_exit_gracefully(int signum)
   exit(0);
 }
 
-/* Dummy version of bgp_rd2str() to resolve code dependencies */
+/* Dummy version of unsupported functions for the purpose of resolving code dependencies */
 int bgp_rd2str(u_char *str, rd_t *rd)
 {
   return TRUE;

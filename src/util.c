@@ -927,16 +927,6 @@ u_int32_t decode_mpls_label(char *label)
   return ret;
 }
 
-void encode_mpls_label(char *label, u_int32_t value)
-{
-  u_int32_t new_value;
-
-  value <<= 12 /* label shift */;
-  value &= 0xfffff000 /* label mask */;
-  new_value = htonl(value);
-  memcpy(label, &new_value, 3);
-}
-
 /*
  * timeval_cmp(): returns > 0 if a > b; < 0 if a < b; 0 if a == b.
  */
@@ -1515,8 +1505,9 @@ void version_daemon(char *header)
 
 #ifdef WITH_JANSSON 
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, pm_counter_t bytes_counter,
-		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", *tmpbuf;
@@ -1799,6 +1790,24 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
+  if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
+    kv = json_pack("{sI}", "mpls_label_top", pmpls->mpls_label_top);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
+    kv = json_pack("{sI}", "mpls_label_bottom", pmpls->mpls_label_bottom);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
+    kv = json_pack("{sI}", "mpls_stack_depth", pmpls->mpls_stack_depth);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE);
     kv = json_pack("{ss}", "timestamp_start", tstamp_str);
@@ -1854,8 +1863,9 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 }
 #else
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-                  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, pm_counter_t bytes_counter,
-                  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+                  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   return NULL;
 }
@@ -1891,4 +1901,41 @@ void print_primitives(int acct_type, char *header)
         printf("\n%s\n", _primitives_matrix[idx].name);
     }
   }
+}
+
+void set_primptrs_funcs(struct extra_primitives *extras)
+{
+  int idx = 0;
+
+  memset(primptrs_funcs, 0, sizeof(primptrs_funcs));
+
+  if (extras->off_pkt_bgp_primitives) {
+    primptrs_funcs[idx] = primptrs_set_bgp;
+    idx++;
+  }
+
+  if (extras->off_pkt_nat_primitives) { 
+    primptrs_funcs[idx] = primptrs_set_nat;
+    idx++;
+  }
+
+  if (extras->off_pkt_mpls_primitives) { 
+    primptrs_funcs[idx] = primptrs_set_mpls;
+    idx++;
+  }
+}
+
+void primptrs_set_bgp(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->pbgp = (struct pkt_bgp_primitives *) (base + extras->off_pkt_bgp_primitives);
+}
+
+void primptrs_set_nat(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->pnat = (struct pkt_nat_primitives *) (base + extras->off_pkt_nat_primitives);
+}
+
+void primptrs_set_mpls(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->pmpls = (struct pkt_mpls_primitives *) (base + extras->off_pkt_mpls_primitives);
 }

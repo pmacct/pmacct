@@ -1,0 +1,33 @@
+This document doesn't replace documentation relevant to the database software you are
+using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'mpls_vpn_rd' field.
+Such field is being introduced to support BGP/MPLS VPN Route Distinguisher (RD) field.
+The guidelines below (typically in MySQL format) are to add such primitives to the SQL
+schema: 
+
+* mpls_vpn_rd field:
+  - "mpls_vpn_rd CHAR(18) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., mpls_vpn_rd, ...)" to put it in the primary key 
+
+The primitive is not declared as part of any default table version; yet will not fail
+version checks which are enabled when 'sql_optimize_clauses' feature is disabled.
+
+The 'mpls_label_top', 'mpls_label_bottom' and 'mpls_stack_depth' fields.
+These fields are being introduced to support NetFlow v9/IPFIX on MPLS-enabled core
+interfaces. 'mpls_label_top' can be useful to resolve BGP next-hop; 'mpls_label_bottom'
+can be useful to map traffic to a specific L2/L3 MPLS VPN; 'mpls_stack_depth' says
+how many labels are in the MPLS stack. The guidelines below (typically in MySQL format)
+are to add such primitives to the SQL schema:
+
+* mpls_label_top field:
+  - "mpls_label_top INT(4) UNSIGNED NOT NULL, " to declare the field itself
+  - "PRIMARY KEY (..., mpls_label_top, ...)" to put it in the primary key
+
+* mpls_label_bottom field:
+  - "mpls_label_bottom INT(4) UNSIGNED NOT NULL, " to declare the field itself
+  - "PRIMARY KEY (..., mpls_label_bottom, ...)" to put it in the primary key
+
+* mpls_stack_depth field:
+  - "mpls_stack_depth INT(1) UNSIGNED NOT NULL, " to declare the field itself
+  - "PRIMARY KEY (..., mpls_stack_depth, ...)" to put it in the primary key

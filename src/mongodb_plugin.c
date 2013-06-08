@@ -52,8 +52,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
 
-  struct pkt_bgp_primitives *pbgp;
-  struct pkt_nat_primitives *pnat;
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
@@ -126,6 +124,11 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
+  pm_size = sizeof(struct pkt_mpls_primitives);
+
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+  set_primptrs_funcs(&extras);
+
   dbc_size = sizeof(struct chained_cache);
   if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES; 
   memset(&sa, 0, sizeof(struct scratch_area));
@@ -282,16 +285,11 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        if (extras.off_pkt_bgp_primitives)
-          pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
-        else
-          pbgp = NULL;
-        if (extras.off_pkt_nat_primitives)
-          pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
-        else pnat = NULL;
+        for (num = 0; primptrs_funcs[num]; num++)
+          (*primptrs_funcs[num])((u_char *)data, &extras, &prim_ptrs);
 
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, prim_ptrs.pbgp, &nfd);
 
 	if (config.ports_file) {
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
@@ -303,8 +301,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           evaluate_pkt_len_distrib(data);
 
         prim_ptrs.data = data;
-        prim_ptrs.pbgp = pbgp;
-        prim_ptrs.pnat = pnat;
         (*insert_func)(&prim_ptrs);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
@@ -337,8 +333,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_primitives *data = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
+  struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
+  struct pkt_mpls_primitives empty_pmpls;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
@@ -373,6 +371,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
+  memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
 
   if (!config.sql_table) config.sql_table = default_table;
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
@@ -407,6 +406,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
     if (queue[j]->pnat) pnat = queue[j]->pnat;
     else pnat = &empty_pnat;
+
+    if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
+    else pmpls = &empty_pmpls;
 
     if (P_test_zero_elem(queue[j])) continue;
 
@@ -566,6 +568,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     if (config.what_to_count_2 & COUNT_NAT_EVENT) {
       sprintf(misc_str, "%u", pnat->nat_event);
       bson_append_string(bson_elem, "nat_event", misc_str);
+    }
+
+    if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
+      sprintf(misc_str, "%u", pmpls->mpls_label_top);
+      bson_append_string(bson_elem, "mpls_label_top", misc_str);
+    }
+    if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
+      sprintf(misc_str, "%u", pmpls->mpls_label_bottom);
+      bson_append_string(bson_elem, "mpls_label_bottom", misc_str);
+    }
+    if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
+      sprintf(misc_str, "%u", pmpls->mpls_stack_depth);
+      bson_append_string(bson_elem, "mpls_stack_depth", misc_str);
     }
 
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {

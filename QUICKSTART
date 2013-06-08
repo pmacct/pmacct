@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
 TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
-II.	Configuring pmacct for compilation
+II.	Configuring pmacct for compilation and installing
 III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) and noSQL (MongoDB) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
@@ -38,12 +38,13 @@ plugins. Here is a list of plugins included within the official pmacct distribut
 	   of the MongoDB API C driver is also required.
 
 
-II. Configuring pmacct for compilation
+II. Configuring pmacct for compilation and installing
 The simplest way to configure the package for compilation is to let the configure
-script to probe default headers and libraries for you. By default SQL plugins are
-not enabled; much like multi-threading (pre-requisite for compiling the BGP daemon
-code), IPv6 support and 64 bits counters. A few examples will follow; as usual to
-get the list of available switches, you can use the following command-line:
+script to probe default headers and libraries for you. Switches you are likely to
+want enabled are already set so, ie. 64 bits counters and multi-threading (pre-
+requisite for the BGP and IGP daemon codes). SQL plugins and IPv6 support are by
+default disabled instead. A few examples will follow; as usual to get the list of
+available switches, you can use the following command-line:
 
 shell> ./configure --help
 
@@ -55,6 +56,18 @@ Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
 (3) shell> ./configure --enable-sqlite3
 (4) shell> ./configure --enable-mongodb
 (5) shell> ./configure --enable-mysql --enable-pgsql
+
+Then to compile and install simply:
+
+shell> make; make install
+
+Once daemons are installed you can check:
+* how to instrument each daemon via its usage help page: 
+  shell> pmacctd -h
+* review version and build details:
+  shell> sfacctd -V
+* supported traffic aggregation primitives by the daemon, and their description:
+  shell> nfacctd -a
 
 
 III. Brief SQL and noSQL setup examples

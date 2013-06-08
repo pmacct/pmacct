@@ -2869,8 +2869,8 @@ void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len)
-      memcpy(pmpls->mpls_label_top, pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off, MIN(tpl->tpl[NF9_MPLS_LABEL_1].len, 3));
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3)
+      pmpls->mpls_label_top = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
     break;
   default:
     break;
@@ -2890,7 +2890,7 @@ void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
   case 9:
     for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_9; label_idx++) { 
       if (tpl->tpl[label_idx].len == 3 && check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
-        memcpy(pmpls->mpls_label_bottom, pptrs->f_data+tpl->tpl[label_idx].off, MIN(tpl->tpl[label_idx].len, 3));
+        pmpls->mpls_label_bottom = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off);
 	break;
       } 
     }

@@ -110,6 +110,7 @@ struct db_cache {
   time_t basetime;
   struct cache_bgp_primitives *cbgp;
   struct pkt_nat_primitives *pnat;
+  struct pkt_mpls_primitives *pmpls;
   u_int8_t valid;
   u_int8_t prep_valid;
   unsigned int signature;
@@ -245,6 +246,9 @@ EXT void count_post_nat_dst_ip_handler(const struct db_cache *, const struct ins
 EXT void count_post_nat_src_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_post_nat_dst_port_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_nat_event_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_mpls_label_top_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_mpls_label_bottom_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
+EXT void count_mpls_stack_depth_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_start_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_residual_handler(const struct db_cache *, const struct insert_data *, int, char **, char **);
@@ -279,7 +283,7 @@ EXT void count_noop_setclause_event_handler(const struct db_cache *, const struc
 /* Toward a common SQL layer */
 EXT void sql_set_signals();
 EXT void sql_set_insert_func();
-EXT void sql_init_maps(struct networks_table *, struct networks_cache *, struct ports_table *);
+EXT void sql_init_maps(struct extra_primitives *, struct primitives_ptrs *, struct networks_table *, struct networks_cache *, struct ports_table *);
 EXT void sql_init_global_buffers();
 EXT void sql_init_default_values(struct extra_primitives *);
 EXT void sql_init_historical_acct(time_t, struct insert_data *);
@@ -343,7 +347,7 @@ EXT unsigned char *pipebuf;
 EXT struct db_cache *cache;
 EXT struct db_cache **queries_queue, **pending_queries_queue;
 EXT struct db_cache *collision_queue;
-EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, dbc_size, cq_size, pqq_ptr;
+EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, dbc_size, cq_size, pqq_ptr;
 EXT struct db_cache lru_head, *lru_tail;
 EXT struct frags where[N_PRIMITIVES+2];
 EXT struct frags values[N_PRIMITIVES+2];

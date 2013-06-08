@@ -45,6 +45,7 @@
 #if defined ENABLE_PLABEL
 #define AF_PLABEL		255
 #endif
+#define PRIMPTRS_FUNCS_N	16
 
 /* 10Mb/s ethernet header */
 struct eth_header
@@ -461,6 +462,8 @@ struct primitives_ptrs {
   struct pkt_mpls_primitives *pmpls;
 };
 
+typedef void (*primptrs_func) (u_char *, struct extra_primitives *, struct primitives_ptrs *);
+
 struct pkt_bgp_primitives {
   as_t peer_src_as;
   as_t peer_dst_as;
@@ -490,8 +493,8 @@ struct pkt_nat_primitives {
 };
 
 struct pkt_mpls_primitives {
-  char mpls_label_top[3];
-  char mpls_label_bottom[3];
+  u_int32_t mpls_label_top;
+  u_int32_t mpls_label_bottom;
   u_int8_t mpls_stack_depth;
 };
 

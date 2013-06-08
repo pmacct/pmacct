@@ -360,6 +360,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
 	while (((struct ch_buf_hdr *)pipebuf)->num) {
+
+	  // XXX: to be optimized: remove empty_* vars
           if (extras.off_pkt_bgp_primitives)
 	    pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
 	  else pbgp = (struct pkt_bgp_primitives *) &empty_pbgp;

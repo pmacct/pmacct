@@ -53,8 +53,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 1, rg_err_count = 0;
 
   struct extra_primitives extras;
-  struct pkt_bgp_primitives *pbgp;
-  struct pkt_nat_primitives *pnat;
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
@@ -127,7 +125,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
+  pm_size = sizeof(struct pkt_mpls_primitives);
   dbc_size = sizeof(struct chained_cache);
+
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+  set_primptrs_funcs(&extras);
+
   if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES; 
   memset(&sa, 0, sizeof(struct scratch_area));
   sa.num = config.print_cache_entries*AVERAGE_CHAIN_LEN;
@@ -268,16 +271,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        if (extras.off_pkt_bgp_primitives)
-	  pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
-        else
-	  pbgp = NULL;
-        if (extras.off_pkt_nat_primitives)
-          pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
-        else pnat = NULL;
+	for (num = 0; primptrs_funcs[num]; num++)
+	  (*primptrs_funcs[num])((u_char *)data, &extras, &prim_ptrs);
 
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, prim_ptrs.pbgp, &nfd);
 
 	if (config.ports_file) {
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
@@ -289,8 +287,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           evaluate_pkt_len_distrib(data);
 
         prim_ptrs.data = data;
-        prim_ptrs.pbgp = pbgp;
-        prim_ptrs.pnat = pnat;
         (*insert_func)(&prim_ptrs);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
@@ -311,11 +307,13 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   struct pkt_primitives *srcdst = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   register unsigned int modulo;
 
   modulo = cache_crc32((unsigned char *)srcdst, pp_size);
   if (pbgp) modulo ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) modulo ^= cache_crc32((unsigned char *)pnat, pn_size);
+  if (pmpls) modulo ^= cache_crc32((unsigned char *)pmpls, pm_size);
   
   return modulo %= config.print_cache_entries;
 }
@@ -326,9 +324,10 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   struct pkt_primitives *data = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
-  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_time = TRUE;
+  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_time = TRUE;
 
   start:
   res_data = memcmp(&cache_ptr->primitives, data, sizeof(struct pkt_primitives));
@@ -348,7 +347,12 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   }
   else res_nat = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_time) {
+  if (pmpls) {
+    if (cache_ptr->pmpls) res_mpls = memcmp(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+  }
+  else res_mpls = FALSE;
+
+  if (res_data || res_bgp || res_nat || res_mpls || res_time) {
     if (cache_ptr->valid == TRUE) {
       if (cache_ptr->next) {
         cache_ptr = cache_ptr->next;
@@ -366,10 +370,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   struct pkt_primitives *srcdst = &data->primitives;
-  int res_data, res_bgp, res_nat, res_time;
+  int res_data, res_bgp, res_nat, res_mpls, res_time;
 
   if (config.sql_history && (*basetime_eval)) {
     memcpy(&ibasetime, &basetime, sizeof(ibasetime));
@@ -405,7 +410,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
 
   start:
-  res_data = res_bgp = res_nat = res_time = TRUE;
+  res_data = res_bgp = res_nat = res_mpls = res_time = TRUE;
 
   res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives)); 
 
@@ -424,7 +429,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
   else res_nat = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_time) {
+  if (pmpls) {
+    if (cache_ptr->pmpls) res_mpls = memcmp(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+  }
+  else res_mpls = FALSE;
+
+  if (res_data || res_bgp || res_nat || res_mpls || res_time) {
     /* aliasing of entries */
     if (cache_ptr->valid == TRUE) { 
       if (cache_ptr->next) {
@@ -462,6 +472,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       memcpy(cache_ptr->pnat, pnat, sizeof(struct pkt_nat_primitives));
     }
     else cache_ptr->pnat = NULL;
+
+    if (pmpls) {
+      if (!cache_ptr->pmpls) cache_ptr->pmpls = (struct pkt_mpls_primitives *) malloc(PmplsSz);
+      memcpy(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+    }
+    else cache_ptr->pmpls = NULL;
 
     cache_ptr->packet_counter = data->pkt_num;
     cache_ptr->flow_counter = data->flo_num;
@@ -540,8 +556,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_primitives *data = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
+  struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
+  struct pkt_mpls_primitives empty_pmpls;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator;
   char *as_path, *bgp_comm, empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
@@ -551,6 +569,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
+  memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
 
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;
 
@@ -578,6 +597,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
     if (queue[j]->pnat) pnat = queue[j]->pnat;
     else pnat = &empty_pnat;
+
+    if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
+    else pmpls = &empty_pmpls;
 
     if (P_test_zero_elem(queue[j])) continue;
 
@@ -762,6 +784,16 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "%-5u              ", pnat->post_nat_dst_port);
       if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "%-3u       ", pnat->nat_event);
 
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
+	fprintf(f, "%-7u         ", pmpls->mpls_label_top);
+      }
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
+	fprintf(f, "%-7u            ", pmpls->mpls_label_bottom);
+      }
+      if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
+	fprintf(f, "%-2u                ", pmpls->mpls_stack_depth);
+      }
+
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
           char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
           time_t time1;
@@ -905,6 +937,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "%s%u", write_sep(sep, &count), pnat->post_nat_dst_port);
       if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "%s%u", write_sep(sep, &count), pnat->nat_event);
 
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_top);
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_bottom);
+      if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);
+
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
           char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
           time_t time1;
@@ -946,7 +982,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       char *json_str;
 
       json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, queue[j]->bytes_counter, queue[j]->packet_counter,
+                         &queue[j]->primitives, pbgp, pnat, pmpls, queue[j]->bytes_counter, queue[j]->packet_counter,
                          queue[j]->flow_counter, queue[j]->tcp_flags, NULL);
 
       if (json_str) {
@@ -1018,6 +1054,9 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "POST_NAT_SRC_PORT  ");
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "POST_NAT_DST_PORT  ");
   if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "NAT_EVENT ");
+  if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "MPLS_LABEL_TOP  ");
+  if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "MPLS_LABEL_BOTTOM  ");
+  if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "MPLS_STACK_DEPTH  ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
 
@@ -1083,6 +1122,9 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "%sPOST_NAT_DST_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "%sNAT_EVENT", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%sMPLS_LABEL_TOP", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
 

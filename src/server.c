@@ -432,14 +432,8 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   }
 
   if (extras->off_pkt_mpls_primitives && s4) {
-    if (w2 & COUNT_MPLS_LABEL_TOP) {
-      u_int32_t label = decode_mpls_label(s4->mpls_label_top); 
-      encode_mpls_label(d4->mpls_label_top, label);
-    }
-    if (w2 & COUNT_MPLS_LABEL_BOTTOM) {
-      u_int32_t label = decode_mpls_label(s4->mpls_label_bottom); 
-      encode_mpls_label(d4->mpls_label_bottom, label);
-    }
+    if (w2 & COUNT_MPLS_LABEL_TOP) d4->mpls_label_top = s4->mpls_label_top;
+    if (w2 & COUNT_MPLS_LABEL_BOTTOM) d4->mpls_label_bottom = s4->mpls_label_bottom;
     if (w2 & COUNT_MPLS_STACK_DEPTH) d4->mpls_stack_depth = s4->mpls_stack_depth;
   }
 }

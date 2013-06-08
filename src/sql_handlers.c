@@ -246,6 +246,30 @@ void count_nat_event_handler(const struct db_cache *cache_elem, const struct ins
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_mpls_label_top_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pmpls->mpls_label_top);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pmpls->mpls_label_top);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_mpls_label_bottom_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pmpls->mpls_label_bottom);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pmpls->mpls_label_bottom);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_mpls_stack_depth_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pmpls->mpls_stack_depth);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pmpls->mpls_stack_depth);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void PG_copy_count_timestamp_start_handler(const struct db_cache *cache_elem, const struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   static char time_str[LONGSRVBUFLEN];

@@ -23,8 +23,6 @@
 #define ADD 0
 #define SUB 1
 
-#define DEBUG_TIMING 0
-
 /* prototypes */
 #if (!defined __UTIL_C)
 #define EXT extern
@@ -64,7 +62,6 @@ EXT int read_SQLquery_from_file(char *, char *, int);
 EXT void stick_bosbit(u_char *);
 EXT int check_bosbit(u_char *);
 EXT u_int32_t decode_mpls_label(char *);
-EXT void encode_mpls_label(char *, u_int32_t);
 EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
 EXT void exit_plugin(int);
@@ -100,22 +97,17 @@ EXT void version_daemon(char *);
 
 EXT char *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 		      struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
-		      pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t,
-		      struct timeval *);
+		      struct pkt_mpls_primitives *, pm_counter_t, pm_counter_t,
+		      pm_counter_t, u_int32_t, struct timeval *);
 EXT void compose_timestamp(char *, int, struct timeval *, int);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
 EXT void print_primitives(int, char *);
+
+EXT primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
+EXT void set_primptrs_funcs(struct extra_primitives *);
+EXT void primptrs_set_bgp(u_char *, struct extra_primitives *, struct primitives_ptrs *);
+EXT void primptrs_set_nat(u_char *, struct extra_primitives *, struct primitives_ptrs *);
+EXT void primptrs_set_mpls(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 #undef EXT
-
-/* Timing Stuff */
-#if DEBUG_TIMING
-struct mytimer {
-  struct timeval t0;
-	struct timeval t1;
-};
-
-void start_timer(struct mytimer *);
-void stop_timer(struct mytimer *, const char *, ...);
-#endif

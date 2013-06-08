@@ -53,8 +53,6 @@ char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_mpls_primitives *, pm_counter_t, pm_counter_t,
 			pm_counter_t, u_int32_t, struct timeval *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int);
-u_int32_t pmc_decode_mpls_label(char *);
-void pmc_encode_mpls_label(char *, u_int32_t);
 
 /* vars */
 struct stripped_class *class_table = NULL;
@@ -1529,12 +1527,10 @@ int main(int argc,char **argv)
           request.pnat.nat_event = atoi(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "mpls_label_top")) {
-	  u_int32_t label = atoi(match_string_token);
-	  pmc_encode_mpls_label(request.pmpls.mpls_label_top, label);
+	  request.pmpls.mpls_label_top = atoi(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "mpls_label_bottom")) {
-	  u_int32_t label = atoi(match_string_token);
-	  pmc_encode_mpls_label(request.pmpls.mpls_label_bottom, label);
+	  request.pmpls.mpls_label_bottom = atoi(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "mpls_stack_depth")) {
           request.pmpls.mpls_stack_depth = atoi(match_string_token);
@@ -2118,17 +2114,13 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_MPLS_LABEL_TOP)) {
-	  u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_top);
-
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u         ", label);
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), label);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u         ", pmpls->mpls_label_top);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_label_top);
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM)) {
-          u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_bottom);
-
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u            ", label);
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), label);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u            ", pmpls->mpls_label_bottom);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_label_bottom);
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_MPLS_STACK_DEPTH)) {
@@ -2920,17 +2912,13 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
-    u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_top);
-
-    kv = json_pack("{sI}", "mpls_label_top", label);
+    kv = json_pack("{sI}", "mpls_label_top", pmpls->mpls_label_top);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
-    u_int32_t label = pmc_decode_mpls_label(pmpls->mpls_label_bottom);
-
-    kv = json_pack("{sI}", "mpls_label_bottom", label);
+    kv = json_pack("{sI}", "mpls_label_bottom", pmpls->mpls_label_bottom);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -2998,27 +2986,4 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec)
 
   if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
   else snprintf(buf, buflen, "%s", tmpbuf);
-}
-
-u_int32_t pmc_decode_mpls_label(char *label)
-{
-  u_int32_t ret = 0;
-  u_char label_ttl[4];
-
-  memset(label_ttl, 0, 4);
-  memcpy(label_ttl, label, 3);
-  ret = ntohl(*(uint32_t *)(label_ttl));
-  ret = ((ret & 0xfffff000 /* label mask */) >> 12 /* label shift */); 
-
-  return ret;
-}
-
-void pmc_encode_mpls_label(char *label, u_int32_t value)
-{
-  u_int32_t new_value;
-
-  value <<= 12 /* label shift */;
-  value &= 0xfffff000 /* label mask */;
-  new_value = htonl(value);
-  memcpy(label, &new_value, 3);
 }

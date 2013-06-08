@@ -43,8 +43,6 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
-  struct pkt_bgp_primitives *pbgp;
-  struct pkt_nat_primitives *pnat;
   struct networks_file_data nfd;
   char *dataptr;
 
@@ -78,7 +76,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_deadline = idata.now;
   idata.cfg = &config;
 
-  sql_init_maps(&nt, &nc, &pt);
+  sql_init_maps(&extras, &prim_ptrs, &nt, &nc, &pt);
   sql_init_global_buffers();
   sql_init_pipe(&pfd, pipe_fd);
   sql_init_historical_acct(idata.now, &idata);
@@ -287,16 +285,11 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       while (((struct ch_buf_hdr *)pipebuf)->num) {
-        if (extras.off_pkt_bgp_primitives)
-          pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
-        else
-          pbgp = NULL;
-        if (extras.off_pkt_nat_primitives)
-          pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
-        else pnat = NULL;
+        for (num = 0; primptrs_funcs[num]; num++)
+          (*primptrs_funcs[num])((u_char *)data, &extras, &prim_ptrs);
 
 	for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, prim_ptrs.pbgp, &nfd);
 
 	if (config.ports_file) {
 	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
@@ -308,8 +301,6 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           evaluate_pkt_len_distrib(data);
 
         prim_ptrs.data = data;
-        prim_ptrs.pbgp = pbgp;
-        prim_ptrs.pnat = pnat;
 	(*insert_func)(&prim_ptrs, &idata);
 	
 	((struct ch_buf_hdr *)pipebuf)->num--;

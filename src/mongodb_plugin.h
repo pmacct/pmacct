@@ -50,7 +50,7 @@ EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
-EXT int qq_ptr, pp_size, pb_size, pn_size, dbc_size, quit; 
+EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit; 
 EXT time_t refresh_deadline;
 EXT mongo db_conn;
 

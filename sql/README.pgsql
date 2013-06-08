@@ -118,6 +118,9 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * post_nat_src_port => post_nat_port_src (INT NOT NULL DEFAULT 0)
   * post_nat_dst_port => post_nat_port_dst (INT NOT NULL DEFAULT 0)
   * nat_event => nat_event (INT NOT NULL DEFAULT 0)
+  * mpls_label_top => mpls_label_top (INT NOT NULL DEFAULT 0)
+  * mpls_label_bottom => mpls_label_bottom (INT NOT NULL DEFAULT 0)
+  * mpls_stack_depth => mpls_stack_depth (INT NOT NULL DEFAULT 0)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_start_residual INT NOT NULL DEFAULT 0, see README.timestamp)

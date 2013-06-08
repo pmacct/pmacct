@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -893,7 +893,7 @@ static int PG_affected_rows(PGresult *result)
   return atoi(PQcmdTuples(result));
 }
 
-/* Dummy version of bgp_rd2str() to resolve code dependencies */
+/* Dummy version of unsupported functions for the purpose of resolving code dependencies */
 int bgp_rd2str(u_char *str, rd_t *rd)
 {
   return TRUE;
