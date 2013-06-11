@@ -895,6 +895,105 @@ AC_ARG_ENABLE(sqlite3,
 AC_MSG_RESULT(no))
 dnl finish: sqlite3 handling
 
+dnl start: RabbitMQ/AMQP handling
+AC_MSG_CHECKING(whether to enable RabbitMQ/AMQP support)
+AC_ARG_ENABLE(rabbitmq,
+  [  --enable-rabbitmq                Enable RabbitMQ/AMQP support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+dnl USING_SQL="yes"
+
+    AC_ARG_WITH(rabbitmq-libs,
+      [  --with-rabbitmq-libs=DIR         Search for RabbitMQ libs in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	LIBS="${LIBS} -L$withval"
+	RABBITMQLIB=$withval
+	RABBITMQLIBFOUND=1
+      ]) 
+
+    if test x"$RABBITMQLIB" != x""; then
+      AC_MSG_CHECKING(your own RabbitMQ library)
+      if test -r $RABBITMQLIB/librabbitmq.a -o -r $RABBITMQLIB/librabbitmq.so; then
+        AC_MSG_RESULT(ok)
+      else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing RabbitMQ library in $RABBITMQLIB)
+      fi
+    fi
+
+    if test x"$RABBITMQLIBFOUND" = x""; then
+      AC_MSG_CHECKING([default locations for librabbitmq])
+      if test -r /usr/lib/librabbitmq.a -o -r /usr/lib/librabbitmq.so; then
+	AC_MSG_RESULT([found in /usr/lib])
+	RABBITMQLIBFOUND=1
+      elif test -r /usr/local/lib/librabbitmq.a -o -r /usr/local/lib/librabbitmq.so; then
+	LIBS="${LIBS} -L/usr/local/lib"
+	AC_MSG_RESULT([found in /usr/local/lib])
+	RABBITMQLIBFOUND=1
+      else 
+        AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$RABBITMQLIBFOUND" = x""; then
+      AC_CHECK_LIB([rabbitmq], [amqp_new_connection], [], [AC_MSG_ERROR([
+        ERROR: missing RabbitMQ library. Refer to: https://github.com/alanxz/rabbitmq-c/
+      ])])
+    else 
+      LIBS="${LIBS} -lrabbitmq"
+    fi 
+
+    AC_ARG_WITH(rabbitmq-includes,
+      [  --with-rabbitmq-includes=DIR     Search for RabbitMQ includes in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	INCLUDES="${INCLUDES} -I$withval"
+	RABBITMQINCLUDES=$withval
+	RABBITMQINCLUDESFOUND=1
+      ])
+
+    if test x"$RABBITMQINCLUDES" != x""; then
+      AC_MSG_CHECKING(your own RabbitMQ headers)
+      if test -r $RABBITMQINCLUDES/amqp.h; then
+        AC_MSG_RESULT(ok)
+      else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing RabbitMQ headers in $RABBITMQINCLUDES)
+      fi
+    fi
+
+    if test x"$RABBITMQINCLUDESFOUND" = x""; then 
+      AC_MSG_CHECKING([default locations for amqp.h])
+      if test -r /usr/include/amqp.h; then
+	AC_MSG_RESULT([found in /usr/include])
+	RABBITMQINCLUDESFOUND=1;
+      elif test -r /usr/local/include/rabbitmq.h; then
+	INCLUDES="${INCLUDES} -I/usr/local/include"
+	AC_MSG_RESULT([found in /usr/local/include])
+	RABBITMQINCLUDESFOUND=1;
+      fi
+      if test x"$RABBITMQINCLUDESFOUND" = x""; then
+	AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$RABBITMQINCLUDESFOUND" = x""; then
+      AC_CHECK_HEADER([amqp.h],,
+      [AC_MSG_ERROR(ERROR: missing RabbitMQ headers)])      
+    fi
+
+    AC_DEFINE(WITH_RABBITMQ, 1)
+    PLUGINS="${PLUGINS} amqp_plugin.c"
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
+dnl finish: RabbitMQ/AMQP handling
+
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,

@@ -146,6 +146,10 @@ EXT void sqlite3_plugin(int, struct configuration *, void *);
 EXT void mongodb_plugin(int, struct configuration *, void *);
 #endif
 
+#ifdef WITH_RABBITMQ
+EXT void amqp_plugin(int, struct configuration *, void *);
+#endif
+
 EXT void stats_plugin(int, struct configuration *, void *);
 
 EXT char *extract_token(char **, int);

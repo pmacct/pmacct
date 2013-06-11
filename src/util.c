@@ -1149,26 +1149,6 @@ void free_packet_ptrs(struct packet_ptrs *pptrs)
   free(pptrs);
 }
 
-#if DEBUG_TIMING
-void start_timer(struct mytimer *t)
-{
-  gettimeofday(&t->t0, NULL);
-}
-
-void stop_timer(struct mytimer *t, const char *format, ...)
-{
-  char msg[1024];
-  va_list ap;
-
-  gettimeofday(&t->t1, NULL);
-  va_start(ap, format);
-  vsnprintf(msg, 1024, format, ap);
-  va_end(ap);
-
-  fprintf(stderr, "TIMER:%s:%d\n", msg, (t->t1.tv_sec - t->t0.tv_sec) * 1000000 + (t->t1.tv_usec - t->t0.tv_usec));
-}
-#endif
-
 void evaluate_bgp_aspath_radius(char *path, int len, int radius)
 {
   int count, idx;
@@ -1867,6 +1847,8 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
 		  u_int32_t tcp_flags, struct timeval *basetime)
 {
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+
   return NULL;
 }
 #endif
