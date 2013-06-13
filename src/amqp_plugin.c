@@ -336,13 +336,22 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_mpls_primitives empty_pmpls;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
-  char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "acct";
+  char *as_path, *bgp_comm, empty_aspath[] = "^$", default_amqp_routing_key[] = "acct";
+  char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
   int i, j, amqp_status, batch_idx;
 
   amqp_connection_state_t amqp_conn;
   amqp_socket_t *amqp_socket = NULL;
   amqp_rpc_reply_t amqp_ret;
-  amqp_bytes_t amqp_msg;
+
+  /* setting some defaults */
+  if (!config.sql_db) config.sql_db = default_amqp_exchange;
+  if (!config.sql_table) config.sql_table = default_amqp_routing_key;
+  if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
+
+  memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
+  memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
+  memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
 
   amqp_conn = amqp_new_connection();
 
@@ -377,11 +386,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     return;
   }
 
-  memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
-  memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
-  memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
-
-  if (!config.sql_table) config.sql_table = default_table;
+  amqp_exchange_declare(amqp_conn, 1, amqp_cstring_bytes(config.sql_db), amqp_cstring_bytes(config.amqp_exchange_type), 0, 0, amqp_empty_table);
+  amqp_ret = amqp_get_rpc_reply(amqp_conn);
+  if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: exchange declare\n", config.name, config.type);
+    return;
+  }
 
   for (j = 0; j < index; j++) {
     char *json_str;
@@ -400,16 +410,13 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
     json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
                          &queue[j]->primitives, pbgp, pnat, pmpls, queue[j]->bytes_counter, queue[j]->packet_counter,
-                         queue[j]->flow_counter, queue[j]->tcp_flags, NULL);
+                         queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime);
 
     if (json_str) {
       if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing: %s\n", config.name, config.type, json_str);
 
-      amqp_msg.len = strlen(json_str);
-      amqp_msg.bytes = json_str; 
-
-      amqp_basic_publish(amqp_conn, 1, amqp_cstring_bytes("amq.direct"),
-			 amqp_cstring_bytes(config.sql_table), 0, 0, NULL, amqp_msg);
+      amqp_basic_publish(amqp_conn, 1, amqp_cstring_bytes(config.sql_db), amqp_cstring_bytes(config.sql_table),
+			 0, 0, NULL, amqp_cstring_bytes(json_str));
 
       amqp_ret = amqp_get_rpc_reply(amqp_conn);
       if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {

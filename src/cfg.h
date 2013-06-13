@@ -93,6 +93,7 @@ struct configuration {
   char *sql_delimiter;
   int timestamps_secs;
   int mongo_insert_batch;
+  char *amqp_exchange_type;
   int print_cache_entries;
   int print_markers;
   int print_output;

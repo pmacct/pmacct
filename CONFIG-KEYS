@@ -409,16 +409,16 @@ DESC:		this switch makes sense only when using PostgreSQL plugin and supplied de
 		fields because making use of IP prefix labels, transparently to pmacct - making this
 		configuration switch deprecated. (default: 'typed').
 
-KEY:	 	[ sql_host | mongo_host ]
+KEY:	 	[ sql_host | mongo_host | amqp_host ]
 DESC:		defines the backend server IP/hostname (default: localhost).
 
-KEY:		sql_user
-DESC:		defines the username to use when connecting to the SQL server (default: pmacct).
+KEY:		[ sql_user | amqp_user ]
+DESC:		defines the username to use when connecting to the server (default: pmacct).
 
-KEY:		sql_passwd
-DESC:		defines the password to use when connecting to the SQL server (default: arealsmartpwd).
+KEY:		[ sql_passwd | amqp_passwd ]
+DESC:		defines the password to use when connecting to the server (default: arealsmartpwd).
 
-KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time ] (-r)
+KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time ] (-r)
 DESC:		time interval, in seconds, between consecutive executions of the plugin cache scanner. The
 		scanner purges data into the plugin backend. Note: internally all these config directives
 		write to the same variable; when using multiple plugins it is recommended to bind refresh
@@ -448,7 +448,7 @@ DESC:		enables the optimization of the statements sent to the RDBMS essentially 
 		always remember to specify which default SQL table version you intend to stick to by using
 		the 'sql_table_version' directive. (default: false)
 
-KEY:		[ sql_history | mongo_history ]
+KEY:		[ sql_history | mongo_history | amqp_history ]
 VALUES:		#[m|h|d|w|M]
 DESC:		enables historical accounting by dividing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
@@ -460,7 +460,7 @@ DESC:		enables historical accounting by dividing accounted data into configurabl
 		is close to time slots in a RRD file. Examples of valid values are: '5m' - five minutes,
 		'1h' - one hour, '4h' - four hours, '1d' - one day, '1w' - one week, '1M' - one month).
 
-KEY:		[ sql_history_roundoff | print_time_roundoff | mongo_time_roundoff ]
+KEY:		[ sql_history_roundoff | print_time_roundoff | mongo_time_roundoff | amqp_time_roundoff ]
 VALUES		[m,h,d,w,M]
 DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
 		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).
@@ -684,6 +684,16 @@ DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to 
 KEY:		mongo_insert_batch
 DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per batch
 		(default: 10000)
+
+KEY:		amqp_exchange
+DESC:		Name of the AMQP exchange to publish data (default: pmacct).
+
+KEY:		amqp_exchange_type
+DESC:		Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
+		supported. (default: direct).
+
+KEY:		amqp_routing_key
+DESC:		Name of the AMQP routing key to attach to published data (default: acct).
 		
 KEY:		print_markers
 VALUES:		[ true | false ]
