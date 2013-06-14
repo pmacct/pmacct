@@ -10,7 +10,7 @@ IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
 VI.	Running the ULOG-based daemon (uacctd)
 VII.	Running the pmacct client (pmacct)
-VIII.	Running the logfile players (pmmyplay/pmpgplay) 
+VIII.	Running the RabbitMQ/AMQP plugin
 IX.	Quickstart guide to packet/stream classifiers
 X.	Quickstart guide to setup a NetFlow agent/probe 
 XI.	Quickstart guide to setup a sFlow agent/probe 
@@ -23,19 +23,23 @@ XVII.	Using pmacct as traffic/event logger
 
 
 I. Plugins included with pmacct distribution
-Given its open and pluggable architecture, pmacct is easily extensible by writing new
-plugins. Here is a list of plugins included within the official pmacct distribution.
+Given its open and pluggable architecture, pmacct is easily extensible with new
+plugins. Here is a list of plugins included in the official pmacct distribution:
 
-'memory':  data are stored in a memory table and can be fetched via the pmacct client
-	   tool, 'pmacct'. It also allows easily data injection into 3rd party tools
-	   like GNUplot, MRTG, RRDtool or a Net-SNMP server
-'mysql':   a working MySQL installation can be used for data storage
-'pgsql':   a working PostgreSQL installation can be used for data storage
-'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite API)
-           installation can be used for data storage
-'print':   data are printed at regular intervals to flat-files or standard output
-'mongodb': a working MongoDB installation can be used for data storage. Installation
-	   of the MongoDB API C driver is also required.
+'memory':  data is stored in a memory table and can be fetched via the pmacct
+	   command-line client tool, 'pmacct'. This plugin also allows easily to
+	   inject data into 3rd party tools like GNUplot, RRDtool or a Net-SNMP
+	   server.
+'mysql':   a working MySQL installation can be used for data storage.
+'pgsql':   a working PostgreSQL installation can be used for data storage.
+'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite
+	   API) installation can be used for data storage.
+'print':   data is printed at regular intervals to flat-files or standard output
+	   in tab-spaced, CSV and JSON formats.
+'mongodb': a working MongoDB installation can be used for data storage. It is
+	   required to install the MongoDB API C driver.
+'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
+	   for delivery to consumer applications or tools.
 
 
 II. Configuring pmacct for compilation and installing
@@ -481,29 +485,53 @@ shell> pmacct -c src_host,dst_host -N "10.0.0.10,10.0.0.1;10.0.0.9,10.0.0.1;10.0
 shell> pmacct -c src_host,dst_host -N "file:/home/paolo/queries.list"
 
 
-VIII. Running the logfile players (pmmyplay and pmpgplay)
-For brevity, examples in this section will revolve around "pmmyplay" tool but the same
-are applicable to "pmpgplay". Currently, two different methods are supported as failover
-action when the RDBMS fails: logfiles or backup DB. While planning for a recovery method,
-consider that the logfile method is being discontinued and you are encouraged to use the
-backup DB option. 
+VIII. Running the RabbitMQ/AMQP plugin
+The Advanced Message Queuing Protocol (AMQP) is an open standard for passing business
+messages between applications. RabbitMQ is a messaging broker, an intermediary for
+messaging, which implementes AMQP. pmacct RabbitMQ/AMQP plugin is designed to send
+aggregated network traffic data, in JSON format, through a RabbitMQ server to 3rd
+party applications. Requirements to use the plugin are:
 
-Display online help and available options:
-shell> pmmyplay -h
+* A working RabbitMQ server: http://www.rabbitmq.com/
+* RabbitMQ C API, rabbitmq-c: https://github.com/alanxz/rabbitmq-c/
+* Libjansson to cook JSON objects: http://www.digip.org/jansson/
 
-Play the whole specified file, inserting elements in the DB and enabling debug:
-shell> pmmyplay -d -f /tmp/pmacct-recovery.dat
+Once these elements are installed, pmacct can be configured for compilation as
+follows (assumptions: Jansson is installed in /usr/local/lib and RabbitMQ server
+and rabbitmq-c are installed in /usr/local/rabbitmq as base path):
 
-Just see on the screen the content of the supplied logfile; that is, do not interact with
-the DB:
-shell> pmmyplay -d -t -f /tmp/pmacct-recovery.dat 
+./configure --enable-rabbitmq \
+            --with-rabbitmq-libs=/usr/local/rabbitmq/lib/ \
+            --with-rabbitmq-includes=/usr/local/rabbitmq/include/ \
+            --enable-jansson
 
-Play a single (-n 1) element (the fifth) from the specified file (useful if for example
-a previous player execution was aborted due to a failure):
-shell> pmmyplay -o 5 -n 1 -f /tmp/pmacct-recovery.dat
+Then "make; make install" as usual. Following a configuration snippet showing a
+basic RabbitMQ/AMQP plugin configuration (assumes: RabbitMQ server is available
+at localhost; look all configurable directives up in the CONFIG-KEYS document):
 
-Play all elements until the end of file, starting from element number six:
-shell> pmmyplay -o 6 -f /tmp/pmacct-recovery.dat -p ohwhatanicepwrd
+! ..
+plugins: amqp
+!
+aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+amqp_exchange: pmacct
+amqp_routing_key: acct
+amqp_refresh_time: 300
+sql_history: 5m
+sql_history_roundoff: m
+! ..
+
+pmacct will only declare a message exchange and provide a routing key, ie. it
+will not get involved with queues at all. A basic consumer script, in Python,
+is provided as sample to: declare a queue, bind the queue to the exchange and
+show consumed data on the screen. The script is located in the pmacct default
+distribution tarball in: examples/amqp/amqp_receiver.py and requires the pika
+Python module installed. Should this not be available you can read on the
+following page how to get it installed:
+
+http://www.rabbitmq.com/tutorials/tutorial-one-python.html
+
+Improvements to the basic Python script provided and/or examples in different
+languages are very welcome at this stage.
 
 
 IX. Quickstart guide to packet classifiers
