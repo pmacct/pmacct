@@ -693,7 +693,15 @@ DESC:		Type of the AMQP exchange to publish data. Currently only 'direct' and 'f
 		supported. (default: direct).
 
 KEY:		amqp_routing_key
-DESC:		Name of the AMQP routing key to attach to published data (default: acct).
+DESC:		Name of the AMQP routing key to attach to published data. Dynamic names are supported through
+		the use of variables, which are computed at the moment when data is purged to the backend. The
+		list of supported variables follows (default: acct): 
+
+                $peer_src_ip	Value of the peer_src_ip primitive of the record being processed. 
+
+		$pre_tag	Value of the tag primitive of the record being processed.
+
+                $post_tag	Configured value of post_tag.
 		
 KEY:		print_markers
 VALUES:		[ true | false ]

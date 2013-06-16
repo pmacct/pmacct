@@ -335,10 +335,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_amqp_routing_key[] = "acct";
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
-  int i, j, amqp_status, batch_idx;
+  int i, j, amqp_status, batch_idx, is_routing_key_dyn = FALSE;
 
   amqp_connection_state_t amqp_conn;
   amqp_socket_t *amqp_socket = NULL;
@@ -347,6 +347,13 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   /* setting some defaults */
   if (!config.sql_db) config.sql_db = default_amqp_exchange;
   if (!config.sql_table) config.sql_table = default_amqp_routing_key;
+  else {
+    if (strchr(config.sql_table, '$')) {
+      is_routing_key_dyn = TRUE;
+      orig_amqp_routing_key = config.sql_table;
+      config.sql_table = dyn_amqp_routing_key;
+    }
+  }
   if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
@@ -413,7 +420,11 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
                          queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime);
 
     if (json_str) {
-      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing: %s\n", config.name, config.type, json_str);
+      if (is_routing_key_dyn) amqp_handle_routing_key_dyn_strings(config.sql_table, SRVBUFLEN, orig_amqp_routing_key,
+								  queue[j]);  
+
+      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s]: %s\n", config.name,
+                            config.type, config.sql_db, config.sql_table, json_str);
 
       amqp_basic_publish(amqp_conn, 1, amqp_cstring_bytes(config.sql_db), amqp_cstring_bytes(config.sql_table),
 			 0, 0, NULL, amqp_cstring_bytes(json_str));
@@ -459,4 +470,84 @@ int amqp_trigger_exec(char *filename)
   }
 
   return 0;
+}
+
+void amqp_handle_routing_key_dyn_strings(char *new, int newlen, char *old, struct chained_cache *elem)
+{
+  int oldlen, ptr_len;
+  char peer_src_ip_string[] = "$peer_src_ip", post_tag_string[] = "$post_tag";
+  char pre_tag_string[] = "$pre_tag";
+  char *ptr_start, *ptr_end;
+
+  oldlen = strlen(old);
+  if (oldlen <= newlen) strcpy(new, old);
+  else {
+    strncpy(new, old, newlen);
+    return;
+  }
+
+  if (!strchr(new, '$')) return;
+  ptr_start = strstr(new, peer_src_ip_string);
+  if (ptr_start) {
+    char ip_address[INET6_ADDRSTRLEN];
+    char buf[newlen];
+    int len;
+
+    if (!elem || !elem->pbgp) goto out_peer_src_ip; 
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(peer_src_ip_string);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    addr_to_str(ip_address, &elem->pbgp->peer_src_ip);
+    snprintf(buf, newlen, "%s", ip_address);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+  out_peer_src_ip:
+
+  if (!strchr(new, '$')) return;
+  ptr_start = strstr(new, post_tag_string);
+  if (ptr_start) {
+    char buf[newlen];
+    int len;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(post_tag_string);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    snprintf(buf, newlen, "%u", config.post_tag);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  if (!strchr(new, '$')) return;
+  ptr_start = strstr(new, pre_tag_string);
+  if (ptr_start) {
+    char buf[newlen];
+    int len;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(pre_tag_string);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    snprintf(buf, newlen, "%u", elem->primitives.id);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
 }
