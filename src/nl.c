@@ -345,7 +345,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 
   if (!t) return 0;
 
-  pretag_init_vars(pptrs);
+  pretag_init_vars(pptrs, t);
   id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;

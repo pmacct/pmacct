@@ -46,14 +46,16 @@
 #define PRETAG_MPLS_VPN_RD	0x00080000
 #define PRETAG_SAMPLE_TYPE      0x00100000
 #define PRETAG_SET_TOS		0x00200000
-#define PRETAG_SET_TAG		0x00400000
-#define PRETAG_SET_TAG2		0x00800000
+#define PRETAG_LOOKUP_BGP_PORT	0x00400000
+#define PRETAG_SET_TAG		0x00800000
+#define PRETAG_SET_TAG2		0x01000000
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
 #define PRETAG_MAP_RCODE_SET_TOS	0x00000400
 #define BTA_MAP_RCODE_ID_ID2		0x00000800
-#define BPAS_MAP_RCODE_BGP		0x00001000
+#define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00001000
+#define BPAS_MAP_RCODE_BGP		0x00002000
 
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
@@ -122,6 +124,7 @@ struct id_entry {
   pt_uint32_t src_local_pref;
   pt_uint32_t local_pref;
   s_uint8_t set_tos;
+  s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   pt_rd_t mpls_vpn_rd;
@@ -139,6 +142,7 @@ struct id_entry {
 };
 
 struct id_table {
+  int type;
   unsigned short int num;
   struct id_entry *ipv4_base;
   unsigned short int ipv4_num;
@@ -169,7 +173,7 @@ struct pretag_filter {
 EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
 EXT u_int8_t pt_check_neg(char **);
 EXT char * pt_check_range(char *);
-EXT void pretag_init_vars(struct packet_ptrs *);
+EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
 
 EXT int tag_map_allocated;
 EXT int bpas_map_allocated;

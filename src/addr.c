@@ -139,7 +139,7 @@ unsigned int sa_to_addr(struct sockaddr *sa, struct host_addr *a, u_int16_t *por
  * returns 0 if they match; 1 if they don't match; -1 to signal a generic
  * error (e.g. unsupported family mismatch).
  */
-unsigned int sa_addr_cmp(struct sockaddr *sa, struct host_addr *a)
+int sa_addr_cmp(struct sockaddr *sa, struct host_addr *a)
 {
   struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
 #if defined ENABLE_IPV6
@@ -168,6 +168,34 @@ unsigned int sa_addr_cmp(struct sockaddr *sa, struct host_addr *a)
     memset((u_int8_t *)&sa6_local.sin6_addr+10, 0xff, 2);
     memcpy((u_int8_t *)&sa6_local.sin6_addr+12, &sa4->sin_addr, 4);
     if (!ip6_addr_cmp(&sa6_local.sin6_addr, &a->address.ipv6)) return FALSE;
+    else return TRUE;
+  }
+#endif
+
+  return -1;
+}
+
+/*
+ * sa_port_cmp(): compare two TCP/UDP ports: the first encapsulated in a
+ * 'struct sockaddr' and the second as a u_int16_t
+ * returns 0 if they match; 1 if they don't match; -1 to signal a generic
+ * error (e.g. unsupported family).
+ */
+int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
+#if defined ENABLE_IPV6
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+  struct sockaddr_in6 sa6_local;
+#endif
+
+  if (sa->sa_family == AF_INET) {
+    if (sa4->sin_port == port) return FALSE;
+    else return TRUE;
+  }
+#if defined ENABLE_IPV6
+  if (sa->sa_family == AF_INET6) {
+    if (sa6->sin6_port == port) return FALSE;
     else return TRUE;
   }
 #endif
@@ -210,7 +238,7 @@ void *pm_ntohl6(void *addr)
  * 1 if the first not matching chunk of addr1 is found to be greater than
  * addr2; -1 on the contrary. 
  */
-unsigned int ip6_addr_cmp(void *addr1, void *addr2)
+int ip6_addr_cmp(void *addr1, void *addr2)
 {
   register u_int32_t *ptr1 = addr1, *ptr2 = addr2; 
   int chunk;

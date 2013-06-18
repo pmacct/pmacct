@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -53,6 +53,7 @@ struct xflow_status_map_cache
 {
   pm_id_t id;
   pm_id_t id2;
+  s_uint16_t port;		/* BGP port */
   int ret;
   struct timeval stamp;
 };

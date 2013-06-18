@@ -352,10 +352,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	      }
               else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
                 if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
-                  int j;
+                  int j, z;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
-                  tmp.e[tmp.num].func[j] = pretag_id_handler;
+		  for (z = 0; tmp.e[tmp.num].set_func[z]; z++, j++) {
+                    tmp.e[tmp.num].func[j] = tmp.e[tmp.num].set_func[z];
+                    tmp.e[tmp.num].func_type[j] = tmp.e[tmp.num].set_func_type[z];
+                  }
+		  /* imposing pretag_id_handler to be the last one */
+		  tmp.e[tmp.num].func[j] = pretag_id_handler;
+
                   if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
                   else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
@@ -364,7 +370,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                 }
                 else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
                   Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
-			config.name, config.type, filename, tot_lines, filename);
+                        config.name, config.type, tot_lines, filename);
               }
               else if (acct_type == MAP_BGP_IFACE_TO_RD) {
                 if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
@@ -416,6 +422,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
          in order to deal smoothly with jumps (ie. JEQs) */
 
       x = 0;
+      t->type = acct_type;
       t->num = tmp.num;
       t->ipv4_num = v4_num; 
       t->ipv4_base = &t->e[x];
@@ -529,7 +536,8 @@ char *pt_check_range(char *str)
   else return NULL;
 }
 
-void pretag_init_vars(struct packet_ptrs *pptrs)
+void pretag_init_vars(struct packet_ptrs *pptrs, struct id_table *t)
 {
-  memset(&pptrs->set_tos, 0, sizeof(s_uint8_t));
+  if (t->type == ACCT_NF) memset(&pptrs->set_tos, 0, sizeof(s_uint8_t));
+  if (t->type == MAP_BGP_TO_XFLOW_AGENT) memset(&pptrs->lookup_bgp_port, 0, sizeof(s_uint16_t));
 }

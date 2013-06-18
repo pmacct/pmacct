@@ -98,7 +98,6 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       }
     }
 
-    /* feature currently only supported in nfacctd */
     e->set_func[x] = pretag_id_handler;
     e->set_func_type[x] = PRETAG_SET_TAG;
   }
@@ -127,7 +126,6 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
       }
     }
 
-    /* feature currently only supported in nfacctd */
     e->set_func[x] = pretag_id2_handler;
     e->set_func_type[x] = PRETAG_SET_TAG2;
   }
@@ -944,6 +942,38 @@ int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
+int BTA_map_lookup_bgp_port_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0, len;
+  char *endptr;
+
+  e->lookup_bgp_port.set = TRUE;
+  len = strlen(value);
+
+  while (x < len) {
+    if (!isdigit(value[x])) {
+      Log(LOG_ERR, "ERROR ( %s ): bad 'bgp_port' value: '%s'. ", filename, value);
+      return TRUE;
+    }
+    x++;
+  }
+
+  e->lookup_bgp_port.n = strtoul(value, &endptr, 10);
+  for (x = 0; e->set_func[x]; x++) {
+    if (e->set_func_type[x] == PRETAG_LOOKUP_BGP_PORT) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'bgp_port' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  /* feature currently only supported in bgp_agent_map */
+  if (acct_type == MAP_BGP_TO_XFLOW_AGENT) e->set_func[x] = BTA_lookup_bgp_port_handler;
+
+  if (e->set_func[x]) e->set_func_type[x] = PRETAG_LOOKUP_BGP_PORT;
+
+  return FALSE;
+}
+
 int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   strlcpy(e->label, value, MAX_LABEL_LEN); 
@@ -1670,6 +1700,15 @@ int pretag_set_tos_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   memcpy(&pptrs->set_tos, &entry->set_tos, sizeof(s_uint8_t));
 
   return PRETAG_MAP_RCODE_SET_TOS;
+}
+
+int BTA_lookup_bgp_port_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+
+  memcpy(&pptrs->lookup_bgp_port, &entry->lookup_bgp_port, sizeof(s_uint16_t));
+
+  return BTA_MAP_RCODE_LOOKUP_BGP_PORT;
 }
 
 int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)

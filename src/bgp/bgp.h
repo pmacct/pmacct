@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -98,6 +98,7 @@ struct bgp_peer {
   time_t last_keepalive;
   struct host_addr id;
   struct host_addr addr;
+  u_int16_t tcp_port;
   u_int8_t cap_mp;
   char *cap_4as;
   u_int32_t msglen;

@@ -238,9 +238,15 @@ void skinny_bgp_daemon()
 
       FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = ((struct sockaddr *)&client)->sa_family;
-      if (peer->addr.family == AF_INET) peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+      if (peer->addr.family == AF_INET) {
+	peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+	peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
+      }
 #if defined ENABLE_IPV6
-      else if (peer->addr.family == AF_INET6) memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
+      else if (peer->addr.family == AF_INET6) {
+	memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
+	peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
+      }
 #endif
 
       /* Check: only one TCP connection is allowed per peer */
@@ -1895,7 +1901,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   struct bgp_node *default_node, *result;
   struct bgp_info *info;
   struct prefix default_prefix;
-  int peers_idx;
+  int peers_idx, compare_bgp_port;
   int follow_default = config.nfacctd_bgp_follow_default;
   struct in_addr pref4;
 #if defined ENABLE_IPV6
@@ -1911,6 +1917,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   pptrs->bgp_dst_info = NULL;
   pptrs->bgp_peer = NULL;
   pptrs->bgp_nexthop_info = NULL;
+  compare_bgp_port = FALSE;
   safi = SAFI_UNICAST;
 
   if (pptrs->bta) {
@@ -1918,12 +1925,20 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     if (pptrs->bta_af == ETHERTYPE_IP) {
       sa->sa_family = AF_INET;
       ((struct sockaddr_in *)sa)->sin_addr.s_addr = pptrs->bta; 
+      if (pptrs->lookup_bgp_port.set) {
+	((struct sockaddr_in *)sa)->sin_port = pptrs->lookup_bgp_port.n; 
+	compare_bgp_port = TRUE;
+      }
     }
 #if defined ENABLE_IPV6
     else if (pptrs->bta_af == ETHERTYPE_IPV6) {
       sa->sa_family = AF_INET6;
       ip6_addr_32bit_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &pptrs->bta, 0, 0, 1);
       ip6_addr_32bit_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &pptrs->bta2, 2, 0, 1);
+      if (pptrs->lookup_bgp_port.set) {
+        ((struct sockaddr_in6 *)sa)->sin6_port = pptrs->lookup_bgp_port.n; 
+	compare_bgp_port = TRUE;
+      }
     }
 #endif
   }
@@ -1943,10 +1958,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     }
 #endif
   }
-  
 
   if (xs_entry && peer_idx) {
-    if (!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) {
+    if ((!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) &&
+        (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
       peer = &peers[peer_idx];
       pptrs->bgp_peer = (char *) &peers[peer_idx];
     }
@@ -1958,7 +1973,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   }
   else {
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-      if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
+      if ((!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) && 
+	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
         peer = &peers[peers_idx];
         pptrs->bgp_peer = (char *) &peers[peers_idx];
         if (xs_entry && peer_idx_ptr) *peer_idx_ptr = peers_idx;
@@ -2132,6 +2148,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       
       if (!pptrs->bgp_src || !pptrs->bgp_dst) {
 	follow_default--;
+	compare_bgp_port = FALSE; // XXX: fixme: follow default in NAT traversal scenarios
 
         if (default_node) {
           if (info && info->attr) {
@@ -2162,6 +2179,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         }
       }
     }
+
     if (config.nfacctd_bgp_follow_nexthop[0].family && pptrs->bgp_dst && safi != SAFI_MPLS_VPN)
       bgp_follow_nexthop_lookup(pptrs);
   }

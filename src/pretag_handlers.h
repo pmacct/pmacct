@@ -62,6 +62,9 @@ EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct p
 EXT int BPAS_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int BPAS_map_bgp_peer_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
+/* BTA_*: bgp_agent_map specific handlers */
+EXT int BTA_map_lookup_bgp_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id2_handler(struct packet_ptrs *, void *, void *);
@@ -107,4 +110,6 @@ EXT int PM_pretag_output_handler(struct packet_ptrs *, void *, void *);
 
 EXT int BPAS_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *, void *, void *);
+
+EXT int BTA_lookup_bgp_port_handler(struct packet_ptrs *, void *, void *);
 #undef EXT

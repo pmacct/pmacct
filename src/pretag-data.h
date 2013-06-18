@@ -79,6 +79,8 @@ const struct _map_dictionary_line bpas_map_dictionary[] = {
 
 const struct _map_dictionary_line bta_map_dictionary[] = {
   {"id", PT_map_id_handler},
+  {"bgp_ip", PT_map_id_handler},
+  {"bgp_port", BTA_map_lookup_bgp_port_handler},
   {"ip", PT_map_ip_handler},
   {"filter", PT_map_filter_handler},
   {"", NULL}

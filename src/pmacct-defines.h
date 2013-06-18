@@ -323,6 +323,11 @@ typedef struct {
   u_int8_t n;
 } s_uint8_t;
 
+typedef struct {
+  u_int8_t set;
+  u_int16_t n;
+} s_uint16_t;
+
 #if defined HAVE_64BIT_COUNTERS
 typedef u_int64_t pm_counter_t;
 #else

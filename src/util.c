@@ -1327,6 +1327,7 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
     *tag = xsmc->id;
     *tag2 = xsmc->id2;
     ret = xsmc->ret;
+    memcpy(&pptrs->lookup_bgp_port, &xsmc->port, sizeof(s_uint16_t));
   }
   else {
     if (find_id_func) {
@@ -1335,14 +1336,15 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 	xsmc->id = *tag;
 	xsmc->id2 = *tag2;
 	xsmc->ret = ret;
+	memcpy(&xsmc->port, &pptrs->lookup_bgp_port, sizeof(s_uint16_t));
 	gettimeofday(&xsmc->stamp, NULL);
       }
     }
   }
 
-  if (ret == PRETAG_MAP_RCODE_ID) pptrs->bta_af = ETHERTYPE_IP;
+  if (ret & PRETAG_MAP_RCODE_ID) pptrs->bta_af = ETHERTYPE_IP;
 #if defined ENABLE_IPV6
-  else if (ret == BTA_MAP_RCODE_ID_ID2) pptrs->bta_af = ETHERTYPE_IPV6;
+  else if (ret & BTA_MAP_RCODE_ID_ID2) pptrs->bta_af = ETHERTYPE_IPV6;
 #endif
 
   return ret;

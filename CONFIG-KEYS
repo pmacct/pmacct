@@ -1186,10 +1186,9 @@ DESC:           full pathname to a file containing source MED (Multi Exit Discri
 
 KEY:		bgp_agent_map
 DESC:		full pathname to a file to map source IP address of NetFlow agents and AgentID of sFlow
-		agents to source IP address or Router ID of BGP peers. This is particularly aimed as a
-		resource-savy alternative to have N agents but only a restricted number of BGP peers (ie.
-		a BGP RR), in case of simpler topologies (ie. hub-and- spoke) or scenarios (ie. single-
-		homed). It can also be viewed as a temporary workaround to certain situations. pmacctd,
+		agents to source IP address or Router ID of BGP peers. This is to provide flexibility
+		in a number of scenarios, for example and not limited to BGP peering with RRs, hub-and-
+		spoke topologies, single-homed networks - but also BGP sessions traversing NAT. pmacctd,
 		uacctd daemons are required to use a bgp_agent_map with up to two "catch-all" entries -
 		working in a primary/backup fashion (see agent_to_peer.map in the examples section):
 		this is because these daemons do not have a NetFlow/sFlow source address to match to.
