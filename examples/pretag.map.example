@@ -27,102 +27,96 @@
 !
 ! list of currently supported keys follows:
 !
-! 'set_tag'		tag assigned to a matching packet, flow or sample; its
-!			use is mutually exclusive with set_tag2. The resulting
+! 'set_tag'		SET: tag assigned to a matching packet, flow or sample;
+!			its use is mutually exclusive to set_tag2. The resulting
 !			label is written to the 'tag' field when using memory
 !			tables and 'agent_id' when using a SQL plugin. Legacy
 !			name for this primitive is 'id'. 
-! 'set_tag2'		tag assigned to a matching packet, flow or sample; its
-!			use within a rule is mutually exclusive with 'set_tag'.
-!			The resulting label is written to the 'tag2' field when
-!			using memory tables and 'agent_id2' when using a SQL
-!			plugin. If using a SQL plugin, read more about the
-!			'agent_id2' field in the 'sql/README.agent_id2' document.
-!			Legacy name for this primitive is 'id2'.
-! 'set_qos'             Matching packets are set their 'tos' primitive to the
-!			specified value. Valid only in nfacctd. When collecting
-!			ingress NetFlow at both trusted and untrusted borders,
-!			for example, this is useful to selectively override ToS
+! 'set_tag2'		SET: tag assigned to a matching packet, flow or sample;
+!			its use is mutually exclusive to 'set_tag'. The resulting
+!			label is written to the 'tag2' field when using memory
+!			tables and 'agent_id2' when using a SQL plugin. If using
+!			a SQL plugin, read more about the 'agent_id2' field in
+!			the 'sql/README.agent_id2' document. Legacy name for this
+!			primitive is 'id2'.
+! 'set_qos'             SET: Matching packets are set their 'tos' primitive to
+!			the specified value. Currently valid only in nfacctd. If
+!			collecting ingress NetFlow at both trusted and untrusted
+!			borders, e.g., this is useful to selectively override ToS
 !			values read only at untrusted ones. 
-! 'ip'			In nfacctd it's compared against the source IP address
-!			of the device which is originating NetFlow packets; in
-!			sfacctd this is compared against the AgentId field of
-!			received sFlow samples.
-! 'in'  		Input interface 
-! 'out' 		Output interface 
-! 'engine_type'		In NetFlow V5 it's compared against the 'engine_type'
-!			header field. In NetFlow V9 it's compared against the
-!			3rd octet of the 'source_id' header field. Provides
-!			uniqueness with respect to the routing engine on the
-!			exporting device.
-! 'engine_id'		In NetFlow V5 it's compared against the 'engine_id'
-!			header field. In NetFlow V9 it's compared against the
-!			4th octet of the 'source_id' header field. It provides
-!			uniqueness with respect to the particular line card on
-!			the exporting device.
-! 'nexthop'		IPv4/IPv6 address of the next-hop router
-! 'bgp_nexthop'		IPv4/IPv6 address of the next-hop BGP router
-! 'filter'		Matches incoming packets against the supplied filter
-!			expression (expected in libpcap syntax); the filter
+! 'ip'                  MATCH: in nfacctd this is compared against the source
+!                       IP address of the device originating NetFlow packets;
+!                       in sfacctd this is compared against the AgentId field
+!                       of received sFlow samples.
+! 'in'  		MATCH: Input interface 
+! 'out' 		MATCH: Output interface 
+! 'engine_type'		MATCH: in NFv5 this is compared against the 'engine_type'
+!			header field. In NFv9 it's compared against the 3rd octet
+!			of the 'source_id' header field. Provides uniqueness with
+!			respect to the routing engine on the exporting device.
+! 'engine_id'		MATCH: in NFv5 this is compared against the 'engine_id'
+!			header field. In NFv9 it's compared against the 4th octet
+!			of the 'source_id' header field. It provides uniqueness
+!			with respect to the particular line card on the exporting
+!			device.
+! 'nexthop'		MATCH: IPv4/IPv6 address of the next-hop router
+! 'bgp_nexthop'		MATCH: IPv4/IPv6 address of the next-hop BGP router
+! 'filter'		MATCH: incoming packets are mateched against the supplied
+!			filter expression (expected in libpcap syntax); the filter
 !			needs to be enclosed in quotes ('). 
-! 'v8agg'		In NetFlow V8 this is compared against the aggregation
+! 'v8agg'		MATCH: in NFv8 this is compared against the aggregation
 !			method in use. Valid values are in the range 0 > value
 !			> 15. 
-! 'agent_id'		In sFlow v5 it's compared against the subAgentId field.
-!			sFlow v2/v4 do not carry such field, hence it does not
-!			apply.
-! 'sampling_rate'       In sFlow v2/v4/v5 this is compared against the sampling
-!			rate field; it also works against NetFlow v5. NetFlow v9
-!			and IPFIX are unsupported instead.
-! 'sample_type'         In sFlow v2/v4/v5 this is compared against the sample
-!			type field. Expected in <Enterprise>:<Format> notation.
-!			In NetFlow/IPIX two keywords are supported: "flow" to
-!			denote templates suitable to transport flow traffic data
-!			and "event" to denote templates suitable to flag events. 
-! 'direction'		In NetFlow v9 and IPFIX this is compared against the
-!			direction (61) field, which only valid values are 0
+! 'agent_id'		MATCH: in sFlow v5 it's compared against the subAgentId
+!			field. sFlow v2/v4 do not carry such field, hence it does
+!			not apply.
+! 'sampling_rate'       MATCH: in sFlow v2/v4/v5 this is compared against the
+!			sampling rate field; it also works against NetFlow v5.
+!			NetFlow v9 and IPFIX are unsupported instead.
+! 'sample_type'         MATCH: in sFlow v2/v4/v5 this is compared against the
+!			sample type field. Expected in <Enterprise>:<Format>
+!			notation. In NetFlow/IPIX two keywords are supported:
+!			"flow" to denote templates suitable to transport flow
+!			traffic data and "event" to denote templates suitable to
+!			flag events. 
+! 'direction'		MATCH: In NetFlow v9 and IPFIX this is compared against
+!			the direction (61) field, which only valid values are 0
 !			(ingress) and 1 (egress) flow.
-! 'src_as'		source Autonomous System Number. Whether BGP daemon is
-!			not enabled in pmacctd it works only against a Networks
-!			map (see 'networks_file' directive); in nfacctd and
-!			sfacctd it works against a Networks Map, the source ASN
-!			field in either sFlow or NetFlow datagrams. Since 0.12,
-!			this can be compared against the corresponding BGP RIB
+! 'src_as'		MATCH: source Autonomous System Number. In pmacctd, if
+!			the BGP daemon is not enabled it works only against a
+!			Networks map (see 'networks_file' directive); in nfacctd
+!			and sfacctd it works against a Networks Map, the source
+!			ASN field in either sFlow or NetFlow datagrams. Since
+!			0.12, this can be compared against the corresponding BGP
+!			RIB of the exporting device ('bgp_daemon' configuration
+!			directive).
+! 'dst_as'              MATCH: destination Autonomous System Number. Same 'src_as'
+!			remarks hold here. Please read them above.
+! 'peer_src_as'		MATCH: peering source Autonomous System Number. This is
+!			compared against the corresponding (or mapped) BGP RIB
 !			of the exporting device (see 'bgp_daemon' configuration
 !			directive).
-! 'dst_as'              destination Autonomous System Number. Same 'src_as'
-!			remarks hold here. Please read them above.
-! 'peer_src_as'		peering source Autonomous System Number. It is compared
-!			against the corresponding BGP RIB of the exporting
-!			device (see 'bgp_daemon' configuration directive).
-! 'peer_dst_as'		peering destination Autonomous System Number. Same
+! 'peer_dst_as'		MATCH: peering destination Autonomous System Number. Same
 !			'peer_src_as' remarks hold here. Please read them above.
-! 'src_local_pref'      Source IP prefix BGP local preference attribute. This is
-!			compared against the BGP RIB of the exporting device.
-! 'local_pref'		Destination IP prefix BGP local preference attribute.
+! 'local_pref'		MATCH: destination IP prefix BGP Local Preference attribute.
 !			This is compared against the BGP RIB of the exporting
 !			device.  
-! 'src_comms'           Source IP prefix BGP standard communities attribbute;
+! 'comms'		MATCH: Destination IP prefix BGP standard communities;
 !			multiple elements, up to 16, can be supplied, comma-
 !			separated (no spaces allowed); the check is successful
 !			if any of the communities is matched. This is compared
-!			against the BGP RIB of the exporting device. Examples
-!			are provided below.
-! 'comms'		Destination IP prefix BGP standard communities; multiple
-!			elements, up to 16, can be supplied, comma-separated (no
-!			spaces allowed); the check is successful if any of the
-!			communities is matched. This is compared against the BGP
-!			RIB of the exporting device. See examples below.
-! 'mpls_vpn_rd'		Destination IP prefix BGP/MPLS VPN Route Distinguisher
-!			(RD) value. Encoding types #0, #1 and #2 are supported
-!			as per rfc4364. See example below.
-! 'label'		Mark the rule with label's value. Labels don't need to
-!			be unique: when jumping, the first matching label wins.
+!			against the BGP RIB of the exporting device. See examples
+!			below.
+! 'mpls_vpn_rd'		MATCH: Destination IP prefix BGP-signalled MPLS L2/L3
+!			VPN Route Distinguisher (RD) value. Encoding types #0, #1
+!			and #2 are supported as per rfc4364. See example below.
+! 'label'		SET: Mark the rule with label's value. Labels don't need
+!			to be unique: when jumping, the first matching label wins.
 !			Label value 'next' is reserved for internal use and
 !			hence must not be used in a map. Doing otherwise might
 !			give unexpected results.
-! 'jeq'			Jump on EQual. Jumps to the supplied label in case of
-!			rule match. Jumps are Only forward. Label "next" is
+! 'jeq'			SET: Jump on EQual. Jumps to the supplied label in case
+!			of rule match. Jumps are Only forward. Label "next" is
 !			reserved and causes to go to the next rule, if any.
 !			Before continuing the map workflow, tagged data can be
 !			optionally returned to plugins (jeq=xxx return=true).
@@ -134,14 +128,9 @@
 !			(if not filtered out by the pre_tag_filter directive);
 !			plugins not configured for tags will only receive a
 !			single copy of the data.
-! 'return'		Works only associated to a 'jeq' and is set to 'false'
-!			by default. Read full details in the 'jeq' section. If
-!			set to 'true', after tagged data is sent for accounting,
-!			the tag is zeroed making essentially this feature not
-!			compatible with a 'stack' one.
-! 'stack'		Currently '+' (ie. sum symbol) is the unique supported
-!			value. This key makes sense only if JEQs are in use.
-!			When matching, accumulate tags, using the specified
+! 'stack'		SET: Currently '+' (ie. the sum symbol) is the unique
+!			supported value. This key makes sense only if JEQs are in
+!			use. When matching, accumulate tags, using the specified
 !			operator/function. By setting 'stack=+', the resulting
 !			tag would be: <tag>=<previous ID + current ID>. 
 !

@@ -13,16 +13,16 @@
 !
 ! list of currently supported keys follows:
 !
-! 'id'			sampling rate assigned to a matching packet, flow or sample.
-!			The result is used to renormalize packet and bytes count if
-!			either of sfacctd_renormalize or nfacctd_renormalize config
+! 'id'			SET: sampling rate assigned to a matching packet, flow
+!			or sample. The result is used to renormalize packet and
+!			bytes count if [nf|sf]acctd_renormalize configuration
 !			directive is set to true.
-! 'ip'			In nfacctd this is compared against the source IP address of
-!			the device which is originating NetFlow packets; in sfacctd
-!			this is compared against the AgentId field of received sFlow
-!			samples.
-! 'in'  		Input interface 
-! 'out' 		Output interface 
+! 'ip'                  MATCH: in nfacctd this is compared against the source
+!                       IP address of the device originating NetFlow packets;
+!                       in sfacctd this is compared against the AgentId field
+!                       of received sFlow samples.
+! 'in'  		MATCH: Input interface 
+! 'out' 		MATCH: Output interface 
 !
 !
 ! Examples:

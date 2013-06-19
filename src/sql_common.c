@@ -1612,7 +1612,8 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
         strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
-      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && config.sql_table_version < 8) {
+      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && (config.sql_table_version < 8 ||
+	  (config.sql_table_version >= SQL_TABLE_VERSION_BGP && config.sql_table_version < SQL_TABLE_VERSION_BGP+8))) {
         strncat(insert_clause, "src_port", SPACELEFT(insert_clause));
         strncat(where[primitive].string, "src_port=%u", SPACELEFT(where[primitive].string));
       }
@@ -1645,7 +1646,8 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
         strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
-      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && config.sql_table_version < 8) {
+      if ((!strcmp(config.type, "mysql") || !strcmp(config.type, "sqlite3")) && (config.sql_table_version < 8 ||
+          (config.sql_table_version >= SQL_TABLE_VERSION_BGP && config.sql_table_version < SQL_TABLE_VERSION_BGP+8))) {
         strncat(insert_clause, "dst_port", SPACELEFT(insert_clause));
         strncat(where[primitive].string, "dst_port=%u", SPACELEFT(where[primitive].string));
       }
