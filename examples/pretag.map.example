@@ -60,7 +60,10 @@
 !			with respect to the particular line card on the exporting
 !			device.
 ! 'nexthop'		MATCH: IPv4/IPv6 address of the next-hop router
-! 'bgp_nexthop'		MATCH: IPv4/IPv6 address of the next-hop BGP router
+! 'bgp_nexthop'		MATCH: IPv4/IPv6 address of the next-hop BGP router. In
+!			MPLS-enabled networks this can be also matched against top
+!			label address where available (ie. egress NetFlow v9/IPFIX
+!			exports).
 ! 'filter'		MATCH: incoming packets are mateched against the supplied
 !			filter expression (expected in libpcap syntax); the filter
 !			needs to be enclosed in quotes ('). 

@@ -65,6 +65,9 @@ EXT int BPAS_map_bgp_peer_dst_as_handler(char *, struct id_entry *, char *, stru
 /* BTA_*: bgp_agent_map specific handlers */
 EXT int BTA_map_lookup_bgp_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
+/* BITR_*: flow_to_rd_map specific handlers */
+EXT int BITR_map_mpls_label_bottom_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id2_handler(struct packet_ptrs *, void *, void *);
@@ -112,4 +115,6 @@ EXT int BPAS_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *, void *, void *);
 
 EXT int BTA_lookup_bgp_port_handler(struct packet_ptrs *, void *, void *);
+
+EXT int BITR_mpls_label_bottom_handler(struct packet_ptrs *, void *, void *);
 #undef EXT

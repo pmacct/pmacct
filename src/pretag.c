@@ -192,7 +192,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
 		}
-                else if (acct_type == MAP_BGP_IFACE_TO_RD) {
+                else if (acct_type == MAP_FLOW_TO_RD) {
                   for (dindex = 0; strcmp(bitr_map_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(bitr_map_dictionary[dindex].key, key)) {
                       err = (*bitr_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
@@ -372,7 +372,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   Log(LOG_ERR, "ERROR ( %s/%s ): required key missing at line %d in map '%s'. Required keys are: 'id', 'ip'.\n",
                         config.name, config.type, tot_lines, filename);
               }
-              else if (acct_type == MAP_BGP_IFACE_TO_RD) {
+              else if (acct_type == MAP_FLOW_TO_RD) {
                 if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
                   int j;
 

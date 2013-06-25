@@ -68,7 +68,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
     }
   }
 #endif
-  else if (acct_type == MAP_BGP_IFACE_TO_RD && strchr(value, ':')) {
+  else if (acct_type == MAP_FLOW_TO_RD && strchr(value, ':')) {
     rd_t rd;
 
     bgp_str2rd(&rd, value);
@@ -338,6 +338,26 @@ int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, st
   for (x = 0; e->func[x]; x++);
   e->func[x] = pretag_filter_handler;
   req->bpf_filter = TRUE;
+  return FALSE;
+}
+
+int BITR_map_mpls_label_bottom_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  as_t tmp;
+  int x = 0;
+  char *endptr;
+
+  e->mpls_label_bottom.neg = pt_check_neg(&value);
+
+  tmp = strtoul(value, &endptr, 10);
+  e->mpls_label_bottom.n = tmp;
+
+  for (x = 0; e->func[x]; x++);
+
+  /* Currently supported only in nfacctd */
+  if (config.acct_type == ACCT_NF) e->func[x] = BITR_mpls_label_bottom_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_MPLS_LABEL_BOTTOM;
+
   return FALSE;
 }
 
@@ -1180,13 +1200,29 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   case 10:
   case 9:
     if (entry->bgp_nexthop.a.family == AF_INET) {
-      if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len))
-	return (FALSE | entry->bgp_nexthop.neg);
+      if (tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len) {
+        if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len))
+	  return (FALSE | entry->bgp_nexthop.neg);
+      }
+      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
+        if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len))
+	  return (FALSE | entry->bgp_nexthop.neg);
+      }
     }
 #if defined ENABLE_IPV6
     else if (entry->nexthop.a.family == AF_INET6) {
-      if (!memcmp(&entry->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len))
-	return (FALSE | entry->bgp_nexthop.neg);
+      if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
+        if (!memcmp(&entry->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len))
+	  return (FALSE | entry->bgp_nexthop.neg);
+      }
+      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
+        if (!memcmp(&entry->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len))
+	  return (FALSE | entry->bgp_nexthop.neg);
+      }
+      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len) {
+        if (!memcmp(&entry->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len))
+	  return (FALSE | entry->bgp_nexthop.neg);
+      }
     }
 #endif
     else return (TRUE ^ entry->bgp_nexthop.neg);
@@ -1963,4 +1999,29 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
 
   if (entry->peer_dst_as.n == asn) return (FALSE | entry->peer_dst_as.neg);
   else return (TRUE ^ entry->peer_dst_as.neg);
+}
+
+int BITR_mpls_label_bottom_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  int label_idx;
+  u_int32_t label;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
+      if (tpl->tpl[label_idx].len == 3 && check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+        label = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off);
+	if (entry->mpls_label_bottom.n == label) return (FALSE | entry->mpls_label_bottom.neg);
+      }
+    }
+    return (TRUE ^ entry->mpls_label_bottom.neg);
+    break;
+  default:
+    return (TRUE ^ entry->mpls_label_bottom.neg);
+    break;
+  }
 }

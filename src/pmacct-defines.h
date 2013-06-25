@@ -104,7 +104,7 @@
 #define MAP_BGP_TO_XFLOW_AGENT	101	/* bgp_to_agent_map */
 #define MAP_BGP_SRC_LOCAL_PREF	102	/* bgp_src_local_pref_map */
 #define MAP_BGP_SRC_MED		103	/* bgp_src_med_map */
-#define MAP_BGP_IFACE_TO_RD	104	/* bgp_iface_to_rd */
+#define MAP_FLOW_TO_RD		104	/* flow_to_rd_map */
 #define MAP_SAMPLING		105	/* sampling_map */
 #define MAP_TEE_RECVS		106	/* tee_receivers */
 #define MAP_IGP			107	/* igp_daemon_map */

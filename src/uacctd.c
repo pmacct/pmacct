@@ -706,8 +706,8 @@ int main(int argc,char **argv, char **envp)
        to keep a backup feed in memory */
     config.nfacctd_bgp_max_peers = 2;
 
-    if (config.nfacctd_bgp_iface_to_rd_map) {
-      Log(LOG_ERR, "ERROR ( default/core ): 'bgp_iface_to_rd_map' is not supported by this daemon. Exiting.\n");
+    if (config.nfacctd_flow_to_rd_map) {
+      Log(LOG_ERR, "ERROR ( default/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n");
       exit(1);
     }
 

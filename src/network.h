@@ -292,7 +292,7 @@ struct packet_ptrs {
   u_char *blp_table; /* ptr to bgp_src_local_pref table map */
   u_char *bmed_table; /* ptr to bgp_src_med table map */
   u_char *bta_table; /* ptr to bgp_to_agent table map */
-  u_char *bitr_table; /* ptr to bgp_iface_to_rd table map */
+  u_char *bitr_table; /* ptr to flow_to_rd table map */
   u_char *sampling_table; /* ptr to sampling_map table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
@@ -308,7 +308,7 @@ struct packet_ptrs {
   u_int16_t bta_af; /* bgp_to_agent address family */
   pm_id_t bta; /* bgp_to_agent */
   pm_id_t bta2; /* bgp_to_agent (cont.d: 64bits more for IPv6 addresses) */
-  pm_id_t bitr; /* bgp_iface_to_rd */
+  pm_id_t bitr; /* flow_to_rd */
   pm_id_t st; /* sampling_map */
   s_uint8_t set_tos; /* pretag map: set_tos feature */
   s_uint16_t lookup_bgp_port; /* bgp_agent_map: lookup BGP port feature */

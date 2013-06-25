@@ -380,7 +380,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
                                             COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
-                                            COUNT_DST_AS|COUNT_PEER_SRC_AS|COUNT_MPLS_VPN_RD) &&
+                                            COUNT_DST_AS|COUNT_PEER_SRC_AS) &&
         channels_list[index].plugin->cfg.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
@@ -402,6 +402,13 @@ void evaluate_packet_handlers()
         channels_list[index].phandler[primitives] = bgp_ext_handler;
         primitives++;
       }
+    }
+
+    if (channels_list[index].aggregation & COUNT_MPLS_VPN_RD) {
+      if (config.nfacctd_flow_to_rd_map) {
+        channels_list[index].phandler[primitives] = mpls_vpn_rd_frommap_handler;
+        primitives++;
+      } 
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
@@ -1138,6 +1145,14 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
   }
 
   pdata->primitives.sampling_rate = config.ext_sampling_rate ? config.ext_sampling_rate : 1;
+}
+
+void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+
+  if (pbgp && pptrs->bitr) memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t));
 }
 
 void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3244,9 +3259,11 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         }
       }
     }
+/*
     if (info && info->extra) {
       if (chptr->aggregation & COUNT_MPLS_VPN_RD) memcpy(&pbgp->mpls_vpn_rd, &info->extra->rd, sizeof(rd_t)); 
     }
+*/
   }
 }
 

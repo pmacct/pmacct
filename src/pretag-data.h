@@ -99,5 +99,7 @@ const struct _map_dictionary_line bitr_map_dictionary[] = {
   {"ip", PT_map_ip_handler},
   {"in", PT_map_input_handler},
   {"out", PT_map_output_handler},
+  {"bgp_nexthop", PT_map_bgp_nexthop_handler},
+  {"mpls_label_bottom", BITR_map_mpls_label_bottom_handler},
   {"", NULL}
 };

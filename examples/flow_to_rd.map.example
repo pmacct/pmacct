@@ -1,10 +1,10 @@
 ! 
-! PE router ifIndex to BGP/MPLS VPN RD map
+! Flow to BGP/MPLS VPN RD map
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! nfacctd, sfacctd: valid keys: id, ip, in, out.
+! nfacctd, sfacctd: valid keys: id, ip, in, out, bgp_nexthop, mpls_label_bottom.
 !
 ! list of currently supported keys follow:
 !
@@ -15,8 +15,13 @@
 !                       IP address of the device originating NetFlow packets;
 !                       in sfacctd this is compared against the AgentId field
 !                       of received sFlow samples.
-! 'in'                  MATCH: Input interface
-! 'out'                 MATCH: Output interface
+! 'in'                  MATCH: Input interface.
+! 'out'                 MATCH: Output interface.
+! 'bgp_nexthop'         MATCH: IPv4/IPv6 address of the next-hop BGP router. In
+!                       MPLS-enabled networks this can be also matched against
+!			top label address where available (ie. egress NetFlow
+!			v9/IPFIX exports).
+! 'mpls_label_bottom'	MATCH: MPLS bottom label value.
 !
 ! A couple of straightforward examples follow.  
 !
