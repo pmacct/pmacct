@@ -497,6 +497,10 @@ AC_ARG_ENABLE(mysql,
 	LIBS="${LIBS} -L/usr/lib/mysql"
 	AC_MSG_RESULT([found in /usr/lib/mysql])
 	MYSQLLIBFOUND=1
+      elif test -r /usr/lib64/mysql/libmysqlclient.a -o -r /usr/lib64/mysql/libmysqlclient.so; then
+        LIBS="${LIBS} -L/usr/lib64/mysql"
+        AC_MSG_RESULT([found in /usr/lib64/mysql])
+        MYSQLLIBFOUND=1
       elif test -r /usr/local/mysql/lib/libmysqlclient.a -o -r /usr/local/mysql/lib/libmysqlclient.so; then
 	LIBS="${LIBS} -L/usr/local/mysql/lib"
 	AC_MSG_RESULT([found in /usr/local/mysql/lib])
@@ -614,6 +618,10 @@ AC_ARG_ENABLE(pgsql,
       if test -r /usr/lib/libpq.a -o -r /usr/lib/libpq.so; then
         AC_MSG_RESULT([found in /usr/lib])
         PGSQLLIBFOUND=1
+      elif test -r /usr/lib64/libpq.a -o -r /usr/lib64/libpq.so; then
+	LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        PGSQLLIBFOUND=1
       elif test -r /usr/local/lib/libpq.a -o -r /usr/local/lib/libpq.so; then
 	LIBS="${LIBS} -L/usr/local/lib"
 	AC_MSG_RESULT([found in /usr/local/lib])
@@ -722,6 +730,10 @@ dnl USING_SQL="yes"
       if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
 	AC_MSG_RESULT([found in /usr/lib])
 	MONGODBLIBFOUND=1
+      elif test -r /usr/lib64/libmongoc.a -o -r /usr/lib64/libmongoc.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        MONGODBLIBFOUND=1
       elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
 	LIBS="${LIBS} -L/usr/local/lib"
 	AC_MSG_RESULT([found in /usr/local/lib])
@@ -818,9 +830,12 @@ AC_ARG_ENABLE(sqlite3,
     if test x"$SQLITE3LIBFOUND" = x""; then
       AC_MSG_CHECKING([default locations for libsqlite3])
       if test -r /usr/lib/libsqlite3.a -o -r /usr/lib/libsqlite3.so; then
-	# LIBS="${LIBS} -L/usr/lib/sqlite3"
 	AC_MSG_RESULT([found in /usr/lib])
 	SQLITE3LIBFOUND=1
+      elif test -r /usr/lib64/libsqlite3.a -o -r /usr/lib64/libsqlite3.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        SQLITE3LIBFOUND=1
       elif test -r /usr/local/sqlite3/lib/libsqlite3.a -o -r /usr/local/sqlite3/lib/libsqlite3.so; then
 	LIBS="${LIBS} -L/usr/local/sqlite3/lib"
 	AC_MSG_RESULT([found in /usr/local/sqlite3/lib])
@@ -928,6 +943,10 @@ dnl USING_SQL="yes"
       if test -r /usr/lib/librabbitmq.a -o -r /usr/lib/librabbitmq.so; then
 	AC_MSG_RESULT([found in /usr/lib])
 	RABBITMQLIBFOUND=1
+      elif test -r /usr/lib64/librabbitmq.a -o -r /usr/lib64/librabbitmq.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        RABBITMQLIBFOUND=1
       elif test -r /usr/local/lib/librabbitmq.a -o -r /usr/local/lib/librabbitmq.so; then
 	LIBS="${LIBS} -L/usr/local/lib"
 	AC_MSG_RESULT([found in /usr/local/lib])
@@ -1026,6 +1045,10 @@ AC_ARG_ENABLE(geoip,
       if test -r /usr/lib/libGeoIP.a -o -r /usr/lib/libGeoIP.so; then
 	AC_MSG_RESULT([found in /usr/lib])
 	MMGEOIPLIBFOUND=1
+      elif test -r /usr/lib64/libGeoIP.a -o -r /usr/lib64/libGeoIP.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        MMGEOIPLIBFOUND=1
       elif test -r /usr/local/lib/libGeoIP.a -o -r /usr/local/lib/libGeoIP.so; then
 	LIBS="${LIBS} -L/usr/local/lib"
 	AC_MSG_RESULT([found in /usr/local/lib])
@@ -1123,6 +1146,10 @@ AC_ARG_ENABLE(jansson,
       if test -r /usr/lib/libjansson.a -o -r /usr/lib/libjansson.so; then
 	AC_MSG_RESULT([found in /usr/lib])
 	JANSSONLIBFOUND=1
+      elif test -r /usr/lib64/libjansson.a -o -r /usr/lib64/libjansson.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        JANSSONLIBFOUND=1
       elif test -r /usr/local/lib/libjansson.a -o -r /usr/local/lib/libjansson.so; then
 	LIBS="${LIBS} -L/usr/local/lib"
 	AC_MSG_RESULT([found in /usr/local/lib])
