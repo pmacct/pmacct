@@ -245,6 +245,7 @@ typedef u_int16_t as16_t;
 #define RD_TYPE_AS      0
 #define RD_TYPE_IP      1
 #define RD_TYPE_AS4     2
+#define RD_TYPE_VRFID	65535
 
 struct rd_as
 {

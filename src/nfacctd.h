@@ -508,6 +508,9 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_NAT_EVENT			230
 /* ... */
+#define NF9_INGRESS_VRFID		234
+#define NF9_EGRESS_VRFID		235
+/* ... */
 #define NF9_ETHERTYPE			256
 /* ... */
 #define NF9_OBSERVATION_TIME_SEC	322

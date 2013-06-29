@@ -2535,6 +2535,10 @@ int pmc_bgp_rd2str(char *str, rd_t *rd)
     rda4 = (struct rd_as4 *) rd;
     sprintf(str, "%u:%u:%u", rda4->type, rda4->as, rda4->val);
     break;
+  case RD_TYPE_VRFID:
+    rda = (struct rd_as *) rd;
+    sprintf(str, "vrfid:%u", rda->val);
+    break;
   default:
     sprintf(str, "unknown");
     break;

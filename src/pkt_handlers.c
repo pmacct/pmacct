@@ -409,6 +409,10 @@ void evaluate_packet_handlers()
         channels_list[index].phandler[primitives] = mpls_vpn_rd_frommap_handler;
         primitives++;
       } 
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_mpls_vpn_rd_handler;
+        primitives++;
+      }
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
@@ -2921,7 +2925,7 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  int label_idx, stack_depth;
+  int label_idx, last_label_value = 0, stack_depth, bosbit_found = FALSE;
 
   switch(hdr->version) {
   case 10:
@@ -2929,12 +2933,39 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
     for (label_idx = NF9_MPLS_LABEL_1, stack_depth = 0; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
       if (tpl->tpl[label_idx].len == 3) {
 	stack_depth++;
-	if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) break;
+	last_label_value = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off); 
+	if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+	  bosbit_found = TRUE;
+	  break;
+	}
       }
     }
 
-    pmpls->mpls_stack_depth = stack_depth;
+    if (last_label_value || bosbit_found) pmpls->mpls_stack_depth = stack_depth;
 
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_INGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val)
+      memcpy(&pbgp->mpls_vpn_rd.val, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+
+    if (tpl->tpl[NF9_EGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val)
+      memcpy(&pbgp->mpls_vpn_rd.val, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+
+    if (pbgp->mpls_vpn_rd.val) pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
     break;
   default:
     break;
