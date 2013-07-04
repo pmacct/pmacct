@@ -2025,3 +2025,111 @@ int BITR_mpls_label_bottom_handler(struct packet_ptrs *pptrs, void *unused, void
     break;
   }
 }
+
+int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+  int idx;
+
+  if (table) {
+    for (idx = 0; idx < table->num && table->primitive[idx].name; idx++) {
+      if (!strcmp(table->primitive[idx].name, value)) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Duplicate custom aggregate primitive name specified: %s. ", config.name, config.type, value);
+        return TRUE;
+      }
+    }
+
+    strlcpy(table->primitive[table->num].name, value, MAX_CUSTOM_PRIMITIVE_NAMELEN);
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+
+  if (table) {
+    table->primitive[table->num].field_type = atoi(value);
+    if (!table->primitive[table->num].field_type) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid NetFlow v9/IPFIX field type '%s'. ", config.name, config.type, value);
+      return TRUE;
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+
+  if (table) {
+    table->primitive[table->num].len = atoi(value);
+    if (!table->primitive[table->num].len) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
+      return TRUE;
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+
+  if (table) {
+    if (!strncmp(value, "int", 3)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_INT;
+    }
+    else if (!strncmp(value, "hex", 3)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_HEX;
+    }
+    else if (!strncmp(value, "str", 3)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_STRING;
+    }
+    // XXX: ip, mac
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
+{
+  struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+  int valid = FALSE;
+
+  if (table) {
+    if (strcmp(table->primitive[table->num].name, "") && table->primitive[table->num].field_type &&
+	table->primitive[table->num].len && table->primitive[table->num].semantics)
+      valid = TRUE;
+    else
+      valid = FALSE;
+
+    if (valid) table->num++;
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry in map '%s': name=%s field_type=%u len=%u semantics=%u\n",
+	  config.name, config.type, filename, table->primitive[table->num].name, table->primitive[table->num].field_type,
+	  table->primitive[table->num].len, table->primitive[table->num].semantics);
+
+      memset(&table->primitive[table->num], 0, sizeof(struct custom_primitive_entry));
+    }
+  }
+}

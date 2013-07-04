@@ -274,6 +274,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pidfile", cfg_key_pidfile},
   {"daemonize", cfg_key_daemonize},
   {"aggregate", cfg_key_aggregate},
+  {"aggregate_primitives", cfg_key_aggregate_primitives},
   {"snaplen", cfg_key_snaplen},
   {"aggregate_filter", cfg_key_aggregate_filter},
   {"promisc", cfg_key_promisc},

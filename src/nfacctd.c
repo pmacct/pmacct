@@ -158,6 +158,7 @@ int main(int argc,char **argv, char **envp)
   biss_map_allocated = FALSE;
   bta_map_allocated = FALSE;
   bitr_map_allocated = FALSE;
+  custom_primitives_allocated = FALSE;
   bta_map_caching = TRUE;
   sampling_map_caching = TRUE;
   find_id_func = NF_find_id;
@@ -547,6 +548,13 @@ int main(int argc,char **argv, char **envp)
     pptrs.v4.bitr_table = (u_char *) &bitr_table;
   }
   else pptrs.v4.bitr_table = NULL;
+
+  if (config.aggregate_primitives) {
+    int custom_primitives_allocated = FALSE;
+
+    req.key_value_table = (void *) &custom_primitives_registry;
+    load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
+  }
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */

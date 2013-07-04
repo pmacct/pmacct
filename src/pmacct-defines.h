@@ -108,6 +108,7 @@
 #define MAP_SAMPLING		105	/* sampling_map */
 #define MAP_TEE_RECVS		106	/* tee_receivers */
 #define MAP_IGP			107	/* igp_daemon_map */
+#define MAP_CUSTOM_PRIMITIVES	108	/* aggregate_primitives */
 
 /* PRIMITIVES DEFINITION: START */
 /* 55 primitives currently defined */
@@ -313,6 +314,10 @@
 #define IFINDEX_STATIC		0x00000001
 #define IFINDEX_TAG		0x00000002
 #define IFINDEX_TAG2		0x00000004
+
+#define CUSTOM_PRIMITIVE_TYPE_INT	1
+#define CUSTOM_PRIMITIVE_TYPE_HEX	2
+#define CUSTOM_PRIMITIVE_TYPE_STRING	3
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

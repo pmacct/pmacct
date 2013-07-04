@@ -121,12 +121,15 @@ int cfg_key_daemonize(char *filename, char *name, char *value_ptr)
 int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
+  struct custom_primitives_ptrs cpptrs[MAX_CUSTOM_PRIMITIVES];
   char *count_token;
-  u_int64_t value[3];
+  int cpptrs_index = 0;
   u_int32_t changes = 0; 
+  u_int64_t value[3];
 
   trim_all_spaces(value_ptr);
   memset(&value, 0, sizeof(value));
+  memset(&cpptrs, 0, sizeof(cpptrs));
 
   while (count_token = extract_token(&value_ptr, ',')) {
     if (!strcmp(count_token, "src_host")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST, count_token);
@@ -192,23 +195,39 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "mpls_label_top")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_TOP, count_token);
     else if (!strcmp(count_token, "mpls_label_bottom")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_BOTTOM, count_token);
     else if (!strcmp(count_token, "mpls_stack_depth")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_STACK_DEPTH, count_token);
-    else Log(LOG_WARNING, "WARN ( %s ): ignoring unknown aggregation method: %s.\n", filename, count_token);
+    else {
+      cpptrs[cpptrs_index].name = count_token;
+      cpptrs_index++;
+    }
   }
 
   if (!name) for (; list; list = list->next, changes++) {
     list->cfg.what_to_count = value[1];
     list->cfg.what_to_count_2 = value[2];
+    memcpy(&list->cfg.cpptrs, &cpptrs, sizeof(cpptrs));
   }
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.what_to_count = value[1];
         list->cfg.what_to_count_2 = value[2];
+        memcpy(&list->cfg.cpptrs, &cpptrs, sizeof(cpptrs));
         changes++;
         break;
       }
     }
   }
+
+  return changes;
+}
+
+int cfg_key_aggregate_primitives(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.aggregate_primitives = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'aggregate_primitives'. Globalized.\n", filename);
 
   return changes;
 }
@@ -2046,7 +2065,7 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
     value = BGP_SRC_PRIMITIVES_KEEP;
     value |= BGP_SRC_PRIMITIVES_BGP;
   }
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_peer_src_as_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_peer_src_as_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_src_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_peer_src_as_type'. Globalized.\n", filename);
@@ -2060,7 +2079,7 @@ int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *valu
   int value, changes = 0;
 
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_std_comm_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_std_comm_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_std_comm_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_std_comm_type'. Globalized.\n", filename);
@@ -2074,7 +2093,7 @@ int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *valu
   int value, changes = 0;
 
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_ext_comm_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_ext_comm_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_ext_comm_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_ext_comm_type'. Globalized.\n", filename);
@@ -2088,7 +2107,7 @@ int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value
   int value, changes = 0;
 
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_as_path_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_as_path_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_as_path_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_as_path_type'. Globalized.\n", filename);
@@ -2103,7 +2122,7 @@ int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *va
 
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_local_pref_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_local_pref_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_local_pref_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_local_pref_type'. Globalized.\n", filename);
@@ -2118,7 +2137,7 @@ int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr
 
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else Log(LOG_WARNING, "WARN ( %s ): Ignoring uknown 'bgp_src_med_type' value.\n", filename);
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_med_type' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_med_type = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_src_med_type'. Globalized.\n", filename);

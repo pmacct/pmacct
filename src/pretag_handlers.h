@@ -68,6 +68,13 @@ EXT int BTA_map_lookup_bgp_port_handler(char *, struct id_entry *, char *, struc
 /* BITR_*: flow_to_rd_map specific handlers */
 EXT int BITR_map_mpls_label_bottom_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
+/* custom_primitives_*: aggregate_primitives specific handlers */
+EXT int custom_primitives_map_name_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int custom_primitives_map_field_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int custom_primitives_map_len_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int custom_primitives_map_semantics_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT void custom_primitives_map_validate(char *, struct plugin_requests *);
+
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id2_handler(struct packet_ptrs *, void *, void *);

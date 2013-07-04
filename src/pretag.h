@@ -185,6 +185,7 @@ EXT int biss_map_allocated;
 EXT int bta_map_allocated;
 EXT int bitr_map_allocated;
 EXT int sampling_map_allocated;
+EXT int custom_primitives_allocated;
 
 EXT int bta_map_caching; 
 EXT int sampling_map_caching; 

@@ -33,6 +33,7 @@ EXT int cfg_key_logfile(char *, char *, char *);
 EXT int cfg_key_pidfile(char *, char *, char *);
 EXT int cfg_key_daemonize(char *, char *, char *);
 EXT int cfg_key_aggregate(char *, char *, char *);
+EXT int cfg_key_aggregate_primitives(char *, char *, char *);
 EXT int cfg_key_snaplen(char *, char *, char *);
 EXT int cfg_key_aggregate_filter(char *, char *, char *);
 EXT int cfg_key_pcap_filter(char *, char *, char *);

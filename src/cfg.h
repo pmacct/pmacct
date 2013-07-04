@@ -24,6 +24,8 @@
 
 /* defines */
 #define CFG_LINE_LEN(x) (SRVBUFLEN-strlen(x))
+#define MAX_CUSTOM_PRIMITIVES		64
+#define MAX_CUSTOM_PRIMITIVE_NAMELEN	64
 
 /* structures */
 struct _dictionary_line {
@@ -31,11 +33,30 @@ struct _dictionary_line {
   int (*func)(char *, char *, char *);
 };
 
+struct custom_primitive_entry {
+  u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  u_int16_t field_type;
+  u_int16_t len;
+  u_int8_t semantics;
+};
+
+struct custom_primitives {
+  struct custom_primitive_entry primitive[MAX_CUSTOM_PRIMITIVES];
+  int num;
+};
+
+struct custom_primitives_ptrs {
+  char *name;
+  struct custom_primitive_entry *ptr;
+};
+
 struct configuration {
   u_int64_t what_to_count;	/* first registry */
   u_int64_t what_to_count_2;	/* second registry */
   u_int64_t nfprobe_what_to_count;
   u_int64_t nfprobe_what_to_count_2;
+  char *aggregate_primitives;
+  struct custom_primitives_ptrs cpptrs[MAX_CUSTOM_PRIMITIVES];
   char *name;
   char *type;
   int type_id;
@@ -252,5 +273,6 @@ EXT void set_default_values();
 
 /* global vars */
 EXT char *cfg[SRVBUFLEN], *cfg_cmdline[SRVBUFLEN];
+EXT struct custom_primitives custom_primitives_registry;
 EXT int rows;
 #undef EXT
