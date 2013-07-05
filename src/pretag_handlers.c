@@ -2075,6 +2075,7 @@ int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *
   if (table) {
     table->primitive[table->num].len = atoi(value);
     if (!table->primitive[table->num].len) {
+      table->primitive[table->num].len = 0; /* pedantic */
       Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
       return TRUE;
     }
@@ -2123,11 +2124,12 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
     else
       valid = FALSE;
 
-    if (valid) table->num++;
+    if (valid && (table->num + 1 < MAX_CUSTOM_PRIMITIVES)) table->num++;
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry in map '%s': name=%s field_type=%u len=%u semantics=%u\n",
-	  config.name, config.type, filename, table->primitive[table->num].name, table->primitive[table->num].field_type,
-	  table->primitive[table->num].len, table->primitive[table->num].semantics);
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s field_type=%u len=%u semantics=%u\n",
+	  config.name, config.type, table->num + 1, filename, table->primitive[table->num].name,
+	  table->primitive[table->num].field_type, table->primitive[table->num].len,
+	  table->primitive[table->num].semantics);
 
       memset(&table->primitive[table->num], 0, sizeof(struct custom_primitive_entry));
     }

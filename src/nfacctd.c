@@ -554,6 +554,13 @@ int main(int argc,char **argv, char **envp)
 
     req.key_value_table = (void *) &custom_primitives_registry;
     load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
+
+    /* fixing per plugin pointers, offsets and lengths */
+    list = plugins_list;
+    while(list) {
+      custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+      list = list->next;
+    }
   }
 
 #if defined ENABLE_THREADS

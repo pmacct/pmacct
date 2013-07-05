@@ -455,6 +455,7 @@ struct extra_primitives {
   u_int16_t off_pkt_bgp_primitives;
   u_int16_t off_pkt_nat_primitives;
   u_int16_t off_pkt_mpls_primitives;
+  u_int16_t off_custom_primitives;
 };
 
 struct primitives_ptrs {

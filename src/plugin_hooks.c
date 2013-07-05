@@ -66,6 +66,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += sizeof(struct pkt_bgp_primitives);
       if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
+      if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
 
       /* If nothing is supplied, let's hint some working default values */
       if (list->cfg.pcap_savefile && !list->cfg.pipe_size && !list->cfg.buffer_size) {
@@ -172,6 +173,10 @@ void load_plugins(struct plugin_requests *req)
         offset += sizeof(struct pkt_mpls_primitives);
       }
       else chptr->extras.off_pkt_mpls_primitives = 0;
+      if (list->cfg.cpptrs.len) {
+	chptr->extras.off_custom_primitives = offset;
+	offset += list->cfg.cpptrs.len;
+      }
 
       chptr->datasize = min_sz-ChBufHdrSz;
 

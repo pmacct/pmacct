@@ -621,6 +621,14 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    /* if cpptrs.len > 0 one or multiple custom primitives are defined */
+    if (channels_list[index].plugin->cfg.cpptrs.len) {
+      if (config.acct_type == ACCT_NF) {
+	channels_list[index].phandler[primitives] = NF_custom_primitives_handler;
+	primitives++;
+      }
+    }
+
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
       if (config.acct_type == ACCT_PM) {
 	channels_list[index].phandler[primitives] = counters_handler;
@@ -2743,6 +2751,32 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
   }
 
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_end.tv_usec = 0;
+}
+
+void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  struct custom_primitive_entry *cpe;
+  int cpptrs_idx;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    for (cpptrs_idx = 0; cpptrs_idx < chptr->plugin->cfg.cpptrs.num; cpptrs_idx++) {
+      if (chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr) {
+	cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
+	if (tpl->tpl[cpe->field_type].len == cpe->len) {
+	  memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
+	}
+      }
+    }
+    break;
+  default:
+    break;
+  }
 }
 
 void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

@@ -121,9 +121,8 @@ int cfg_key_daemonize(char *filename, char *name, char *value_ptr)
 int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  struct custom_primitives_ptrs cpptrs[MAX_CUSTOM_PRIMITIVES];
+  struct custom_primitives_ptrs cpptrs;
   char *count_token;
-  int cpptrs_index = 0;
   u_int32_t changes = 0; 
   u_int64_t value[3];
 
@@ -196,8 +195,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "mpls_label_bottom")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_BOTTOM, count_token);
     else if (!strcmp(count_token, "mpls_stack_depth")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_STACK_DEPTH, count_token);
     else {
-      cpptrs[cpptrs_index].name = count_token;
-      cpptrs_index++;
+      cpptrs.primitive[cpptrs.num].name = count_token;
+      cpptrs.num++;
     }
   }
 

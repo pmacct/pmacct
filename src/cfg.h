@@ -34,6 +34,7 @@ struct _dictionary_line {
 };
 
 struct custom_primitive_entry {
+  /* compiled from map */
   u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
   u_int16_t field_type;
   u_int16_t len;
@@ -45,9 +46,16 @@ struct custom_primitives {
   int num;
 };
 
-struct custom_primitives_ptrs {
+struct custom_primitive_ptrs {
   char *name;
+  u_int16_t off;
   struct custom_primitive_entry *ptr;
+};
+
+struct custom_primitives_ptrs {
+  struct custom_primitive_ptrs primitive[MAX_CUSTOM_PRIMITIVES];
+  int num;
+  int len;
 };
 
 struct configuration {
@@ -56,7 +64,7 @@ struct configuration {
   u_int64_t nfprobe_what_to_count;
   u_int64_t nfprobe_what_to_count_2;
   char *aggregate_primitives;
-  struct custom_primitives_ptrs cpptrs[MAX_CUSTOM_PRIMITIVES];
+  struct custom_primitives_ptrs cpptrs;
   char *name;
   char *type;
   int type_id;

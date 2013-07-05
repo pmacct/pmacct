@@ -1923,3 +1923,34 @@ void primptrs_set_mpls(u_char *base, struct extra_primitives *extras, struct pri
 {
   prim_ptrs->pmpls = (struct pkt_mpls_primitives *) (base + extras->off_pkt_mpls_primitives);
 }
+
+void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct custom_primitives *registry)
+{
+  int cpptrs_idx, registry_idx;
+
+  /* first pass: linking */
+  for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
+    for (registry_idx = 0; registry->primitive[registry_idx].len && registry_idx < registry->num; registry_idx++) {
+      if (!strcmp(cpptrs->primitive[cpptrs_idx].name, registry->primitive[registry_idx].name)) {
+	if (cpptrs->len + registry->primitive[cpptrs_idx].len < UINT16_MAX) {
+	  cpptrs->primitive[cpptrs_idx].ptr = &registry->primitive[registry_idx];
+	  cpptrs->primitive[cpptrs_idx].off = cpptrs->len;
+	  cpptrs->len += registry->primitive[cpptrs_idx].len;
+	}
+	else {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): Max allocatable space for custom primitives finished (%s).\n",
+		config.name, config.type, cpptrs->primitive[cpptrs_idx].name);
+	  cpptrs->primitive[cpptrs_idx].ptr = NULL;
+	}
+
+	break;
+      }
+    }
+  } 
+  
+  /* second pass: verification */
+  for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
+    if (!cpptrs->primitive[cpptrs_idx].ptr)
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unknown primitive '%s'\n", config.name, config.type, cpptrs->primitive[cpptrs_idx].name);
+  }
+}
