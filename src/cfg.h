@@ -68,6 +68,7 @@ struct configuration {
   char *name;
   char *type;
   int type_id;
+  char *proc_name;
   int sock;
   int acct_type; 
   int data_type; 

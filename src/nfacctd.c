@@ -658,7 +658,8 @@ int main(int argc,char **argv, char **envp)
   load_plugins(&req);
   load_plugin_filters(1);
   evaluate_packet_handlers();
-  pm_setproctitle("%s [%s]", "Core Process", "default");
+  if (!config.proc_name) pm_setproctitle("%s [%s]", "Core Process", "default");
+  else pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
   if (config.pidfile) write_pid_file(config.pidfile);
   load_networks(config.networks_file, &nt, &nc);
 

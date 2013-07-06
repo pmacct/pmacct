@@ -745,6 +745,10 @@ KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD]
 DESC:		defines the IPv4/IPv6 address where to bind the nfacctd (nfacctd_ip) and sfacctd (sfacctd_ip)
 		daemons (default: all interfaces).
 
+KEY:		[ nfacctd_proc_name | sfacctd_proc_name | uacctd_proc_name | pmacctd_proc_name ]
+DESC:		defines the name of the core process. This is the equivalent to instantiate named plugins but
+		for the core process (default: "defaut")
+
 KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, NO_PMACCTD]
 DESC:		full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
 		to send packets to the daemon. Current syntax does not implement network masks but individual

@@ -231,6 +231,17 @@ int cfg_key_aggregate_primitives(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_proc_name(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.proc_name = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key '[nf|pm|sf|u]acctd_proc_name'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_snaplen(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2609,7 +2620,7 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   } 
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_as = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key '[nf|pm|sf|ua]acctd_as_new'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key '[nf|pm|sf|u]acctd_as_new'. Globalized.\n", filename);
 
   return changes;
 }
