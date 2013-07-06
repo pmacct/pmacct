@@ -348,6 +348,8 @@ static const struct _dictionary_line dictionary[] = {
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
   {"mongo_host", cfg_key_sql_host},
   {"mongo_table", cfg_key_sql_table},
+  {"mongo_user", cfg_key_sql_user},
+  {"mongo_passwd", cfg_key_sql_passwd},
   {"mongo_refresh_time", cfg_key_sql_refresh_time},
   {"mongo_cache_entries", cfg_key_print_cache_entries},
   {"mongo_history", cfg_key_sql_history},

@@ -340,6 +340,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
+  char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int i, j, db_status, batch_idx;
 
   const bson **bson_batch, **bson_batch_ptr;
@@ -388,6 +389,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
     strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+  }
+
+  /* If there is any signs of auth in the config, then try to auth */
+  if (config.sql_user || config.sql_passwd) {
+    if (!config.sql_user) config.sql_user = default_user;
+    if (!config.sql_passwd) config.sql_passwd = default_passwd;
+    if (dyn_table) db_status = mongo_cmd_authenticate(&db_conn, tmpbuf, config.sql_user, config.sql_passwd);
+    else db_status = mongo_cmd_authenticate(&db_conn, config.sql_table, config.sql_user, config.sql_passwd);
+    if (db_status != MONGO_OK) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Authentication failed to MongoDB\n", config.name, config.type); 
+      return;
+    }
+    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): Successful authentication (MONGO_OK) to MongoDB\n", config.name, config.type);
   }
 
   for (j = 0, batch_idx = 0; j < index; j++, batch_idx++) {

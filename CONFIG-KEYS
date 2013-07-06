@@ -412,11 +412,17 @@ DESC:		this switch makes sense only when using PostgreSQL plugin and supplied de
 KEY:	 	[ sql_host | mongo_host | amqp_host ]
 DESC:		defines the backend server IP/hostname (default: localhost).
 
-KEY:		[ sql_user | amqp_user ]
-DESC:		defines the username to use when connecting to the server (default: pmacct).
+KEY:		[ sql_user | mongo_user | amqp_user ]
+DESC:		defines the username to use when connecting to the server. In MongoDB, if both
+		mongo_user and mongo_passwd directives are omitted, authentication is disabled;
+		if only one of the two is specified, the other is set to its default value.
+		(default: pmacct).
 
-KEY:		[ sql_passwd | amqp_passwd ]
-DESC:		defines the password to use when connecting to the server (default: arealsmartpwd).
+KEY:		[ sql_passwd | mongo_passwd | amqp_passwd ]
+DESC:		defines the password to use when connecting to the server.In MongoDB, if both
+                mongo_user and mongo_passwd directives are omitted, authentication is disabled;
+		if only one of the two is specified, the other is set to its default value.
+		(default: arealsmartpwd).
 
 KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time ] (-r)
 DESC:		time interval, in seconds, between consecutive executions of the plugin cache scanner. The
