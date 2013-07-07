@@ -1907,6 +1907,11 @@ void set_primptrs_funcs(struct extra_primitives *extras)
     primptrs_funcs[idx] = primptrs_set_mpls;
     idx++;
   }
+
+  if (extras->off_custom_primitives) {
+    primptrs_funcs[idx] = primptrs_set_custom;
+    idx++;
+  }
 }
 
 void primptrs_set_bgp(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
@@ -1924,9 +1929,15 @@ void primptrs_set_mpls(u_char *base, struct extra_primitives *extras, struct pri
   prim_ptrs->pmpls = (struct pkt_mpls_primitives *) (base + extras->off_pkt_mpls_primitives);
 }
 
+void primptrs_set_custom(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->pcust = (char *) (base + extras->off_custom_primitives);
+}
+
 void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct custom_primitives *registry)
 {
   int cpptrs_idx, registry_idx;
+  int pad = 0;
 
   /* first pass: linking */
   for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
@@ -1935,7 +1946,7 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
 	if (cpptrs->len + registry->primitive[cpptrs_idx].len < UINT16_MAX) {
 	  cpptrs->primitive[cpptrs_idx].ptr = &registry->primitive[registry_idx];
 	  cpptrs->primitive[cpptrs_idx].off = cpptrs->len;
-	  cpptrs->len += registry->primitive[cpptrs_idx].len;
+	  cpptrs->len += registry->primitive[registry_idx].len;
 	}
 	else {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): Max allocatable space for custom primitives finished (%s).\n",
@@ -1948,9 +1959,17 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
     }
   } 
   
-  /* second pass: verification */
+  /* second pass: verification and finish-off */
   for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
     if (!cpptrs->primitive[cpptrs_idx].ptr)
       Log(LOG_WARNING, "WARN ( %s/%s ): Unknown primitive '%s'\n", config.name, config.type, cpptrs->primitive[cpptrs_idx].name);
+    else {
+      struct custom_primitive_entry *cpe = cpptrs->primitive[cpptrs_idx].ptr;
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': off=%u len=%u\n", config.name, config.type,
+	cpptrs->primitive[cpptrs_idx].name, cpptrs->primitive[cpptrs_idx].off, cpe->len);
+    }
   }
+
+  if (cpptrs->len) pad = 8 - (cpptrs->len % 8);
+  cpptrs->len += pad; /* padding to a safe 64-bit boundary */
 }

@@ -77,12 +77,22 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   struct pkt_bgp_primitives dummy_pbgp;
   struct pkt_nat_primitives dummy_pnat;
   struct pkt_mpls_primitives dummy_pmpls;
+  char *dummy_pcust, *custbuf;
   int reset_counter, offset = PdataSz;
 
+  dummy_pcust = malloc(config.cpptrs.len);
+  custbuf = malloc(config.cpptrs.len);
+  if (!dummy_pcust || !custbuf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate 'dummy_pcust' or 'custbuf' structure.\n", config.name, config.type);
+    exit_plugin(1);
+  }
   memset(&dummy, 0, sizeof(struct pkt_data));
   memset(&dummy_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&dummy_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&dummy_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(dummy_pcust, 0, config.cpptrs.len); 
+  memset(custbuf, 0, config.cpptrs.len); 
+
   memset(&rb, 0, sizeof(struct reply_buffer));
   memcpy(rb.buf, buf, sizeof(struct query_header));
   rb.len = LARGEBUFLEN-sizeof(struct query_header);
@@ -112,6 +122,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     offset += sizeof(struct pkt_mpls_primitives);
   }
   else q->extras.off_pkt_mpls_primitives = 0;
+  if (extras->off_custom_primitives) {
+    q->extras.off_custom_primitives = offset;
+    offset += config.cpptrs.len;
+  }
+  else q->extras.off_custom_primitives = 0;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Processing data received from client ...\n", config.name, config.type);
 
@@ -149,6 +164,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
         if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
           enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 	}
+
+        if (extras->off_custom_primitives && acc_elem->pcust) {
+          enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
+        }
       } 
       if (acc_elem->next != NULL) {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Following chain in reply ...\n", config.name, config.type);
@@ -203,6 +222,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	prim_ptrs.pbgp = &request.pbgp;
 	prim_ptrs.pnat = &request.pnat;
 	prim_ptrs.pmpls = &request.pmpls;
+	prim_ptrs.pcust = request.pcust;
 
         acc_elem = search_accounting_structure(&prim_ptrs);
         if (acc_elem) { 
@@ -227,6 +247,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	      enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 	    }
 
+	    if (extras->off_custom_primitives && acc_elem->pcust) {
+	      enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
+	    }
+
 	    if (reset_counter) {
 	      if (forked) set_reset_flag(acc_elem);
 	      else reset_counters(acc_elem);
@@ -244,6 +268,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
 	      if (extras->off_pkt_mpls_primitives)
 		enQueue_elem(sd, &rb, &dummy_pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
+
+	      if (extras->off_custom_primitives)
+		enQueue_elem(sd, &rb, &dummy_pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
 	    }
 	  }
         }
@@ -259,6 +286,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
 	    if (extras->off_pkt_mpls_primitives)
 	      enQueue_elem(sd, &rb, &dummy_pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
+
+            if (extras->off_custom_primitives)  
+              enQueue_elem(sd, &rb, &dummy_pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
 	  }
 	}
       }
@@ -275,6 +305,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
         for (idx = 0; idx < config.buckets; idx++) {
           if (!following_chain) acc_elem = (struct acc *) elem;
 	  if (!test_zero_elem(acc_elem)) {
+	    // XXX: support for custom primitives
 	    mask_elem(&tbuf, &bbuf, &nbuf, &mbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives)) &&
@@ -331,9 +362,31 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
       idx++;
     }
 
-    send_ct_dummy:
     memset(&dummy, 0, sizeof(dummy));
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
+    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+  }
+  else if (q->type & WANT_CUSTOM_PRIMITIVES_TABLE) {
+    struct imt_custom_primitives custom_primitives_registry;
+    u_int32_t idx;
+
+    /* compsing new structure */
+    memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
+    for (idx = 0; idx < config.cpptrs.num; idx++) {
+      strlcpy(custom_primitives_registry.primitive[idx].name, config.cpptrs.primitive[idx].name, MAX_CUSTOM_PRIMITIVE_NAMELEN); 
+      custom_primitives_registry.primitive[idx].off = config.cpptrs.primitive[idx].off;
+      custom_primitives_registry.primitive[idx].field_type = config.cpptrs.primitive[idx].ptr->field_type;
+      custom_primitives_registry.primitive[idx].len = config.cpptrs.primitive[idx].ptr->len;
+      custom_primitives_registry.primitive[idx].semantics = config.cpptrs.primitive[idx].ptr->semantics;
+    } 
+    custom_primitives_registry.num = config.cpptrs.num;
+    custom_primitives_registry.len = config.cpptrs.len;
+
+    if (idx) enQueue_elem(sd, &rb, &custom_primitives_registry, sizeof(custom_primitives_registry), sizeof(custom_primitives_registry));
+    else {
+      memset(&dummy, 0, sizeof(dummy));
+      enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
+    }
     send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
   else if (q->type & WANT_PKT_LEN_DISTRIB_TABLE) {
@@ -354,6 +407,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
     send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
+
+  if (dummy_pcust) free(dummy_pcust);
+  if (custbuf) free(custbuf);
 }
 
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct pkt_nat_primitives *d3,

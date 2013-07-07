@@ -24,7 +24,7 @@
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uRVa"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:RVa"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:Va"
-#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDV"
+#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDVU"
 #define N_PRIMITIVES 57
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
@@ -284,6 +284,7 @@
 #define WANT_CLASS_TABLE		0x00000040
 #define WANT_PKT_LEN_DISTRIB_TABLE	0x00000080
 #define WANT_LOCK_OP			0x00000100
+#define WANT_CUSTOM_PRIMITIVES_TABLE	0x00000200
 
 #define PIPE_TYPE_METADATA	0x00000001
 #define PIPE_TYPE_PAYLOAD	0x00000002
@@ -315,9 +316,11 @@
 #define IFINDEX_TAG		0x00000002
 #define IFINDEX_TAG2		0x00000004
 
-#define CUSTOM_PRIMITIVE_TYPE_INT	1
+#define CUSTOM_PRIMITIVE_TYPE_UINT	1
 #define CUSTOM_PRIMITIVE_TYPE_HEX	2
 #define CUSTOM_PRIMITIVE_TYPE_STRING	3
+#define CUSTOM_PRIMITIVE_TYPE_IP	4
+#define CUSTOM_PRIMITIVE_TYPE_MAC	5
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

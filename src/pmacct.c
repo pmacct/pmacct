@@ -89,6 +89,7 @@ void usage_client(char *prog)
   printf("  -l\tPerform locking of the table\n");
   printf("  -t\tShow memory table status\n");
   printf("  -C\tShow classifiers table\n");
+  printf("  -U\tShow custom primitives table\n");
   printf("  -D\tShow packet length distribution table\n");
   printf("  -p\t[file] \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -O\tSet output [ formatted | csv | json | event_formatted | event_csv ] (applies to -M and -s)\n");
@@ -560,8 +561,9 @@ int main(int argc,char **argv)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
+  char *pcust = NULL, *empty_pcust = NULL;
   char clibuf[clibufsz], *bufptr;
-  unsigned char *largebuf, *elem, *ct, *pldt;
+  unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
   char path[128], file[128], password[9], rd_str[SRVBUFLEN];
   char *as_path, empty_aspath[] = "^$", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
@@ -569,6 +571,7 @@ int main(int argc,char **argv)
   int counter=0, ct_idx=0, ct_num=0, sep_len=0;
   int pldt_idx=0, pldt_num=0, is_event;
   char *sep_ptr = NULL, sep[10], default_sep[] = ",";
+  struct imt_custom_primitives custom_primitives_registry;
 
   /* mrtg stuff */
   char match_string[LARGEBUFLEN], *match_string_token, *match_string_ptr;
@@ -581,7 +584,7 @@ int main(int argc,char **argv)
   extern int optind, opterr, optopt;
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
-  int want_output, want_pkt_len_distrib_table;
+  int want_output, want_pkt_len_distrib_table, want_custom_primitives_table;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   int datasize;
   u_int64_t what_to_count, what_to_count_2, have_wtc;
@@ -598,6 +601,7 @@ int main(int argc,char **argv)
   memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
   memset(pkt_len_distrib_table, 0, sizeof(pkt_len_distrib_table));
+  memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
 
   strcpy(path, "/tmp/collect.pipe");
   unpacked = 0; printed = 0;
@@ -614,6 +618,7 @@ int main(int argc,char **argv)
   want_class_table = FALSE;
   want_ipproto_num = FALSE;
   want_pkt_len_distrib_table = FALSE;
+  want_custom_primitives_table = FALSE;
   which_counter = FALSE;
   topN_counter = FALSE;
   sum_counters = FALSE;
@@ -885,6 +890,12 @@ int main(int argc,char **argv)
       q.num = 1;
       want_class_table = TRUE;
       break;
+    case 'U':
+      if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
+      q.type |= WANT_CUSTOM_PRIMITIVES_TABLE;
+      q.num = 1;
+      want_custom_primitives_table = TRUE;
+      break;
     case 'D':
       if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
       q.type |= WANT_PKT_LEN_DISTRIB_TABLE;
@@ -980,6 +991,54 @@ int main(int argc,char **argv)
       usage_client(argv[0]);
       exit(1);
       break;
+    }
+  }
+
+  /* first off let's fetch the list of custom primitives
+     loaded at the server we are connecting to */
+  {
+    struct query_header qhdr;
+
+    memset(&qhdr, 0, sizeof(struct query_header));
+    qhdr.type = WANT_CUSTOM_PRIMITIVES_TABLE;
+    qhdr.num = 1;
+
+    memcpy(clibuf, &qhdr, sizeof(struct query_header));
+    buflen = sizeof(struct query_header);
+    buflen++;
+    clibuf[buflen] = '\x4'; /* EOT */
+    buflen++;
+
+    // XXX: transfer entry by entry like class/pkt_distrib tables
+    assert(sizeof(struct imt_custom_primitives)+sizeof(struct query_header) < LARGEBUFLEN);
+    sd = build_query_client(path);
+    send(sd, clibuf, buflen, 0);
+    Recv(sd, &cpt);
+
+    memcpy(&custom_primitives_registry, cpt+sizeof(struct query_header), sizeof(struct imt_custom_primitives));
+    if (custom_primitives_registry.len) empty_pcust = malloc(custom_primitives_registry.len);
+    else empty_pcust = malloc(LARGEBUFLEN); /* the assert() just above protects */
+
+    if (!empty_pcust) {
+      printf("ERROR: unable to allocate 'empty_pcust' structure.\nExiting...\n\n");
+      exit(1);
+    }
+
+    if (want_custom_primitives_table) {
+      int idx;
+
+      /* table header */
+      printf("NAME                              ");
+      printf("LEN    ");
+      printf("OFF\n");
+
+      for (idx = 0; idx < custom_primitives_registry.num; idx++) {
+	printf("%-32s  %-5u  %-5u\n", custom_primitives_registry.primitive[idx].name,
+		custom_primitives_registry.primitive[idx].len,
+		custom_primitives_registry.primitive[idx].off);
+      }
+
+      exit(1);
     }
   }
 
@@ -1680,10 +1739,14 @@ int main(int argc,char **argv)
       if (extras.off_pkt_mpls_primitives) pmpls = (struct pkt_mpls_primitives *) ((u_char *)elem + extras.off_pkt_mpls_primitives);
       else pmpls = &empty_pmpls;
 
+      if (extras.off_custom_primitives) pcust = ((u_char *)elem + extras.off_custom_primitives);
+      else pcust = &empty_pcust;
+
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0 ||
 	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
-	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0) {
+	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0 ||
+	  custom_primitives_registry.len) {
         if (!have_wtc || (what_to_count & COUNT_ID)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.id);
@@ -2163,6 +2226,8 @@ int main(int argc,char **argv)
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20llu  ", acc_elem->flo_num);
 	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->flo_num);
 	  }
+
+	  /* all custom primitives printed here */
 
 	  if (want_output & (PRINT_OUTPUT_FORMATTED|PRINT_OUTPUT_CSV))
 	    printf("%s%llu\n", write_sep(sep_ptr, &count), acc_elem->pkt_len);

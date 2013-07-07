@@ -52,6 +52,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_bgp_primitives *pbgp, empty_pbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
   struct pkt_mpls_primitives *pmpls, empty_pmpls;
+  char *pcust, empty_pcust[] = "";
   struct networks_file_data nfd;
   struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
@@ -309,7 +310,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       /* When using extended BGP features we need to
 	 free() up memory allocations before erasing */ 
       if (extras.off_pkt_bgp_primitives || extras.off_pkt_nat_primitives ||
-	  extras.off_pkt_mpls_primitives) free_extra_allocs(); 
+	  extras.off_pkt_mpls_primitives || extras.off_custom_primitives)
+	free_extra_allocs(); 
       clear_memory_pool_table();
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
       if (current_pool == NULL) {
@@ -371,6 +373,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (extras.off_pkt_mpls_primitives) 
             pmpls = (struct pkt_mpls_primitives *) ((u_char *)data + extras.off_pkt_mpls_primitives);
           else pmpls = (struct pkt_mpls_primitives *) &empty_pmpls;
+          if (extras.off_custom_primitives)
+	    pcust = ((u_char *)data + extras.off_custom_primitives);
+          else pcust = empty_pcust;
 
 	  for (num = 0; net_funcs[num]; num++)
 	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -388,7 +393,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  prim_ptrs.pbgp = pbgp; 
 	  prim_ptrs.pnat = pnat;
 	  prim_ptrs.pmpls = pmpls;
-
+	  prim_ptrs.pcust = pcust;
+	  
           (*insert_func)(&prim_ptrs);
 
 	  ((struct ch_buf_hdr *)pipebuf)->num--;
@@ -492,6 +498,10 @@ void free_extra_allocs()
     if (acc_elem->pmpls) {
       free(acc_elem->pmpls);
       acc_elem->pmpls = NULL;
+    }
+    if (acc_elem->pcust) {
+      free(acc_elem->pcust);
+      acc_elem->pcust = NULL;
     }
     if (acc_elem->next) {
       acc_elem = acc_elem->next;

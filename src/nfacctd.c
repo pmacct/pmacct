@@ -550,17 +550,16 @@ int main(int argc,char **argv, char **envp)
   else pptrs.v4.bitr_table = NULL;
 
   if (config.aggregate_primitives) {
-    int custom_primitives_allocated = FALSE;
-
     req.key_value_table = (void *) &custom_primitives_registry;
     load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
+  }
+  else memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
 
-    /* fixing per plugin pointers, offsets and lengths */
-    list = plugins_list;
-    while(list) {
-      custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
-      list = list->next;
-    }
+  /* fixing per plugin custom primitives pointers, offsets and lengths */
+  list = plugins_list;
+  while(list) {
+    custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+    list = list->next;
   }
 
 #if defined ENABLE_THREADS
@@ -831,6 +830,7 @@ int main(int argc,char **argv, char **envp)
     if (reload_map) {
       bta_map_caching = TRUE;
       sampling_map_caching = TRUE;
+      req.key_value_table = NULL;
 
       load_networks(config.networks_file, &nt, &nc);
 
@@ -849,6 +849,10 @@ int main(int argc,char **argv, char **envp)
       if (config.sampling_map) {
         load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
         set_sampling_table(&pptrs, (u_char *) &sampling_table);
+      }
+      if (config.aggregate_primitives) {
+	req.key_value_table = (void *) &custom_primitives_registry;
+	load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
       }
 
       reload_map = FALSE;

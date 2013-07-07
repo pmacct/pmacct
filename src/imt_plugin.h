@@ -41,6 +41,7 @@ struct acc {
   struct cache_bgp_primitives *cbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
+  char *pcust;
   struct acc *next;
 };
 
@@ -77,6 +78,7 @@ struct query_entry {
   struct pkt_bgp_primitives pbgp;	/* extended BGP data */
   struct pkt_nat_primitives pnat;	/* extended NAT + timestamp data */
   struct pkt_mpls_primitives pmpls;	/* extended MPLS data */
+  char *pcust;				/* custom-defined data */
 };
 
 struct reply_buffer {
@@ -93,6 +95,22 @@ struct stripped_class {
 
 struct stripped_pkt_len_distrib {
   char str[MAX_PKT_LEN_DISTRIB_LEN];
+};
+
+struct imt_custom_primitive_entry {
+  /* compiled from map */
+  u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  u_int16_t field_type;
+  u_int16_t len;
+  u_int8_t semantics;
+  /* compiled internally */
+  u_int16_t off;
+};
+
+struct imt_custom_primitives {
+  struct imt_custom_primitive_entry primitive[MAX_CUSTOM_PRIMITIVES];
+  int len;
+  int num;
 };
 
 /* prototypes */

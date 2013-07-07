@@ -559,6 +559,14 @@ int main(int argc,char **argv, char **envp)
   }
   else pptrs.v4.bitr_table = NULL;
 
+  /* fixing per plugin custom primitives pointers, offsets and lengths */
+  memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
+  list = plugins_list;
+  while(list) { 
+    custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+    list = list->next;
+  }
+
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */
   if (config.nfacctd_isis) {

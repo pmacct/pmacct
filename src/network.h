@@ -463,6 +463,7 @@ struct primitives_ptrs {
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
+  char *pcust;
 };
 
 typedef void (*primptrs_func) (u_char *, struct extra_primitives *, struct primitives_ptrs *);

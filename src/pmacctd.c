@@ -742,11 +742,6 @@ int main(int argc,char **argv, char **envp)
        to keep a backup feed in memory */
     config.nfacctd_bgp_max_peers = 2;
 
-    if (config.nfacctd_flow_to_rd_map) {
-      Log(LOG_ERR, "ERROR ( default/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n");
-      exit(1);
-    }
-
     cb_data.f_agent = (char *)&client;
     nfacctd_bgp_wrapper();
 
@@ -770,6 +765,19 @@ int main(int argc,char **argv, char **envp)
     req.bpf_filter = TRUE;
   }
 #endif
+
+  if (config.nfacctd_flow_to_rd_map) {
+    Log(LOG_ERR, "ERROR ( default/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n");
+    exit(1);
+  }
+
+  /* fixing per plugin custom primitives pointers, offsets and lengths */
+  memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
+  list = plugins_list;
+  while(list) {
+    custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+    list = list->next;
+  }
 
   /* Init tunnel handlers */
   tunnel_registry_init();

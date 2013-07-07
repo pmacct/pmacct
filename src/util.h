@@ -110,6 +110,7 @@ EXT void set_primptrs_funcs(struct extra_primitives *);
 EXT void primptrs_set_bgp(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_nat(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_mpls(u_char *, struct extra_primitives *, struct primitives_ptrs *);
+EXT void primptrs_set_custom(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 
 EXT void custom_primitives_reconcile(struct custom_primitives_ptrs *, struct custom_primitives *);
 #undef EXT

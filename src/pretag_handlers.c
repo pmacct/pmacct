@@ -2093,8 +2093,8 @@ int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, 
   struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
 
   if (table) {
-    if (!strncmp(value, "int", 3)) {
-      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_INT;
+    if (!strncmp(value, "u_int", 5)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_UINT;
     }
     else if (!strncmp(value, "hex", 3)) {
       table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_HEX;
@@ -2102,7 +2102,12 @@ int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, 
     else if (!strncmp(value, "str", 3)) {
       table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_STRING;
     }
-    // XXX: ip, mac
+    else if (!strncmp(value, "ip", 2)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_IP;
+    }
+    else if (!strncmp(value, "mac", 3)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_MAC;
+    }
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
