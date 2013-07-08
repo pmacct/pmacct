@@ -395,8 +395,20 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_user || config.sql_passwd) {
     if (!config.sql_user) config.sql_user = default_user;
     if (!config.sql_passwd) config.sql_passwd = default_passwd;
-    if (dyn_table) db_status = mongo_cmd_authenticate(&db_conn, tmpbuf, config.sql_user, config.sql_passwd);
-    else db_status = mongo_cmd_authenticate(&db_conn, config.sql_table, config.sql_user, config.sql_passwd);
+    if (dyn_table) {
+      char *collection_sep = strchr(tmpbuf, '.');
+
+      if (collection_sep) *collection_sep = '\0';
+      db_status = mongo_cmd_authenticate(&db_conn, tmpbuf, config.sql_user, config.sql_passwd);
+      if (collection_sep) *collection_sep = '.';
+    }
+    else {
+      char *collection_sep = strchr(config.sql_table, '.');
+
+      if (collection_sep) *collection_sep = '\0';
+      db_status = mongo_cmd_authenticate(&db_conn, config.sql_table, config.sql_user, config.sql_passwd);
+      if (collection_sep) *collection_sep = '.';
+    }
     if (db_status != MONGO_OK) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Authentication failed to MongoDB\n", config.name, config.type); 
       return;
