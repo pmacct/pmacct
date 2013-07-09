@@ -237,6 +237,28 @@ static const struct _protocols_struct _protocols[] = {
   {"", -1},
 };
 
+/* cps = custom primitive semantics */
+static const char *cps_type[] = {
+  "",
+  "u",
+  "x",
+  "s",
+  "s",
+  "s"
+};
+
+static const int cps_flen[] = {
+  0,
+  3,
+  5,
+  0,
+  10,
+  0,
+  0,
+  0,
+  20
+};
+
 #if defined __PMACCTD_C || defined __UACCTD_C
 static struct _devices_struct _devices[] = {
 #if defined DLT_LOOP
