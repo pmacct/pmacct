@@ -617,6 +617,7 @@ int main(int argc,char **argv)
   int counter=0, ct_idx=0, ct_num=0, sep_len=0;
   int pldt_idx=0, pldt_num=0, is_event;
   char *sep_ptr = NULL, sep[10], default_sep[] = ",";
+  struct imt_custom_primitives custom_primitives_input;
 
   /* mrtg stuff */
   char match_string[LARGEBUFLEN], *match_string_token, *match_string_ptr;
@@ -647,6 +648,7 @@ int main(int argc,char **argv)
   memset(sep, 0, sizeof(sep));
   memset(pkt_len_distrib_table, 0, sizeof(pkt_len_distrib_table));
   memset(&pmc_custom_primitives_registry, 0, sizeof(pmc_custom_primitives_registry));
+  memset(&custom_primitives_input, 0, sizeof(custom_primitives_input));
 
   strcpy(path, "/tmp/collect.pipe");
   unpacked = 0; printed = 0;
@@ -924,7 +926,11 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_TIMESTAMP_END;
           what_to_count_2 |= COUNT_TIMESTAMP_END;
         }
-        else printf("WARN: ignoring unknown aggregation method: %s.\n", count_token[count_index]);
+        else {
+	  strlcpy(custom_primitives_input.primitive[custom_primitives_input.num].name,
+			count_token[count_index], MAX_CUSTOM_PRIMITIVE_NAMELEN);
+	  custom_primitives_input.num++;
+	} 
 	what_to_count |= COUNT_COUNTERS; /* we always count counters ;-) */
 	count_index++;
       }
@@ -1077,6 +1083,27 @@ int main(int argc,char **argv)
       }
 
       exit(1);
+    }
+
+    /* if we were invoked with -c, let's check we do not have unknown primitives */
+    if (custom_primitives_input.num) {
+      int idx, idx2, found;
+
+      for (idx = 0; idx < custom_primitives_input.num; idx++) {
+	found = FALSE;
+
+        for (idx2 = 0; idx2 < pmc_custom_primitives_registry.num; idx2++) {
+	  if (!strcmp(custom_primitives_input.primitive[idx].name, pmc_custom_primitives_registry.primitive[idx2].name)) {
+	    found = TRUE;
+	    break;
+	  } 
+	}
+
+	if (!found) {
+	  printf("ERROR: unknown primitive '%s'\n", custom_primitives_input.primitive[idx].name);
+	  exit(1);
+	}
+      }
     }
   }
 
@@ -1664,7 +1691,26 @@ int main(int argc,char **argv)
 	  request.pnat.timestamp_end.tv_sec = mktime(&tmp);
 	  request.pnat.timestamp_end.tv_usec = residual;
         }
-        else printf("WARN: ignoring unknown aggregation method: '%s'.\n", *count_token);
+        else {
+	  int idx, found;
+
+	  for (idx = 0, found = FALSE; idx < pmc_custom_primitives_registry.num; idx++) {
+            if (!strcmp(count_token[match_string_index], pmc_custom_primitives_registry.primitive[idx].name)) {
+              found = TRUE;
+              break;
+            }
+          }
+
+          if (!found) {
+            printf("ERROR: unknown primitive '%s'\n", count_token[match_string_index]);
+            exit(1);
+          }
+	  else {
+	    // XXX: to be supported in future
+            printf("ERROR: -M and -N are not supported (yet) against custom primitives\n");
+            exit(1);
+	  }
+        }
         match_string_index++;
       }
 
@@ -3156,7 +3202,13 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_MAC) {
-      // XXX
+      int len = ETHER_ADDRSTRLEN;
+
+      if (formatted) {
+        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
+        strncat(format, "s", SRVBUFLEN);
+      }
+      else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
 
     snprintf(out, outlen, format, cp_entry->name);
@@ -3249,7 +3301,19 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
       snprintf(out, outlen, format, ip_str);
     }
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_MAC) {
-      // XXX
+      char eth_str[ETHER_ADDRSTRLEN];
+      int len = ETHER_ADDRSTRLEN;
+
+      memset(eth_str, 0, sizeof(eth_str));
+      etheraddr_string(in+cp_entry->off, eth_str);
+
+      if (formatted)
+        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
+                        cps_type[cp_entry->semantics]);
+      else
+        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]);
+
+      snprintf(out, outlen, format, eth_str);
     }
   }
 }

@@ -76,6 +76,9 @@
 
 #include "pmacct-build.h"
 
+#if !defined ETHER_ADDRSTRLEN
+#define ETHER_ADDRSTRLEN 18
+#endif
 #if !defined INET_ADDRSTRLEN 
 #define INET_ADDRSTRLEN 16
 #endif

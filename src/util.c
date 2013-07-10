@@ -1961,8 +1961,10 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
   
   /* second pass: verification and finish-off */
   for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
-    if (!cpptrs->primitive[cpptrs_idx].ptr)
-      Log(LOG_WARNING, "WARN ( %s/%s ): Unknown primitive '%s'\n", config.name, config.type, cpptrs->primitive[cpptrs_idx].name);
+    if (!cpptrs->primitive[cpptrs_idx].ptr) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unknown primitive '%s'\n", config.name, config.type, cpptrs->primitive[cpptrs_idx].name);
+      exit(1);
+    }
     else {
       struct custom_primitive_entry *cpe = cpptrs->primitive[cpptrs_idx].ptr;
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': off=%u len=%u\n", config.name, config.type,
@@ -1972,4 +1974,157 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
 
   if (cpptrs->len) pad = 8 - (cpptrs->len % 8);
   cpptrs->len += pad; /* padding to a safe 64-bit boundary */
+}
+
+void custom_primitive_header_print(char *out, int outlen, struct custom_primitive_ptrs *cp_entry, int formatted)
+{
+  char format[SRVBUFLEN];
+
+  if (out && cp_entry) {
+    memset(out, 0, outlen);
+
+    if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
+        cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
+      if (formatted) {
+	snprintf(format, SRVBUFLEN, "%%-%u", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name));
+	strncat(format, "s", SRVBUFLEN);
+      }
+      else snprintf(format, SRVBUFLEN, "%s", "%s");
+    }
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+      if (formatted) {
+	snprintf(format, SRVBUFLEN, "%%-%u", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name));
+	strncat(format, "s", SRVBUFLEN);
+      }
+      else snprintf(format, SRVBUFLEN, "%s", "%s");
+    }
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_IP) {
+      int len = 0;
+
+      len = INET_ADDRSTRLEN;
+#if defined ENABLE_IPV6
+      len = INET6_ADDRSTRLEN;
+#endif
+      	
+      if (formatted) {
+        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
+        strncat(format, "s", SRVBUFLEN);
+      }
+      else snprintf(format, SRVBUFLEN, "%s", "%s");
+    }
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_MAC) {
+      int len = ETHER_ADDRSTRLEN;
+
+      if (formatted) {
+        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
+        strncat(format, "s", SRVBUFLEN);
+      }
+      else snprintf(format, SRVBUFLEN, "%s", "%s");
+    }
+
+    snprintf(out, outlen, format, cp_entry->ptr->name);
+  }
+}
+
+void custom_primitive_value_print(char *out, int outlen, char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
+{
+  char format[SRVBUFLEN];
+
+  if (in && out && cp_entry) {
+    memset(out, 0, outlen); 
+
+    if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
+	cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
+      if (formatted)
+        snprintf(format, SRVBUFLEN, "%%-%u%s", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name), 
+			cps_type[cp_entry->ptr->semantics]); 
+      else
+        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]); 
+
+      if (cp_entry->ptr->len == 1) {
+        u_int8_t t8;
+
+        memcpy(&t8, (in+cp_entry->off), 1);
+	snprintf(out, outlen, format, t8);
+      }
+      else if (cp_entry->ptr->len == 2) {
+        u_int16_t t16, st16;
+
+        memcpy(&t16, (in+cp_entry->off), 2);
+	st16 = ntohs(t16);
+	snprintf(out, outlen, format, st16);
+      }
+      else if (cp_entry->ptr->len == 4) {
+        u_int32_t t32, st32;
+
+        memcpy(&t32, (in+cp_entry->off), 4);
+        st32 = ntohl(t32);
+	snprintf(out, outlen, format, st32);
+      }
+      else if (cp_entry->ptr->len == 8) {
+        u_int32_t t64, st64;
+
+        memcpy(&t64, (in+cp_entry->off), 8);
+        st64 = pm_ntohll(t64);
+	snprintf(out, outlen, format, st64);
+      }
+    }
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+      if (formatted)
+	snprintf(format, SRVBUFLEN, "%%-%u%s", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name),
+			cps_type[cp_entry->ptr->semantics]); 
+      else
+	snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]); 
+
+      snprintf(out, outlen, format, (in+cp_entry->off));
+    }
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_IP) {
+      struct host_addr ip_addr;
+      char ip_str[INET6_ADDRSTRLEN];
+      int len = 0;
+
+      memset(&ip_addr, 0, sizeof(ip_addr));
+      memset(ip_str, 0, sizeof(ip_str));
+
+      len = INET_ADDRSTRLEN;
+#if defined ENABLE_IPV6
+      len = INET6_ADDRSTRLEN;
+#endif
+
+      if (cp_entry->ptr->len == 4) { 
+	ip_addr.family = AF_INET;
+	memcpy(&ip_addr.address.ipv4, in+cp_entry->off, 4); 
+      }
+#if defined ENABLE_IPV6
+      else if (cp_entry->ptr->len == 16) {
+	ip_addr.family = AF_INET6;
+	memcpy(&ip_addr.address.ipv6, in+cp_entry->off, 16); 
+      }
+#endif
+
+      addr_to_str(ip_str, &ip_addr);
+      if (formatted)
+        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
+                        cps_type[cp_entry->ptr->semantics]);
+      else
+        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
+
+      snprintf(out, outlen, format, ip_str);
+    }
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_MAC) {
+      char eth_str[ETHER_ADDRSTRLEN];
+      int len = ETHER_ADDRSTRLEN;
+
+      memset(eth_str, 0, sizeof(eth_str));
+      etheraddr_string(in+cp_entry->off, eth_str);
+
+      if (formatted)
+        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
+                        cps_type[cp_entry->ptr->semantics]);
+      else
+        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
+
+      snprintf(out, outlen, format, eth_str);
+    }
+  }
 }

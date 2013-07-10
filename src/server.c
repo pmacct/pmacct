@@ -330,6 +330,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
 		  enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 		}
+                if (extras->off_custom_primitives && acc_elem->pcust) {
+                  enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
+                }
 	      }
 	      if (reset_counter) set_reset_flag(acc_elem);
 	    }
