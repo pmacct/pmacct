@@ -37,11 +37,7 @@ void sql_set_signals()
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps);
   signal(SIGPIPE, SIG_IGN);
-//#if !defined FBSD4
-//  signal(SIGCHLD, SIG_IGN);
-//#else
-  signal(SIGCHLD, ignore_falling_child);
-//#endif
+  signal(SIGCHLD, SIG_IGN);
 }
 
 void sql_set_insert_func()

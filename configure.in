@@ -80,16 +80,9 @@ case "$host_os" in
   IRIX*)
     AC_DEFINE(IRIX, 1)
     ;;
-esac
-
-dnl os-version specific flags
-case "$host_os1" in
-  "FreeBSD 4"*)
-  AC_DEFINE(FBSD4, 1)
-  ;;
-  "DragonFly"*)
-  AC_DEFINE(FBSD4, 1)
-  ;;
+  *BSD)
+    AC_DEFINE(BSD, 1)
+    ;;
 esac
 
 dnl cpu specific flags

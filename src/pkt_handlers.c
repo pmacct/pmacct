@@ -829,7 +829,7 @@ void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
-  struct bgp_info *nh_info;
+  struct bgp_info *nh_info = NULL;
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_BGP)) return;
@@ -2630,6 +2630,7 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+
   time_t fstime = 0;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
@@ -3187,7 +3188,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src; 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
-  struct bgp_info *info;
+  struct bgp_info *info = NULL;
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
@@ -3338,7 +3339,7 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src; 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
-  struct bgp_info *info;
+  struct bgp_info *info = NULL;
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
@@ -3376,7 +3377,7 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
-  struct bgp_info *info;
+  struct bgp_info *info = NULL;
 
   --pdata; /* Bringing back to original place */
 
@@ -3415,7 +3416,7 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
-  struct bgp_info *info;
+  struct bgp_info *info = NULL;
 
   pbgp->peer_src_as = pptrs->bpas;
 

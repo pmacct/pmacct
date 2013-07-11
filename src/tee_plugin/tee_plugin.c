@@ -54,11 +54,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN);
-#if !defined FBSD4
   signal(SIGCHLD, SIG_IGN);
-#else
-  signal(SIGCHLD, ignore_falling_child);
-#endif
 
   if (config.tee_transparent && getuid() != 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Transparent mode requires super-user permissions. Exiting ...\n", config.name, config.type);
@@ -293,7 +289,11 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
         i4h->ip_vhl <<= 4;
         i4h->ip_vhl |= (IP4HdrSz/4);
         i4h->ip_tos = 0;
+#if !defined BSD
         i4h->ip_len = htons(IP4HdrSz+UDPHdrSz+msg->len);
+#else
+        i4h->ip_len = IP4HdrSz+UDPHdrSz+msg->len;
+#endif
         i4h->ip_id = 0;
         i4h->ip_off = 0;
         i4h->ip_ttl = 255;
@@ -411,10 +411,16 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
       Log(LOG_ERR, "ERROR ( %s/%s ): bind() error: %s\n", config.name, config.type, strerror(errno));
   }
   else {
+    int hincl = 1;                  /* 1 = on, 0 = off */
+
     if ((s = socket(addr->sa_family, SOCK_RAW, IPPROTO_RAW)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
       exit_plugin(1);
     }
+
+#if defined BSD
+    setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl));
+#endif
   }
 
   /* XXX: SNDBUF tuning? */
