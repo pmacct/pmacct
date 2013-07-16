@@ -691,6 +691,16 @@ KEY:		mongo_insert_batch
 DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per batch
 		(default: 10000)
 
+KEY:            mongo_indexes_file
+DESC:           full pathname to a file containing a list of indexes to apply to a MongoDB collection with
+		dynamic name. If the collection does not exists, it is created. Index names are picked by
+		MongoDB. For example, to create collections with two indexes 1) one using as key source/
+		destination IP addresses and 2) the other using source/destination TCP/UDP ports compile
+		the file pointed by this directive as:
+
+		src_host, dst_host
+		src_port, dst_port
+
 KEY:		amqp_exchange
 DESC:		Name of the AMQP exchange to publish data (default: pmacct).
 

@@ -43,6 +43,8 @@ EXT void MongoDB_cache_flush(struct chained_cache *[], int);
 EXT void MongoDB_cache_purge(struct chained_cache *[], int);
 EXT void MongoDB_exit_now(int);
 EXT int MongoDB_trigger_exec(char *);
+EXT void MongoDB_get_database(char *, int, char *);
+EXT void MongoDB_create_indexes(mongo *, time_t *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */

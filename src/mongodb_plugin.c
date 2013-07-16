@@ -334,7 +334,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN];
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int i, j, db_status, batch_idx;
@@ -373,6 +373,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   if (!config.sql_table) config.sql_table = default_table;
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
   else dyn_table = FALSE;
+  MongoDB_get_database(mongo_database, SRVBUFLEN, config.sql_table);
 
   bson_batch = (bson **) malloc(sizeof(bson *) * index);
   if (!bson_batch) {
@@ -385,26 +386,14 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
     strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+    if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, &stamp);
   }
 
   /* If there is any signs of auth in the config, then try to auth */
   if (config.sql_user || config.sql_passwd) {
     if (!config.sql_user) config.sql_user = default_user;
     if (!config.sql_passwd) config.sql_passwd = default_passwd;
-    if (dyn_table) {
-      char *collection_sep = strchr(tmpbuf, '.');
-
-      if (collection_sep) *collection_sep = '\0';
-      db_status = mongo_cmd_authenticate(&db_conn, tmpbuf, config.sql_user, config.sql_passwd);
-      if (collection_sep) *collection_sep = '.';
-    }
-    else {
-      char *collection_sep = strchr(config.sql_table, '.');
-
-      if (collection_sep) *collection_sep = '\0';
-      db_status = mongo_cmd_authenticate(&db_conn, config.sql_table, config.sql_user, config.sql_passwd);
-      if (collection_sep) *collection_sep = '.';
-    }
+    db_status = mongo_cmd_authenticate(&db_conn, mongo_database, config.sql_user, config.sql_passwd);
     if (db_status != MONGO_OK) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Authentication failed to MongoDB\n", config.name, config.type); 
       return;
@@ -701,4 +690,52 @@ int MongoDB_trigger_exec(char *filename)
   }
 
   return 0;
+}
+
+void MongoDB_get_database(char *db, int dblen, char *db_table)
+{
+  char *collection_sep = strchr(db_table, '.');
+  
+  memset(db, 0, dblen);
+  if (collection_sep) *collection_sep = '\0';
+  strlcpy(db, db_table, dblen); 
+  if (collection_sep) *collection_sep = '.';
+}
+
+void MongoDB_create_indexes(mongo *db_conn, time_t *basetime)
+{
+  struct tm *nowtm;
+  bson idx_key[1], *out;
+  FILE *f;
+  char buf[LARGEBUFLEN], tmpbuf[SRVBUFLEN], tmpbuf2[SRVBUFLEN];
+  char *token, *bufptr;
+  int ret;
+
+  memset(buf, 0, LARGEBUFLEN);
+  strlcpy(tmpbuf, config.sql_table, SRVBUFLEN);
+  handle_dynname_internal_strings(tmpbuf2, SRVBUFLEN-10, tmpbuf);
+  nowtm = localtime(basetime);
+  strftime(buf, SRVBUFLEN, tmpbuf2, nowtm);
+
+  f = fopen(config.sql_table_schema, "r");
+  if (f) {
+    while (!feof(f)) {
+      if (fgets(buf, SRVBUFLEN, f)) {
+        if (!iscomment(buf) && !isblankline(buf)) {
+	  trim_all_spaces(buf);
+	  bufptr = buf;
+	  bson_init(idx_key);
+	  while (token = extract_token(&bufptr, ',')) {
+	    bson_append_int(idx_key, token, 1);
+	  }
+	  bson_finish(idx_key);
+	  mongo_create_index(db_conn, tmpbuf2, idx_key, NULL, 0, NULL);
+	  bson_destroy(idx_key);
+        }
+      }
+    }
+
+    fclose(f);
+  }
+  else Log(LOG_WARNING, "WARN ( %s/%s ): mongo_indexes_file '%s' does not exist.\n", config.name, config.type, config.sql_table_schema);
 }

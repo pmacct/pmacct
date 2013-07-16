@@ -378,6 +378,7 @@ static const struct _dictionary_line dictionary[] = {
   {"mongo_time_roundoff", cfg_key_sql_history_roundoff},
   {"mongo_trigger_exec", cfg_key_sql_trigger_exec},
   {"mongo_insert_batch", cfg_key_mongo_insert_batch},
+  {"mongo_indexes_file", cfg_key_sql_table_schema},
   {"amqp_host", cfg_key_sql_host},
   {"amqp_refresh_time", cfg_key_sql_refresh_time},
   {"amqp_user", cfg_key_sql_user},

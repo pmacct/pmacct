@@ -3000,6 +3000,7 @@ void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptr
     if (tpl->tpl[NF9_EGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val)
       memcpy(&pbgp->mpls_vpn_rd.val, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
 
+    pbgp->mpls_vpn_rd.val = ntohl(pbgp->mpls_vpn_rd.val);
     if (pbgp->mpls_vpn_rd.val) pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
     break;
   default:
