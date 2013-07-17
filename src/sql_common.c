@@ -37,7 +37,7 @@ void sql_set_signals()
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps);
   signal(SIGPIPE, SIG_IGN);
-  signal(SIGCHLD, SIG_IGN);
+  signal(SIGCHLD, ignore_falling_child);
 }
 
 void sql_set_insert_func()

@@ -77,15 +77,16 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   struct pkt_bgp_primitives dummy_pbgp;
   struct pkt_nat_primitives dummy_pnat;
   struct pkt_mpls_primitives dummy_pmpls;
-  char *dummy_pcust, *custbuf;
+  char *dummy_pcust = NULL, *custbuf = NULL;
   int reset_counter, offset = PdataSz;
 
   dummy_pcust = malloc(config.cpptrs.len);
   custbuf = malloc(config.cpptrs.len);
   if (!dummy_pcust || !custbuf) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate 'dummy_pcust' or 'custbuf' structure.\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() dummy_pcust. Exiting.\n", config.name, config.type);
     exit_plugin(1);
   }
+
   memset(&dummy, 0, sizeof(struct pkt_data));
   memset(&dummy_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&dummy_pnat, 0, sizeof(struct pkt_nat_primitives));

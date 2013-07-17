@@ -1488,7 +1488,7 @@ void version_daemon(char *header)
 #ifdef WITH_JANSSON 
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  char *pcust, pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
 		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
@@ -1804,6 +1804,19 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
+  /* all custom primitives printed here */
+  {
+    char cp_str[SRVBUFLEN];
+    int cp_idx;
+
+    for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+      custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+      kv = json_pack("{ss}", config.cpptrs.primitive[cp_idx].name, cp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+  }
+
   if (basetime && config.sql_history) {
     struct timeval tv;
 
@@ -1846,7 +1859,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 #else
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  char *pcust, pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
 		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON object not created due to missing --enable-jansson\n", config.name, config.type);

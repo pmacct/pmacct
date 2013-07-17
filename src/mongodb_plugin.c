@@ -121,6 +121,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
   pm_size = sizeof(struct pkt_mpls_primitives);
+  pc_size = config.cpptrs.len;
 
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
@@ -330,14 +331,17 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
+  char *pcust = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
+  char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int i, j, db_status, batch_idx;
+  time_t stamp;
 
   const bson **bson_batch, **bson_batch_ptr;
   bson *bson_elem;
@@ -366,9 +370,16 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   }
   else Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection succeeded (MONGO_OK) to MongoDB\n", config.name, config.type);
 
+  empty_pcust = malloc(config.cpptrs.len);
+  if (!empty_pcust) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(empty_pcust, 0, config.cpptrs.len);
 
   if (!config.sql_table) config.sql_table = default_table;
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
@@ -382,11 +393,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   }
 
   if (dyn_table) {
-    time_t stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
+    stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
 
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
     strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
-    if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, &stamp);
   }
 
   /* If there is any signs of auth in the config, then try to auth */
@@ -400,6 +410,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     }
     else Log(LOG_DEBUG, "DEBUG ( %s/%s ): Successful authentication (MONGO_OK) to MongoDB\n", config.name, config.type);
   }
+
+  if (dyn_table && config.sql_table_schema) MongoDB_create_indexes(&db_conn, &stamp);
 
   for (j = 0, batch_idx = 0; j < index; j++, batch_idx++) {
     bson_elem = (bson *) malloc(sizeof(bson));
@@ -420,6 +432,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
     if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
     else pmpls = &empty_pmpls;
+
+    if (queue[j]->pcust) pcust = queue[j]->pcust;
+    else pcust = empty_pcust;
 
     if (P_test_zero_elem(queue[j])) continue;
 
@@ -607,6 +622,17 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       bts.t = pnat->timestamp_end.tv_sec;
       bts.i = pnat->timestamp_end.tv_usec;
       bson_append_timestamp(bson_elem, "timestamp_end", &bts);
+    }
+
+    /* all custom primitives printed here */
+    {
+      char cp_str[SRVBUFLEN];
+      int cp_idx;
+
+      for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+	custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+	bson_append_string(bson_elem, config.cpptrs.primitive[cp_idx].name, cp_str);
+      }
     }
 
     if (config.sql_history) {

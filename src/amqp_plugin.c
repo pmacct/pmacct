@@ -121,6 +121,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
   pm_size = sizeof(struct pkt_mpls_primitives);
+  pc_size = config.cpptrs.len;
 
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
@@ -327,9 +328,11 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
+  char *pcust = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
+  char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_amqp_routing_key[] = "acct";
@@ -352,9 +355,16 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   }
   if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
 
+  empty_pcust = malloc(config.cpptrs.len);
+  if (!empty_pcust) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(empty_pcust, 0, config.cpptrs.len);
 
   amqp_conn = amqp_new_connection();
 
@@ -409,11 +419,15 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
     else pmpls = &empty_pmpls;
 
+    if (queue[j]->pcust) pcust = queue[j]->pcust;
+    else pcust = empty_pcust;
+
     if (P_test_zero_elem(queue[j])) continue;
 
     json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, pmpls, queue[j]->bytes_counter, queue[j]->packet_counter,
-                         queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime);
+                         &queue[j]->primitives, pbgp, pnat, pmpls, pcust, queue[j]->bytes_counter,
+			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
+			 &queue[j]->basetime);
 
     if (json_str) {
       if (is_routing_key_dyn) amqp_handle_routing_key_dyn_strings(config.sql_table, SRVBUFLEN, orig_amqp_routing_key,

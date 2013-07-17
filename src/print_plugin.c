@@ -122,6 +122,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
   pm_size = sizeof(struct pkt_mpls_primitives);
+  pc_size = config.cpptrs.len;
   dbc_size = sizeof(struct chained_cache);
 
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
@@ -304,12 +305,14 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  char *pcust = prim_ptrs->pcust;
   register unsigned int modulo;
 
   modulo = cache_crc32((unsigned char *)srcdst, pp_size);
   if (pbgp) modulo ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) modulo ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) modulo ^= cache_crc32((unsigned char *)pmpls, pm_size);
+  if (pcust) modulo ^= cache_crc32((unsigned char *)pcust, pc_size);
   
   return modulo %= config.print_cache_entries;
 }
@@ -321,9 +324,11 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  char *pcust = prim_ptrs->pcust;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_time = TRUE;
+  int res_cust = TRUE;
 
   start:
   res_data = memcmp(&cache_ptr->primitives, data, sizeof(struct pkt_primitives));
@@ -348,7 +353,12 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   }
   else res_mpls = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_mpls || res_time) {
+  if (pcust) {
+    if (cache_ptr->pcust) res_cust = memcmp(cache_ptr->pcust, pcust, config.cpptrs.len);
+  }
+  else res_cust = FALSE;
+
+  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust) {
     if (cache_ptr->valid == TRUE) {
       if (cache_ptr->next) {
         cache_ptr = cache_ptr->next;
@@ -367,10 +377,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  char *pcust = prim_ptrs->pcust;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   struct pkt_primitives *srcdst = &data->primitives;
-  int res_data, res_bgp, res_nat, res_mpls, res_time;
+  int res_data, res_bgp, res_nat, res_mpls, res_time, res_cust;
 
   if (config.sql_history && (*basetime_eval)) {
     memcpy(&ibasetime, &basetime, sizeof(ibasetime));
@@ -406,7 +417,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
 
   start:
-  res_data = res_bgp = res_nat = res_mpls = res_time = TRUE;
+  res_data = res_bgp = res_nat = res_mpls = res_time = res_cust = TRUE;
 
   res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives)); 
 
@@ -430,7 +441,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
   else res_mpls = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_mpls || res_time) {
+  if (pcust) {
+    if (cache_ptr->pcust) res_cust = memcmp(cache_ptr->pcust, pcust, config.cpptrs.len); 
+  }
+  else res_cust = FALSE;
+
+  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust) {
     /* aliasing of entries */
     if (cache_ptr->valid == TRUE) { 
       if (cache_ptr->next) {
@@ -474,6 +490,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       memcpy(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
     }
     else cache_ptr->pmpls = NULL;
+
+    if (pcust) {
+      if (!cache_ptr->pcust) cache_ptr->pcust = malloc(config.cpptrs.len);
+      memcpy(cache_ptr->pcust, pcust, config.cpptrs.len);
+    }
+    else cache_ptr->pcust = NULL;
 
     cache_ptr->packet_counter = data->pkt_num;
     cache_ptr->flow_counter = data->flo_num;
@@ -553,9 +575,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
+  char *pcust = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
+  char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator;
   char *as_path, *bgp_comm, empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
@@ -563,9 +587,16 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   FILE *f = NULL;
   int j, is_event = FALSE;
 
+  empty_pcust = malloc(config.cpptrs.len);
+  if (!empty_pcust) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(empty_pcust, 0, config.cpptrs.len);
 
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;
 
@@ -596,6 +627,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
     if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
     else pmpls = &empty_pmpls;
+
+    if (queue[j]->pcust) pcust = queue[j]->pcust;
+    else pcust = empty_pcust;
 
     if (P_test_zero_elem(queue[j])) continue;
 
@@ -791,28 +825,39 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       }
 
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+        char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+        time_t time1;
+        struct tm *time2;
 
-          time1 = pnat->timestamp_start.tv_sec;
-          time2 = localtime(&time1);
-          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-          fprintf(f, "%-30s ", buf2);
-        }
+        time1 = pnat->timestamp_start.tv_sec;
+        time2 = localtime(&time1);
+        strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+        snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
+        fprintf(f, "%-30s ", buf2);
+      }
 
       if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+        char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+        time_t time1;
+        struct tm *time2;
       
-          time1 = pnat->timestamp_end.tv_sec;
-          time2 = localtime(&time1);
-          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-          fprintf(f, "%-30s ", buf2);
+        time1 = pnat->timestamp_end.tv_sec;
+        time2 = localtime(&time1);
+        strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+        snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
+        fprintf(f, "%-30s ", buf2);
+      }
+
+      /* all custom primitives printed here */
+      {
+        char cp_str[SRVBUFLEN];
+        int cp_idx;
+
+        for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+          custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], TRUE);
+	  fprintf(f, "%s  ", cp_str);
         }
+      }
 
       if (!is_event) {
 #if defined HAVE_64BIT_COUNTERS
@@ -961,6 +1006,17 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%s%s", write_sep(sep, &count), buf2);
       }
 
+      /* all custom primitives printed here */
+      {
+        char cp_str[SRVBUFLEN];
+        int cp_idx;
+
+        for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+          custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+          fprintf(f, "%s%s", write_sep(sep, &count), cp_str);
+        }
+      }
+
       if (!is_event) {
 #if defined HAVE_64BIT_COUNTERS
         fprintf(f, "%s%llu", write_sep(sep, &count), queue[j]->packet_counter);
@@ -978,8 +1034,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       char *json_str;
 
       json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, pmpls, queue[j]->bytes_counter, queue[j]->packet_counter,
-                         queue[j]->flow_counter, queue[j]->tcp_flags, NULL);
+                         &queue[j]->primitives, pbgp, pnat, pmpls, pcust, queue[j]->bytes_counter,
+			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL);
 
       if (json_str) {
         fprintf(f, "%s\n", json_str);
@@ -1056,6 +1112,17 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
 
+  /* all custom primitives printed here */
+  {
+    char cp_str[SRVBUFLEN];
+    int cp_idx;
+
+    for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+      custom_primitive_header_print(cp_str, SRVBUFLEN, &config.cpptrs.primitive[cp_idx], TRUE);
+      fprintf(f, "%s  ", cp_str);
+    }
+  }
+
   if (!is_event) {
 #if defined HAVE_64BIT_COUNTERS
     fprintf(f, "PACKETS               ");
@@ -1123,6 +1190,17 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
+
+  /* all custom primitives printed here */
+  { 
+    char cp_str[SRVBUFLEN];
+    int cp_idx;
+
+    for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+      custom_primitive_header_print(cp_str, SRVBUFLEN, &config.cpptrs.primitive[cp_idx], FALSE);
+      fprintf(f, "%s%s", write_sep(sep, &count), cp_str);
+    }
+  }
 
   if (!is_event) {
     fprintf(f, "%sPACKETS", write_sep(sep, &count));

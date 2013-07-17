@@ -1024,10 +1024,10 @@ An example of content of a tee_receivers map, ie. /path/to/tee_receivers_a.lst,
 is as follows ('id' is the pool ID and 'ip' a comma-separated list of receivers
 for that pool):
 
-set_tag=1	ip=X.X.X.X:2100
-set_tag=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
-! set_tag=1	ip=X.X.X.X:2100			tag=0
-! set_tag=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
+id=1	ip=X.X.X.X:2100
+id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
+! id=1	ip=X.X.X.X:2100			tag=0
+! id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
 
 Selective teeing allows to filter which pool of receivers has to receive which
 datagrams. Tags are applied via a pre_tag_map, the one illustrated below applies

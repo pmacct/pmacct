@@ -46,6 +46,7 @@ struct chained_cache {
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
+  char *pcust;
   int valid;
   struct timeval basetime;
   struct chained_cache *next;
@@ -81,7 +82,8 @@ EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
-EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit; 
+EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, pc_size;
+EXT int dbc_size, quit; 
 EXT time_t refresh_deadline;
 
 EXT void (*basetime_init)(time_t);
