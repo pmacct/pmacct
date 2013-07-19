@@ -78,6 +78,7 @@ EXT int P_trigger_exec(char *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;

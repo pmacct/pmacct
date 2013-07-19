@@ -77,7 +77,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&timeslot, 0, sizeof(timeslot));
 
   /* signal handling */
-  signal(SIGINT, MongoDB_exit_now);
+  signal(SIGINT, P_exit_now);
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps);
   signal(SIGPIPE, SIG_IGN);
@@ -91,7 +91,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   timeout = config.sql_refresh_time*1000;
 
-  /* XXX: reusing cache functions from print plugin -- should get common'ed? */
+  /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
     insert_func = P_sum_host_insert;
   else if (config.what_to_count & COUNT_SUM_PORT) insert_func = P_sum_port_insert;
@@ -100,6 +100,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = P_sum_mac_insert;
 #endif
   else insert_func = P_cache_insert;
+  purge_func = MongoDB_cache_purge;
 
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
@@ -204,11 +205,11 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (qq_ptr) {
 	switch (ret = fork()) {
 	case 0: /* Child */
-	  MongoDB_cache_purge(queries_queue, qq_ptr);
+	  (*purge_func)(queries_queue, qq_ptr);
           exit(0);
         default: /* Parent */
 	  if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-          MongoDB_cache_flush(queries_queue, qq_ptr);
+          P_cache_flush(queries_queue, qq_ptr);
 	  gettimeofday(&flushtime, NULL);
     	  refresh_deadline += config.sql_refresh_time; 
           qq_ptr = FALSE;
@@ -261,11 +262,11 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         if (qq_ptr) {
           switch (ret = fork()) {
           case 0: /* Child */
-            MongoDB_cache_purge(queries_queue, qq_ptr);
+            (*purge_func)(queries_queue, qq_ptr);
             exit(0);
           default: /* Parent */
 	    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-            MongoDB_cache_flush(queries_queue, qq_ptr);
+            P_cache_flush(queries_queue, qq_ptr);
 	    gettimeofday(&flushtime, NULL);
             refresh_deadline += config.sql_refresh_time; 
             qq_ptr = FALSE;
@@ -310,19 +311,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       goto read_data;
     }
   }
-}
-
-void MongoDB_cache_flush(struct chained_cache *queue[], int index)
-{
-  int j;
-
-  for (j = 0; j < index; j++) {
-    queue[j]->valid = FALSE;
-    queue[j]->next = NULL;
-  }
-
-  /* rewinding scratch area stuff */
-  sa.ptr = sa.base;
 }
 
 void MongoDB_cache_purge(struct chained_cache *queue[], int index)
@@ -689,33 +677,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     batch_idx = 0;
   }
 
-  if (config.sql_trigger_exec) MongoDB_trigger_exec(config.sql_trigger_exec); 
-}
-
-void MongoDB_exit_now(int signum)
-{
-  MongoDB_cache_purge(queries_queue, qq_ptr);
-
-  wait(NULL);
-  exit_plugin(0);
-}
-
-int MongoDB_trigger_exec(char *filename)
-{
-  char *args[1];
-  int pid;
-
-  memset(args, 0, sizeof(args));
-
-  switch (pid = vfork()) {
-  case -1:
-    return -1;
-  case 0:
-    execv(filename, args);
-    exit(0);
-  }
-
-  return 0;
+  if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
 
 void MongoDB_get_database(char *db, int dblen, char *db_table)

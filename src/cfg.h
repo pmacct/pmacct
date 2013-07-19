@@ -72,9 +72,9 @@ struct configuration {
   int sock;
   int acct_type; 
   int data_type; 
-  int pipe_size;
+  u_int64_t pipe_size;
+  u_int64_t buffer_size;
   int pipe_backlog;
-  int buffer_size;
   int files_umask;
   int files_uid;
   int files_gid;
@@ -127,6 +127,7 @@ struct configuration {
   int print_cache_entries;
   int print_markers;
   int print_output;
+  int print_output_file_append;
   char *print_output_separator;
   char *print_output_file;
   int nfacctd_port;

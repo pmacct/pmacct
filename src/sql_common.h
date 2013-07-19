@@ -111,6 +111,7 @@ struct db_cache {
   struct cache_bgp_primitives *cbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
+  char *pcust;
   u_int8_t valid;
   u_int8_t prep_valid;
   unsigned int signature;

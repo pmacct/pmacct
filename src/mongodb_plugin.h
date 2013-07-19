@@ -39,15 +39,13 @@
 #define EXT
 #endif
 EXT void mongodb_plugin(int, struct configuration *, void *);
-EXT void MongoDB_cache_flush(struct chained_cache *[], int);
 EXT void MongoDB_cache_purge(struct chained_cache *[], int);
-EXT void MongoDB_exit_now(int);
-EXT int MongoDB_trigger_exec(char *);
 EXT void MongoDB_get_database(char *, int, char *);
 EXT void MongoDB_create_indexes(mongo *, time_t *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue;

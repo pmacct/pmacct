@@ -364,6 +364,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_markers", cfg_key_print_markers},
   {"print_output", cfg_key_print_output},
   {"print_output_file", cfg_key_print_output_file},
+  {"print_output_file_append", cfg_key_print_output_file_append},
   {"print_output_separator", cfg_key_print_output_separator},
   {"print_num_protos", cfg_key_num_protos},
   {"print_time_roundoff", cfg_key_sql_history_roundoff},

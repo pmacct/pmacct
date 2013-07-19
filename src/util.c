@@ -426,13 +426,14 @@ void close_print_output_file(FILE *f, char *filename, time_t now)
   }
 }
 
-FILE *open_print_output_file(char *filename, time_t now)
+FILE *open_print_output_file(char *filename, time_t now, int *append)
 {
   char buf[LARGEBUFLEN], buf2[LARGEBUFLEN];
   FILE *file = NULL;
   struct tm *tmnow;
   uid_t owner = -1;
   gid_t group = -1;
+  int ret;
 
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
@@ -441,7 +442,14 @@ FILE *open_print_output_file(char *filename, time_t now)
   tmnow = localtime(&now);
   strftime(buf2, LARGEBUFLEN-10, buf, tmnow);
 
-  file = fopen(buf2, "w");
+  ret = access(buf2, F_OK);
+
+  if (config.print_output_file_append && !ret) {
+    file = fopen(buf2, "a");
+    *append = TRUE;
+  }
+  else file = fopen(buf2, "w");
+
   if (file) {
     if (chown(buf2, owner, group) == -1)
       Log(LOG_WARNING, "WARN: Unable to chown() print_ouput_file '%s': %s\n", buf2, strerror(errno));

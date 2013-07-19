@@ -93,6 +93,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   timeout = config.sql_refresh_time*1000;
 
+  /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
     insert_func = P_sum_host_insert;
   else if (config.what_to_count & COUNT_SUM_PORT) insert_func = P_sum_port_insert;
@@ -101,6 +102,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (config.what_to_count & COUNT_SUM_MAC) insert_func = P_sum_mac_insert;
 #endif
   else insert_func = P_cache_insert;
+  purge_func = P_cache_purge;
 
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
@@ -191,7 +193,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     case 0: /* timeout */
       switch (ret = fork()) {
       case 0: /* Child */
-	P_cache_purge(queries_queue, qq_ptr);
+	(*purge_func)(queries_queue, qq_ptr);
 	exit(0);
       default: /* Parent */
         if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
@@ -247,7 +249,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         if (qq_ptr) {
           switch (ret = fork()) {
           case 0: /* Child */
-            P_cache_purge(queries_queue, qq_ptr);
+            (*purge_func)(queries_queue, qq_ptr);
             exit(0);
           default: /* Parent */
 	    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
@@ -456,9 +458,28 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       else {
 	cache_ptr = P_cache_attach_new_node(cache_ptr); 
 	if (!cache_ptr) {
-	  Log(LOG_WARNING, "WARN ( %s/%s ): Unable to write data: try with a larger 'print_cache_entries' value.\n", 
-			  config.name, config.type);
-	  return; 
+	  int ret;
+
+	  Log(LOG_WARNING, "WARN ( %s/%s ): Finished cache entries: purging to backend and starting again.\n", config.name, config.type);
+	  Log(LOG_WARNING, "WARN ( %s/%s ): You may want to set a larger print_cache_entries value.\n", config.name, config.type);
+	  if (config.type_id == PLUGIN_ID_PRINT && config.sql_table)
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Make sure print_output_file_append is set to true.\n", config.name, config.type);
+
+	  /* Writing out to replenish cache space */
+	  switch (ret = fork()) {
+	  case 0: /* Child */
+	    (*purge_func)(queries_queue, qq_ptr);
+	    exit(0);
+	  default: /* Parent */
+	    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+	    P_cache_flush(queries_queue, qq_ptr);
+	    qq_ptr = FALSE;
+	    break;
+	  }
+
+	  // XXX: should really go back to start
+	  // goto start;
+	  return;
 	}
 	else {
 	  queries_queue[qq_ptr] = cache_ptr;
@@ -477,25 +498,37 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       if (!cache_ptr->pbgp) cache_ptr->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
       memcpy(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
     }
-    else cache_ptr->pbgp = NULL;
+    else {
+      if (cache_ptr->pbgp) free(cache_ptr->pbgp);
+      cache_ptr->pbgp = NULL;
+    }
 
     if (pnat) {
       if (!cache_ptr->pnat) cache_ptr->pnat = (struct pkt_nat_primitives *) malloc(PnatSz);
       memcpy(cache_ptr->pnat, pnat, sizeof(struct pkt_nat_primitives));
     }
-    else cache_ptr->pnat = NULL;
+    else {
+      if (cache_ptr->pnat) free(cache_ptr->pnat);
+      cache_ptr->pnat = NULL;
+    }
 
     if (pmpls) {
       if (!cache_ptr->pmpls) cache_ptr->pmpls = (struct pkt_mpls_primitives *) malloc(PmplsSz);
       memcpy(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
     }
-    else cache_ptr->pmpls = NULL;
+    else {
+      if (cache_ptr->pmpls) free(cache_ptr->pmpls);
+      cache_ptr->pmpls = NULL;
+    }
 
     if (pcust) {
       if (!cache_ptr->pcust) cache_ptr->pcust = malloc(config.cpptrs.len);
       memcpy(cache_ptr->pcust, pcust, config.cpptrs.len);
     }
-    else cache_ptr->pcust = NULL;
+    else {
+      if (cache_ptr->pcust) free(cache_ptr->pcust);
+      cache_ptr->pcust = NULL;
+    }
 
     cache_ptr->packet_counter = data->pkt_num;
     cache_ptr->flow_counter = data->flo_num;
@@ -601,9 +634,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;
 
   if (config.sql_table) {
-    f = open_print_output_file(config.sql_table, refresh_deadline-config.sql_refresh_time);
+    int append = FALSE;
 
-    if (f) { 
+    f = open_print_output_file(config.sql_table, refresh_deadline-config.sql_refresh_time, &append);
+
+    if (f && !append) { 
       if (config.print_output & PRINT_OUTPUT_FORMATTED)
         P_write_stats_header_formatted(f, is_event);
       else if (config.print_output & PRINT_OUTPUT_CSV)
@@ -631,7 +666,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pcust) pcust = queue[j]->pcust;
     else pcust = empty_pcust;
 
-    if (P_test_zero_elem(queue[j])) continue;
+    // if (P_test_zero_elem(queue[j])) continue;
+    if (!queue[j]->valid) continue;
 
     if (f && config.print_output & PRINT_OUTPUT_FORMATTED) {
       if (config.what_to_count & COUNT_ID) fprintf(f, "%-10llu  ", data->id);
@@ -1262,7 +1298,7 @@ void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 
 void P_exit_now(int signum)
 {
-  P_cache_purge(queries_queue, qq_ptr);
+  (*purge_func)(queries_queue, qq_ptr);
 
   wait(NULL);
   exit_plugin(0);

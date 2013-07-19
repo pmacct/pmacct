@@ -740,6 +740,28 @@ int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_print_output_file_append(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_file_append = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_output_file_append = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_table_schema(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -1417,13 +1439,14 @@ int cfg_key_timestamps_secs(char *filename, char *name, char *value_ptr)
 int cfg_key_plugin_pipe_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  u_int64_t value, changes = 0;
+  char *endptr;
 
   /* legal values should be >= sizeof(struct pkt_data)+sizeof(struct ch_buf_hdr)
      though we are unable to check this condition here. Thus, this function will
      just cut clearly wrong values ie. < = 0. Strict checks will be accomplished
      later, by the load_plugins() */ 
-  value = atoi(value_ptr);
+  value = strtoull(value_ptr, &endptr, 10);
   if (value <= 0) {
     Log(LOG_WARNING, "WARN ( %s ): 'plugin_pipe_size' has to be > 0.\n", filename);
     return ERR;
@@ -1471,13 +1494,14 @@ int cfg_key_plugin_pipe_backlog(char *filename, char *name, char *value_ptr)
 int cfg_key_plugin_buffer_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  u_int64_t value, changes = 0;
+  char *endptr;
 
   /* legal values should be >= sizeof(struct pkt_data) and < plugin_pipe_size
      value, if any though we are unable to check this condition here. Thus, this
      function will just cut clearly wrong values ie. < = 0. Strict checks will 
      be accomplished later, by the load_plugins() */
-  value = atoi(value_ptr);
+  value = strtoull(value_ptr, &endptr, 10);
   if (value <= 0) {
     Log(LOG_WARNING, "WARN ( %s ): 'plugin_buffer_size' has to be > 0.\n", filename);
     return ERR;
@@ -1779,7 +1803,7 @@ int cfg_key_post_tag(char *filename, char *name, char *value_ptr)
   pm_id_t value, changes = 0;
   char *endptr;
 
-  value = strtoul(value_ptr, &endptr, 10);
+  value = strtoull(value_ptr, &endptr, 10);
   if (value < 1) {
     Log(LOG_ERR, "WARN ( %s ): 'post_tag' cannot be zero.\n", filename);
     return ERR;

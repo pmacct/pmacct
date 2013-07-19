@@ -361,6 +361,12 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		The maximum table name length is 64 characters. The maximum number of variables it may
 		contain is 8.
 
+KEY:		print_output_file_append
+VALUES:         [ true | false ]
+DESC:		If set to true, print plugin will append to existing files instead of overwriting. If
+		appending, and in case of an output format requiring a title, ie. csv, formatted, etc.,
+		intuitively the title is not re-printed (default: false)
+
 KEY:		sql_table_schema
 DESC:		full pathname to a file containing a SQL table schema. It allows to create the SQL table
 		if it does not exist; this directive makes sense only if a dynamic 'sql_table' is in use.  
