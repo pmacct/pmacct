@@ -2090,6 +2090,19 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_SEC].off, tpl->tpl[NF9_LAST_SWITCHED_SEC].len);
       pdata->time_end.tv_sec = pm_ntohll(t64);
     }
+    /* fallback to header timestamp if no other time reference is available */
+    else {
+      if (hdr->version == 10) {
+        struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
+
+        pdata->time_start.tv_sec = ntohl(hdr_ipfix->unix_secs);
+      }
+      else if (hdr->version == 9) {
+        struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *) pptrs->f_header;
+
+        pdata->time_start.tv_sec = ntohl(hdr_v9->unix_secs);
+      }
+    }
     break;
   case 8:
     switch(hdr->aggregation) {
@@ -2661,6 +2674,19 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
     else if (tpl->tpl[NF9_FIRST_SWITCHED_SEC].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
       pnat->timestamp_start.tv_sec = pm_ntohll(t64);
+    }
+    /* fallback to header timestamp if no other time reference is available */
+    else {
+      if (hdr->version == 10) {
+        struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
+
+        pnat->timestamp_start.tv_sec = ntohl(hdr_ipfix->unix_secs);
+      }
+      else if (hdr->version == 9) {
+        struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *) pptrs->f_header;
+
+        pnat->timestamp_start.tv_sec = ntohl(hdr_v9->unix_secs);
+      }
     }
     break;
   case 8:

@@ -8,8 +8,8 @@
 ! keys can be used to alter the standard rule evaluation flow.
 !
 ! nfacctd: valid keys: set_tag, set_tag2, ip, in, out, engine_type, engine_id,
-! nexthop, bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate, filter
-! and set_qos;
+! nexthop, bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate, filter,
+! flowset_id and set_qos;
 ! mandatory keys for each rule: ip.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, ip, in, out, agent_id, bgp_nexthop,
@@ -59,6 +59,8 @@
 !			of the 'source_id' header field. It provides uniqueness
 !			with respect to the particular line card on the exporting
 !			device.
+! 'flowset_id'		MATCH: In NFv9/IPFIX this is compared against the flowset
+!			ID field of the flowset header.
 ! 'nexthop'		MATCH: IPv4/IPv6 address of the next-hop router
 ! 'bgp_nexthop'		MATCH: IPv4/IPv6 address of the next-hop BGP router. In
 !			MPLS-enabled networks this can be also matched against top

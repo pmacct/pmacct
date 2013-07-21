@@ -50,6 +50,7 @@
 #define PRETAG_SET_TAG			0x00800000
 #define PRETAG_SET_TAG2			0x01000000
 #define PRETAG_MPLS_LABEL_BOTTOM	0x02000000
+#define PRETAG_FLOWSET_ID		0x04000000
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -114,6 +115,7 @@ struct id_entry {
   pt_uint32_t output; /* output interface index */
   pt_uint8_t engine_type;
   pt_uint8_t engine_id;
+  pt_uint16_t flowset_id; /* applies to NetFlow v9/IPFIX flowset ID */
   pt_uint32_t agent_id; /* applies to sFlow agentSubId */
   pt_uint32_t sampling_rate; /* applies to sFlow sampling rate */
   pt_uint32_t sample_type; /* applies to sFlow sample type */

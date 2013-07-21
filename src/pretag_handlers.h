@@ -38,6 +38,7 @@ EXT int PT_map_engine_id_handler(char *, struct id_entry *, char *, struct plugi
 EXT int PT_map_filter_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_v8agg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_agent_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_flowset_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_sampling_rate_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_sample_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_direction_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -84,6 +85,7 @@ EXT int pretag_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_engine_type_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_engine_id_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_flowset_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_filter_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_v8agg_handler(struct packet_ptrs *, void *, void *); 
 EXT int pretag_src_as_handler(struct packet_ptrs *, void *, void *);

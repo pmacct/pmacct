@@ -32,6 +32,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"filter", PT_map_filter_handler},
   {"v8agg", PT_map_v8agg_handler},
   {"agent_id", PT_map_agent_id_handler},
+  {"flowset_id", PT_map_flowset_id_handler},
   {"sampling_rate", PT_map_sampling_rate_handler},
   {"sample_type", PT_map_sample_type_handler},
   {"direction", PT_map_direction_handler},

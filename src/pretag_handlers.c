@@ -524,6 +524,24 @@ int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, str
   return FALSE;
 }
 
+int PT_map_flowset_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->flowset_id.neg = pt_check_neg(&value);
+  e->flowset_id.n = htons(atoi(value));
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_FLOWSET_ID) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'flowset_id' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_flowset_id_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_FLOWSET_ID;
+
+  return FALSE;
+}
+
 int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -1340,6 +1358,25 @@ int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   case 5:
     if (entry->engine_id.n == ((struct struct_header_v5 *)pptrs->f_header)->engine_id) return (FALSE | entry->engine_id.neg);
     else return (TRUE ^ entry->engine_id.neg);
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
+int pretag_flowset_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl) {
+      if (entry->flowset_id.n == tpl->template_id) return (FALSE | entry->flowset_id.neg);
+      else return (TRUE ^ entry->flowset_id.neg);
+    }
+    else return TRUE; /* template not received yet */
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
