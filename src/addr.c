@@ -74,6 +74,69 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
 }
 
 /*
+ * str_to_addr_mask() converts a string into a supported family address
+ */
+unsigned int str_to_addr_mask(const char *str, struct host_addr *a, struct host_mask *m)
+{
+  char *delim = NULL, *net = NULL, *mask = NULL;
+  unsigned int family = 0, index = 0, j;
+
+  if (!str || !a || !m) return family;
+
+  net = (char *) str;
+
+  delim = strchr(str, '/');
+  if (delim) {
+    *delim = '\0';
+    mask = delim+1;
+  }
+  
+  family = str_to_addr(str, a);
+  if (delim) *delim = '/'; 
+
+  if (family) {
+    if (mask) {
+      index = atoi(mask);
+      if (family == AF_INET) {
+        if (index > 32) goto error;
+        else {
+	  m->mask.m4 = htonl((index == 32) ? 0xffffffffUL : ~(0xffffffffUL >> index));
+	  a->address.ipv4.s_addr &= m->mask.m4;
+        }
+      }
+#if defined ENABLE_IPV6
+      else if (family == AF_INET6) {
+        if (index > 128) goto error;
+
+        for (j = 0; j < 4 && index >= 32; j++, index -= 32) m->mask.m6[j] = 0xffffffffU;
+	if (j < 4 && index) m->mask.m6[j] = htonl(~(0xffffffffU >> index));
+
+        for (j = 0; j < 4; j++) a->address.ipv6.s6_addr[j] &= m->mask.m6[j];
+      }
+#endif
+      else goto error;
+    }
+    /* if no mask: set ipv4 mask to /32 and ipv6 mask to /128 */
+    else {
+      if (family == AF_INET) m->mask.m4 = 0xffffffffUL;
+#if defined ENABLE_IPV6
+      else if (family == AF_INET6) for (j = 0; j < 4; j++) m->mask.m6[j] = 0xffffffffU;
+#endif
+      else goto error;
+    }
+
+    m->family = family;
+  }
+
+  return family;
+
+  error:
+  a->family = 0;
+  m->family = 0;
+  return 0;
+}
+
+/*
  * addr_to_sa() converts a supported family address into a sockaddr 
  * structure 
  */
@@ -197,6 +260,40 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
   if (sa->sa_family == AF_INET6) {
     if (sa6->sin6_port == port) return FALSE;
     else return TRUE;
+  }
+#endif
+
+  return -1;
+}
+
+/*
+ * host_addr_mask_cmp() checks whether s1 falls in a1/m1
+ * returns 0 if positive; 1 if negative; -1 to signal a generic error
+ * (e.g. unsupported family).
+ */
+int host_addr_mask_sa_cmp(struct host_addr *a1, struct host_mask *m1, struct sockaddr *s1)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)s1;
+#if defined ENABLE_IPV6
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)s1;
+  struct sockaddr_in6 sa6_local;
+  int ret, j;
+#endif
+
+  if (!a1 || !m1 || !s1) return -1;
+  if (a1->family != s1->sa_family || a1->family != m1->family) return -1;
+
+  if (a1->family == AF_INET) {
+    if ((sa4->sin_addr.s_addr & m1->mask.m4) == a1->address.ipv4.s_addr) return 0;
+    else return 1;
+  }
+#if defined ENABLE_IPV6
+  else if (a1->family == AF_INET6) {
+    memcpy(&sa6_local, s1, sizeof(struct sockaddr));
+    for (j = 0; j < 4; j++) sa6_local.sin6_addr.s6_addr[j] &= m1->mask.m6[j];
+    ret = ip6_addr_cmp(a1, &sa6_local.sin6_addr);
+    if (!ret) return 0;
+    else return 1;
   }
 #endif
 

@@ -326,6 +326,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_amqp_routing_key[] = "acct";
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
   int i, j, amqp_status, batch_idx, is_routing_key_dyn = FALSE;
+  time_t start, duration;
 
   amqp_connection_state_t amqp_conn;
   amqp_socket_t *amqp_socket = NULL;
@@ -394,6 +395,9 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     return;
   }
 
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  start = time(NULL);
+
   for (j = 0; j < index; j++) {
     char *json_str;
 
@@ -440,6 +444,9 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   amqp_channel_close(amqp_conn, 1, AMQP_REPLY_SUCCESS);
   amqp_connection_close(amqp_conn, AMQP_REPLY_SUCCESS);
   amqp_destroy_connection(amqp_conn);
+
+  duration = time(NULL)-start;
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

@@ -2096,7 +2096,7 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
 
 int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  int x, j;
+  int x, j, begin = 0, end = 0;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   pm_id_t id, stop, ret;
 
@@ -2113,87 +2113,54 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (tag2) *tag2 = 0;
 
   if (sa->sa_family == AF_INET) {
-    for (x = 0; x < t->ipv4_num; x++) {
-      if (t->e[x].agent_ip.a.address.ipv4.s_addr == ((struct sockaddr_in *)sa)->sin_addr.s_addr) {
-	t->e[x].last_matched = FALSE; 
-        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
-	  ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-	  if (ret > TRUE) stop |= ret;
-	  else stop = ret;
-	}
-        if (!stop || stop > TRUE) {
-	  if (stop & PRETAG_MAP_RCODE_ID) {
-	    if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
-	    *tag = id;
-	  }
-	  else if (stop & PRETAG_MAP_RCODE_ID2) {
-	    if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
-	    *tag2 = id;
-	  }
-          else if (stop == BTA_MAP_RCODE_ID_ID2) {
-            // stack not applicable here
-            *tag = id;
-            *tag2 = t->e[x].id2;
-          }
-
-          if (t->e[x].jeq.ptr) {
-	    if (t->e[x].ret) {
-              exec_plugins(pptrs);
-              set_shadow_status(pptrs);
-	      *tag = 0;
-	      *tag2 = 0;
-	    }
-            x = t->e[x].jeq.ptr->pos;
-            x--; /* yes, it will be automagically incremented by the for() cycle */
-            id = 0;
-          }
-          else break;
-        }
-      }
-    }
+    begin = 0;
+    end = t->ipv4_num;
   }
 #if defined ENABLE_IPV6
   else if (sa->sa_family == AF_INET6) {
-    for (x = (t->num-t->ipv6_num); x < t->num; x++) {
-      if (!ip6_addr_cmp(&t->e[x].agent_ip.a.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr)) {
-        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
-	  ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-	  if (ret > TRUE) stop |= ret;
-	  else stop = ret;
+    begin = t->num-t->ipv6_num;
+    end = t->num;
+  }
+#endif
+
+  for (x = begin; x < end; x++) {
+    if (host_addr_mask_sa_cmp(&t->e[x].agent_ip.a, &t->e[x].agent_mask, sa) == 0) {
+      t->e[x].last_matched = FALSE; 
+      for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+	ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+	if (ret > TRUE) stop |= ret;
+	else stop = ret;
+      }
+      if (!stop || stop > TRUE) {
+	if (stop & PRETAG_MAP_RCODE_ID) {
+	  if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
+	  *tag = id;
 	}
-        if (!stop || stop > TRUE) {
-          if (stop & PRETAG_MAP_RCODE_ID) {
-            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
-            *tag = id;
-          }
-          else if (stop & PRETAG_MAP_RCODE_ID2) {
-            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
-            *tag2 = id;
-          }
-          else if (stop == BTA_MAP_RCODE_ID_ID2) {
-            // stack not applicable here
-            *tag = id;
-            *tag2 = t->e[x].id2;
-          }
+	else if (stop & PRETAG_MAP_RCODE_ID2) {
+	  if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
+	  *tag2 = id;
+	}
+        else if (stop == BTA_MAP_RCODE_ID_ID2) {
+          // stack not applicable here
+          *tag = id;
+          *tag2 = t->e[x].id2;
+        }
 
-	  if (t->e[x].jeq.ptr) {
-	    if (t->e[x].ret) {
-	      exec_plugins(pptrs);
-	      set_shadow_status(pptrs);
-	      *tag = 0;
-	      *tag2 = 0;
-	    }
-
-	    x = t->e[x].jeq.ptr->pos;
-	    x--; /* yes, it will be automagically incremented by the for() cycle */
-	    id = 0;
+        if (t->e[x].jeq.ptr) {
+	  if (t->e[x].ret) {
+            exec_plugins(pptrs);
+            set_shadow_status(pptrs);
+	    *tag = 0;
+	    *tag2 = 0;
 	  }
-  	  else break;
-	}
+          x = t->e[x].jeq.ptr->pos;
+          x--; /* yes, it will be automagically incremented by the for() cycle */
+          id = 0;
+        }
+        else break;
       }
     }
   }
-#endif
 
   return stop;
 }

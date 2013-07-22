@@ -619,6 +619,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
   int j, is_event = FALSE;
+  time_t start, duration;
 
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
@@ -646,6 +647,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
   }
   else f = stdout; /* write to standard output */
+
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  start = time(NULL);
 
   if (f && config.print_markers) fprintf(f, "--START (%ld+%d)--\n", refresh_deadline-config.sql_refresh_time,
 		  			config.sql_refresh_time);
@@ -1083,6 +1087,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   if (f && config.print_markers) fprintf(f, "--END--\n");
 
   if (f && config.sql_table) close_print_output_file(f, config.sql_table, refresh_deadline-config.sql_refresh_time);
+
+  duration = time(NULL)-start;
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

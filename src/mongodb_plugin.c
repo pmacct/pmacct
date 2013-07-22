@@ -329,7 +329,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int i, j, db_status, batch_idx;
-  time_t stamp;
+  time_t stamp, start, duration;
 
   const bson **bson_batch, **bson_batch_ptr;
   bson *bson_elem;
@@ -342,7 +342,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   if (db_status != MONGO_OK) {
     switch (db_conn.err) {
     case MONGO_CONN_SUCCESS:
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection succeeded (MONGO_CONN_SUCCESS) to MongoDB\n", config.name, config.type);
+      Log(LOG_INFO, "INFO ( %s/%s ): Connection succeeded (MONGO_CONN_SUCCESS) to MongoDB\n", config.name, config.type);
       break;
     case MONGO_CONN_NO_SOCKET:
       Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to MongoDB: no socket\n", config.name, config.type);
@@ -356,7 +356,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       return;
     }
   }
-  else Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection succeeded (MONGO_OK) to MongoDB\n", config.name, config.type);
+  else Log(LOG_INFO, "INFO ( %s/%s ): Connection succeeded (MONGO_OK) to MongoDB\n", config.name, config.type);
 
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
@@ -396,8 +396,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       Log(LOG_ERR, "ERROR ( %s/%s ): Authentication failed to MongoDB\n", config.name, config.type); 
       return;
     }
-    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): Successful authentication (MONGO_OK) to MongoDB\n", config.name, config.type);
+    else Log(LOG_INFO, "INFO ( %s/%s ): Successful authentication (MONGO_OK) to MongoDB\n", config.name, config.type);
   }
+
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  start = time(NULL);
 
   if (dyn_table && config.sql_table_schema) MongoDB_create_indexes(&db_conn, &stamp);
 
@@ -676,6 +679,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
     batch_idx = 0;
   }
+
+  duration = time(NULL)-start;
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

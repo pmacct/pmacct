@@ -135,8 +135,8 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 
 int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  if (!str_to_addr(value, &e->agent_ip.a)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad IP address '%s'. ", filename, value);
+  if (!str_to_addr_mask(value, &e->agent_ip.a, &e->agent_mask)) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad IP address or prefix '%s'. ", filename, value);
     return TRUE;
   }
 

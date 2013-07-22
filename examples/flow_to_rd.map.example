@@ -14,7 +14,8 @@
 ! 'ip'                  MATCH: in nfacctd this is compared against the source
 !                       IP address of the device originating NetFlow packets;
 !                       in sfacctd this is compared against the AgentId field
-!                       of received sFlow samples.
+!                       of received sFlow samples. Expected argument are an IP
+!                       address or prefix (ie. XXX.XXX.XXX.XXX/NN)
 ! 'in'                  MATCH: Input interface.
 ! 'out'                 MATCH: Output interface.
 ! 'bgp_nexthop'         MATCH: IPv4/IPv6 address of the next-hop BGP router. In

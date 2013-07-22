@@ -13,9 +13,10 @@
 ! 'bgp_port'		LOOKUP: TCP port used by the BGP peer to establish the
 !			session, useful in NAT traversal scenarios. 
 ! 'ip'                  MATCH: in nfacctd this is compared against the source
-!			IP address of the device originating NetFlow packets;
-!			in sfacctd this is compared against the AgentId field
-!			of received sFlow samples.
+!                       IP address of the device originating NetFlow packets;
+!                       in sfacctd this is compared against the AgentId field
+!                       of received sFlow samples. Expected argument are an IP
+!                       address or prefix (ie. XXX.XXX.XXX.XXX/NN)
 ! 'filter'              MATCH: incoming data is compared against the supplied
 !			filter expression (expected in libpcap syntax); the
 !			filter needs to be enclosed in quotes ('). In this map

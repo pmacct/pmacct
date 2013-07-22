@@ -2566,8 +2566,13 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
 int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
+  struct sockaddr sa_local;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &sa_local;
+#if defined ENABLE_IPV6
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &sa_local;
+#endif 
   SFSample *sample = (SFSample *)pptrs->f_data; 
-  int x, j;
+  int x, j, begin = 0, end = 0;
   pm_id_t id, stop, ret;
 
   if (!t) return 0;
@@ -2583,87 +2588,58 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (tag2) *tag2 = 0;
 
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
-    for (x = 0; x < t->ipv4_num; x++) {
-      if (t->e[x].agent_ip.a.address.ipv4.s_addr == sample->agent_addr.address.ip_v4.s_addr) {
-	t->e[x].last_matched = FALSE;
-        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
-          ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-          if (ret > TRUE) stop |= ret;
-          else stop = ret;
-        }
-        if (!stop || stop > TRUE) {
-          if (stop & PRETAG_MAP_RCODE_ID) {
-            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
-            *tag = id;
-          }
-          else if (stop & PRETAG_MAP_RCODE_ID2) {
-            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
-            *tag2 = id;
-          }
-          else if (stop == BTA_MAP_RCODE_ID_ID2) {
-            // stack not applicable here
-            *tag = id;
-            *tag2 = t->e[x].id2;
-          }
-
-          if (t->e[x].jeq.ptr) {
-	    if (t->e[x].ret) {
-              exec_plugins(pptrs);
-	      set_shadow_status(pptrs);
-	      *tag = 0;
-	      *tag2 = 0;
-	    }
-            x = t->e[x].jeq.ptr->pos;
-            x--; /* yes, it will be automagically incremented by the for() cycle */
-            id = 0;
-          }
-          else break;
-        }
-      }
-    }
+    begin = 0;
+    end = t->ipv4_num;
+    sa_local.sa_family = AF_INET;
+    sa4->sin_addr.s_addr = sample->agent_addr.address.ip_v4.s_addr;
   }
 #if defined ENABLE_IPV6
-  else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) { 
-    for (x = (t->num-t->ipv6_num); x < t->num; x++) {
-      if (!ip6_addr_cmp(&t->e[x].agent_ip.a.address.ipv6, &sample->agent_addr.address.ip_v6)) {
-        for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
-          ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-          if (ret > TRUE) stop |= ret;
-          else stop = ret;
-        }
-        if (!stop || stop > TRUE) {
-          if (stop & PRETAG_MAP_RCODE_ID) {
-            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
-            *tag = id;
-          }
-          else if (stop & PRETAG_MAP_RCODE_ID2) {
-            if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
-            *tag2 = id;
-          }
-          else if (stop == BTA_MAP_RCODE_ID_ID2) {
-            // stack not applicable here
-            *tag = id;
-            *tag2 = t->e[x].id2;
-          }
+  else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
+    begin = t->num-t->ipv6_num;
+    end = t->num;
+    sa_local.sa_family = AF_INET6;
+    for (j = 0; j < 4; j++) sa6->sin6_addr.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
+  }
+#endif
 
-          if (t->e[x].jeq.ptr) {
-	    if (t->e[x].ret) {
-              exec_plugins(pptrs);
-              set_shadow_status(pptrs);
-	      *tag = 0;
-	      *tag2 = 0;
-	    }
-
-            x = t->e[x].jeq.ptr->pos;
-            x--; /* yes, it will be automagically incremented by the for() cycle */
-            id = 0;
-          }
-          else break;
+  for (x = begin; x < end; x++) {
+    if (host_addr_mask_sa_cmp(&t->e[x].agent_ip.a, &t->e[x].agent_mask, &sa_local) == 0) {
+      t->e[x].last_matched = FALSE;
+      for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
+        ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
+        if (ret > TRUE) stop |= ret;
+        else stop = ret;
+      }
+      if (!stop || stop > TRUE) {
+        if (stop & PRETAG_MAP_RCODE_ID) {
+          if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
+          *tag = id;
         }
+        else if (stop & PRETAG_MAP_RCODE_ID2) {
+          if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
+          *tag2 = id;
+        }
+        else if (stop == BTA_MAP_RCODE_ID_ID2) {
+          // stack not applicable here
+          *tag = id;
+          *tag2 = t->e[x].id2;
+        }
+
+        if (t->e[x].jeq.ptr) {
+	  if (t->e[x].ret) {
+            exec_plugins(pptrs);
+	    set_shadow_status(pptrs);
+	    *tag = 0;
+	    *tag2 = 0;
+	  }
+          x = t->e[x].jeq.ptr->pos;
+          x--; /* yes, it will be automagically incremented by the for() cycle */
+          id = 0;
+        }
+        else break;
       }
     }
   }
-#endif
 
   return stop;
 }

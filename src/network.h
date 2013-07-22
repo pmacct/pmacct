@@ -362,6 +362,16 @@ struct host_addr {
   } address;
 };
 
+struct host_mask {
+  u_int8_t family;
+  union {
+    u_int32_t m4;
+#if defined ENABLE_IPV6
+    u_int32_t m6[4];
+#endif
+  } mask;
+};
+
 struct pkt_primitives {
 #if defined (HAVE_L2)
   u_int8_t eth_dhost[ETH_ADDR_LEN];

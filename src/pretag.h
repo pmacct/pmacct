@@ -82,6 +82,8 @@ typedef struct {
   struct host_addr a;
 } pt_hostaddr_t;
 
+typedef struct host_mask pt_hostmask_t;
+
 typedef struct {
   u_int8_t neg;
   rd_t rd;
@@ -109,6 +111,7 @@ struct id_entry {
   pm_id_t flags;
   pm_id_t pos;
   pt_hostaddr_t agent_ip;
+  pt_hostmask_t agent_mask;
   pt_hostaddr_t nexthop;
   pt_hostaddr_t bgp_nexthop;
   pt_uint32_t input; /* input interface index */
