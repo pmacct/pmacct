@@ -458,28 +458,9 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       else {
 	cache_ptr = P_cache_attach_new_node(cache_ptr); 
 	if (!cache_ptr) {
-	  int ret;
-
-	  Log(LOG_WARNING, "WARN ( %s/%s ): Finished cache entries: purging to backend and starting again.\n", config.name, config.type);
+	  Log(LOG_WARNING, "WARN ( %s/%s ): Finished cache entries. Purging.\n", config.name, config.type);
 	  Log(LOG_WARNING, "WARN ( %s/%s ): You may want to set a larger print_cache_entries value.\n", config.name, config.type);
-	  if (config.type_id == PLUGIN_ID_PRINT && config.sql_table)
-	    Log(LOG_WARNING, "WARN ( %s/%s ): Make sure print_output_file_append is set to true.\n", config.name, config.type);
-
-	  /* Writing out to replenish cache space */
-	  switch (ret = fork()) {
-	  case 0: /* Child */
-	    (*purge_func)(queries_queue, qq_ptr);
-	    exit(0);
-	  default: /* Parent */
-	    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-	    P_cache_flush(queries_queue, qq_ptr);
-	    qq_ptr = FALSE;
-	    break;
-	  }
-
-	  // XXX: should really go back to start
-	  // goto start;
-	  return;
+	  goto safe_action;
 	}
 	else {
 	  queries_queue[qq_ptr] = cache_ptr;
@@ -496,7 +477,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
     memcpy(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives));
     if (pbgp) {
       if (!cache_ptr->pbgp) cache_ptr->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
-      memcpy(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+      if (cache_ptr->pbgp) memcpy(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
+      else {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
+        goto safe_action;
+      }
     }
     else {
       if (cache_ptr->pbgp) free(cache_ptr->pbgp);
@@ -505,7 +490,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
     if (pnat) {
       if (!cache_ptr->pnat) cache_ptr->pnat = (struct pkt_nat_primitives *) malloc(PnatSz);
-      memcpy(cache_ptr->pnat, pnat, sizeof(struct pkt_nat_primitives));
+      if (cache_ptr->pnat) memcpy(cache_ptr->pnat, pnat, sizeof(struct pkt_nat_primitives));
+      else {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
+        goto safe_action;
+      }
     }
     else {
       if (cache_ptr->pnat) free(cache_ptr->pnat);
@@ -514,7 +503,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
     if (pmpls) {
       if (!cache_ptr->pmpls) cache_ptr->pmpls = (struct pkt_mpls_primitives *) malloc(PmplsSz);
-      memcpy(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+      if (cache_ptr->pmpls) memcpy(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
+      else {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
+        goto safe_action;
+      }
     }
     else {
       if (cache_ptr->pmpls) free(cache_ptr->pmpls);
@@ -523,7 +516,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
     if (pcust) {
       if (!cache_ptr->pcust) cache_ptr->pcust = malloc(config.cpptrs.len);
-      memcpy(cache_ptr->pcust, pcust, config.cpptrs.len);
+      if (cache_ptr->pcust) memcpy(cache_ptr->pcust, pcust, config.cpptrs.len);
+      else {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
+        goto safe_action;
+      }
     }
     else {
       if (cache_ptr->pcust) free(cache_ptr->pcust);
@@ -576,6 +573,31 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       queries_queue[qq_ptr] = cache_ptr;
       qq_ptr++;
     }
+  }
+
+  return;
+
+  safe_action:
+  {
+    int ret;
+
+    if (config.type_id == PLUGIN_ID_PRINT && config.sql_table)
+      Log(LOG_WARNING, "WARN ( %s/%s ): Make sure print_output_file_append is set to true.\n", config.name, config.type);
+
+    /* Writing out to replenish cache space */
+    switch (ret = fork()) {
+    case 0: /* Child */
+      (*purge_func)(queries_queue, qq_ptr);
+      exit(0);
+    default: /* Parent */
+      if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+      P_cache_flush(queries_queue, qq_ptr);
+      qq_ptr = FALSE;
+      break;
+    }
+
+    /* try to insert again */
+    (*insert_func)(prim_ptrs);
   }
 }
 
@@ -670,7 +692,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pcust) pcust = queue[j]->pcust;
     else pcust = empty_pcust;
 
-    // if (P_test_zero_elem(queue[j])) continue;
     if (!queue[j]->valid) continue;
 
     if (f && config.print_output & PRINT_OUTPUT_FORMATTED) {

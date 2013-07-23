@@ -168,7 +168,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->flo_num;
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
-        elem_acc->flow_type = data->flow_type; // XXX
+        elem_acc->flow_type = data->flow_type; 
         if (config.what_to_count & COUNT_CLASS) {
           elem_acc->packet_counter += data->cst.pa;
           elem_acc->bytes_counter += data->cst.ba;
@@ -190,7 +190,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->flo_num;
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
-        elem_acc->flow_type = data->flow_type; // XXX
+        elem_acc->flow_type = data->flow_type;
 	if (config.what_to_count & COUNT_CLASS) {
 	  elem_acc->packet_counter += data->cst.pa;
 	  elem_acc->bytes_counter += data->cst.ba;
@@ -205,43 +205,55 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       memcpy(&elem_acc->primitives, addr, sizeof(struct pkt_primitives));
 
       if (pbgp) {
-	if (elem_acc->cbgp) {
-	  if (elem_acc->cbgp->std_comms) free(elem_acc->cbgp->std_comms);
-	  if (elem_acc->cbgp->ext_comms) free(elem_acc->cbgp->ext_comms);
-	  if (elem_acc->cbgp->as_path) free(elem_acc->cbgp->as_path);
-	  if (elem_acc->cbgp->src_std_comms) free(elem_acc->cbgp->src_std_comms);
-	  if (elem_acc->cbgp->src_ext_comms) free(elem_acc->cbgp->src_ext_comms);
-	  if (elem_acc->cbgp->src_as_path) free(elem_acc->cbgp->src_as_path);
-	  free(elem_acc->cbgp);
+	if (!elem_acc->cbgp) {
+	  elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+	  memset(elem_acc->cbgp, 0, cb_size);
 	}
-	elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
-	memset(elem_acc->cbgp, 0, cb_size);
         pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
+      }
+      else {
+        if (elem_acc->cbgp->std_comms) free(elem_acc->cbgp->std_comms);
+        if (elem_acc->cbgp->ext_comms) free(elem_acc->cbgp->ext_comms);
+        if (elem_acc->cbgp->as_path) free(elem_acc->cbgp->as_path);
+        if (elem_acc->cbgp->src_std_comms) free(elem_acc->cbgp->src_std_comms);
+        if (elem_acc->cbgp->src_ext_comms) free(elem_acc->cbgp->src_ext_comms);
+        if (elem_acc->cbgp->src_as_path) free(elem_acc->cbgp->src_as_path);
+        free(elem_acc->cbgp);
+	elem_acc->cbgp = NULL;
       }
 
       if (pnat) {
-        elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
+	if (!elem_acc->pnat) elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
 	memcpy(elem_acc->pnat, pnat, pn_size);
       }
-      else elem_acc->pnat = NULL;
+      else {
+	if (elem_acc->pnat) free(elem_acc->pnat);
+	elem_acc->pnat = NULL;
+      }
 
       if (pmpls) {
-        elem_acc->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
+	if (!elem_acc->pmpls) elem_acc->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
         memcpy(elem_acc->pmpls, pmpls, pm_size);
       }
-      else elem_acc->pmpls = NULL;
+      else {
+	if (elem_acc->pmpls) free(elem_acc->pmpls);
+	elem_acc->pmpls = NULL;
+      }
 
       if (pcust) {
-        elem_acc->pcust = (char *) malloc(pc_size);
+	if (!elem_acc->pcust) elem_acc->pcust = (char *) malloc(pc_size);
         memcpy(elem_acc->pcust, pcust, pc_size);
       }
-      else elem_acc->pcust = NULL;
+      else {
+	if (elem_acc->pcust) free(elem_acc->pcust);
+	elem_acc->pcust = NULL;
+      }
 
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
       elem_acc->tcp_flags |= data->tcp_flags;
-      elem_acc->flow_type = data->flow_type; // XXX
+      elem_acc->flow_type = data->flow_type;
       elem_acc->signature = hash;
       if (config.what_to_count & COUNT_CLASS) {
         elem_acc->packet_counter += data->cst.pa;

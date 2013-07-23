@@ -414,7 +414,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pcust) pcust = queue[j]->pcust;
     else pcust = empty_pcust;
 
-    if (P_test_zero_elem(queue[j])) continue;
+    if (!queue[j]->valid) continue;
 
     json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
                          &queue[j]->primitives, pbgp, pnat, pmpls, pcust, queue[j]->bytes_counter,

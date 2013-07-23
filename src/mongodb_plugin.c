@@ -427,7 +427,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pcust) pcust = queue[j]->pcust;
     else pcust = empty_pcust;
 
-    if (P_test_zero_elem(queue[j])) continue;
+    if (!queue[j]->valid) continue;
 
     if (config.what_to_count & COUNT_ID) bson_append_long(bson_elem, "tag", data->id);
     if (config.what_to_count & COUNT_ID2) bson_append_long(bson_elem, "tag2", data->id2);

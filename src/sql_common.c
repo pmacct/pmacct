@@ -637,27 +637,47 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   if (pbgp) {
     if (!Cursor->cbgp) {
       Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+      if (!Cursor->cbgp) goto safe_action;
       memset(Cursor->cbgp, 0, cb_size);
     }
     pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
   }
-  else Cursor->cbgp = NULL;
+  else {
+    if (Cursor->cbgp) {
+      if (Cursor->cbgp->std_comms) free(Cursor->cbgp->std_comms);
+      if (Cursor->cbgp->ext_comms) free(Cursor->cbgp->ext_comms);
+      if (Cursor->cbgp->as_path) free(Cursor->cbgp->as_path);
+      if (Cursor->cbgp->src_std_comms) free(Cursor->cbgp->src_std_comms);
+      if (Cursor->cbgp->src_ext_comms) free(Cursor->cbgp->src_ext_comms);
+      if (Cursor->cbgp->src_as_path) free(Cursor->cbgp->src_as_path);
+      free(Cursor->cbgp);
+    }
+    Cursor->cbgp = NULL;
+  }
 
   if (pnat) {
     if (!Cursor->pnat) {
       Cursor->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
+      if (!Cursor->pnat) goto safe_action;
     }
     memcpy(Cursor->pnat, pnat, pn_size);
   }
-  else Cursor->pnat = NULL;
+  else {
+    if (Cursor->pnat) free(Cursor->pnat);
+    Cursor->pnat = NULL;
+  }
 
   if (pmpls) {
     if (!Cursor->pmpls) {
-      Cursor->pmpls= (struct pkt_mpls_primitives *) malloc(pm_size);
+      Cursor->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
+      if (!Cursor->pmpls) goto safe_action;
     }
     memcpy(Cursor->pmpls, pmpls, pm_size);
   }
-  else Cursor->pmpls = NULL;
+  else {
+    if (Cursor->pmpls) free(Cursor->pmpls);
+    Cursor->pmpls = NULL;
+  }
 
   Cursor->packet_counter = data->pkt_num;
   Cursor->flows_counter = data->flo_num;

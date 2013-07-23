@@ -527,6 +527,9 @@ void Accumulate_Counters(struct pkt_data *abuf, struct acc *elem)
 
 int test_zero_elem(struct acc *elem)
 {
+  if (elem && elem->flow_type && !elem->reset_flag) return FALSE;
+
+/*
   if (elem) {
     if (elem->flow_type == NF9_FTYPE_NAT_EVENT) {
       if (elem->pnat && elem->pnat->nat_event) return FALSE;
@@ -537,6 +540,7 @@ int test_zero_elem(struct acc *elem)
       else return TRUE;
     }
   }
+*/
 
   return TRUE;
 }
