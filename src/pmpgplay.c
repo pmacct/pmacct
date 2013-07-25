@@ -39,6 +39,7 @@ int sql_dont_try_update = 0;
 int sql_history_since_epoch = 0;
 char *sql_table, *sql_user, *sql_db;
 char timebuf[SRVBUFLEN];
+struct configuration config;
 
 void usage(char *prog)
 {
@@ -897,4 +898,8 @@ static int PG_affected_rows(PGresult *result)
 int bgp_rd2str(u_char *str, rd_t *rd)
 {
   return TRUE;
+}
+
+void custom_primitive_value_print(char *out, int outlen, char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
+{
 }

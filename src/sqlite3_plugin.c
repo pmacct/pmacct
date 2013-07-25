@@ -462,10 +462,8 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
     sql_invalidate_shadow_entries(queue, &index);
   idata->ten = index;
 
-  if (config.debug) {
-    Log(LOG_DEBUG, "( %s/%s ) *** Purging cache - START ***\n", config.name, config.type);
-    start = time(NULL);
-  }
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  start = time(NULL);
 
   /* We check for variable substitution in SQL table */ 
   if (idata->dyn_table) {
@@ -503,11 +501,9 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   (*sqlfunc_cbr.unlock)(&bed);
   if (b.fail) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for SQLite3 daemon failed.\n", config.name, config.type);
   
-  if (config.debug) {
-    idata->elap_time = time(NULL)-start; 
-    Log(LOG_DEBUG, "( %s/%s ) *** Purging cache - END (QN: %u, ET: %u) ***\n", 
+  idata->elap_time = time(NULL)-start; 
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", 
 		    config.name, config.type, idata->qn, idata->elap_time); 
-  }
 
   if (config.sql_trigger_exec) {
     if (!config.debug) idata->elap_time = time(NULL)-start;
