@@ -2647,7 +2647,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
 {
   SFSample *sample = (SFSample *)pptrs->f_data;
-  u_int8_t ret = 0;
+  u_int8_t ret = NF9_FTYPE_TRAFFIC;
 
   if (sample->in_vlan || sample->out_vlan) ret += NF9_FTYPE_VLAN;
   if (sample->lstk.depth > 0) ret += NF9_FTYPE_MPLS;

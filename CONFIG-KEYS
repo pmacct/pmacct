@@ -81,6 +81,12 @@ NOTES:		* Some primitives (ie. tag2, src_as_path, src_std_comm, src_ext_comm, sr
 		  timestamp_end currently only makes sense for logging flows via NetFlow and
 		  IPFIX. 
 
+KEY:		aggregate_primitives [GLOBAL]
+DESC:		Expects full pathname to a file containing custom-defined primitives. Once
+		properly defined in this file (see 'examples/primitives.lst' for full syntax),
+		primitives can be used in 'aggregate' statements. The feature is currently
+		supported only in nfacctd, for NetFlow v9/IPFIX.
+
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
 		is performed slightly afterwards, upon successful match of this filter.

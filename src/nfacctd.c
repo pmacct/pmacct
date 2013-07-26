@@ -2026,7 +2026,7 @@ void compute_once()
 
 u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
-  u_int16_t ret=0;
+  u_int16_t ret = NF9_FTYPE_TRAFFIC;
 
   if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
       (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += NF9_FTYPE_VLAN; 

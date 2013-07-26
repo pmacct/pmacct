@@ -1,0 +1,40 @@
+!
+! aggregate_primitives list -- list of custom-defined primitives
+!
+! File syntax is key-based. Position of keys inside the same row (rule) is not
+! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full
+! match wins (like in firewall rules).
+!
+! list of currently supported keys follows:
+!
+! 'name'		Primitive name: it will be used as identifier of the
+!			primitive itself and hence must be unique. This name
+!			can be used in 'aggregate' statements to include the
+!			primitive as part of plugin aggregation methods.
+! 'field_type'		Applies to NetFlow v9/IPFIX: expects a positive number
+!			and specifies which field type (Element ID) to select.
+!			As a reference the IPFIX IE definition table can be
+!			used: http://www.iana.org/assignments/ipfix/ipfix.xhtml
+! 'len'			Length of the primitive, in bytes. Variable length 
+!			fields are not supported yet. 
+! 'semantics'		Specifies semantics of the primitive. Allowed values
+!			are: 'u_int' (unsigned integer, presented as decimal
+!			number), 'hex' (unsigned integer, presented as hexa-
+!			decimal number), 'ip' (IP address), 'mac' (MAC address)
+!			and 'str' (string). 
+! 
+! Examples:
+!
+! Defines a primitive called 'mtla': it picks NetFlow v9/IPFIX field type #47
+! (mplsTopLabelIPv4Address), reads for 4 bytes (since it's expected to be an
+! IPv4 address) and will present it as an IP address. 
+! In an 'aggregate' statement this primitive would be intuitively recalled by
+! its name, 'mtla'.
+!
+name=mtla	field_type=47	len=4	semantics=ip
+!
+! Defines a primitive called 'mtlpl': it picks NetFlow v9/IPFIX field type #91
+! (mplsTopLabelPrefixLength), reads for 1 byte (since it's expected to be a
+! prefix length/network mask) and will present it as a decimal unsigned int.
+!
+name=mtlpl	field_type=91	len=1	semantics=u_int
