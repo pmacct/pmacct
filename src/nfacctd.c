@@ -502,8 +502,12 @@ int main(int argc,char **argv, char **envp)
   if (rc < 0) Log(LOG_ERR, "WARN ( default/core ): setsockopt() failed for SO_REUSEADDR.\n");
 
   if (config.pipe_size) {
+    int l = sizeof(config.pipe_size);
+    u_int64_t x = 0;
+
     rc = Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.pipe_size, sizeof(config.pipe_size));
-    if (rc < 0) Log(LOG_ERR, "WARN ( default/core ): Setsocksize() failed for 'plugin_pipe_size' = '%d'.\n", config.pipe_size); 
+    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &x, &l);
+    if (x < config.pipe_size) Log(LOG_INFO, "INFO ( default/core ): Network socket size obtained: %u / %u.\n", x, config.pipe_size);
   }
 
   /* Multicast: memberships handling */

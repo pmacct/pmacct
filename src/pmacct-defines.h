@@ -48,6 +48,9 @@
 #ifndef UINT32_MAX
 #define UINT32_MAX (4294967295U)
 #endif
+#ifndef INT_MAX
+#define INT_MAX (2147483647U)
+#endif
 
 #if defined ENABLE_IPV6
 #define DEFAULT_SNAPLEN 128

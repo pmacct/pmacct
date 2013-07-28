@@ -150,13 +150,34 @@ DESC:		plugins to be enabled. SQL plugins are available only if configured and c
 		(default: memory) 
 
 KEY:		plugin_pipe_size
-DESC:		Core process and active plugins are encapsulated into different OS processes.
-		To exchange data, they set up a communication channel structured as a circular queue
-		(referred as pipe). This directive sets the total size, in bytes, of such queue. Its
-		default size is set depending on the Operating System. Whenever facing heavy traffic
-		loads, this size can be adjusted to store more data. Read INTERNALS, 'Communications
-		between core process and plugin' section for further details. A value of 10240000
-		(10MB) is usually ok.  
+DESC:		Core process and each of the plugins are run into different processes. To exchange
+		data, they set up a communication channel structured as a circular queue (referred
+		as pipe). This directive sets the total size, in bytes, of such queue. Its default
+		size is set depending on the Operating System. Whenever facing heavy traffic loads,
+		this size can be adjusted to store more data. Read INTERNALS, 'Communications between
+		core process and plugin' section for further details.
+		In nfacctd and sfacctd daemons, this directive also sets the receive buffer size of
+		the socket listening from the network for NetFlow and sFlow messages respectively. In
+		the following example the pipe between the Core process and the plugin 'test' is set
+		to 10M, whereas the receiving socket of the Core process is set to 2M:
+
+		...
+		plugins: memory[test]
+		plugin_pipe_size[test]: 10240000 
+		plugin_pipe_size[default]: 2048000
+		...
+
+		If facing informational log messages like "Pipe size obtained" or "Network socket
+		size obtained", it could mean the maximum socket size granted by the underlying
+		Operating System has to be increased. This can be achieved on Linux, for example,
+		as follows: 
+
+		shell> echo <max plugin_pipe_size value> > /proc/sys/net/core/rmem_max
+		shell> echo <max plugin_pipe_size value> > /proc/sys/net/core/wmem_max
+
+		With reference to nfacctd and sfacctd and the socket listening from the network for
+		NetFlow and sFlow messages, depending on the operating system, it can be that the
+		maximum achieveable socket size is around 1GB.
 
 KEY:		plugin_buffer_size 
 DESC:		by defining the transfer buffer size, in bytes, this directive enables bufferization
@@ -700,8 +721,10 @@ DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to 
 
 
 KEY:		mongo_insert_batch
-DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per batch
-		(default: 10000)
+DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per
+		batch. The maximum value for this directive that shown safe-enough during testing was 75000:
+		the mongo_insert_batch() is currently set to continue inserting upon hitting errors so logs
+		will not reveal much. (default: 10000)
 
 KEY:            mongo_indexes_file
 DESC:           full pathname to a file containing a list of indexes to apply to a MongoDB collection with

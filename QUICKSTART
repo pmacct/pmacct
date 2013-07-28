@@ -249,7 +249,7 @@ aggregate: ...
 mongo_history: 5m
 mongo_time_roundoff: m
 mongo_refresh_time: 300
-mongo_table: test.acct
+mongo_table: pmacct.acct
 ...
 
 MongoDB release >= 2.2.0 is recommended. Installation of the MongoDB C driver is
