@@ -39,7 +39,8 @@
    area */
 void load_plugins(struct plugin_requests *req)
 {
-  int x, v, socklen, nfprobe_id = 0, min_sz = 0;
+  u_int64_t snd_buflen, rcv_buflen, socklen, target_buflen;
+  int nfprobe_id = 0, min_sz = 0;
   struct plugins_list_entry *list = plugins_list;
   int l = sizeof(list->cfg.pipe_size), offset;
   struct channels_list_entry *chptr = NULL;
@@ -78,17 +79,11 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.pipe_size) {
 	if (list->cfg.pipe_size < min_sz) list->cfg.pipe_size = min_sz;
       }
-      else {
-        x = DEFAULT_PIPE_SIZE;
-	Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &x, l);
-        Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &x, l);
-      }
 
       /* checking SO_RCVBUF and SO_SNDBUF values; if different we take the smaller one */
-      getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &v, &l);
-      x = v;
-      getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &v, &l);
-      socklen = (v < x) ? v : x;
+      getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
+      getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
+      socklen = (rcv_buflen < snd_buflen) ? rcv_buflen : snd_buflen;
 
       /* checking Core <-> Plugins buffer size; then, if required let's align it on
          4 bytes boundary -- on the assumption that data strucures are aligned aswell. */
@@ -109,9 +104,9 @@ void load_plugins(struct plugin_requests *req)
       if (!list->cfg.pipe_size) { 
         list->cfg.pipe_size = (socklen/sizeof(char *))*list->cfg.buffer_size;
 	if ((list->cfg.debug) || (list->cfg.pipe_size > WARNING_PIPE_SIZE))  {
-          Log(LOG_INFO, "INFO ( %s/%s ): %d bytes are available to address shared memory segment; buffer size is %d bytes.\n",
+          Log(LOG_INFO, "INFO ( %s/%s ): %u bytes are available to address shared memory segment; buffer size is %u bytes.\n",
 			list->name, list->type.string, socklen, list->cfg.buffer_size);
-	  Log(LOG_INFO, "INFO ( %s/%s ): Trying to allocate a shared memory segment of %d bytes.\n",
+	  Log(LOG_INFO, "INFO ( %s/%s ): Trying to allocate a shared memory segment of %u bytes.\n",
 			list->name, list->type.string, list->cfg.pipe_size);
 	}
       }
@@ -119,20 +114,26 @@ void load_plugins(struct plugin_requests *req)
         if (list->cfg.buffer_size > list->cfg.pipe_size)
 	  list->cfg.buffer_size = list->cfg.pipe_size;
 
-        x = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
-        if (x > socklen) {
-	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &x, l);
-	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &x, l);
+        target_buflen = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
+        if (target_buflen > socklen) {
+	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &target_buflen, l);
+	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &target_buflen, l);
         }
 
-        socklen = x;
-        getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &v, &l);
-        x = v;
-        getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &v, &l);
-        if (x > v) x = v;
+        getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
+        getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
+        if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
 
-        if ((x < socklen) || (list->cfg.debug))
-          Log(LOG_INFO, "INFO ( %s/%s ): Pipe size obtained: %d / %d.\n", list->name, list->type.string, x, socklen);
+        if ((snd_buflen < socklen) || (list->cfg.debug)) {
+	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &socklen, l);
+	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &socklen, l);
+
+          getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
+          getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
+          if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
+
+          Log(LOG_INFO, "INFO ( %s/%s ): Plugin pipe size: obtained=%u target=%u.\n", list->name, list->type.string, snd_buflen, target_buflen);
+	}
       }
 
       list->cfg.name = list->name;

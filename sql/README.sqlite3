@@ -137,6 +137,8 @@ Similarly, BGP tables:
   * stamp_inserted (DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00')
   * stamp_updated (DATETIME)
 
+- For custom-defined primitives refer to the README.custom_primitives doc.
+
 NOTE: mind to specify EVERYTIME which SQL table version you
 intend to adhere to by using either of the following rules:
 

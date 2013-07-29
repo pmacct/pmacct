@@ -140,6 +140,8 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * stamp_inserted (timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00')
   * stamp_updated (timestamp without time zone)
 
+- For custom-defined primitives refer to the README.custom_primitives doc.
+
 - What is the difference between 'typed' and 'unified' modes ? 
 Read this section only if using a table schema v5 or below and does not apply to BGP table
 schemas. The 'unified' table has IP addresses and MAC addresses specified as standard CHAR

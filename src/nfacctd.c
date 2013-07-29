@@ -503,11 +503,17 @@ int main(int argc,char **argv, char **envp)
 
   if (config.pipe_size) {
     int l = sizeof(config.pipe_size);
-    u_int64_t x = 0;
+    u_int64_t saved = 0, obtained = 0;
 
-    rc = Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.pipe_size, sizeof(config.pipe_size));
-    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &x, &l);
-    if (x < config.pipe_size) Log(LOG_INFO, "INFO ( default/core ): Network socket size obtained: %u / %u.\n", x, config.pipe_size);
+    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+    Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.pipe_size, sizeof(config.pipe_size));
+    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+
+    if (config.debug || obtained < config.pipe_size) {
+      Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      Log(LOG_INFO, "INFO ( default/core ): Network socket pipe size: obtained=%u target=%u.\n", obtained, config.pipe_size);
+    }
   }
 
   /* Multicast: memberships handling */

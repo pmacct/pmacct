@@ -167,10 +167,10 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		plugin_pipe_size[default]: 2048000
 		...
 
-		If facing informational log messages like "Pipe size obtained" or "Network socket
-		size obtained", it could mean the maximum socket size granted by the underlying
-		Operating System has to be increased. This can be achieved on Linux, for example,
-		as follows: 
+		When enabling debug, informational log messages containing obtained and target pipe
+		sizes are printed. If obtained is less than target, it could mean the maximum socket
+		size granted by the underlying Operating System has to be increased. This can be
+		achieved on Linux, for example, as follows: 
 
 		shell> echo <max plugin_pipe_size value> > /proc/sys/net/core/rmem_max
 		shell> echo <max plugin_pipe_size value> > /proc/sys/net/core/wmem_max
@@ -722,9 +722,8 @@ DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to 
 
 KEY:		mongo_insert_batch
 DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per
-		batch. The maximum value for this directive that shown safe-enough during testing was 75000:
-		the mongo_insert_batch() is currently set to continue inserting upon hitting errors so logs
-		will not reveal much. (default: 10000)
+		batch. This value depends on available memory: with 8GB RAM a max 35000 value did work OK;
+		with 16GB RAM a max 75000 value did work OK instead. (default: 10000)
 
 KEY:            mongo_indexes_file
 DESC:           full pathname to a file containing a list of indexes to apply to a MongoDB collection with

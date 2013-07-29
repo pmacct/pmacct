@@ -1,0 +1,37 @@
+This document doesn't replace documentation relevant to the database software you
+are using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+Custom-defined primitives: SQL schema field name.
+The field name of custom-defined primitives is derived from the primitive name, ie.
+if, in a aggregate_primitives file, is defined a primitive with name 'blabla' then
+it is expected the SQL schema will contain a field named 'blabla'.
+
+Custom-defined primitives: SQL schema field definition.
+The field definition should be worked out intuitively starting from the definition
+of the primitive itself in the aggregate_primitives file. Following the SQL schema
+(in MySQL format) worked out for the couple of examples provided as part of the
+'examples/primitives.lst' doc: 
+
+name=mtla       field_type=47   len=4   semantics=ip
+
+Semantics is 'ip', so the field contains an IP address, length being 4 meaning only
+IPv4 addresses are expected. The corresponding SQL field can be defined as follows:
+"mtla CHAR(15) NOT NULL". If the primitive would have been suitable to also travel
+IPv6 addresses, the field could have been defined according to guidelines in the
+README.IPv6 doc (essentially CHAR(45) instead of CHAR(15). 
+
+name=mtlpl      field_type=91   len=1   semantics=u_int
+
+Semantics is 'u_int', so the field contains a positive integer number, length being
+a single byte. The corresponding SQL field can be defined as follows: "mtlpl INT(1)
+UNSIGNED NOT NULL".  
+
+Custom-defined primitives: primary key and concluding remarks.
+Custom-defined primitives can be no problem included as part of the primary key or
+any other SQL table index. Inclusion is not any different from natively supported
+primitives. For example a primary key including both 'mtla' and 'mtlpl' primitives:
+"PRIMARY KEY (..., mtla, mtlpl, ...)". 
+
+Custom-defined primitives intuitively are not declared as part of any default table
+version; although they will not fail version checks, it is recommended to set to
+true the 'sql_optimize_clauses' feature.
