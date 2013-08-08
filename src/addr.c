@@ -527,3 +527,25 @@ unsigned int label_to_addr(const char *label, struct host_addr *a, int len)
   return 0;
 }
 #endif
+
+/*
+ * ipv4_mapped_to_ipv4() converts a label into a supported family address
+ */
+#if defined ENABLE_IPV6
+void ipv4_mapped_to_ipv4(struct sockaddr_storage *sas)
+{
+  struct sockaddr_storage sas_local;
+  struct sockaddr *sa = (struct sockaddr *) sas;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) sas;
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) sas;
+
+  if (sa->sa_family != AF_INET6 || !IN6_IS_ADDR_V4MAPPED(&sa6->sin6_addr)) return;
+
+  memcpy(&sas_local, sas, sizeof(struct sockaddr_storage));
+  memset(sas, 0, sizeof(struct sockaddr_storage));
+  sa6 = (struct sockaddr_in6 *) &sas_local;
+  sa->sa_family = AF_INET;
+  memcpy(&sa4->sin_addr, (u_int8_t *) &sa6->sin6_addr+12, 4);
+  sa4->sin_port = sa6->sin6_port;
+}
+#endif

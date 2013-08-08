@@ -227,6 +227,10 @@ void skinny_bgp_daemon()
       }
       peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
 
+#if defined ENABLE_IPV6
+      ipv4_mapped_to_ipv4(&client);
+#endif
+
       /* If an ACL is defined, here we check against and enforce it */
       if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
       else allowed = TRUE;

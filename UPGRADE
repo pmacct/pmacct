@@ -8,6 +8,17 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.5.0rc1
+FROM:	<= 0.14.3
+TOPIC:	IPv6, peer_src_ip primitive, NetFlow exporter IP address
+DESC:	Upon enabling IPv6 at compile time, via --enable-ipv6 switch, an IPv4
+	NetFlow exporter IP address, ie. 10.0.0.1, was being written as IPv4-
+        mapped IPv6 address, ie. ::ffff:10.0.0.1. This was causing confusion
+	when composing maps, ie. the 'ip' field would change depending on whether
+	IPv6 was enabled or not. To make maps consistent and simplify transitions
+	to IPv6 compiled pmacct executables, IPv4-mapped IPv6 addresses are now
+	internally translated to plain IPv4 ones.
+ 
 TO:	>= 0.14.3
 FROM:	<= 0.14.2
 TOPIC:	networks_file & host aggregation primitives 

@@ -840,7 +840,9 @@ int main(int argc,char **argv, char **envp)
     reset_tag_status(&pptrs);
     reset_shadow_status(&pptrs);
 
-    // if (ret < SFLOW_MIN_MSG_SIZE) continue; 
+#if defined ENABLE_IPV6
+    ipv4_mapped_to_ipv4(&client);
+#endif
 
     /* check if Hosts Allow Table is loaded; if it is, we will enforce rules */
     if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client); 

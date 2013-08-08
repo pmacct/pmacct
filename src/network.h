@@ -32,6 +32,15 @@
 
 #define min(a,b) ((a)>(b)?(b):(a))
 
+#if defined ENABLE_IPV6
+#ifndef IN6_IS_ADDR_V4MAPPED
+#define IN6_IS_ADDR_V4MAPPED(a) \
+        ((((__const uint32_t *) (a))[0] == 0)                                 \
+         && (((__const uint32_t *) (a))[1] == 0)                              \
+         && (((__const uint32_t *) (a))[2] == htonl (0xffff)))
+#endif
+#endif
+
 #define ETH_ADDR_LEN    	6               /* Octets in one ethernet addr   */
 #define ETHER_HDRLEN    	14
 #define ETHERMTU		1500

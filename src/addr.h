@@ -54,4 +54,8 @@ EXT int is_multicast(struct host_addr *);
 EXT void clean_sin_addr(struct sockaddr *);
 EXT unsigned int label_to_addr(const char *, struct host_addr *, int);
 
+#if defined ENABLE_IPV6
+EXT void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
+#endif
+
 #undef EXT

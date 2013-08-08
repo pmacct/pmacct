@@ -127,6 +127,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
   u_int64_t value[3];
 
   trim_all_spaces(value_ptr);
+  lower_string(value_ptr);
   memset(&value, 0, sizeof(value));
   memset(&cpptrs, 0, sizeof(cpptrs));
 
@@ -1240,6 +1241,7 @@ int cfg_key_sql_preprocess_type(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0, value = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "any", 3)) value = FALSE;
   if (!strncmp(value_ptr, "all", 3)) value = TRUE;
 
@@ -1696,6 +1698,7 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strcmp(value_ptr, "formatted"))
     value = PRINT_OUTPUT_FORMATTED;
   else if (!strcmp(value_ptr, "csv"))
@@ -2091,6 +2094,7 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "netflow", strlen("netflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
   else if (!strncmp(value_ptr, "sflow", strlen("sflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
   else if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
@@ -2112,6 +2116,7 @@ int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *valu
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_std_comm_type' value.\n", filename);
 
@@ -2126,6 +2131,7 @@ int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *valu
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_ext_comm_type' value.\n", filename);
 
@@ -2140,6 +2146,7 @@ int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_as_path_type' value.\n", filename);
 
@@ -2154,6 +2161,7 @@ int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *va
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_local_pref_type' value.\n", filename);
@@ -2169,6 +2177,7 @@ int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_src_med_type' value.\n", filename);
@@ -2622,6 +2631,7 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strcmp(value_ptr, "false"))
     value = NF_AS_KEEP;
   else if (!strcmp(value_ptr, "true") || !strcmp(value_ptr, "file"))
@@ -2654,6 +2664,7 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strcmp(value_ptr, "sflow") || !strcmp(value_ptr, "netflow"))
     value = NF_NET_KEEP;
   else if (!strcmp(value_ptr, "file"))
@@ -2958,6 +2969,7 @@ int cfg_key_nfprobe_direction(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  lower_string(value_ptr);
   if (!strcmp(value_ptr, "tag"))
     value = DIRECTION_TAG;
   else if (!strcmp(value_ptr, "tag2"))
@@ -2994,6 +3006,7 @@ int cfg_key_nfprobe_ifindex(char *filename, char *name, char *value_ptr)
   int changes = 0, value2 = 0;
   u_int32_t value = 0;
 
+  lower_string(value_ptr);
   if (!strcmp(value_ptr, "tag"))
     value2 = IFINDEX_TAG;
   else if (!strcmp(value_ptr, "tag2"))

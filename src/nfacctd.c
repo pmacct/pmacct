@@ -833,6 +833,10 @@ int main(int argc,char **argv, char **envp)
 
     pptrs.v4.f_len = ret;
 
+#if defined ENABLE_IPV6
+    ipv4_mapped_to_ipv4(&client);
+#endif
+
     /* check if Hosts Allow Table is loaded; if it is, we will enforce rules */
     if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client); 
     if (!allowed) continue;
