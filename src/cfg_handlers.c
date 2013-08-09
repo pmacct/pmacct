@@ -610,7 +610,7 @@ int cfg_key_sql_table(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  /* validations: we allow only a) certain variable names, b) a maximum of 8 variables
+  /* validations: we allow only a) certain variable names, b) a maximum of 32 variables
      and c) a maximum table name length of 64 chars */ 
   {
     int num = 0;
@@ -651,14 +651,14 @@ int cfg_key_sql_table(char *filename, char *name, char *value_ptr)
       } 
     } 
 
-    if (num > 8) {
-      Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum allowed variables (8) into the table name.\n", filename);
+    if (num > 32) {
+      Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum allowed variables (32) into the table name.\n", filename);
       exit(1);
     }
   }
 
   if (strlen(value_ptr) > 64) {
-    Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum SQL table name length (255).\n", filename);
+    Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum SQL table name length (64).\n", filename);
     exit(1);
   }
 
@@ -681,7 +681,7 @@ int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  /* validations: we allow only a) certain variable names, b) a maximum of 8 variables */
+  /* validations: we allow only a) certain variable names, b) a maximum of 32 variables */
   {
     int num = 0;
     char *c, *ptr = value_ptr;
@@ -715,14 +715,14 @@ int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
         num++;
         break;
       default:
-        Log(LOG_ERR, "ERROR ( %s ): sql_table, %%%c not supported.\n", filename, *c);
+        Log(LOG_ERR, "ERROR ( %s ): print_output_file, %%%c not supported.\n", filename, *c);
         exit(1);
         break;
       }
     }
 
-    if (num > 8) {
-      Log(LOG_ERR, "ERROR ( %s ): sql_table, exceeded the maximum allowed variables (8) into the table name.\n", filename);
+    if (num > 32) {
+      Log(LOG_ERR, "ERROR ( %s ): print_output_file, exceeded the maximum allowed variables (32) into the filename.\n", filename);
       exit(1);
     }
   }

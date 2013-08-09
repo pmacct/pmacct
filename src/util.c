@@ -442,6 +442,14 @@ FILE *open_print_output_file(char *filename, time_t now, int *append)
   tmnow = localtime(&now);
   strftime(buf2, LARGEBUFLEN-10, buf, tmnow);
 
+  ret = mkdir_multilevel(buf2, TRUE);
+  if (ret) {
+    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s': mkdir_multilevel() failed.\n", buf2);
+    file = NULL;
+
+    return file;
+  }
+
   ret = access(buf2, F_OK);
 
   if (config.print_output_file_append && !ret) {
@@ -2148,4 +2156,34 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
       snprintf(out, outlen, format, eth_str);
     }
   }
+}
+
+int mkdir_multilevel(const char *path, int trailing_filename)
+{
+  char opath[SRVBUFLEN];
+  char *p;
+  int ret = 0, len = 0;
+
+  strlcpy(opath, path, sizeof(opath));
+
+  for (p = opath; *p; p++, len++) {
+    if (*p == '/') {
+      *p = '\0';
+      if (len && access(opath, F_OK)) {
+        ret = mkdir(opath, S_IRWXU);
+        if (ret) return ret;
+      }
+      *p = '/';
+    }
+  }
+
+  /* do a last mkdir in case the path was not terminated
+     by a traiing '/' and we do not expect the last part
+     to be a filename, ie. trailing_filename set to 0 */
+  if (!trailing_filename && access(opath, F_OK)) {
+    ret = mkdir(opath, S_IRWXU);
+    if (ret) return ret;
+  }
+
+  return ret;
 }

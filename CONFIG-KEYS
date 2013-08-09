@@ -376,17 +376,21 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 
 		Ideally sql_refresh_time and sql_history values should be aligned for the dynamic tables
 		to work; sql_refresh_time with a value smaller than sql_history is also supported; whereas
-		the feature does not support values of sql_refresh_time greater than sql_history.
+		the feature does not support values of sql_refresh_time greater than sql_history. The
+		maximum table name length is 64 characters.
 
 		Print plugin notes:
-		If a non-dynamic filename is selected, content is overwritten to the existing one. 
+		If a non-dynamic filename is selected, content is overwritten to the existing one in
+		case print_output_file_append is set to false (default). Are supported scenarios where
+		multiple level of directories need to be created in order to create the target file,
+		ie. "/path/to/%Y/%Y-%m/%Y-%m-%d/blabla-%Y%m%d-%H%M.txt". Shell replacements are not
+		supported though, ie. '~' symbol to denote the user home directory. 
 
 		MongoDB plugin notes:
 		Default table is test.acct
 
 		Common notes:
-		The maximum table name length is 64 characters. The maximum number of variables it may
-		contain is 8.
+		The maximum number of variables it may contain is 32.
 
 KEY:		print_output_file_append
 VALUES:         [ true | false ]

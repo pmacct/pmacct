@@ -104,6 +104,7 @@ EXT void compose_timestamp(char *, int, struct timeval *, int);
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
 EXT void print_primitives(int, char *);
+EXT int mkdir_multilevel(const char *, int);
 
 EXT primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 EXT void set_primptrs_funcs(struct extra_primitives *);
