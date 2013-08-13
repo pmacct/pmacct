@@ -73,6 +73,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   basetime_cmp = NULL;
   memset(&basetime, 0, sizeof(basetime));
   memset(&ibasetime, 0, sizeof(ibasetime));
+  memset(&sbasetime, 0, sizeof(sbasetime));
   memset(&timeslot, 0, sizeof(timeslot));
 
   /* signal handling */
@@ -155,6 +156,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_deadline = t;
   refresh_deadline += config.sql_refresh_time; /* it's a deadline not a basetime */
 
+  if (config.sql_history) {
+    basetime_init = P_init_historical_acct;
+    basetime_eval = P_eval_historical_acct;
+    basetime_cmp = P_cmp_historical_acct;
+
+    (*basetime_init)(now);
+  }
+
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
 
@@ -170,6 +179,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     P_write_stats_header_formatted(stdout, is_event);
   else if (!config.sql_table && config.print_output & PRINT_OUTPUT_CSV)
     P_write_stats_header_csv(stdout, is_event);
+
+  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
+  else dyn_table = FALSE;
 
   /* plugin main loop */
   for(;;) {
@@ -188,6 +200,16 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     now = time(NULL);
+
+    if (config.sql_history) {
+      memset(&sbasetime, 0, sizeof(sbasetime));
+      while (now > (basetime.tv_sec + timeslot)) {
+        sbasetime.tv_sec = basetime.tv_sec;
+        basetime.tv_sec += timeslot;
+        if (config.sql_history == COUNT_MONTHLY)
+          timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
+      }
+    }
 
     switch (ret) {
     case 0: /* timeout */
@@ -386,7 +408,8 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   int res_data, res_bgp, res_nat, res_mpls, res_time, res_cust;
 
   if (config.sql_history && (*basetime_eval)) {
-    memcpy(&ibasetime, &basetime, sizeof(ibasetime));
+    // XXX: memcpy(&ibasetime, &basetime, sizeof(ibasetime));
+    memcpy(&ibasetime, &sbasetime, sizeof(ibasetime));
     (*basetime_eval)(&data->time_start, &ibasetime, timeslot);
   }
 
@@ -653,19 +676,24 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
+  memset(&local_basetime, 0, sizeof(local_basetime));
+  memset(&latest_basetime, 0, sizeof(latest_basetime));
 
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;
 
   if (config.sql_table) {
-    int append = FALSE;
+    if (!dyn_table || !config.sql_history) {
+      int append = FALSE;
 
-    f = open_print_output_file(config.sql_table, refresh_deadline-config.sql_refresh_time, &append);
+      f = open_print_output_file(config.sql_table, refresh_deadline-config.sql_refresh_time, &append);
 
-    if (f && !append) { 
-      if (config.print_output & PRINT_OUTPUT_FORMATTED)
-        P_write_stats_header_formatted(f, is_event);
-      else if (config.print_output & PRINT_OUTPUT_CSV)
-        P_write_stats_header_csv(f, is_event);
+      if (f && !append) { 
+        if (config.print_output & PRINT_OUTPUT_FORMATTED)
+          P_write_stats_header_formatted(f, is_event);
+        else if (config.print_output & PRINT_OUTPUT_CSV)
+          P_write_stats_header_csv(f, is_event);
+      }
+      /* else: we handle opening of the output file in the upcoming for cycle */
     }
   }
   else f = stdout; /* write to standard output */
@@ -678,6 +706,35 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   for (j = 0; j < index; j++) {
     int count = 0;
+
+    /* open/close output file basing on entry basetime */
+    if (dyn_table && config.sql_history) {
+      int append = FALSE;
+
+      if (f) {
+	if (memcmp(&local_basetime, &queue[j]->basetime, sizeof(struct timeval))) {
+	  memset(&local_basetime, 0, sizeof(struct timeval)); /* pedantic */
+	  fclose(f);
+	  f = NULL;
+	}
+	else append = TRUE;
+      }
+
+      if (!f) {
+	if (queue[j]->basetime.tv_sec > latest_basetime.tv_sec)
+	  memcpy(&latest_basetime, &queue[j]->basetime, sizeof(struct timeval));
+
+	memcpy(&local_basetime, &queue[j]->basetime, sizeof(struct timeval));
+	f = open_print_output_file(config.sql_table, local_basetime.tv_sec, &append);
+      }
+
+      if (f && !append) {
+        if (config.print_output & PRINT_OUTPUT_FORMATTED)
+          P_write_stats_header_formatted(f, is_event);
+        else if (config.print_output & PRINT_OUTPUT_CSV)
+          P_write_stats_header_csv(f, is_event);
+      }
+    }
 
     data = &queue[j]->primitives;
     if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
@@ -1107,7 +1164,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   if (f && config.print_markers) fprintf(f, "--END--\n");
 
-  if (f && config.sql_table) close_print_output_file(f, config.sql_table, refresh_deadline-config.sql_refresh_time);
+  if (f && config.sql_table) {
+    if (!config.sql_history) close_print_output_file(f, config.sql_table, refresh_deadline-config.sql_refresh_time);
+    else close_print_output_file(f, config.sql_table, latest_basetime.tv_sec);
+  }
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, index, duration);

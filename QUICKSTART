@@ -1117,7 +1117,7 @@ Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
 Output is text-based (no binary proprietary format) and can be JSON, CSV or
-formatted ('print_output' directive). When to write to disk can be configured
+formatted ('print_output' directive). Interval between writes can be configured
 via the 'print_refresh_time' directive. An example follows on how to write to
 files on a 15 mins basis in CSV format:
 
@@ -1138,6 +1138,21 @@ found at the following URL: http://www.digip.org/jansson/ . pmacct can be
 configured for compilation against the library using the --enable-jansson
 switch. Please refer to the configure script help screen to supply custom
 locations of Jansson library and/or headers. 
+
+Splitting data into time bins is supported via print_history directive. When
+enabled, time-related variable substitutions of dynamic print_output_file
+names are determined using this value instead of print_refresh_time one. It
+is supported to have shorter print_refresh_time values than print_history
+ones by setting print_output_file_append to true (which is generally also
+recommended to prevent that unscheduled writes to disk, ie. due to caching
+issues, overwrite existing file content). A sample config follows:
+
+print_refresh_time: 300
+print_output: csv
+print_output_file: /path/to/%Y/%Y-%m/%Y-%m-%d/file-%Y%m%d-%H%M.txt
+print_history: 15m
+print_time_roundoff: m
+print_output_file_append: true 
 
 
 XVI. Quickstart guide to setup GeoIP lookups

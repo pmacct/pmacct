@@ -384,7 +384,9 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		case print_output_file_append is set to false (default). Are supported scenarios where
 		multiple level of directories need to be created in order to create the target file,
 		ie. "/path/to/%Y/%Y-%m/%Y-%m-%d/blabla-%Y%m%d-%H%M.txt". Shell replacements are not
-		supported though, ie. '~' symbol to denote the user home directory. 
+		supported though, ie. '~' symbol to denote the user home directory. If print_history is
+		specified, time-related variables substitution of dynamic print_output_file names are
+		determined using this value instead of print_refresh_time one.
 
 		MongoDB plugin notes:
 		Default table is test.acct
@@ -491,7 +493,7 @@ DESC:		enables the optimization of the statements sent to the RDBMS essentially 
 		always remember to specify which default SQL table version you intend to stick to by using
 		the 'sql_table_version' directive. (default: false)
 
-KEY:		[ sql_history | mongo_history | amqp_history ]
+KEY:		[ sql_history | print_history | mongo_history | amqp_history ]
 VALUES:		#[m|h|d|w|M]
 DESC:		enables historical accounting by dividing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
