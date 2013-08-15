@@ -418,9 +418,17 @@ void close_print_output_file(FILE *f, char *filename, time_t now)
     memcpy(latest_pname, buf2, LARGEBUFLEN);
     offset = strlen(buf2)-strlen(fname_ptr);
     if (strlen(latest_fname) < LARGEBUFLEN-offset) {
+      uid_t owner = -1;
+      gid_t group = -1;
+
       strcpy(latest_pname+offset, latest_fname);
       unlink(latest_pname);
       symlink(fname_ptr, latest_pname);
+
+      if (config.files_uid) owner = config.files_uid;
+      if (config.files_gid) group = config.files_gid;
+      if (lchown(latest_pname, owner, group) == -1)
+        printf("WARN: Unable to chown() latest file for print_ouput_file '%s'\n", latest_pname);
     }
     else Log(LOG_WARNING, "WARN: Unable to link latest file for print_ouput_file '%s'\n", buf2);
   }

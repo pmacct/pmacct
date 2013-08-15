@@ -31,8 +31,8 @@
 struct scratch_area {
   unsigned char *base;
   unsigned char *ptr;
-  int num;
-  int size;
+  u_int64_t num;
+  u_int64_t size;
   struct scratch_area *next;
 };
 

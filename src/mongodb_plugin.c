@@ -368,11 +368,16 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
+  memset(mongo_database, 0, sizeof(mongo_database));
+  memset(tmpbuf, 0, sizeof(tmpbuf));
+  memset(&local_basetime, 0, sizeof(local_basetime));
 
-  if (!config.sql_table) config.sql_table = default_table;
+  if (!config.sql_table || MongoDB_get_database(mongo_database, SRVBUFLEN, config.sql_table)) {
+    config.sql_table = default_table;
+    Log(LOG_INFO, "INFO ( %s/%s ): mongo_table set to '%s'\n", config.name, config.type, default_table);
+  }
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
   else dyn_table = FALSE;
-  MongoDB_get_database(mongo_database, SRVBUFLEN, config.sql_table);
 
   bson_batch = (bson **) malloc(sizeof(bson *) * index);
   if (!bson_batch) {
@@ -402,7 +407,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
   start = time(NULL);
 
-  if (dyn_table && config.sql_table_schema) MongoDB_create_indexes(&db_conn, &stamp);
+  if (dyn_table && config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
 
   for (j = 0, batch_idx = 0; j < index; j++, batch_idx++) {
     bson_elem = (bson *) malloc(sizeof(bson));
@@ -690,30 +695,30 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
 
-void MongoDB_get_database(char *db, int dblen, char *db_table)
+int MongoDB_get_database(char *db, int dblen, char *db_table)
 {
   char *collection_sep = strchr(db_table, '.');
+
+  if (!collection_sep) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): mongo_table '%s' is not in <database>.<collection> format.\n", config.name, config.type, config.sql_table);
+    return TRUE;
+  }
   
   memset(db, 0, dblen);
-  if (collection_sep) *collection_sep = '\0';
+  *collection_sep = '\0';
   strlcpy(db, db_table, dblen); 
-  if (collection_sep) *collection_sep = '.';
+  *collection_sep = '.';
+
+  return FALSE;
 }
 
-void MongoDB_create_indexes(mongo *db_conn, time_t *basetime)
+void MongoDB_create_indexes(mongo *db_conn, const char *table)
 {
-  struct tm *nowtm;
   bson idx_key[1], *out;
   FILE *f;
-  char buf[LARGEBUFLEN], tmpbuf[SRVBUFLEN], tmpbuf2[SRVBUFLEN];
+  char buf[LARGEBUFLEN];
   char *token, *bufptr;
   int ret;
-
-  memset(buf, 0, LARGEBUFLEN);
-  strlcpy(tmpbuf, config.sql_table, SRVBUFLEN);
-  handle_dynname_internal_strings(tmpbuf2, SRVBUFLEN-10, tmpbuf);
-  nowtm = localtime(basetime);
-  strftime(buf, SRVBUFLEN, tmpbuf2, nowtm);
 
   f = fopen(config.sql_table_schema, "r");
   if (f) {
@@ -727,7 +732,7 @@ void MongoDB_create_indexes(mongo *db_conn, time_t *basetime)
 	    bson_append_int(idx_key, token, 1);
 	  }
 	  bson_finish(idx_key);
-	  mongo_create_index(db_conn, tmpbuf2, idx_key, NULL, 0, NULL);
+	  mongo_create_index(db_conn, table, idx_key, NULL, 0, NULL);
 	  bson_destroy(idx_key);
         }
       }

@@ -389,7 +389,7 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		determined using this value instead of print_refresh_time one.
 
 		MongoDB plugin notes:
-		Default table is test.acct
+		The table name is expected as <database>.<collection> . Default table is test.acct
 
 		Common notes:
 		The maximum number of variables it may contain is 32.
