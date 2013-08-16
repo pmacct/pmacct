@@ -27,8 +27,9 @@
 !
 bgp_ip=1.2.3.4	ip=2.3.4.5
 !
-! The following maps something which isn't a Netflow/sFlow agent to the
-! specified BGP peer. The only application for this lies with pmacctd.
+! The following maps something which any Netflow/sFlow agent to the specified
+! BGP peer. This syntax applies also to non-telemetry daemons, ie. pmacctd and
+! uacctd. 
 !
-! bgp_ip=4.5.6.7	ip=0.0.0.0
+! bgp_ip=4.5.6.7	ip=0.0.0.0/0
 !

@@ -1257,7 +1257,8 @@ log_update:
     lp = attr_new->local_pref;
     med = attr_new->med;
 
-    addr_to_str(nexthop_str, &attr_new->mp_nexthop);
+    if (attr_new->mp_nexthop.family) addr_to_str(nexthop_str, &attr_new->mp_nexthop);
+    else inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
 
     if (safi != SAFI_MPLS_VPN)
       Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
