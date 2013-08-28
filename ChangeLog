@@ -1,6 +1,124 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.0rc1
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
+1.5.0rc1 -- xx-08-2013
+  + Introducing custom-defined aggregation primitives: primitives are defined
+    via a file pointed by aggregate_primitives config directive. The feature
+    applies to NetFlow v9/IPFIX fields only, and with a pre-defined length.
+    Semantics supported are: 'u_int' (unsigned integer, presented as decimal
+    number), 'hex' (unsigned integer, presented as hexa- decimal number), 'ip'
+    (IP address), 'mac' (MAC address)and 'str' (string). Syntax along with
+    examples are available in the 'examples/primitives.lst' file.
+  + Introducing JSON output in addition to tabular and CSV formats. Suitable
+    for injection in 3rd party tools, JSON has the advantage of being a self-
+    consisting format (ie. compared to CSV does not require a table title).
+    Library leveraged is Jansson, available at: http://www.digip.org/jansson/
+  + Introducing RabbitMQ/AMQP pmacct plugin to publish network traffic data
+    to message exchanges. Unicast, broadcast, load-balancing scenarios being
+    supported. amqp_routing_key supports dynamic elements, like the value of
+    peer_src_ip and tag primitives or configured post_tag value, enabling
+    selective delivery of data to consumers. Messages are encoded in JSON
+    format.
+  + pre_tag_map (and other maps): 'ip' key, which is compared against the IP
+    address originating NetFlow/IPFIX or the AgentId field in sFlow, can now
+    be an IP prefix, ie. XXX.XXX.XXX.XXX/NN, so to apply tag statements to
+    set of exporters or 0.0.0.0/0 to apply to any exporter. Many thanks to
+    Stefano Birmani for his support.
+  + Re-introducing support for Cisco ASA NSEL export. Previously it was just
+    a hack. Now most of the proper work done for Cisco NEL is being reused:
+    post_nat_src_host (field type #40001), post_nat_dst_host (field type
+    #40002), post_nat_src_port (field type #40003), post_nat_dst_port (field
+    type #40004), fw_event (variant of nat_event, field type #40005) and
+    timestamp_start (observation time in msecs, field type #323).
+  + Introducing MPLS-related aggregation primitives decoded from NetFlow v9/
+    IPFIX, mpls_label_top mpls_label_bottom and mpls_stack_depth, so to give
+    visibility in export scenarios on egress towards core, MPLS interfaces.
+  + mpls_vpn_rd: primitive value can now be sourced from NetFlow v9/IPFIX
+    field types #234 (ingressVRFID) and #235 (egressVRFID). This is in
+    addition to existing method to source value from a flow_to_rd_map file.
+  + networks_file: AS field can now be defined as "<peer_as>_<origin_as>",
+    Useful also to define (or override) elments of an internal port-to-port
+    traffic matrix.
+  + print plugin: creation of intermediate directory levels is now supported;
+    directories can contain dynamic time-based elements hence the amount of
+    variables in a given pathname was also lifted to 32 from 8.
+  + print plugin: introduced print_history configuration directive, which
+    supports same syntax as, for example, sql_history. When enabled, time-
+    related variables substitution of dynamic print_output_file names are
+    determined using this value instead of print_refresh_time one.
+  + Introducing IP prefix labels, ie. for custom grouping of own IP address
+    space. The feature can be enabled by a --enable-plabel when configuring
+    the package for compiling. Labels can be defined via a networks_file.
+  + mongo_user and mongo_passwd configuration directive have been added in
+    order to support authentication with MongoDB. If both are omitted, for
+    backward compatibility, authentication is disabled; if only one of the
+    two is specified instead, the other is set to its default value.
+  + Introducing mongo_indexes_file config directive to define indexes in
+    collections with dynamic name. If the collection does not exist yet, it
+    is created. Index names are picked by MongoDB.
+  + print plugin: introduced print_output_file_append config directive: if
+    set to true allows the plugin to append to an output file rather than
+    overwrite.
+  + bgp_agent_map: added bgp_port key to lookup a NetFlow agent also against
+    a BGP session port (in addition to BGP session IP address/router ID): it
+    aims to support scenarios where BGP sessions do NAT traverals.
+  + peer_dst_ip (BGP next-hop) can now be inferred by MPLS_TOP_LABEL_ADDR
+    (NetFlow v9/IPFIX field type #47). This field might replace BGP next-hop
+    when NetFlow is exported egress on MPLS-enabled core interfaces.
+  + Introducing [nf|pm|sf|u]acctd_proc_name config directives to define the
+    name of the core process (by default always set to 'default'). This is
+    the equivalent to instantiate named plugins but for the core process.
+    Thanks to Brian Rak for bringing this up.
+  + pre_tag_map: introduced key 'flowset_id' to tag NetFlow v9/IFPIX data
+    records basing on their flowset ID value, part of the flowset header.
+  + pmacct client: introduced '-V' command-line option to verify version,
+    build info and compile options passed to the configure script; also a
+    new -a option now allows to retrieve supported aggregation primitives
+    and their description.
+  + Check for mallopt() has been added at configure time. mallopt() calls
+    are introduced in order to disable glibc malloc() boundary checks.
+  ! flow_to_rd_map replaces iface_to_rd_map, increasing its scope: it is
+    now possible to map <MPLS bottom label, BGP next-hop> couples to BGP/
+    MPLS VPN Route Distinguishers (RD). This is in addition to existing
+    mapping method basing on <ingress router, input interface>.
+  ! fix, nfacctd, sfacctd: Setsocksize() call effectiveness is now verified
+    via a subsequent getsockopt(). If result is different than expected, an
+    informational log message is issued.
+  ! fix, building system: removed stale check for FreeBSD4 and introduced
+    check for BSD systems. If on a BSD system, -DBSD is now passed over to
+    the compiler.
+  ! fix, tee plugin: transparent mode now works on FreeBSD systems. Patch
+    is courtesy by Nikita V. Shirokov.
+  ! fix, peer_dst_ip: uninitialized pointer variable was causing unexpected
+    behaviours. Thanks to Maarten Bollen for his support resolving this.
+  ! fix, IMT plugin: selective queries with -M and -N switches verified not
+    working properly. Thanks to Acipia organization for providing a patch.
+  ! fix, sql_common.c: src_port and dst_port primitives correctly spelled if
+    used in conjunction with BGP primitives. Thanks to Brent Van Dussen and
+    Elisa Jasinska for flagging the issue.
+  ! fix, building system: added library checks in /usr/lib64 for OS's where
+    it is not linked to /lib where required. 
+  ! fix, print, MongoDB and AMQP plugins: P_test_zero_elem() obsoleted.
+    Instead, the cache structure 'valid' field is used to commit entries to
+    the backend.
+  ! fix, nfacctd: in NetFlow v9/IPFIX, if no time reference is specified as
+    part of records, fall back to time reference in datagram header.
+  ! fix, MongoDB plugin: mongo_insert_batch() now bails out with MONGO_FAIL
+    if something went wrong while processing elements in the batch and an
+    error message is issued. Typical reason for such condition is batch is
+    too big for the resources, mainly memory, available. Thanks very much to
+    Maarten Bollen for his support.
+  ! fix, cfg_handlers.c: all functions parsing configuration directives, and
+    expecting string arguments, are now calling lower_string() so to act as
+    case insensitive.
+  ! fix, IPv6 & NetFlow exporter IP address: upon enabling IPv6, NetFlow
+    exporter IP addresses were written as IPv4-mapped IPv6 address. This was
+    causing confusion when composing maps since the 'ip' field would change
+    depending on whether IPv6 was enabled or not. This is now fixed and IPv4-
+    mapped IPv6 addresses are now internally translated to plain IPv4 ones.
+  ! fix, nfacctd: NetFlow v9/IPFIX source/destination peer ASN information
+    elements have been found mixed up and are now in proper order. 
+
 0.14.3 -- 03-05-2013
   + tee plugin: a new tee_receivers configuration directive allows multiple
     receivers to be defined. Receivers can be optionally grouped, for example

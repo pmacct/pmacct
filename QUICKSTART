@@ -1192,7 +1192,7 @@ for logging flows via NetFlow. Still, the exact boundary between aggregation
 and logging can be defined via the aggregation method, ie. no assumptions are
 made. A composite but rather intuitive example follows to aggregate network
 traffic and in parallel log events, specifically CGNAT (Carrier Grade NAT)
-events, within a single collector instance:
+events from a Cisco ASR1K box, within a single collector instance:
 
 ! ...
 !
@@ -1201,14 +1201,33 @@ pre_tag_map: /path/to/pretag.map
 plugins: memory[traffic], memory[nat]
 !
 pre_tag_filter[traffic]: 10
-aggregate[traffic]: src_host, dst_host, src_port, dst_port, tos, proto
+aggregate[traffic]: src_host, dst_host, peer_src_ip, peer_dst_ip, in_iface, out_iface, timestamp_start, timestamp_end, src_port, dst_port, proto, tos, src_mask, dst_mask, src_as, dst_as, tcpflags
+print_output_file[traffic]: /path/to/traffic-%Y%m%d_%H%M.txt
+print_output[traffic]: csv
+print_history[traffic]: 5m 
+print_time_roundoff[traffic]: m 
+print_refresh_time[traffic]: 300
+! print_cache_entries[traffic]: 9999991
+print_output_file_append[traffic]: true
 !
 pre_tag_filter[nat]: 20
 aggregate[nat]: src_host, post_nat_src_host, src_port, post_nat_src_port, proto, nat_event, timestamp_start 
+print_output_file[nat]: /path/to/nat-%Y%m%d_%H%M.txt
+print_output[nat]: json
+print_history[nat]: 5m 
+print_time_roundoff[nat]: m 
+print_refresh_time[nat]: 300
+! print_cache_entries[nat]: 9999991
+print_output_file_append[nat]: true
 !
 ! ...
 
-This is a snippet from /path/to/pretag.map referred above:
+In the above configuration both plugins will log their data in 5 mins files
+basing on the 'print_history[<plugin name>]: 5m' configuration directive, ie.
+traffic-20130802-1345.txt traffic-20130802-1350.txt traffic-20130802-1355.txt
+etc. Granted appending to output file is set to true, data can be refreshed
+at shorter intervals than 300 secs. This is a snippet from /path/to/pretag.map
+referred above:
 
 set_tag=10      ip=A.A.A.A	sample_type=flow
 set_tag=20      ip=A.A.A.A	sample_type=event
