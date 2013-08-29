@@ -1,7 +1,7 @@
-pmacct (Promiscuous mode IP Accounting package) v1.5.0rc1
+pmacct (Promiscuous mode IP Accounting package) v1.5.0rc2
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
-1.5.0rc1 -- xx-08-2013
+1.5.0rc1 -- 29-08-2013
   + Introducing custom-defined aggregation primitives: primitives are defined
     via a file pointed by aggregate_primitives config directive. The feature
     applies to NetFlow v9/IPFIX fields only, and with a pre-defined length.

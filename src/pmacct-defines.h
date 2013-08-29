@@ -69,13 +69,13 @@
 #define PRIMITIVE_DESC_LEN	64
 
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
-#define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.5.0rc1-cvs"
-#define UACCTD_USAGE_HEADER "Linux NetFilter ULOG Accounting Daemon, uacctd 1.5.0rc1-cvs"
-#define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.5.0rc1-cvs"
-#define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 1.5.0rc1-cvs"
-#define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.5.0rc1-cvs"
-#define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.5.0rc1-cvs"
-#define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.5.0rc1-cvs"
+#define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.5.0rc2-cvs"
+#define UACCTD_USAGE_HEADER "Linux NetFilter ULOG Accounting Daemon, uacctd 1.5.0rc2-cvs"
+#define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.5.0rc2-cvs"
+#define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 1.5.0rc2-cvs"
+#define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.5.0rc2-cvs"
+#define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.5.0rc2-cvs"
+#define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.5.0rc2-cvs"
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
