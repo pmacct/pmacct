@@ -887,17 +887,23 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
 	
 	/* Processing for expired flows */
 	if (num_expired > 0) {
-		if (target != NULL && target->fd != -1) {
-			r = target->dialect->func(expired_flows, num_expired, 
+		if (target != NULL) {
+			if (target->fd == -1) {
+			  Log(LOG_WARNING, "WARN ( %s/%s ): No connection to collector, discarding flows\n", config.name, config.type);
+			  return -1;
+                        }
+			else {
+			  r = target->dialect->func(expired_flows, num_expired, 
 			    target->fd, &ft->flows_exported, // &ft->next_datagram_seq,
 			    &ft->system_boot_time, verbose_flag, engine_type, engine_id);
-			if (verbose_flag)
+			  if (verbose_flag)
 				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
-			if (r > 0) {
+			  if (r > 0) {
 				ft->packets_sent += r;
 				/* XXX what if r < num_expired * 2 ? */
-			} else {
+			  } else {
 				ft->flows_dropped += num_expired * 2;
+			  }
 			}
 		}
 		for (i = 0; i < num_expired; i++) {
@@ -1073,7 +1079,11 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 
   if (connect(s, (struct sockaddr*)addr, len) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): connect() failed: %s\n", config.name, config.type, strerror(errno));
-    exit_plugin(1);
+    if (errno == ENETUNREACH) {
+      close(s);
+      return -1;
+    }
+    else exit_plugin(1);
   }
 
   switch (addr->ss_family) {
@@ -1357,7 +1367,7 @@ sort_version:
   target.dialect = &nf[i];
 
   /* Netflow send socket */
-  if (dest.ss_family != 0) {
+  if (dest.ss_family != 0 && target.fd != -1) {
     if ((err = getnameinfo((struct sockaddr *)&dest,
 	    dest_len, dest_addr, sizeof(dest_addr), 
 	    dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
@@ -1511,7 +1521,8 @@ expiry_check:
 	  sleep(5);
 	  target.fd = connsock(&dest, dest_len, hoplimit);
 
-	  Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
+	  if (target.fd != -1)
+	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
 			config.name, config.type, dest_addr, dest_serv);
 	}
       }
