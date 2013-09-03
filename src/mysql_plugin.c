@@ -388,11 +388,19 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
 
     if (config.sql_multi_values) { 
       multi_values_handling:
+      len = config.sql_multi_values-idata->mv.buffer_offset; 
       if (!idata->mv.buffer_elem_num) {
-	strncpy(multi_values_buffer, insert_full_clause, config.sql_multi_values);
-	strcat(multi_values_buffer, " VALUES");
-	idata->mv.buffer_offset += strlen(multi_values_buffer);
-	idata->mv.head_buffer_elem = idata->current_queue_elem;
+	if (strlen(insert_full_clause) < len) {
+	  strncpy(multi_values_buffer, insert_full_clause, config.sql_multi_values);
+	  strcat(multi_values_buffer, " VALUES");
+	  idata->mv.buffer_offset += strlen(multi_values_buffer);
+	  idata->mv.head_buffer_elem = idata->current_queue_elem;
+	}
+        else {
+          Log(LOG_ERR, "ERROR ( %s/%s ): 'sql_multi_values' is too small (%d). Try with a larger value.\n",
+                         config.name, config.type, config.sql_multi_values);
+          exit_plugin(1);
+	}
       }
       len = config.sql_multi_values-idata->mv.buffer_offset; 
       if (strlen(values_clause) < len) { 
