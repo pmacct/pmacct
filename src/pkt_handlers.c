@@ -2785,6 +2785,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct utpl_field *utpl = NULL;
   char *pcust = ((*data) + chptr->extras.off_custom_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx;
@@ -2795,8 +2796,27 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
     for (cpptrs_idx = 0; cpptrs_idx < chptr->plugin->cfg.cpptrs.num; cpptrs_idx++) {
       if (chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr) {
 	cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
-	if (tpl->tpl[cpe->field_type].len == cpe->len) {
-	  memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
+	if (cpe->field_type < NF9_MAX_DEFINED_FIELD) {
+	  if (tpl->tpl[cpe->field_type].len == cpe->len) {
+	    memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
+	  }
+	  else {
+	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, MIN(tpl->tpl[cpe->field_type].len, cpe->len));
+	    }
+	  }
+	}
+	else {
+	  if (utpl = (*get_ext_db_ie_by_type)(tpl, cpe->field_type)) {
+	    if (utpl->len == cpe->len) {
+	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, cpe->len);
+	    }
+            else {
+              if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+	        memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, MIN(utpl->len, cpe->len));
+	      }
+            }
+	  }
 	}
       }
     }
