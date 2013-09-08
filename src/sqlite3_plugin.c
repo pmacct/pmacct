@@ -454,7 +454,9 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 {
   struct db_cache *LastElemCommitted = NULL;
   time_t start;
-  int j, stop, ret;
+  int j, stop, ret, go_to_pending;
+  char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
+  char tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
 
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++)
     stop = preprocess_funcs[j](queue, &index, j); 
@@ -465,41 +467,87 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
   start = time(NULL);
 
-  /* We check for variable substitution in SQL table */ 
+  /* re-using pending queries queue stuff from parent and saving clauses */
+  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  pqq_ptr = index;
+
+  strlcpy(orig_insert_clause, insert_clause, LONGSRVBUFLEN);
+  strlcpy(orig_update_clause, update_clause, LONGSRVBUFLEN);
+  strlcpy(orig_lock_clause, lock_clause, LONGSRVBUFLEN);
+
+  start:
+  memset(&idata->mv, 0, sizeof(struct multi_values));
+  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
+  index = pqq_ptr; pqq_ptr = 0;
+
+  /* We check for variable substitution in SQL table */
   if (idata->dyn_table) {
-    char tmpbuf[LONGLONGSRVBUFLEN];
-    time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
+    time_t stamp = 0;
+
+    memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
+    if (index) stamp = queue[0]->basetime;
+    strlcpy(idata->dyn_table_name, config.sql_table, SRVBUFLEN);
+    strlcpy(insert_clause, orig_insert_clause, LONGSRVBUFLEN);
+    strlcpy(update_clause, orig_update_clause, LONGSRVBUFLEN);
+    strlcpy(lock_clause, orig_lock_clause, LONGSRVBUFLEN);
 
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause);
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause);
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, idata->dyn_table_name);
 
     strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
-
+    strftime_same(idata->dyn_table_name, LONGSRVBUFLEN, tmpbuf, &stamp);
     if (config.sql_table_schema) sql_create_table(bed.p, &stamp);
   }
-  // strncat(update_clause, set_clause, SPACELEFT(update_clause));
 
   (*sqlfunc_cbr.lock)(bed.p); 
 
   for (idata->current_queue_elem = 0; idata->current_queue_elem < index; idata->current_queue_elem++) {
-    if (queue[idata->current_queue_elem]->valid)
-      sql_query(&bed, queue[idata->current_queue_elem], idata);
-    if (queue[idata->current_queue_elem]->valid == SQL_CACHE_COMMITTED)
-      LastElemCommitted = queue[idata->current_queue_elem];
+    go_to_pending = FALSE;
+
+    if (idata->dyn_table) {
+      time_t stamp = 0;
+
+      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
+      stamp = queue[idata->current_queue_elem]->basetime;
+      strlcpy(tmptable, config.sql_table, SRVBUFLEN);
+
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, tmptable);
+      strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp);
+
+      if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
+        pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
+
+        pqq_ptr++;
+        go_to_pending = TRUE;
+      }
+    }
+
+    if (!go_to_pending) {
+      if (queue[idata->current_queue_elem]->valid)
+        sql_query(&bed, queue[idata->current_queue_elem], idata);
+      if (queue[idata->current_queue_elem]->valid == SQL_CACHE_COMMITTED)
+        LastElemCommitted = queue[idata->current_queue_elem];
+    }
   }
 
   /* multi-value INSERT query: wrap-up */
   if (idata->mv.buffer_elem_num) {
     idata->mv.last_queue_elem = TRUE;
     sql_query(&bed, LastElemCommitted, idata);
+    idata->qn--; /* increased by sql_query() one time too much */
   }
   
   /* rewinding stuff */
   (*sqlfunc_cbr.unlock)(&bed);
   if (b.fail) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for SQLite3 daemon failed.\n", config.name, config.type);
+
+  /* If we have pending queries then start again */
+  if (pqq_ptr) goto start;
   
   idata->elap_time = time(NULL)-start; 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", 

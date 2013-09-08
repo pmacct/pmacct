@@ -136,6 +136,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pipebuf = (unsigned char *) Malloc(config.buffer_size);
   cache = (struct chained_cache *) Malloc(config.print_cache_entries*dbc_size); 
   queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  pending_queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   sa.base = (unsigned char *) Malloc(sa.size);
   sa.ptr = sa.base;
   sa.next = NULL;
@@ -167,6 +168,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(pipebuf, 0, config.buffer_size);
   memset(cache, 0, config.print_cache_entries*sizeof(struct chained_cache));
   memset(queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  memset(pending_queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
 
@@ -328,10 +330,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
   char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
-  int i, j, db_status, batch_idx;
+  int qn = 0, i, j, db_status, batch_idx, go_to_pending;
   time_t stamp, start, duration;
+  char current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
 
-  const bson **bson_batch, **bson_batch_ptr;
+  const bson **bson_batch;
   bson *bson_elem;
 
   if (config.sql_host)
@@ -385,20 +388,13 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     return;
   }
 
-  if (dyn_table) {
-    stamp = sbasetime.tv_sec ? sbasetime.tv_sec : basetime.tv_sec;
-
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, config.sql_table);
-    strftime_same(config.sql_table, LONGSRVBUFLEN, tmpbuf, &stamp);
-  }
-
   /* If there is any signs of auth in the config, then try to auth */
   if (config.sql_user || config.sql_passwd) {
     if (!config.sql_user) config.sql_user = default_user;
     if (!config.sql_passwd) config.sql_passwd = default_passwd;
     db_status = mongo_cmd_authenticate(&db_conn, mongo_database, config.sql_user, config.sql_passwd);
     if (db_status != MONGO_OK) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Authentication failed to MongoDB\n", config.name, config.type); 
+      Log(LOG_ERR, "ERROR ( %s/%s ): Authentication failed to MongoDB\n", config.name, config.type);
       return;
     }
     else Log(LOG_INFO, "INFO ( %s/%s ): Successful authentication (MONGO_OK) to MongoDB\n", config.name, config.type);
@@ -407,280 +403,315 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
   start = time(NULL);
 
-  if (dyn_table && config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
+  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  pqq_ptr = index;
 
-  for (j = 0, batch_idx = 0; j < index; j++, batch_idx++) {
-    bson_elem = (bson *) malloc(sizeof(bson));
-    if (!bson_elem) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed: bson_elem (elem# %u batch# %u\n", config.name, config.type, j, batch_idx);
-      return;
-    }
+  start:
+  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
+  index = pqq_ptr; pqq_ptr = 0;
 
-    bson_init(bson_elem);
-    bson_append_new_oid(bson_elem, "_id" );
+  if (dyn_table) {
+    if (index) stamp = queue[0]->basetime.tv_sec;
 
-    data = &queue[j]->primitives;
-    if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
-    else pbgp = &empty_pbgp;
+    strlcpy(current_table, config.sql_table, SRVBUFLEN);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, current_table);
+    strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+    if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
+  }
 
-    if (queue[j]->pnat) pnat = queue[j]->pnat;
-    else pnat = &empty_pnat;
+  for (j = 0, batch_idx = 0; j < index; j++) {
+    go_to_pending = FALSE;
 
-    if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
-    else pmpls = &empty_pmpls;
+    if (dyn_table) {
+      time_t stamp = 0;
 
-    if (queue[j]->pcust) pcust = queue[j]->pcust;
-    else pcust = empty_pcust;
+      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
+      stamp = queue[j]->basetime.tv_sec;
+      strlcpy(elem_table, config.sql_table, SRVBUFLEN);
 
-    if (!queue[j]->valid) continue;
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table);
+      strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp);
 
-    if (config.what_to_count & COUNT_ID) bson_append_long(bson_elem, "tag", data->id);
-    if (config.what_to_count & COUNT_ID2) bson_append_long(bson_elem, "tag2", data->id2);
-    if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-#if defined (HAVE_L2)
-    if (config.what_to_count & COUNT_SRC_MAC) {
-      etheraddr_string(data->eth_shost, src_mac);
-      bson_append_string(bson_elem, "mac_src", src_mac);
-    }
-    if (config.what_to_count & COUNT_DST_MAC) {
-      etheraddr_string(data->eth_dhost, dst_mac);
-      bson_append_string(bson_elem, "mac_dst", dst_mac);
-    }
+      if (strncmp(current_table, elem_table, SRVBUFLEN)) {
+        pending_queries_queue[pqq_ptr] = queue[j];
 
-    if (config.what_to_count & COUNT_VLAN) {
-      sprintf(misc_str, "%u", data->vlan_id); 
-      bson_append_string(bson_elem, "vlan_id", misc_str);
-    }
-    if (config.what_to_count & COUNT_COS) {
-      sprintf(misc_str, "%u", data->cos); 
-      bson_append_string(bson_elem, "cos", misc_str);
-    }
-    if (config.what_to_count & COUNT_ETHERTYPE) {
-      sprintf(misc_str, "%x", data->etype); 
-      bson_append_string(bson_elem, "etype", misc_str);
-    }
-#endif
-    if (config.what_to_count & COUNT_SRC_AS) bson_append_int(bson_elem, "as_src", data->src_as);
-    if (config.what_to_count & COUNT_DST_AS) bson_append_int(bson_elem, "as_dst", data->dst_as);
-
-    if (config.what_to_count & COUNT_STD_COMM) {
-      bgp_comm = pbgp->std_comms;
-      while (bgp_comm) {
-        bgp_comm = strchr(pbgp->std_comms, ' ');
-        if (bgp_comm) *bgp_comm = '_';
-      }
-
-      if (strlen(pbgp->std_comms)) 
-        bson_append_string(bson_elem, "comms", pbgp->std_comms);
-      else
-        bson_append_null(bson_elem, "comms");
-    }
-
-    if (config.what_to_count & COUNT_AS_PATH) {
-      as_path = pbgp->as_path;
-      while (as_path) {
-        as_path = strchr(pbgp->as_path, ' ');
-        if (as_path) *as_path = '_';
-      }
-      if (strlen(pbgp->as_path))
-        bson_append_string(bson_elem, "as_path", pbgp->as_path);
-      else
-        bson_append_string(bson_elem, "as_path", empty_aspath);
-    }
-
-    if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "local_pref", pbgp->local_pref);
-    if (config.what_to_count & COUNT_MED) bson_append_int(bson_elem, "med", pbgp->med);
-    if (config.what_to_count & COUNT_PEER_SRC_AS) bson_append_int(bson_elem, "peer_as_src", pbgp->peer_src_as);
-    if (config.what_to_count & COUNT_PEER_DST_AS) bson_append_int(bson_elem, "peer_as_dst", pbgp->peer_dst_as);
-
-    if (config.what_to_count & COUNT_PEER_SRC_IP) {
-      addr_to_str(ip_address, &pbgp->peer_src_ip);
-      bson_append_string(bson_elem, "peer_ip_src", ip_address);
-    }
-    if (config.what_to_count & COUNT_PEER_DST_IP) {
-      addr_to_str(ip_address, &pbgp->peer_dst_ip);
-      bson_append_string(bson_elem, "peer_ip_dst", ip_address);
-    }
-
-    if (config.what_to_count & COUNT_IN_IFACE) bson_append_int(bson_elem, "iface_in", data->ifindex_in);
-    if (config.what_to_count & COUNT_OUT_IFACE) bson_append_int(bson_elem, "iface_out", data->ifindex_out);
-
-    if (config.what_to_count & COUNT_MPLS_VPN_RD) {
-      bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
-      bson_append_string(bson_elem, "mpls_vpn_rd", rd_str);
-    }
-
-    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
-      addr_to_str(src_host, &data->src_ip);
-      bson_append_string(bson_elem, "ip_src", src_host);
-    }
-    if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
-      addr_to_str(dst_host, &data->dst_ip);
-      bson_append_string(bson_elem, "ip_dst", dst_host);
-    }
-
-    if (config.what_to_count & COUNT_SRC_NMASK) {
-      sprintf(misc_str, "%u", data->src_nmask);
-      bson_append_string(bson_elem, "mask_src", misc_str);
-    }
-    if (config.what_to_count & COUNT_DST_NMASK) {
-      sprintf(misc_str, "%u", data->dst_nmask);
-      bson_append_string(bson_elem, "mask_dst", misc_str);
-    }
-    if (config.what_to_count & COUNT_SRC_PORT) {
-      sprintf(misc_str, "%u", data->src_port);
-      bson_append_string(bson_elem, "port_src", misc_str);
-    }
-    if (config.what_to_count & COUNT_DST_PORT) {
-      sprintf(misc_str, "%u", data->dst_port);
-      bson_append_string(bson_elem, "port_dst", misc_str);
-    }
-#if defined (WITH_GEOIP)
-    if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
-      if (data->src_ip_country > 0)
-	bson_append_string(bson_elem, "country_ip_src", GeoIP_code_by_id(data->src_ip_country));
-      else
-	bson_append_null(bson_elem, "country_ip_src");
-    }
-    if (config.what_to_count & COUNT_DST_HOST_COUNTRY) {
-      if (data->dst_ip_country > 0)
-	bson_append_string(bson_elem, "country_ip_dst", GeoIP_code_by_id(data->dst_ip_country));
-      else
-	bson_append_null(bson_elem, "country_ip_dst");
-    }
-#endif
-    if (config.what_to_count & COUNT_TCPFLAGS) {
-      sprintf(misc_str, "%u", queue[j]->tcp_flags);
-      bson_append_string(bson_elem, "tcp_flags", misc_str);
-    }
-
-    if (config.what_to_count & COUNT_IP_PROTO) {
-      if (!config.num_protos) bson_append_string(bson_elem, "ip_proto", _protocols[data->proto].name);
-      else {
-        sprintf(misc_str, "%u", _protocols[data->proto].number);
-        bson_append_string(bson_elem, "ip_proto", misc_str);
+        pqq_ptr++;
+        go_to_pending = TRUE;
       }
     }
 
-    if (config.what_to_count & COUNT_IP_TOS) {
-      sprintf(misc_str, "%u", data->tos);
-      bson_append_string(bson_elem, "tos", misc_str);
-    }
-
-    if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
-    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
-      bson_append_string(bson_elem, "pkt_len_distrib", config.pkt_len_distrib_bins[data->pkt_len_distrib]);
-
-    if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
-      addr_to_str(src_host, &pnat->post_nat_src_ip);
-      bson_append_string(bson_elem, "post_nat_ip_src", src_host);
-    }
-    if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) {
-      addr_to_str(dst_host, &pnat->post_nat_dst_ip);
-      bson_append_string(bson_elem, "post_nat_ip_dst", dst_host);
-    }
-    if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) {
-      sprintf(misc_str, "%u", pnat->post_nat_src_port);
-      bson_append_string(bson_elem, "post_nat_port_src", misc_str);
-    }
-    if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) {
-      sprintf(misc_str, "%u", pnat->post_nat_dst_port);
-      bson_append_string(bson_elem, "post_nat_port_dst", misc_str);
-    }
-    if (config.what_to_count_2 & COUNT_NAT_EVENT) {
-      sprintf(misc_str, "%u", pnat->nat_event);
-      bson_append_string(bson_elem, "nat_event", misc_str);
-    }
-
-    if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
-      sprintf(misc_str, "%u", pmpls->mpls_label_top);
-      bson_append_string(bson_elem, "mpls_label_top", misc_str);
-    }
-    if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
-      sprintf(misc_str, "%u", pmpls->mpls_label_bottom);
-      bson_append_string(bson_elem, "mpls_label_bottom", misc_str);
-    }
-    if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
-      sprintf(misc_str, "%u", pmpls->mpls_stack_depth);
-      bson_append_string(bson_elem, "mpls_stack_depth", misc_str);
-    }
-
-    if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-      bson_timestamp_t bts;
-
-      bts.t = pnat->timestamp_start.tv_sec;
-      bts.i = pnat->timestamp_start.tv_usec;
-      bson_append_timestamp(bson_elem, "timestamp_start", &bts);
-    }
-    if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-      bson_timestamp_t bts;
-
-      bts.t = pnat->timestamp_end.tv_sec;
-      bts.i = pnat->timestamp_end.tv_usec;
-      bson_append_timestamp(bson_elem, "timestamp_end", &bts);
-    }
-
-    /* all custom primitives printed here */
-    {
-      char cp_str[SRVBUFLEN];
-      int cp_idx;
-
-      for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-	custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
-	bson_append_string(bson_elem, config.cpptrs.primitive[cp_idx].name, cp_str);
-      }
-    }
-
-    if (config.sql_history) {
-      bson_append_date(bson_elem, "stamp_inserted", (bson_date_t) 1000*queue[j]->basetime.tv_sec);
-      bson_append_date(bson_elem, "stamp_updated", (bson_date_t) 1000*time(NULL));
-    }
-
-    if (queue[j]->flow_type != NF9_FTYPE_EVENT) {
-#if defined HAVE_64BIT_COUNTERS
-      bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
-      if (config.what_to_count & COUNT_FLOWS) bson_append_long(bson_elem, "flows", queue[j]->flow_counter);
-      bson_append_long(bson_elem, "bytes", queue[j]->bytes_counter);
-#else
-      bson_append_int(bson_elem, "packets", queue[j]->packet_counter);
-      if (config.what_to_count & COUNT_FLOWS) bson_append_int(bson_elem, "flows", queue[j]->flow_counter);
-      bson_append_int(bson_elem, "bytes", queue[j]->bytes_counter);
-#endif
-    }
-
-    bson_finish(bson_elem);
-    bson_batch[j] = bson_elem;
-
-    if (config.debug) bson_print(bson_elem);
-
-    if (batch_idx == config.mongo_insert_batch) {
-      bson_batch_ptr = &bson_batch[j-batch_idx];
-
-      if (dyn_table) db_status = mongo_insert_batch(&db_conn, tmpbuf, bson_batch_ptr, batch_idx, NULL, 0);
-      else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch_ptr, batch_idx, NULL, 0);
-      if (db_status != MONGO_OK)
-	Log(LOG_ERR, "ERROR ( %s/%s ): Unable to insert all elements in batch: try a smaller mongo_insert_batch value.\n", config.name, config.type);
-
-      for (i = j-batch_idx; i < j; i++) {
-        bson_elem = (bson *) bson_batch[i];
-        bson_destroy(bson_elem);
-        free(bson_elem);
+    if (!go_to_pending) {
+      bson_elem = (bson *) malloc(sizeof(bson));
+      if (!bson_elem) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed: bson_elem (elem# %u batch# %u\n", config.name, config.type, j, batch_idx);
+        return;
       }
 
-      batch_idx = 0;
+      bson_init(bson_elem);
+      bson_append_new_oid(bson_elem, "_id" );
+
+      data = &queue[j]->primitives;
+      if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
+      else pbgp = &empty_pbgp;
+
+      if (queue[j]->pnat) pnat = queue[j]->pnat;
+      else pnat = &empty_pnat;
+  
+      if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
+      else pmpls = &empty_pmpls;
+  
+      if (queue[j]->pcust) pcust = queue[j]->pcust;
+      else pcust = empty_pcust;
+  
+      if (!queue[j]->valid) continue;
+  
+      if (config.what_to_count & COUNT_ID) bson_append_long(bson_elem, "tag", data->id);
+      if (config.what_to_count & COUNT_ID2) bson_append_long(bson_elem, "tag2", data->id2);
+      if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+  #if defined (HAVE_L2)
+      if (config.what_to_count & COUNT_SRC_MAC) {
+        etheraddr_string(data->eth_shost, src_mac);
+        bson_append_string(bson_elem, "mac_src", src_mac);
+      }
+      if (config.what_to_count & COUNT_DST_MAC) {
+        etheraddr_string(data->eth_dhost, dst_mac);
+        bson_append_string(bson_elem, "mac_dst", dst_mac);
+      }
+  
+      if (config.what_to_count & COUNT_VLAN) {
+        sprintf(misc_str, "%u", data->vlan_id); 
+        bson_append_string(bson_elem, "vlan_id", misc_str);
+      }
+      if (config.what_to_count & COUNT_COS) {
+        sprintf(misc_str, "%u", data->cos); 
+        bson_append_string(bson_elem, "cos", misc_str);
+      }
+      if (config.what_to_count & COUNT_ETHERTYPE) {
+        sprintf(misc_str, "%x", data->etype); 
+        bson_append_string(bson_elem, "etype", misc_str);
+      }
+  #endif
+      if (config.what_to_count & COUNT_SRC_AS) bson_append_int(bson_elem, "as_src", data->src_as);
+      if (config.what_to_count & COUNT_DST_AS) bson_append_int(bson_elem, "as_dst", data->dst_as);
+  
+      if (config.what_to_count & COUNT_STD_COMM) {
+        bgp_comm = pbgp->std_comms;
+        while (bgp_comm) {
+          bgp_comm = strchr(pbgp->std_comms, ' ');
+          if (bgp_comm) *bgp_comm = '_';
+        }
+  
+        if (strlen(pbgp->std_comms)) 
+          bson_append_string(bson_elem, "comms", pbgp->std_comms);
+        else
+          bson_append_null(bson_elem, "comms");
+      }
+  
+      if (config.what_to_count & COUNT_AS_PATH) {
+        as_path = pbgp->as_path;
+        while (as_path) {
+          as_path = strchr(pbgp->as_path, ' ');
+          if (as_path) *as_path = '_';
+        }
+        if (strlen(pbgp->as_path))
+          bson_append_string(bson_elem, "as_path", pbgp->as_path);
+        else
+          bson_append_string(bson_elem, "as_path", empty_aspath);
+      }
+  
+      if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "local_pref", pbgp->local_pref);
+      if (config.what_to_count & COUNT_MED) bson_append_int(bson_elem, "med", pbgp->med);
+      if (config.what_to_count & COUNT_PEER_SRC_AS) bson_append_int(bson_elem, "peer_as_src", pbgp->peer_src_as);
+      if (config.what_to_count & COUNT_PEER_DST_AS) bson_append_int(bson_elem, "peer_as_dst", pbgp->peer_dst_as);
+  
+      if (config.what_to_count & COUNT_PEER_SRC_IP) {
+        addr_to_str(ip_address, &pbgp->peer_src_ip);
+        bson_append_string(bson_elem, "peer_ip_src", ip_address);
+      }
+      if (config.what_to_count & COUNT_PEER_DST_IP) {
+        addr_to_str(ip_address, &pbgp->peer_dst_ip);
+        bson_append_string(bson_elem, "peer_ip_dst", ip_address);
+      }
+  
+      if (config.what_to_count & COUNT_IN_IFACE) bson_append_int(bson_elem, "iface_in", data->ifindex_in);
+      if (config.what_to_count & COUNT_OUT_IFACE) bson_append_int(bson_elem, "iface_out", data->ifindex_out);
+  
+      if (config.what_to_count & COUNT_MPLS_VPN_RD) {
+        bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
+        bson_append_string(bson_elem, "mpls_vpn_rd", rd_str);
+      }
+  
+      if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
+        addr_to_str(src_host, &data->src_ip);
+        bson_append_string(bson_elem, "ip_src", src_host);
+      }
+      if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
+        addr_to_str(dst_host, &data->dst_ip);
+        bson_append_string(bson_elem, "ip_dst", dst_host);
+      }
+  
+      if (config.what_to_count & COUNT_SRC_NMASK) {
+        sprintf(misc_str, "%u", data->src_nmask);
+        bson_append_string(bson_elem, "mask_src", misc_str);
+      }
+      if (config.what_to_count & COUNT_DST_NMASK) {
+        sprintf(misc_str, "%u", data->dst_nmask);
+        bson_append_string(bson_elem, "mask_dst", misc_str);
+      }
+      if (config.what_to_count & COUNT_SRC_PORT) {
+        sprintf(misc_str, "%u", data->src_port);
+        bson_append_string(bson_elem, "port_src", misc_str);
+      }
+      if (config.what_to_count & COUNT_DST_PORT) {
+        sprintf(misc_str, "%u", data->dst_port);
+        bson_append_string(bson_elem, "port_dst", misc_str);
+      }
+  #if defined (WITH_GEOIP)
+      if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
+        if (data->src_ip_country > 0)
+  	bson_append_string(bson_elem, "country_ip_src", GeoIP_code_by_id(data->src_ip_country));
+        else
+  	bson_append_null(bson_elem, "country_ip_src");
+      }
+      if (config.what_to_count & COUNT_DST_HOST_COUNTRY) {
+        if (data->dst_ip_country > 0)
+  	bson_append_string(bson_elem, "country_ip_dst", GeoIP_code_by_id(data->dst_ip_country));
+        else
+  	bson_append_null(bson_elem, "country_ip_dst");
+      }
+  #endif
+      if (config.what_to_count & COUNT_TCPFLAGS) {
+        sprintf(misc_str, "%u", queue[j]->tcp_flags);
+        bson_append_string(bson_elem, "tcp_flags", misc_str);
+      }
+  
+      if (config.what_to_count & COUNT_IP_PROTO) {
+        if (!config.num_protos) bson_append_string(bson_elem, "ip_proto", _protocols[data->proto].name);
+        else {
+          sprintf(misc_str, "%u", _protocols[data->proto].number);
+          bson_append_string(bson_elem, "ip_proto", misc_str);
+        }
+      }
+  
+      if (config.what_to_count & COUNT_IP_TOS) {
+        sprintf(misc_str, "%u", data->tos);
+        bson_append_string(bson_elem, "tos", misc_str);
+      }
+  
+      if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
+      if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
+        bson_append_string(bson_elem, "pkt_len_distrib", config.pkt_len_distrib_bins[data->pkt_len_distrib]);
+  
+      if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
+        addr_to_str(src_host, &pnat->post_nat_src_ip);
+        bson_append_string(bson_elem, "post_nat_ip_src", src_host);
+      }
+      if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) {
+        addr_to_str(dst_host, &pnat->post_nat_dst_ip);
+        bson_append_string(bson_elem, "post_nat_ip_dst", dst_host);
+      }
+      if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) {
+        sprintf(misc_str, "%u", pnat->post_nat_src_port);
+        bson_append_string(bson_elem, "post_nat_port_src", misc_str);
+      }
+      if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) {
+        sprintf(misc_str, "%u", pnat->post_nat_dst_port);
+        bson_append_string(bson_elem, "post_nat_port_dst", misc_str);
+      }
+      if (config.what_to_count_2 & COUNT_NAT_EVENT) {
+        sprintf(misc_str, "%u", pnat->nat_event);
+        bson_append_string(bson_elem, "nat_event", misc_str);
+      }
+  
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
+        sprintf(misc_str, "%u", pmpls->mpls_label_top);
+        bson_append_string(bson_elem, "mpls_label_top", misc_str);
+      }
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
+        sprintf(misc_str, "%u", pmpls->mpls_label_bottom);
+        bson_append_string(bson_elem, "mpls_label_bottom", misc_str);
+      }
+      if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
+        sprintf(misc_str, "%u", pmpls->mpls_stack_depth);
+        bson_append_string(bson_elem, "mpls_stack_depth", misc_str);
+      }
+  
+      if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
+        bson_timestamp_t bts;
+  
+        bts.t = pnat->timestamp_start.tv_sec;
+        bts.i = pnat->timestamp_start.tv_usec;
+        bson_append_timestamp(bson_elem, "timestamp_start", &bts);
+      }
+      if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
+        bson_timestamp_t bts;
+  
+        bts.t = pnat->timestamp_end.tv_sec;
+        bts.i = pnat->timestamp_end.tv_usec;
+        bson_append_timestamp(bson_elem, "timestamp_end", &bts);
+      }
+  
+      /* all custom primitives printed here */
+      {
+        char cp_str[SRVBUFLEN];
+        int cp_idx;
+  
+        for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+  	custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+  	bson_append_string(bson_elem, config.cpptrs.primitive[cp_idx].name, cp_str);
+        }
+      }
+  
+      if (config.sql_history) {
+        bson_append_date(bson_elem, "stamp_inserted", (bson_date_t) 1000*queue[j]->basetime.tv_sec);
+        bson_append_date(bson_elem, "stamp_updated", (bson_date_t) 1000*time(NULL));
+      }
+  
+      if (queue[j]->flow_type != NF9_FTYPE_EVENT) {
+  #if defined HAVE_64BIT_COUNTERS
+        bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
+        if (config.what_to_count & COUNT_FLOWS) bson_append_long(bson_elem, "flows", queue[j]->flow_counter);
+        bson_append_long(bson_elem, "bytes", queue[j]->bytes_counter);
+  #else
+        bson_append_int(bson_elem, "packets", queue[j]->packet_counter);
+        if (config.what_to_count & COUNT_FLOWS) bson_append_int(bson_elem, "flows", queue[j]->flow_counter);
+        bson_append_int(bson_elem, "bytes", queue[j]->bytes_counter);
+  #endif
+      }
+  
+      bson_finish(bson_elem);
+      bson_batch[batch_idx] = bson_elem;
+      batch_idx++;
+      qn++;
+  
+      if (config.debug) bson_print(bson_elem);
+  
+      if (batch_idx == config.mongo_insert_batch) {
+        if (dyn_table) db_status = mongo_insert_batch(&db_conn, current_table, bson_batch, batch_idx, NULL, 0);
+        else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch, batch_idx, NULL, 0);
+        if (db_status != MONGO_OK)
+  	  Log(LOG_ERR, "ERROR ( %s/%s ): Unable to insert all elements in batch: try a smaller mongo_insert_batch value.\n", config.name, config.type);
+  
+        for (i = 0; i < batch_idx; i++) {
+          bson_elem = (bson *) bson_batch[i];
+          bson_destroy(bson_elem);
+          free(bson_elem);
+        }
+  
+        batch_idx = 0;
+      }
     }
   }
 
   /* last round on the lollipop */
   if (batch_idx) {
-    bson_batch_ptr = &bson_batch[j-batch_idx];
-
-    if (dyn_table) db_status = mongo_insert_batch(&db_conn, tmpbuf, bson_batch_ptr, batch_idx, NULL, 0);
-    else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch_ptr, batch_idx, NULL, 0);
+    if (dyn_table) db_status = mongo_insert_batch(&db_conn, current_table, bson_batch, batch_idx, NULL, 0);
+    else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch, batch_idx, NULL, 0);
     if (db_status != MONGO_OK) 
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to insert all elements in batch: try a smaller mongo_insert_batch value.\n", config.name, config.type);
 
-    for (i = j-batch_idx; i < j; i++) {
+    for (i = 0; i < batch_idx; i++) {
       bson_elem = (bson *) bson_batch[i];
       bson_destroy(bson_elem);
       free(bson_elem);
@@ -689,8 +720,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     batch_idx = 0;
   }
 
+  /* If we have pending queries then start again */
+  if (pqq_ptr) goto start;
+
   duration = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, index, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, qn, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
