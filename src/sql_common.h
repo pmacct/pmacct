@@ -84,6 +84,7 @@ struct insert_data {
   int pending_accumulators;
   int num_primitives;
   int dyn_table;
+  char dyn_table_name[SRVBUFLEN];
   int recover;
   int locks;
   time_t new_basetime;
