@@ -8,6 +8,16 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+
+TO:     >= 1.5.0rc2
+FROM:   <= 1.5.0rc1
+TOPIC:  print plugin and time-related variables in dynamic file names
+DESC:	Time-related variables substitution is now based solely on the value of
+	print_history. Previously, if print_history was not specified, this was
+	based on the value of print_refresh_time. While this breaks backward-
+	compatibility, it makes print plugin acting consistently to the rest of
+	pmacct plugins. 
+
 TO:	>= 1.5.0rc1
 FROM:	<= 0.14.3
 TOPIC:	IPv6, peer_src_ip primitive, NetFlow exporter IP address

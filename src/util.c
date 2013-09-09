@@ -434,49 +434,46 @@ void close_print_output_file(FILE *f, char *filename, time_t now)
   }
 }
 
-FILE *open_print_output_file(char *filename, time_t now, int *append)
+FILE *open_print_output_file(char *filename, int *append)
 {
-  char buf[LARGEBUFLEN], buf2[LARGEBUFLEN];
+  char buf[LARGEBUFLEN];
   FILE *file = NULL;
-  struct tm *tmnow;
   uid_t owner = -1;
   gid_t group = -1;
   int ret;
 
+  strlcpy(buf, filename, LARGEBUFLEN);
+
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
-  handle_dynname_internal_strings(buf, LARGEBUFLEN-10, filename);
-  tmnow = localtime(&now);
-  strftime(buf2, LARGEBUFLEN-10, buf, tmnow);
-
-  ret = mkdir_multilevel(buf2, TRUE);
+  ret = mkdir_multilevel(buf, TRUE);
   if (ret) {
-    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s': mkdir_multilevel() failed.\n", buf2);
+    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s': mkdir_multilevel() failed.\n", buf);
     file = NULL;
 
     return file;
   }
 
-  ret = access(buf2, F_OK);
+  ret = access(buf, F_OK);
 
   if (config.print_output_file_append && !ret) {
-    file = fopen(buf2, "a");
+    file = fopen(buf, "a");
     *append = TRUE;
   }
-  else file = fopen(buf2, "w");
+  else file = fopen(buf, "w");
 
   if (file) {
-    if (chown(buf2, owner, group) == -1)
-      Log(LOG_WARNING, "WARN: Unable to chown() print_ouput_file '%s': %s\n", buf2, strerror(errno));
+    if (chown(buf, owner, group) == -1)
+      Log(LOG_WARNING, "WARN: Unable to chown() print_ouput_file '%s': %s\n", buf, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ALERT, "ALERT: Unable to obtain lock for print_ouput_file '%s'.\n", buf2);
+      Log(LOG_ALERT, "ALERT: Unable to obtain lock for print_ouput_file '%s'.\n", buf);
       file = NULL;
     }
   }
   else {
-    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s'\n", buf2);
+    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s'\n", buf);
     file = NULL;
   }
 

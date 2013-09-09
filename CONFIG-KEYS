@@ -386,9 +386,9 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		case print_output_file_append is set to false (default). Are supported scenarios where
 		multiple level of directories need to be created in order to create the target file,
 		ie. "/path/to/%Y/%Y-%m/%Y-%m-%d/blabla-%Y%m%d-%H%M.txt". Shell replacements are not
-		supported though, ie. '~' symbol to denote the user home directory. If print_history is
-		specified, time-related variables substitution of dynamic print_output_file names are
-		determined using this value instead of print_refresh_time one.
+		supported though, ie. '~' symbol to denote the user home directory. print_history
+		values are used for time-related variables substitution of dynamic print_output_file
+		names. 
 
 		MongoDB plugin notes:
 		The table name is expected as <database>.<collection> . Default table is test.acct

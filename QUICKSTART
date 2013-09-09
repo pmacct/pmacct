@@ -1140,12 +1140,12 @@ switch. Please refer to the configure script help screen to supply custom
 locations of Jansson library and/or headers. 
 
 Splitting data into time bins is supported via print_history directive. When
-enabled, time-related variable substitutions of dynamic print_output_file
-names are determined using this value instead of print_refresh_time one. It
-is supported to have shorter print_refresh_time values than print_history
-ones by setting print_output_file_append to true (which is generally also
-recommended to prevent that unscheduled writes to disk, ie. due to caching
-issues, overwrite existing file content). A sample config follows:
+enabled, time-related variable substitutions of dynamic print_output_file names
+are determined using this value. It is supported to define print_refresh_time
+values shorter than print_history ones by setting print_output_file_append to
+true (which is generally also recommended to prevent that unscheduled writes to
+disk, ie. due to caching issues, overwrite existing file content). A sample
+config follows:
 
 print_refresh_time: 300
 print_output: csv
