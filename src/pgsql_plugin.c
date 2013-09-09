@@ -468,11 +468,17 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 {
   PGresult *ret;
   struct logfile lf;
+  struct db_cache **reprocess_queries_queue, **bulk_reprocess_queries_queue;
+  char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
+  char orig_copy_clause[LONGSRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
   time_t start;
-  int j, r, reprocess = 0, stop;
+  int j, r, reprocess = 0, stop, go_to_pending, reprocess_idx, bulk_reprocess_idx;
 
   memset(&lf, 0, sizeof(struct logfile));
   bed.lf = &lf;
+
+  reprocess_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
+  bulk_reprocess_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
 
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++) 
     stop = preprocess_funcs[j](queue, &index, j);
@@ -483,40 +489,96 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
   start = time(NULL);
 
+  /* re-using pending queries queue stuff from parent and saving clauses */
+  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  pqq_ptr = index;
+
+  strlcpy(orig_copy_clause, copy_clause, LONGSRVBUFLEN);
+  strlcpy(orig_insert_clause, insert_clause, LONGSRVBUFLEN);
+  strlcpy(orig_update_clause, update_clause, LONGSRVBUFLEN);
+  strlcpy(orig_lock_clause, lock_clause, LONGSRVBUFLEN);
+
+  start:
+  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
+  index = pqq_ptr; pqq_ptr = 0;
+
   /* We check for variable substitution in SQL table */
   if (idata->dyn_table) {
-    char tmpbuf[LONGLONGSRVBUFLEN];
-    time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
+    time_t stamp = 0;
+
+    memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
+    if (index) stamp = queue[0]->basetime;
+    strlcpy(idata->dyn_table_name, config.sql_table, SRVBUFLEN);
+    strlcpy(insert_clause, orig_insert_clause, LONGSRVBUFLEN);
+    strlcpy(update_clause, orig_update_clause, LONGSRVBUFLEN);
+    strlcpy(lock_clause, orig_lock_clause, LONGSRVBUFLEN);
 
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, copy_clause);
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause);
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause);
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, idata->dyn_table_name);
 
     strftime_same(copy_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
+    strftime_same(idata->dyn_table_name, LONGSRVBUFLEN, tmpbuf, &stamp);
 
     if (config.sql_table_schema) sql_create_table(bed.p, &stamp); 
   }
-  // strncat(update_clause, set_clause, SPACELEFT(update_clause));
 
   /* beginning DB transaction */
   (*sqlfunc_cbr.lock)(bed.p);
 
   /* for each element of the queue to be processed we execute sql_query(); the function
-     returns a non-zero value if DB has failed; then, first failed element is saved to
-     allow reprocessing of previous elements if a failover method is in use; elements
-     need to be reprocessed because at the time of DB failure they were not yet committed */
+     returns a non-zero value if DB has failed; then we use reprocess_queries_queue and
+     bulk_reprocess_queries_queue to handle reprocessing of specific elements or bulk
+     queue (of elements not being held in a pending_queries_queue) due to final COMMIT
+     failure */
+
+  memset(reprocess_queries_queue, 0, qq_size*sizeof(struct db_cache *));
+  memset(bulk_reprocess_queries_queue, 0, qq_size*sizeof(struct db_cache *));
+  reprocess_idx = 0; bulk_reprocess_idx = 0;
 
   for (j = 0; j < index; j++) {
-    if (queue[j]->valid) r = sql_query(&bed, queue[j], idata);
-    else r = FALSE; /* not valid elements are marked as not to be reprocessed */ 
-    if (r && !reprocess) {
-      idata->uqn = 0;
-      idata->iqn = 0;
-      reprocess = j+1; /* avoding reprocess to be 0 when element j = 0 fails */
+    go_to_pending = FALSE;
+
+    if (idata->dyn_table) {
+      time_t stamp = 0;
+
+      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
+      stamp = queue[idata->current_queue_elem]->basetime;
+      strlcpy(tmptable, config.sql_table, SRVBUFLEN);
+
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, tmptable);
+      strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp);
+
+      if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
+        pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
+
+        pqq_ptr++;
+        go_to_pending = TRUE;
+      }
+    }
+
+    if (!go_to_pending) { 
+      if (queue[j]->valid) {
+	r = sql_query(&bed, queue[j], idata);
+
+	/* note down all elements in case of a reprocess due to COMMIT failure */
+	bulk_reprocess_queries_queue[bulk_reprocess_idx] = queue[j];
+	bulk_reprocess_idx++;
+      }
+      else r = FALSE; /* not valid elements are marked as not to be reprocessed */ 
+      if (r) {
+        reprocess_queries_queue[reprocess_idx] = queue[j];
+        reprocess_idx++;
+
+	if (!reprocess) sql_db_fail(&p);
+        reprocess = REPROCESS_SPECIFIC;
+      }
     }
   }
 
@@ -528,22 +590,22 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
     ret = PQexec(p.desc, "COMMIT");
     if (PQresultStatus(ret) != PGRES_COMMAND_OK) {
-      if (!reprocess) {
-	sql_db_fail(&p);
-        idata->uqn = 0;
-        idata->iqn = 0;
-        reprocess = j+1;
-      }
+      if (!reprocess) sql_db_fail(&p);
+      reprocess = REPROCESS_BULK;
     }
     PQclear(ret);
   }
 
+  /* don't reprocess free (SQL_CACHE_FREE) and already recovered (SQL_CACHE_ERROR) elements */
   if (p.fail) {
-    reprocess--;
-    if (reprocess) {
-      for (j = 0; j <= reprocess; j++) {
-	/* don't reprocess free (SQL_CACHE_FREE) and already recovered (SQL_CACHE_ERROR) elements */
-        if (queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, queue[j], idata);
+    if (reprocess = REPROCESS_SPECIFIC) {
+      for (j = 0; j <= reprocess_idx; j++) {
+        if (reprocess_queries_queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, reprocess_queries_queue[j], idata);
+      }
+    }
+    else if (reprocess = REPROCESS_BULK) {
+      for (j = 0; j <= bulk_reprocess_idx; j++) {
+        if (bulk_reprocess_queries_queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, bulk_reprocess_queries_queue[j], idata);
       }
     }
   }
@@ -560,6 +622,9 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   /* rewinding stuff */
   if (lf.file) PG_file_close(&lf);
   if (lf.fail || b.fail) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for PgSQL operation failed.\n", config.name, config.type);
+
+  /* If we have pending queries then start again */
+  if (pqq_ptr) goto start;
 
   idata->elap_time = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, idata->qn, idata->elap_time);

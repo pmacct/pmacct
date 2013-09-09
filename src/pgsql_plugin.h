@@ -22,6 +22,10 @@
 /* includes */
 #include <libpq-fe.h>
 
+/* defines */
+#define REPROCESS_SPECIFIC	1
+#define REPROCESS_BULK		2
+
 /* prototypes */
 void pgsql_plugin(int, struct configuration *, void *);
 int PG_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
