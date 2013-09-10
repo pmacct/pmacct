@@ -2527,7 +2527,7 @@ int sql_query(struct BE_descs *bed, struct db_cache *elem, struct insert_data *i
         if (config.sql_table_schema) {
 	  time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
 
-	  sql_create_table(bed->b, &stamp);
+	  sql_create_table(bed->b, &stamp, NULL); // XXX: should not be null
 	}
         (*sqlfunc_cbr.lock)(bed->b);
       }
@@ -2660,7 +2660,7 @@ FILE *sql_file_open(const char *path, const char *mode, const struct insert_data
   return NULL;
 }
 
-void sql_create_table(struct DBdesc *db, time_t *basetime)
+void sql_create_table(struct DBdesc *db, time_t *basetime, struct primitives_ptrs *prim_ptrs)
 {
   struct tm *nowtm;
   char buf[LARGEBUFLEN], tmpbuf[LARGEBUFLEN], tmpbuf2[LARGEBUFLEN];
@@ -2668,7 +2668,7 @@ void sql_create_table(struct DBdesc *db, time_t *basetime)
 
   ret = read_SQLquery_from_file(config.sql_table_schema, tmpbuf, LARGEBUFLEN);
   if (ret) {
-    handle_dynname_internal_strings(tmpbuf2, LARGEBUFLEN-10, tmpbuf);
+    handle_dynname_internal_strings(tmpbuf2, LARGEBUFLEN-10, tmpbuf, prim_ptrs);
     nowtm = localtime(basetime);
     strftime(buf, LARGEBUFLEN, tmpbuf2, nowtm);
     (*sqlfunc_cbr.create_table)(db, buf);
@@ -2757,4 +2757,18 @@ int sql_compose_static_set(int have_flows)
   }
 
   return set_primitives;
+}
+
+void primptrs_set_all_from_db_cache(struct primitives_ptrs *prim_ptrs, struct db_cache *entry)
+{
+  struct pkt_data *data = prim_ptrs->data;
+
+  if (prim_ptrs && data && entry) {
+    memset(data, 0, PdataSz);
+    data->primitives = entry->primitives;
+    prim_ptrs->pbgp = (struct pkt_bgp_primitives *) entry->cbgp;
+    prim_ptrs->pnat = entry->pnat;
+    prim_ptrs->pmpls = entry->pmpls;
+    prim_ptrs->pcust = entry->pcust;
+  }
 }

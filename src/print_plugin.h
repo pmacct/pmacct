@@ -75,6 +75,7 @@ EXT void P_write_stats_header_formatted(FILE *, int);
 EXT void P_write_stats_header_csv(FILE *, int);
 EXT void P_exit_now(int);
 EXT int P_trigger_exec(char *);
+EXT void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */

@@ -309,11 +309,12 @@ EXT int sql_query(struct BE_descs *, struct db_cache *, struct insert_data *);
 EXT void sql_exit_gracefully(int);
 EXT int sql_evaluate_primitives(int);
 EXT FILE *sql_file_open(const char *, const char *, const struct insert_data *);
-EXT void sql_create_table(struct DBdesc *, time_t *);
+EXT void sql_create_table(struct DBdesc *, time_t *, struct primitives_ptrs *);
 EXT void sql_invalidate_shadow_entries(struct db_cache *[], int *);
 EXT int sql_select_locking_style(char *);
 EXT int sql_compose_static_set(int); 
 EXT int sql_compose_static_set_event(); 
+EXT void primptrs_set_all_from_db_cache(struct primitives_ptrs *, struct db_cache *);
 
 EXT void sql_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
 EXT void sql_sum_port_insert(struct primitives_ptrs *, struct insert_data *);

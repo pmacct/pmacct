@@ -333,27 +333,30 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		are computed at the moment when data is purged to the backend. The list of supported
 		variables follows: 
 
-		%d	The day of the month as a decimal number (range 01 to 31).
+		%d		The day of the month as a decimal number (range 01 to 31).
 
-		%H	The hour as a decimal number using a 24 hour clock (range 00 to 23).
+		%H		The hour as a decimal number using a 24 hour clock (range 00 to 23).
 
-		%m	The month as a decimal number (range 01 to 12).
+		%m		The month as a decimal number (range 01 to 12).
 
-		%M	The minute as a decimal number (range 00 to 59).
+		%M		The minute as a decimal number (range 00 to 59).
 
-		%s      The number of seconds since the Epoch, i.e., since 1970-01-01 00:00:00 UTC.
+		%s      	The number of seconds since Epoch, ie., since 1970-01-01 00:00:00 UTC.
 
-		%w	The day of the week as a decimal, range 0 to 6, Sunday being 0.
+		%w		The day of the week as a decimal, range 0 to 6, Sunday being 0.
 
-		%W	The week number of the current year as a decimal number, range
-			00 to 53,  starting  with the first Monday as the first day of
-			week 01.
+		%W		The week number of the current year as a decimal number, range
+				00 to 53,  starting  with the first Monday as the first day of
+				week 01.
 
-		%Y	The year as a decimal number including the century.
+		%Y		The year as a decimal number including the century.
 
-		$ref	Configured value of refresh time.
+		$ref		Configured refresh time value for the plugin.
 
-		$hst	Configured value of sql_history in seconds.
+		$hst		Configured sql_history value, in seconds, for the plugin.
+
+		$peer_src_ip	Record value for peer_src_ip primitive (if primitive is not part of
+				the aggregation method then this will be set to a null value).
 
 		SQL plugins notes:
 		Time-related variables require 'sql_history' to be specified in order to work correctly

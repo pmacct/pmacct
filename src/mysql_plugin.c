@@ -476,9 +476,13 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   int j, stop, ret, go_to_pending;
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
   char tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
+  struct primitives_ptrs prim_ptrs;
+  struct pkt_data dummy_data;
 
   bed.lf = &lf;
   memset(&lf, 0, sizeof(struct logfile));
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+  memset(&dummy_data, 0, sizeof(dummy_data));
 
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++)
     stop = preprocess_funcs[j](queue, &index, j); 
@@ -514,16 +518,19 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     strlcpy(update_clause, orig_update_clause, LONGSRVBUFLEN);
     strlcpy(lock_clause, orig_lock_clause, LONGSRVBUFLEN);
 
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, idata->dyn_table_name);
+    prim_ptrs.data = &dummy_data;
+    primptrs_set_all_from_db_cache(&prim_ptrs, queue[0]);
+
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause, &prim_ptrs);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause, &prim_ptrs);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause, &prim_ptrs);
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, idata->dyn_table_name, &prim_ptrs);
 
     strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp);
     strftime_same(idata->dyn_table_name, LONGSRVBUFLEN, tmpbuf, &stamp);
-    if (config.sql_table_schema) sql_create_table(bed.p, &stamp);
+    if (config.sql_table_schema) sql_create_table(bed.p, &stamp, &prim_ptrs);
   }
 
   if (idata->locks == PM_LOCK_EXCLUSIVE) (*sqlfunc_cbr.lock)(bed.p); 
@@ -538,7 +545,9 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
       stamp = queue[idata->current_queue_elem]->basetime;
       strlcpy(tmptable, config.sql_table, SRVBUFLEN);
 
-      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, tmptable);
+      prim_ptrs.data = &dummy_data;
+      primptrs_set_all_from_db_cache(&prim_ptrs, queue[idata->current_queue_elem]);
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, tmptable, &prim_ptrs);
       strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp);
 
       if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {

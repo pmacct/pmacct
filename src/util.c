@@ -396,7 +396,7 @@ void close_print_output_file(FILE *f, char *filename, time_t now)
 
   fclose(f);
 
-  handle_dynname_internal_strings(buf, LARGEBUFLEN-10, filename);
+  handle_dynname_internal_strings(buf, LARGEBUFLEN-10, filename, NULL);
   tmnow = localtime(&now);
   strftime(buf2, LARGEBUFLEN-10, buf, tmnow);
 
@@ -485,10 +485,10 @@ FILE *open_print_output_file(char *filename, int *append)
    - we check for sufficient space: we do not (de)allocate anything
    - as long as we have only a couple possible replacements, we test them all
 */
-void handle_dynname_internal_strings(char *new, int newlen, char *old)
+void handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs)
 {
   int oldlen;
-  char ref_string[] = "$ref", hst_string[] = "$hst";
+  char ref_string[] = "$ref", hst_string[] = "$hst", psi_string[] = "$peer_src_ip";
   char *ptr_start, *ptr_end;
 
   oldlen = strlen(old);
@@ -530,11 +530,45 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old)
     *ptr_start = '\0';
     strncat(new, buf, len);
   }
+
+  ptr_start = strstr(new, psi_string);
+  if (ptr_start) {
+    char empty_peer_src_ip[] = "null";
+    char peer_src_ip[SRVBUFLEN];
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(psi_string);
+    len -= strlen(psi_string);
+
+    if (prim_ptrs && prim_ptrs->pbgp) addr_to_str(peer_src_ip, &prim_ptrs->pbgp->peer_src_ip);
+    else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(empty_peer_src_ip));
+
+    escape_ip_uscores(peer_src_ip);
+    snprintf(buf, newlen, "%s", peer_src_ip);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
 }
 
-void handle_dynname_internal_strings_same(char *new, int newlen, char *old)
+void escape_ip_uscores(char *str)
 {
-  handle_dynname_internal_strings(new, newlen, old);
+  int idx, len = 0;
+
+  if (str) len = strlen(str);
+  for (idx = 0; idx < len; idx++) {
+    if (str[idx] == '.' || str[idx] == ':') str[idx] = '_';
+  }
+}
+
+void handle_dynname_internal_strings_same(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs)
+{
+  handle_dynname_internal_strings(new, newlen, old, prim_ptrs);
   strlcpy(old, new, newlen);
 }
 

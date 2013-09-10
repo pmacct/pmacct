@@ -333,6 +333,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   int qn = 0, i, j, db_status, batch_idx, go_to_pending;
   time_t stamp, start, duration;
   char current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
+  struct primitives_ptrs prim_ptrs;
+  struct pkt_data dummy_data;
 
   const bson **bson_batch;
   bson *bson_elem;
@@ -372,8 +374,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
   memset(mongo_database, 0, sizeof(mongo_database));
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+  memset(&dummy_data, 0, sizeof(dummy_data));
   memset(tmpbuf, 0, sizeof(tmpbuf));
-  memset(&local_basetime, 0, sizeof(local_basetime));
 
   if (!config.sql_table || MongoDB_get_database(mongo_database, SRVBUFLEN, config.sql_table)) {
     config.sql_table = default_table;
@@ -413,9 +416,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
   if (dyn_table) {
     if (index) stamp = queue[0]->basetime.tv_sec;
-
     strlcpy(current_table, config.sql_table, SRVBUFLEN);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, current_table);
+
+    prim_ptrs.data = &dummy_data;
+    primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
+
+    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, current_table, &prim_ptrs);
     strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp);
     if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
   }
@@ -430,7 +436,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       stamp = queue[j]->basetime.tv_sec;
       strlcpy(elem_table, config.sql_table, SRVBUFLEN);
 
-      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table);
+      prim_ptrs.data = &dummy_data;
+      primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table, &prim_ptrs);
       strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
@@ -766,7 +774,11 @@ void MongoDB_create_indexes(mongo *db_conn, const char *table)
 	    bson_append_int(idx_key, token, 1);
 	  }
 	  bson_finish(idx_key);
+#if MONGO_MAJOR <= 0 && MONGO_MINOR <= 7
 	  mongo_create_index(db_conn, table, idx_key, NULL, 0, NULL);
+#else
+	  mongo_create_index(db_conn, table, idx_key, NULL, 0, -1, NULL);
+#endif
 	  bson_destroy(idx_key);
         }
       }
