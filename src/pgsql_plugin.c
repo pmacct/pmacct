@@ -476,6 +476,8 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
 
+  if (!index) return;
+
   bed.lf = &lf;
   memset(&lf, 0, sizeof(struct logfile));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
@@ -512,7 +514,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     time_t stamp = 0;
 
     memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
-    if (index) stamp = queue[0]->basetime;
+    stamp = queue[0]->basetime;
 
     prim_ptrs.data = &dummy_data;
     primptrs_set_all_from_db_cache(&prim_ptrs, queue[0]);

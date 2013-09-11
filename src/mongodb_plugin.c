@@ -339,6 +339,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   const bson **bson_batch;
   bson *bson_elem;
 
+  if (!index) return;
+
   if (config.sql_host)
     db_status = mongo_connect(&db_conn, config.sql_host, 27017 /* default port */);
   else
@@ -415,7 +417,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   index = pqq_ptr; pqq_ptr = 0;
 
   if (dyn_table) {
-    if (index) stamp = queue[0]->basetime.tv_sec;
+    stamp = queue[0]->basetime.tv_sec;
     strlcpy(current_table, config.sql_table, SRVBUFLEN);
 
     prim_ptrs.data = &dummy_data;

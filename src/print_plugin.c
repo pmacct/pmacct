@@ -671,6 +671,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
 
+  if (!index) return;
+
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
@@ -705,7 +707,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     strlcpy(current_table, config.sql_table, SRVBUFLEN);
 
     if (dyn_table) {
-      if (index) stamp = queue[0]->basetime.tv_sec;
+      stamp = queue[0]->basetime.tv_sec;
 
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);

@@ -485,6 +485,8 @@ u_int64_t pm_ntohll(u_int64_t addr)
  */
 int is_multicast(struct host_addr *a)
 {
+  if (!a) return FALSE;
+
   if (a->family == AF_INET) {
     if (IS_IPV4_MULTICAST(a->address.ipv4.s_addr)) return a->family;
     else return FALSE;
@@ -492,6 +494,32 @@ int is_multicast(struct host_addr *a)
 #if defined ENABLE_IPV6
   if (a->family == AF_INET6) {
     if (IS_IPV6_MULTICAST(&a->address.ipv6)) return a->family;
+    else return FALSE;
+  }
+#endif
+
+  return FALSE;
+}
+
+/*
+ * is_any(): determines whether the supplied IPv4/IPv6 address is a
+ * 0.0.0.0 IPv4 or :: IPv6 address or not. 
+ */
+int is_any(struct host_addr *a)
+{
+  struct host_addr empty_host_addr;
+
+  if (!a) return FALSE;
+
+  memset(&empty_host_addr, 0, sizeof(empty_host_addr));
+
+  if (a->family == AF_INET) {
+    if (!memcmp(&empty_host_addr.address.ipv4, &a->address.ipv4, 4)) return a->family;
+    else return FALSE;
+  }
+#if defined ENABLE_IPV6
+  if (a->family == AF_INET6) {
+    if (!memcmp(&empty_host_addr.address.ipv6, &a->address.ipv6, 16)) return a->family;
     else return FALSE;
   }
 #endif

@@ -460,6 +460,8 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
 
+  if (!index) return;
+
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   memset(&dummy_data, 0, sizeof(dummy_data));
 
@@ -491,7 +493,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
     time_t stamp = 0;
 
     memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
-    if (index) stamp = queue[0]->basetime;
+    stamp = queue[0]->basetime;
 
     prim_ptrs.data = &dummy_data;
     primptrs_set_all_from_db_cache(&prim_ptrs, queue[0]);

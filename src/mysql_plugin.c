@@ -479,6 +479,8 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
 
+  if (!index) return;
+
   bed.lf = &lf;
   memset(&lf, 0, sizeof(struct logfile));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
@@ -512,7 +514,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     time_t stamp = 0;
 
     memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
-    if (index) stamp = queue[0]->basetime;
+    stamp = queue[0]->basetime;
     strlcpy(idata->dyn_table_name, config.sql_table, SRVBUFLEN);
     strlcpy(insert_clause, orig_insert_clause, LONGSRVBUFLEN);
     strlcpy(update_clause, orig_update_clause, LONGSRVBUFLEN);
