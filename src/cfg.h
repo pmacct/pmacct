@@ -130,6 +130,7 @@ struct configuration {
   int print_output_file_append;
   char *print_output_separator;
   char *print_output_file;
+  char *print_latest_file;
   int nfacctd_port;
   char *nfacctd_ip;
   char *nfacctd_allow_file;

@@ -405,6 +405,31 @@ DESC:		If set to true, print plugin will append to existing files instead of ove
 		appending, and in case of an output format requiring a title, ie. csv, formatted, etc.,
 		intuitively the title is not re-printed (default: false)
 
+KEY:            print_latest_file
+DESC:		It defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
+		through the use of variables, which are computed at the moment when data is purged to the
+		backend: refer to print_output_file for a full listing of supported variables; time-based
+		variables are not allowed. Three examples follow:
+
+		#1:
+                print_output_file: /path/to/spool/foo-%Y%m%d-%H%M.txt
+                print_latest_file: /path/to/spool/foo-latest
+
+		#2:
+		print_output_file: /path/to/spool/%Y/%Y-%m/%Y-%m-%d/foo-%Y%m%d-%H%M.txt
+		print_latest_file: /path/to/spool/latest/foo
+
+		#3:
+		print_output_file: /path/to/$peer_src_ip/foo-%Y%m%d-%H%M.txt
+		print_latest_file: /path/to//spool/latest/blabla-$peer_src_ip
+
+		For correct working of the feature, responsibility is put on the user. A file is reckon
+		as latest if it's lexicographically greater than an existing one: this is generally fine
+		but requires dates to be in %Y%m%d format rather than %d%m%Y. Also, upon restart of the
+		daemon, if print_output_file is modified to a different location good practice would be
+		to 1) manually delete latest pointer(s) or 2) move existing print_output_file files to
+		the new targer location.  
+
 KEY:		sql_table_schema
 DESC:		full pathname to a file containing a SQL table schema. It allows to create the SQL table
 		if it does not exist; this directive makes sense only if a dynamic 'sql_table' is in use.  

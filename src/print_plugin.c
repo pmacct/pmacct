@@ -665,11 +665,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char *as_path, *bgp_comm, empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
-  int j, is_event = FALSE, qn = 0, go_to_pending, change_latest_ptr;
+  int j, is_event = FALSE, qn = 0, go_to_pending;
   time_t start, duration;
   char tmpbuf[LONGLONGSRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
-  struct primitives_ptrs prim_ptrs;
-  struct pkt_data dummy_data;
+  struct primitives_ptrs prim_ptrs, elem_prim_ptrs;
+  struct pkt_data dummy_data, elem_dummy_data;
 
   if (!index) return;
 
@@ -685,7 +685,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   memset(empty_pcust, 0, config.cpptrs.len);
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   memset(&dummy_data, 0, sizeof(dummy_data));
-  memset(&latest_basetime, 0, sizeof(latest_basetime));
+  memset(&elem_prim_ptrs, 0, sizeof(elem_prim_ptrs));
+  memset(&elem_dummy_data, 0, sizeof(elem_dummy_data));
 
   memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
@@ -696,7 +697,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   start:
   memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
   memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
-  index = pqq_ptr; pqq_ptr = 0; change_latest_ptr = FALSE;
+  index = pqq_ptr; pqq_ptr = 0;
 
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;
 
@@ -714,10 +715,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
       handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, current_table, &prim_ptrs);
       strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp);
-      if (stamp > latest_basetime.tv_sec) {
-	latest_basetime.tv_sec = stamp;
-	change_latest_ptr = TRUE;
-      }
     }
 
     f = open_print_output_file(current_table, &append);
@@ -744,9 +741,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       stamp = queue[j]->basetime.tv_sec;
       strlcpy(elem_table, config.sql_table, SRVBUFLEN);
 
-      prim_ptrs.data = &dummy_data;
-      primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
-      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table, &prim_ptrs);
+      elem_prim_ptrs.data = &elem_dummy_data;
+      primptrs_set_all_from_chained_cache(&elem_prim_ptrs, queue[j]);
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table, &elem_prim_ptrs);
       strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
@@ -1189,7 +1186,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   if (f && config.print_markers) fprintf(f, "--END--\n");
 
-  if (f && config.sql_table) close_print_output_file(f, config.sql_table, latest_basetime.tv_sec); // XXX
+  if (f && config.sql_table) close_print_output_file(f, config.print_latest_file, current_table, &prim_ptrs);
 
   /* If we have pending queries then start again */
   if (pqq_ptr) goto start;

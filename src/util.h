@@ -79,7 +79,7 @@ EXT void handle_dynname_internal_strings(char *, int, char *, struct primitives_
 EXT void handle_dynname_internal_strings_same(char *, int, char *, struct primitives_ptrs *);
 EXT void escape_ip_uscores(char *);
 EXT int sql_history_to_secs(int, int);
-EXT void close_print_output_file(FILE *, char *, time_t);
+EXT void close_print_output_file(FILE *, char *, char *, struct primitives_ptrs *);
 EXT void evaluate_bgp_aspath_radius(char *, int, int);
 EXT void copy_stdcomm_to_asn(char *, as_t *, int);
 EXT void *Malloc(unsigned int);

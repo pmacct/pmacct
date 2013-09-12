@@ -741,6 +741,30 @@ int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_print_latest_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (strchr(value_ptr, '%')) {
+    Log(LOG_ERR, "ERROR ( %s ): invalid 'print_latest_file' value: time-based '%' variables not allowed.\n", filename);
+    return TRUE;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_latest_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_latest_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_print_output_file_append(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
