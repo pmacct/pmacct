@@ -185,6 +185,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
   else dyn_table = FALSE;
 
+  sbasetime.tv_sec = basetime.tv_sec;
+
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -204,7 +206,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     now = time(NULL);
 
     if (config.sql_history) {
-      memset(&sbasetime, 0, sizeof(sbasetime));
       while (now > (basetime.tv_sec + timeslot)) {
         sbasetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;

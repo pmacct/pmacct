@@ -170,6 +170,8 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
 
+  sbasetime.tv_sec = basetime.tv_sec;
+
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -188,7 +190,6 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     now = time(NULL);
 
     if (config.sql_history) {
-      memset(&sbasetime, 0, sizeof(sbasetime));
       while (now > (basetime.tv_sec + timeslot)) {
 	sbasetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;

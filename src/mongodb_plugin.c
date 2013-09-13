@@ -175,6 +175,8 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   mongo_init(&db_conn);
   mongo_set_op_timeout(&db_conn, 1000);
 
+  sbasetime.tv_sec = basetime.tv_sec;
+
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -193,7 +195,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     now = time(NULL);
 
     if (config.sql_history) {
-      memset(&sbasetime, 0, sizeof(sbasetime));
       while (now > (basetime.tv_sec + timeslot)) {
 	sbasetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;
