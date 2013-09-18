@@ -65,9 +65,9 @@ struct aggregate_filter {
 struct channels_list_entry {
   u_int64_t aggregation;
   u_int64_t aggregation_2;
-  u_int32_t buf;	/* buffer base */
-  u_int32_t bufptr;	/* buffer current */
-  u_int32_t bufend;	/* buffer end; max 4Gb */
+  u_int64_t buf;	/* buffer base */
+  u_int64_t bufptr;	/* buffer current */
+  u_int64_t bufend;	/* buffer end; max 4Gb */
   struct ring rg;	
   struct ch_buf_hdr hdr;
   struct ch_status *status;

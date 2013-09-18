@@ -903,7 +903,8 @@ DESC:		full pathname to a file containing tag mappings. Tags can be internal-onl
 		purposes, see pre_tag_filter configuration directive) or exposed to users (ie. if 'tag' and/or
 		'tag2' primitives are part of the aggregation method). Take a look to the examples/ sub-tree
 		for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is evaluated in
-		the Core Process (ie. once for all instantiated plugins).
+		the Core Process (ie. once for all instantiated plugins). Results of evaluation of pre_tag_map
+		overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/sfprobe plugin.  
 
 KEY:		pre_tag_map_entries [GLOBAL]
 DESC:		defines the maximum number of entries the Pre-Tagging map can contain. The default value is

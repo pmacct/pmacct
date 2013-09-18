@@ -685,15 +685,14 @@ void evaluate_packet_handlers()
 	  channels_list[index].phandler[primitives] = ptag_id_handler;
 	  primitives++;
 	}
-	else {
-	  if (config.acct_type == ACCT_NF) {
-	    channels_list[index].phandler[primitives] = NF_id_handler;
-	    primitives++;
-	  }
-	  else if (config.acct_type == ACCT_SF) {
-	    channels_list[index].phandler[primitives] = SF_id_handler;
-	    primitives++;
-	  }
+
+	if (config.acct_type == ACCT_NF) {
+	  channels_list[index].phandler[primitives] = NF_id_handler;
+	  primitives++;
+	}
+	else if (config.acct_type == ACCT_SF) {
+	  channels_list[index].phandler[primitives] = SF_id_handler;
+	  primitives++;
 	}
 
 	if (channels_list[index].id) { 
@@ -709,15 +708,14 @@ void evaluate_packet_handlers()
           channels_list[index].phandler[primitives] = ptag_id2_handler;
           primitives++;
         }
-        else {
-          if (config.acct_type == ACCT_NF) {
-            channels_list[index].phandler[primitives] = NF_id2_handler;
-            primitives++;
-          }
-          else if (config.acct_type == ACCT_SF) {
-            channels_list[index].phandler[primitives] = SF_id2_handler;
-            primitives++;
-          }
+
+        if (config.acct_type == ACCT_NF) {
+          channels_list[index].phandler[primitives] = NF_id2_handler;
+          primitives++;
+        }
+        else if (config.acct_type == ACCT_SF) {
+          channels_list[index].phandler[primitives] = SF_id2_handler;
+          primitives++;
         }
       }
     }
@@ -3100,7 +3098,7 @@ void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_CUST_TAG].len) {
+    if (tpl->tpl[NF9_CUST_TAG].len && !pptrs->have_tag) {
       memcpy(&pdata->primitives.id, pptrs->f_data+tpl->tpl[NF9_CUST_TAG].off, tpl->tpl[NF9_CUST_TAG].len);
       pdata->primitives.id = ntohl(pdata->primitives.id);
     }
@@ -3119,7 +3117,7 @@ void NF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_CUST_TAG2].len) {
+    if (tpl->tpl[NF9_CUST_TAG2].len && !pptrs->have_tag2) {
       memcpy(&pdata->primitives.id2, pptrs->f_data+tpl->tpl[NF9_CUST_TAG2].off, tpl->tpl[NF9_CUST_TAG2].len);
       pdata->primitives.id2 = ntohl(pdata->primitives.id2);
     }
@@ -3960,7 +3958,7 @@ void SF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  pdata->primitives.id = sample->tag;
+  if (!pptrs->have_tag) pdata->primitives.id = sample->tag;
 }
 
 void SF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3968,7 +3966,7 @@ void SF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  pdata->primitives.id2 = sample->tag2;
+  if (!pptrs->have_tag2) pdata->primitives.id2 = sample->tag2;
 }
 
 void sampling_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

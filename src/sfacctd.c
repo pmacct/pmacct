@@ -2598,6 +2598,10 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;
+  if (pptrs) {
+    pptrs->have_tag = FALSE;
+    pptrs->have_tag2 = FALSE;
+  }
 
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
     begin = 0;
@@ -2626,15 +2630,19 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
         if (stop & PRETAG_MAP_RCODE_ID) {
           if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
           *tag = id;
+          pptrs->have_tag = TRUE;
         }
         else if (stop & PRETAG_MAP_RCODE_ID2) {
           if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
           *tag2 = id;
+          pptrs->have_tag2 = TRUE;
         }
         else if (stop == BTA_MAP_RCODE_ID_ID2) {
           // stack not applicable here
           *tag = id;
           *tag2 = t->e[x].id2;
+          pptrs->have_tag = TRUE;
+          pptrs->have_tag2 = TRUE;
         }
 
         if (t->e[x].jeq.ptr) {
@@ -2643,6 +2651,8 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 	    set_shadow_status(pptrs);
 	    *tag = 0;
 	    *tag2 = 0;
+            pptrs->have_tag = FALSE;
+            pptrs->have_tag = FALSE;
 	  }
           x = t->e[x].jeq.ptr->pos;
           x--; /* yes, it will be automagically incremented by the for() cycle */
