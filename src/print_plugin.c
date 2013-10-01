@@ -182,8 +182,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (!config.sql_table && config.print_output & PRINT_OUTPUT_CSV)
     P_write_stats_header_csv(stdout, is_event);
 
-  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
-  else dyn_table = FALSE;
+  if (config.sql_table && (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')))
+    dyn_table = TRUE;
+  else
+    dyn_table = FALSE;
 
   sbasetime.tv_sec = basetime.tv_sec;
 
