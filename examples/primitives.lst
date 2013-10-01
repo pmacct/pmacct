@@ -1,5 +1,5 @@
 !
-! aggregate_primitives list -- list of custom-defined primitives
+! aggregate_primitives: list of custom-defined primitives
 !
 ! File syntax is key-based. Position of keys inside the same row (rule) is not
 ! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full

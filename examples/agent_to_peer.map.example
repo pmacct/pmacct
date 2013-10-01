@@ -1,5 +1,5 @@
 ! 
-! NetFlow/sFlow agent to BGP peer map
+! bgp_agent_map: NetFlow/sFlow agent to BGP peer map
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.

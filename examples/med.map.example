@@ -1,5 +1,5 @@
 ! 
-! BGP source MED (Multi Exit Discriminator) map 
+! bgp_src_med_type: BGP source MED (Multi Exit Discriminator) map 
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.

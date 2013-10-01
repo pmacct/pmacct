@@ -1,5 +1,5 @@
 !
-! Tee receivers map
+! tee_receivers: Tee receivers map
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.

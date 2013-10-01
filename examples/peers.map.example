@@ -1,5 +1,5 @@
 ! 
-! BGP source peer ASN map 
+! bgp_peer_src_as_map: BGP source peer ASN map 
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.

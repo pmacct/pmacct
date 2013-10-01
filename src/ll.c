@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -111,7 +111,8 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
 
 u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register struct packet_ptrs *pptrs)
 {
-  u_char *p = bp;
+  u_int32_t *p = (u_int32_t *) bp;
+  char *next = bp;
   u_int32_t label=0;
 
   pptrs->mpls_ptr = bp;
@@ -123,7 +124,7 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
 
   do {
     label = ntohl(*p);
-    p += 4; *nl += 4; *caplen -= 4;
+    p += 4; *nl += 4; next += 4; *caplen -= 4;
   } while (!MPLS_STACK(label) && *caplen >= 4);
 
   switch (MPLS_LABEL(label)) {
@@ -144,7 +145,7 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
        0x60-0x6f is IPv6
     */
     if (MPLS_STACK(label)) { 
-      switch (*p) {
+      switch (*next) {
       case 0x45:
       case 0x46:
       case 0x47:

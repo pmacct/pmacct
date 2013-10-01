@@ -1,5 +1,5 @@
 ! 
-! Flow to BGP/MPLS VPN RD map
+! flow_to_rd_map: Flow to BGP/MPLS VPN RD map
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.

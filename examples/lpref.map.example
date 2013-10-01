@@ -1,5 +1,5 @@
 ! 
-! BGP source local preferecence map 
+! bgp_src_local_pref_map: BGP source local preferecence map 
 !
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.

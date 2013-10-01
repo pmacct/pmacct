@@ -1,5 +1,5 @@
 ! 
-! Sampling map -- given at least a router IP, returns a sampling rate
+! sampling_map: given at least a router IP, returns a sampling rate
 !
 ! File syntax is key-based. Position of keys inside the same row (rule) is not
 ! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full
