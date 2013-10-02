@@ -649,7 +649,7 @@ int main(int argc,char **argv, char **envp)
   if (!config.dev || pcap_lookupnet(config.dev, &localnet, &netmask, errbuf) < 0) {
     localnet = 0;
     netmask = 0;
-    Log(LOG_WARNING, "WARN ( default/core ): %s\n", errbuf);
+    if (config.dev) Log(LOG_WARNING, "WARN ( default/core ): %s\n", errbuf);
   }
 
   if (pcap_compile(device.dev_desc, &filter, config.clbuf, 0, netmask) < 0)

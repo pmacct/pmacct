@@ -591,19 +591,22 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_TOP) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_top_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_top_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_top_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_BOTTOM) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_bottom_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_bottom_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_bottom_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_STACK_DEPTH) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_stack_depth_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_stack_depth_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_stack_depth_handler;
       else primitives--;
       primitives++;
     }
@@ -799,6 +802,46 @@ void etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   pdata->primitives.etype = pptrs->l3_proto;
 }
 #endif
+
+void mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  u_int32_t *label = (u_int32_t *) pptrs->mpls_ptr;
+
+  if (label) pmpls->mpls_label_top = MPLS_LABEL(ntohl(*label));
+}
+
+void mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr;
+
+  if (label) {
+    do {
+      lvalue = ntohl(*label);
+      label += 4;
+    } while (!MPLS_STACK(lvalue));
+
+    pmpls->mpls_label_bottom = MPLS_LABEL(lvalue);
+  }
+}
+
+void mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr;
+
+  if (label) {
+    do {
+      lvalue = ntohl(*label);
+      label += 4;
+      pmpls->mpls_stack_depth++;
+    } while (!MPLS_STACK(lvalue));
+  }
+}
 
 void bgp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {

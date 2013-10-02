@@ -42,6 +42,9 @@ EXT void dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, cha
 EXT void vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
