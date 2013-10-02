@@ -358,7 +358,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
   amqp_conn = amqp_new_connection();
 
-  amqp_socket = amqp_tcp_socket_new();
+  amqp_socket = amqp_tcp_socket_new(amqp_conn);
   if (!socket) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: no socket\n", config.name, config.type);
     return;
@@ -374,8 +374,6 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     return;
   }
 
-  amqp_set_socket(amqp_conn, amqp_socket);
-
   amqp_ret = amqp_login(amqp_conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, config.sql_user, config.sql_passwd);
   if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: login\n", config.name, config.type);
@@ -383,6 +381,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   }
 
   amqp_channel_open(amqp_conn, 1);
+
   amqp_ret = amqp_get_rpc_reply(amqp_conn);
   if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: unable to open channel\n", config.name, config.type);
