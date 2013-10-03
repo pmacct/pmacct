@@ -358,6 +358,12 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		$peer_src_ip	Record value for peer_src_ip primitive (if primitive is not part of
 				the aggregation method then this will be set to a null value).
 
+		$tag		Record value for tag primitive ((if primitive is not part of the
+				aggregation method then this will be set to a null value).
+
+		$tag2		Record value for tag2 primitive ((if primitive is not part of the
+				aggregation method then this will be set to a null value).
+
 		SQL plugins notes:
 		Time-related variables require 'sql_history' to be specified in order to work correctly
 		(see 'sql_history' entry in this in this document for further information) and that the

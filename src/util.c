@@ -491,6 +491,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 {
   int oldlen;
   char ref_string[] = "$ref", hst_string[] = "$hst", psi_string[] = "$peer_src_ip";
+  char tag_string[] = "$tag", tag2_string[] = "$tag2";
   char *ptr_start, *ptr_end;
 
   oldlen = strlen(old);
@@ -550,6 +551,48 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 
     escape_ip_uscores(peer_src_ip);
     snprintf(buf, newlen, "%s", peer_src_ip);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, tag_string);
+  if (ptr_start) {
+    pm_id_t zero_tag = 0;
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(tag_string);
+    len -= strlen(tag_string);
+
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.id); 
+    else snprintf(buf, newlen, "%llu", zero_tag);
+
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, tag2_string);
+  if (ptr_start) {
+    pm_id_t zero_tag = 0;
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(tag2_string);
+    len -= strlen(tag2_string);
+
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.id2);
+    else snprintf(buf, newlen, "%llu", zero_tag);
+
     strncat(buf, ptr_end, len);
 
     len = strlen(buf);
