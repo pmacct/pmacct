@@ -157,6 +157,8 @@ struct configuration {
   int nfacctd_bgp_src_local_pref_type;
   int nfacctd_bgp_src_med_type;
   int nfacctd_bgp_peer_as_skip_subas;
+  int nfacctd_bgp_init_interval;
+  int nfacctd_bgp_init_batch;
   char *nfacctd_bgp_peer_as_src_map;
   char *nfacctd_bgp_src_local_pref_map;
   char *nfacctd_bgp_src_med_map;

@@ -146,7 +146,7 @@ void skinny_bgp_daemon()
     exit_all(1);
   }
 
-  rc = listen(sock, config.nfacctd_bgp_max_peers);
+  rc = listen(sock, 1);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( default/core/BGP ): listen() failed (errno: %d).\n", errno);
     exit_all(1);
@@ -183,6 +183,16 @@ void skinny_bgp_daemon()
     }
   }
 
+  /* Let's initialize peers table with some throttling */
+  if (config.nfacctd_bgp_init_batch && config.nfacctd_bgp_init_interval) {
+    now = time(NULL);
+    for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+      if (peers_idx > 0 && ((peers_idx % config.nfacctd_bgp_init_batch) == 0))
+        now += config.nfacctd_bgp_init_interval;
+      peers[peers_idx].last_keepalive = now;
+    }
+  }
+
   for (;;) {
     select_again:
     select_fd = sock;
@@ -209,9 +219,21 @@ void skinny_bgp_daemon()
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (peers[peers_idx].fd == 0) {
-          peer = &peers[peers_idx];
-          bgp_peer_init(peer);
-          break;
+          now = time(NULL);
+          if (now > peers[peers_idx].last_keepalive) {
+            peer = &peers[peers_idx];
+            bgp_peer_init(peer);
+            break;
+          }
+          else { /* throttle */
+            int fd = 0;
+
+            /* We briefly accept the new connection to be able to drop it */
+            Log(LOG_INFO, "INFO ( default/core/BGP ): throttling BGP peer #%u\n", peers_idx);
+            fd = accept(sock, (struct sockaddr *) &client, &clen);
+            close(fd);
+            goto select_again;
+          }
         }
 	/* XXX: replenish sessions with expired keepalives */
       }

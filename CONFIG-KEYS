@@ -1192,6 +1192,16 @@ VALUES:		[ true | false ]
 DESC:		enables BGP messages logging: as this can get easily verbose, it is intended for debug and
 		troubleshooting purposes only. (default: false)
 
+KEY:		bgp_daemon_init_interval
+DESC:		At startup, to prevent all BGP peers to contend resources, this defines the time interval,
+		in seconds, between BGP peer batches. If bgp_daemon_init_interval or bgp_daemon_init_batch
+		is set to zero, default, initial BGP peer batching is disabled. (default: 0)
+
+KEY:		bgp_daemon_init_batch
+DESC:		At startup, to prevent all BGP peers to contend resources, this defines the amount of BGP
+		peers in each batch. If bgp_daemon_init_interval or bgp_daemon_init_batch is set to zero,
+		default, initial BGP peer batching is disabled. (default: 0)
+
 KEY:		bgp_aspath_radius
 DESC:		cuts down AS-PATHs to the specified number of ASN hops. If the same ASN is repeated multiple
 		times (ie. as effect of prepending), each of them is regarded as one hop. By default AS-PATHs

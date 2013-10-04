@@ -174,6 +174,8 @@ EXT int cfg_key_nfacctd_bgp_follow_nexthop(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_neighbors_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_md5_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_table_peer_buckets(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_init_batch(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_init_interval(char *, char *, char *);
 EXT int cfg_key_nfacctd_flow_to_rd_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_ip(char *, char *, char *);
