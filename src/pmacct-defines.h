@@ -364,6 +364,7 @@ typedef u_int32_t pm_counter_t;
 
 /* flow type */
 #define NF9_FTYPE_TRAFFIC		1  /* temporary: re-coding needed */
+#define NF9_FTYPE_TRAFFIC_IPV6		1
 #define NF9_FTYPE_IPV4                  1
 #define NF9_FTYPE_IPV6                  2
 #define NF9_FTYPE_VLAN                  5

@@ -73,7 +73,6 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   basetime_cmp = NULL;
   memset(&basetime, 0, sizeof(basetime));
   memset(&ibasetime, 0, sizeof(ibasetime));
-  memset(&sbasetime, 0, sizeof(sbasetime));
   memset(&timeslot, 0, sizeof(timeslot));
 
   /* signal handling */
@@ -170,8 +169,6 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
 
-  sbasetime.tv_sec = basetime.tv_sec;
-
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -191,7 +188,6 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     if (config.sql_history) {
       while (now > (basetime.tv_sec + timeslot)) {
-	sbasetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
           timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);

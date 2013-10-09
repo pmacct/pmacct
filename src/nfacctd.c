@@ -2048,9 +2048,9 @@ u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_
 
   /* Explicit IP protocol definition first; a bit of heuristics as fallback */
   if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4);
-  else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) ret += NF9_FTYPE_IPV6;
+  else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) ret += NF9_FTYPE_TRAFFIC_IPV6;
   else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
-  else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_IPV6;
+  else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_TRAFFIC_IPV6;
 
   /* NetFlow Event Logging (NEL): generic NAT event support */
   if (tpl->tpl[NF9_NAT_EVENT].len) ret = NF9_FTYPE_NAT_EVENT;

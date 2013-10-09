@@ -73,7 +73,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   basetime_cmp = NULL;
   memset(&basetime, 0, sizeof(basetime));
   memset(&ibasetime, 0, sizeof(ibasetime));
-  memset(&sbasetime, 0, sizeof(sbasetime));
   memset(&timeslot, 0, sizeof(timeslot));
 
   /* signal handling */
@@ -187,8 +186,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else
     dyn_table = FALSE;
 
-  sbasetime.tv_sec = basetime.tv_sec;
-
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -209,7 +206,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     if (config.sql_history) {
       while (now > (basetime.tv_sec + timeslot)) {
-        sbasetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
           timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
@@ -413,8 +409,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   int res_data, res_bgp, res_nat, res_mpls, res_time, res_cust;
 
   if (config.sql_history && (*basetime_eval)) {
-    // XXX: memcpy(&ibasetime, &basetime, sizeof(ibasetime));
-    memcpy(&ibasetime, &sbasetime, sizeof(ibasetime));
+    memcpy(&ibasetime, &basetime, sizeof(ibasetime));
     (*basetime_eval)(&data->time_start, &ibasetime, timeslot);
   }
 

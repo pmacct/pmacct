@@ -91,7 +91,7 @@ EXT time_t refresh_deadline;
 EXT void (*basetime_init)(time_t);
 EXT void (*basetime_eval)(struct timeval *, struct timeval *, time_t);
 EXT int (*basetime_cmp)(struct timeval *, struct timeval *);
-EXT struct timeval basetime, ibasetime, sbasetime;
+EXT struct timeval basetime, ibasetime;
 EXT time_t timeslot;
 EXT int dyn_table;
 

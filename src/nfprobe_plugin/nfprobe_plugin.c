@@ -1367,7 +1367,7 @@ sort_version:
   target.dialect = &nf[i];
 
   /* Netflow send socket */
-  if (dest.ss_family != 0 && target.fd != -1) {
+  if (dest.ss_family != 0) {
     if ((err = getnameinfo((struct sockaddr *)&dest,
 	    dest_len, dest_addr, sizeof(dest_addr), 
 	    dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
@@ -1375,11 +1375,11 @@ sort_version:
       exit_plugin(1);
     }
     target.fd = connsock(&dest, dest_len, hoplimit);
-  }
 	
-  if (dest.ss_family != 0)
-    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
+    if (target.fd != -1)
+      Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
 		    config.name, config.type, dest_addr, dest_serv);
+  }
 
   /* Main processing loop */
   gettimeofday(&flowtrack.system_boot_time, NULL);

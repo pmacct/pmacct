@@ -2674,7 +2674,7 @@ u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
   if (sample->in_vlan || sample->out_vlan) ret += NF9_FTYPE_VLAN;
   if (sample->lstk.depth > 0) ret += NF9_FTYPE_MPLS;
   if (sample->gotIPV4); 
-  else if (sample->gotIPV6) ret += NF9_FTYPE_IPV6;
+  else if (sample->gotIPV6) ret += NF9_FTYPE_TRAFFIC_IPV6;
 
   return ret;
 }
