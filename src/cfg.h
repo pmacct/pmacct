@@ -137,12 +137,14 @@ struct configuration {
   int nfacctd_time;
   u_int32_t nfacctd_as;
   u_int32_t nfacctd_net;
+  u_int64_t nfacctd_pipe_size;
   int sfacctd_renormalize;
   int nfacctd_disable_checks;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog;
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
+  u_int64_t nfacctd_bgp_pipe_size;
   int nfacctd_bgp_ipprec;
   char *nfacctd_bgp_allow_file;
   int nfacctd_bgp_max_peers;

@@ -151,6 +151,18 @@ DESC:		plugins to be enabled. SQL plugins are available only if configured and c
 		Then, directives can be bound to such named plugin as: 'directive[name]: value'.
 		(default: memory) 
 
+KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size ]
+DESC:		Defines the size of the kernel socket used read traffic data. On Linux systems, if
+		this configuration directive is not specified default socket size awared is defined
+		in /proc/sys/net/core/rmem_default ; the maximum configurable socket size (which can
+		be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
+
+KEY:            bgp_daemon_pipe_size
+DESC:           Defines the size of the kernel socket used for BGP messaging. On Linux systems, if
+                this configuration directive is not specified default socket size awared is defined
+                in /proc/sys/net/core/rmem_default ; the maximum configurable socket size (which can
+                be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
+
 KEY:		plugin_pipe_size
 DESC:		Core process and each of the plugins are run into different processes. To exchange
 		data, they set up a communication channel structured as a circular queue (referred

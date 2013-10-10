@@ -136,6 +136,21 @@ void skinny_bgp_daemon()
   rc = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", errno);
 
+  if (config.nfacctd_bgp_pipe_size) {
+    int l = sizeof(config.nfacctd_bgp_pipe_size);
+    u_int64_t saved = 0, obtained = 0;
+
+    getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+    Setsocksize(sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
+    getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+
+    if (config.debug || obtained < config.nfacctd_bgp_pipe_size) {
+      Setsocksize(sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      Log(LOG_INFO, "INFO ( default/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", obtained, config.nfacctd_bgp_pipe_size);
+    }
+  }
+
   rc = bind(sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
     char null_ip_address[] = "0.0.0.0";

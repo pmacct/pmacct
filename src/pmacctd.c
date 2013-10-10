@@ -608,13 +608,13 @@ int main(int argc,char **argv, char **envp)
 
   device.active = TRUE;
   glob_pcapt = device.dev_desc; /* SIGINT/stats handling */ 
-  if (config.pipe_size) {
-    int slen = sizeof(config.pipe_size), x;
+  if (config.nfacctd_pipe_size) {
+    int slen = sizeof(config.nfacctd_pipe_size), x;
 
 #if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
-    Setsocksize(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &config.pipe_size, slen);
+    Setsocksize(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
     getsockopt(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
-    Log(LOG_DEBUG, "DEBUG ( default/core ): PCAP buffer: obtained %d / %d bytes.\n", x, config.pipe_size);
+    Log(LOG_DEBUG, "DEBUG ( default/core ): pmacctd_pipe_size: obtained=%u target=%u.\n", x, config.nfacctd_pipe_size);
 #endif
   }
 
