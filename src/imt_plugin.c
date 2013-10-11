@@ -357,7 +357,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (num > 0) {
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
-	while (((struct ch_buf_hdr *)pipebuf)->num) {
+	while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 
 	  // XXX: to be optimized: remove empty_* vars
           if (extras.off_pkt_bgp_primitives)

@@ -1460,7 +1460,7 @@ read_data:
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
-      while (((struct ch_buf_hdr *)pipebuf)->num) {
+      while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 
 	if (config.networks_file) {
 	  memcpy(&dummy.primitives.src_ip, &data->primitives.src_ip, HostAddrSz);

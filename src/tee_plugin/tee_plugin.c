@@ -190,7 +190,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       msg = (struct pkt_msg *) (pipebuf+sizeof(struct ch_buf_hdr));
 
-      while (((struct ch_buf_hdr *)pipebuf)->num) {
+      while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
 	  if (!evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->id)) {
 	    if (!receivers.pools[pool_idx].balance.func) {

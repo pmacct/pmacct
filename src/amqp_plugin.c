@@ -276,7 +276,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
-      while (((struct ch_buf_hdr *)pipebuf)->num) {
+      while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
         for (num = 0; primptrs_funcs[num]; num++)
           (*primptrs_funcs[num])((u_char *)data, &extras, &prim_ptrs);
 

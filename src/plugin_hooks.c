@@ -278,10 +278,12 @@ reprocess:
         channels_list[index].bufptr += size;
       }
 
-      if ((channels_list[index].bufptr+size) > channels_list[index].bufend) {
+      if ((channels_list[index].bufptr+size) > channels_list[index].bufend ||
+	  channels_list[index].hdr.num == INT_MAX) {
 	channels_list[index].hdr.seq++;
 	channels_list[index].hdr.seq %= MAX_SEQNUM;
 
+	/* let's commit the buffer we just finished writing */
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = channels_list[index].hdr.seq;
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
 
@@ -299,6 +301,10 @@ reprocess:
 
 	if ((channels_list[index].rg.ptr+channels_list[index].bufsize) > channels_list[index].rg.end)
 	  channels_list[index].rg.ptr = channels_list[index].rg.base;
+
+	/* let's protect the buffer we are going to write */
+        ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = 0;
+        ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = 0;
 
         /* rewind pointer */
         channels_list[index].bufptr = channels_list[index].buf;
