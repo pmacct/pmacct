@@ -33,14 +33,13 @@ typedef int (*ring_cleaner) (void *, int);
 typedef pm_counter_t (*skip_func) (pm_counter_t);
 
 struct ring {
-  u_int32_t seq;
   char *base;
   char *ptr;
   char *end;
 };
 
 struct ch_buf_hdr {
-  u_int32_t seq;
+  int seq;
   int num;
 };
 

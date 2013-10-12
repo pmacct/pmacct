@@ -303,7 +303,7 @@ reprocess:
 	  channels_list[index].rg.ptr = channels_list[index].rg.base;
 
 	/* let's protect the buffer we are going to write */
-        ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = 0;
+        ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = -1;
         ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = 0;
 
         /* rewind pointer */

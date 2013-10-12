@@ -21,6 +21,7 @@
 
 /* includes */
 #include <amqp.h>
+#include <sys/poll.h>
 
 /* structures */
 

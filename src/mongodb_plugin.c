@@ -25,7 +25,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
-#include "print_plugin.h"
+#include "plugin_common.h"
 #include "mongodb_plugin.h"
 #include "net_aggr.h"
 #include "ports_aggr.h"
