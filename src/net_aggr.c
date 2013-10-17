@@ -1476,6 +1476,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
             }
 
 	    memset(&tmpmask, 0, sizeof(tmpmask));
+            tmpt->table6[eff_rows].masknum = index;
 
 	    for (j = 0; j < 4 && index >= 32; j++, index -= 32) tmpmask[j] = 0xffffffffU; 
 	    if (j < 4 && index) tmpmask[j] = ~(0xffffffffU >> index);
@@ -1484,8 +1485,6 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
             memcpy(&tmpt->table6[eff_rows].net, tmpnet, IP6AddrSz);
             memcpy(&tmpt->table6[eff_rows].mask, tmpmask, IP6AddrSz);
-            tmpt->table6[eff_rows].masknum = index;
-
 
             eff_rows++;
           }
@@ -1585,13 +1584,18 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       index = 0;
       while (!fake_row && index < tmpt->num6) {
         if (config.debug) {
+          int j;
+          struct host_addr net_bin;
           char nh_string[INET6_ADDRSTRLEN];
+          char net_string[INET6_ADDRSTRLEN];
 
+          net_bin.family = AF_INET6;
+          for (j = 0; j < 4; j++) net_bin.address.ipv6.s6_addr32[j] = htonl(nt->table6[index].net[j]);
+          addr_to_str(net_string, &net_bin);
           addr_to_str(nh_string, &nt->table6[index].nh);
 
-          Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] nh: %s peer_asn: %u asn: %u net: %x:%x:%x:%x mask: %u\n", filename,
-	    nh_string, nt->table6[index].peer_as,  nt->table6[index].as, nt->table6[index].net[0], nt->table6[index].net[1],
-	    nt->table6[index].net[2], nt->table6[index].net[3], nt->table6[index].masknum);
+          Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] nh: %s peer_asn: %u asn: %u net: %s mask: %u\n", filename,
+	    nh_string, nt->table6[index].peer_as, nt->table6[index].as, net_string, nt->table6[index].masknum); 
 	}
 	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
 	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])
