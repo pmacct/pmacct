@@ -98,6 +98,11 @@ void sql_init_global_buffers()
   queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
   pending_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
 
+  if (!pipebuf || !cache || !queries_queue || !pending_queries_queue) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (sql_init_global_buffers). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   memset(pipebuf, 0, config.buffer_size);
   memset(cache, 0, config.sql_cache_entries*sizeof(struct db_cache));
   memset(queries_queue, 0, qq_size*sizeof(struct db_cache *));

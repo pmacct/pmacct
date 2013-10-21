@@ -2500,6 +2500,10 @@ int Recv(int sd, unsigned char **buf)
   unsigned char rxbuf[LARGEBUFLEN], *elem;
 
   *buf = (unsigned char *) malloc(LARGEBUFLEN);
+  if (!(*buf)) {
+    printf("ERROR: malloc() out of memory (Recv)\n");
+    exit(1);
+  }
   memset(*buf, 0, LARGEBUFLEN);
   memset(rxbuf, 0, LARGEBUFLEN);
 
@@ -2511,7 +2515,7 @@ int Recv(int sd, unsigned char **buf)
         round++;
         *buf = realloc((unsigned char *) *buf, round*LARGEBUFLEN);
         if (!(*buf)) {
-          printf("ERROR: realloc() out of memory\n");
+          printf("ERROR: realloc() out of memory (Recv)\n");
           exit(1);
         }
         /* ensuring realloc() didn't move somewhere else our memory area */

@@ -672,6 +672,10 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
   gid_t group = -1;
 
   fname = malloc(len);
+  if (!fname) {
+    Log(LOG_ERR, "ERROR: malloc() failed (write_pid_file_plugin)\n");
+    return;
+  }
   memset(fname, 0, sizeof(fname));
   strcpy(fname, filename);
   strcat(fname, minus);
@@ -935,6 +939,10 @@ int file_archive(const char *path, int rotations)
   int j, ret, len = strlen(path)+11;
   
   new_path = malloc(len);
+  if (!new_path) {
+    Log(LOG_ERR, "ERROR: malloc() failed (file_archive)\n");
+    return -1;
+  }
   memset(new_path, 0, len);
   for (j = 1; j < rotations; j++) {
     snprintf(new_path, len, "%s.%d", path, j); 

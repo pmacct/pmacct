@@ -866,6 +866,10 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
 
   while ( (token = extract_token(&value, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
     e->src_comms[idx] = malloc(MAX_BGP_STD_COMMS);
+    if (!e->src_comms[idx]) {
+      Log(LOG_ERR, "ERROR ( %s ): malloc() failed (PT_map_src_comms_handler). Exiting ..\n", filename);
+      exit_all(1);
+    }
     strlcpy(e->src_comms[idx], token, MAX_BGP_STD_COMMS);
     trim_spaces(e->src_comms[idx]);
     idx++;
@@ -900,6 +904,10 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
 
   while ( (token = extract_token(&value, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
     e->comms[idx] = malloc(MAX_BGP_STD_COMMS);
+    if (!e->comms[idx]) {
+      Log(LOG_ERR, "ERROR ( %s ): malloc() failed (PT_map_comms_handler). Exiting ..\n", filename);
+      exit_all(1);
+    }
     strlcpy(e->comms[idx], token, MAX_BGP_STD_COMMS);
     trim_spaces(e->comms[idx]);
     idx++;
@@ -1022,8 +1030,11 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
 int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   e->jeq.label = malloc(MAX_LABEL_LEN);
-  if (e->jeq.label) strlcpy(e->jeq.label, value, MAX_LABEL_LEN);
-  else Log(LOG_ERR, "ERROR ( %s ): Not enough memory to allocate JEQ '%s'\n", filename, value); 
+  if (!e->jeq.label) {
+    Log(LOG_ERR, "ERROR ( %s ): malloc() failed (PT_map_jeq_handler). Exiting ..\n", filename);
+    exit_all(1);
+  }
+  else strlcpy(e->jeq.label, value, MAX_LABEL_LEN);
 
   return FALSE;
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /* 
@@ -40,11 +40,17 @@ bgp_table_init (afi_t afi, safi_t safi)
   struct bgp_table *rt;
 
   rt = malloc (sizeof (struct bgp_table));
-  memset (rt, 0, sizeof (struct bgp_table));
+  if (rt) {
+    memset (rt, 0, sizeof (struct bgp_table));
 
-  rt->type = BGP_TABLE_MAIN;
-  rt->afi = afi;
-  rt->safi = safi;
+    rt->type = BGP_TABLE_MAIN;
+    rt->afi = afi;
+    rt->safi = safi;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_table_init). Exiting ..\n");
+    exit_all(1);
+  }
   
   return rt;
 }
@@ -62,12 +68,20 @@ bgp_node_create ()
   struct bgp_node *rn;
 
   rn = (struct bgp_node *) malloc (sizeof (struct bgp_node));
-  memset (rn, 0, sizeof (struct bgp_node));
+  if (rn) {
+    memset (rn, 0, sizeof (struct bgp_node));
 
-  rn->info = (void **) malloc(sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
-  memset (rn->info, 0, sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
+    rn->info = (void **) malloc(sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
+    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
+    else goto malloc_failed;
+  }
+  else goto malloc_failed;
 
   return rn;
+
+  malloc_failed:
+  Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_node_create). Exiting ..\n");
+  exit_all(1);
 }
 
 /* Allocate new route node with prefix set. */

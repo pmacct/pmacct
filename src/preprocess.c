@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -497,6 +497,10 @@ int check_fsrc(struct db_cache *queue[], int *num, int seq)
 
       if (fsrc_queue.num < max) {
         new = malloc(queueElemSz);
+        if (!new) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (check_fsrc). Exiting ..\n", config.name, config.type);
+	  exit_plugin(1);
+	}
         fsrc_queue.num++;
         new->next = last_seen->next;
         last_seen->next = new;

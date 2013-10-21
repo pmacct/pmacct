@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -111,6 +111,10 @@ int parse_configuration_file(char *filename)
         else {
 	  localbuf[sizeof(localbuf)-1] = '\0';
           cfg[rows] = malloc(strlen(localbuf)+2);
+	  if (!cfg[rows]) {
+	    Log(LOG_ERR, "ERROR ( %s ): malloc() failed (parse_configuration_file). Exiting ..\n", filename);
+	    exit(1);
+	  }
           strcpy(cfg[rows], localbuf);
           cfg[rows][strlen(localbuf)+1] = '\0';
           rows++;
@@ -434,7 +438,7 @@ int create_plugin(char *filename, char *name, char *type)
   /* creating a new plugin structure */
   plugin = (struct plugins_list_entry *) malloc(sizeof(struct plugins_list_entry));
   if (!plugin) {
-    Log(LOG_ERR, "ERROR ( %s ): Unable to allocate memory config_plugin structure.\n", filename);
+    Log(LOG_ERR, "ERROR ( %s ): malloc() failed (create_plugin). Exiting ..\n", filename);
     exit(1);
   }
 

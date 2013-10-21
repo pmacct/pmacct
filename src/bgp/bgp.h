@@ -173,7 +173,7 @@ EXT void bgp_attr_init();
 EXT struct bgp_attr *bgp_attr_intern(struct bgp_attr *);
 EXT void bgp_attr_unintern (struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
-EXT void bgp_peer_init(struct bgp_peer *);
+EXT int bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **, char **);

@@ -77,6 +77,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* a bunch of default definitions and post-checks */
   pipebuf = (unsigned char *) malloc(config.buffer_size);
+  if (!pipebuf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pipebuf). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
 
   setnonblocking(pipe_fd);
   memset(pipebuf, 0, config.buffer_size);

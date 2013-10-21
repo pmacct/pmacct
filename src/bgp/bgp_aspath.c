@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /* 
@@ -78,6 +78,7 @@ struct assegment_header
 static inline as_t *
 assegment_data_new (int num)
 {
+  // XXX: to be protected
   return (malloc(ASSEGMENT_DATA_SIZE (num, 1)));
 }
 
@@ -98,6 +99,10 @@ assegment_new (u_char type, u_short length)
   struct assegment *new;
   
   new = malloc(sizeof (struct assegment));
+  if (!new) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (assegment_new). Exiting ..\n");
+    exit_all(1);
+  }
   memset(new, 0, sizeof (struct assegment));
   
   if (length) {
@@ -311,6 +316,10 @@ aspath_new (void)
   struct aspath *aspath;
 
   aspath = malloc(sizeof (struct aspath));
+  if (!aspath) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (aspath_new). Exiting ..\n");
+    exit_all(1);
+  }
   memset (aspath, 0, sizeof (struct aspath));
   return aspath;
 }
@@ -519,6 +528,10 @@ aspath_make_str_count (struct aspath *as)
   if (!as->segments)
     {
       str_buf = malloc(1);
+      if (!str_buf) {
+	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n");
+	exit_all(1);
+      }
       str_buf[0] = '\0';
       return str_buf;
     }
@@ -538,6 +551,10 @@ aspath_make_str_count (struct aspath *as)
   str_size = MAX (assegment_count_asns (seg, 0) * ASN_STR_LEN + 2 + 1,
                   ASPATH_STR_DEFAULT_LEN);
   str_buf = malloc(str_size);
+  if (!str_buf) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n");
+    exit_all(1);
+  }
 
   while (seg)
     {
@@ -647,6 +664,10 @@ aspath_dup (struct aspath *aspath)
   struct aspath *new;
 
   new = malloc(sizeof (struct aspath));
+  if (!new) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (aspath_dup). Exiting ..\n");
+    exit_all(1);
+  }
   memset(new, 0, sizeof(struct aspath));
 
   if (aspath->segments)

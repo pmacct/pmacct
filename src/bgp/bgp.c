@@ -117,6 +117,10 @@ void skinny_bgp_daemon()
   Log(LOG_INFO, "INFO ( default/core/BGP ): maximum BGP peers allowed: %d\n", config.nfacctd_bgp_max_peers);
 
   peers = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
+  if (!peers) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): Unable to malloc() BGP peers structure. Terminating thread.\n");
+    exit_all(1);
+  }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -237,7 +241,7 @@ void skinny_bgp_daemon()
           now = time(NULL);
           if (now > peers[peers_idx].last_keepalive) {
             peer = &peers[peers_idx];
-            bgp_peer_init(peer);
+            if (bgp_peer_init(peer)) peer = NULL;
             break;
           }
           else { /* throttle */
@@ -1235,8 +1239,10 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	    struct bgp_info_extra *rie;
 
 	    rie = bgp_info_extra_get(ri);
-	    memcpy(&rie->rd, rd, sizeof(rd_t));
-	    memcpy(&rie->label, label, 3);
+	    if (rie) {
+	      memcpy(&rie->rd, rd, sizeof(rd_t));
+	      memcpy(&rie->label, label, 3);
+	    }
 	  }
 
 	  bgp_unlock_node (route);
@@ -1250,15 +1256,21 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
   /* Make new BGP info. */
   new = bgp_info_new();
-  new->peer = peer;
-  new->attr = attr_new;
-  if (safi == SAFI_MPLS_VPN) {
-    struct bgp_info_extra *rie;
+  if (new) {
+    new->peer = peer;
+    new->attr = attr_new;
 
-    rie = bgp_info_extra_get(new);
-    memcpy(&rie->rd, rd, sizeof(rd_t));
-    memcpy(&rie->label, label, 3);
+    if (safi == SAFI_MPLS_VPN) {
+      struct bgp_info_extra *rie;
+
+      rie = bgp_info_extra_get(new);
+      if (rie) {
+        memcpy(&rie->rd, rd, sizeof(rd_t));
+        memcpy(&rie->label, label, 3);
+      }
+    }
   }
+  else return -1;
 
   /* Register new BGP information. */
   bgp_info_add(route, new, modulo);
@@ -1503,6 +1515,11 @@ struct bgp_info_extra *bgp_info_extra_new(void)
   struct bgp_info_extra *new;
 
   new = malloc(sizeof(struct bgp_info_extra));
+  if (!new) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_info_extra_new). Exiting ..\n");
+    exit_all(1);
+  }
+  else memset(new, 0, sizeof (struct bgp_info_extra));
 
   return new;
 }
@@ -1530,7 +1547,11 @@ struct bgp_info *bgp_info_new()
   struct bgp_info *new;
 
   new = malloc(sizeof(struct bgp_info));
-  memset(new, 0, sizeof (struct bgp_info));
+  if (!new) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_info_new). Exiting ..\n");
+    exit_all(1);
+  }
+  else memset(new, 0, sizeof (struct bgp_info));
   
   return new;
 }
@@ -1727,15 +1748,22 @@ void *bgp_attr_hash_alloc (void *p)
   struct bgp_attr *attr;
 
   attr = malloc(sizeof (struct bgp_attr));
-  memset(attr, 0, sizeof (struct bgp_attr));
-  *attr = *val;
-  attr->refcnt = 0;
+  if (!attr) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_attr_hash_alloc). Exiting ..\n");
+    exit_all(1);
+  }
+  else {
+    memset(attr, 0, sizeof (struct bgp_attr));
+    *attr = *val;
+    attr->refcnt = 0;
+  }
 
   return attr;
 }
 
-void bgp_peer_init(struct bgp_peer *peer)
+int bgp_peer_init(struct bgp_peer *peer)
 {
+  int ret = TRUE;
   afi_t afi;
   safi_t safi;
 
@@ -1743,7 +1771,16 @@ void bgp_peer_init(struct bgp_peer *peer)
   peer->status = Idle;
   peer->buf.len = BGP_MAX_PACKET_SIZE;
   peer->buf.base = malloc(peer->buf.len);
-  memset(peer->buf.base, 0, peer->buf.len);
+  if (!peer->buf.base) {
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_peer_init). Exiting ..\n");
+    exit_all(1);
+  }
+  else {
+    memset(peer->buf.base, 0, peer->buf.len);
+    ret = FALSE;
+  }
+
+  return ret;
 }
 
 void bgp_peer_close(struct bgp_peer *peer)
@@ -2443,21 +2480,30 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     memcpy(&c->peer_src_ip, &p->peer_src_ip, HostAddrSz);
     memcpy(&c->peer_dst_ip, &p->peer_dst_ip, HostAddrSz);
     if (what_to_count & COUNT_STD_COMM) {
-      if (!c->std_comms) c->std_comms = malloc(MAX_BGP_STD_COMMS);
+      if (!c->std_comms) {
+	c->std_comms = malloc(MAX_BGP_STD_COMMS);
+	if (!c->std_comms) goto malloc_failed;
+      }
       memcpy(c->std_comms, p->std_comms, MAX_BGP_STD_COMMS);
     }
     else {
       if (c->std_comms) free(c->std_comms);
     }
     if (what_to_count & COUNT_EXT_COMM) {
-      if (!c->ext_comms) c->ext_comms = malloc(MAX_BGP_EXT_COMMS);
+      if (!c->ext_comms) {
+	c->ext_comms = malloc(MAX_BGP_EXT_COMMS);
+	if (!c->ext_comms) goto malloc_failed;
+      }
       memcpy(c->ext_comms, p->ext_comms, MAX_BGP_EXT_COMMS);
     }
     else {
       if (c->ext_comms) free(c->ext_comms);
     }
     if (what_to_count & COUNT_AS_PATH) {
-      if (!c->as_path) c->as_path = malloc(MAX_BGP_ASPATH);
+      if (!c->as_path) {
+	c->as_path = malloc(MAX_BGP_ASPATH);
+	if (!c->as_path) goto malloc_failed;
+      }
       memcpy(c->as_path, p->as_path, MAX_BGP_ASPATH);
     }
     else {
@@ -2466,21 +2512,30 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     c->local_pref = p->local_pref;
     c->med = p->med;
     if (what_to_count & COUNT_SRC_STD_COMM) {
-      if (!c->src_std_comms) c->src_std_comms = malloc(MAX_BGP_STD_COMMS);
+      if (!c->src_std_comms) {
+	c->src_std_comms = malloc(MAX_BGP_STD_COMMS);
+	if (!c->src_std_comms) goto malloc_failed;
+      }
       memcpy(c->src_std_comms, p->src_std_comms, MAX_BGP_STD_COMMS);
     }
     else {
       if (c->src_std_comms) free(c->src_std_comms);
     }
     if (what_to_count & COUNT_SRC_EXT_COMM) {
-      if (!c->src_ext_comms) c->src_ext_comms = malloc(MAX_BGP_EXT_COMMS);
+      if (!c->src_ext_comms) {
+	c->src_ext_comms = malloc(MAX_BGP_EXT_COMMS);
+	if (!c->src_ext_comms) goto malloc_failed;
+      }
       memcpy(c->src_ext_comms, p->src_ext_comms, MAX_BGP_EXT_COMMS);
     }
     else {
       if (c->src_ext_comms) free(c->src_ext_comms);
     }
     if (what_to_count & COUNT_SRC_AS_PATH) {
-      if (!c->src_as_path) c->src_as_path = malloc(MAX_BGP_ASPATH);
+      if (!c->src_as_path) {
+	c->src_as_path = malloc(MAX_BGP_ASPATH);
+	if (!c->src_as_path) goto malloc_failed;
+      }
       memcpy(c->src_as_path, p->src_as_path, MAX_BGP_ASPATH);
     }
     else {
@@ -2489,6 +2544,11 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     c->src_local_pref = p->src_local_pref;
     c->src_med = p->src_med;
     memcpy(&c->mpls_vpn_rd, &p->mpls_vpn_rd, sizeof(rd_t));
+
+    return;
+
+    malloc_failed:
+    Log(LOG_WARNING, "WARN ( default/core/BGP ): malloc() failed (pkt_to_cache_bgp_primitives).\n");
   }
 }
 

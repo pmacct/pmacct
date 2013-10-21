@@ -76,6 +76,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       if (*map_allocated == 0) {
         memset(t, 0, sizeof(struct id_table));
         t->e = (struct id_entry *) malloc(sz);
+	if (!t->e) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (load_id_file)\n", config.name, config.type);
+	  goto handle_error;
+	}
         *map_allocated = TRUE;
       }
       else {
@@ -89,6 +93,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     }
 
     tmp.e = (struct id_entry *) malloc(sz);
+    if (!tmp.e) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (load_id_file)\n", config.name, config.type);
+      goto handle_error;
+    }
 
     memset(tmp.e, 0, sz);
     if (t) memset(t->e, 0, sz);

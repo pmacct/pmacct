@@ -757,6 +757,10 @@ void MY_create_dyn_table(struct DBdesc *db, char *buf)
 void MY_create_backend(struct DBdesc *db)
 {
   db->desc = malloc(sizeof(MYSQL));
+  if (!db->desc) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (MY_create_backend). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
   memset(db->desc, 0, sizeof(MYSQL));
 }
 

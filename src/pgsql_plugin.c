@@ -485,6 +485,10 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   reprocess_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
   bulk_reprocess_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
+  if (!reprocess_queries_queue || !bulk_reprocess_queries_queue) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (reprocess_queries_queue). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
 
   for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++) 
     stop = preprocess_funcs[j](queue, &index, j);
@@ -824,6 +828,10 @@ void PG_compose_conn_string(struct DBdesc *db, char *host)
   
   if (!db->conn_string) {
     db->conn_string = (char *) malloc(slen);
+    if (!db->conn_string) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (PG_compose_conn_string). Exiting ..\n", config.name, config.type);
+      exit_plugin(1);
+    }
     string = db->conn_string;
 
     snprintf(string, slen, "dbname=%s user=%s password=%s", config.sql_db, config.sql_user, config.sql_passwd);
