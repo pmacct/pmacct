@@ -446,7 +446,8 @@ DESC:		It defines the full pathname to pointer(s) to latest file(s). Dynamic nam
 		but requires dates to be in %Y%m%d format rather than %d%m%Y. Also, upon restart of the
 		daemon, if print_output_file is modified to a different location good practice would be
 		to 1) manually delete latest pointer(s) or 2) move existing print_output_file files to
-		the new targer location.  
+		the new targer location. Finally, if upgrading from pmacct releases before 1.5.0rc1, it
+		is recommended to delete existing symlinks. 
 
 KEY:		sql_table_schema
 DESC:		full pathname to a file containing a SQL table schema. It allows to create the SQL table

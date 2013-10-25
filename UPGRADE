@@ -17,7 +17,8 @@ DESC:	Until 1.5.0rc1 pointer to latest file available was built as "<plugin
 	phase-out the simple way of producing pointers, jeopardizing backward
 	compatibility aswell. From 1.5.0rc2 a print_latest_file configuration
 	directive allows to explicitely define pointer(s) to latest file(s):
-	please refer to CONFIG-KEYS for more details about the feature.
+	please refer to CONFIG-KEYS for more details about the feature. When
+	upgrading, it is recommended to delete existing symlinks. 
 
 TO:     >= 1.5.0rc2
 FROM:   <= 1.5.0rc1
