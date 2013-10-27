@@ -36,6 +36,7 @@ struct _dictionary_line {
 struct custom_primitive_entry {
   /* compiled from map */
   u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  u_int32_t pen;
   u_int16_t field_type;
   u_int16_t len;
   u_int8_t semantics;

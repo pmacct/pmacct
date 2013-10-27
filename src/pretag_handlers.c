@@ -2100,9 +2100,18 @@ int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char 
 int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+  char *pen = NULL, *type = NULL, *endptr;
 
   if (table) {
-    table->primitive[table->num].field_type = atoi(value);
+    if (type = strchr(value, ':')) {
+      pen = value;
+      *type = '\0';
+      type++;
+    }
+    else type = value;
+
+    if (pen) table->primitive[table->num].pen = strtoul(pen, &endptr, 10);
+    table->primitive[table->num].field_type = atoi(type);
     if (!table->primitive[table->num].field_type) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Invalid NetFlow v9/IPFIX field type '%s'. ", config.name, config.type, value);
       return TRUE;

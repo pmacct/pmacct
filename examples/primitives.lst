@@ -11,9 +11,10 @@
 !			primitive itself and hence must be unique. This name
 !			can be used in 'aggregate' statements to include the
 !			primitive as part of plugin aggregation methods.
-! 'field_type'		Applies to NetFlow v9/IPFIX: expects a positive number
-!			and specifies which field type (Element ID) to select.
-!			As a reference the IPFIX IE definition table can be
+! 'field_type'		Applies to NetFlow v9/IPFIX: defines which field type
+!			(Element ID) to select. Optionally, a PEN value can be
+!			supplied aswell via the <PEN>:<value> format. As ai
+!			reference the IPFIX standard IE definition table can be
 !			used: http://www.iana.org/assignments/ipfix/ipfix.xhtml
 ! 'len'			Length of the primitive, in bytes. Variable length 
 !			fields are not supported yet. 
@@ -38,3 +39,9 @@ name=mtla	field_type=47	len=4	semantics=ip
 ! prefix length/network mask) and will present it as a decimal unsigned int.
 !
 name=mtlpl	field_type=91	len=1	semantics=u_int
+!
+! Defines a primitive called 'alu_91': it picks NetFlow v9/IPFIX field type
+! #91 and PEN #637 (Alcatel-Lucent), reads for 2 bytes and will present it as
+! a hexadecimal.
+!
+name=alu_91	field_type=637:91	len=2	semantics=hex

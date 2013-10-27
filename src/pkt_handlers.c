@@ -2845,7 +2845,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
     for (cpptrs_idx = 0; cpptrs_idx < chptr->plugin->cfg.cpptrs.num; cpptrs_idx++) {
       if (chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr) {
 	cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
-	if (cpe->field_type < NF9_MAX_DEFINED_FIELD) {
+	if (cpe->field_type < NF9_MAX_DEFINED_FIELD && !cpe->pen) {
 	  if (tpl->tpl[cpe->field_type].len == cpe->len) {
 	    memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
 	  }
@@ -2856,7 +2856,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	  }
 	}
 	else {
-	  if (utpl = (*get_ext_db_ie_by_type)(tpl, cpe->field_type)) {
+	  if (utpl = (*get_ext_db_ie_by_type)(tpl, cpe->pen, cpe->field_type)) {
 	    if (utpl->len == cpe->len) {
 	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, cpe->len);
 	    }
@@ -2891,7 +2891,7 @@ void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct pack
         memcpy(&pnat->post_nat_src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_SRC_ADDR].len, 4));
         pnat->post_nat_src_ip.family = AF_INET;
       }
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, NF9_ASA_XLATE_IPV4_SRC_ADDR)) {
+      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_IPV4_SRC_ADDR)) {
         memcpy(&pnat->post_nat_src_ip.address.ipv4, pptrs->f_data+utpl->off, MIN(utpl->len, 4));
         pnat->post_nat_src_ip.family = AF_INET;
       }
@@ -2918,7 +2918,7 @@ void NF_post_nat_dst_host_handler(struct channels_list_entry *chptr, struct pack
         memcpy(&pnat->post_nat_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_DST_ADDR].len, 4));
         pnat->post_nat_dst_ip.family = AF_INET;
       }
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, NF9_ASA_XLATE_IPV4_DST_ADDR)) {
+      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_IPV4_DST_ADDR)) {
         memcpy(&pnat->post_nat_dst_ip.address.ipv4, pptrs->f_data+utpl->off, MIN(utpl->len, 4));
         pnat->post_nat_dst_ip.family = AF_INET;
       }
@@ -2947,7 +2947,7 @@ void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct pack
     if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
       if (tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len)
         memcpy(&pnat->post_nat_src_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len, 2));
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, NF9_ASA_XLATE_L4_SRC_PORT))
+      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_SRC_PORT))
         memcpy(&pnat->post_nat_src_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
 
       pnat->post_nat_src_port = ntohs(pnat->post_nat_src_port);
@@ -2976,7 +2976,7 @@ void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct pack
     if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
       if (tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len)
         memcpy(&pnat->post_nat_dst_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len, 2));
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, NF9_ASA_XLATE_L4_DST_PORT))
+      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_DST_PORT))
         memcpy(&pnat->post_nat_dst_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
 
       pnat->post_nat_dst_port = ntohs(pnat->post_nat_dst_port);
@@ -3000,7 +3000,7 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   case 9:
     if (tpl->tpl[NF9_NAT_EVENT].len)
       memcpy(&pnat->nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, MIN(tpl->tpl[NF9_NAT_EVENT].len, 1));
-    else if (utpl = (*get_ext_db_ie_by_type)(tpl, NF9_ASA_XLATE_EVENT))
+    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT))
       memcpy(&pnat->nat_event, pptrs->f_data+utpl->off, MIN(utpl->len, 1));
     break;
   default:
