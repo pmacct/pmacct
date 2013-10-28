@@ -1149,11 +1149,11 @@ void search_peer_src_as(struct networks_table *nt, struct networks_cache *nc, st
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6) {
       if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
-        if (pbgp) pbgp->peer_src_as = res->peer_as;
+        if (pbgp) pbgp->peer_src_as = res6->peer_as;
       }
       else {
         if (res6->masknum >= p->src_nmask) {
-          if (pbgp) pbgp->peer_src_as = res->peer_as;
+          if (pbgp) pbgp->peer_src_as = res6->peer_as;
         }
       }
     }
@@ -1187,11 +1187,11 @@ void search_peer_dst_as(struct networks_table *nt, struct networks_cache *nc, st
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6) {
       if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
-        if (pbgp) pbgp->peer_dst_as = res->peer_as;
+        if (pbgp) pbgp->peer_dst_as = res6->peer_as;
       }
       else {
         if (res6->masknum >= p->dst_nmask) {
-          if (pbgp) pbgp->peer_dst_as = res->peer_as;
+          if (pbgp) pbgp->peer_dst_as = res6->peer_as;
         }
       }
     }
