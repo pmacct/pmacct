@@ -71,6 +71,7 @@ EXT int BITR_map_mpls_label_bottom_handler(char *, struct id_entry *, char *, st
 
 /* custom_primitives_*: aggregate_primitives specific handlers */
 EXT int custom_primitives_map_name_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int custom_primitives_map_packet_ptr_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int custom_primitives_map_field_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int custom_primitives_map_len_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int custom_primitives_map_semantics_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);

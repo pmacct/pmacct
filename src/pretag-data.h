@@ -107,6 +107,7 @@ const struct _map_dictionary_line bitr_map_dictionary[] = {
 
 const struct _map_dictionary_line custom_primitives_map_dictionary[] = {
   {"name", custom_primitives_map_name_handler},
+  {"packet_ptr", custom_primitives_map_packet_ptr_handler},
   {"field_type", custom_primitives_map_field_type_handler},
   {"len", custom_primitives_map_len_handler},
   {"semantics", custom_primitives_map_semantics_handler},

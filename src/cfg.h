@@ -33,9 +33,16 @@ struct _dictionary_line {
   int (*func)(char *, char *, char *);
 };
 
+struct packet_data_ptr {
+  u_int8_t ptr_idx;
+  u_int16_t off;
+  s_uint16_t proto;
+};
+
 struct custom_primitive_entry {
   /* compiled from map */
   u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  struct packet_data_ptr pd_ptr;
   u_int32_t pen;
   u_int16_t field_type;
   u_int16_t len;

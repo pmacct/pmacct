@@ -47,6 +47,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.pkthdr = (struct pcap_pkthdr *) pkthdr;
     pptrs.packet_ptr = (u_char *) buf;
     pptrs.mac_ptr = 0; pptrs.vlan_ptr = 0; pptrs.mpls_ptr = 0;
+    pptrs.iph_ptr = 0; pptrs.tlh_ptr = 0; pptrs.payload_ptr = 0;
     pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag = 0; pptrs.tag2 = 0;
     pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0; pptrs.blp = 0;
     pptrs.bmed = 0; pptrs.bitr = 0; pptrs.bta2 = 0; pptrs.bta_af = 0;
@@ -77,6 +78,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
         if (config.nfacctd_bgp_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
         if (config.pre_tag_map) PM_find_id((struct id_table *)pptrs.idtable, &pptrs, &pptrs.tag, &pptrs.tag2);
 
+	set_index_pkt_ptrs(&pptrs);
         exec_plugins(&pptrs);
       }
     }
@@ -98,6 +100,10 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
     if (config.pre_tag_map)
       load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req, &tag_map_allocated);
+    if (config.aggregate_primitives) {
+      req.key_value_table = (void *) &custom_primitives_registry;
+      load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
+    }
 
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);
@@ -382,6 +388,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 
       if (t->e[x].jeq.ptr) {
         if (t->e[x].ret) {
+	  set_index_pkt_ptrs(pptrs);
           exec_plugins(pptrs);
           set_shadow_status(pptrs);
           *tag = 0;
@@ -540,4 +547,18 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
   }
 
   return ret;
+}
+
+void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
+{
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_PACKET_PTR] = pptrs->packet_ptr;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_MAC_PTR] = pptrs->mac_ptr;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_VLAN_PTR] = pptrs->vlan_ptr;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_MPLS_PTR] = pptrs->mpls_ptr;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_L3_PTR] = pptrs->iph_ptr;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->tlh_ptr;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_PAYLOAD_PTR] = pptrs->payload_ptr;
+
+  pptrs->pkt_proto[CUSTOM_PRIMITIVE_L3_PTR] = pptrs->l3_proto;
+  pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }

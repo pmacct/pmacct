@@ -61,6 +61,7 @@ EXT void in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

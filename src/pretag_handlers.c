@@ -2125,6 +2125,82 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
   return FALSE;
 }
 
+int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
+  char *layer = NULL, *proto_ptr = NULL, *offset_ptr = NULL, *endptr;
+  u_int16_t offset = 0, proto = 0;
+
+  if (table) {
+    layer = value;
+
+    proto_ptr = strchr(value, ':');
+    offset_ptr = strchr(value, '+');
+
+    if (offset_ptr) {
+      *offset_ptr = '\0';
+      offset_ptr++;
+      endptr = NULL;
+      offset = strtoul(offset_ptr, &endptr, 10);
+    }
+
+    if (proto_ptr) {
+      *proto_ptr = '\0';
+      proto_ptr++;
+      endptr = NULL;
+      if (strchr(proto_ptr, 'x')) proto = strtoul(proto_ptr, &endptr, 16);
+      else proto = strtoul(proto_ptr, &endptr, 10);
+    }
+    
+    if (!strncmp(layer, "packet", 6)) {
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_PACKET_PTR;
+      if (proto) goto proto_err; 
+    }
+    else if (!strncmp(layer, "mac", 3)) {
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_MAC_PTR;
+      if (proto) goto proto_err; 
+    }
+    else if (!strncmp(layer, "vlan", 4)) {
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_VLAN_PTR;
+      if (proto) goto proto_err; 
+    }
+    else if (!strncmp(layer, "mpls", 4)) { 
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_MPLS_PTR;
+      if (proto) goto proto_err; 
+    }
+    else if (!strncmp(layer, "l3", 2)) {
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_L3_PTR;
+      table->primitive[table->num].pd_ptr.proto.n = proto;
+      table->primitive[table->num].pd_ptr.proto.set = TRUE;
+    }
+    else if (!strncmp(layer, "l4", 2)) {
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_L4_PTR;
+      table->primitive[table->num].pd_ptr.proto.n = proto;
+      table->primitive[table->num].pd_ptr.proto.set = TRUE;
+    }
+    else if (!strncmp(layer, "payload", 7)) { 
+      table->primitive[table->num].pd_ptr.ptr_idx = CUSTOM_PRIMITIVE_PAYLOAD_PTR;
+      if (proto) goto proto_err; 
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid packet pointer '%s'. ", config.name, config.type, value);
+      return TRUE;
+    }
+
+    table->primitive[table->num].pd_ptr.off = offset;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    return TRUE;
+  }
+
+  return FALSE;
+
+  proto_err:
+  Log(LOG_ERR, "ERROR ( %s/%s ): protocol type not supported for '%s'. ", config.name, config.type, layer);
+  return TRUE;
+}
+
 int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
@@ -2180,18 +2256,18 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
   int valid = FALSE;
 
   if (table) {
-    if (strcmp(table->primitive[table->num].name, "") && table->primitive[table->num].field_type &&
-	table->primitive[table->num].len && table->primitive[table->num].semantics)
+    if (strcmp(table->primitive[table->num].name, "") && (table->primitive[table->num].field_type ||
+	table->primitive[table->num].pd_ptr.ptr_idx) && table->primitive[table->num].len &&
+	table->primitive[table->num].semantics)
       valid = TRUE;
     else
       valid = FALSE;
 
     if (valid && (table->num + 1 < MAX_CUSTOM_PRIMITIVES)) table->num++;
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s field_type=%u len=%u semantics=%u\n",
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s len=%u semantics=%u\n",
 	  config.name, config.type, table->num + 1, filename, table->primitive[table->num].name,
-	  table->primitive[table->num].field_type, table->primitive[table->num].len,
-	  table->primitive[table->num].semantics);
+	  table->primitive[table->num].len, table->primitive[table->num].semantics);
 
       memset(&table->primitive[table->num], 0, sizeof(struct custom_primitive_entry));
     }

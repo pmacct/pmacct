@@ -626,7 +626,11 @@ void evaluate_packet_handlers()
 
     /* if cpptrs.len > 0 one or multiple custom primitives are defined */
     if (channels_list[index].plugin->cfg.cpptrs.len) {
-      if (config.acct_type == ACCT_NF) {
+      if (config.acct_type == ACCT_PM) {
+	channels_list[index].phandler[primitives] = custom_primitives_handler;
+	primitives++;
+      }
+      else if (config.acct_type == ACCT_NF) {
 	channels_list[index].phandler[primitives] = NF_custom_primitives_handler;
 	primitives++;
       }
@@ -1216,6 +1220,27 @@ void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_pt
   pnat->timestamp_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
   if (!chptr->plugin->cfg.timestamps_secs) {
     pnat->timestamp_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
+  }
+}
+
+void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  struct custom_primitive_entry *cpe;
+  int cpptrs_idx;
+
+  for (cpptrs_idx = 0; cpptrs_idx < chptr->plugin->cfg.cpptrs.num; cpptrs_idx++) {
+    if (chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr) {
+      cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
+      if (pptrs->pkt_data_ptrs[cpe->pd_ptr.ptr_idx] &&
+	  ((pptrs->pkt_data_ptrs[cpe->pd_ptr.ptr_idx]-pptrs->pkt_data_ptrs[0])+
+	   cpe->pd_ptr.off+cpe->len) < ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen) {
+	if (cpe->pd_ptr.proto.set && pptrs->pkt_proto[cpe->pd_ptr.ptr_idx] == cpe->pd_ptr.proto.n) {
+          memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->pkt_data_ptrs[cpe->pd_ptr.ptr_idx]+cpe->pd_ptr.off, cpe->len);
+	}
+      }
+    }
   }
 }
 

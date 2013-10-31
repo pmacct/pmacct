@@ -378,3 +378,13 @@ typedef u_int32_t pm_counter_t;
 #define NF9_FTYPE_VLAN_MPLS_IPV6        17
 #define NF9_FTYPE_EVENT			100 /* temporary: re-coding needed */
 #define NF9_FTYPE_NAT_EVENT             100
+
+/* Packet pointers indexes */
+#define CUSTOM_PRIMITIVE_PACKET_PTR	0
+#define CUSTOM_PRIMITIVE_MAC_PTR	1
+#define CUSTOM_PRIMITIVE_VLAN_PTR	2
+#define CUSTOM_PRIMITIVE_MPLS_PTR	3
+#define CUSTOM_PRIMITIVE_L3_PTR		4
+#define CUSTOM_PRIMITIVE_L4_PTR		5
+#define CUSTOM_PRIMITIVE_PAYLOAD_PTR	6
+#define CUSTOM_PRIMITIVE_MAX_PPTRS_IDX	7

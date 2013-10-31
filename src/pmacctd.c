@@ -138,6 +138,7 @@ int main(int argc,char **argv, char **envp)
   biss_map_allocated = FALSE;
   bta_map_caching = FALSE;
   sampling_map_caching = FALSE;
+  custom_primitives_allocated = FALSE;
   find_id_func = PM_find_id;
 
   errflag = 0;
@@ -560,6 +561,20 @@ int main(int argc,char **argv, char **envp)
     init_classifiers(config.classifiers_path);
     init_conntrack_table();
   }
+
+  if (config.aggregate_primitives) {
+    req.key_value_table = (void *) &custom_primitives_registry;
+    load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
+  }
+  else memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
+
+  /* fixing per plugin custom primitives pointers, offsets and lengths */
+  list = plugins_list;
+  while(list) {
+    custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+    list = list->next;
+  }
+
   load_plugins(&req);
 
   if (config.handle_fragments) init_ip_fragment_handler();
@@ -769,14 +784,6 @@ int main(int argc,char **argv, char **envp)
   if (config.nfacctd_flow_to_rd_map) {
     Log(LOG_ERR, "ERROR ( default/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n");
     exit(1);
-  }
-
-  /* fixing per plugin custom primitives pointers, offsets and lengths */
-  memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
-  list = plugins_list;
-  while(list) {
-    custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
-    list = list->next;
   }
 
   /* Init tunnel handlers */

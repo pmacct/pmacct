@@ -85,9 +85,9 @@ KEY:		aggregate_primitives [GLOBAL]
 DESC:		Expects full pathname to a file containing custom-defined primitives. Once
 		properly defined in this file (see 'examples/primitives.lst' for full syntax),
 		primitives can be used in 'aggregate' statements. The feature is currently
-		available only in nfacctd, for NetFlow v9/IPFIX. Variable-length fields, for
-		example strings, are currently supported only by defining a length equal to
-		the maximum estimated length of the field. 
+		available only in nfacctd, for NetFlow v9/IPFIX, pmacctd and uacctd. IPFIX
+		variable-length fields, for example strings, are currently supported only by
+		defining a length equal to the maximum estimated length of the field. 
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation

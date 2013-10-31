@@ -11,13 +11,24 @@
 !			primitive itself and hence must be unique. This name
 !			can be used in 'aggregate' statements to include the
 !			primitive as part of plugin aggregation methods.
+! 'packet_ptr'		Applies to pmacctd (libpcap) and uacctd (ULOG):
+!			defines the base pointer in the packet where to read
+!			the primitive value; intuitively, this is to be used
+!			in conjunction with 'len'. The supported syntax is:
+!			"<layer>:[<protocol value>]+[<offset>]". 'layer' keys 
+!			are: 'packet', 'mac', 'vlan', 'mpls', 'l3', 'l4' and
+!			'payload'; 'layer' keyword is mandatory. 'protocol
+!			value' is optional key and can be supplied in either
+!			decimal or hex format. 'offset' is optional key and
+!			is expected as a positive decimal number. 
 ! 'field_type'		Applies to NetFlow v9/IPFIX: defines which field type
 !			(Element ID) to select. Optionally, a PEN value can be
-!			supplied aswell via the <PEN>:<value> format. As ai
+!			supplied aswell via the <PEN>:<value> format. As a
 !			reference the IPFIX standard IE definition table can be
 !			used: http://www.iana.org/assignments/ipfix/ipfix.xhtml
 ! 'len'			Length of the primitive, in bytes. Variable length 
-!			fields are not supported yet. 
+!			fields are currently supported by defining a length
+!			equal to the maximum estimated length of the field.
 ! 'semantics'		Specifies semantics of the primitive. Allowed values
 !			are: 'u_int' (unsigned integer, presented as decimal
 !			number), 'hex' (unsigned integer, presented as hexa-
@@ -45,3 +56,21 @@ name=mtlpl	field_type=91	len=1	semantics=u_int
 ! a hexadecimal.
 !
 name=alu_91	field_type=637:91	len=2	semantics=hex
+!
+! Defines a primitive called 'ttl': base pointer is set to the IPv4 header
+! (l3:0x800) plus 8 bytes offset, reads for 1 byte and will present it as
+! unsigned int.
+!
+name=ttl	packet_ptr=l3:0x800+8   len=1   semantics=u_int
+!
+! Defines a primitive called 'udp_len': base pointer is set to the UDP header
+! (l4:17) plus 4 bytes offset, reads for 2 byte and will present it as unsigned
+! int.
+!
+name=udp_len            packet_ptr=l4:17+4      len=2   semantics=u_int
+!
+! Defines a primitive called 'tcp_win': base pointer is set to the TCP header
+! (l4:6) plus 14 bytes offset, reads for 2 byte and will present it as unsigned
+! int.
+!
+name=tcp_win            packet_ptr=l4:6+14      len=2   semantics=u_int
