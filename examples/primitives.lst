@@ -20,7 +20,8 @@
 !			'payload'; 'layer' keyword is mandatory. 'protocol
 !			value' is optional key and can be supplied in either
 !			decimal or hex format. 'offset' is optional key and
-!			is expected as a positive decimal number. 
+!			is expected as a positive decimal number. A maximum
+!			of 8 'packet_ptr' definitions are allowed per entry. 
 ! 'field_type'		Applies to NetFlow v9/IPFIX: defines which field type
 !			(Element ID) to select. Optionally, a PEN value can be
 !			supplied aswell via the <PEN>:<value> format. As a
@@ -57,11 +58,12 @@ name=mtlpl	field_type=91	len=1	semantics=u_int
 !
 name=alu_91	field_type=637:91	len=2	semantics=hex
 !
-! Defines a primitive called 'ttl': base pointer is set to the IPv4 header
-! (l3:0x800) plus 8 bytes offset, reads for 1 byte and will present it as
-! unsigned int.
+! Defines a primitive called 'ttl': if reading an IPv4 header (l3:0x800) the
+! base pointer is offset by 8 bytes, if reading an IPv6 header (l3:0x86dd) it
+! is offset by 7 bytes; it reads for 1 byte and will present it as unsigned
+! int.
 !
-name=ttl	packet_ptr=l3:0x800+8   len=1   semantics=u_int
+name=ttl	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7	len=1   semantics=u_int
 !
 ! Defines a primitive called 'udp_len': base pointer is set to the UDP header
 ! (l4:17) plus 4 bytes offset, reads for 2 byte and will present it as unsigned

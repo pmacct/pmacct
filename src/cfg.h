@@ -26,6 +26,7 @@
 #define CFG_LINE_LEN(x) (SRVBUFLEN-strlen(x))
 #define MAX_CUSTOM_PRIMITIVES		64
 #define MAX_CUSTOM_PRIMITIVE_NAMELEN	64
+#define MAX_CUSTOM_PRIMITIVE_PD_PTRS	8
 
 /* structures */
 struct _dictionary_line {
@@ -34,7 +35,7 @@ struct _dictionary_line {
 };
 
 struct packet_data_ptr {
-  u_int8_t ptr_idx;
+  s_uint8_t ptr_idx;
   u_int16_t off;
   s_uint16_t proto;
 };
@@ -42,7 +43,7 @@ struct packet_data_ptr {
 struct custom_primitive_entry {
   /* compiled from map */
   u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
-  struct packet_data_ptr pd_ptr;
+  struct packet_data_ptr pd_ptr[MAX_CUSTOM_PRIMITIVE_PD_PTRS];
   u_int32_t pen;
   u_int16_t field_type;
   u_int16_t len;

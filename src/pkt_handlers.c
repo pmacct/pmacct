@@ -1228,16 +1228,25 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
   struct pkt_data *pdata = (struct pkt_data *) *data;
   char *pcust = ((*data) + chptr->extras.off_custom_primitives);
   struct custom_primitive_entry *cpe;
-  int cpptrs_idx;
+  int cpptrs_idx, pd_ptr_idx;
 
   for (cpptrs_idx = 0; cpptrs_idx < chptr->plugin->cfg.cpptrs.num; cpptrs_idx++) {
     if (chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr) {
       cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
-      if (pptrs->pkt_data_ptrs[cpe->pd_ptr.ptr_idx] &&
-	  ((pptrs->pkt_data_ptrs[cpe->pd_ptr.ptr_idx]-pptrs->pkt_data_ptrs[0])+
-	   cpe->pd_ptr.off+cpe->len) < ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen) {
-	if (cpe->pd_ptr.proto.set && pptrs->pkt_proto[cpe->pd_ptr.ptr_idx] == cpe->pd_ptr.proto.n) {
-          memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->pkt_data_ptrs[cpe->pd_ptr.ptr_idx]+cpe->pd_ptr.off, cpe->len);
+      
+      for (pd_ptr_idx = 0; pd_ptr_idx < MAX_CUSTOM_PRIMITIVE_PD_PTRS && cpe->pd_ptr[pd_ptr_idx].ptr_idx.set; pd_ptr_idx++) {
+        if (pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] &&
+	    ((pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]-
+		pptrs->pkt_data_ptrs[0])+
+		cpe->pd_ptr[pd_ptr_idx].off+cpe->len) <
+	    ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen) {
+	  if (!cpe->pd_ptr[pd_ptr_idx].proto.set || 
+	      pptrs->pkt_proto[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] ==
+			cpe->pd_ptr[pd_ptr_idx].proto.n) {
+            memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off,
+		   pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off,
+		   cpe->len);
+	  }
 	}
       }
     }
