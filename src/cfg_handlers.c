@@ -2019,7 +2019,12 @@ int cfg_key_nfacctd_time_secs(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_time = NF_TIME_SECS;
+  for (; list; list = list->next, changes++) {
+    if (!list->cfg.nfacctd_time) {  
+      if (value) list->cfg.nfacctd_time = NF_TIME_SECS;
+    }
+    else Log(LOG_WARNING, "WARN ( %s ): Possibly 'nfacctd_time_new: true' set. 'nfacctd_time_secs' ignored.\n", filename);
+  }
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_time_secs'. Globalized.\n", filename);
 
   return changes;
@@ -2033,7 +2038,12 @@ int cfg_key_nfacctd_time_new(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_time = NF_TIME_NEW;
+  for (; list; list = list->next, changes++) {
+    if (!list->cfg.nfacctd_time) {
+      if (value) list->cfg.nfacctd_time = NF_TIME_NEW;
+    }
+    else Log(LOG_WARNING, "WARN ( %s ): Possibly 'nfacctd_time_secs: true' set. 'nfacctd_time_new' ignored.\n", filename);
+  }
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_time_new'. Globalized.\n", filename);
 
   return changes;
