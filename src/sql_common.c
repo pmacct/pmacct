@@ -510,6 +510,14 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
   int ret;
 
+  /* pro_rating vars */
+  int time_delta = 0, time_total = 0;
+  pm_counter_t tot_bytes = 0, tot_packets = 0, tot_flows = 0;
+
+  tot_bytes = data->pkt_len;
+  tot_packets = data->pkt_num;
+  tot_flows = data->flo_num;
+
   if (data->time_start.tv_sec && config.sql_history) {
     while (basetime > data->time_start.tv_sec) {
       if (config.sql_history != COUNT_MONTHLY) basetime -= timeslot;
@@ -524,6 +532,21 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         basetime += timeslot;
         timeslot = calc_monthly_timeslot(basetime, config.sql_history_howmany, ADD);
       }
+    }
+  }
+
+  new_timeslot:
+  /* pro_rating, if needed */
+  if (data->time_end.tv_sec > data->time_start.tv_sec) { 
+    time_total = data->time_end.tv_sec - data->time_start.tv_sec;
+    time_delta = MIN(data->time_end.tv_sec, basetime + timeslot) - MAX(data->time_start.tv_sec, basetime);
+
+    if (time_delta > 0 && time_total > 0 && time_delta < time_total) {
+      float ratio = (float) time_total / (float) time_delta;
+
+      if (tot_bytes) data->pkt_len = (float)tot_bytes / ratio;
+      if (tot_packets) data->pkt_num = (float)tot_packets / ratio;
+      if (tot_flows) data->flo_num = (float)tot_flows / ratio;
     }
   }
 
@@ -737,7 +760,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   if (Cursor->chained) AddToLRUTail(Cursor); 
   if (SafePtr) goto safe_action;
   if (staleElem) SwapChainedElems(Cursor, staleElem);
-  return;
+  goto pro_rating;
 
   update:
   Cursor->packet_counter += data->pkt_num;
@@ -751,6 +774,14 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->flows_counter += data->cst.fa;
     Cursor->tentatives = data->cst.tentatives;
   }
+  // goto pro_rating;
+
+  pro_rating:
+  if ((basetime + timeslot) < data->time_end.tv_sec) {
+    basetime += timeslot;
+    goto new_timeslot; 
+  }
+
   return;
 
   safe_action:

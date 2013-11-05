@@ -239,7 +239,7 @@ void skinny_bgp_daemon()
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (peers[peers_idx].fd == 0) {
           now = time(NULL);
-          if (now > peers[peers_idx].last_keepalive) {
+          if (now >= peers[peers_idx].last_keepalive) {
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
             break;

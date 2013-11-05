@@ -544,11 +544,12 @@ DESC:		enables the optimization of the statements sent to the RDBMS essentially 
 
 KEY:		[ sql_history | print_history | mongo_history | amqp_history ]
 VALUES:		#[m|h|d|w|M]
-DESC:		enables historical accounting by dividing accounted data into configurable time-bins. It
+DESC:		enables historical accounting by placing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
 		the time-bin was touched) fields. The supplied value defines the time slot length during
 		which counters are accumulated. For a nice effect, it's adviceable to pair this directive
-		with 'sql_history_roundoff'.
+		with 'sql_history_roundoff'. In nfacctd, where a flow can span across multiple time-bins,
+		flow counters are pro-rated (seconds timestamp resolution) over involved time-bins.
 		Note that this value is fully disjoint from the 'sql_refresh_time' directive which sets
 		the time intervals at which data has to be written to the RDBMS instead. The final effect
 		is close to time slots in a RRD file. Examples of valid values are: '5m' - five minutes,
