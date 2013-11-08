@@ -106,6 +106,8 @@ EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
 EXT void print_primitives(int, char *);
 EXT int mkdir_multilevel(const char *, int);
+EXT char bin_to_hex(int);
+EXT int print_hex(const u_char *, u_char *, int);
 
 EXT primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 EXT void set_primptrs_funcs(struct extra_primitives *);

@@ -3184,7 +3184,8 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
-    else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+    else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
+	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, SRVBUFLEN, "%%-%u", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name));
 	strncat(format, "s", SRVBUFLEN);
@@ -3262,7 +3263,8 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
 	snprintf(out, outlen, format, st64);
       }
     }
-    else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+    else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
+	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted)
 	snprintf(format, SRVBUFLEN, "%%-%u%s", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name),
 			cps_type[cp_entry->semantics]); 

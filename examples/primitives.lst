@@ -33,8 +33,9 @@
 ! 'semantics'		Specifies semantics of the primitive. Allowed values
 !			are: 'u_int' (unsigned integer, presented as decimal
 !			number), 'hex' (unsigned integer, presented as hexa-
-!			decimal number), 'ip' (IP address), 'mac' (MAC address)
-!			and 'str' (string). 
+!			decimal number), 'ip' (IP address), 'mac' (L2 MAC
+!			address), 'str' (string) and 'raw' (raw data, fixed
+!			or variable length in hex format). 
 ! 
 ! Examples:
 !

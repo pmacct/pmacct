@@ -1243,9 +1243,19 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 	  if (!cpe->pd_ptr[pd_ptr_idx].proto.set || 
 	      pptrs->pkt_proto[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] ==
 			cpe->pd_ptr[pd_ptr_idx].proto.n) {
-            memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off,
-		   pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off,
-		   cpe->len);
+	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
+              char hexbuf[cpe->alloc_len];
+              int hexbuflen = 0;
+
+              hexbuflen = print_hex(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off, hexbuf, cpe->len);
+              if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
+              memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
+	    }
+	    else {
+              memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off,
+		     pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off,
+		     cpe->len);
+	    }
 	  }
 	}
       }
@@ -2880,23 +2890,43 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
       if (chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr) {
 	cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
 	if (cpe->field_type < NF9_MAX_DEFINED_FIELD && !cpe->pen) {
-	  if (tpl->tpl[cpe->field_type].len == cpe->len) {
-	    memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
-	  }
+	  if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
+            char hexbuf[cpe->alloc_len];
+            int hexbuflen = 0;
+
+            hexbuflen = print_hex(pptrs->f_data+tpl->tpl[cpe->field_type].off, hexbuf, tpl->tpl[cpe->field_type].len);
+            if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
+            memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
+          }
 	  else {
-	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
-	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, MIN(tpl->tpl[cpe->field_type].len, cpe->len));
+	    if (tpl->tpl[cpe->field_type].len == cpe->len) {
+	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
+	    }
+	    else {
+	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+	        memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, MIN(tpl->tpl[cpe->field_type].len, cpe->len));
+	      }
 	    }
 	  }
 	}
 	else {
 	  if (utpl = (*get_ext_db_ie_by_type)(tpl, cpe->pen, cpe->field_type)) {
-	    if (utpl->len == cpe->len) {
-	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, cpe->len);
-	    }
-            else {
-              if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
-	        memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, MIN(utpl->len, cpe->len));
+	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
+              char hexbuf[cpe->alloc_len];
+              int hexbuflen = 0;
+
+              hexbuflen = print_hex(pptrs->f_data+utpl->off, hexbuf, utpl->len);
+              if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
+              memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
+            }
+	    else {
+	      if (utpl->len == cpe->len) {
+	        memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, cpe->len);
+	      }
+              else {
+                if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+	          memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, MIN(utpl->len, cpe->len));
+		}
 	      }
             }
 	  }

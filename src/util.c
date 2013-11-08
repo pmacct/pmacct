@@ -2067,7 +2067,7 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
 	if (cpptrs->len + registry->primitive[cpptrs_idx].len < UINT16_MAX) {
 	  cpptrs->primitive[cpptrs_idx].ptr = &registry->primitive[registry_idx];
 	  cpptrs->primitive[cpptrs_idx].off = cpptrs->len;
-	  cpptrs->len += registry->primitive[registry_idx].len;
+	  cpptrs->len += registry->primitive[registry_idx].alloc_len;
 	}
 	else {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): Max allocatable space for custom primitives finished (%s).\n",
@@ -2112,7 +2112,8 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
-    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
+	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, SRVBUFLEN, "%%-%u", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name));
 	strncat(format, "s", SRVBUFLEN);
@@ -2190,7 +2191,8 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
 	snprintf(out, outlen, format, st64);
       }
     }
-    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
+    else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
+	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted)
 	snprintf(format, SRVBUFLEN, "%%-%u%s", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name),
 			cps_type[cp_entry->ptr->semantics]); 
@@ -2278,4 +2280,33 @@ int mkdir_multilevel(const char *path, int trailing_filename)
   }
 
   return ret;
+}
+
+char bin_to_hex(int nib) { return (nib < 10) ? ('0' + nib) : ('A' - 10 + nib); }
+
+int print_hex(const u_char *a, u_char *buf, int len)
+{
+  int b = 0, i = 0;
+
+  for (; i < len; i++) {
+    u_char byte;
+
+    // if (a[i] == '\0') break;
+
+    byte = a[i];
+    buf[b++] = bin_to_hex(byte >> 4);
+    buf[b++] = bin_to_hex(byte & 0x0f);
+
+    // separate the bytes with a dash
+    if (i < (len - 1)) buf[b++] = '-';
+  }
+
+  if (buf[b-1] == '-') {
+    buf[b-1] = '\0';
+    return (b-1);
+  }
+  else {
+    buf[b] = '\0';
+    return b;
+  }
 }

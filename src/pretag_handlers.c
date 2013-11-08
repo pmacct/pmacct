@@ -2265,6 +2265,9 @@ int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, 
     else if (!strncmp(value, "mac", 3)) {
       table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_MAC;
     }
+    else if (!strncmp(value, "raw", 3)) {
+      table->primitive[table->num].semantics = CUSTOM_PRIMITIVE_TYPE_RAW;
+    }
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
@@ -2282,8 +2285,15 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
   if (table) {
     if (strcmp(table->primitive[table->num].name, "") && (table->primitive[table->num].field_type ||
 	table->primitive[table->num].pd_ptr[0].ptr_idx.set) && table->primitive[table->num].len &&
-	table->primitive[table->num].semantics)
+	table->primitive[table->num].semantics) {
       valid = TRUE;
+      if (table->primitive[table->num].semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
+	table->primitive[table->num].alloc_len = (table->primitive[table->num].len * 3) + 1; 
+      }
+      else { 
+	table->primitive[table->num].alloc_len = table->primitive[table->num].len;
+      }
+    }
     else
       valid = FALSE;
 

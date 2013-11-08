@@ -326,6 +326,7 @@
 #define CUSTOM_PRIMITIVE_TYPE_STRING	3
 #define CUSTOM_PRIMITIVE_TYPE_IP	4
 #define CUSTOM_PRIMITIVE_TYPE_MAC	5
+#define CUSTOM_PRIMITIVE_TYPE_RAW	6
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

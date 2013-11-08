@@ -244,6 +244,7 @@ static const char *cps_type[] = {
   "x",
   "s",
   "s",
+  "s",
   "s"
 };
 
