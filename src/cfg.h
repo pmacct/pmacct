@@ -112,6 +112,7 @@ struct configuration {
   int sql_optimize_clauses;
   int sql_refresh_time;
   int sql_history;
+  int sql_history_offset;
   int sql_history_howmany; /* internal */
   int sql_history_since_epoch;
   int sql_startup_delay;

@@ -555,7 +555,14 @@ DESC:		enables historical accounting by placing accounted data into configurable
 		is close to time slots in a RRD file. Examples of valid values are: '5m' - five minutes,
 		'1h' - one hour, '4h' - four hours, '1d' - one day, '1w' - one week, '1M' - one month).
 
-KEY:		[ sql_history_roundoff | print_time_roundoff | mongo_time_roundoff | amqp_time_roundoff ]
+KEY:            [ sql_history_offset | print_history_offset | mongo_history_offset | amqp_history_offset ]
+DESC:		Sets an offset to timeslots basetime. If history is set to 30 mins (by default creating
+		10:00, 10:30, 11:00, etc. time-bins), with an offset of 900 seconds (so 15 mins) it will
+		create 10:15, 10:45, 11:15, etc. time-bins. It expects a positive value, in seconds.
+		(default: 0)
+
+KEY:		[ sql_history_roundoff | print_history_roundoff | mongo_history_roundoff |
+		  amqp_history_roundoff ]
 VALUES		[m,h,d,w,M]
 DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
 		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).

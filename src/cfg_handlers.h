@@ -65,6 +65,7 @@ EXT int cfg_key_sql_refresh_time(char *, char *, char *);
 EXT int cfg_key_sql_startup_delay(char *, char *, char *);
 EXT int cfg_key_sql_optimize_clauses(char *, char *, char *);
 EXT int cfg_key_sql_history(char *, char *, char *);
+EXT int cfg_key_sql_history_offset(char *, char *, char *);
 EXT int cfg_key_sql_history_roundoff(char *, char *, char *);
 EXT int cfg_key_sql_history_since_epoch(char *, char *, char *);
 EXT int cfg_key_sql_recovery_logfile(char *, char *, char *);

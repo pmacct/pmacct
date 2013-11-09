@@ -184,6 +184,15 @@ void sql_init_historical_acct(time_t now, struct insert_data *idata)
       if (config.sql_history == COUNT_MONTHLY) idata->timeslot = calc_monthly_timeslot(t, config.sql_history_howmany, ADD);
     }
 
+    if (config.sql_history_offset) {
+      if (config.sql_history_offset >= idata->timeslot) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): History offset (ie. sql_history_offset) must be < history (ie. sql_history).\n", config.name, config.type);
+	exit(1);
+      }
+
+      t = t - (idata->timeslot + config.sql_history_offset);
+    }
+
     idata->basetime = t;
     glob_basetime = idata->basetime;
     idata->new_basetime = idata->basetime;

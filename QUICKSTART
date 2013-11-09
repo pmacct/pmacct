@@ -247,7 +247,7 @@ simple configuration with historical accounting support:
 plugins: mongodb
 aggregate: ...
 mongo_history: 5m
-mongo_time_roundoff: m
+mongo_history_roundoff: m
 mongo_refresh_time: 300
 mongo_table: pmacct.acct
 ...
@@ -1124,7 +1124,7 @@ files on a 15 mins basis in CSV format:
 print_refresh_time: 900
 print_output: csv
 print_output_file: /path/to/file-%Y%m%d-%H%M.txt
-print_time_roundoff: m
+print_history_roundoff: m
  
 Which, over time, would produce a would produce a series of files as follows:
 
@@ -1151,7 +1151,7 @@ print_refresh_time: 300
 print_output: csv
 print_output_file: /path/to/%Y/%Y-%m/%Y-%m-%d/file-%Y%m%d-%H%M.txt
 print_history: 15m
-print_time_roundoff: m
+print_history_roundoff: m
 print_output_file_append: true 
 
 
@@ -1200,7 +1200,7 @@ aggregate[traffic]: src_host, dst_host, peer_src_ip, peer_dst_ip, in_iface, out_
 print_output_file[traffic]: /path/to/traffic-%Y%m%d_%H%M.txt
 print_output[traffic]: csv
 print_history[traffic]: 5m
-print_time_roundoff[traffic]: m
+print_history_roundoff[traffic]: m
 print_refresh_time[traffic]: 300
 ! print_cache_entries[traffic]: 9999991
 print_output_file_append[traffic]: true
@@ -1218,7 +1218,7 @@ aggregate[nat]: src_host, post_nat_src_host, src_port, post_nat_src_port, proto,
 print_output_file[nat]: /path/to/nat-%Y%m%d_%H%M.txt
 print_output[nat]: json
 print_history[nat]: 5m
-print_time_roundoff[nat]: m
+print_history_roundoff[nat]: m
 print_refresh_time[nat]: 300
 ! print_cache_entries[nat]: 9999991
 print_output_file_append[nat]: true
@@ -1241,7 +1241,7 @@ aggregate[traffic]: src_host, dst_host, peer_src_ip, peer_dst_ip, in_iface, out_
 print_output_file[traffic]: /path/to/traffic-%Y%m%d_%H%M.txt
 print_output[traffic]: csv
 print_history[traffic]: 5m 
-print_time_roundoff[traffic]: m 
+print_history_roundoff[traffic]: m 
 print_refresh_time[traffic]: 300
 ! print_cache_entries[traffic]: 9999991
 print_output_file_append[traffic]: true
@@ -1251,7 +1251,7 @@ aggregate[nat]: src_host, post_nat_src_host, src_port, post_nat_src_port, proto,
 print_output_file[nat]: /path/to/nat-%Y%m%d_%H%M.txt
 print_output[nat]: json
 print_history[nat]: 5m 
-print_time_roundoff[nat]: m 
+print_history_roundoff[nat]: m 
 print_refresh_time[nat]: 300
 ! print_cache_entries[nat]: 9999991
 print_output_file_append[nat]: true

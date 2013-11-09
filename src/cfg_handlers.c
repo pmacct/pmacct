@@ -1172,6 +1172,32 @@ int cfg_key_sql_history(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sql_history_offset(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sql_history_offset' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_history_offset = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sql_history_offset = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+
 int cfg_key_sql_history_since_epoch(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
