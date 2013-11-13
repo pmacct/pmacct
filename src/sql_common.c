@@ -553,9 +553,9 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     if (time_delta > 0 && time_total > 0 && time_delta < time_total) {
       float ratio = (float) time_total / (float) time_delta;
 
-      if (tot_bytes) data->pkt_len = (float)tot_bytes / ratio;
-      if (tot_packets) data->pkt_num = (float)tot_packets / ratio;
-      if (tot_flows) data->flo_num = (float)tot_flows / ratio;
+      if (tot_bytes) data->pkt_len = MAX((float)tot_bytes / ratio, 1);
+      if (tot_packets) data->pkt_num = MAX((float)tot_packets / ratio, 1);
+      if (tot_flows) data->flo_num = MAX((float)tot_flows / ratio, 1);
     }
   }
 
