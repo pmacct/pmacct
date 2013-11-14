@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -642,6 +642,10 @@ pm_class_t pmct_find_first_free()
     if (ret > 0) return idx+1;
     else if (ret < 0) return 0;
     idx++;
+  }
+
+  if (num && idx == num) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): Finished elements in class table (%u). Raise via classifier_table_num.\n", config.name, config.type, num);
   }
 
   return 0;

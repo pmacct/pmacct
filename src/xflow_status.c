@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -235,8 +235,9 @@ search_class_id_status_table(struct xflow_status_entry_class *centry, pm_class_t
 {
   pm_class_t needle, haystack;
 
+  needle = ntohl(class_id);
+
   while (centry) {
-    needle = ntohl(class_id);
     haystack = ntohl(centry->class_id);
 
     if (centry->class_id == class_id) return centry;
