@@ -242,13 +242,17 @@ void skinny_bgp_daemon()
           if (now >= peers[peers_idx].last_keepalive) {
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
+	    log_notification_unset(&log_notifications.bgp_peers_throttling);
             break;
           }
           else { /* throttle */
             int fd = 0;
 
             /* We briefly accept the new connection to be able to drop it */
-            Log(LOG_INFO, "INFO ( default/core/BGP ): throttling BGP peer #%u\n", peers_idx);
+	    if (!log_notification_isset(log_notifications.bgp_peers_throttling)) {
+              Log(LOG_INFO, "INFO ( default/core/BGP ): throttling BGP peer #%u\n", peers_idx);
+	      log_notification_set(&log_notifications.bgp_peers_throttling);
+	    }
             fd = accept(sock, (struct sockaddr *) &client, &clen);
             close(fd);
             goto select_again;
@@ -702,7 +706,6 @@ int bgp_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
       my_id = my_id_static;
       str_to_addr(my_id, &my_id_addr);
     }
-    printf("CI PASSO\n");
   }
   else str_to_addr(my_id, &my_id_addr);
 

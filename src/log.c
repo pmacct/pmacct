@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2011 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /*
@@ -18,6 +18,8 @@
     along with this program; if no, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+
+#define __LOG_C
 
 /* includes */
 #include "pmacct.h"
@@ -72,3 +74,27 @@ int parse_log_facility(const char *facility)
 
   return ERR;
 }
+
+void log_notifications_init(struct _log_notifications *ln)
+{
+  if (ln) {
+    memset(ln, 0, sizeof(struct _log_notifications));
+  }
+}
+
+void log_notification_set(u_int8_t *elem)
+{
+  *elem = TRUE;
+}
+
+void log_notification_unset(u_int8_t *elem)
+{
+  *elem = FALSE;
+}
+
+int log_notification_isset(u_int8_t elem)
+{
+  if (elem == TRUE) return TRUE;
+  else return FALSE;
+}
+

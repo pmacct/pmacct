@@ -194,6 +194,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bitr_table, 0, sizeof(bitr_table));
   memset(&sampling_table, 0, sizeof(sampling_table));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
+  log_notifications_init(&log_notifications);
   config.acct_type = ACCT_SF;
 
   rows = 0;
