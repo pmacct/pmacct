@@ -72,6 +72,10 @@ void skinny_bgp_daemon()
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
 
+  /* BGP peer batching vars */
+  int bgp_current_batch_elem = 0;
+  time_t bgp_current_batch_stamp_base = 0;
+
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
   int select_fd, select_num;
@@ -202,14 +206,12 @@ void skinny_bgp_daemon()
     }
   }
 
-  /* Let's initialize peers table with some throttling */
-  if (config.nfacctd_bgp_init_batch && config.nfacctd_bgp_init_interval) {
-    now = time(NULL);
-    for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-      if (peers_idx > 0 && ((peers_idx % config.nfacctd_bgp_init_batch) == 0))
-        now += config.nfacctd_bgp_init_interval;
-      peers[peers_idx].last_keepalive = now;
-    }
+  /* BGP peers batching checks */
+  if ((config.nfacctd_bgp_batch && !config.nfacctd_bgp_batch_interval) ||
+      (config.nfacctd_bgp_batch_interval && !config.nfacctd_bgp_batch)) {
+    Log(LOG_WARNING, "WARN ( default/core/BGP ): 'bgp_daemon_batch_interval' and 'bgp_daemon_batch' both set to zero.\n");
+    config.nfacctd_bgp_batch = 0;
+    config.nfacctd_bgp_batch_interval = 0;
   }
 
   for (;;) {
@@ -239,18 +241,31 @@ void skinny_bgp_daemon()
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (peers[peers_idx].fd == 0) {
           now = time(NULL);
-          if (now >= peers[peers_idx].last_keepalive) {
+
+          if (config.nfacctd_bgp_batch && ((bgp_current_batch_elem > 0) ||
+	      now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval))) {
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
-	    log_notification_unset(&log_notifications.bgp_peers_throttling);
+
+            log_notification_unset(&log_notifications.bgp_peers_throttling);
+
+            if (peer) {
+              if (now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval)) {
+                bgp_current_batch_elem = config.nfacctd_bgp_batch;
+                bgp_current_batch_stamp_base = now;
+              }
+
+              if (bgp_current_batch_elem > 0) bgp_current_batch_elem--;
+            }
+
             break;
-          }
+	  }
           else { /* throttle */
             int fd = 0;
 
             /* We briefly accept the new connection to be able to drop it */
 	    if (!log_notification_isset(log_notifications.bgp_peers_throttling)) {
-              Log(LOG_INFO, "INFO ( default/core/BGP ): throttling BGP peer #%u\n", peers_idx);
+              Log(LOG_INFO, "INFO ( default/core/BGP ): throttling at BGP peer #%u\n", peers_idx);
 	      log_notification_set(&log_notifications.bgp_peers_throttling);
 	    }
             fd = accept(sock, (struct sockaddr *) &client, &clen);

@@ -2481,36 +2481,36 @@ int cfg_key_nfacctd_bgp_table_peer_buckets(char *filename, char *name, char *val
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_init_interval(char *filename, char *name, char *value_ptr)
+int cfg_key_nfacctd_bgp_batch_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
   if (value < 0) {
-    Log(LOG_ERR, "WARN ( %s ): 'bgp_daemon_init_interval' has to be >= 0.\n", filename);
+    Log(LOG_ERR, "WARN ( %s ): 'bgp_daemon_batch_interval' has to be >= 0.\n", filename);
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_init_interval = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_init_interval'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_batch_interval = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_batch_interval'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_init_batch(char *filename, char *name, char *value_ptr)
+int cfg_key_nfacctd_bgp_batch(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
   if (value < 0) {
-    Log(LOG_ERR, "WARN ( %s ): 'bgp_daemon_init_batch' has to be >= 0.\n", filename);
+    Log(LOG_ERR, "WARN ( %s ): 'bgp_daemon_batch' has to be >= 0.\n", filename);
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_init_batch = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_init_batch'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_batch = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_batch'. Globalized.\n", filename);
 
   return changes;
 }
