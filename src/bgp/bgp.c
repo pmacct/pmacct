@@ -242,14 +242,13 @@ void skinny_bgp_daemon()
         if (peers[peers_idx].fd == 0) {
           now = time(NULL);
 
-          if (config.nfacctd_bgp_batch && ((bgp_current_batch_elem > 0) ||
-	      now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval))) {
+          if (bgp_current_batch_elem > 0 || now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval)) {
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
 
             log_notification_unset(&log_notifications.bgp_peers_throttling);
 
-            if (peer) {
+            if (config.nfacctd_bgp_batch && peer) {
               if (now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval)) {
                 bgp_current_batch_elem = config.nfacctd_bgp_batch;
                 bgp_current_batch_stamp_base = now;
