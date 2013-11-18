@@ -417,6 +417,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 void exit_now(int signum)
 {
+  if (config.imt_plugin_path) unlink(config.imt_plugin_path);
   exit_plugin(0);
 }
 

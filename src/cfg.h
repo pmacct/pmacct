@@ -80,6 +80,7 @@ struct configuration {
   int type_id;
   char *proc_name;
   int sock;
+  int bgp_sock;
   int acct_type; 
   int data_type; 
   u_int64_t pipe_size;

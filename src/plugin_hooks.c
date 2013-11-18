@@ -206,6 +206,7 @@ void load_plugins(struct plugin_requests *req)
 #endif
 
 	close(config.sock);
+	close(config.bgp_sock);
 	close(list->pipe[1]);
 	(*list->type.func)(list->pipe[0], &list->cfg, chptr);
 	exit(0);

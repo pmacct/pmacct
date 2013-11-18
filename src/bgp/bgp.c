@@ -50,7 +50,7 @@ void nfacctd_bgp_wrapper()
 
 void skinny_bgp_daemon()
 {
-  int slen, ret, sock, rc, peers_idx, allowed;
+  int slen, ret, rc, peers_idx, allowed;
   struct host_addr addr;
   struct bgp_header bhdr;
   struct bgp_peer *peer;
@@ -129,37 +129,37 @@ void skinny_bgp_daemon()
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
 
-  sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
-  if (sock < 0) {
+  config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+  if (config.bgp_sock < 0) {
     Log(LOG_ERR, "ERROR ( default/core/BGP ): thread socket() failed. Terminating thread.\n");
     exit_all(1);
   }
   if (config.nfacctd_bgp_ipprec) {
     int opt = config.nfacctd_bgp_ipprec << 5;
 
-    rc = setsockopt(sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(config.bgp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
     if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for IP_TOS (errno: %d).\n", errno);
   }
 
-  rc = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", errno);
 
   if (config.nfacctd_bgp_pipe_size) {
     int l = sizeof(config.nfacctd_bgp_pipe_size);
     u_int64_t saved = 0, obtained = 0;
 
-    getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
-    getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+    getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+    Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
+    getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     if (config.debug || obtained < config.nfacctd_bgp_pipe_size) {
-      Setsocksize(sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
-      getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
       Log(LOG_INFO, "INFO ( default/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", obtained, config.nfacctd_bgp_pipe_size);
     }
   }
 
-  rc = bind(sock, (struct sockaddr *) &server, slen);
+  rc = bind(config.bgp_sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
     char null_ip_address[] = "0.0.0.0";
     char *ip_address;
@@ -169,7 +169,7 @@ void skinny_bgp_daemon()
     exit_all(1);
   }
 
-  rc = listen(sock, 1);
+  rc = listen(config.bgp_sock, 1);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( default/core/BGP ): listen() failed (errno: %d).\n", errno);
     exit_all(1);
@@ -178,7 +178,7 @@ void skinny_bgp_daemon()
   /* Preparing for syncronous I/O multiplexing */
   select_fd = 0;
   FD_ZERO(&bkp_read_descs);
-  FD_SET(sock, &bkp_read_descs);
+  FD_SET(config.bgp_sock, &bkp_read_descs);
 
   {
     char srv_string[INET6_ADDRSTRLEN];
@@ -196,7 +196,7 @@ void skinny_bgp_daemon()
   /* Preparing MD5 keys, if any */
   if (config.nfacctd_bgp_md5_file) {
     load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
-    if (bgp_md5.num) process_bgp_md5_file(sock, &bgp_md5);
+    if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5);
   }
 
   /* Let's initialize clean shared RIB */
@@ -216,7 +216,7 @@ void skinny_bgp_daemon()
 
   for (;;) {
     select_again:
-    select_fd = sock;
+    select_fd = config.bgp_sock;
     for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++)
       if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
     select_fd++;
@@ -227,15 +227,15 @@ void skinny_bgp_daemon()
     if (reload_map_bgp_thread) {
       if (config.nfacctd_bgp_md5_file) {
 	unload_bgp_md5_file(&bgp_md5);
-	if (bgp_md5.num) process_bgp_md5_file(sock, &bgp_md5); // process unload
+	if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5); // process unload
 	load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
-	if (bgp_md5.num) process_bgp_md5_file(sock, &bgp_md5); // process load
+	if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5); // process load
       }
       reload_map_bgp_thread = FALSE;
     }
 
     /* New connection is coming in */ 
-    if (FD_ISSET(sock, &read_descs)) {
+    if (FD_ISSET(config.bgp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
@@ -267,7 +267,7 @@ void skinny_bgp_daemon()
               Log(LOG_INFO, "INFO ( default/core/BGP ): throttling at BGP peer #%u\n", peers_idx);
 	      log_notification_set(&log_notifications.bgp_peers_throttling);
 	    }
-            fd = accept(sock, (struct sockaddr *) &client, &clen);
+            fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
             close(fd);
             goto select_again;
           }
@@ -280,11 +280,11 @@ void skinny_bgp_daemon()
 
 	/* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_bgp_max_peers' (%d).\n", config.nfacctd_bgp_max_peers);
-	fd = accept(sock, (struct sockaddr *) &client, &clen);
+	fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
 	close(fd);
 	goto select_again;
       }
-      peer->fd = accept(sock, (struct sockaddr *) &client, &clen);
+      peer->fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
 
 #if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
