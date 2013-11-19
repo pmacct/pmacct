@@ -1052,7 +1052,8 @@ int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct
 {
   e->stack.func = NULL;
 
-  if (*value == '+') e->stack.func = PT_stack_sum;
+  if (*value == '+' || !strncmp(value, "sum", 3)) e->stack.func = PT_stack_sum;
+  else if (!strncmp(value, "or", 2)) e->stack.func = PT_stack_logical_or;
   else Log(LOG_ERR, "ERROR ( %s ): Unknown STACK operator: '%c'. Ignoring.\n", filename, value);
 
   return FALSE;
@@ -1985,6 +1986,11 @@ int PM_pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 pm_id_t PT_stack_sum(pm_id_t tag, pm_id_t pre)
 {
   return tag + pre;
+}
+
+pm_id_t PT_stack_logical_or(pm_id_t tag, pm_id_t pre)
+{
+  return tag | pre;
 }
 
 int BPAS_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)

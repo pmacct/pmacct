@@ -135,10 +135,10 @@
 !			(if not filtered out by the pre_tag_filter directive);
 !			plugins not configured for tags will only receive a
 !			single copy of the data.
-! 'stack'		SET: Currently '+' (ie. the sum symbol) is the unique
-!			supported value. This key makes sense only if JEQs are in
+! 'stack'		SET: Currently 'sum' (A + B) and 'or' (A | B) operators
+!			are supported. This key makes sense only if JEQs are in
 !			use. When matching, accumulate tags, using the specified
-!			operator/function. By setting 'stack=+', the resulting
+!			operator/function. By setting 'stack=sum', the resulting
 !			tag would be: <tag>=<previous ID + current ID>. 
 !
 !
@@ -193,9 +193,9 @@ set_tag=11000 ip=192.168.1.1 in=1 jeq=eval_out
 set_tag=12000 ip=192.168.1.1 in=2 jeq=eval_out
 set_tag=13000 ip=192.168.1.1 in=3 jeq=eval_out
 ! ... further INs
-set_tag=100 ip=192.168.1.1 out=1 label=eval_out stack=+
-set_tag=101 ip=192.168.1.1 out=2 stack=+
-set_tag=102 ip=192.168.1.1 out=3 stack=+
+set_tag=100 ip=192.168.1.1 out=1 label=eval_out stack=sum
+set_tag=101 ip=192.168.1.1 out=2 stack=sum
+set_tag=102 ip=192.168.1.1 out=3 stack=sum
 ! ... further OUTs 
 !
 ! ===

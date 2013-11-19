@@ -57,6 +57,7 @@ EXT int PT_map_jeq_handler(char *, struct id_entry *, char *, struct plugin_requ
 EXT int PT_map_return_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_stack_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT pm_id_t PT_stack_sum(pm_id_t, pm_id_t);
+EXT pm_id_t PT_stack_logical_or(pm_id_t, pm_id_t);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);

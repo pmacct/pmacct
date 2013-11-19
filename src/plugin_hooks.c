@@ -70,70 +70,56 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
 
       /* If nothing is supplied, let's hint some working default values */
-      if (list->cfg.pcap_savefile && !list->cfg.pipe_size && !list->cfg.buffer_size) {
-        list->cfg.pipe_size = 4096000; /* 4Mb */
-        list->cfg.buffer_size = 10240; /* 10Kb */
+      if (!list->cfg.pipe_size || !list->cfg.buffer_size) {
+        if (!list->cfg.pipe_size) list->cfg.pipe_size = 4096000; /* 4Mb */
+        if (!list->cfg.buffer_size) {
+	  if (list->cfg.pcap_savefile) list->cfg.buffer_size = 10240; /* 10Kb */
+	  else list->cfg.buffer_size = MIN(min_sz, 10240);
+	}
       }
+
       /* creating communication channel */
       socketpair(AF_UNIX, SOCK_DGRAM, 0, list->pipe);
-      if (list->cfg.pipe_size) {
-	if (list->cfg.pipe_size < min_sz) list->cfg.pipe_size = min_sz;
-      }
+
+      /* some validations */
+      if (list->cfg.pipe_size < min_sz) list->cfg.pipe_size = min_sz;
+      if (list->cfg.buffer_size < min_sz) list->cfg.buffer_size = min_sz;
+      if (list->cfg.buffer_size > list->cfg.pipe_size) list->cfg.buffer_size = list->cfg.pipe_size;
 
       /* checking SO_RCVBUF and SO_SNDBUF values; if different we take the smaller one */
       getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
       getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
       socklen = (rcv_buflen < snd_buflen) ? rcv_buflen : snd_buflen;
 
-      /* checking Core <-> Plugins buffer size; then, if required let's align it on
-         4 bytes boundary -- on the assumption that data strucures are aligned aswell. */
-      if (list->cfg.buffer_size < min_sz) list->cfg.buffer_size = min_sz;
+      /*  if required let's align plugin_buffer_size to  4 bytes boundary */
 #if NEED_ALIGN
       while (list->cfg.buffer_size % 4 != 0) list->cfg.buffer_size--;
 #endif
 
-      if (list->cfg.data_type == PIPE_TYPE_PAYLOAD) {
-	/* Let's tweak plugin_pipe_size if we don't have an explicit size */
-	if (!list->cfg.pipe_size) list->cfg.pipe_size = 4096000; /* 4Mb */
+      target_buflen = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
+      if (target_buflen > socklen) {
+	Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &target_buflen, l);
+	Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &target_buflen, l);
       }
 
-      /* if we are not supplied a 'plugin_pipe_size', then we calculate it using
-         buffer size and given socket size; if 'plugin_pipe_size' is known, we
-	 reverse the method: we try to obtain needed socket size to accomodate
-	 given pipe and buffer size */
-      if (!list->cfg.pipe_size) { 
-        list->cfg.pipe_size = (socklen/sizeof(char *))*list->cfg.buffer_size;
-	if ((list->cfg.debug) || (list->cfg.pipe_size > WARNING_PIPE_SIZE))  {
-          Log(LOG_INFO, "INFO ( %s/%s ): %u bytes are available to address shared memory segment; buffer size is %u bytes.\n",
-			list->name, list->type.string, socklen, list->cfg.buffer_size);
-	  Log(LOG_INFO, "INFO ( %s/%s ): Trying to allocate a shared memory segment of %u bytes.\n",
-			list->name, list->type.string, list->cfg.pipe_size);
-	}
-      }
-      else {
-        if (list->cfg.buffer_size > list->cfg.pipe_size)
-	  list->cfg.buffer_size = list->cfg.pipe_size;
+      getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
+      getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
+      if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
 
-        target_buflen = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
-        if (target_buflen > socklen) {
-	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &target_buflen, l);
-	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &target_buflen, l);
-        }
+      if (snd_buflen < socklen) {
+	Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &socklen, l);
+	Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &socklen, l);
 
         getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
         getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
         if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
+      }
 
-        if ((snd_buflen < socklen) || (list->cfg.debug)) {
-	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &socklen, l);
-	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &socklen, l);
-
-          getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
-          getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
-          if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
-
-          Log(LOG_INFO, "INFO ( %s/%s ): Plugin pipe size: obtained=%u target=%u.\n", list->name, list->type.string, snd_buflen, target_buflen);
-	}
+      if (list->cfg.debug || (list->cfg.pipe_size > WARNING_PIPE_SIZE)) {
+	Log(LOG_INFO, "INFO ( %s/%s ): plugin_pipe_size=%llu bytes plugin_buffer_size=%llu bytes\n", 
+	    list->name, list->type.string, list->cfg.pipe_size, list->cfg.buffer_size);
+        Log(LOG_INFO, "INFO ( %s/%s ): ctrl channel: obtained=%llu bytes target=%llu bytes\n",
+	    list->name, list->type.string, snd_buflen, target_buflen);
       }
 
       list->cfg.name = list->name;
