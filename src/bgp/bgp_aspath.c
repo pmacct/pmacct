@@ -75,10 +75,9 @@ struct assegment_header
 // struct hash *ashash;
 
 
-static inline as_t *
+void *
 assegment_data_new (int num)
 {
-  // XXX: to be protected
   return (malloc(ASSEGMENT_DATA_SIZE (num, 1)));
 }
 
@@ -100,14 +99,18 @@ assegment_new (u_char type, u_short length)
   
   new = malloc(sizeof (struct assegment));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (assegment_new). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (assegment_new: new). Exiting ..\n");
     exit_all(1);
   }
   memset(new, 0, sizeof (struct assegment));
   
   if (length) {
     new->as = assegment_data_new (length);
-	memset(new->as, 0, length);
+    if (!new->as) {
+      Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (assegment_new: new->as). Exiting ..\n");
+      exit_all(1);
+    }
+    memset(new->as, 0, length);
   }
   
   new->length = length;

@@ -81,7 +81,7 @@ nfacctd_SOURCES = nfacctd.c signals.c util.c strlcpy.c plugin_hooks.c         se
 
 nfacctd_LDFLAGS = $(DEFS)
 nfacctd_LDADD = $(pmacctd_PLUGINS)
-sfacctd_SOURCES = sfacctd.c signals.c util.c strlcpy.c plugin_hooks.c         server.c acct.c memory.c cfg.c imt_plugin.c log.c pkt_handlers.c         cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c pretag.c 	pretag_handlers.c ports_aggr.c addr.c ll.c setproctitle.c ip_flow.c 	classifier.c regexp.c regsub.c conntrack.c xflow_status.c 	plugin_common.c
+sfacctd_SOURCES = sfacctd.c signals.c util.c strlcpy.c plugin_hooks.c         server.c acct.c memory.c cfg.c imt_plugin.c log.c pkt_handlers.c         cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c pretag.c 	pretag_handlers.c ports_aggr.c addr.c ll.c setproctitle.c ip_flow.c 	classifier.c regexp.c regsub.c conntrack.c xflow_status.c 	plugin_common.c sfv5_module.c
 
 sfacctd_LDFLAGS = $(DEFS)
 sfacctd_LDADD = $(pmacctd_PLUGINS)
@@ -134,7 +134,7 @@ server.o acct.o memory.o cfg.o imt_plugin.o log.o pkt_handlers.o \
 cfg_handlers.o net_aggr.o bpf_filter.o print_plugin.o pretag.o \
 pretag_handlers.o ports_aggr.o addr.o ll.o setproctitle.o ip_flow.o \
 classifier.o regexp.o regsub.o conntrack.o xflow_status.o \
-plugin_common.o
+plugin_common.o sfv5_module.o
 sfacctd_DEPENDENCIES = 
 uacctd_OBJECTS =  uacctd.o signals.o util.o strlcpy.o plugin_hooks.o \
 server.o acct.o memory.o ll.o cfg.o imt_plugin.o log.o pkt_handlers.o \

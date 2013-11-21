@@ -243,7 +243,7 @@ EXT void process_SF_raw_packet(SFSample *, struct packet_ptrs_vector *, struct p
 EXT void readv2v4FlowSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void readv5FlowSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void readv2v4CountersSample(SFSample *);
-EXT void readv5CountersSample(SFSample *);
+EXT void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void finalizeSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void InterSampleCleanup(SFSample *);
 EXT void decodeMpls(SFSample *);

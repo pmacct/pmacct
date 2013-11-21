@@ -24,7 +24,7 @@ sfacctd_SOURCES = sfacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
         cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c pretag.c \
 	pretag_handlers.c ports_aggr.c addr.c ll.c setproctitle.c ip_flow.c \
 	classifier.c regexp.c regsub.c conntrack.c xflow_status.c \
-	plugin_common.c
+	plugin_common.c sfv5_module.c
 sfacctd_LDFLAGS = $(DEFS)
 sfacctd_LDADD = $(pmacctd_PLUGINS)
 uacctd_SOURCES = uacctd.c signals.c util.c strlcpy.c plugin_hooks.c \

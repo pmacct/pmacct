@@ -31,6 +31,7 @@
 #include "pmacct.h"
 #include "sflow.h"
 #include "sfacctd.h"
+#include "sfv5_module.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -997,21 +998,24 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
     set_vector_sample_type(pptrsv, 0);
+    sfv5_modules_db_init();
+
 SFv5_read_sampleType:
     sampleType = getData32(spp);
     if (!pptrsv->v4.sample_type) set_vector_sample_type(pptrsv, sampleType);
+
     switch (sampleType) {
     case SFLFLOW_SAMPLE:
       readv5FlowSample(spp, FALSE, pptrsv, req);
       break;
     case SFLCOUNTERS_SAMPLE:
-      readv5CountersSample(spp);
+      readv5CountersSample(spp, FALSE, pptrsv, req);
       break;
     case SFLFLOW_SAMPLE_EXPANDED:
       readv5FlowSample(spp, TRUE, pptrsv, req);
       break;
     case SFLCOUNTERS_SAMPLE_EXPANDED:
-      readv5CountersSample(spp);
+      readv5CountersSample(spp, TRUE, pptrsv, req);
       break;
     case SFLACL_BROCADE_SAMPLE:
       getData32(spp); /* trash: sample length */
@@ -2077,6 +2081,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
 
 void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
 {
+  struct sfv5_modules_db_field *db_field = NULL;
   u_int32_t num_elements, sampleLength, actualSampleLength;
   u_char *sampleStart;
 
@@ -2148,20 +2153,69 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
 	skipBytes(sample, length);
 	break;
       }
+
+      db_field = sfv5_modules_db_get_next_ie(tag);
+      if (db_field) {
+	db_field->type = tag;
+	db_field->ptr = start;
+	db_field->len = length;
+      }
+      else Log(LOG_WARNING, "WARN ( default/core ): readv5FlowSample(): no IEs available in SFv5 modules DB.\n");
+
       if (lengthCheck(sample, start, length) == ERR) return;
     }
   }
+
   if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
 
   finalizeSample(sample, pptrsv, req);
 }
 
-void readv5CountersSample(SFSample *sample)
+void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
 {
-  u_int32_t sampleLength;
+  struct sfv5_modules_db_field *db_field = NULL;
+  u_int32_t sampleLength, num_elements, idx, drain;
+  u_char *sampleStart;
 
   sampleLength = getData32(sample);
-  skipBytes(sample, sampleLength);
+  sampleStart = (u_char *)sample->datap;
+  drain = getData32(sample); /* samplesGenerated */
+
+  if (expanded) {
+    sample->ds_class = getData32(sample);
+    sample->ds_index = getData32(sample);
+  }
+  else {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+
+  num_elements = getData32(sample);
+
+  for (idx = 0; idx < num_elements; idx++) {
+    u_int32_t tag, length;
+    u_char *start, buf[51];
+
+    tag = getData32(sample);
+    length = getData32(sample);
+    start = (u_char *)sample->datap;
+    Log(LOG_DEBUG, "DEBUG ( default/core ): readv5CountersSample(): element tag %s.\n", printTag(tag, buf, 50));
+
+    db_field = sfv5_modules_db_get_next_ie(tag); 
+    if (db_field) {
+      db_field->type = tag;
+      db_field->ptr = start;
+      db_field->len = length;
+    }
+    else Log(LOG_WARNING, "WARN ( default/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n");
+
+    skipBytes(sample, length);
+  }
+
+  if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
+
+  // finalizeSample(sample, pptrsv, req);
 }
 
 /*
