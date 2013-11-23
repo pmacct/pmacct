@@ -956,6 +956,59 @@ int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, 
   else return TRUE; 
 }
 
+int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->src_mac.neg = pt_check_neg(&value);
+
+  if (string_etheraddr(value, &e->src_mac.a)) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad source MAC address '%s'. ", filename, value);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_MAC) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_mac' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_src_mac_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_src_mac_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_SRC_MAC;
+
+  return FALSE;
+}
+
+int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int tmp, x = 0;
+
+  e->vlan_id.neg = pt_check_neg(&value);
+
+  tmp = atoi(value);
+  if (tmp < 0 || tmp > 4096) {
+    Log(LOG_ERR, "ERROR ( %s ): 'vlan' need to be in the following range: 0 > value > 4096. ", filename);
+    return TRUE;
+  }
+  e->vlan_id.n = tmp;
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_VLAN_ID) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'vlan' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_vlan_id_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_vlan_id_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_VLAN_ID;
+
+  return FALSE;
+}
+
+
 int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, len;
@@ -1778,6 +1831,45 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->mpls_vpn_rd.neg);
 }
 
+int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IN_SRC_MAC].len) {
+      if (!memcmp(&entry->src_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6)))
+	return (FALSE | entry->src_mac.neg);
+      else return (TRUE ^ entry->src_mac.neg);
+    }
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
+int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t vlan_id = 0;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IN_VLAN].len) {
+      memcpy(&vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+    }
+    if (entry->vlan_id.n == vlan_id) return (FALSE | entry->vlan_id.neg);
+    else return (TRUE ^ entry->vlan_id.neg);
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
 int pretag_set_tos_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -1947,6 +2039,25 @@ int SF_pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->dst_as.n == sample->dst_as) return (FALSE | entry->dst_as.neg);
   else return (TRUE ^ entry->dst_as.neg);
+}
+
+int SF_pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (!memcmp(entry->src_mac.a, sample->eth_src, ETH_ADDR_LEN)) return (FALSE | entry->src_mac.neg);
+  else return (TRUE ^ entry->src_mac.neg);
+}
+
+int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->vlan_id.n == sample->in_vlan ||
+      entry->vlan_id.n == sample->out_vlan) return (FALSE | entry->vlan_id.neg);
+  else return (TRUE ^ entry->vlan_id.neg);
 }
 
 int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)

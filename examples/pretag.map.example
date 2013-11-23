@@ -117,6 +117,12 @@
 ! 'mpls_vpn_rd'		MATCH: Destination IP prefix BGP-signalled MPLS L2/L3
 !			VPN Route Distinguisher (RD) value. Encoding types #0, #1
 !			and #2 are supported as per rfc4364. See example below.
+! 'src_mac'		MATCH: In NetFlow v9 and IPFIX this is compared against
+!			IE #56, in sFlow against source MAC address field part
+!			of the Extended Switch object.
+! 'vlan'		MATCH: In NetFlow v9 and IPFIX this is compared against
+!			IE #58, in sFlow against in/out VLAN ID fields part of
+!			the Extended Switch object.
 ! 'label'		SET: Mark the rule with label's value. Labels don't need
 !			to be unique: when jumping, the first matching label wins.
 !			Label value 'next' is reserved for internal use and

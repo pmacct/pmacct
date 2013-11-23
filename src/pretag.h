@@ -51,6 +51,8 @@
 #define PRETAG_SET_TAG2			0x01000000
 #define PRETAG_MPLS_LABEL_BOTTOM	0x02000000
 #define PRETAG_FLOWSET_ID		0x04000000
+#define PRETAG_SRC_MAC			0x08000000
+#define PRETAG_VLAN_ID			0x10000000
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -83,6 +85,11 @@ typedef struct {
 } pt_hostaddr_t;
 
 typedef struct host_mask pt_hostmask_t;
+
+typedef struct {
+  u_int8_t neg;
+  u_char a[ETH_ADDR_LEN]; 
+} pt_etheraddr_t;
 
 typedef struct {
   u_int8_t neg;
@@ -130,6 +137,8 @@ struct id_entry {
   pt_uint32_t src_local_pref;
   pt_uint32_t local_pref;
   pt_uint32_t mpls_label_bottom;
+  pt_etheraddr_t src_mac;
+  pt_uint16_t vlan_id;
   s_uint8_t set_tos;
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */

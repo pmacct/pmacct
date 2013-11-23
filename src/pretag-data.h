@@ -45,6 +45,8 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"src_comms", PT_map_src_comms_handler},
   {"comms", PT_map_comms_handler},
   {"mpls_vpn_rd", PT_map_mpls_vpn_rd_handler},
+  {"src_mac", PT_map_src_mac_handler},
+  {"vlan", PT_map_vlan_id_handler},
   {"set_tag", PT_map_id_handler},
   {"set_tag2", PT_map_id2_handler},
   {"set_tos", PT_map_set_tos_handler},
