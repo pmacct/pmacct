@@ -486,14 +486,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         bson_append_string(bson_elem, "mac_dst", dst_mac);
       }
   
-      if (config.what_to_count & COUNT_VLAN) {
-        sprintf(misc_str, "%u", data->vlan_id); 
-        bson_append_string(bson_elem, "vlan_id", misc_str);
-      }
-      if (config.what_to_count & COUNT_COS) {
-        sprintf(misc_str, "%u", data->cos); 
-        bson_append_string(bson_elem, "cos", misc_str);
-      }
+      if (config.what_to_count & COUNT_VLAN) bson_append_int(bson_elem, "vlan_id", data->vlan_id);
+      if (config.what_to_count & COUNT_COS) bson_append_int(bson_elem, "cos", data->cos);
       if (config.what_to_count & COUNT_ETHERTYPE) {
         sprintf(misc_str, "%x", data->etype); 
         bson_append_string(bson_elem, "etype", misc_str);
@@ -558,22 +552,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         bson_append_string(bson_elem, "ip_dst", dst_host);
       }
   
-      if (config.what_to_count & COUNT_SRC_NMASK) {
-        sprintf(misc_str, "%u", data->src_nmask);
-        bson_append_string(bson_elem, "mask_src", misc_str);
-      }
-      if (config.what_to_count & COUNT_DST_NMASK) {
-        sprintf(misc_str, "%u", data->dst_nmask);
-        bson_append_string(bson_elem, "mask_dst", misc_str);
-      }
-      if (config.what_to_count & COUNT_SRC_PORT) {
-        sprintf(misc_str, "%u", data->src_port);
-        bson_append_string(bson_elem, "port_src", misc_str);
-      }
-      if (config.what_to_count & COUNT_DST_PORT) {
-        sprintf(misc_str, "%u", data->dst_port);
-        bson_append_string(bson_elem, "port_dst", misc_str);
-      }
+      if (config.what_to_count & COUNT_SRC_NMASK) bson_append_int(bson_elem, "mask_src", data->src_nmask);
+      if (config.what_to_count & COUNT_DST_NMASK) bson_append_int(bson_elem, "mask_dst", data->dst_nmask);
+      if (config.what_to_count & COUNT_SRC_PORT) bson_append_int(bson_elem, "port_src", data->src_port);
+      if (config.what_to_count & COUNT_DST_PORT) bson_append_int(bson_elem, "port_dst", data->dst_port);
+
   #if defined (WITH_GEOIP)
       if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
         if (data->src_ip_country > 0)
@@ -601,11 +584,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         }
       }
   
-      if (config.what_to_count & COUNT_IP_TOS) {
-        sprintf(misc_str, "%u", data->tos);
-        bson_append_string(bson_elem, "tos", misc_str);
-      }
-  
+      if (config.what_to_count & COUNT_IP_TOS) bson_append_int(bson_elem, "tos", data->tos);
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
       if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
         bson_append_string(bson_elem, "pkt_len_distrib", config.pkt_len_distrib_bins[data->pkt_len_distrib]);
@@ -618,31 +597,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         addr_to_str(dst_host, &pnat->post_nat_dst_ip);
         bson_append_string(bson_elem, "post_nat_ip_dst", dst_host);
       }
-      if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) {
-        sprintf(misc_str, "%u", pnat->post_nat_src_port);
-        bson_append_string(bson_elem, "post_nat_port_src", misc_str);
-      }
-      if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) {
-        sprintf(misc_str, "%u", pnat->post_nat_dst_port);
-        bson_append_string(bson_elem, "post_nat_port_dst", misc_str);
-      }
-      if (config.what_to_count_2 & COUNT_NAT_EVENT) {
-        sprintf(misc_str, "%u", pnat->nat_event);
-        bson_append_string(bson_elem, "nat_event", misc_str);
-      }
-  
-      if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
-        sprintf(misc_str, "%u", pmpls->mpls_label_top);
-        bson_append_string(bson_elem, "mpls_label_top", misc_str);
-      }
-      if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
-        sprintf(misc_str, "%u", pmpls->mpls_label_bottom);
-        bson_append_string(bson_elem, "mpls_label_bottom", misc_str);
-      }
-      if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
-        sprintf(misc_str, "%u", pmpls->mpls_stack_depth);
-        bson_append_string(bson_elem, "mpls_stack_depth", misc_str);
-      }
+      if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) bson_append_int(bson_elem, "post_nat_port_src", pnat->post_nat_src_port);
+      if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) bson_append_int(bson_elem, "post_nat_port_dst", pnat->post_nat_dst_port);
+      if (config.what_to_count_2 & COUNT_NAT_EVENT) bson_append_int(bson_elem, "nat_event", pnat->nat_event);
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) bson_append_int(bson_elem, "mpls_label_top", pmpls->mpls_label_top);
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) bson_append_int(bson_elem, "mpls_label_bottom", pmpls->mpls_label_bottom);
+      if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
         bson_timestamp_t bts;
