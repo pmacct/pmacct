@@ -24,6 +24,9 @@
 #define MAX_LABEL_LEN 32
 #define MAX_PRETAG_MAP_ENTRIES 384 
 
+#define MAX_ID_TABLE_INDEXES 8
+#define ID_TABLE_INDEX_DEPTH 8
+
 #define PRETAG_IN_IFACE			0x00000001
 #define PRETAG_OUT_IFACE		0x00000002
 #define PRETAG_NEXTHOP			0x00000004
@@ -53,6 +56,7 @@
 #define PRETAG_FLOWSET_ID		0x04000000
 #define PRETAG_SRC_MAC			0x08000000
 #define PRETAG_VLAN_ID			0x10000000
+#define PRETAG_IP			0x20000000
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -60,6 +64,8 @@
 #define BTA_MAP_RCODE_ID_ID2		0x00000800
 #define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00001000
 #define BPAS_MAP_RCODE_BGP		0x00002000
+
+#define IDT_INDEX_HASH_BASE(entries)	(entries * 2)
 
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
@@ -147,14 +153,24 @@ struct id_entry {
   struct bpf_program filter;
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];
-  u_int32_t func_type[N_MAP_HANDLERS];
+  u_int64_t func_type[N_MAP_HANDLERS];
   pretag_handler set_func[N_MAP_HANDLERS];
-  u_int32_t set_func_type[N_MAP_HANDLERS];
+  u_int64_t set_func_type[N_MAP_HANDLERS];
   char label[MAX_LABEL_LEN];
   pt_jeq_t jeq;
   u_int8_t ret;
   pt_stack_t stack;
-  u_int32_t last_matched;
+  u_int64_t last_matched;
+};
+
+struct id_index_entry {
+  struct id_entry *e[ID_TABLE_INDEX_DEPTH];
+};
+
+struct id_table_index {
+  u_int64_t bitmap; 
+  int entries;
+  struct id_index_entry *idx_t;
 };
 
 struct id_table {
@@ -167,6 +183,7 @@ struct id_table {
   unsigned short int ipv6_num;
 #endif
   struct id_entry *e;
+  struct id_table_index index[MAX_ID_TABLE_INDEXES];
   time_t timestamp;
 };
 
@@ -190,6 +207,7 @@ EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, 
 EXT u_int8_t pt_check_neg(char **);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
+EXT u_int64_t pretag_build_index_bitmap(struct id_entry *, int);
 
 EXT int tag_map_allocated;
 EXT int bpas_map_allocated;
