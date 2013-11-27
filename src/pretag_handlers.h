@@ -61,6 +61,29 @@ EXT int PT_map_stack_handler(char *, struct id_entry *, char *, struct plugin_re
 EXT pm_id_t PT_stack_sum(pm_id_t, pm_id_t);
 EXT pm_id_t PT_stack_logical_or(pm_id_t, pm_id_t);
 
+EXT int PT_map_index_entries_ip_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_input_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_output_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_bgp_nexthop_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_src_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_dst_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_peer_src_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_peer_dst_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_src_mac_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_vlan_id_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_ip_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_input_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_output_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_src_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_dst_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_peer_src_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_src_mac_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_vlan_id_handler(struct id_entry *, void *);
+
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int BPAS_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);

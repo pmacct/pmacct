@@ -57,6 +57,36 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"", NULL}
 };
 
+const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
+  {PRETAG_IP, PT_map_index_entries_ip_handler},
+  {PRETAG_IN_IFACE, PT_map_index_entries_input_handler},
+  {PRETAG_OUT_IFACE, PT_map_index_entries_output_handler},
+  {PRETAG_BGP_NEXTHOP, PT_map_index_entries_bgp_nexthop_handler},
+  {PRETAG_SRC_AS, PT_map_index_entries_src_as_handler},
+  {PRETAG_DST_AS, PT_map_index_entries_dst_as_handler},
+  {PRETAG_PEER_SRC_AS, PT_map_index_entries_peer_src_as_handler},
+  {PRETAG_PEER_DST_AS, PT_map_index_entries_peer_dst_as_handler},
+  {PRETAG_MPLS_VPN_RD, PT_map_index_entries_mpls_vpn_rd_handler},
+  {PRETAG_SRC_MAC, PT_map_index_entries_src_mac_handler},
+  {PRETAG_VLAN_ID, PT_map_index_entries_vlan_id_handler},
+  {0, NULL}
+};
+
+const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
+  {PRETAG_IP, PT_map_index_fdata_ip_handler},
+  {PRETAG_IN_IFACE, PT_map_index_fdata_input_handler},
+  {PRETAG_OUT_IFACE, PT_map_index_fdata_output_handler},
+  {PRETAG_BGP_NEXTHOP, PT_map_index_fdata_bgp_nexthop_handler},
+  {PRETAG_SRC_AS, PT_map_index_fdata_src_as_handler},
+  {PRETAG_DST_AS, PT_map_index_fdata_dst_as_handler},
+  {PRETAG_PEER_SRC_AS, PT_map_index_fdata_peer_src_as_handler},
+  {PRETAG_PEER_DST_AS, PT_map_index_fdata_peer_dst_as_handler},
+  {PRETAG_MPLS_VPN_RD, PT_map_index_fdata_mpls_vpn_rd_handler},
+  {PRETAG_SRC_MAC, PT_map_index_fdata_src_mac_handler},
+  {PRETAG_VLAN_ID, PT_map_index_fdata_vlan_id_handler},
+  {0, NULL}
+};
+
 const struct _map_dictionary_line tag_map_tee_dictionary[] = {
   {"id", PT_map_id_handler},
   {"id2", PT_map_id2_handler},

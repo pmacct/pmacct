@@ -2037,6 +2037,28 @@ int cfg_key_pre_tag_map_entries(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pre_tag_map_index(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pre_tag_map_index = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pre_tag_map_index = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_time_secs(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

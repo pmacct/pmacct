@@ -70,6 +70,8 @@
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
 
+typedef u_int64_t pt_bitmap_t;
+
 typedef struct {
   u_int8_t neg;
   u_int8_t n;
@@ -153,14 +155,14 @@ struct id_entry {
   struct bpf_program filter;
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];
-  u_int64_t func_type[N_MAP_HANDLERS];
+  pt_bitmap_t func_type[N_MAP_HANDLERS];
   pretag_handler set_func[N_MAP_HANDLERS];
-  u_int64_t set_func_type[N_MAP_HANDLERS];
+  pt_bitmap_t set_func_type[N_MAP_HANDLERS];
   char label[MAX_LABEL_LEN];
   pt_jeq_t jeq;
   u_int8_t ret;
   pt_stack_t stack;
-  u_int64_t last_matched;
+  pt_bitmap_t last_matched;
 };
 
 struct id_index_entry {
@@ -168,7 +170,7 @@ struct id_index_entry {
 };
 
 struct id_table_index {
-  u_int64_t bitmap; 
+  pt_bitmap_t bitmap; 
   int entries;
   struct id_index_entry *idx_t;
 };
@@ -192,6 +194,11 @@ struct _map_dictionary_line {
   int (*func)(char *, struct id_entry *, char *, struct plugin_requests *, int);
 };
 
+struct _map_index_dictionary_line {
+  pt_bitmap_t key;
+  int (*func)(struct id_entry *, void *);
+};
+
 struct pretag_filter {
   u_int16_t num;
   ptt_t table[MAX_PRETAG_MAP_ENTRIES/4];
@@ -207,7 +214,11 @@ EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, 
 EXT u_int8_t pt_check_neg(char **);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
-EXT u_int64_t pretag_build_index_bitmap(struct id_entry *, int);
+EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
+EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
+EXT int pretag_index_allocate(struct id_table *, char *);
+EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *, char *);
+EXT void pretag_index_destroy(struct id_table *, char *);
 
 EXT int tag_map_allocated;
 EXT int bpas_map_allocated;

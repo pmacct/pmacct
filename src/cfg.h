@@ -226,6 +226,7 @@ struct configuration {
   struct pretag_filter pt2f;
   char *pre_tag_map;
   int pre_tag_map_entries;
+  int pre_tag_map_index;
   pm_id_t post_tag;
   int ext_sampling_rate;
   int sampling_rate;
