@@ -550,6 +550,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	}
 
+	/* set handlers */
+	pretag_index_set_handlers(t, filename);
+
 	/* allocate indexes */
         pretag_index_allocate(t, filename);
 
@@ -650,6 +653,47 @@ int pretag_index_insert_bitmap(struct id_table *t, pt_bitmap_t idx_bmap)
   return TRUE;
 }
 
+int pretag_index_set_handlers(struct id_table *t, char *filename)
+{
+  pt_bitmap_t residual_idx_bmap = 0;
+  u_int32_t index = 0, iterator = 0, handler_index = 0;
+
+  if (!t) return TRUE;
+  
+  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+    residual_idx_bmap = t->index[iterator].bitmap;
+
+    handler_index = 0;
+    memset(t->index[iterator].idt_handler, 0, sizeof(t->index[iterator].idt_handler));
+    memset(t->index[iterator].fdata_handler, 0, sizeof(t->index[iterator].fdata_handler));
+
+    for (index = 0; tag_map_index_entries_dictionary[index].key; index++) {
+      if (t->index[iterator].bitmap & tag_map_index_entries_dictionary[index].key) {
+        t->index[iterator].idt_handler[handler_index] = (*tag_map_index_entries_dictionary[index].func);
+	handler_index++;
+
+        residual_idx_bmap ^= tag_map_index_entries_dictionary[index].key;
+      }
+    }
+
+    /* we set foreign data handlers here but skip on the residual_idx_bmap */
+    for (index = 0; tag_map_index_fdata_dictionary[index].key; index++) {
+      if (t->index[iterator].bitmap & tag_map_index_fdata_dictionary[index].key) {
+        t->index[iterator].fdata_handler[handler_index] = (*tag_map_index_fdata_dictionary[index].func);
+        handler_index++;
+      }
+    }
+
+    if (residual_idx_bmap) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): pre_tag_map_index: not supported for field(s) %x in table '%s'. Indexing disabled.\n",
+		config.name, config.type, residual_idx_bmap, filename);
+      pretag_index_destroy(t, filename);
+    }
+  }
+
+  return FALSE;
+}
+
 int pretag_index_allocate(struct id_table *t, char *filename)
 {
   pt_bitmap_t idx_t_size = 0;
@@ -659,16 +703,16 @@ int pretag_index_allocate(struct id_table *t, char *filename)
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].bitmap) {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): '%s': index bitmap %x (%u entries)\n", config.name,
-    		config.type, filename, t->index[iterator].bitmap, t->index[iterator].entries);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): pre_tag_map_index: index bitmap %x (%u entries) for table '%s'\n", config.name,
+    		config.type, t->index[iterator].bitmap, t->index[iterator].entries, filename);
 
       assert(!t->index[iterator].idx_t);
       idx_t_size = IDT_INDEX_HASH_BASE(t->index[iterator].entries) * sizeof(struct id_index_entry);
       t->index[iterator].idx_t = malloc(idx_t_size);
 
       if (!t->index[iterator].idx_t) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): '%s': unable to allocate index '%x'\n", config.name,
-		config.type, filename, t->index[iterator].bitmap);
+        Log(LOG_ERR, "ERROR ( %s/%s ): pre_tag_map_index: unable to allocate index %x for table '%s'\n", config.name,
+		config.type, t->index[iterator].bitmap, filename);
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
       }
@@ -681,14 +725,23 @@ int pretag_index_allocate(struct id_table *t, char *filename)
 
 int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr, char *filename)
 {
-  u_int32_t index = 0, iterator = 0;
+  struct id_entry e;
+  u_int32_t index = 0, iterator = 0, handler_index = 0;
 
   if (!t) return TRUE;
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
-    if (t->index[iterator].bitmap == idx_bmap) {
-      int modulo = cache_crc32((unsigned char *)ptr, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
-      struct id_index_entry *idie = &t->index[iterator].idx_t[modulo];
+    if (t->index[iterator].bitmap && t->index[iterator].bitmap == idx_bmap) {
+      struct id_index_entry *idie;
+      int modulo;
+
+      /* fill 'e' in and compute modulo */
+      memset(&e, 0, sizeof(struct id_entry));
+      for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
+	(*t->index[iterator].idt_handler[handler_index])(&e, ptr);
+      }
+      modulo = cache_crc32((unsigned char *)&e, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      idie = &t->index[iterator].idx_t[modulo];
 
       for (index = 0; index < ID_TABLE_INDEX_DEPTH; index++) {
         if (!idie->e[index]) {
@@ -698,7 +751,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       }
 
       if (index == ID_TABLE_INDEX_DEPTH) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Out of index space %x for table '%s'. Indexing disabled.\n",
+        Log(LOG_WARNING, "WARN ( %s/%s ): pre_tag_map_index: out of index space %x for table '%s'. Indexing disabled.\n",
 		config.name, config.type, idx_bmap, filename);
 	pretag_index_destroy(t, filename);
 	break;
@@ -718,7 +771,7 @@ void pretag_index_destroy(struct id_table *t, char *filename)
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].idx_t) {
       free(t->index[iterator].idx_t);
-      Log(LOG_INFO, "INFO ( %s/%s ): Destroyed index %x for table '%s'.\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): pre_tag_map_index: destroyed index %x for table '%s'.\n",
 		config.name, config.type, t->index[iterator].bitmap, filename);
     }
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));

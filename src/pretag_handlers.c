@@ -2428,46 +2428,122 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
 int PT_map_index_entries_ip_handler(struct id_entry *e, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src; 
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->agent_ip, &src_e->agent_ip, sizeof(pt_hostaddr_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_input_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->input, &src_e->input, sizeof(pt_uint32_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_output_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->output, &src_e->output, sizeof(pt_uint32_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_bgp_nexthop_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->bgp_nexthop, &src_e->bgp_nexthop, sizeof(pt_hostaddr_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_src_as_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->src_as, &src_e->src_as, sizeof(pt_uint32_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_dst_as_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->dst_as, &src_e->dst_as, sizeof(pt_uint32_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_peer_src_as_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->peer_src_as, &src_e->peer_src_as, sizeof(pt_uint32_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_peer_dst_as_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->peer_dst_as, &src_e->peer_dst_as, sizeof(pt_uint32_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->mpls_vpn_rd, &src_e->mpls_vpn_rd, sizeof(pt_rd_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_src_mac_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->src_mac, &src_e->src_mac, sizeof(pt_etheraddr_t));
+
+  return FALSE;
 }
 
 int PT_map_index_entries_vlan_id_handler(struct id_entry *e, void *src)
 {
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE; 
+
+  memcpy(&e->vlan_id, &src_e->vlan_id, sizeof(pt_uint16_t));
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)

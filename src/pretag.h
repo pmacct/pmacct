@@ -22,6 +22,7 @@
 /* Pre-Tag map stuff */
 #define N_MAP_HANDLERS N_PRIMITIVES
 #define MAX_LABEL_LEN 32
+#define MAX_BITMAP_ENTRIES 64 /* pt_bitmap_t -> u_int64_t */
 #define MAX_PRETAG_MAP_ENTRIES 384 
 
 #define MAX_ID_TABLE_INDEXES 8
@@ -165,6 +166,8 @@ struct id_entry {
   pt_bitmap_t last_matched;
 };
 
+typedef int (*pretag_copier)(struct id_entry *, void *);
+
 struct id_index_entry {
   struct id_entry *e[ID_TABLE_INDEX_DEPTH];
 };
@@ -172,6 +175,8 @@ struct id_index_entry {
 struct id_table_index {
   pt_bitmap_t bitmap; 
   int entries;
+  pretag_copier idt_handler[MAX_BITMAP_ENTRIES];
+  pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
   struct id_index_entry *idx_t;
 };
 
@@ -196,7 +201,7 @@ struct _map_dictionary_line {
 
 struct _map_index_dictionary_line {
   pt_bitmap_t key;
-  int (*func)(struct id_entry *, void *);
+  pretag_copier func;
 };
 
 struct pretag_filter {
@@ -216,6 +221,7 @@ EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
 EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
 EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
+EXT int pretag_index_set_handlers(struct id_table *, char *);
 EXT int pretag_index_allocate(struct id_table *, char *);
 EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *, char *);
 EXT void pretag_index_destroy(struct id_table *, char *);
