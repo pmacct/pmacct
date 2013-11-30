@@ -2548,6 +2548,35 @@ int PT_map_index_entries_vlan_id_handler(struct id_entry *e, void *src)
 
 int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
 {
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
+  struct sockaddr sa_local;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &sa_local;
+#if defined ENABLE_IPV6
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &sa_local;
+#endif
+  SFSample *sample = (SFSample *)pptrs->f_data;
+  u_int16_t port;
+
+  if (config.acct_type == ACCT_NF) {
+    sa_to_addr(sa, &e->agent_ip, &port);
+  }
+  else if (config.acct_type == ACCT_SF) {
+    if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
+      sa_local.sa_family = AF_INET;
+      sa4->sin_addr.s_addr = sample->agent_addr.address.ip_v4.s_addr;
+    }
+#if defined ENABLE_IPV6
+    else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
+      sa_local.sa_family = AF_INET6;
+      for (j = 0; j < 4; j++) sa6->sin6_addr.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
+    }
+#endif 
+    sa_to_addr(&sa_local, &e->agent_ip, &port);
+  }
+  else return TRUE;
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_input_handler(struct id_entry *e, void *src)
@@ -2560,6 +2589,75 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, void *src)
 
 int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, void *src)
 {
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
+  struct bgp_info *info;
+
+  if (evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_BGP)) {
+    if (dst_ret) {
+      if (pptrs->bgp_nexthop_info)
+	info = (struct bgp_info *) pptrs->bgp_nexthop_info;
+      else
+	info = (struct bgp_info *) pptrs->bgp_dst_info;
+
+      if (info && info->attr) {
+	if (info->attr->mp_nexthop.family == AF_INET) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
+	}
+#if defined ENABLE_IPV6
+	else if (info->attr->mp_nexthop.family == AF_INET6) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
+	}
+#endif
+	else {
+	  memcpy(&e->bgp_nexthop.a.address.ipv4, &info->attr->nexthop, 4);
+	}
+      }
+    }
+  }
+  else if (evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) {
+    if (config.acct_type == ACCT_NF) {
+      switch(hdr->version) {
+      case 10:
+      case 9:
+	if (tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len);
+	}
+	else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len);
+	}
+#if defined ENABLE_IPV6
+	if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len);
+	}
+	else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len);
+	}
+	else if (tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len) {
+	  memcpy(&e->bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len);
+	}
+#endif
+      }
+    }
+    else if (config.acct_type == ACCT_SF) {
+      if (sample->gotIPV4) {
+	memcpy(&e->bgp_nexthop.a.address.ipv4, &sample->bgp_nextHop.address.ip_v4, 4);
+      }
+#if defined ENABLE_IPV6
+      else if (sample->gotIPV6) {
+	memcpy(&e->bgp_nexthop.a.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz);
+      }
+#endif
+    }
+    else return TRUE;
+  }
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_src_as_handler(struct id_entry *e, void *src)
@@ -2584,8 +2682,49 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, void *src)
 
 int PT_map_index_fdata_src_mac_handler(struct id_entry *e, void *src)
 {
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_IN_SRC_MAC].len) {
+        memcpy(&e->src_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
+      }
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    memcpy(&e->src_mac.a, sample->eth_src, ETH_ADDR_LEN);
+  }
+  else return TRUE;
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, void *src)
 {
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_IN_VLAN].len) {
+        memcpy(&e->vlan_id.n, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+      }
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    if (sample->in_vlan) e->vlan_id.n = sample->in_vlan;
+    else if (sample->out_vlan) e->vlan_id.n = sample->out_vlan;
+  }
+  else return TRUE;
+
+  return FALSE;
 }

@@ -777,3 +777,57 @@ void pretag_index_destroy(struct id_table *t, char *filename)
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
   }
 }
+
+void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results)
+{
+  struct id_entry res_idt, res_fdata;
+  struct id_index_entry *idie;
+  u_int32_t iterator, index_cc, index_hdlr;
+  int modulo;
+
+  if (!t || !index_results) return;
+
+  memset(&index_results, 0, (sizeof(struct id_entry) * MAX_ID_TABLE_INDEXES));
+  memset(&res_idt, 0, sizeof(res_idt));
+  memset(&res_fdata, 0, sizeof(res_fdata));
+
+  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+    for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
+      (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, pptrs);
+    }
+
+    modulo = cache_crc32((unsigned char *)&res_fdata, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+    idie = &t->index[iterator].idx_t[modulo];
+
+    for (index_cc = 0; idie->e[index_cc] && index_cc < ID_TABLE_INDEX_DEPTH; index_cc++) {
+      for (index_hdlr = 0; (*t->index[iterator].idt_handler[index_hdlr]); index_hdlr++) {
+        (*t->index[iterator].idt_handler[index_hdlr])(&res_idt, idie->e[index_cc]);
+      }
+
+      if (!memcmp(&res_idt, &res_fdata, sizeof(struct id_entry))) {
+        index_results[iterator] = idie->e[index_cc];
+        break;
+      }
+    }
+  }
+
+  pretag_index_results_sort(index_results);
+}
+
+void pretag_index_results_sort(struct id_entry **index_results)
+{
+  struct id_entry *ptr = NULL;
+  u_int32_t i, j;
+
+  if (!index_results) return;
+
+  for (i = 0, j = 1; index_results[i] && i < ID_TABLE_INDEX_DEPTH; i++, j++) {
+    if (index_results[j] && j < ID_TABLE_INDEX_DEPTH) {
+      if (index_results[i]->pos > index_results[j]->pos) {
+	ptr = index_results[j];
+	index_results[j] = index_results[i];
+	index_results[i] = ptr;
+      }
+    }
+  }
+}

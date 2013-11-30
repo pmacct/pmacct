@@ -41,6 +41,7 @@
 #include "net_aggr.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
+#include "crc32.c"
 
 /* variables to be exported away */
 int debug;
@@ -2657,6 +2658,15 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     pptrs->have_tag = FALSE;
     pptrs->have_tag2 = FALSE;
   }
+
+  /* Giving a first try with index(es) */
+/*
+  if (config.pre_tag_map_index && t->type == ACCT_SF) {
+    struct id_entry *index_results[MAX_ID_TABLE_INDEXES];
+
+    pretag_index_lookup(t, pptrs, index_results);
+  }
+*/
 
   if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
     begin = 0;
