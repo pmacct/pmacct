@@ -2640,7 +2640,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &sa_local;
 #endif 
   SFSample *sample = (SFSample *)pptrs->f_data; 
-  int x, begin = 0, end = 0;
+  int x, j, begin = 0, end = 0;
   pm_id_t ret = 0;
 
   if (!t) return 0;
@@ -2659,7 +2659,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   }
 
   /* Giving a first try with index(es) */
-  if (config.index_maps && pretag_index_have_one(t) && t->type == ACCT_SF) {
+  if (config.maps_index && pretag_index_have_one(t) && t->type == ACCT_SF) {
     struct id_entry *index_results[MAX_ID_TABLE_INDEXES];
     u_int32_t iterator;
 

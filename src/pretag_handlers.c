@@ -2557,7 +2557,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   SFSample *sample = (SFSample *)pptrs->f_data;
-  u_int16_t port;
+  u_int16_t port, j;
 
   if (config.acct_type == ACCT_NF) {
     sa_to_addr(sa, &e->agent_ip, &port);
@@ -2570,7 +2570,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
 #if defined ENABLE_IPV6
     else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
       e->agent_ip.a.family = AF_INET6;
-      for (j = 0; j < 4; j++) e->agent_ip.a.address.ipv6.sin6_addr.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
+      for (j = 0; j < 4; j++) e->agent_ip.a.address.ipv6.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
     }
 #endif 
   }

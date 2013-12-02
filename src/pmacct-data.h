@@ -429,10 +429,13 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"sfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"pcap_savefile", cfg_key_pcap_savefile},
-  {"refresh_maps", cfg_key_refresh_maps},
-  {"index_maps", cfg_key_index_maps},
+  {"refresh_maps", cfg_key_maps_refresh}, // legacy
+  {"index_maps", cfg_key_maps_index}, // legacy
+  {"maps_refresh", cfg_key_maps_refresh},
+  {"maps_index", cfg_key_maps_index},
+  {"maps_entries", cfg_key_maps_entries},
   {"pre_tag_map", cfg_key_pre_tag_map},	
-  {"pre_tag_map_entries", cfg_key_pre_tag_map_entries},	
+  {"pre_tag_map_entries", cfg_key_maps_entries}, // legacy	
   {"pre_tag_filter", cfg_key_pre_tag_filter},
   {"pre_tag2_filter", cfg_key_pre_tag2_filter},
   {"post_tag", cfg_key_post_tag},

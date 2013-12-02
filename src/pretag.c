@@ -63,7 +63,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   memset(&st, 0, sizeof(st));
   memset(&tmp, 0, sizeof(struct id_table));
 
-  if (!config.pre_tag_map_entries) config.pre_tag_map_entries = MAX_PRETAG_MAP_ENTRIES;
+  if (!config.maps_entries) config.maps_entries = MAX_PRETAG_MAP_ENTRIES;
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
@@ -71,7 +71,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       goto handle_error;
     }
 
-    sz = sizeof(struct id_entry)*config.pre_tag_map_entries;
+    sz = sizeof(struct id_entry)*config.maps_entries;
 
     if (t) {
       if (*map_allocated == 0) {
@@ -86,7 +86,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       else {
         ptr = t->e ;
 
-        if (config.index_maps) {
+        if (config.maps_index) {
 	  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)
 	    pretag_index_destroy(t, filename);
 	}
@@ -119,9 +119,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       ignoring = FALSE;
       req->line_num = ++tot_lines;
 
-      if (tmp.num >= config.pre_tag_map_entries) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): map '%s' cut to the first %u entries. Number of entries can be configured via 'pre_tag_map_etries'.\n",
-		config.name, config.type, filename, config.pre_tag_map_entries);
+      if (tmp.num >= config.maps_entries) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): map '%s' cut to the first %u entries. Number of entries can be configured via 'maps_entries'.\n",
+		config.name, config.type, filename, config.maps_entries);
 	break;
       }
       memset(buf, 0, read_len);
@@ -531,7 +531,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 #endif
 
       /* pre_tag_map indexing here */
-      if (config.index_maps &&
+      if (config.maps_index &&
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)) {
 	pt_bitmap_t idx_bmap;
 
@@ -736,7 +736,7 @@ int pretag_index_set_handlers(struct id_table *t, char *filename)
     }
 
     if (residual_idx_bmap) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): index_maps: not supported for field(s) %x in table '%s'. Indexing disabled.\n",
+      Log(LOG_WARNING, "WARN ( %s/%s ): maps_index: not supported for field(s) %x in table '%s'. Indexing disabled.\n",
 		config.name, config.type, residual_idx_bmap, filename);
       pretag_index_destroy(t, filename);
     }
@@ -754,7 +754,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].bitmap) {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): index_maps: index bitmap %x (%u entries) for table '%s'\n", config.name,
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): maps_index: index bitmap %x (%u entries) for table '%s'\n", config.name,
     		config.type, t->index[iterator].bitmap, t->index[iterator].entries, filename);
 
       assert(!t->index[iterator].idx_t);
@@ -762,7 +762,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
       t->index[iterator].idx_t = malloc(idx_t_size);
 
       if (!t->index[iterator].idx_t) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): index_maps: unable to allocate index %x for table '%s'\n", config.name,
+        Log(LOG_ERR, "ERROR ( %s/%s ): maps_index: unable to allocate index %x for table '%s'\n", config.name,
 		config.type, t->index[iterator].bitmap, filename);
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
@@ -802,7 +802,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       }
 
       if (index == ID_TABLE_INDEX_DEPTH) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): index_maps: out of index space %x for table '%s'. Indexing disabled.\n",
+        Log(LOG_WARNING, "WARN ( %s/%s ): maps_index: out of index space %x for table '%s'. Indexing disabled.\n",
 		config.name, config.type, idx_bmap, filename);
 	pretag_index_destroy(t, filename);
 	break;
@@ -822,7 +822,7 @@ void pretag_index_destroy(struct id_table *t, char *filename)
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].idx_t) {
       free(t->index[iterator].idx_t);
-      Log(LOG_INFO, "INFO ( %s/%s ): index_maps: destroyed index %x for table '%s'.\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): maps_index: destroyed index %x for table '%s'.\n",
 		config.name, config.type, t->index[iterator].bitmap, filename);
     }
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));

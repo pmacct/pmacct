@@ -1231,7 +1231,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
       if (ri->peer == peer) break;
     }
     else {
-      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, &rd, sizeof(rd_t)))
+      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)))
 	break;
     }
   }
@@ -1362,7 +1362,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
       if (ri->peer == peer) break;
     }
     else {
-      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, &rd, sizeof(rd_t)))
+      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)))
 	break;
     }
   }

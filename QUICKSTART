@@ -940,8 +940,8 @@ plugin_pipe_size: 1024000
 aggregate: tag, src_as, dst_as, peer_src_as, peer_dst_as, peer_src_ip, peer_dst_ip, local_pref, as_path
 
 pre_tag_map: /path/to/pretag.map
-refresh_maps: true
-pre_tag_map_entries: 3840
+maps_refresh: true
+maps_entries: 3840
 
 The content of the maps (bgp_peer_src_as_map, pre_tag_map) is meant to be pretty
 standard and will not be shown. As it can be grasped from the above configuration,

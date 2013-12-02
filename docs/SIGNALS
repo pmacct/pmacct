@@ -11,7 +11,7 @@ SIGUSR1:        returns various statistics via either console or syslog; the
 		syslog level used is NOTICE; the facility is selected through
 		configuration (ie. key 'syslog'). The feature works for all
 		daemons;
-SIGUSR2:	if 'refresh_maps' config directive is enabled, it causes Core
+SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes Core
 		Process-based maps to be reloaded (ie. Pre-Tagging, BGP source
 		peer ASN, NetFlow/sFlow agent to BGP peer, BGP MD5, etc.).
 SIGINT:		if starting pmacct in foreground the signal is propagated to
@@ -30,6 +30,6 @@ SIGPIPE:	ignored;
 SIGCHLD:	ignored;
 SIGHUP:		inherited by Core Process; 
 SIGUSR1:	ignored;
-SIGUSR2:        if 'refresh_maps' configuration directive is enabled it causes
+SIGUSR2:        if 'maps_refresh' configuration directive is enabled it causes
 		Ports and Networks maps to be reloaded;
 SIGINT:		causes the process to exit gracefully;	

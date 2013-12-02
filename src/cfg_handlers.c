@@ -1718,7 +1718,7 @@ int cfg_key_ports_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_refresh_maps(char *filename, char *name, char *value_ptr)
+int cfg_key_maps_refresh(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -1726,8 +1726,8 @@ int cfg_key_refresh_maps(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.refresh_maps = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'refresh_maps'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.maps_refresh = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'maps_refresh'. Globalized.\n", filename);
 
   return changes;
 }
@@ -2020,24 +2020,24 @@ int cfg_key_pre_tag_map(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_pre_tag_map_entries(char *filename, char *name, char *value_ptr)
+int cfg_key_maps_entries(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
   if (value <= 0) {
-    Log(LOG_ERR, "WARN ( %s ): 'pre_tag_map_entries' has to be > 0.\n", filename);
+    Log(LOG_ERR, "WARN ( %s ): 'maps_entries' has to be > 0.\n", filename);
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.pre_tag_map_entries = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'pre_tag_map_entries'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.maps_entries = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'maps_entries'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_index_maps(char *filename, char *name, char *value_ptr)
+int cfg_key_maps_index(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -2045,11 +2045,11 @@ int cfg_key_index_maps(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.index_maps = value;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.maps_index = value;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.index_maps = value;
+        list->cfg.maps_index = value;
         changes++;
         break;
       }

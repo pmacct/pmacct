@@ -392,7 +392,7 @@ void set_default_values()
 
   while (list) {
     list->cfg.promisc = TRUE;
-    list->cfg.refresh_maps = TRUE;
+    list->cfg.maps_refresh = TRUE;
 
     list = list->next;
   }

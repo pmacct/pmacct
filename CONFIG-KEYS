@@ -933,13 +933,13 @@ DESC:		full pathname to a file containing tag mappings. Tags can be internal-onl
 		the Core Process (ie. once for all instantiated plugins). Results of evaluation of pre_tag_map
 		overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/sfprobe plugin.  
 
-KEY:		pre_tag_map_entries [GLOBAL]
+KEY:		maps_entries [GLOBAL]
 DESC:		defines the maximum number of entries the Pre-Tagging map can contain. The default value is
 		suitable for most scenarios, though tuning it could be required either to save on memory or
 		to allow for more entries. Refer to the specific map directives documentation in this file
 		to see which are affected by this setting. (default: 384) 
 
-KEY:		refresh_maps [GLOBAL]
+KEY:		maps_refresh [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		when enabled, this directive allows to reload map files without restarting the daemon instance. 
 		For example, it may result particularly useful to reload Pre-Tagging entries or Networks map in
@@ -950,6 +950,14 @@ DESC:		when enabled, this directive allows to reload map files without restartin
 		devoted to Networks and Ports maps instead. Then, because signals can be sent either to the whole
 		daemon (killall) or to just a specific process (kill), this mechanism also offers the advantage
 		to elicit local reloads. (default: true)
+
+KEY:		maps_index [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		enables indexing of maps to increase lookup speeds on large maps and/or sustained lookup
+		rates. Indexes are automatically defined basing on structure and content of the map, up to
+		a maximum of 8. Currently only indexing of pre_tag_map is supported - and a sub-set of its
+		field (namely: ip, bgp_nexthop, vlan_id, src_mac, mpls_vpn_rd, src_as, dst_as, peer_src_as,
+		peer_dst_as, input, output). (default: false)
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [ 0-2^64-1 ]
@@ -1271,7 +1279,7 @@ DESC:		full pathname to a file containing source peer AS mappings. The AS can be
 		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB
 		to look up the source IP prefix). This is sufficient to model popular tecniques for both
 		public and private BGP peerings. Number of map entries (by default 384) can be modified via 
-		pre_tag_map_entries. Sample map in 'examples/peers.map.example'.
+		maps_entries. Sample map in 'examples/peers.map.example'.
 
 KEY:            bgp_src_std_comm_type
 VALUES:         [ bgp ]
@@ -1301,7 +1309,7 @@ KEY:            bgp_src_local_pref_map
 DESC:           full pathname to a file containing source local preference mappings. The LP value can be
 		mapped to one or a combination of: ifIndex, source MAC address and BGP next-hop (query
 		against the BGP RIB to look up the source IP prefix). Number of map entries (by default
-		384) can be modified via pre_tag_map_entries. Sample map in 'examples/lpref.map.example'.
+		384) can be modified via maps_entries. Sample map in 'examples/lpref.map.example'.
 
 KEY:            bgp_src_med_type
 VALUES:         [ map | bgp ]
@@ -1313,8 +1321,8 @@ KEY:            bgp_src_med_map
 DESC:           full pathname to a file containing source MED (Multi Exit Discriminator) mappings. The
 		MED value can be mapped to one or a combination of: ifIndex, source MAC address and BGP
 		next-hop (query against the BGP RIB to look up the source IP prefix). Number of map
-		entries (by default 384) can be modified via pre_tag_map_entries. Sample map in
-		'examples/med.map.example'.
+		entries (by default 384) can be modified via maps_entries. Sample map in 'examples/
+		med.map.example'.
 
 KEY:		bgp_agent_map
 DESC:		full pathname to a file to map source IP address of NetFlow agents and AgentID of sFlow
@@ -1324,14 +1332,14 @@ DESC:		full pathname to a file to map source IP address of NetFlow agents and Ag
 		uacctd daemons are required to use a bgp_agent_map with up to two "catch-all" entries -
 		working in a primary/backup fashion (see agent_to_peer.map in the examples section):
 		this is because these daemons do not have a NetFlow/sFlow source address to match to.
-		Number of map entries (by default 384) can be modified via pre_tag_map_entries.
+		Number of map entries (by default 384) can be modified via maps_entries.
 
 KEY:		flow_to_rd_map
 DESC:		full pathname to a file to map flows (typically, a) ingress router, input interfaces or
 		b) MPLS bottom label, BGP next-hop couples) to BGP/MPLS Virtual Private Network (VPN)
 		Route Distinguisher (RD), based upon rfc4659. See flow_to_rd.map file in the examples
 		section for further info. Number of map entries (by default 384) can be modified via
-		pre_tag_map_entries. 
+		maps_entries. 
 
 KEY:		bgp_follow_default
 DESC:		expects positive number value which instructs how many times a default route, if any, can

@@ -223,10 +223,10 @@ struct configuration {
   struct bpf_program *bpfp_a_table[AGG_FILTER_ENTRIES];
   struct pretag_filter ptf;
   struct pretag_filter pt2f;
-  int refresh_maps;
-  int index_maps;
+  int maps_refresh;
+  int maps_index;
+  int maps_entries;
   char *pre_tag_map;
-  int pre_tag_map_entries;
   pm_id_t post_tag;
   int ext_sampling_rate;
   int sampling_rate;
