@@ -1277,7 +1277,7 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->last_matched == PRETAG_BGP_NEXTHOP) return FALSE;
 
   /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return;
+  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return TRUE;
 
   switch(hdr->version) {
   case 10:
@@ -1327,7 +1327,7 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
   int ret = -1;
 
   /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_BGP)) return;
+  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_BGP)) goto way_out;
 
   if (dst_ret) {
     if (pptrs->bgp_nexthop_info)
@@ -1350,11 +1350,13 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
     }
   }
 
+  way_out:
+
   if (!ret) {
     entry->last_matched = PRETAG_BGP_NEXTHOP;
     return (FALSE | entry->bgp_nexthop.neg);
   }
-  else if (config.nfacctd_as & NF_AS_KEEP) return FALSE;
+  else if (config.nfacctd_net & NF_NET_KEEP) return FALSE;
   else return (TRUE ^ entry->bgp_nexthop.neg);
 }
 
@@ -1968,7 +1970,8 @@ int SF_pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (!memcmp(&entry->nexthop.a.address.ipv6, &sample->nextHop.address.ip_v6, IP6AddrSz)) return (FALSE | entry->nexthop.neg);
   }
 #endif
-  else return (TRUE ^ entry->nexthop.neg);
+
+  return (TRUE ^ entry->nexthop.neg);
 }
 
 int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -1976,8 +1979,10 @@ int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void 
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
+  if (entry->last_matched == PRETAG_BGP_NEXTHOP) return FALSE;
+
   /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return;
+  if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return TRUE;
 
   if (entry->bgp_nexthop.a.family == AF_INET) {
     if (!memcmp(&entry->bgp_nexthop.a.address.ipv4, &sample->bgp_nextHop.address.ip_v4, 4)) return (FALSE | entry->bgp_nexthop.neg);
@@ -1987,7 +1992,8 @@ int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void 
     if (!memcmp(&entry->bgp_nexthop.a.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz)) return (FALSE | entry->bgp_nexthop.neg);
   }
 #endif
-  else return (TRUE ^ entry->bgp_nexthop.neg);
+
+  return (TRUE ^ entry->bgp_nexthop.neg);
 }
 
 int SF_pretag_agent_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -2550,11 +2556,6 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
-  struct sockaddr sa_local;
-  struct sockaddr_in *sa4 = (struct sockaddr_in *) &sa_local;
-#if defined ENABLE_IPV6
-  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &sa_local;
-#endif
   SFSample *sample = (SFSample *)pptrs->f_data;
   u_int16_t port;
 
@@ -2563,16 +2564,15 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
   }
   else if (config.acct_type == ACCT_SF) {
     if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
-      sa_local.sa_family = AF_INET;
-      sa4->sin_addr.s_addr = sample->agent_addr.address.ip_v4.s_addr;
+      e->agent_ip.a.family = AF_INET;
+      e->agent_ip.a.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
     }
 #if defined ENABLE_IPV6
     else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
-      sa_local.sa_family = AF_INET6;
-      for (j = 0; j < 4; j++) sa6->sin6_addr.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
+      e->agent_ip.a.family = AF_INET6;
+      for (j = 0; j < 4; j++) e->agent_ip.a.address.ipv6.sin6_addr.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
     }
 #endif 
-    sa_to_addr(&sa_local, &e->agent_ip, &port);
   }
   else return TRUE;
 
@@ -2646,10 +2646,12 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, void *src)
     }
     else if (config.acct_type == ACCT_SF) {
       if (sample->gotIPV4) {
-	memcpy(&e->bgp_nexthop.a.address.ipv4, &sample->bgp_nextHop.address.ip_v4, 4);
+	e->bgp_nexthop.a.family = AF_INET;
+	e->bgp_nexthop.a.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;
       }
 #if defined ENABLE_IPV6
       else if (sample->gotIPV6) {
+	e->bgp_nexthop.a.family = AF_INET6;
 	memcpy(&e->bgp_nexthop.a.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz);
       }
 #endif

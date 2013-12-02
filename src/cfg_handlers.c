@@ -2037,7 +2037,7 @@ int cfg_key_pre_tag_map_entries(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_pre_tag_map_index(char *filename, char *name, char *value_ptr)
+int cfg_key_index_maps(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -2045,11 +2045,11 @@ int cfg_key_pre_tag_map_index(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.pre_tag_map_index = value;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.index_maps = value;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.pre_tag_map_index = value;
+        list->cfg.index_maps = value;
         changes++;
         break;
       }

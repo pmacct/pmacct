@@ -218,15 +218,15 @@ struct configuration {
   int networks_file_filter;
   int networks_cache_entries;
   char *ports_file;
-  int refresh_maps;
   char *a_filter;
   int bpfp_a_num;
   struct bpf_program *bpfp_a_table[AGG_FILTER_ENTRIES];
   struct pretag_filter ptf;
   struct pretag_filter pt2f;
+  int refresh_maps;
+  int index_maps;
   char *pre_tag_map;
   int pre_tag_map_entries;
-  int pre_tag_map_index;
   pm_id_t post_tag;
   int ext_sampling_rate;
   int sampling_rate;

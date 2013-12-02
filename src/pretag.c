@@ -86,7 +86,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       else {
         ptr = t->e ;
 
-        if (config.pre_tag_map_index) {
+        if (config.index_maps) {
 	  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)
 	    pretag_index_destroy(t, filename);
 	}
@@ -494,6 +494,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	      if (!strcmp(ptr->jeq.label, ptr2->label)) {
 	        ptr->jeq.ptr = ptr2;
 	        label_solved = TRUE;
+		break;
 	      }
 	    }
 	  }
@@ -515,6 +516,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
             if (!strcmp(ptr->jeq.label, ptr2->label)) {
               ptr->jeq.ptr = ptr2;
               label_solved = TRUE;
+	      break;
             }
           }
           if (!label_solved) {
@@ -529,7 +531,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 #endif
 
       /* pre_tag_map indexing here */
-      if (config.pre_tag_map_index &&
+      if (config.index_maps &&
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)) {
 	pt_bitmap_t idx_bmap;
 
@@ -615,6 +617,53 @@ void pretag_init_vars(struct packet_ptrs *pptrs, struct id_table *t)
   if (t->type == MAP_BGP_TO_XFLOW_AGENT) memset(&pptrs->lookup_bgp_port, 0, sizeof(s_uint16_t));
 }
 
+int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
+  int j = 0;
+  pm_id_t id = 0, stop = 0, ret = 0;
+
+  e->last_matched = FALSE;
+  for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*e->func[j])); j++) {
+    ret = (*e->func[j])(pptrs, &id, e);
+    if (ret > TRUE) stop |= ret;
+    else stop = ret;
+  }
+
+  if (!stop || stop > TRUE) {
+    if (stop & PRETAG_MAP_RCODE_ID) {
+      if (e->stack.func) id = (*e->stack.func)(id, *tag);
+      *tag = id;
+      pptrs->have_tag = TRUE;
+    }
+    else if (stop & PRETAG_MAP_RCODE_ID2) {
+      if (e->stack.func) id = (*e->stack.func)(id, *tag2);
+      *tag2 = id;
+      pptrs->have_tag2 = TRUE;
+    } 
+    else if (stop == BTA_MAP_RCODE_ID_ID2) {
+      // stack not applicable here
+      *tag = id;
+      *tag2 = e->id2;
+      pptrs->have_tag = TRUE;
+      pptrs->have_tag2 = TRUE;
+    }
+
+    if (e->jeq.ptr) {
+      if (e->ret) {
+	exec_plugins(pptrs);
+	set_shadow_status(pptrs);
+	*tag = 0;
+	*tag2 = 0;
+	pptrs->have_tag = FALSE;
+	pptrs->have_tag = FALSE;
+      }
+      stop |= PRETAG_MAP_RCODE_JEQ;
+    }
+  }
+
+  return stop;
+}
+
 pt_bitmap_t pretag_index_build_bitmap(struct id_entry *ptr, int acct_type)
 {
   pt_bitmap_t idx_bmap = 0;
@@ -676,6 +725,8 @@ int pretag_index_set_handlers(struct id_table *t, char *filename)
       }
     }
 
+    handler_index = 0;
+
     /* we set foreign data handlers here but skip on the residual_idx_bmap */
     for (index = 0; tag_map_index_fdata_dictionary[index].key; index++) {
       if (t->index[iterator].bitmap & tag_map_index_fdata_dictionary[index].key) {
@@ -685,7 +736,7 @@ int pretag_index_set_handlers(struct id_table *t, char *filename)
     }
 
     if (residual_idx_bmap) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): pre_tag_map_index: not supported for field(s) %x in table '%s'. Indexing disabled.\n",
+      Log(LOG_WARNING, "WARN ( %s/%s ): index_maps: not supported for field(s) %x in table '%s'. Indexing disabled.\n",
 		config.name, config.type, residual_idx_bmap, filename);
       pretag_index_destroy(t, filename);
     }
@@ -703,7 +754,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].bitmap) {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): pre_tag_map_index: index bitmap %x (%u entries) for table '%s'\n", config.name,
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): index_maps: index bitmap %x (%u entries) for table '%s'\n", config.name,
     		config.type, t->index[iterator].bitmap, t->index[iterator].entries, filename);
 
       assert(!t->index[iterator].idx_t);
@@ -711,7 +762,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
       t->index[iterator].idx_t = malloc(idx_t_size);
 
       if (!t->index[iterator].idx_t) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): pre_tag_map_index: unable to allocate index %x for table '%s'\n", config.name,
+        Log(LOG_ERR, "ERROR ( %s/%s ): index_maps: unable to allocate index %x for table '%s'\n", config.name,
 		config.type, t->index[iterator].bitmap, filename);
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
@@ -751,7 +802,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       }
 
       if (index == ID_TABLE_INDEX_DEPTH) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): pre_tag_map_index: out of index space %x for table '%s'. Indexing disabled.\n",
+        Log(LOG_WARNING, "WARN ( %s/%s ): index_maps: out of index space %x for table '%s'. Indexing disabled.\n",
 		config.name, config.type, idx_bmap, filename);
 	pretag_index_destroy(t, filename);
 	break;
@@ -771,7 +822,7 @@ void pretag_index_destroy(struct id_table *t, char *filename)
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].idx_t) {
       free(t->index[iterator].idx_t);
-      Log(LOG_INFO, "INFO ( %s/%s ): pre_tag_map_index: destroyed index %x for table '%s'.\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): index_maps: destroyed index %x for table '%s'.\n",
 		config.name, config.type, t->index[iterator].bitmap, filename);
     }
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
@@ -785,33 +836,38 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
   u_int32_t iterator, index_cc, index_hdlr;
   int modulo;
 
-  if (!t || !index_results) return;
+  if (!t || !pptrs || !index_results) return;
 
-  memset(&index_results, 0, (sizeof(struct id_entry) * MAX_ID_TABLE_INDEXES));
-  memset(&res_idt, 0, sizeof(res_idt));
-  memset(&res_fdata, 0, sizeof(res_fdata));
+  memset(index_results, 0, (sizeof(struct id_entry *) * MAX_ID_TABLE_INDEXES));
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
-    for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
-      (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, pptrs);
-    }
+    if (t->index[iterator].entries) {
+      memset(&res_idt, 0, sizeof(res_idt));
+      memset(&res_fdata, 0, sizeof(res_fdata));
 
-    modulo = cache_crc32((unsigned char *)&res_fdata, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
-    idie = &t->index[iterator].idx_t[modulo];
-
-    for (index_cc = 0; idie->e[index_cc] && index_cc < ID_TABLE_INDEX_DEPTH; index_cc++) {
-      for (index_hdlr = 0; (*t->index[iterator].idt_handler[index_hdlr]); index_hdlr++) {
-        (*t->index[iterator].idt_handler[index_hdlr])(&res_idt, idie->e[index_cc]);
+      for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
+        (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, pptrs);
       }
 
-      if (!memcmp(&res_idt, &res_fdata, sizeof(struct id_entry))) {
-        index_results[iterator] = idie->e[index_cc];
-        break;
+      modulo = cache_crc32((unsigned char *)&res_fdata, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      idie = &t->index[iterator].idx_t[modulo];
+
+      for (index_cc = 0; idie->e[index_cc] && index_cc < ID_TABLE_INDEX_DEPTH; index_cc++) {
+        for (index_hdlr = 0; (*t->index[iterator].idt_handler[index_hdlr]); index_hdlr++) {
+          (*t->index[iterator].idt_handler[index_hdlr])(&res_idt, idie->e[index_cc]);
+        }
+
+        if (!memcmp(&res_idt, &res_fdata, sizeof(struct id_entry))) {
+          index_results[iterator] = idie->e[index_cc];
+	  break;
+	}
       }
     }
   }
 
+  pretag_index_results_compress(index_results);
   pretag_index_results_sort(index_results);
+  pretag_index_results_compress_jeqs(index_results);
 }
 
 void pretag_index_results_sort(struct id_entry **index_results)
@@ -821,8 +877,8 @@ void pretag_index_results_sort(struct id_entry **index_results)
 
   if (!index_results) return;
 
-  for (i = 0, j = 1; index_results[i] && i < ID_TABLE_INDEX_DEPTH; i++, j++) {
-    if (index_results[j] && j < ID_TABLE_INDEX_DEPTH) {
+  for (i = 0, j = 1; index_results[i] && i < MAX_ID_TABLE_INDEXES; i++, j++) {
+    if (index_results[j] && j < MAX_ID_TABLE_INDEXES) {
       if (index_results[i]->pos > index_results[j]->pos) {
 	ptr = index_results[j];
 	index_results[j] = index_results[i];
@@ -830,4 +886,52 @@ void pretag_index_results_sort(struct id_entry **index_results)
       }
     }
   }
+}
+
+void pretag_index_results_compress(struct id_entry **index_results)
+{
+  struct id_entry *ptr = NULL;
+  u_int32_t j, valid;
+  int i;
+
+  if (!index_results) return;
+
+  for (i = 0; i < MAX_ID_TABLE_INDEXES; i++) {
+    valid = 0;
+    if (!index_results[i]) {
+      for (j = i + 1; j < MAX_ID_TABLE_INDEXES; j++) {
+	if (index_results[j]) valid++;
+        index_results[j-1] = index_results[j];
+      }
+      index_results[MAX_ID_TABLE_INDEXES-1] = NULL;
+      if (!index_results[i] && valid) i--;
+    }
+  }
+}
+
+void pretag_index_results_compress_jeqs(struct id_entry **index_results)
+{
+  struct id_entry *ptr = NULL;
+  u_int32_t i, j, x;
+
+  if (!index_results) return;
+
+  for (i = 0; index_results[i] && i < MAX_ID_TABLE_INDEXES; i++) {
+    if (index_results[i]->jeq.ptr) {
+      for (j = i + 1; index_results[j] && j < MAX_ID_TABLE_INDEXES; j++) {
+        if (index_results[i]->jeq.ptr->pos > index_results[j]->pos) {
+	  for (x = j + 1; x < MAX_ID_TABLE_INDEXES; x++) {
+	    index_results[x-1] = index_results[x];
+	  }
+
+	  index_results[MAX_ID_TABLE_INDEXES-1] = NULL;
+	}
+      }
+    }
+  }
+}
+
+int pretag_index_have_one(struct id_table *t)
+{
+  return t->index[0].entries;
 }

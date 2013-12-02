@@ -62,9 +62,10 @@
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
 #define PRETAG_MAP_RCODE_SET_TOS	0x00000400
-#define BTA_MAP_RCODE_ID_ID2		0x00000800
-#define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00001000
-#define BPAS_MAP_RCODE_BGP		0x00002000
+#define PRETAG_MAP_RCODE_JEQ		0x00000800
+#define BTA_MAP_RCODE_ID_ID2		0x00001000
+#define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00002000
+#define BPAS_MAP_RCODE_BGP		0x00004000
 
 #define IDT_INDEX_HASH_BASE(entries)	(entries * 2)
 
@@ -219,6 +220,7 @@ EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, 
 EXT u_int8_t pt_check_neg(char **);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
+EXT int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
 EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
 EXT int pretag_index_set_handlers(struct id_table *, char *);
@@ -227,6 +229,9 @@ EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *, cha
 EXT void pretag_index_destroy(struct id_table *, char *);
 EXT void pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **);
 EXT void pretag_index_results_sort(struct id_entry **);
+EXT void pretag_index_results_compress(struct id_entry **);
+EXT void pretag_index_results_compress_jeqs(struct id_entry **);
+EXT int pretag_index_have_one(struct id_table *);
 
 EXT int tag_map_allocated;
 EXT int bpas_map_allocated;
