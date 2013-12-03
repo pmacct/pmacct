@@ -754,7 +754,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].bitmap) {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): maps_index: index bitmap %x (%u entries) for table '%s'\n", config.name,
+      Log(LOG_INFO, "INFO ( %s/%s ): maps_index: created index %x (%u entries) for table '%s'\n", config.name,
     		config.type, t->index[iterator].bitmap, t->index[iterator].entries, filename);
 
       assert(!t->index[iterator].idx_t);
