@@ -865,10 +865,12 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
         set_sampling_table(&pptrs, (u_char *) &sampling_table);
       }
+/*
       if (config.aggregate_primitives) {
 	req.key_value_table = (void *) &custom_primitives_registry;
 	load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
       }
+*/
 
       reload_map = FALSE;
       gettimeofday(&reload_map_tstamp, NULL);
@@ -2111,9 +2113,9 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
 
 int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  int x, j, begin = 0, end = 0;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
-  pm_id_t id, stop, ret;
+  int x, j, begin = 0, end = 0;
+  pm_id_t ret = 0;
 
   if (!t) return 0;
 
@@ -2123,12 +2125,27 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   */
 
   pretag_init_vars(pptrs, t);
-  id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;
   if (pptrs) {
     pptrs->have_tag = FALSE;
     pptrs->have_tag2 = FALSE;
+  }
+
+  /* Giving a first try with index(es) */
+  if (config.maps_index && pretag_index_have_one(t) && t->type == ACCT_NF) {
+    struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
+    u_int32_t iterator;
+
+    pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
+
+    for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
+      ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
+      if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
+    }
+
+    /* if we have at least one index we trust we did a good job */
+    return ret;
   }
 
   if (sa->sa_family == AF_INET) {
@@ -2144,50 +2161,19 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 
   for (x = begin; x < end; x++) {
     if (host_addr_mask_sa_cmp(&t->e[x].agent_ip.a, &t->e[x].agent_mask, sa) == 0) {
-      t->e[x].last_matched = FALSE; 
-      for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
-	ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-	if (ret > TRUE) stop |= ret;
-	else stop = ret;
-      }
-      if (!stop || stop > TRUE) {
-	if (stop & PRETAG_MAP_RCODE_ID) {
-	  if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
-	  *tag = id;
-	  pptrs->have_tag = TRUE;
-	}
-	else if (stop & PRETAG_MAP_RCODE_ID2) {
-	  if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
-	  *tag2 = id;
-	  pptrs->have_tag2 = TRUE;
-	}
-        else if (stop == BTA_MAP_RCODE_ID_ID2) {
-          // stack not applicable here
-          *tag = id;
-          *tag2 = t->e[x].id2;
-	  pptrs->have_tag = TRUE;
-	  pptrs->have_tag2 = TRUE;
-        }
+      ret = pretag_entry_process(&t->e[x], pptrs, tag, tag2);
 
-        if (t->e[x].jeq.ptr) {
-	  if (t->e[x].ret) {
-            exec_plugins(pptrs);
-            set_shadow_status(pptrs);
-	    *tag = 0;
-	    *tag2 = 0;
-	    pptrs->have_tag = FALSE;
-	    pptrs->have_tag2 = FALSE;
-	  }
+      if (!ret || ret > TRUE) {
+        if (ret & PRETAG_MAP_RCODE_JEQ) {
           x = t->e[x].jeq.ptr->pos;
-          x--; /* yes, it will be automagically incremented by the for() cycle */
-          id = 0;
+          x--; // yes, it will be automagically incremented by the for() cycle
         }
         else break;
       }
     }
   }
 
-  return stop;
+  return ret;
 }
 
 char *nfv578_check_status(struct packet_ptrs *pptrs)

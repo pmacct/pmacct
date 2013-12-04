@@ -8,16 +8,15 @@
 ! 'ip' keys don't support negative values. 'label', 'jeq', 'return' and 'stack'
 ! keys can be used to alter the standard rule evaluation flow.
 !
-! nfacctd: valid keys: set_tag, set_tag2, ip, in, out, engine_type, engine_id,
-! nexthop, bgp_nexthop, src_as, dst_as, direction, v8agg, sampling_rate, filter,
-! flowset_id and set_qos;
+! nfacctd: valid keys: set_tag, set_tag2, set_tos, ip, in, out, engine_type,
+! engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg, sampling_rate,
+! sample_type, direction, src_mac, vlan; mandatory keys for each rule: ip.
+!
+! sfacctd: valid keys: set_tag, set_tag2, set_tos, ip, in, out, nexthop,
+! bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac, vlan;
 ! mandatory keys for each rule: ip.
 !
-! sfacctd: valid keys: set_tag, set_tag2, ip, in, out, agent_id, bgp_nexthop,
-! nexthop, src_as, dst_as, sampling_rate, sample_type and filter; mandatory
-! keys for each rule: ip.
-!
-! pmacctd: valid keys: set_tag, set_tag2, src_as, dst_as and filter.
+! pmacctd: valid keys: set_tag, set_tag2 and filter.
 !
 ! sfacctd, nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, ip;
 ! mandatory keys for each rule: ip.
@@ -40,7 +39,7 @@
 !			a SQL plugin, read more about the 'agent_id2' field in
 !			the 'sql/README.agent_id2' document. Legacy name for this
 !			primitive is 'id2'.
-! 'set_qos'             SET: Matching packets are set their 'tos' primitive to
+! 'set_tos'             SET: Matching packets are set their 'tos' primitive to
 !			the specified value. Currently valid only in nfacctd. If
 !			collecting ingress NetFlow at both trusted and untrusted
 !			borders, e.g., this is useful to selectively override ToS

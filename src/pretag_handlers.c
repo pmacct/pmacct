@@ -312,35 +312,6 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
   return FALSE;
 }
 
-int BPAS_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
-{
-  struct pcap_device device;
-  bpf_u_int32 localnet, netmask;  /* pcap library stuff */
-  char errbuf[PCAP_ERRBUF_SIZE];
-  char filter_str[28];
-  int x, link_type;
-
-  memset(&device, 0, sizeof(struct pcap_device));
-  if (glob_pcapt) device.link_type = pcap_datalink(glob_pcapt);
-  else device.link_type = 1;
-  device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+my_iphdr+my_tlhdr */
-
-  pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
-
-  memset(filter_str, 0, sizeof(filter_str));
-  snprintf(filter_str, sizeof(filter_str), "ether src %s", value);
-  if (pcap_compile(device.dev_desc, &e->filter, filter_str, 0, netmask) < 0) {
-    Log(LOG_ERR, "ERROR ( %s ): malformed src_mac filter: %s\n", filename, pcap_geterr(device.dev_desc));
-    return TRUE;
-  }
-
-  pcap_close(device.dev_desc);
-  for (x = 0; e->func[x]; x++);
-  e->func[x] = pretag_filter_handler;
-  req->bpf_filter = TRUE;
-  return FALSE;
-}
-
 int BITR_map_mpls_label_bottom_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
@@ -2560,7 +2531,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
   u_int16_t port, j;
 
   if (config.acct_type == ACCT_NF) {
-    sa_to_addr(sa, &e->agent_ip, &port);
+    sa_to_addr(sa, &e->agent_ip.a, &port);
   }
   else if (config.acct_type == ACCT_SF) {
     if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {

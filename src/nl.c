@@ -100,10 +100,12 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
     if (config.pre_tag_map)
       load_id_file(config.acct_type, config.pre_tag_map, (struct id_table *) pptrs.idtable, &req, &tag_map_allocated);
+/*
     if (config.aggregate_primitives) {
       req.key_value_table = (void *) &custom_primitives_registry;
       load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
     }
+*/
 
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);
@@ -347,12 +349,11 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   int x, j;
-  pm_id_t id, stop, ret;
+  pm_id_t ret = 0;
 
   if (!t) return 0;
 
   pretag_init_vars(pptrs, t);
-  id = 0;
   if (tag) *tag = 0;
   if (tag2) *tag2 = 0;
   if (pptrs) {
@@ -360,51 +361,35 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     pptrs->have_tag2 = FALSE;
   }
 
-  for (x = 0; x < t->ipv4_num; x++) {
-    t->e[x].last_matched = FALSE;
-    for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*t->e[x].func[j])); j++) {
-      ret = (*t->e[x].func[j])(pptrs, &id, &t->e[x]);
-      if (ret > TRUE) stop |= ret;
-      else stop = ret;
-    }
-    if (!stop || stop > TRUE) {
-      if (stop & PRETAG_MAP_RCODE_ID) {
-        if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag);
-        *tag = id;
-        pptrs->have_tag = TRUE;
-      }
-      else if (stop & PRETAG_MAP_RCODE_ID2) {
-        if (t->e[x].stack.func) id = (*t->e[x].stack.func)(id, *tag2);
-        *tag2 = id;
-        pptrs->have_tag2 = TRUE;
-      }
-      else if (stop == BTA_MAP_RCODE_ID_ID2) {
-        // stack not applicable here
-        *tag = id;
-        *tag2 = t->e[x].id2;
-        pptrs->have_tag = TRUE;
-        pptrs->have_tag2 = TRUE;
-      }
+  /* Giving a first try with index(es) */
+  if (config.maps_index && pretag_index_have_one(t) && t->type == ACCT_SF) {
+    struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
+    u_int32_t iterator;
 
-      if (t->e[x].jeq.ptr) {
-        if (t->e[x].ret) {
-	  set_index_pkt_ptrs(pptrs);
-          exec_plugins(pptrs);
-          set_shadow_status(pptrs);
-          *tag = 0;
-          *tag2 = 0;
-          pptrs->have_tag = FALSE;
-          pptrs->have_tag2 = FALSE;
-        }
+    pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
+
+    for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
+      ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
+      if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
+    }
+
+    /* if we have at least one index we trust we did a good job */
+    return ret;
+  }
+
+  for (x = 0; x < t->ipv4_num; x++) {
+    ret = pretag_entry_process(&t->e[x], pptrs, tag, tag2);
+
+    if (!ret || ret > TRUE) {
+      if (ret & PRETAG_MAP_RCODE_JEQ) {
         x = t->e[x].jeq.ptr->pos;
-        x--; /* yes, it will be automagically incremented by the for() cycle */
-        id = 0;
+        x--; // yes, it will be automagically incremented by the for() cycle
       }
       else break;
     }
   }
 
-  return stop;
+  return ret;
 }
 
 void compute_once()

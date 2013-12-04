@@ -106,7 +106,8 @@ const struct _map_dictionary_line bpas_map_dictionary[] = {
   {"in", PT_map_input_handler},
   {"bgp_nexthop", BPAS_map_bgp_nexthop_handler},
   {"peer_dst_as", BPAS_map_bgp_peer_dst_as_handler},
-  {"src_mac", BPAS_map_src_mac_handler},
+  {"src_mac", PT_map_src_mac_handler},
+  {"vlan", PT_map_vlan_id_handler},
   {"", NULL}
 };
 

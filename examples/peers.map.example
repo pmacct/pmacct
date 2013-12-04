@@ -4,7 +4,7 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! nfacctd, sfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac.
+! nfacctd, sfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac, vlan.
 !
 ! list of currently supported keys follow:
 !
@@ -25,8 +25,12 @@
 !			address (RPF-like). This value is compared against the
 !			BGP RIB of the exporting device (see 'bgp_daemon'
 !			configuration directive).
-! 'src_mac'             MATCH: source MAC address of the flow. Requires NetFlow
-!			v9, IPFIX or sFlow.
+! 'src_mac'             MATCH: In NetFlow v9 and IPFIX this is compared against
+!                       IE #56, in sFlow against source MAC address field part
+!                       of the Extended Switch object.
+! 'vlan'                MATCH: In NetFlow v9 and IPFIX this is compared against
+!                       IE #58, in sFlow against in/out VLAN ID fields part of
+!                       the Extended Switch object.
 !
 ! A few examples follow.
 !

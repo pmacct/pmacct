@@ -86,7 +86,6 @@ EXT int PT_map_index_fdata_vlan_id_handler(struct id_entry *, void *);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int BPAS_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int BPAS_map_bgp_peer_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
 /* BTA_*: bgp_agent_map specific handlers */

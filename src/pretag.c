@@ -88,7 +88,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
         if (config.maps_index) {
 	  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)
-	    pretag_index_destroy(t, filename);
+	    pretag_index_destroy(t);
 	}
 
         memset(t, 0, sizeof(struct id_table));
@@ -530,6 +530,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       }
 #endif
 
+      t->filename = filename;
+
       /* pre_tag_map indexing here */
       if (config.maps_index &&
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)) {
@@ -547,16 +549,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  if (pretag_index_insert_bitmap(t, idx_bmap)) {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): Out of indexes for table '%s'. Indexing disabled.\n",
 		config.name, config.type, filename);
-	    pretag_index_destroy(t, filename);
+	    pretag_index_destroy(t);
 	    break;
 	  }
 	}
 
 	/* set handlers */
-	pretag_index_set_handlers(t, filename);
+	pretag_index_set_handlers(t);
 
 	/* allocate indexes */
-        pretag_index_allocate(t, filename);
+        pretag_index_allocate(t);
 
 #if defined ENABLE_IPV6
         for (ptr = t->ipv4_base, x = 0; x < MAX(t->ipv4_num, t->ipv6_num); ptr++, x++) {
@@ -567,7 +569,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
           if (!idx_bmap) continue;
 
 	  /* fill indexes */
-	  pretag_index_fill(t, idx_bmap, ptr, filename);
+	  pretag_index_fill(t, idx_bmap, ptr);
 	}
       }
     }
@@ -702,7 +704,7 @@ int pretag_index_insert_bitmap(struct id_table *t, pt_bitmap_t idx_bmap)
   return TRUE;
 }
 
-int pretag_index_set_handlers(struct id_table *t, char *filename)
+int pretag_index_set_handlers(struct id_table *t)
 {
   pt_bitmap_t residual_idx_bmap = 0;
   u_int32_t index = 0, iterator = 0, handler_index = 0;
@@ -737,15 +739,15 @@ int pretag_index_set_handlers(struct id_table *t, char *filename)
 
     if (residual_idx_bmap) {
       Log(LOG_WARNING, "WARN ( %s/%s ): maps_index: not supported for field(s) %x in table '%s'. Indexing disabled.\n",
-		config.name, config.type, residual_idx_bmap, filename);
-      pretag_index_destroy(t, filename);
+		config.name, config.type, residual_idx_bmap, t->filename);
+      pretag_index_destroy(t);
     }
   }
 
   return FALSE;
 }
 
-int pretag_index_allocate(struct id_table *t, char *filename)
+int pretag_index_allocate(struct id_table *t)
 {
   pt_bitmap_t idx_t_size = 0;
   u_int32_t iterator = 0;
@@ -755,7 +757,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].bitmap) {
       Log(LOG_INFO, "INFO ( %s/%s ): maps_index: created index %x (%u entries) for table '%s'\n", config.name,
-    		config.type, t->index[iterator].bitmap, t->index[iterator].entries, filename);
+    		config.type, t->index[iterator].bitmap, t->index[iterator].entries, t->filename);
 
       assert(!t->index[iterator].idx_t);
       idx_t_size = IDT_INDEX_HASH_BASE(t->index[iterator].entries) * sizeof(struct id_index_entry);
@@ -763,7 +765,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
 
       if (!t->index[iterator].idx_t) {
         Log(LOG_ERR, "ERROR ( %s/%s ): maps_index: unable to allocate index %x for table '%s'\n", config.name,
-		config.type, t->index[iterator].bitmap, filename);
+		config.type, t->index[iterator].bitmap, t->filename);
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
       }
@@ -774,7 +776,7 @@ int pretag_index_allocate(struct id_table *t, char *filename)
   return FALSE;
 }
 
-int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr, char *filename)
+int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr)
 {
   struct id_entry e;
   u_int32_t index = 0, iterator = 0, handler_index = 0;
@@ -803,8 +805,8 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
       if (index == ID_TABLE_INDEX_DEPTH) {
         Log(LOG_WARNING, "WARN ( %s/%s ): maps_index: out of index space %x for table '%s'. Indexing disabled.\n",
-		config.name, config.type, idx_bmap, filename);
-	pretag_index_destroy(t, filename);
+		config.name, config.type, idx_bmap, t->filename);
+	pretag_index_destroy(t);
 	break;
       }
     }
@@ -813,7 +815,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
   return FALSE;
 }
 
-void pretag_index_destroy(struct id_table *t, char *filename)
+void pretag_index_destroy(struct id_table *t)
 {
   u_int32_t iterator = 0;
 
@@ -823,22 +825,23 @@ void pretag_index_destroy(struct id_table *t, char *filename)
     if (t->index[iterator].idx_t) {
       free(t->index[iterator].idx_t);
       Log(LOG_INFO, "INFO ( %s/%s ): maps_index: destroyed index %x for table '%s'.\n",
-		config.name, config.type, t->index[iterator].bitmap, filename);
+		config.name, config.type, t->index[iterator].bitmap, t->filename);
     }
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
   }
 }
 
-void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results)
+void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
 {
   struct id_entry res_idt, res_fdata;
   struct id_index_entry *idie;
-  u_int32_t iterator, index_cc, index_hdlr;
+  u_int32_t iterator, iterator_ir, index_cc, index_hdlr;
   int modulo;
 
   if (!t || !pptrs || !index_results) return;
 
-  memset(index_results, 0, (sizeof(struct id_entry *) * MAX_ID_TABLE_INDEXES));
+  memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
+  iterator_ir = 0;
 
   for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
     if (t->index[iterator].entries) {
@@ -858,27 +861,34 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
         }
 
         if (!memcmp(&res_idt, &res_fdata, sizeof(struct id_entry))) {
-          index_results[iterator] = idie->e[index_cc];
-	  break;
+          index_results[iterator_ir] = idie->e[index_cc];
+	  if (iterator_ir < ir_entries) iterator_ir++;
+	  else {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): maps_index: out of index results space for table '%s'. Indexing disabled.\n",
+                config.name, config.type, t->filename);
+	    pretag_index_destroy(t);
+	    memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
+	    return;
+	  }
 	}
       }
     }
   }
 
-  pretag_index_results_compress(index_results);
-  pretag_index_results_sort(index_results);
-  pretag_index_results_compress_jeqs(index_results);
+  pretag_index_results_compress(index_results, ir_entries);
+  pretag_index_results_sort(index_results, ir_entries);
+  pretag_index_results_compress_jeqs(index_results, ir_entries);
 }
 
-void pretag_index_results_sort(struct id_entry **index_results)
+void pretag_index_results_sort(struct id_entry **index_results, int ir_entries)
 {
   struct id_entry *ptr = NULL;
   u_int32_t i, j;
 
   if (!index_results) return;
 
-  for (i = 0, j = 1; index_results[i] && i < MAX_ID_TABLE_INDEXES; i++, j++) {
-    if (index_results[j] && j < MAX_ID_TABLE_INDEXES) {
+  for (i = 0, j = 1; index_results[i] && i < ir_entries; i++, j++) {
+    if (index_results[j] && j < ir_entries) {
       if (index_results[i]->pos > index_results[j]->pos) {
 	ptr = index_results[j];
 	index_results[j] = index_results[i];
@@ -888,7 +898,7 @@ void pretag_index_results_sort(struct id_entry **index_results)
   }
 }
 
-void pretag_index_results_compress(struct id_entry **index_results)
+void pretag_index_results_compress(struct id_entry **index_results, int ir_entries)
 {
   struct id_entry *ptr = NULL;
   u_int32_t j, valid;
@@ -896,35 +906,35 @@ void pretag_index_results_compress(struct id_entry **index_results)
 
   if (!index_results) return;
 
-  for (i = 0; i < MAX_ID_TABLE_INDEXES; i++) {
+  for (i = 0; i < ir_entries; i++) {
     valid = 0;
     if (!index_results[i]) {
-      for (j = i + 1; j < MAX_ID_TABLE_INDEXES; j++) {
+      for (j = i + 1; j < ir_entries; j++) {
 	if (index_results[j]) valid++;
         index_results[j-1] = index_results[j];
       }
-      index_results[MAX_ID_TABLE_INDEXES-1] = NULL;
+      index_results[ir_entries-1] = NULL;
       if (!index_results[i] && valid) i--;
     }
   }
 }
 
-void pretag_index_results_compress_jeqs(struct id_entry **index_results)
+void pretag_index_results_compress_jeqs(struct id_entry **index_results, int ir_entries)
 {
   struct id_entry *ptr = NULL;
   u_int32_t i, j, x;
 
   if (!index_results) return;
 
-  for (i = 0; index_results[i] && i < MAX_ID_TABLE_INDEXES; i++) {
+  for (i = 0; index_results[i] && i < ir_entries; i++) {
     if (index_results[i]->jeq.ptr) {
-      for (j = i + 1; index_results[j] && j < MAX_ID_TABLE_INDEXES; j++) {
+      for (j = i + 1; index_results[j] && j < ir_entries; j++) {
         if (index_results[i]->jeq.ptr->pos > index_results[j]->pos) {
-	  for (x = j + 1; x < MAX_ID_TABLE_INDEXES; x++) {
+	  for (x = j + 1; x < ir_entries; x++) {
 	    index_results[x-1] = index_results[x];
 	  }
 
-	  index_results[MAX_ID_TABLE_INDEXES-1] = NULL;
+	  index_results[ir_entries-1] = NULL;
 	}
       }
     }

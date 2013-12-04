@@ -27,6 +27,7 @@
 
 #define MAX_ID_TABLE_INDEXES 8
 #define ID_TABLE_INDEX_DEPTH 8
+#define ID_TABLE_INDEX_RESULTS (MAX_ID_TABLE_INDEXES * 8)
 
 #define PRETAG_IN_IFACE			0x00000001
 #define PRETAG_OUT_IFACE		0x00000002
@@ -182,6 +183,7 @@ struct id_table_index {
 };
 
 struct id_table {
+  char *filename;
   int type;
   unsigned short int num;
   struct id_entry *ipv4_base;
@@ -223,14 +225,14 @@ EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
 EXT int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
 EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
-EXT int pretag_index_set_handlers(struct id_table *, char *);
-EXT int pretag_index_allocate(struct id_table *, char *);
-EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *, char *);
-EXT void pretag_index_destroy(struct id_table *, char *);
-EXT void pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **);
-EXT void pretag_index_results_sort(struct id_entry **);
-EXT void pretag_index_results_compress(struct id_entry **);
-EXT void pretag_index_results_compress_jeqs(struct id_entry **);
+EXT int pretag_index_set_handlers(struct id_table *);
+EXT int pretag_index_allocate(struct id_table *);
+EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
+EXT void pretag_index_destroy(struct id_table *);
+EXT void pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
+EXT void pretag_index_results_sort(struct id_entry **, int);
+EXT void pretag_index_results_compress(struct id_entry **, int);
+EXT void pretag_index_results_compress_jeqs(struct id_entry **, int);
 EXT int pretag_index_have_one(struct id_table *);
 
 EXT int tag_map_allocated;

@@ -2660,12 +2660,12 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 
   /* Giving a first try with index(es) */
   if (config.maps_index && pretag_index_have_one(t) && t->type == ACCT_SF) {
-    struct id_entry *index_results[MAX_ID_TABLE_INDEXES];
+    struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
 
-    pretag_index_lookup(t, pptrs, index_results);
+    pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
 
-    for (iterator = 0; index_results[iterator] && iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+    for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
       ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
     }
