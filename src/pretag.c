@@ -86,9 +86,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       else {
         ptr = t->e ;
 
-        if (config.maps_index) {
-	  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)
-	    pretag_index_destroy(t);
+        if (config.maps_index && pretag_index_have_one(t)) {
+	  pretag_index_destroy(t);
 	}
 
         memset(t, 0, sizeof(struct id_table));
@@ -534,7 +533,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
       /* pre_tag_map indexing here */
       if (config.maps_index &&
-	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM)) {
+	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
+	   acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD)) {
 	pt_bitmap_t idx_bmap;
 
 #if defined ENABLE_IPV6
@@ -682,7 +682,9 @@ pt_bitmap_t pretag_index_build_bitmap(struct id_entry *ptr, int acct_type)
   if (idx_bmap & PRETAG_SET_TAG2) idx_bmap ^= PRETAG_SET_TAG2;
 
   /* 3) add 'ip' to bitmap, if mandated by the map type */
-  if (acct_type == ACCT_NF || acct_type == ACCT_SF) idx_bmap |= PRETAG_IP;
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF ||
+      acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD)
+    idx_bmap |= PRETAG_IP;
 
   return idx_bmap;
 }
@@ -859,7 +861,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
         for (index_hdlr = 0; (*t->index[iterator].idt_handler[index_hdlr]); index_hdlr++) {
           (*t->index[iterator].idt_handler[index_hdlr])(&res_idt, idie->e[index_cc]);
         }
-
+	
         if (!memcmp(&res_idt, &res_fdata, sizeof(struct id_entry))) {
           index_results[iterator_ir] = idie->e[index_cc];
 	  if (iterator_ir < ir_entries) iterator_ir++;

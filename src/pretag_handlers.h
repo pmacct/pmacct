@@ -70,6 +70,7 @@ EXT int PT_map_index_entries_dst_as_handler(struct id_entry *, void *);
 EXT int PT_map_index_entries_peer_src_as_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_peer_dst_as_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_src_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_vlan_id_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_ip_handler(struct id_entry *, void *); 
@@ -81,6 +82,7 @@ EXT int PT_map_index_fdata_dst_as_handler(struct id_entry *, void *);
 EXT int PT_map_index_fdata_peer_src_as_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_src_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_vlan_id_handler(struct id_entry *, void *);
 

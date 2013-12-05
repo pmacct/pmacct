@@ -430,7 +430,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"refresh_maps", cfg_key_maps_refresh}, // legacy
-  {"index_maps", cfg_key_maps_index}, // legacy
   {"maps_refresh", cfg_key_maps_refresh},
   {"maps_index", cfg_key_maps_index},
   {"maps_entries", cfg_key_maps_entries},

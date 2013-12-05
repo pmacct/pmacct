@@ -955,9 +955,13 @@ KEY:		maps_index [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		enables indexing of maps to increase lookup speeds on large maps and/or sustained lookup
 		rates. Indexes are automatically defined basing on structure and content of the map, up to
-		a maximum of 8. Currently only indexing of pre_tag_map is supported - and a sub-set of its
-		field (namely: ip, bgp_nexthop, vlan_id, src_mac, mpls_vpn_rd, src_as, dst_as, peer_src_as,
-		peer_dst_as, input, output). (default: false)
+		a maximum of 8. Indexing of pre_tag_map, bgp_peer_src_as_map, flows_to_rd_map is supported.
+		Only a sub-set of pre_tag_map fields are supported, including: ip, bgp_nexthop, vlan_id,
+		src_mac, mpls_vpn_rd, src_as, dst_as, peer_src_as, peer_dst_as, input, output). Only IP
+		addresses, ie. no IP prefixes, are supported as part of the 'ip' field. Also, negations
+		are not supported (ie. 'in=-216' match all but input interface 216). bgp_agent_map and
+		sampling_map implement a separate caching mechanism and hence do not leverage this feature.
+		(default: false)
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [ 0-2^64-1 ]
@@ -1249,7 +1253,7 @@ DESC:		filters BGP standard/extended communities against the supplied pattern. T
 		(96 chars). The filter does substring matching, ie. 12345:64 will match communities in the
 		ranges 64-64, 640-649, 6400-6499 and 64000-64999. The '.' symbol can be used to wildcard a
 		pre-defined number of characters, ie. 12345:64... will match community values in the range
-		64000-64999 only.
+		64000-64999 only. Multiple patterns can be supplied comma-separated.
 
 KEY:            [ bgp_stdcomm_pattern_to_asn ]
 DESC:           filters BGP standard communities against the supplied pattern. The algorithm employed is
@@ -1258,7 +1262,7 @@ DESC:           filters BGP standard communities against the supplied pattern. T
 		part is mapped onto the peer AS field while the second is mapped onto the origin AS field.
 		The aim of this directive is to deal with IP prefixes on the own address space, ie. statics
 		or connected redistributed in BGP. Example: BGP standard community XXXXX:YYYYY is mapped as:
-		Peer-AS=XXXXX, Origin-AS=YYYYY.
+		Peer-AS=XXXXX, Origin-AS=YYYYY. Multiple patterns can be supplied comma-separated.
 
 KEY:		bgp_peer_as_skip_subas
 VALUES:		[ true | false ]

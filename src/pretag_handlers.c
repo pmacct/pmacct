@@ -2501,6 +2501,17 @@ int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *e, void *src)
   return FALSE;
 }
 
+int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *e, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE;
+
+  memcpy(&e->mpls_label_bottom, &src_e->mpls_label_bottom, sizeof(pt_uint32_t));
+
+  return FALSE;
+}
+
 int PT_map_index_entries_src_mac_handler(struct id_entry *e, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -2943,6 +2954,30 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, void *src)
       if (vrfid) {
         e->mpls_vpn_rd.rd.val = ntohl(e->mpls_vpn_rd.rd.val);
         if (e->mpls_vpn_rd.rd.val) e->mpls_vpn_rd.rd.type = RD_TYPE_VRFID;
+      }
+      break;
+    }
+  }
+}
+
+int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.acct_type == ACCT_NF) {
+    int label_idx;
+
+    switch(hdr->version) {
+    case 10:
+    case 9:
+      for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
+        if (tpl->tpl[label_idx].len == 3 && check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+          e->mpls_label_bottom.n = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off);
+          break;
+        }
       }
       break;
     }

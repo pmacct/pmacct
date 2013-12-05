@@ -362,7 +362,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   }
 
   /* Giving a first try with index(es) */
-  if (config.maps_index && pretag_index_have_one(t) && t->type == ACCT_SF) {
+  if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
 
