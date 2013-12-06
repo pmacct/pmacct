@@ -54,6 +54,13 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
   if (!map_allocated) return;
 
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
+      acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_TO_XFLOW_AGENT ||
+      acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED ||
+      acct_type == MAP_FLOW_TO_RD || acct_type == MAP_SAMPLING) {
+    req->key_value_table = (void *) &tmp;
+  }
+
   /* parsing engine vars */
   char *start, *key = NULL, *value = NULL;
   int len;
@@ -457,6 +464,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       t->num = tmp.num;
       t->ipv4_num = v4_num; 
       t->ipv4_base = &t->e[x];
+      t->flags = tmp.flags;
       for (index = 0; index < tmp.num; index++) {
         if (tmp.e[index].agent_ip.a.family == AF_INET) { 
           memcpy(&t->e[x], &tmp.e[index], sizeof(struct id_entry));
@@ -536,6 +544,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
 	   acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD)) {
 	pt_bitmap_t idx_bmap;
+	
+	t->index_num = MAX_ID_TABLE_INDEXES;
 
 #if defined ENABLE_IPV6
         for (ptr = t->ipv4_base, x = 0; x < MAX(t->ipv4_num, t->ipv6_num); ptr++, x++) {
@@ -573,6 +583,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	}
       }
     }
+
+    if (t->flags & PRETAG_FLAG_NEG) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): Negations not supported for table '%s'. Indexing disabled.\n",
+                config.name, config.type, filename);
+      pretag_index_destroy(t);
+    }
   }
 
   if (tmp.e) free(tmp.e) ;
@@ -592,10 +608,13 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   else exit_all(1);
 }
 
-u_int8_t pt_check_neg(char **value)
+u_int8_t pt_check_neg(char **value, u_int32_t *flags)
 {
   if (**value == '-') {
     (*value)++;
+
+    if (flags) *flags |= PRETAG_FLAG_NEG;
+
     return TRUE;
   }
   else return FALSE;
@@ -695,7 +714,7 @@ int pretag_index_insert_bitmap(struct id_table *t, pt_bitmap_t idx_bmap)
 
   if (!t) return TRUE;
 
-  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+  for (iterator = 0; iterator < t->index_num; iterator++) {
     if (!t->index[iterator].bitmap || t->index[iterator].bitmap == idx_bmap) {
       t->index[iterator].bitmap = idx_bmap;
       t->index[iterator].entries++;
@@ -713,7 +732,7 @@ int pretag_index_set_handlers(struct id_table *t)
 
   if (!t) return TRUE;
   
-  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+  for (iterator = 0; iterator < t->index_num; iterator++) {
     residual_idx_bmap = t->index[iterator].bitmap;
 
     handler_index = 0;
@@ -752,11 +771,11 @@ int pretag_index_set_handlers(struct id_table *t)
 int pretag_index_allocate(struct id_table *t)
 {
   pt_bitmap_t idx_t_size = 0;
-  u_int32_t iterator = 0;
+  u_int32_t iterator = 0, j = 0;
 
   if (!t) return TRUE;
 
-  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+  for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].bitmap) {
       Log(LOG_INFO, "INFO ( %s/%s ): maps_index: created index %x (%u entries) for table '%s'\n", config.name,
     		config.type, t->index[iterator].bitmap, t->index[iterator].entries, t->filename);
@@ -771,7 +790,13 @@ int pretag_index_allocate(struct id_table *t)
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
       }
-      else memset(t->index[iterator].idx_t, 0, idx_t_size); 
+      else {
+	memset(t->index[iterator].idx_t, 0, idx_t_size); 
+
+	for (j = 0; j < IDT_INDEX_HASH_BASE(t->index[iterator].entries); j++) {
+	  t->index[iterator].idx_t[j].depth = ID_TABLE_INDEX_DEPTH;
+	}
+      }
     }
   }
 
@@ -785,7 +810,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
   if (!t) return TRUE;
 
-  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+  for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].bitmap && t->index[iterator].bitmap == idx_bmap) {
       struct id_index_entry *idie;
       int modulo;
@@ -798,14 +823,14 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       modulo = cache_crc32((unsigned char *)&e, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
       idie = &t->index[iterator].idx_t[modulo];
 
-      for (index = 0; index < ID_TABLE_INDEX_DEPTH; index++) {
+      for (index = 0; index < idie->depth; index++) {
         if (!idie->e[index]) {
           idie->e[index] = ptr;
           break;
         }
       }
 
-      if (index == ID_TABLE_INDEX_DEPTH) {
+      if (index == idie->depth) {
         Log(LOG_WARNING, "WARN ( %s/%s ): maps_index: out of index space %x for table '%s'. Indexing disabled.\n",
 		config.name, config.type, idx_bmap, t->filename);
 	pretag_index_destroy(t);
@@ -823,7 +848,7 @@ void pretag_index_destroy(struct id_table *t)
 
   if (!t) return;
 
-  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+  for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].idx_t) {
       free(t->index[iterator].idx_t);
       Log(LOG_INFO, "INFO ( %s/%s ): maps_index: destroyed index %x for table '%s'.\n",
@@ -831,6 +856,8 @@ void pretag_index_destroy(struct id_table *t)
     }
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
   }
+
+  t->index_num = 0;
 }
 
 void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
@@ -845,7 +872,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
   memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
   iterator_ir = 0;
 
-  for (iterator = 0; iterator < MAX_ID_TABLE_INDEXES; iterator++) {
+  for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries) {
       memset(&res_idt, 0, sizeof(res_idt));
       memset(&res_fdata, 0, sizeof(res_fdata));
@@ -857,7 +884,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
       modulo = cache_crc32((unsigned char *)&res_fdata, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
       idie = &t->index[iterator].idx_t[modulo];
 
-      for (index_cc = 0; idie->e[index_cc] && index_cc < ID_TABLE_INDEX_DEPTH; index_cc++) {
+      for (index_cc = 0; idie->e[index_cc] && index_cc < idie->depth; index_cc++) {
         for (index_hdlr = 0; (*t->index[iterator].idt_handler[index_hdlr]); index_hdlr++) {
           (*t->index[iterator].idt_handler[index_hdlr])(&res_idt, idie->e[index_cc]);
         }

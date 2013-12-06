@@ -150,7 +150,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
 
   if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
 
-  e->input.neg = pt_check_neg(&value);
+  e->input.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
 
   while (x < len) {
@@ -183,7 +183,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
 
-  e->output.neg = pt_check_neg(&value);
+  e->output.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
 
   while (x < len) {
@@ -213,7 +213,7 @@ int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, stru
 {
   int x = 0;
 
-  e->nexthop.neg = pt_check_neg(&value);
+  e->nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->nexthop.a)) {
     Log(LOG_ERR, "ERROR ( %s ): Bad nexthop address '%s'. ", filename, value);
@@ -237,7 +237,7 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
 {
   int x = 0, have_bgp = 0;
 
-  e->bgp_nexthop.neg = pt_check_neg(&value);
+  e->bgp_nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->bgp_nexthop.a)) {
     Log(LOG_ERR, "ERROR ( %s ): Bad BGP nexthop address '%s'. ", filename, value);
@@ -282,7 +282,7 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
 {
   int x = 0;
 
-  e->bgp_nexthop.neg = pt_check_neg(&value);
+  e->bgp_nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->bgp_nexthop.a)) {
     Log(LOG_ERR, "ERROR ( %s ): Bad BGP nexthop address '%s'. ", filename, value);
@@ -301,7 +301,7 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
   int x = 0;
   char *endptr;
 
-  e->peer_dst_as.neg = pt_check_neg(&value);
+  e->peer_dst_as.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
   e->peer_dst_as.n = tmp;
@@ -318,7 +318,7 @@ int BITR_map_mpls_label_bottom_handler(char *filename, struct id_entry *e, char 
   int x = 0;
   char *endptr;
 
-  e->mpls_label_bottom.neg = pt_check_neg(&value);
+  e->mpls_label_bottom.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
   e->mpls_label_bottom.n = tmp;
@@ -336,7 +336,7 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
 {
   int x = 0, j, len;
 
-  e->engine_type.neg = pt_check_neg(&value);
+  e->engine_type.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
 
   while (x < len) {
@@ -370,7 +370,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
 {
   int x = 0, j, len;
 
-  e->engine_id.neg = pt_check_neg(&value);
+  e->engine_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
 
   while (x < len) {
@@ -446,7 +446,7 @@ int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct
 {
   int tmp, x = 0, len;
 
-  e->v8agg.neg = pt_check_neg(&value);
+  e->v8agg.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
 
   while (x < len) {
@@ -481,7 +481,7 @@ int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, str
 {
   int x = 0;
 
-  e->agent_id.neg = pt_check_neg(&value);
+  e->agent_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   e->agent_id.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SF_AGENTID) {
@@ -499,7 +499,7 @@ int PT_map_flowset_id_handler(char *filename, struct id_entry *e, char *value, s
 {
   int x = 0;
 
-  e->flowset_id.neg = pt_check_neg(&value);
+  e->flowset_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   e->flowset_id.n = htons(atoi(value));
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_FLOWSET_ID) {
@@ -517,7 +517,7 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
 {
   int x = 0;
 
-  e->sampling_rate.neg = pt_check_neg(&value);
+  e->sampling_rate.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   e->sampling_rate.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SAMPLING_RATE) {
@@ -538,7 +538,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
   u_int32_t tmp;
   int x = 0;
 
-  e->sample_type.neg = pt_check_neg(&value);
+  e->sample_type.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (acct_type == ACCT_SF && strchr(value, ':')) {
     while (token = extract_token(&value, ':')) {
@@ -598,7 +598,7 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
 {
   int x = 0;
 
-  e->direction.neg = pt_check_neg(&value);
+  e->direction.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   e->direction.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_DIRECTION) {
@@ -618,7 +618,7 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
   int x = 0, have_bgp = 0;
   char *endptr;
 
-  e->src_as.neg = pt_check_neg(&value);
+  e->src_as.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
 
@@ -667,7 +667,7 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
   int x = 0, have_bgp = 0;
   char *endptr;
 
-  e->dst_as.neg = pt_check_neg(&value);
+  e->dst_as.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
 
@@ -716,7 +716,7 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
   int x = 0;
   char *endptr;
 
-  e->peer_src_as.neg = pt_check_neg(&value);
+  e->peer_src_as.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
 
@@ -745,7 +745,7 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
   int x = 0;
   char *endptr;
 
-  e->peer_dst_as.neg = pt_check_neg(&value);
+  e->peer_dst_as.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
 
@@ -774,7 +774,7 @@ int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *valu
   int x = 0;
   char *endptr;
 
-  e->src_local_pref.neg = pt_check_neg(&value);
+  e->src_local_pref.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
 
@@ -803,7 +803,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   int x = 0;
   char *endptr;
 
-  e->local_pref.neg = pt_check_neg(&value);
+  e->local_pref.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = strtoul(value, &endptr, 10);
 
@@ -909,7 +909,7 @@ int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, 
 
   memset(&e->mpls_vpn_rd, 0, sizeof(e->mpls_vpn_rd));
 
-  e->mpls_vpn_rd.neg = pt_check_neg(&value);
+  e->mpls_vpn_rd.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   ret = bgp_str2rd(&e->mpls_vpn_rd.rd, value);
 
   for (x = 0; e->func[x]; x++) {
@@ -931,7 +931,7 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
 {
   int x = 0;
 
-  e->src_mac.neg = pt_check_neg(&value);
+  e->src_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (string_etheraddr(value, &e->src_mac.a)) {
     Log(LOG_ERR, "ERROR ( %s ): Bad source MAC address '%s'. ", filename, value);
@@ -956,7 +956,7 @@ int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, stru
 {
   int tmp, x = 0;
 
-  e->vlan_id.neg = pt_check_neg(&value);
+  e->vlan_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = atoi(value);
   if (tmp < 0 || tmp > 4096) {

@@ -1477,7 +1477,7 @@ int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
   filter->num = 0;
 
   while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
-    neg = pt_check_neg(&count_token);
+    neg = pt_check_neg(&count_token, NULL);
     range_ptr = pt_check_range(count_token);
     value = strtoull(count_token, &endptr_v, 10);
     if (range_ptr) range = strtoull(range_ptr, &endptr_r, 10);

@@ -68,6 +68,8 @@
 #define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00002000
 #define BPAS_MAP_RCODE_BGP		0x00004000
 
+#define PRETAG_FLAG_NEG			0x00000001
+
 #define IDT_INDEX_HASH_BASE(entries)	(entries * 2)
 
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
@@ -171,6 +173,7 @@ struct id_entry {
 typedef int (*pretag_copier)(struct id_entry *, void *);
 
 struct id_index_entry {
+  u_int16_t depth;
   struct id_entry *e[ID_TABLE_INDEX_DEPTH];
 };
 
@@ -194,7 +197,9 @@ struct id_table {
 #endif
   struct id_entry *e;
   struct id_table_index index[MAX_ID_TABLE_INDEXES];
+  unsigned short int index_num; /* for future */
   time_t timestamp;
+  u_int32_t flags;
 };
 
 struct _map_dictionary_line {
@@ -219,7 +224,7 @@ struct pretag_filter {
 #define EXT
 #endif
 EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
-EXT u_int8_t pt_check_neg(char **);
+EXT u_int8_t pt_check_neg(char **, u_int32_t *);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
 EXT int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
