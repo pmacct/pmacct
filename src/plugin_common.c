@@ -498,16 +498,18 @@ void P_init_historical_acct(time_t now)
 void P_eval_historical_acct(struct timeval *stamp, struct timeval *basetime, time_t timeslot)
 {
   if (stamp->tv_sec) {
-    while (basetime->tv_sec > stamp->tv_sec) {
-      if (config.sql_history != COUNT_MONTHLY) basetime->tv_sec -= timeslot;
-      else {
+    if (config.sql_history != COUNT_MONTHLY) {
+      int residual;
+
+      residual = timeslot - ((basetime->tv_sec - stamp->tv_sec) % timeslot);
+      basetime->tv_sec = stamp->tv_sec - residual;
+    }
+    else {
+      while (basetime->tv_sec > stamp->tv_sec) {
         timeslot = calc_monthly_timeslot(basetime->tv_sec, config.sql_history_howmany, SUB);
         basetime->tv_sec -= timeslot;
       }
-    }
-    while ((basetime->tv_sec+timeslot) < stamp->tv_sec) {
-      if (config.sql_history != COUNT_MONTHLY) basetime->tv_sec += timeslot;
-      else {
+      while ((basetime->tv_sec+timeslot) < stamp->tv_sec) {
         basetime->tv_sec += timeslot;
         timeslot = calc_monthly_timeslot(basetime->tv_sec, config.sql_history_howmany, ADD);
       }

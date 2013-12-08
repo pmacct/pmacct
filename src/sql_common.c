@@ -528,16 +528,18 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   tot_flows = data->flo_num;
 
   if (data->time_start.tv_sec && config.sql_history) {
-    while (basetime > data->time_start.tv_sec) {
-      if (config.sql_history != COUNT_MONTHLY) basetime -= timeslot;
-      else {
+    if (config.sql_history != COUNT_MONTHLY) {
+      int residual;
+
+      residual = timeslot - ((basetime - data->time_start.tv_sec) % timeslot);
+      basetime = data->time_start.tv_sec - residual;
+    }
+    else {
+      while (basetime > data->time_start.tv_sec) {
         timeslot = calc_monthly_timeslot(basetime, config.sql_history_howmany, SUB);
         basetime -= timeslot;
       }
-    }
-    while ((basetime+timeslot) < data->time_start.tv_sec) {
-      if (config.sql_history != COUNT_MONTHLY) basetime += timeslot;
-      else {
+      while ((basetime + timeslot) < data->time_start.tv_sec) {
         basetime += timeslot;
         timeslot = calc_monthly_timeslot(basetime, config.sql_history_howmany, ADD);
       }

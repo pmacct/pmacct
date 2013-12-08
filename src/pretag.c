@@ -582,12 +582,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  pretag_index_fill(t, idx_bmap, ptr);
 	}
       }
-    }
 
-    if (t->flags & PRETAG_FLAG_NEG) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): Negations not supported for table '%s'. Indexing disabled.\n",
+      if (t->flags & PRETAG_FLAG_NEG) {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Negations not supported for table '%s'. Indexing disabled.\n",
                 config.name, config.type, filename);
-      pretag_index_destroy(t);
+        pretag_index_destroy(t);
+      }
     }
   }
 
