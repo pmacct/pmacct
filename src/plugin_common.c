@@ -501,7 +501,7 @@ void P_eval_historical_acct(struct timeval *stamp, struct timeval *basetime, tim
     if (config.sql_history != COUNT_MONTHLY) {
       int residual;
 
-      residual = timeslot - ((basetime->tv_sec - stamp->tv_sec) % timeslot);
+      residual = timeslot - ((int)(basetime->tv_sec - stamp->tv_sec) % timeslot);
       basetime->tv_sec = stamp->tv_sec - residual;
     }
     else {

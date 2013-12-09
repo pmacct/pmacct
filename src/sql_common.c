@@ -531,7 +531,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     if (config.sql_history != COUNT_MONTHLY) {
       int residual;
 
-      residual = timeslot - ((basetime - data->time_start.tv_sec) % timeslot);
+      residual = timeslot - ((int)(basetime - data->time_start.tv_sec) % timeslot);
       basetime = data->time_start.tv_sec - residual;
     }
     else {

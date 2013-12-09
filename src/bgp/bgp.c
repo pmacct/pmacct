@@ -2506,7 +2506,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
       memcpy(c->std_comms, p->std_comms, MAX_BGP_STD_COMMS);
     }
     else {
-      if (c->std_comms) free(c->std_comms);
+      if (c->std_comms) {
+	free(c->std_comms);
+	c->std_comms = NULL;
+      }
     }
     if (what_to_count & COUNT_EXT_COMM) {
       if (!c->ext_comms) {
@@ -2516,7 +2519,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
       memcpy(c->ext_comms, p->ext_comms, MAX_BGP_EXT_COMMS);
     }
     else {
-      if (c->ext_comms) free(c->ext_comms);
+      if (c->ext_comms) {
+	free(c->ext_comms);
+	c->ext_comms = NULL;
+      }
     }
     if (what_to_count & COUNT_AS_PATH) {
       if (!c->as_path) {
@@ -2526,7 +2532,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
       memcpy(c->as_path, p->as_path, MAX_BGP_ASPATH);
     }
     else {
-      if (c->as_path) free(c->as_path);
+      if (c->as_path) {
+	free(c->as_path);
+	c->as_path = NULL;
+      }
     }
     c->local_pref = p->local_pref;
     c->med = p->med;
@@ -2538,7 +2547,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
       memcpy(c->src_std_comms, p->src_std_comms, MAX_BGP_STD_COMMS);
     }
     else {
-      if (c->src_std_comms) free(c->src_std_comms);
+      if (c->src_std_comms) {
+	free(c->src_std_comms);
+	c->src_std_comms = NULL;
+      }
     }
     if (what_to_count & COUNT_SRC_EXT_COMM) {
       if (!c->src_ext_comms) {
@@ -2548,7 +2560,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
       memcpy(c->src_ext_comms, p->src_ext_comms, MAX_BGP_EXT_COMMS);
     }
     else {
-      if (c->src_ext_comms) free(c->src_ext_comms);
+      if (c->src_ext_comms) {
+	free(c->src_ext_comms);
+	c->src_ext_comms = NULL;
+      }
     }
     if (what_to_count & COUNT_SRC_AS_PATH) {
       if (!c->src_as_path) {
@@ -2558,7 +2573,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
       memcpy(c->src_as_path, p->src_as_path, MAX_BGP_ASPATH);
     }
     else {
-      if (c->src_as_path) free(c->src_as_path);
+      if (c->src_as_path) {
+	free(c->src_as_path);
+	c->src_as_path = NULL;
+      }
     }
     c->src_local_pref = p->src_local_pref;
     c->src_med = p->src_med;
