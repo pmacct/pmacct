@@ -59,6 +59,7 @@
 #define PRETAG_SRC_MAC			0x08000000
 #define PRETAG_VLAN_ID			0x10000000
 #define PRETAG_IP			0x20000000
+#define PRETAG_MPLS_PW_ID		0x40000000
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -157,6 +158,7 @@ struct id_entry {
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   pt_rd_t mpls_vpn_rd;
+  pt_uint32_t mpls_pw_id;
   struct bpf_program filter;
   pt_uint8_t v8agg;
   pretag_handler func[N_MAP_HANDLERS];

@@ -1720,10 +1720,10 @@ void readExtendedMplsVC(SFSample *sample)
 {
 #define SA_MAX_VCNAME_LEN 100
   char vc_name[SA_MAX_VCNAME_LEN+1];
-  u_int32_t vll_vc_id, vc_cos;
+  u_int32_t vc_cos;
 
   getString(sample, vc_name, SA_MAX_VCNAME_LEN); 
-  vll_vc_id = getData32(sample);
+  sample->mpls_vll_vc_id = getData32(sample);
   vc_cos = getData32(sample);
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_VC;

@@ -511,6 +511,8 @@ struct data_hdr_v9 {
 #define NF9_INGRESS_VRFID		234
 #define NF9_EGRESS_VRFID		235
 /* ... */
+#define NF9_PSEUDOWIREID		249
+/* ... */
 #define NF9_ETHERTYPE			256
 /* ... */
 #define NF9_OBSERVATION_TIME_SEC	322

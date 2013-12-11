@@ -927,6 +927,28 @@ int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, 
   else return TRUE; 
 }
 
+int PT_map_mpls_pw_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+  char *endptr;
+
+  e->mpls_pw_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->mpls_pw_id.n = strtoul(value, &endptr, 10);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_MPLS_PW_ID) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'mpls_pw_id' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_pw_id_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_mpls_pw_id_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_MPLS_PW_ID;
+
+  return FALSE;
+}
+
 int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -1804,6 +1826,25 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->mpls_vpn_rd.neg);
 }
 
+int pretag_mpls_pw_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_PSEUDOWIREID].len) {
+      if (!memcmp(&entry->mpls_pw_id.n, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4))
+        return (FALSE | entry->mpls_pw_id.neg);
+      else return (TRUE ^ entry->mpls_pw_id.neg);
+    }
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
 int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2035,6 +2076,15 @@ int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->vlan_id.n == sample->in_vlan ||
       entry->vlan_id.n == sample->out_vlan) return (FALSE | entry->vlan_id.neg);
   else return (TRUE ^ entry->vlan_id.neg);
+}
+
+int SF_pretag_mpls_pw_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->mpls_pw_id.n == sample->mpls_vll_vc_id) return (FALSE | entry->mpls_pw_id.neg);
+  else return (TRUE ^ entry->mpls_pw_id.neg);
 }
 
 int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -2501,6 +2551,17 @@ int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *e, void *src)
   return FALSE;
 }
 
+int PT_map_index_entries_mpls_pw_id_handler(struct id_entry *e, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE;
+
+  memcpy(&e->mpls_pw_id, &src_e->mpls_pw_id, sizeof(pt_uint32_t));
+
+  return FALSE;
+}
+
 int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *e, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -2958,6 +3019,30 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, void *src)
       break;
     }
   }
+}
+
+int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_PSEUDOWIREID].len) {
+        memcpy(&e->mpls_pw_id.n, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4);
+      }
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    e->mpls_pw_id.n = sample->mpls_vll_vc_id;
+  }
+  else return TRUE;
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, void *src)

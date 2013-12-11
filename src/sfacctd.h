@@ -154,6 +154,7 @@ typedef struct _SFSample {
 
   /* mpls */
   SFLAddress mpls_nextHop;
+  u_int32_t mpls_vll_vc_id;
 
   /* nat */
   SFLAddress nat_src;

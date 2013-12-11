@@ -116,6 +116,10 @@
 ! 'mpls_vpn_rd'		MATCH: Destination IP prefix BGP-signalled MPLS L2/L3
 !			VPN Route Distinguisher (RD) value. Encoding types #0, #1
 !			and #2 are supported as per rfc4364. See example below.
+! 'mpls_pw_id'		MATCH: Signalled MPLS L2 VPNs Pseudowire ID. In NetFlow
+!			v9/IPFIX this is compared against IE #249; in sFlow v5
+!			this is compared against vll_vc_id field, extended MPLS
+!			VC object.
 ! 'src_mac'		MATCH: In NetFlow v9 and IPFIX this is compared against
 !			IE #56, in sFlow against source MAC address field part
 !			of the Extended Switch object.
