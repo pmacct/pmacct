@@ -462,17 +462,35 @@ int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
 int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 {
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
-  struct my_gtphdr *gtp_hdr = (struct my_gtphdr *) pptrs->payload_ptr;
+  struct my_gtphdr_v0 *gtp_hdr_v0 = (struct my_gtphdr_v0 *) pptrs->payload_ptr;
+  struct my_gtphdr_v1 *gtp_hdr_v1 = (struct my_gtphdr_v1 *) pptrs->payload_ptr;
   struct my_udphdr *udp_hdr = (struct my_udphdr *) pptrs->tlh_ptr;
-  u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr, gtp_len;
+  u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr;
+  u_int16_t gtp_hdr_len, gtp_opt_len, gtp_version;
   char *ptr = pptrs->payload_ptr;
-  int ret;
+  int ret, trial;
 
-  if (off+sizeof(struct my_gtphdr) < caplen) {
-    gtp_len = (ntohs(udp_hdr->uh_ulen)-sizeof(struct my_udphdr))-ntohs(gtp_hdr->length);
-    if (off+gtp_len < caplen) {
-      off += gtp_len;
-      ptr += gtp_len;
+  gtp_version = (gtp_hdr_v0->flags >> 5) & 0x07;
+
+  switch (gtp_version) {
+  case 0:
+    gtp_hdr_len = 4;
+    break;
+  case 1:
+    gtp_hdr_len = 8;
+    break;
+  default:
+    Log(LOG_INFO, "INFO ( default/core ): unsupported GTP version %u\n", gtp_version);
+    return FALSE;
+  }
+
+  if (off + gtp_hdr_len < caplen) {
+    off += gtp_hdr_len;
+    ptr += gtp_hdr_len;
+    ret = 0; trial = 0;
+
+    while (!ret && trial < MAX_GTP_TRIALS) {
+      off++; ptr++; trial++;
 
       pptrs->iph_ptr = ptr;
       pptrs->tlh_ptr = NULL; pptrs->payload_ptr = NULL;
@@ -521,13 +539,9 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 	break;
       }
     }
-    else {
-      Log(LOG_INFO, "INFO ( default/core ): short GTP packet read (%u/%u/tunnel/#1). Snaplen issue ?\n", caplen, off+gtp_len);
-      return FALSE;
-    }
-  } 
+  }
   else {
-    Log(LOG_INFO, "INFO ( default/core ): short GTP packet read (%u/%u/tunnel/#2). Snaplen issue ?\n", caplen, off+sizeof(struct my_gtphdr));
+    Log(LOG_INFO, "INFO ( default/core ): short GTP packet read (%u/%u/tunnel). Snaplen issue ?\n", caplen, off + gtp_hdr_len);
     return FALSE;
   }
 

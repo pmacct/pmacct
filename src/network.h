@@ -241,10 +241,19 @@ struct my_tlhdr {
    u_int16_t	dst_port;
 };
 
-struct my_gtphdr {
+#define MAX_GTP_TRIALS	8
+
+struct my_gtphdr_v0 {
     u_int8_t flags;
     u_int8_t message;
     u_int16_t length;
+};
+
+struct my_gtphdr_v1 {
+    u_int8_t flags;
+    u_int8_t message;
+    u_int16_t length;
+    u_int32_t teid;
 };
 
 /* typedefs */
