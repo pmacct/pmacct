@@ -482,16 +482,7 @@ void free_extra_allocs()
 
   for (idx = 0; idx < config.buckets; idx++) {
     if (!following_chain) acc_elem = (struct acc *) elem;
-    if (acc_elem->cbgp) {
-      if (acc_elem->cbgp->std_comms) free(acc_elem->cbgp->std_comms);
-      if (acc_elem->cbgp->ext_comms) free(acc_elem->cbgp->ext_comms);
-      if (acc_elem->cbgp->as_path) free(acc_elem->cbgp->as_path);
-      if (acc_elem->cbgp->src_std_comms) free(acc_elem->cbgp->src_std_comms);
-      if (acc_elem->cbgp->src_ext_comms) free(acc_elem->cbgp->src_ext_comms);
-      if (acc_elem->cbgp->src_as_path) free(acc_elem->cbgp->src_as_path);
-      free(acc_elem->cbgp);
-      acc_elem->cbgp = NULL;
-    }
+    if (acc_elem->cbgp) free_cache_bgp_primitives(&acc_elem->cbgp);
     if (acc_elem->pnat) {
       free(acc_elem->pnat);
       acc_elem->pnat = NULL;

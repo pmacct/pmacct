@@ -50,8 +50,8 @@
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
 #define ROUTING_SEGMENT_MAX	16
-#define PREFIX_LABEL_LEN	16
 #if defined ENABLE_PLABEL
+#define PREFIX_LABEL_LEN	16
 #define AF_PLABEL		255
 #endif
 #define PRIMPTRS_FUNCS_N	16

@@ -153,7 +153,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	  if (acc_elem->cbgp) {
 	    struct pkt_bgp_primitives tmp_pbgp;
 
-	    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
+	    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp, config.what_to_count);
 	    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	  }
 	}
@@ -235,7 +235,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	      if (acc_elem->cbgp) {
 		struct pkt_bgp_primitives tmp_pbgp;
 
-		cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
+		cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp, config.what_to_count);
 		enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 	      }
 	    }
@@ -320,7 +320,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		  if (acc_elem->cbgp) {
 		    struct pkt_bgp_primitives tmp_pbgp;
 
-		    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
+		    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp, config.what_to_count);
 		    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
 		  }
 		}
@@ -426,7 +426,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   struct pkt_nat_primitives *s3 = src->pnat;
   struct pkt_mpls_primitives *s4 = src->pmpls;
 
-  cache_to_pkt_bgp_primitives(s2, src->cbgp);
+  cache_to_pkt_bgp_primitives(s2, src->cbgp, w);
 
   memset(d1, 0, sizeof(struct pkt_primitives));
   memset(d2, 0, sizeof(struct pkt_bgp_primitives));

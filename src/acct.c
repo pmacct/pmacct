@@ -81,7 +81,7 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
     if (elem->cbgp) {
       struct pkt_bgp_primitives tmp_pbgp;
 
-      cache_to_pkt_bgp_primitives(&tmp_pbgp, elem->cbgp);
+      cache_to_pkt_bgp_primitives(&tmp_pbgp, elem->cbgp, config.what_to_count);
       res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
     }
   }
@@ -205,26 +205,18 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       memcpy(&elem_acc->primitives, addr, sizeof(struct pkt_primitives));
 
       if (pbgp) {
+	if (elem_acc->cbgp) free_cache_bgp_primitives(&elem_acc->cbgp);
+	elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
 	if (!elem_acc->cbgp) {
-	  elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
-	  if (!elem_acc->cbgp) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-	    exit_plugin(1);
-          }
+	  Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
+	  exit_plugin(1);
+        }
+	else {
 	  memset(elem_acc->cbgp, 0, cb_size);
+          pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
 	}
-        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
-      else {
-        if (elem_acc->cbgp->std_comms) free(elem_acc->cbgp->std_comms);
-        if (elem_acc->cbgp->ext_comms) free(elem_acc->cbgp->ext_comms);
-        if (elem_acc->cbgp->as_path) free(elem_acc->cbgp->as_path);
-        if (elem_acc->cbgp->src_std_comms) free(elem_acc->cbgp->src_std_comms);
-        if (elem_acc->cbgp->src_ext_comms) free(elem_acc->cbgp->src_ext_comms);
-        if (elem_acc->cbgp->src_as_path) free(elem_acc->cbgp->src_as_path);
-        free(elem_acc->cbgp);
-	elem_acc->cbgp = NULL;
-      }
+      else free_cache_bgp_primitives(&elem_acc->cbgp);
 
       if (pnat) {
 	if (!elem_acc->pnat) {

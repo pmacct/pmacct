@@ -417,13 +417,6 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             Cursor->lru_prev = NULL;
             Cursor->lru_next = NULL;
             Cursor->lru_tag = PendingElem->lru_tag;
-/* 
-	    XXX: will be free'ing these up in RetireElem()
-	    if (PendingElem->cbgp) PendingElem->cbgp = NULL;
-	    if (PendingElem->pnat) PendingElem->pnat = NULL;
-	    if (PendingElem->pmpls) PendingElem->pmpls = NULL;
-	    if (PendingElem->pcust) PendingElem->pcust = NULL;
-*/
             RetireElem(PendingElem);
             queue[j] = Cursor;
           }
@@ -471,7 +464,7 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
 	if (Cursor->cbgp) {
 	  struct pkt_bgp_primitives tmp_pbgp;
 
-	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
+	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp, config.what_to_count);
 	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
 	}
       }
@@ -650,7 +643,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         if (Cursor->cbgp) {
 	  struct pkt_bgp_primitives tmp_pbgp;
 
-	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
+	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp, config.what_to_count);
 	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
 	}
       }
@@ -700,24 +693,18 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   memcpy(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
 
   if (pbgp) {
-    if (!Cursor->cbgp) {
-      Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
-      if (!Cursor->cbgp) goto safe_action;
+    /* releasing stale information and starting from scratch */
+    if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
+
+    Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+    if (!Cursor->cbgp) goto safe_action;
+    else {
       memset(Cursor->cbgp, 0, cb_size);
+      pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
     }
-    pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
   }
   else {
-    if (Cursor->cbgp) {
-      if (Cursor->cbgp->std_comms) free(Cursor->cbgp->std_comms);
-      if (Cursor->cbgp->ext_comms) free(Cursor->cbgp->ext_comms);
-      if (Cursor->cbgp->as_path) free(Cursor->cbgp->as_path);
-      if (Cursor->cbgp->src_std_comms) free(Cursor->cbgp->src_std_comms);
-      if (Cursor->cbgp->src_ext_comms) free(Cursor->cbgp->src_ext_comms);
-      if (Cursor->cbgp->src_as_path) free(Cursor->cbgp->src_as_path);
-      free(Cursor->cbgp);
-    }
-    Cursor->cbgp = NULL;
+    if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
   }
 
   if (pnat) {
