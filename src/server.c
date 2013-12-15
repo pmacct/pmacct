@@ -78,6 +78,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   struct pkt_nat_primitives dummy_pnat;
   struct pkt_mpls_primitives dummy_pmpls;
   char *dummy_pcust = NULL, *custbuf = NULL;
+  char emptybuf[LARGEBUFLEN];
   int reset_counter, offset = PdataSz;
 
   dummy_pcust = malloc(config.cpptrs.len);
@@ -94,6 +95,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   memset(dummy_pcust, 0, config.cpptrs.len); 
   memset(custbuf, 0, config.cpptrs.len); 
 
+  memset(emptybuf, 0, LARGEBUFLEN);
   memset(&rb, 0, sizeof(struct reply_buffer));
   memcpy(rb.buf, buf, sizeof(struct query_header));
   rb.len = LARGEBUFLEN-sizeof(struct query_header);
@@ -411,6 +413,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
     send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
+
+  /* end EOF */
+  send(sd, emptybuf, LARGEBUFLEN, 0);
 
   if (dummy_pcust) free(dummy_pcust);
   if (custbuf) free(custbuf);

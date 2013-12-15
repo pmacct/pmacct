@@ -1064,46 +1064,52 @@ int main(int argc,char **argv)
     assert(sizeof(struct imt_custom_primitives)+sizeof(struct query_header) < LARGEBUFLEN);
     sd = build_query_client(path);
     send(sd, clibuf, buflen, 0);
-    Recv(sd, &cpt);
+    unpacked = Recv(sd, &cpt);
 
-    memcpy(&pmc_custom_primitives_registry, cpt+sizeof(struct query_header), sizeof(struct imt_custom_primitives));
-
-    if (want_custom_primitives_table) {
-      int idx;
-
-      /* table header */
-      printf("NAME                              ");
-      printf("LEN    ");
-      printf("OFF\n");
-
-      for (idx = 0; idx < pmc_custom_primitives_registry.num; idx++) {
-	printf("%-32s  %-5u  %-5u\n", pmc_custom_primitives_registry.primitive[idx].name,
-		pmc_custom_primitives_registry.primitive[idx].len,
-		pmc_custom_primitives_registry.primitive[idx].off);
+    if (unpacked) {
+      memcpy(&pmc_custom_primitives_registry, cpt+sizeof(struct query_header), sizeof(struct imt_custom_primitives));
+  
+      if (want_custom_primitives_table) {
+        int idx;
+  
+        /* table header */
+        printf("NAME                              ");
+        printf("LEN    ");
+        printf("OFF\n");
+  
+        for (idx = 0; idx < pmc_custom_primitives_registry.num; idx++) {
+  	printf("%-32s  %-5u  %-5u\n", pmc_custom_primitives_registry.primitive[idx].name,
+  		pmc_custom_primitives_registry.primitive[idx].len,
+  		pmc_custom_primitives_registry.primitive[idx].off);
+        }
+  
+        exit(1);
       }
-
-      exit(1);
+  
+      /* if we were invoked with -c, let's check we do not have unknown primitives */
+      if (custom_primitives_input.num) {
+        int idx, idx2, found;
+  
+        for (idx = 0; idx < custom_primitives_input.num; idx++) {
+  	  found = FALSE;
+  
+          for (idx2 = 0; idx2 < pmc_custom_primitives_registry.num; idx2++) {
+  	    if (!strcmp(custom_primitives_input.primitive[idx].name, pmc_custom_primitives_registry.primitive[idx2].name)) {
+  	      found = TRUE;
+  	      break;
+  	    }  
+  	  }
+  
+  	  if (!found) {
+  	    printf("ERROR: unknown primitive '%s'\n", custom_primitives_input.primitive[idx].name);
+  	    exit(1);
+  	  }
+        }
+      }
     }
-
-    /* if we were invoked with -c, let's check we do not have unknown primitives */
-    if (custom_primitives_input.num) {
-      int idx, idx2, found;
-
-      for (idx = 0; idx < custom_primitives_input.num; idx++) {
-	found = FALSE;
-
-        for (idx2 = 0; idx2 < pmc_custom_primitives_registry.num; idx2++) {
-	  if (!strcmp(custom_primitives_input.primitive[idx].name, pmc_custom_primitives_registry.primitive[idx2].name)) {
-	    found = TRUE;
-	    break;
-	  } 
-	}
-
-	if (!found) {
-	  printf("ERROR: unknown primitive '%s'\n", custom_primitives_input.primitive[idx].name);
-	  exit(1);
-	}
-      }
+    else {
+      printf("ERROR: missing EOF from server\n");
+      exit(1);
     }
   }
 
@@ -1450,25 +1456,32 @@ int main(int argc,char **argv)
 
 	    sd = build_query_client(path);
 	    send(sd, clibuf, buflen, 0);
-	    Recv(sd, &ct);
-	    ct_num = ((struct query_header *)ct)->num;
-	    elem = ct+sizeof(struct query_header);
-	    class_table = (struct stripped_class *) elem;
-	    ct_idx = 0;
-	    while (ct_idx < ct_num) {
-	      class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
-	      if (!strcmp(class_table[ct_idx].protocol, sclass)) {
-	        value = class_table[ct_idx].id;
-		break;
-	      }
-	      ct_idx++;
-	    }
+	    unpacked = Recv(sd, &ct);
 
-	    if (!value) {
-	      printf("ERROR: Server has not loaded any classifier for '%s'.\n", sclass);
-	      exit(1); 
+	    if (unpacked) {
+  	      ct_num = ((struct query_header *)ct)->num;
+  	      elem = ct+sizeof(struct query_header);
+  	      class_table = (struct stripped_class *) elem;
+  	      ct_idx = 0;
+  	      while (ct_idx < ct_num) {
+  	        class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
+  	        if (!strcmp(class_table[ct_idx].protocol, sclass)) {
+  	          value = class_table[ct_idx].id;
+  		  break;
+  	        }
+  	        ct_idx++;
+  	      }
+  
+  	      if (!value) {
+  	        printf("ERROR: Server has not loaded any classifier for '%s'.\n", sclass);
+  	        exit(1); 
+  	      }
+  	      else request.data.class = value;
+            }
+	    else {
+	      printf("ERROR: missing EOF from server\n");
+	      exit(1);
 	    }
-	    else request.data.class = value;
 	  }
         }
 	else if (!strcmp(count_token[match_string_index], "pkt_len_distrib")) {
@@ -1492,22 +1505,28 @@ int main(int argc,char **argv)
 
 	  sd = build_query_client(path);
 	  send(sd, clibuf, buflen, 0);
-	  Recv(sd, &pldt);
+	  unpacked = Recv(sd, &pldt);
 
-	  pldt_num = ((struct query_header *)pldt)->num;
-	  elem = pldt+sizeof(struct query_header);
-	  pldt_elem = (struct stripped_pkt_len_distrib *) elem;
-	  while (pldt_idx < pldt_num) {
-	    pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
-	    if (!strcmp(req_elem.str, pkt_len_distrib_table[pldt_idx])) req_value = pldt_idx;
-	    pldt_idx++; pldt_elem++;
+	  if (unpacked) {
+	    pldt_num = ((struct query_header *)pldt)->num;
+	    elem = pldt+sizeof(struct query_header);
+	    pldt_elem = (struct stripped_pkt_len_distrib *) elem;
+	    while (pldt_idx < pldt_num) {
+	      pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
+	      if (!strcmp(req_elem.str, pkt_len_distrib_table[pldt_idx])) req_value = pldt_idx;
+	      pldt_idx++; pldt_elem++;
+	    }
+
+            if (!pldt_num) {
+              printf("ERROR: Server has not loaded any packet length distributions.\n");
+              exit(1);
+            }
+	    else request.data.pkt_len_distrib = req_value;
 	  }
-
-          if (!pldt_num) {
-            printf("ERROR: Server has not loaded any packet length distributions.\n");
-            exit(1);
+	  else {
+	    printf("ERROR: missing EOF from server\n");
+	    exit(1);
           }
-	  else request.data.pkt_len_distrib = req_value;
 	}
         else if (!strcmp(count_token[match_string_index], "std_comm")) {
 	  if (!strcmp(match_string_token, "0"))
@@ -1732,6 +1751,12 @@ int main(int argc,char **argv)
   /* reading results */ 
   if (want_stats || want_match) {
     unpacked = Recv(sd, &largebuf);
+ 
+    if (!unpacked) {
+      printf("ERROR: missing EOF from server\n");
+      exit(1);
+    }
+
     if (want_all_fields) have_wtc = FALSE; 
     else have_wtc = TRUE; 
     what_to_count = ((struct query_header *)largebuf)->what_to_count;
@@ -1744,6 +1769,7 @@ int main(int argc,char **argv)
        from the server */
     if (what_to_count & COUNT_CLASS && !class_table) {
       struct query_header qhdr;
+      int unpacked_class;
 
       memset(&qhdr, 0, sizeof(struct query_header));
       qhdr.type = WANT_CLASS_TABLE;
@@ -1757,19 +1783,27 @@ int main(int argc,char **argv)
 
       sd = build_query_client(path);
       send(sd, clibuf, buflen, 0);
-      Recv(sd, &ct); 
-      ct_num = ((struct query_header *)ct)->num;
-      elem = ct+sizeof(struct query_header);
-      class_table = (struct stripped_class *) elem;
-      while (ct_idx < ct_num) {
-	class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
-        ct_idx++;
+      unpacked_class = Recv(sd, &ct); 
+
+      if (unpacked_class) {
+        ct_num = ((struct query_header *)ct)->num;
+        elem = ct+sizeof(struct query_header);
+        class_table = (struct stripped_class *) elem;
+        while (ct_idx < ct_num) {
+	  class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
+          ct_idx++;
+        }
+      }
+      else {
+	printf("ERROR: missing EOF from server\n");
+	exit(1);
       }
     }
 
     if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB && !pkt_len_distrib_table[0]) {
       struct stripped_pkt_len_distrib *pldt_elem;
       struct query_header qhdr;
+      int unpacked_pldt;
 
       memset(&qhdr, 0, sizeof(struct query_header));
       qhdr.type = WANT_PKT_LEN_DISTRIB_TABLE;
@@ -1783,14 +1817,20 @@ int main(int argc,char **argv)
 
       sd = build_query_client(path);
       send(sd, clibuf, buflen, 0);
-      Recv(sd, &pldt);
+      unpacked_pldt = Recv(sd, &pldt);
 
-      pldt_num = ((struct query_header *)pldt)->num;
-      elem = pldt+sizeof(struct query_header);
-      pldt_elem = (struct stripped_pkt_len_distrib *) elem;
-      while (pldt_idx < pldt_num) {
-        pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
-        pldt_idx++; pldt_elem++;
+      if (unpacked_pldt) {
+        pldt_num = ((struct query_header *)pldt)->num;
+        elem = pldt+sizeof(struct query_header);
+        pldt_elem = (struct stripped_pkt_len_distrib *) elem;
+        while (pldt_idx < pldt_num) {
+          pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
+          pldt_idx++; pldt_elem++;
+	}
+      }
+      else {
+	printf("ERROR: missing EOF from server\n");
+	exit(1);
       }
     }
 
@@ -2364,20 +2404,27 @@ int main(int argc,char **argv)
   else if (want_erase) printf("OK: Clearing stats.\n");
   else if (want_status) {
     unpacked = Recv(sd, &largebuf);
-    write_status_header();
-    elem = largebuf+sizeof(struct query_header);
-    unpacked -= sizeof(struct query_header);
-    while (printed < unpacked) {
-      bd = (struct bucket_desc *) elem;
-      printf("%u\t", bd->num);
-      while (bd->howmany > 0) {
-        printf("*");
-	bd->howmany--;
-      }
-      printf("\n");
 
-      elem += sizeof(struct bucket_desc);
-      printed += sizeof(struct bucket_desc);
+    if (unpacked) {
+      write_status_header();
+      elem = largebuf+sizeof(struct query_header);
+      unpacked -= sizeof(struct query_header);
+      while (printed < unpacked) {
+        bd = (struct bucket_desc *) elem;
+        printf("%u\t", bd->num);
+        while (bd->howmany > 0) {
+          printf("*");
+	  bd->howmany--;
+        }
+        printf("\n");
+
+        elem += sizeof(struct bucket_desc);
+        printed += sizeof(struct bucket_desc);
+      }
+    }
+    else {
+      printf("ERROR: missing EOF from server\n");
+      exit(1);
     }
   }
   else if (want_counter) {
@@ -2390,6 +2437,12 @@ int main(int argc,char **argv)
     int printed;
 
     unpacked = Recv(sd, &largebuf);
+
+    if (!unpacked) {
+      printf("ERROR: missing EOF from server\n");
+      exit(1);
+    }
+
     base = largebuf+sizeof(struct query_header);
     if (check_data_sizes((struct query_header *)largebuf, acc_elem)) exit(1);
     acc_elem = (struct pkt_data *) base;
@@ -2436,36 +2489,50 @@ int main(int argc,char **argv)
   else if (want_class_table) { 
     int ct_eff=0;
 
-    Recv(sd, &ct);
-    write_class_table_header();
-    ct_num = ((struct query_header *)ct)->num;
-    elem = ct+sizeof(struct query_header);
-    class_table = (struct stripped_class *) elem;
-    while (ct_idx < ct_num) {
-      class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
-      if (class_table[ct_idx].id) {
-	printf("%u\t\t%s\n", class_table[ct_idx].id, class_table[ct_idx].protocol);
-	ct_eff++;
+    unpacked = Recv(sd, &ct);
+
+    if (unpacked) {
+      write_class_table_header();
+      ct_num = ((struct query_header *)ct)->num;
+      elem = ct+sizeof(struct query_header);
+      class_table = (struct stripped_class *) elem;
+      while (ct_idx < ct_num) {
+        class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
+        if (class_table[ct_idx].id) {
+	  printf("%u\t\t%s\n", class_table[ct_idx].id, class_table[ct_idx].protocol);
+	  ct_eff++;
+        }
+        ct_idx++;
       }
-      ct_idx++;
+      printf("\nFor a total of: %d classifiers\n", ct_eff);
     }
-    printf("\nFor a total of: %d classifiers\n", ct_eff);
+    else {
+      printf("ERROR: missing EOF from server\n");
+      exit(1);
+    }
   }
   else if (want_pkt_len_distrib_table) {
     struct stripped_pkt_len_distrib *pldt_elem;
     int pldt_eff=0;
 
-    Recv(sd, &pldt);
-    write_pkt_len_distrib_table_header();
-    pldt_num = ((struct query_header *)pldt)->num;
-    elem = pldt+sizeof(struct query_header);
-    pldt_elem = (struct stripped_pkt_len_distrib *) elem;
-    while (pldt_idx < pldt_num) {
-      pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
-      printf("%u\t%s\n", pldt_idx, pkt_len_distrib_table[pldt_idx]);
-      pldt_idx++; pldt_elem++;
+    unpacked = Recv(sd, &pldt);
+
+    if (unpacked) {
+      write_pkt_len_distrib_table_header();
+      pldt_num = ((struct query_header *)pldt)->num;
+      elem = pldt+sizeof(struct query_header);
+      pldt_elem = (struct stripped_pkt_len_distrib *) elem;
+      while (pldt_idx < pldt_num) {
+        pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
+        printf("%u\t%s\n", pldt_idx, pkt_len_distrib_table[pldt_idx]);
+        pldt_idx++; pldt_elem++;
+      }
+      printf("\nFor a total of: %d packet length distributions\n", pldt_idx);
     }
-    printf("\nFor a total of: %d packet length distributions\n", pldt_idx);
+    else {
+      printf("ERROR: missing EOF from server\n");
+      exit(1);
+    }
   }
   else {
     usage_client(argv[0]);
@@ -2496,8 +2563,8 @@ char *pmc_extract_token(char **string, int delim)
 
 int Recv(int sd, unsigned char **buf) 
 {
-  int num, unpacked = 0, round = 0; 
-  unsigned char rxbuf[LARGEBUFLEN], *elem;
+  int num, unpacked = 0, round = 0, eof_received = 0; 
+  unsigned char rxbuf[LARGEBUFLEN], emptybuf[LARGEBUFLEN], *elem;
 
   *buf = (unsigned char *) malloc(LARGEBUFLEN);
   if (!(*buf)) {
@@ -2506,32 +2573,39 @@ int Recv(int sd, unsigned char **buf)
   }
   memset(*buf, 0, LARGEBUFLEN);
   memset(rxbuf, 0, LARGEBUFLEN);
+  memset(emptybuf, 0, LARGEBUFLEN);
 
   do {
     num = recv(sd, rxbuf, LARGEBUFLEN, 0);
     if (num > 0) {
-      /* check 1: enough space in allocated buffer */
-      if (unpacked+num >= round*LARGEBUFLEN) {
-        round++;
-        *buf = realloc((unsigned char *) *buf, round*LARGEBUFLEN);
-        if (!(*buf)) {
-          printf("ERROR: realloc() out of memory (Recv)\n");
-          exit(1);
-        }
-        /* ensuring realloc() didn't move somewhere else our memory area */
-        elem = *buf;
-        elem += unpacked;
+      if (!memcmp(rxbuf, emptybuf, LARGEBUFLEN)) {
+	eof_received = TRUE;
       }
-      /* check 2: enough space in dss */
-      if (((u_int32_t)elem+num) > (u_int32_t)sbrk(0)) sbrk(LARGEBUFLEN);
+      else {
+	/* check 1: enough space in allocated buffer */
+	if (unpacked+num >= round*LARGEBUFLEN) {
+          round++;
+          *buf = realloc((unsigned char *) *buf, round*LARGEBUFLEN);
+          if (!(*buf)) {
+            printf("ERROR: realloc() out of memory (Recv)\n");
+            exit(1);
+          }
+          /* ensuring realloc() didn't move somewhere else our memory area */
+          elem = *buf;
+          elem += unpacked;
+	}
+	/* check 2: enough space in dss */
+	if (((u_int32_t)elem+num) > (u_int32_t)sbrk(0)) sbrk(LARGEBUFLEN);
 
-      memcpy(elem, rxbuf, num);
-      unpacked += num;
-      elem += num;
+	memcpy(elem, rxbuf, num);
+	unpacked += num;
+	elem += num;
+      }
     }
   } while (num > 0);
 
-  return unpacked;
+  if (eof_received) return unpacked;
+  else return 0;
 }
 
 int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
