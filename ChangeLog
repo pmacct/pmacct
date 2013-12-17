@@ -1,6 +1,128 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.0rc2
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
+1.5.0rc2 -- XX-XX-XXXX
+  + nfacctd: introduced support for variable-length IPFIX fields: 'string'
+    semantics is supported and maximum expected length of the field should be
+    specified as 'len' primitive definition. Also PENs are now supported:
+    field_type can be <value> or <PEN>:<value>. Finally, 'raw' semantics to
+    print raw data, fixed or variable length in hex format was added.
+  + pmacctd, uacctd: introducing custom-defined aggregation primitives in 
+    libpcap and ULOG daemons. A new 'packet_ptr' keyword is supported in the
+    aggregate_primitives map for the task: it defines the base pointer in the
+    packet where to read the primitive value; intuitively, this is to be used
+    in conjunction with 'len'. The supported syntax is: <layer>:[<protocol
+    value>]+[<offset>]. 'layer' keys  are: 'packet', 'mac', 'vlan', 'mpls',
+   'l3', 'l4', 'payload'. Examples are provided in 'examples/primitives.lst'.
+  + nfacctd: introduced pro-rating algorithm if sql_history is enabled and
+    nfacctd_time_new is disabled. Given a NetFlow/IPFIX flow duration greater
+    than time-bins size as configured by sql_history, bytes/packets counters
+    are proportionally distributed across all time-bins spanned by the flow.  
+  + Introducing index_maps: enables indexing of maps to increase lookup speeds
+    on large maps and/or sustained lookup rates. Indexes are automatically
+    defined basing on structure and content of the map, up to a maximum of 8.
+    Indexing of pre_tag_map, bgp_peer_src_as_map, flows_to_rd_map is supported.
+  + BGP daemon: introduced bgp_daemon_interval and bgp_daemon_batch config
+    directives: to prevent massive syncronization of BGP peers to contend
+    resources, BGP sessions are accepted in batches: these define the time
+    interval between any two batches and the amount of BGP peers in each batch
+    respectively.
+  + Introducing historical accounting offset (ie. sql_history_offset) to set
+    an offset to timeslots basetime. If history is set to 30 mins (by default
+    creating 10:00, 10:30, 11:00, etc. time-bins), with an offset of, say,
+    900 seconds (so 15 mins) it will create 10:15, 10:45, 11:15, etc. time-
+    bins.
+  + print, MongoDB, SQL plugins: improved placement of tuples in the correct
+    table when historical accounting (ie. sql_history) and dynamic table
+    names (ie. sql_table) features are both in use.
+  + print, MongoDB, SQL plugins: dynamic file names (print plugin) and
+    tables (MongoDB and SQL plugins) can now include $peer_src_ip, $tag and
+    $tag2 variables: value is populated using the processed record value for
+    peer_src_ip, tag, tag2 primitives respectively.
+  + print plugin: introduced print_latest_file to point latest filename for
+    print_output_file time-series. Until 1.5.0rc1 selection was automagic.
+    But having introduced variable spool directory structures and primitives-
+    related variables the existing basic scheme of producing pointers had to
+    be phased-out.
+  + IMT plugin: added EOF in the client-server communication so to detect
+    uncompleted messages and print an error message. Thanks to Adam Jacob
+    Muller for his proposal.
+  + Introduced [nf|sf|pm]acctd_pipe size and bgp_daemon_pipe_size config
+    directives to define the size of the kernel socket used read traffic data
+    and for BGP messaging respectively.
+  + pmacctd, uacctd: mpls_top_label, mpls_bottom_label and mpls_stack_depth
+    primitives have been implemented.
+  + pmacctd, uacctd: GTP tunnel handler now supports inspection of GTPv1.
+  + pre_tag_map: results of evaluation of pre_tag_map, in case of a positive
+    match, overrides any tags passed by nfprobe/sfprobe plugins via NetFlow/
+    sFlow export.  
+  + pre_tag_map: stack keyword now supports logical or operator (A | B) in
+    addition to sum (A + B).
+  + pre_tag_map: introduced 'mpls_pw_id' keyword to match the signalled MPLS
+    L2 VPNs Pseudowire ID. In NetFlow v9/IPFIX this is compared against IE
+    #249; in sFlow v5 this is compared against vll_vc_id field, extended MPLS
+    VC object.
+  + Introduced log notifications facility: allows to note down specific log
+    notifications have been sent so to prevent excessive repetitive output.
+  ! fix, plugin_hooks.c: plugin_buffer_size variables are bumped to u_int64_t
+  ! fix, plugin_hooks.c: improved protection of internal pmacct buffering
+    (plugin_buffer_size, plugin_pipe_size) from inconsistencies: buffer is now
+    also invalidated by the core process upon first writing into it. Thanks to
+    Chris Wilson for his support.
+  ! fix, plugin_hooks.c: a simple default value for plugin_pipe_size and
+    plugin_buffer_size is now picked if none is supplied. This is to get
+    around tricky estimates. 1.5.0rc1 release affected.
+  ! fix, ll.c: ntohl() done against a char pointer instead of u_int32_t one
+    in MPLS handler was causing incorrect parsing of labels. Thanks to Marco
+    Marzetti for his support.
+  ! fix, net_aggr.c: IPv6 networks debug messages now report correctly net
+    and mask information. Also IPv6 prefix to peer source/destination ASN was
+    crashing due to an incorrect pointer.
+  ! fix, classifiers: slightly optimized search_class_id_status_table() and
+    added warning message if the amount of classifiers exceeds configured
+    number of classifier_table_num (by default 256).
+  ! fix, pre_tag_map: if a JEQ can be resolved into multiple labels, stop to
+    the first occurrence.
+  ! fix, nfacctd, sfacctd: IPv6 was not being correctly reported due to a
+    re-definition of NF9_FTYPE_IPV6. 1.5.0rc1 release affected. Thanks to
+    Andrew Boey for reporting the issue.
+  ! fix, nfacctd: when historical accounting is enabled, ie. sql_history, not
+    assume anymore start and end timestamps to be of the same kind (ie. field
+    type #150/#151, #152/#153, etc.).
+  ! fix, BGP daemon: default BGP RouterID used if supplied bgp_daemon_ip is
+    "0.0.0.0" or "::"
+  ! fix, BGP daemon: the socket opened to accept BGP peerings is restricted
+    to che core process (ie. closed upon instantiating the plugins). Thanks
+    to Olivier Benghozi for reporting the issue.
+  ! fix, BGP daemon: memory leak detected accepting vpnv4 and vpnv6 routes.
+    Thanks to Olivier Benghozi for his support solving the issue.
+  ! fix, BGP daemon: compiling the package without IPv6 support and sending
+    ipv6 AF was resulting in a buffer overrun. Thanks to Joel Krauska for his
+    support resolving the issue.
+  ! fix, IMT plugin: when gracefully exiting, ie. via a SIGINT signal, delete
+    the pipe file in place for communicating with the pmacct IMT client tool.
+  ! fix, print, MongoDB, AMQP plugins: saved_basetime variable initialized
+    to basetime value. This prevents P_eval_historical_acct() to consume much
+    resources during the first time-bin, if historical accounting is enabled
+   (ie. print_history). 1.5.0rc1 release affected.
+  ! fix, print, MongoDB and SQL plugins: purge function is escaped if there
+    are no elements on the queue to process. 
+  ! fix, AMQP plugin: removed amqp_set_socket() call so to be able to compile
+    against rabbitmq-c >= 0.4.1
+  ! fix, MongoDB plugin: change of API between C driver version 0.8 and 0.7
+    affected mongo_create_index(). MongoDB C driver version test introduced.
+    Thanks to Maarten Bollen for reporting the issue.
+  ! fix, print plugin: SEGV was received if no print_output_file is specified
+    ie. print to standard output.
+  ! fix, MongoDB: optimized usage of BSON objects array structure.
+  ! fix, MongoDB plugin: brought a few numerical fields, ie. VLAN IDs, CoS,
+    ToS, etc. to integer representation, ie. bson_append_int(), from string
+    one, ie. bson_append_string(). Thanks to Job Snijders for his support.
+  ! fix, MySQL plugin: improved catching condition of sql_multi_value set too
+    little value. Thanks to Chris Wilson for reporting the issue.
+  ! fix, nfprobe plugin: catch ENETUNREACH errors instead of bailing out.
+    Patch is courtesy by Mike Jager.
+
 1.5.0rc1 -- 29-08-2013
   + Introducing custom-defined aggregation primitives: primitives are defined
     via a file pointed by aggregate_primitives config directive. The feature

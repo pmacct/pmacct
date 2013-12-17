@@ -39,10 +39,10 @@
    area */
 void load_plugins(struct plugin_requests *req)
 {
-  u_int64_t snd_buflen, rcv_buflen, socklen, target_buflen;
+  u_int64_t snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
   int nfprobe_id = 0, min_sz = 0;
   struct plugins_list_entry *list = plugins_list;
-  int l = sizeof(list->cfg.pipe_size), offset;
+  int l = sizeof(list->cfg.pipe_size), offset = 0;
   struct channels_list_entry *chptr = NULL;
 
   init_random_seed(); 

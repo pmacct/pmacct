@@ -505,8 +505,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
-  unsigned int modulo;
-  unsigned long int basetime = idata->basetime, timeslot = idata->timeslot;
+  time_t basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
@@ -515,6 +514,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   /* pro_rating vars */
   int time_delta = 0, time_total = 0;
   pm_counter_t tot_bytes = 0, tot_packets = 0, tot_flows = 0;
+
+  /* housekeeping to start */
+  if (lru_head.lru_next && ((idata->now-lru_head.lru_next->lru_tag) > RETIRE_M*config.sql_refresh_time))
+    RetireElem(lru_head.lru_next);
 
   tot_bytes = data->pkt_len;
   tot_packets = data->pkt_num;
@@ -587,12 +590,6 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   }
 
   sql_cache_modulo(prim_ptrs, idata);
-  modulo = idata->modulo;
-
-  /* housekeeping */
-  if (lru_head.lru_next && ((idata->now-lru_head.lru_next->lru_tag) > RETIRE_M*config.sql_refresh_time))
-    RetireElem(lru_head.lru_next);
-
   Cursor = &cache[idata->modulo];
 
   start:
