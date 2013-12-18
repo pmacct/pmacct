@@ -2589,7 +2589,7 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
   }
 }
 
-void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_primitives *c, u_int64_t what_to_count)
+void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_primitives *c)
 {
   if (c && p) {
     memset(p, 0, PbgpSz);
@@ -2598,14 +2598,14 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     p->peer_dst_as = c->peer_dst_as;
     memcpy(&p->peer_src_ip, &c->peer_src_ip, HostAddrSz);
     memcpy(&p->peer_dst_ip, &c->peer_dst_ip, HostAddrSz);
-    if (what_to_count & COUNT_STD_COMM && c->std_comms) memcpy(p->std_comms, c->std_comms, MAX_BGP_STD_COMMS);
-    if (what_to_count & COUNT_EXT_COMM && c->ext_comms) memcpy(p->ext_comms, c->ext_comms, MAX_BGP_EXT_COMMS);
-    if (what_to_count & COUNT_AS_PATH && c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
+    if (c->std_comms) memcpy(p->std_comms, c->std_comms, MAX_BGP_STD_COMMS);
+    if (c->ext_comms) memcpy(p->ext_comms, c->ext_comms, MAX_BGP_EXT_COMMS);
+    if (c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
     p->local_pref = c->local_pref;
     p->med = c->med;
-    if (what_to_count & COUNT_SRC_STD_COMM && c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
-    if (what_to_count & COUNT_SRC_EXT_COMM && c->src_ext_comms) memcpy(p->src_ext_comms, c->src_ext_comms, MAX_BGP_EXT_COMMS);
-    if (what_to_count & COUNT_SRC_AS_PATH && c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
+    if (c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
+    if (c->src_ext_comms) memcpy(p->src_ext_comms, c->src_ext_comms, MAX_BGP_EXT_COMMS);
+    if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
     p->src_local_pref = c->src_local_pref;
     p->src_med = c->src_med;
     memcpy(&p->mpls_vpn_rd, &c->mpls_vpn_rd, sizeof(rd_t));

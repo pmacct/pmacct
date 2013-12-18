@@ -205,16 +205,16 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       memcpy(&elem_acc->primitives, addr, sizeof(struct pkt_primitives));
 
       if (pbgp) {
-	if (elem_acc->cbgp) free_cache_bgp_primitives(&elem_acc->cbgp);
-	elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
 	if (!elem_acc->cbgp) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-	  exit_plugin(1);
-        }
-	else {
-	  memset(elem_acc->cbgp, 0, cb_size);
-          pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
+	  elem_acc->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+	  if (!elem_acc->cbgp) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
+	    exit_plugin(1);
+          }
 	}
+
+	memset(elem_acc->cbgp, 0, cb_size);
+        pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
       else free_cache_bgp_primitives(&elem_acc->cbgp);
 

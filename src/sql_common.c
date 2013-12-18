@@ -397,12 +397,17 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
   /* Not everything was purged, let's sort out the SQL cache buckets involved into that */
   if (index) {
     for (j = 0; j < index; j++) {
+      /* Select next element on the pending queue */
       PendingElem = queue[j];
+
+      /* Go to the first element in the bucket*/
       for (Cursor = PendingElem, auxCursor = NULL; Cursor; auxCursor = Cursor, Cursor = Cursor->prev);
 
       /* Check whether we are already first in the bucket */
       if (auxCursor != PendingElem) {
-        for (Cursor = auxCursor; Cursor && Cursor != PendingElem && Cursor->valid == SQL_CACHE_INUSE; Cursor = Cursor->next);
+	Cursor = auxCursor;
+
+        for (; Cursor && Cursor != PendingElem && Cursor->valid == SQL_CACHE_INUSE; Cursor = Cursor->next);
         /* Check whether a) the whole bucket chain is currently in use
 	   or b) we came across the current pending element: meaning no
 	   free positions are available in the chain, ahead of it */
@@ -419,6 +424,12 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             Cursor->lru_tag = PendingElem->lru_tag;
             RetireElem(PendingElem);
             queue[j] = Cursor;
+
+	    /* freeing stale allocations */
+	    if (SavedCursor.cbgp) free_cache_bgp_primitives(&SavedCursor.cbgp);
+	    if (SavedCursor.pnat) free(SavedCursor.pnat);
+	    if (SavedCursor.pmpls) free(SavedCursor.pmpls);
+	    if (SavedCursor.pcust) free(SavedCursor.pcust);
           }
           /* We found at least one Cursor->valid == SQL_CACHE_INUSE */
           else SwapChainedElems(PendingElem, Cursor);
@@ -464,7 +475,7 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
 	if (Cursor->cbgp) {
 	  struct pkt_bgp_primitives tmp_pbgp;
 
-	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp, config.what_to_count);
+	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
 	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
 	}
       }
@@ -640,7 +651,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         if (Cursor->cbgp) {
 	  struct pkt_bgp_primitives tmp_pbgp;
 
-	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp, config.what_to_count);
+	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
 	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
 	}
       }
@@ -691,14 +702,13 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
   if (pbgp) {
     /* releasing stale information and starting from scratch */
-    if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
-
-    Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
-    if (!Cursor->cbgp) goto safe_action;
-    else {
-      memset(Cursor->cbgp, 0, cb_size);
-      pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
+    if (!Cursor->cbgp) {
+      Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+      if (!Cursor->cbgp) goto safe_action;
     }
+
+    memset(Cursor->cbgp, 0, cb_size);
+    pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
   }
   else {
     if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
