@@ -147,6 +147,7 @@ struct configuration {
   char *nfacctd_ip;
   char *nfacctd_allow_file;
   int nfacctd_time;
+  int nfacctd_pro_rating;
   u_int32_t nfacctd_as;
   u_int32_t nfacctd_net;
   u_int64_t nfacctd_pipe_size;

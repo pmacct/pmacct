@@ -14,10 +14,12 @@ pmacct is Copyright (C) 2003-2013 by Paolo Lucente
     in conjunction with 'len'. The supported syntax is: <layer>:[<protocol
     value>]+[<offset>]. 'layer' keys  are: 'packet', 'mac', 'vlan', 'mpls',
    'l3', 'l4', 'payload'. Examples are provided in 'examples/primitives.lst'.
-  + nfacctd: introduced pro-rating algorithm if sql_history is enabled and
-    nfacctd_time_new is disabled. Given a NetFlow/IPFIX flow duration greater
-    than time-bins size as configured by sql_history, bytes/packets counters
-    are proportionally distributed across all time-bins spanned by the flow.  
+  + nfacctd: introduced pro rating algorithm if sql_history is enabled and
+    nfacctd_time_new is disabled. Although ideal, the feature is disabled
+    by default for now and can be enabled by setting nfacctd_pro_rating to
+    true. Given a NetFlow/IPFIX flow duration greater than time-bins size as
+    configured by sql_history, bytes/packets counters are proportionally
+    distributed across all time-bins spanned by the flow.  
   + Introducing index_maps: enables indexing of maps to increase lookup speeds
     on large maps and/or sustained lookup rates. Indexes are automatically
     defined basing on structure and content of the map, up to a maximum of 8.

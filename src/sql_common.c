@@ -400,7 +400,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
       /* Select next element on the pending queue */
       PendingElem = queue[j];
 
-      /* Go to the first element in the bucket*/
+      /* Go to the first element in the bucket */
       for (Cursor = PendingElem, auxCursor = NULL; Cursor; auxCursor = Cursor, Cursor = Cursor->prev);
 
       /* Check whether we are already first in the bucket */
@@ -417,11 +417,11 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             memcpy(&SavedCursor, Cursor, sizeof(struct db_cache));
             memcpy(Cursor, PendingElem, sizeof(struct db_cache));
             Cursor->prev = NULL;
-            Cursor->next = SavedCursor.next;
-            Cursor->chained = 0;
+            if (SavedCursor.next == PendingElem) Cursor->next = PendingElem->next;
+	    else Cursor->next = SavedCursor.next;
+            Cursor->chained = FALSE;
             Cursor->lru_prev = NULL;
             Cursor->lru_next = NULL;
-            Cursor->lru_tag = PendingElem->lru_tag;
             RetireElem(PendingElem);
             queue[j] = Cursor;
 
@@ -561,16 +561,18 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
   new_timeslot:
   /* pro_rating, if needed */
-  if (data->time_end.tv_sec > data->time_start.tv_sec) { 
-    time_total = data->time_end.tv_sec - data->time_start.tv_sec;
-    time_delta = MIN(data->time_end.tv_sec, basetime + timeslot) - MAX(data->time_start.tv_sec, basetime);
+  if (config.acct_type == ACCT_NF && config.nfacctd_pro_rating && config.sql_history) {
+    if (data->time_end.tv_sec > data->time_start.tv_sec) {
+      time_total = data->time_end.tv_sec - data->time_start.tv_sec;
+      time_delta = MIN(data->time_end.tv_sec, basetime + timeslot) - MAX(data->time_start.tv_sec, basetime);
 
-    if (time_delta > 0 && time_total > 0 && time_delta < time_total) {
-      float ratio = (float) time_total / (float) time_delta;
+      if (time_delta > 0 && time_total > 0 && time_delta < time_total) {
+        float ratio = (float) time_total / (float) time_delta;
 
-      if (tot_bytes) data->pkt_len = MAX((float)tot_bytes / ratio, 1);
-      if (tot_packets) data->pkt_num = MAX((float)tot_packets / ratio, 1);
-      if (tot_flows) data->flo_num = MAX((float)tot_flows / ratio, 1);
+        if (tot_bytes) data->pkt_len = MAX((float)tot_bytes / ratio, 1);
+        if (tot_packets) data->pkt_num = MAX((float)tot_packets / ratio, 1);
+        if (tot_flows) data->flo_num = MAX((float)tot_flows / ratio, 1);
+      }
     }
   }
 
@@ -788,9 +790,11 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   // goto pro_rating;
 
   pro_rating:
-  if ((basetime + timeslot) < data->time_end.tv_sec) {
-    basetime += timeslot;
-    goto new_timeslot; 
+  if (config.acct_type == ACCT_NF && config.nfacctd_pro_rating && config.sql_history) {
+    if ((basetime + timeslot) < data->time_end.tv_sec) {
+      basetime += timeslot;
+      goto new_timeslot; 
+    }
   }
 
   return;

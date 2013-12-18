@@ -882,6 +882,16 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 		('sql_history') and an INSERT-only mechanism is in use ('sql_dont_try_update', 'sql_use_copy').
 		(default: false) 
 
+KEY:		nfacctd_pro_rating [GLOBAL, NO_PMACCTD]
+VALUES:		[ true | false ]
+DESC:		if nfacctd_time_new is set to false (default) and historical accounting (ie. sql_history) is
+		enabled, this directive enables pro rating of NetFlow/IPFIX flows over time-bins, if needed.
+		For example, if sql_history is set to '5m' (so 300 secs), the considered flow duration is 1000
+		secs, its bytes counter is 1000 bytes and, for simplicity, its start time is at the base time
+		of t0, time-bin 0, then the flow is inserted in time-bins t0, t1, t2 and t3 and its bytes
+		counter is proportionally split among these time-bins: 300 bytes during t0, t1 and t2 and
+		100 bytes during t3. (default: false)
+
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp | fallback ]
 DESC:		When 'false', it instructs nfacctd and sfacctd to populate 'src_as', 'dst_as', 'peer_src_as' and

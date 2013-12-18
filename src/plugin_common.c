@@ -130,16 +130,18 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
   new_timeslot:
   /* pro_rating, if needed */
-  if (data->time_end.tv_sec > data->time_start.tv_sec) {
-    time_total = data->time_end.tv_sec - data->time_start.tv_sec;
-    time_delta = MIN(data->time_end.tv_sec, ibasetime.tv_sec + timeslot) - MAX(data->time_start.tv_sec, ibasetime.tv_sec);
+  if (config.acct_type == ACCT_NF && config.nfacctd_pro_rating && config.sql_history) {
+    if (data->time_end.tv_sec > data->time_start.tv_sec) {
+      time_total = data->time_end.tv_sec - data->time_start.tv_sec;
+      time_delta = MIN(data->time_end.tv_sec, ibasetime.tv_sec + timeslot) - MAX(data->time_start.tv_sec, ibasetime.tv_sec);
 
-    if (time_delta > 0 && time_total > 0 && time_delta < time_total) {
-      float ratio = (float) time_total / (float) time_delta;
+      if (time_delta > 0 && time_total > 0 && time_delta < time_total) {
+        float ratio = (float) time_total / (float) time_delta;
 
-      if (tot_bytes) data->pkt_len = MAX((float)tot_bytes / ratio, 1);
-      if (tot_packets) data->pkt_num = MAX((float)tot_packets / ratio, 1);
-      if (tot_flows) data->flo_num = MAX((float)tot_flows / ratio, 1);
+        if (tot_bytes) data->pkt_len = MAX((float)tot_bytes / ratio, 1);
+        if (tot_packets) data->pkt_num = MAX((float)tot_packets / ratio, 1);
+        if (tot_flows) data->flo_num = MAX((float)tot_flows / ratio, 1);
+      }
     }
   }
 
@@ -329,9 +331,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
 
   /* pro_rating */
-  if ((ibasetime.tv_sec + timeslot) < data->time_end.tv_sec) {
-    ibasetime.tv_sec += timeslot;
-    goto new_timeslot;
+  if (config.acct_type == ACCT_NF && config.nfacctd_pro_rating && config.sql_history) {
+    if ((ibasetime.tv_sec + timeslot) < data->time_end.tv_sec) {
+      ibasetime.tv_sec += timeslot;
+      goto new_timeslot;
+    }
   }
 
   return;

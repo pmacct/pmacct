@@ -409,6 +409,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_mcast_groups", cfg_key_nfacctd_mcast_groups},
   {"nfacctd_peer_as", cfg_key_nfprobe_peer_as},
   {"nfacctd_pipe_size", cfg_key_nfacctd_pipe_size},
+  {"nfacctd_pro_rating", cfg_key_nfacctd_pro_rating},
   {"pmacctd_proc_name", cfg_key_proc_name},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"pmacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},
