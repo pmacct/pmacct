@@ -417,12 +417,18 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             memcpy(&SavedCursor, Cursor, sizeof(struct db_cache));
             memcpy(Cursor, PendingElem, sizeof(struct db_cache));
             Cursor->prev = NULL;
-            if (SavedCursor.next == PendingElem) Cursor->next = PendingElem->next;
-	    else Cursor->next = SavedCursor.next;
+            Cursor->next = SavedCursor.next;
             Cursor->chained = FALSE;
             Cursor->lru_prev = NULL;
             Cursor->lru_next = NULL;
+
+	    /* unlinking pointers from PendingElem to prevent free-up (linked by Cursor) */
+	    PendingElem->cbgp = NULL;
+	    PendingElem->pnat = NULL;
+	    PendingElem->pmpls = NULL;
+	    PendingElem->pcust = NULL;
             RetireElem(PendingElem);
+
             queue[j] = Cursor;
 
 	    /* freeing stale allocations */
