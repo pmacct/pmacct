@@ -475,6 +475,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   int j, r, reprocess = 0, stop, go_to_pending, reprocess_idx, bulk_reprocess_idx;
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
+  pid_t writer_pid = getpid();
 
   if (!index) return;
 
@@ -496,7 +497,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     sql_invalidate_shadow_entries(queue, &index);
   idata->ten = index;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
   /* re-using pending queries queue stuff from parent and saving clauses */
@@ -643,7 +644,8 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (pqq_ptr) goto start;
 
   idata->elap_time = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, idata->qn, idata->elap_time);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u, ET: %u) ***\n",
+		config.name, config.type, writer_pid, idata->qn, idata->elap_time);
 
   if (config.sql_trigger_exec) {
     if (!config.debug) idata->elap_time = time(NULL)-start;

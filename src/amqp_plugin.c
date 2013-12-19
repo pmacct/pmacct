@@ -324,6 +324,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
   int i, j, amqp_status, batch_idx, is_routing_key_dyn = FALSE;
   time_t start, duration;
+  pid_t writer_pid = getpid();
 
   amqp_connection_state_t amqp_conn;
   amqp_socket_t *amqp_socket = NULL;
@@ -391,7 +392,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     return;
   }
 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
   for (j = 0; j < index; j++) {
@@ -442,7 +443,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   amqp_destroy_connection(amqp_conn);
 
   duration = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, index, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u, ET: %u) ***\n",
+		config.name, config.type, writer_pid, index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

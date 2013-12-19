@@ -736,7 +736,7 @@ void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 #if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->src_ip.address.ipv6), IP6AddrSz);
-    for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j];
+    for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
     memcpy(&p->src_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
   }
 #endif
@@ -781,7 +781,7 @@ void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 #if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->dst_ip.address.ipv6), IP6AddrSz);
-    for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j];
+    for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
     memcpy(&p->dst_ip.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
   }
 #endif

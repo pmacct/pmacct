@@ -332,6 +332,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
+  pid_t writer_pid = getpid();
 
   const bson **bson_batch;
   bson *bson_elem;
@@ -402,7 +403,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
     else Log(LOG_INFO, "INFO ( %s/%s ): Successful authentication (MONGO_OK) to MongoDB\n", config.name, config.type);
   }
 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START ***\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
   memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
@@ -691,7 +692,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   if (pqq_ptr) goto start;
 
   duration = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (QN: %u, ET: %u) ***\n", config.name, config.type, qn, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u, ET: %u) ***\n",
+		config.name, config.type, writer_pid, qn, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
