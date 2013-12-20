@@ -79,7 +79,9 @@ pmacct is Copyright (C) 2003-2013 by Paolo Lucente
     Marzetti for his support.
   ! fix, net_aggr.c: IPv6 networks debug messages now report correctly net
     and mask information. Also IPv6 prefix to peer source/destination ASN was
-    crashing due to an incorrect pointer.
+    crashing due to an incorrect pointer. Finally applying masks to IPv6
+    addresses was not done correctly. Thanks to Brent Van Dussen for
+    reporting the issue.
   ! fix, classifiers: slightly optimized search_class_id_status_table() and
     added warning message if the amount of classifiers exceeds configured
     number of classifier_table_num (by default 256).

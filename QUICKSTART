@@ -677,11 +677,11 @@ pre_tag_map: /path/to/pretag.map
    flow directions. The 'set_tag2' primitive (tag2) will be used to carry the return
    value:
 
-set_tag=1 filter='dst host XXX.XXX.XXX.XXX'
-set_tag=2 filter='src host XXX.XXX.XXX.XXX'
+set_tag2=1 filter='dst host XXX.XXX.XXX.XXX'
+set_tag2=2 filter='src host XXX.XXX.XXX.XXX'
 
-set_tag=1 filter='ether src XX:XX:XX:XX:XX:XX'
-set_tag=2 filter='ether dst XX:XX:XX:XX:XX:XX'
+set_tag2=1 filter='ether src XX:XX:XX:XX:XX:XX'
+set_tag2=2 filter='ether dst XX:XX:XX:XX:XX:XX'
 
    Indeed in such a case, the 'set_tag' primitive (tag) can be leveraged to other uses
    (ie. filter sub-set of the traffic for flow export); 4) add interface (input, output)

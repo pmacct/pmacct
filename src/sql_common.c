@@ -682,16 +682,18 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
       if (!res_data && !res_bgp && !res_nat && !res_mpls && !res_cust) {
         /* additional check: time */
-        if ((Cursor->basetime < basetime) && config.sql_history) {
-          if (!staleElem && Cursor->chained) staleElem = Cursor;
+        if ((Cursor->basetime != basetime) && config.sql_history) {
+          // if (!staleElem && Cursor->chained) staleElem = Cursor;
           goto follow_chain;
         }
+
         /* additional check: bytes counter overflow */
-        else if (Cursor->bytes_counter > CACHE_THRESHOLD) {
-          if (!staleElem && Cursor->chained) staleElem = Cursor;
+        if (Cursor->bytes_counter > CACHE_THRESHOLD) {
+          // if (!staleElem && Cursor->chained) staleElem = Cursor;
           goto follow_chain;
         }
-        else goto update;
+
+        goto update;
       }
       else goto follow_chain;
     }
