@@ -25,8 +25,17 @@ Inline void AddToLRUTail(struct db_cache *Cursor)
 {
   if (Cursor == lru_tail) return;
 
-  if (Cursor->lru_prev) Cursor->lru_prev->lru_next = Cursor->lru_next;
-  if (Cursor->lru_next) Cursor->lru_next->lru_prev = Cursor->lru_prev;
+  if (Cursor->lru_prev) {
+    if (Cursor->lru_next) {
+      Cursor->lru_prev->lru_next = Cursor->lru_next;
+      Cursor->lru_next->lru_prev = Cursor->lru_prev;
+    }
+    else Cursor->lru_prev->lru_next = NULL;
+  }
+  else {
+    if (Cursor->lru_next) Cursor->lru_next->lru_prev = NULL;
+  }
+
   Cursor->lru_prev = lru_tail;
   Cursor->lru_prev->lru_next = Cursor;
   Cursor->lru_next = NULL;
@@ -36,10 +45,19 @@ Inline void AddToLRUTail(struct db_cache *Cursor)
 Inline void RetireElem(struct db_cache *Cursor)
 {
   assert(Cursor->prev);
+  assert(Cursor->lru_prev);
 
-  Cursor->lru_prev->lru_next = Cursor->lru_next;
-  if (Cursor->lru_next) Cursor->lru_next->lru_prev = Cursor->lru_prev;
-  if (Cursor == lru_tail) lru_tail = &lru_head; 
+  if (Cursor->lru_next) { 
+    Cursor->lru_prev->lru_next = Cursor->lru_next;
+    Cursor->lru_next->lru_prev = Cursor->lru_prev;
+  }
+  else {
+    /* no lru_next: we are tail! */
+    assert(Cursor == lru_tail);
+
+    Cursor->lru_prev->lru_next = NULL;
+    lru_tail = Cursor->lru_prev;
+  }
 
   if (Cursor->next) {
     Cursor->prev->next = Cursor->next;

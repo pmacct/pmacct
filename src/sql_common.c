@@ -533,8 +533,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   pm_counter_t tot_bytes = 0, tot_packets = 0, tot_flows = 0;
 
   /* housekeeping to start */
-  if (lru_head.lru_next && ((idata->now-lru_head.lru_next->lru_tag) > RETIRE_M*config.sql_refresh_time))
-    RetireElem(lru_head.lru_next);
+  if (lru_head.lru_next && ((idata->now-lru_head.lru_next->lru_tag) > RETIRE_M*config.sql_refresh_time)) {
+    /* if element status is SQL_CACHE_INUSE it can't be retired because sits on the queue */
+    if (lru_head.lru_next->valid != SQL_CACHE_INUSE) RetireElem(lru_head.lru_next);
+  }
 
   tot_bytes = data->pkt_len;
   tot_packets = data->pkt_num;
@@ -620,7 +622,8 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         goto start;
       }
       else {
-        if (lru_head.lru_next && ((idata->now-lru_head.lru_next->lru_tag) > STALE_M*config.sql_refresh_time)) {
+        if (lru_head.lru_next && lru_head.lru_next->valid != SQL_CACHE_INUSE &&
+	    ((idata->now-lru_head.lru_next->lru_tag) > STALE_M*config.sql_refresh_time)) {
           newElem = lru_head.lru_next;
 	  if (newElem != Cursor) { 
             ReBuildChain(Cursor, newElem);
