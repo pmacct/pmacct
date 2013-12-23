@@ -1571,6 +1571,15 @@ int cfg_key_nfacctd_pro_rating(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_pro_rating = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'nfacctd_pro_rating'. Globalized.\n", filename);
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_pro_rating = value;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
