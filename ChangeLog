@@ -1,12 +1,13 @@
-pmacct (Promiscuous mode IP Accounting package) v1.5.0rc2
+pmacct (Promiscuous mode IP Accounting package) v1.5.0rc3
 pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 
-1.5.0rc2 -- XX-XX-XXXX
-  + nfacctd: introduced support for variable-length IPFIX fields: 'string'
-    semantics is supported and maximum expected length of the field should be
-    specified as 'len' primitive definition. Also PENs are now supported:
-    field_type can be <value> or <PEN>:<value>. Finally, 'raw' semantics to
-    print raw data, fixed or variable length in hex format was added.
+1.5.0rc2 -- 25-12-2013
+  + nfacctd: introduced support for variable-length IPFIX fields for custom-
+    defined aggregation primitives: 'string' semantics is supported and
+    maximum expected length of the field should be specified as 'len'
+    primitive definition. Also PENs are now supported: field_type can be
+    <value> or <PEN>:<value>. Finally, 'raw' semantics to print raw data,
+    fixed or variable length in hex format was added.
   + pmacctd, uacctd: introducing custom-defined aggregation primitives in 
     libpcap and ULOG daemons. A new 'packet_ptr' keyword is supported in the
     aggregate_primitives map for the task: it defines the base pointer in the
@@ -19,7 +20,8 @@ pmacct is Copyright (C) 2003-2013 by Paolo Lucente
     by default for now and can be enabled by setting nfacctd_pro_rating to
     true. Given a NetFlow/IPFIX flow duration greater than time-bins size as
     configured by sql_history, bytes/packets counters are proportionally
-    distributed across all time-bins spanned by the flow.  
+    distributed across all time-bins spanned by the flow. Many thanks to
+    Stefano Birmani for his support. 
   + Introducing index_maps: enables indexing of maps to increase lookup speeds
     on large maps and/or sustained lookup rates. Indexes are automatically
     defined basing on structure and content of the map, up to a maximum of 8.

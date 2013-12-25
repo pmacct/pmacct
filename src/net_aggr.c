@@ -1590,7 +1590,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
           char net_string[INET6_ADDRSTRLEN];
 
           net_bin.family = AF_INET6;
-          for (j = 0; j < 4; j++) net_bin.address.ipv6.s6_addr32[j] = htonl(nt->table6[index].net[j]);
+          for (j = 0; j < 4; j++) net_bin.address.ipv6.s6_addr[j] = htonl(nt->table6[index].net[j]);
           addr_to_str(net_string, &net_bin);
           addr_to_str(nh_string, &nt->table6[index].nh);
 
