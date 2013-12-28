@@ -83,7 +83,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGCHLD, SIG_IGN);
 
   if (!config.sql_refresh_time)
-    config.sql_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
+    config.sql_refresh_time = DEFAULT_AMQP_REFRESH_TIME;
 
   timeout = config.sql_refresh_time*1000;
 

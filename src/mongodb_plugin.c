@@ -83,7 +83,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGCHLD, SIG_IGN);
 
   if (!config.sql_refresh_time)
-    config.sql_refresh_time = DEFAULT_PRINT_REFRESH_TIME;
+    config.sql_refresh_time = DEFAULT_MONGO_REFRESH_TIME;
 
   if (!config.mongo_insert_batch)
     config.mongo_insert_batch = DEFAULT_MONGO_INSERT_BATCH;

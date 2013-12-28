@@ -501,6 +501,13 @@ void skinny_bgp_daemon()
 				    while (optcap_len > 0) {
 				      u_int8_t cap_len = optcap_ptr[1];
 				      u_int8_t cap_type = optcap_ptr[0];
+
+				      if (cap_len > optcap_len) {
+                                        Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (malformed capability: %x).\n", inet_ntoa(peer->id.address.ipv4), cap_type);
+                                        FD_CLR(peer->fd, &bkp_read_descs);
+                                        bgp_peer_close(peer);
+                                        goto select_again;
+                                      }
 				     
 				      if (cap_type == BGP_CAPABILITY_MULTIPROTOCOL) {
 				  	char *cap_ptr = optcap_ptr+2;
@@ -538,6 +545,22 @@ void skinny_bgp_daemon()
 					  goto select_again;
 					}
 				      }
+                                      else if (cap_type == BGP_CAPABILITY_ADD_PATHS) {
+                                        char *cap_ptr = optcap_ptr+2;
+					struct capability_add_paths cap_data;
+
+                                        memcpy(&cap_data, cap_ptr, sizeof(cap_data));
+
+                                        Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+                                            cap_type, ntohl(cap_data.afi), cap_data.safi, cap_data.sndrcv);
+
+					if (cap_data.sndrcv == 2 /* send */) {
+                                          peer->cap_add_paths = TRUE; 
+                                          memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2);
+                                          *(bgp_open_cap_reply_ptr+((opt_len+2)-1)) = 1; /* receive */
+                                          bgp_open_cap_reply_ptr += opt_len+2;
+					}
+                                      }
 
 				      optcap_ptr += cap_len+2;
 				      optcap_len -= cap_len+2;
@@ -1118,7 +1141,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
   struct prefix p;
   int psize, end;
   int ret;
-  u_int32_t tmp32;
+  u_int32_t tmp32, path_id;
   u_int16_t tmp16;
   struct rd_ip  *rdi;
   struct rd_as  *rda;
@@ -1134,6 +1157,13 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
   safi = info->safi;
 
   for (; pnt < lim; pnt += psize) {
+
+	/* handle path identifier */
+	if (peer->cap_add_paths) {
+	  memcpy(&tmp32, pnt, 4);
+	  path_id = ntohl(tmp32);
+	  pnt += 4;
+	}
 
 	memset(&p, 0, sizeof(struct prefix));
 

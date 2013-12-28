@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
 */
 
 /* 
@@ -42,7 +42,7 @@
 #define BGP_MIN_KEEPALVE_MSG_SIZE	BGP_HEADER_SIZE
 #define BGP_TCP_PORT			179
 #define BGP_VERSION4			4
-#define CAPABILITY_CODE_AS4_LEN 4
+#define CAPABILITY_CODE_AS4_LEN		4
 
 /* BGP message types */
 #define BGP_OPEN		1
@@ -117,6 +117,13 @@ struct capability_as4
   uint32_t as4;
 };
 
+struct capability_add_paths
+{
+  u_int16_t afi;
+  u_char safi;
+  u_char sndrcv;
+};
+
 /* attribute flags, from RFC1771 */
 #define BGP_ATTR_FLAG_OPTIONAL        0x80
 #define BGP_ATTR_FLAG_TRANSITIVE      0x40
@@ -151,6 +158,7 @@ struct capability_as4
 #define BGP_CAPABILITY_GRACEFUL_RESTART         0x40   /* draft-ietf-idr-restart-05  */
 #define BGP_CAPABILITY_4_OCTET_AS_NUMBER	0x41   /* draft-ietf-idr-as4bytes-06 */
 #define BGP_CAPABILITY_DYNAMIC_CAPABILITY	0x42   /* draft-ietf-idr-dynamic-cap-03 */
+#define BGP_CAPABILITY_ADD_PATHS		0x45   /* draft-ietf-idr-add-paths-09 */ 
 #define BGP_CAPABILITY_ORF_CISCO	        0x82   /* Cisco */
 #define BGP_CAPABILITY_ROUTE_REFRESH_CISCO      0x80   /* Cisco */
 
