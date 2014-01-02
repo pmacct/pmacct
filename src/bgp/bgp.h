@@ -158,8 +158,8 @@ EXT int bgp_attr_parse_local_pref(struct bgp_peer *, u_int16_t, struct bgp_attr 
 EXT int bgp_attr_parse_mp_reach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 EXT int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 EXT int bgp_nlri_parse(struct bgp_peer *, void *, struct bgp_nlri *);
-EXT int bgp_process_update(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t, rd_t *, char *);
-EXT int bgp_process_withdraw(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t, rd_t *, char *);
+EXT int bgp_process_update(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, char *);
+EXT int bgp_process_withdraw(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, char *);
 EXT int bgp_afi2family(int);
 EXT int bgp_rd2str(char *, rd_t *);
 EXT int bgp_str2rd(rd_t *, char *);

@@ -85,6 +85,7 @@ struct bgp_info_extra
 {
   rd_t rd;
   u_char label[3];
+  path_id_t path_id;
 };
 
 struct bgp_info

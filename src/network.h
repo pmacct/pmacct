@@ -289,6 +289,8 @@ struct rd_as4
 /* Picking one of the three structures as rd_t for simplicity */
 typedef struct rd_as rd_t;
 
+typedef u_int32_t path_id_t;
+
 /* class status */
 struct class_st {
    u_int8_t tentatives;	

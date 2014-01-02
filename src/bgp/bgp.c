@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -1141,15 +1141,17 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
   struct prefix p;
   int psize, end;
   int ret;
-  u_int32_t tmp32, path_id;
+  u_int32_t tmp32;
   u_int16_t tmp16;
   struct rd_ip  *rdi;
   struct rd_as  *rda;
   struct rd_as4 *rda4;
   rd_t rd;
+  path_id_t path_id;
 
   memset (&p, 0, sizeof(struct prefix));
   memset (&rd, 0, sizeof(rd_t));
+  memset (&path_id, 0, sizeof(path_id_t));
 
   pnt = info->nlri;
   lim = pnt + info->length;
@@ -1160,8 +1162,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 
 	/* handle path identifier */
 	if (peer->cap_add_paths) {
-	  memcpy(&tmp32, pnt, 4);
-	  path_id = ntohl(tmp32);
+	  memcpy(&path_id, pnt, 4);
 	  pnt += 4;
 	}
 
@@ -1239,16 +1240,16 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	
     /* Let's do our job now! */
 	if (attr)
-	  ret = bgp_process_update(peer, &p, attr, info->afi, safi, &rd, label);
+	  ret = bgp_process_update(peer, &p, attr, info->afi, safi, &rd, &path_id, label);
 	else
-	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi, &rd, label);
+	  ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi, &rd, &path_id, label);
   }
 
   return 0;
 }
 
 int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
-		       rd_t *rd, char *label)
+		       rd_t *rd, path_id_t *path_id, char *label)
 {
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL, *new = NULL;
@@ -1259,12 +1260,21 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
   /* Check previously received route. */
   for (ri = route->info[modulo]; ri; ri = ri->next) {
-    if (safi != SAFI_MPLS_VPN) { 
-      if (ri->peer == peer) break;
-    }
-    else {
-      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)))
-	break;
+    if (ri->peer == peer) { 
+      if (safi == SAFI_MPLS_VPN) {
+	if (ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)));
+	else continue;
+      }
+
+      if (peer->cap_add_paths) {
+	if (path_id && *path_id) {
+	  if (ri->extra && *path_id == ri->extra->path_id);
+	  else continue;
+	}
+	else continue;
+      }
+
+      break;
     }
   }
 
@@ -1279,20 +1289,28 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	  return 0;
 	}
 	else {
+	  struct bgp_info_extra *rie = NULL;
+
 	  /* Update to new attribute.  */
 	  bgp_attr_unintern(ri->attr);
 	  ri->attr = attr_new;
 
 	  /* Install/update MPLS stuff if required */
 	  if (safi == SAFI_MPLS_VPN) {
-	    struct bgp_info_extra *rie;
+	    if (!rie) rie = bgp_info_extra_get(ri);
 
-	    rie = bgp_info_extra_get(ri);
 	    if (rie) {
 	      memcpy(&rie->rd, rd, sizeof(rd_t));
 	      memcpy(&rie->label, label, 3);
 	    }
 	  }
+
+          /* Install/update BGP ADD-PATHs stuff if required */
+          if (peer->cap_add_paths && path_id && *path_id) {
+            if (!rie) rie = bgp_info_extra_get(ri);
+
+            if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
+          }
 
 	  bgp_unlock_node (route);
 
@@ -1306,17 +1324,24 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   /* Make new BGP info. */
   new = bgp_info_new();
   if (new) {
+    struct bgp_info_extra *rie = NULL;
+
     new->peer = peer;
     new->attr = attr_new;
 
     if (safi == SAFI_MPLS_VPN) {
-      struct bgp_info_extra *rie;
+      if (!rie) rie = bgp_info_extra_get(new);
 
-      rie = bgp_info_extra_get(new);
       if (rie) {
         memcpy(&rie->rd, rd, sizeof(rd_t));
         memcpy(&rie->label, label, 3);
       }
+    }
+
+    if (peer->cap_add_paths && path_id && *path_id) {
+      if (!rie) rie = bgp_info_extra_get(new);
+
+      if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
     }
   }
   else return -1;
@@ -1347,6 +1372,7 @@ log_update:
     struct rd_ip  *rdi;
     struct rd_as  *rda;
     struct rd_as4 *rda4;
+    path_id_t path_id_ho;
 
     memset(prefix_str, 0, INET6_ADDRSTRLEN);
     memset(nexthop_str, 0, INET6_ADDRSTRLEN);
@@ -1361,17 +1387,20 @@ log_update:
     if (attr_new->mp_nexthop.family) addr_to_str(nexthop_str, &attr_new->mp_nexthop);
     else inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
 
+    if (ri && ri->extra) path_id_ho = ntohl(ri->extra->path_id);
+    else path_id_ho = 0;
+
     if (safi != SAFI_MPLS_VPN)
-      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	  inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
+      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	  inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
     else {
       if (ri && ri->extra) {
         u_char rd_str[SRVBUFLEN];
 
 	bgp_rd2str(rd_str, &ri->extra->rd);
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u RD: '%s' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	    inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, aspath, comm, ecomm, lp, med, nexthop_str);
+	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u RD: '%s' Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	    inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
       }
     }
   }
@@ -1380,7 +1409,7 @@ log_update:
 }
 
 int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
-			 rd_t *rd, char *label)
+			 rd_t *rd, path_id_t *path_id, char *label)
 {
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
@@ -1389,13 +1418,23 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   /* Lookup node. */
   route = bgp_node_get(rib[afi][safi], p);
 
+  /* Check previously received route. */
   for (ri = route->info[modulo]; ri; ri = ri->next) {
-    if (safi != SAFI_MPLS_VPN) {
-      if (ri->peer == peer) break;
-    }
-    else {
-      if (ri->peer == peer && ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)))
-	break;
+    if (ri->peer == peer) {
+      if (safi == SAFI_MPLS_VPN) {
+        if (ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)));
+        else continue;
+      }
+
+      if (peer->cap_add_paths) {
+        if (path_id && *path_id) {
+          if (ri->extra && *path_id == ri->extra->path_id);
+          else continue;
+        }
+        else continue;
+      }
+
+      break;
     }
   }
 
@@ -1403,6 +1442,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	char empty[] = "";
 	char prefix_str[INET6_ADDRSTRLEN];
 	char *aspath, *comm, *ecomm;
+	path_id_t path_id_ho;
 
 	memset(prefix_str, 0, INET6_ADDRSTRLEN);
 	prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
@@ -1411,17 +1451,20 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 	comm = ri->attr->community ? ri->attr->community->str : empty;
 	ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
+	if (ri && ri->extra) path_id_ho = ntohl(ri->extra->path_id);
+        else path_id_ho = 0;
+
 	if (safi != SAFI_MPLS_VPN)
-	  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
-	      inet_ntoa(peer->id.address.ipv4), prefix_str, aspath, comm, ecomm);
+	  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s'\n",
+	      inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm);
 	else {
 	  if (ri && ri->extra) {
 	    u_char rd_str[SRVBUFLEN];
 
 	    bgp_rd2str(rd_str, &ri->extra->rd);
 
-            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w RD: '%s' Prefix: '%s' Path: '%s' Comms: '%s' EComms: '%s'\n",
-		inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, aspath, comm, ecomm); 
+            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w RD: '%s' Prefix: '%s' Path_Id: %u' Path: '%s' Comms: '%s' EComms: '%s'\n",
+		inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm); 
 	  }
 	}
   }
