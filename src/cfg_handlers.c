@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -2036,8 +2036,16 @@ int cfg_key_pre_tag_map(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.pre_tag_map = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'pre_tag_map'. Globalized.\n", filename);
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pre_tag_map = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pre_tag_map = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
@@ -2053,8 +2061,16 @@ int cfg_key_maps_entries(char *filename, char *name, char *value_ptr)
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.maps_entries = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'maps_entries'. Globalized.\n", filename);
+  if (!name) for (; list; list = list->next, changes++) list->cfg.maps_entries = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.maps_entries = value;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }

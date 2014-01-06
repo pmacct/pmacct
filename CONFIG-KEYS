@@ -935,13 +935,13 @@ DESC:           both nfacctd and sfacctd check health of incoming NetFlow/sFlow 
 		limited to just verifying sequence numbers progression. You may want to disable such feature
 		because of non-standard implementations. By default checks are enabled (default: false)
 
-KEY:		pre_tag_map [GLOBAL]
+KEY:		pre_tag_map
 DESC:		full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering
 		purposes, see pre_tag_filter configuration directive) or exposed to users (ie. if 'tag' and/or
 		'tag2' primitives are part of the aggregation method). Take a look to the examples/ sub-tree
 		for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is evaluated in
-		the Core Process (ie. once for all instantiated plugins). Results of evaluation of pre_tag_map
-		overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/sfprobe plugin.  
+		the Core Process and each plugin can be defined a local pre_tag_map. Result of evaluation of
+		pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/sfprobe plugin.  
 
 KEY:		maps_entries [GLOBAL]
 DESC:		defines the maximum number of entries the Pre-Tagging map can contain. The default value is

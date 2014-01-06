@@ -1,4 +1,4 @@
-! pre_tag_map: Pre-Tagging map -- multiplexes various fields into a 4-bytes
+! pre_tag_map: Pre-Tagging map -- multiplexes various fields into a 8-bytes
 ! numerical-only ID 
 !
 ! File syntax is key-based. Position of keys inside the same row (rule) is not

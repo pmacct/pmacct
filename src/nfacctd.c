@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -95,7 +95,6 @@ int main(int argc,char **argv, char **envp)
   int logf, rc, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
-  struct id_table idt;
   struct id_table bpas_table;
   struct id_table blp_table;
   struct id_table bmed_table;
@@ -150,7 +149,6 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
-  tag_map_allocated = FALSE;
   sampling_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;
@@ -179,7 +177,6 @@ int main(int argc,char **argv, char **envp)
   memset(&class, 0, sizeof(class));
   memset(&xflow_status_table, 0, sizeof(xflow_status_table));
 
-  memset(&idt, 0, sizeof(idt));
   memset(&bpas_table, 0, sizeof(bpas_table));
   memset(&blp_table, 0, sizeof(blp_table));
   memset(&bmed_table, 0, sizeof(bmed_table));
@@ -542,12 +539,6 @@ int main(int argc,char **argv, char **envp)
   if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
   else memset(&allow, 0, sizeof(allow));
 
-  if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
-    pptrs.v4.idtable = (u_char *) &idt;
-  }
-  else pptrs.v4.idtable = NULL;
-
   if (config.sampling_map) {
     load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
     set_sampling_table(&pptrs, (u_char *) &sampling_table);
@@ -702,7 +693,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.v4.l3_proto = ETHERTYPE_IP;
 
   memset(dummy_packet_vlan, 0, sizeof(dummy_packet_vlan));
-  pptrs.vlan4.idtable = pptrs.v4.idtable;
   pptrs.vlan4.f_agent = (u_char *) &client;
   pptrs.vlan4.packet_ptr = dummy_packet_vlan;
   pptrs.vlan4.pkthdr = &dummy_pkthdr_vlan;
@@ -719,7 +709,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlan4.l3_proto = ETHERTYPE_IP;
 
   memset(dummy_packet_mpls, 0, sizeof(dummy_packet_mpls));
-  pptrs.mpls4.idtable = pptrs.v4.idtable;
   pptrs.mpls4.f_agent = (u_char *) &client;
   pptrs.mpls4.packet_ptr = dummy_packet_mpls;
   pptrs.mpls4.pkthdr = &dummy_pkthdr_mpls;
@@ -732,7 +721,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.mpls4.l3_proto = ETHERTYPE_IP;
 
   memset(dummy_packet_vlan_mpls, 0, sizeof(dummy_packet_vlan_mpls));
-  pptrs.vlanmpls4.idtable = pptrs.v4.idtable;
   pptrs.vlanmpls4.f_agent = (u_char *) &client;
   pptrs.vlanmpls4.packet_ptr = dummy_packet_vlan_mpls;
   pptrs.vlanmpls4.pkthdr = &dummy_pkthdr_vlan_mpls;
@@ -748,7 +736,6 @@ int main(int argc,char **argv, char **envp)
 
 #if defined ENABLE_IPV6
   memset(dummy_packet6, 0, sizeof(dummy_packet6));
-  pptrs.v6.idtable = pptrs.v4.idtable;
   pptrs.v6.f_agent = (u_char *) &client;
   pptrs.v6.packet_ptr = dummy_packet6;
   pptrs.v6.pkthdr = &dummy_pkthdr6;
@@ -764,7 +751,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.v6.l3_proto = ETHERTYPE_IPV6;
 
   memset(dummy_packet_vlan6, 0, sizeof(dummy_packet_vlan6));
-  pptrs.vlan6.idtable = pptrs.v4.idtable;
   pptrs.vlan6.f_agent = (u_char *) &client;
   pptrs.vlan6.packet_ptr = dummy_packet_vlan6;
   pptrs.vlan6.pkthdr = &dummy_pkthdr_vlan6;
@@ -783,7 +769,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlan6.l3_proto = ETHERTYPE_IPV6;
 
   memset(dummy_packet_mpls6, 0, sizeof(dummy_packet_mpls6));
-  pptrs.mpls6.idtable = pptrs.v4.idtable;
   pptrs.mpls6.f_agent = (u_char *) &client;
   pptrs.mpls6.packet_ptr = dummy_packet_mpls6;
   pptrs.mpls6.pkthdr = &dummy_pkthdr_mpls6;
@@ -796,7 +781,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.mpls6.l3_proto = ETHERTYPE_IPV6;
 
   memset(dummy_packet_vlan_mpls6, 0, sizeof(dummy_packet_vlan_mpls6));
-  pptrs.vlanmpls6.idtable = pptrs.v4.idtable;
   pptrs.vlanmpls6.f_agent = (u_char *) &client;
   pptrs.vlanmpls6.packet_ptr = dummy_packet_vlan_mpls6;
   pptrs.vlanmpls6.pkthdr = &dummy_pkthdr_vlan_mpls6;
@@ -859,8 +843,6 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
       if (config.nfacctd_flow_to_rd_map)
         load_id_file(MAP_FLOW_TO_RD, config.nfacctd_flow_to_rd_map, &bitr_table, &req, &bitr_map_allocated);
-      if (config.pre_tag_map) 
-        load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated); 
       if (config.sampling_map) {
         load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
         set_sampling_table(&pptrs, (u_char *) &sampling_table);
@@ -954,8 +936,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-      exec_plugins(pptrs);
+      exec_plugins(pptrs, req);
       exp_v1++;           
       count--;             
     }
@@ -1018,8 +999,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-      exec_plugins(pptrs);
+      exec_plugins(pptrs, req);
       exp_v5++;
       count--;
     }
@@ -1082,8 +1062,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-      exec_plugins(pptrs);
+      exec_plugins(pptrs, req);
       exp_v7++;
       count--;
     }
@@ -1134,8 +1113,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-      exec_plugins(pptrs);
+      exec_plugins(pptrs, req);
       exp_v8 += v8_handlers[hdr_v8->aggregation].exp_size;
       count--;
     }
@@ -1427,8 +1405,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-          exec_plugins(pptrs);
+          exec_plugins(pptrs, req);
 	  break;
 #if defined ENABLE_IPV6
 	case NF9_FTYPE_IPV6:
@@ -1483,8 +1460,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->v6, &pptrsv->v6.tag, &pptrsv->v6.tag2);
-          exec_plugins(&pptrsv->v6);
+          exec_plugins(&pptrsv->v6, req);
 	  break;
 #endif
 	case NF9_FTYPE_VLAN_IPV4:
@@ -1541,8 +1517,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan4, &pptrsv->vlan4.tag, &pptrsv->vlan4.tag2);
-	  exec_plugins(&pptrsv->vlan4);
+	  exec_plugins(&pptrsv->vlan4, req);
 	  break;
 #if defined ENABLE_IPV6
 	case NF9_FTYPE_VLAN_IPV6:
@@ -1599,8 +1574,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlan6, &pptrsv->vlan6.tag, &pptrsv->vlan6.tag2);
-	  exec_plugins(&pptrsv->vlan6);
+	  exec_plugins(&pptrsv->vlan6, req);
 	  break;
 #endif
         case NF9_FTYPE_MPLS_IPV4:
@@ -1667,8 +1641,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
-          if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls4, &pptrsv->mpls4.tag, &pptrsv->mpls4.tag2);
-          exec_plugins(&pptrsv->mpls4);
+          exec_plugins(&pptrsv->mpls4, req);
           break;
 #if defined ENABLE_IPV6
 	case NF9_FTYPE_MPLS_IPV6:
@@ -1734,8 +1707,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->mpls6, &pptrsv->mpls6.tag, &pptrsv->mpls6.tag2);
-	  exec_plugins(&pptrsv->mpls6);
+	  exec_plugins(&pptrsv->mpls6, req);
 	  break;
 #endif
         case NF9_FTYPE_VLAN_MPLS_IPV4:
@@ -1804,8 +1776,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.tag, &pptrsv->vlanmpls4.tag2);
-	  exec_plugins(&pptrsv->vlanmpls4);
+	  exec_plugins(&pptrsv->vlanmpls4, req);
 	  break;
 #if defined ENABLE_IPV6
         case NF9_FTYPE_VLAN_MPLS_IPV6:
@@ -1873,8 +1844,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.tag, &pptrsv->vlanmpls6.tag2);
-	  exec_plugins(&pptrsv->vlanmpls6);
+	  exec_plugins(&pptrsv->vlanmpls6, req);
 	  break;
 #endif
 	case NF9_FTYPE_NAT_EVENT:
@@ -1909,8 +1879,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrs->l4_proto = 0;
 	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
 
-	  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-          exec_plugins(pptrs);
+          exec_plugins(pptrs, req);
 	default:
 	  break;
         }
@@ -1996,8 +1965,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     Log(LOG_DEBUG, "DEBUG ( default/core ): Received NetFlow packet from [%s:%u] version [%u] seqno [%u]\n", agent_addr, agent_port, nfv, pptrsv->v4.seqno);
   }
 
-  if (config.pre_tag_map) NF_find_id((struct id_table *)pptrs->idtable, pptrs, &pptrs->tag, &pptrs->tag2);
-  exec_plugins(pptrs);
+  exec_plugins(pptrs, req);
 }
 
 void compute_once()

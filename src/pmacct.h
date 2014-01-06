@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -208,7 +208,6 @@ struct pcap_device {
 
 struct pcap_callback_data {
   u_char * f_agent; 
-  u_char * idt; 
   u_char * bta_table;
   u_char * bpas_table; 
   u_char * blp_table; 
@@ -312,7 +311,8 @@ EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 #define EXT
 #endif
 EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
-EXT int reload_map, reload_map_bgp_thread, data_plugins, tee_plugins;
+EXT int reload_map, reload_map_exec_plugins, reload_map_bgp_thread;
+EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;
 #undef EXT

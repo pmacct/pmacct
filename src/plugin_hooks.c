@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -49,6 +49,10 @@ void load_plugins(struct plugin_requests *req)
   init_pipe_channels();
 
   while (list) {
+    if (list->cfg.pre_tag_map) {
+      load_id_file(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc);
+    }
+
     if ((*list->type.func)) {
       if (list->cfg.data_type & (PIPE_TYPE_METADATA|PIPE_TYPE_PAYLOAD|PIPE_TYPE_MSG));
       else {
@@ -211,7 +215,7 @@ void load_plugins(struct plugin_requests *req)
   sort_pipe_channels();
 }
 
-void exec_plugins(struct packet_ptrs *pptrs) 
+void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
 {
   int num, size, already_reprocessed = 0;
   u_int32_t savedptr;
@@ -219,6 +223,15 @@ void exec_plugins(struct packet_ptrs *pptrs)
   int index;
 
   for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+    struct plugins_list_entry *p = channels_list[index].plugin;
+
+    if (p->cfg.pre_tag_map && find_id_func) {
+      if (reload_map_exec_plugins) {
+        load_id_file(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc);
+      }
+      find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
+    }
+
     if (evaluate_filters(&channels_list[index].agg_filter, pptrs->packet_ptr, pptrs->pkthdr) &&
         !evaluate_tags(&channels_list[index].tag_filter, pptrs->tag) && 
         !evaluate_tags(&channels_list[index].tag2_filter, pptrs->tag2) && 
@@ -301,6 +314,8 @@ reprocess:
       }
     }
   }
+
+  reload_map_exec_plugins = FALSE;
 }
 
 struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configuration *cfg, int pipe)

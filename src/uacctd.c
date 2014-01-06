@@ -105,7 +105,6 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
-  struct id_table idt;
   struct pcap_callback_data cb_data;
 
   /* getopt() stuff */
@@ -145,7 +144,6 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
-  tag_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;
   bmed_map_allocated = FALSE;
@@ -645,16 +643,6 @@ int main(int argc,char **argv, char **envp)
     exit_all(1);
   }
   Log(LOG_INFO, "INFO ( default/core ): Netlink ULOG: binding to group %x\n", config.uacctd_group);
-
-  /* loading pre-tagging map, if any */
-  if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
-    cb_data.idt = (u_char *) &idt;
-  }
-  else {
-    memset(&idt, 0, sizeof(idt));
-    cb_data.idt = NULL; 
-  }
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */

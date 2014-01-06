@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -228,6 +228,8 @@ struct configuration {
   int maps_index;
   int maps_entries;
   char *pre_tag_map;
+  struct id_table ptm;
+  int ptm_alloc;
   pm_id_t post_tag;
   int ext_sampling_rate;
   int sampling_rate;

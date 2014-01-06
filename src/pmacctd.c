@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -107,7 +107,6 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
-  struct id_table idt;
   struct pcap_callback_data cb_data;
 
   /* getopt() stuff */
@@ -131,7 +130,6 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
-  tag_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;
   bmed_map_allocated = FALSE;
@@ -681,16 +679,6 @@ int main(int argc,char **argv, char **envp)
   signal(SIGUSR1, push_stats); /* logs various statistics via Log() calls */
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
-
-  /* loading pre-tagging map, if any */
-  if (config.pre_tag_map) {
-    load_id_file(config.acct_type, config.pre_tag_map, &idt, &req, &tag_map_allocated);
-    cb_data.idt = (u_char *) &idt;
-  }
-  else {
-    memset(&idt, 0, sizeof(idt));
-    cb_data.idt = NULL; 
-  }
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */

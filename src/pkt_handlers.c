@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -688,7 +688,7 @@ void evaluate_packet_handlers()
     if (config.acct_type == ACCT_PM || config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
       if (channels_list[index].aggregation & COUNT_ID) {
 	/* we infer 'pre_tag_map' from configuration because it's global */
-        if (config.pre_tag_map) {
+        if (channels_list[index].plugin->cfg.pre_tag_map) {
 	  channels_list[index].phandler[primitives] = ptag_id_handler;
 	  primitives++;
 	}
@@ -711,7 +711,7 @@ void evaluate_packet_handlers()
 
     if (config.acct_type == ACCT_PM || config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
       if (channels_list[index].aggregation & COUNT_ID2) {
-        if (config.pre_tag_map) {
+        if (channels_list[index].plugin->cfg.pre_tag_map) {
           channels_list[index].phandler[primitives] = ptag_id2_handler;
           primitives++;
         }
