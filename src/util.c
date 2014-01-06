@@ -2184,7 +2184,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
 	snprintf(out, outlen, format, st32);
       }
       else if (cp_entry->ptr->len == 8) {
-        u_int32_t t64, st64;
+        u_int64_t t64, st64;
 
         memcpy(&t64, (in+cp_entry->off), 8);
         st64 = pm_ntohll(t64);
