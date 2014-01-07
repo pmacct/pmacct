@@ -290,7 +290,7 @@ int iscomment(char *line)
   for (j = 0; j <= len; j++) {
     if (!isspace(line[j])) first_char--;
     if (!first_char) {
-      if (line[j] == '!') return TRUE; 
+      if (line[j] == '!' || line[j] == '#') return TRUE; 
       else return FALSE;
     }
   }
