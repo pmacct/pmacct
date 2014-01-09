@@ -513,12 +513,10 @@ AC_ARG_ENABLE(mysql,
       ])])
     else 
       LIBS="${LIBS} -lmysqlclient"
-      case "$host_os" in
-        Sun*)
-	  LIBS="${LIBS} -lrt"
-	  ;;
-      esac
     fi 
+
+    # Adding these as prerequisite for MySQL 5.6 
+    LIBS="${LIBS} -lrt -lstdc++"
 
     AC_ARG_WITH(mysql-includes,
       [  --with-mysql-includes=DIR        Search for MySQL includes in the specified directory],
