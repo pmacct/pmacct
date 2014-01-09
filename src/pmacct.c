@@ -80,13 +80,13 @@ void usage_client(char *prog)
   printf("Usage: %s [query]\n\n", prog);
   printf("Queries:\n");
   printf("  -s\tShow statistics\n"); 
-  printf("  -N\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print counters only (requires -c)\n");
-  printf("  -n\t[bytes|packets|flows|all] \n\tSelect the counters to print (applies to -N)\n");
+  printf("  -N\t<matching data>[';'<matching data>] | 'file:'<filename> \n\tMatch primitives; print counters only (requires -c)\n");
+  printf("  -M\t<matching data>[';'<matching data>] | 'file:'<filename> \n\tMatch primitives; print formatted table (requires -c)\n");
+  printf("  -n\t<bytes | packets | flows | all> \n\tSelect the counters to print (applies to -N)\n");
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
-  printf("  -M\t[matching data[';' ... ]] | ['file:'[filename]] \n\tMatch primitives; print formatted table (requires -c)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t[ src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth ] \n\tSelect primitives to match (required by -N and -M)\n");
-  printf("  -T\t[bytes|packets|flows] \n\tOutput top N statistics (applies to -M and -s)\n");
+  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth > \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
   printf("  -l\tPerform locking of the table\n");
@@ -94,8 +94,8 @@ void usage_client(char *prog)
   printf("  -C\tShow classifiers table\n");
   printf("  -U\tShow custom primitives table\n");
   printf("  -D\tShow packet length distribution table\n");
-  printf("  -p\t[file] \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
-  printf("  -O\tSet output [ formatted | csv | json | event_formatted | event_csv ] (applies to -M and -s)\n");
+  printf("  -p\t<file> \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
+  printf("  -O\tSet output < formatted | csv | json | event_formatted | event_csv > (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
   printf("  -V\tPrint version and exit\n");
@@ -632,10 +632,12 @@ int main(int argc,char **argv)
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
   int want_output, want_pkt_len_distrib_table, want_custom_primitives_table;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
+  int topN_howmany, topN_printed;
   int datasize;
   u_int64_t what_to_count, what_to_count_2, have_wtc;
   u_int32_t tmpnum;
   struct extra_primitives extras;
+  char *topN_howmany_ptr, *endptr;
 
   /* Administrativia */
   memset(&q, 0, sizeof(struct query_header));
@@ -668,6 +670,7 @@ int main(int argc,char **argv)
   want_custom_primitives_table = FALSE;
   which_counter = FALSE;
   topN_counter = FALSE;
+  topN_howmany = FALSE;
   sum_counters = FALSE;
   num_counters = FALSE;
   fetch_from_file = FALSE;
@@ -982,6 +985,13 @@ int main(int argc,char **argv)
       else printf("WARN: -n, ignoring unknown counter type: %s.\n", optarg);
       break;
     case 'T':
+      topN_howmany_ptr = strchr(optarg, ',');
+      if (topN_howmany_ptr) {
+	*topN_howmany_ptr = '\0';
+	topN_howmany_ptr++;
+	topN_howmany = strtoul(topN_howmany_ptr, &endptr, 10);
+      }
+
       if (!strcmp(optarg, "bytes")) topN_counter = 1;
       else if (!strcmp(optarg, "packets")) topN_counter = 2;
       else if (!strcmp(optarg, "flows")) topN_counter = 3;
@@ -1843,15 +1853,18 @@ int main(int argc,char **argv)
     unpacked -= sizeof(struct query_header);
 
     acc_elem = (struct pkt_data *) elem;
+
+    topN_printed = 0;
     if (topN_counter) {
       int num = unpacked/datasize;
 
       client_counters_merge_sort((void *)acc_elem, 0, num, datasize, topN_counter);
     }
 
-    while (printed < unpacked) {
+    while (printed < unpacked && (!topN_howmany || topN_printed < topN_howmany)) {
       int count = 0;
 
+      topN_printed++;
       acc_elem = (struct pkt_data *) elem;
 
       if (extras.off_pkt_bgp_primitives) pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem + extras.off_pkt_bgp_primitives);
