@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -1600,7 +1600,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", *tmpbuf;
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
   char tstamp_str[SRVBUFLEN];
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
@@ -1695,7 +1695,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     if (strlen(pbgp->as_path))
       kv = json_pack("{ss}", "as_path", pbgp->as_path);
     else
-      kv = json_pack("{ss}", "as_path", empty_aspath);
+      kv = json_pack("{ss}", "as_path", empty_string);
 
     json_object_update_missing(obj, kv);
     json_decref(kv);

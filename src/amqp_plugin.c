@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -320,8 +320,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
-  char *as_path, *bgp_comm, empty_aspath[] = "^$", default_amqp_routing_key[] = "acct";
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
+  char default_amqp_routing_key[] = "acct";
   int i, j, amqp_status, batch_idx, is_routing_key_dyn = FALSE;
   time_t start, duration;
   pid_t writer_pid = getpid();

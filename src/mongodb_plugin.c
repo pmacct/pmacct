@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -325,7 +325,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
-  char *as_path, *bgp_comm, empty_aspath[] = "^$", default_table[] = "test.acct";
+  char *as_path, *bgp_comm, default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int qn = 0, i, j, db_status, batch_idx, go_to_pending;
   time_t stamp, start, duration;
@@ -519,7 +519,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         if (strlen(pbgp->as_path))
           bson_append_string(bson_elem, "as_path", pbgp->as_path);
         else
-          bson_append_string(bson_elem, "as_path", empty_aspath);
+          bson_append_null(bson_elem, "as_path");
       }
   
       if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "local_pref", pbgp->local_pref);

@@ -612,7 +612,7 @@ int main(int argc,char **argv)
   unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
   char path[128], file[128], password[9], rd_str[SRVBUFLEN];
-  char *as_path, empty_aspath[] = "^$", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
+  char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
   int sd, buflen, unpacked, printed;
   int counter=0, ct_idx=0, ct_num=0, sep_len=0;
   int pldt_idx=0, pldt_num=0, is_event;
@@ -1962,7 +1962,7 @@ int main(int argc,char **argv)
 	  }
 	  else {
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22u   ", 0);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
 	  }
         }
 
@@ -1978,7 +1978,7 @@ int main(int argc,char **argv)
 	  }
 	  else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22u   ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
 	  }
         }
 
@@ -1994,7 +1994,7 @@ int main(int argc,char **argv)
 	  }
 	  else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22u   ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
 	  }
         }
 
@@ -2010,7 +2010,7 @@ int main(int argc,char **argv)
 	  }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22u   ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
         }
 
@@ -2042,7 +2042,7 @@ int main(int argc,char **argv)
 	  }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", empty_aspath);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_aspath);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->as_path);
           }
         }
 
@@ -2086,7 +2086,7 @@ int main(int argc,char **argv)
 	  }
           else {
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
 	  }
 #else
           if (strlen(ip_address)) {
@@ -2095,7 +2095,7 @@ int main(int argc,char **argv)
 	  }
           else {
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
 	  }
 #endif
         }
@@ -2110,7 +2110,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #else
           if (strlen(ip_address)) {
@@ -2119,7 +2119,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #endif
         }
@@ -2142,7 +2142,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #else
           if (strlen(ip_address)) {
@@ -2151,7 +2151,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #endif
 	}
@@ -2166,7 +2166,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #else
           if (strlen(ip_address)) {
@@ -2175,7 +2175,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #endif
 	}
@@ -2260,7 +2260,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #else
           if (strlen(ip_address)) {
@@ -2269,7 +2269,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #endif
         }
@@ -2284,7 +2284,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #else
           if (strlen(ip_address)) {
@@ -2293,7 +2293,7 @@ int main(int argc,char **argv)
           }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
 #endif
         }
@@ -2880,7 +2880,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", *tmpbuf;
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
   char tstamp_str[SRVBUFLEN], unknown_pkt_len_distrib[] = "not_recv";
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
@@ -2975,7 +2975,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     if (strlen(pbgp->as_path))
       kv = json_pack("{ss}", "as_path", pbgp->as_path);
     else
-      kv = json_pack("{ss}", "as_path", empty_aspath);
+      kv = json_pack("{ss}", "as_path", empty_string);
 
     json_object_update_missing(obj, kv);
     json_decref(kv);

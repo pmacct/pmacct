@@ -337,7 +337,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator;
-  char *as_path, *bgp_comm, empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
+  char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
   int j, is_event = FALSE, qn = 0, go_to_pending;
@@ -717,7 +717,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           if (strlen(pbgp->std_comms)) 
             fprintf(f, "%s%s", write_sep(sep, &count), pbgp->std_comms);
           else
-            fprintf(f, "%s%u", write_sep(sep, &count), 0);
+            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
         }
   
         if (config.what_to_count & COUNT_AS_PATH) {
@@ -726,7 +726,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   	  as_path = strchr(pbgp->as_path, ' ');
   	  if (as_path) *as_path = '_';
           }
-          fprintf(f, "%s%s", write_sep(sep, &count), pbgp->as_path);
+
+	  if (strlen(pbgp->as_path))
+            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->as_path);
+	  else
+	    fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
         }
   
         if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->local_pref);
