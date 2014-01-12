@@ -268,6 +268,7 @@ struct configuration {
   char *pkt_len_distrib_bins_str;
   char *pkt_len_distrib_bins[MAX_PKT_LEN_DISTRIB_BINS];
   u_int16_t pkt_len_distrib_bins_lookup[ETHER_JUMBO_MTU+1];
+  int use_ip_next_hop;
 };
 
 struct plugin_type_entry {

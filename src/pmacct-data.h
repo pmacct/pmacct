@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -306,6 +306,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_as", cfg_key_nfacctd_as_new},
   {"pmacctd_net", cfg_key_nfacctd_net},
   {"uacctd_net", cfg_key_nfacctd_net},
+  {"use_ip_next_hop", cfg_key_use_ip_next_hop},
   {"plugins", NULL},
   {"plugin_pipe_size", cfg_key_plugin_pipe_size},
   {"plugin_pipe_backlog", cfg_key_plugin_pipe_backlog},

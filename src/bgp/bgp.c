@@ -2098,6 +2098,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   compare_bgp_port = FALSE;
   safi = SAFI_UNICAST;
 
+  memset(&rd, 0, sizeof(rd));
+
   if (pptrs->bta) {
     sa = &sa_local;
     if (pptrs->bta_af == ETHERTYPE_IP) {

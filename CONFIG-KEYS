@@ -923,6 +923,12 @@ DESC:		Determines the method for performing IP prefix aggregation - hence direct
 		against ia networks list, IGP and BGP only (networks_file < IGP <= BGP).
 		(default: nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file')
 
+KEY:		use_ip_next_hop
+VALUES:		[ true | false ] 
+DESC:		When IP prefix aggregation (ie. nfacctd_net) is set to 'netflow', 'sflow' or 'fallback' (in
+		which case longest winning match is via 'netflow' or 'sflow') populate 'peer_dst_ip' field
+		from NetFlow/sFlow IP next hop field if BGP next-hop is not available. (default: false) 
+
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD]
 DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are
 		supplied, they are expected comma separated. A maximum of 20 multicast groups may be joined by

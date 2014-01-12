@@ -1811,6 +1811,12 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
         memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 4));
         pbgp->peer_dst_ip.family = AF_INET;
       }
+      else if (tpl->tpl[NF9_IPV4_NEXT_HOP].len) {
+	if (chptr->plugin->cfg.use_ip_next_hop) {
+          memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_NEXT_HOP].off, MIN(tpl->tpl[NF9_IPV4_NEXT_HOP].len, 4));
+          pbgp->peer_dst_ip.family = AF_INET;
+	}
+      }
       break;
     }
 #if defined ENABLE_IPV6
@@ -1827,12 +1833,23 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
         memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len, 16));
         pbgp->peer_dst_ip.family = AF_INET6;
       }
+      else if (tpl->tpl[NF9_IPV6_NEXT_HOP].len) {
+	if (chptr->plugin->cfg.use_ip_next_hop) {
+	  memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_IPV6_NEXT_HOP].len, 16));
+	  pbgp->peer_dst_ip.family = AF_INET6;
+	}
+      }
       break;
     }
 #endif
     break;
   case 8:
+    break;
   default:
+    if (chptr->plugin->cfg.use_ip_next_hop) {
+      pbgp->peer_dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->nexthop.s_addr; 
+      pbgp->peer_dst_ip.family = AF_INET;
+    }
     break;
   }
 }
@@ -3991,6 +4008,18 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 #if defined ENABLE_IPV6
   else if (sample->bgp_nextHop.type == SFLADDRESSTYPE_IP_V6) {
     memcpy(&pbgp->peer_dst_ip.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz);
+    pbgp->peer_dst_ip.family = AF_INET6;
+  }
+#endif
+  else if (sample->nextHop.type == SFLADDRESSTYPE_IP_V4) {
+    if (chptr->plugin->cfg.use_ip_next_hop) {
+      pbgp->peer_dst_ip.address.ipv4.s_addr = sample->nextHop.address.ip_v4.s_addr;
+      pbgp->peer_dst_ip.family = AF_INET;
+    }
+  }
+#if defined ENABLE_IPV6
+  else if (sample->nextHop.type == SFLADDRESSTYPE_IP_V6) {
+    memcpy(&pbgp->peer_dst_ip.address.ipv6, &sample->nextHop.address.ip_v6, IP6AddrSz);
     pbgp->peer_dst_ip.family = AF_INET6;
   }
 #endif
