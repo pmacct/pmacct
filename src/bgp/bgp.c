@@ -363,12 +363,16 @@ void skinny_bgp_daemon()
       bgp_peer_close(peer);
       goto select_again;
     }
+/*
+    Candidate for removal: tackled later in conjunction with payload reassembly:
+
     else if (peer->msglen+peer->buf.truncated_len < BGP_HEADER_SIZE) {
       Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (too short).\n", inet_ntoa(peer->id.address.ipv4));
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer);
       goto select_again;
     }
+*/
     else {
       /* Appears a valid peer with a valid BGP message: before
 	 continuing let's see if it's time to send a KEEPALIVE
