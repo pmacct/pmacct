@@ -68,6 +68,36 @@ AC_ARG_ENABLE(relax,
         AC_MSG_RESULT(no)
 )
 
+dnl: shared object handling
+AC_MSG_CHECKING([whether to disable shared objects])
+AC_ARG_ENABLE(so,
+        [  --disable-so                     Disable shared objects (default: no)],
+        if test x$enableval = x"yes" ; then
+          AC_MSG_RESULT(no)
+          AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
+          AC_CHECK_LIB(dl, dlopen,
+                [ USING_DLOPEN="yes"
+                  LIBS="${LIBS} -ldl" ],
+                  [])
+          if test x"$USING_DLOPEN" != x"yes"; then
+                AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
+          fi
+        else
+          AC_MSG_RESULT(yes)
+        fi
+        ,
+        AC_MSG_RESULT(no)
+        AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
+        AC_CHECK_LIB(dl, dlopen,
+                [ USING_DLOPEN="yes"
+                  LIBS="${LIBS} -ldl" ],
+                  [])
+        if test x"$USING_DLOPEN" != x"yes"; then
+                AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
+        fi
+)
+dnl finish: shared object handling
+
 dnl os specific flags
 case "$host_os" in
   OSF*)
@@ -516,6 +546,12 @@ AC_ARG_ENABLE(mysql,
     fi 
 
     # Adding these as prerequisite for MySQL 5.6 
+    AC_CHECK_LIB([stdc++], [main], [], [AC_MSG_ERROR([
+      ERROR: missing libstdc++ devel. Requirement for building MySQL.
+    ])])
+    AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
+      ERROR: missing librt devel. Requirement for building MySQL.
+    ])])
     LIBS="${LIBS} -lrt -lstdc++"
 
     AC_ARG_WITH(mysql-includes,
@@ -1205,35 +1241,6 @@ AC_ARG_ENABLE(jansson,
   esac ],
 AC_MSG_RESULT(no))
 dnl finish: Jansson handling
-
-AC_MSG_CHECKING([whether to disable shared objects])
-AC_ARG_ENABLE(so,
-        [  --disable-so                     Disable shared objects (default: no)],
-        if test x$enableval = x"yes" ; then
-          AC_MSG_RESULT(no)
-	  AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], []) 
-	  AC_CHECK_LIB(dl, dlopen,
-                [ USING_DLOPEN="yes"
-                  LIBS="${LIBS} -ldl" ],
-		  [])
-	  if test x"$USING_DLOPEN" != x"yes"; then 
-		AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
-	  fi
-        else
-          AC_MSG_RESULT(yes)
-        fi
-        ,
-        AC_MSG_RESULT(no)
-        AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
-        AC_CHECK_LIB(dl, dlopen,
-                [ USING_DLOPEN="yes"
-                  LIBS="${LIBS} -ldl" ],
-		  [])
-        if test x"$USING_DLOPEN" != x"yes"; then
-		AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
-	fi
-)
-dnl finish: shared object handling
 
 if test x"$USING_DLOPEN" = x"yes"; then
 	AC_DEFINE(HAVE_DLOPEN, 1)
