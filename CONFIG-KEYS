@@ -891,6 +891,8 @@ DESC:		if nfacctd_time_new is set to false (default) and historical accounting (
 		of t0, time-bin 0, then the flow is inserted in time-bins t0, t1, t2 and t3 and its bytes
 		counter is proportionally split among these time-bins: 300 bytes during t0, t1 and t2 and
 		100 bytes during t3. (default: false)
+NOTES:          If NetFlow sampling is enabled, it is recommended to have counters renormalization enabled
+                (nfacctd_renormalize set to true).
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp | fallback ]

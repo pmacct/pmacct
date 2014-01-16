@@ -49,10 +49,6 @@ void load_plugins(struct plugin_requests *req)
   init_pipe_channels();
 
   while (list) {
-    if (list->cfg.pre_tag_map) {
-      load_id_file(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc);
-    }
-
     if ((*list->type.func)) {
       if (list->cfg.data_type & (PIPE_TYPE_METADATA|PIPE_TYPE_PAYLOAD|PIPE_TYPE_MSG));
       else {
@@ -213,6 +209,16 @@ void load_plugins(struct plugin_requests *req)
   }
 
   sort_pipe_channels();
+
+  /* define pre_tag_map(s) now so that they don't finish unnecessarily in plugin memory space */
+  list = plugins_list;
+  while (list) {
+    if (list->cfg.pre_tag_map) {
+      load_id_file(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc);
+    }
+
+    list = list->next;
+  }
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
