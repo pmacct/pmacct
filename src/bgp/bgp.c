@@ -2168,7 +2168,22 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   }
 
   if (peer) {
-    modulo = peer->fd % config.bgp_table_peer_buckets; 
+    struct host_addr peer_dst_ip;
+
+    modulo = peer->fd % config.bgp_table_peer_buckets;
+
+    if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
+      /* administrativia */
+      struct pkt_bgp_primitives pbgp, *pbgp_ptr = &pbgp;
+      memset(&pbgp, 0, sizeof(struct pkt_bgp_primitives));
+      
+      /* note: call to [NF|SF]_peer_dst_ip_handler for the purpose of
+	 code re-use effectively is defeating the concept of libbgp */
+      if (config.acct_type == ACCT_NF) NF_peer_dst_ip_handler(NULL, pptrs, &pbgp_ptr);
+      else if (config.acct_type == ACCT_SF) SF_peer_dst_ip_handler(NULL, pptrs, &pbgp_ptr);
+
+      memcpy(&peer_dst_ip, &pbgp.peer_dst_ip, sizeof(struct host_addr));
+    }
 
     if (pptrs->bitr) {
       safi = SAFI_MPLS_VPN;
@@ -2214,16 +2229,31 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         }
 
         for (info = result->info[modulo]; info; info = info->next) {
-	  if (safi != SAFI_MPLS_VPN) {
-            if (info->peer == peer) {
-              pptrs->bgp_dst_info = (char *) info;
-              break;
-            }
-	  }
-	  else {
-            if (info->peer == peer && info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) {
-              pptrs->bgp_dst_info = (char *) info;
-              break;
+	  if (info->peer == peer) {
+	    int no_match = FALSE;
+
+	    /* flagging additional checks are required */
+	    if (safi == SAFI_MPLS_VPN) no_match++;
+	    if (peer->cap_add_paths) no_match++;
+ 
+	    if (safi == SAFI_MPLS_VPN) {
+	      if (info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) no_match--;
+	    }
+
+	    if (peer->cap_add_paths) {
+	      if (info->attr) {
+		if (info->attr->mp_nexthop.family == peer_dst_ip.family) {
+		  if (!memcmp(&info->attr->mp_nexthop, &peer_dst_ip, HostAddrSz)) no_match--;
+		}
+		else if (info->attr->nexthop.s_addr && peer_dst_ip.family == AF_INET) {
+		  if (info->attr->nexthop.s_addr == peer_dst_ip.address.ipv4.s_addr) no_match--;
+		}
+	      }
+	    }
+
+	    if (!no_match) {
+	      pptrs->bgp_dst_info = (char *) info;
+	      break;
 	    }
 	  }
         }
@@ -2269,17 +2299,29 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         }
 
         for (info = result->info[modulo]; info; info = info->next) {
-          if (safi != SAFI_MPLS_VPN) {
-            if (info->peer == peer) {
-              pptrs->bgp_dst_info = (char *) info;
-              break;
+          if (info->peer == peer) {
+            int no_match = FALSE;
+
+            /* flagging additional checks are required */
+            if (safi == SAFI_MPLS_VPN) no_match++;
+            if (peer->cap_add_paths) no_match++;
+
+            if (safi == SAFI_MPLS_VPN) {
+              if (info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) no_match--;
             }
-          }
-          else {
-            if (info->peer == peer && info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) {
-              pptrs->bgp_dst_info = (char *) info;
-              break;
+
+            if (peer->cap_add_paths) {
+              if (info->attr) {
+                if (info->attr->mp_nexthop.family == peer_dst_ip.family) {
+                  if (!memcmp(&info->attr->mp_nexthop, &peer_dst_ip, HostAddrSz)) no_match--;
+                }
+              }
             }
+
+            if (!no_match) {
+	      pptrs->bgp_dst_info = (char *) info;
+	      break;
+	    }
           }
         }
       }

@@ -1214,9 +1214,12 @@ DESC:		enables the skinny BGP daemon thread. This feature requires the package t
 		(see bgp_daemon_max_peers directive); also, for security purposes, the daemon doesn't implement
 		outbound BGP UPDATE messages and acts passively (ie. it never establishes a connection to a
 		remote peer but waits for incoming connections); upon receipt of a BGP OPEN message, the local
-		daemon presents itself as belonging to the same AS number and supporting same BGP capabilities
-		(ie. MP-BGP, 4-bytes ASNs) as the remote peer. Per-peer RIBs are maintained basing on the IP
-		address of the peer (and for clarity not its BGP Router-ID). (default: false)
+		daemon presents itself as belonging to the same AS number and supporting the same (or a subset
+		of the) BGP capabilities as the remote peer; capabilities currently supported are MP-BGP,
+		4-bytes ASNs, ADD-PATH). Per-peer RIBs are maintained basing on the IP address of the peer
+		(and for clarity not its BGP Router-ID). In case of ADD-PATH capability, the correct BGP info
+		is linked to traffic data using BGP next-hop (or IP next-hop if use_ip_next_hop is set to true)
+		as selector among the paths available. (default: false)
 
 KEY:		bgp_daemon_ip
 DESC:		binds the BGP daemon to a specific interface. Expects as value an IPv4 address. The same is

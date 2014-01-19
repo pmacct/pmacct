@@ -988,14 +988,16 @@ create table acct_bgp_1hr (
 ) TYPE=MyISAM AUTO_INCREMENT=1;
 
 XIIf. BGP daemon implementation concluding notes
-The implementation supports 4-bytes ASN as well as IPv4, IPv6 and VPNv4 (MP-BGP)
-address families; both IPv4 and IPv6 BGP sessions are supported. When storing
-data via SQL, BGP primitives can be freely mix-and-matched with other primitives
-(ie. L2/L3/L4) when customizing the SQL table (sql_optimize_clauses: true).
-Environments making use of BGP Multi-Path are not currently supported; if you
-are using this and would like to see it implemented, please get in touch. TCP
-MD5 signature for BGP messages is also supported. For a review of all knobs and
-features see the CONFIG-KEYS document. 
+The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
+address families and ADD-PATH (draft-ietf-idr-add-paths); both IPv4 and IPv6
+BGP sessions are supported. When storing data via SQL, BGP primitives can be
+freely mix-and-matched with other primitives (ie. L2/L3/L4) when customizing
+the SQL table (sql_optimize_clauses: true). Environments making use of BGP
+Multi-Path should make use of ADD-PATH to advertise known paths in which case
+the correct BGP info is linked to traffic data using BGP next-hop (or IP next-
+hop if use_ip_next_hop is set to true) as selector among the paths available.
+TCP MD5 signature for BGP messages is also supported. For a review of all knobs
+and features see the CONFIG-KEYS document. 
 
 
 XIII. Quickstart guide to setup a NetFlow/sFlow replicator

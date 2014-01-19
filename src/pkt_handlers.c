@@ -1794,10 +1794,21 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+  struct pkt_bgp_primitives *pbgp;
+  int use_ip_next_hop = FALSE;
 
-  /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
+  /* we determine if this is called by exec_plugins() or bgp_srcdst_lookup() */
+  if (chptr) {
+    pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+    use_ip_next_hop = chptr->plugin->cfg.use_ip_next_hop; 
+
+    /* check network-related primitives against fallback scenarios */
+    if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
+  }
+  else {
+    pbgp = (struct pkt_bgp_primitives *) (*data);
+    use_ip_next_hop = config.use_ip_next_hop;
+  }
 
   switch(hdr->version) {
   case 10:
@@ -1812,7 +1823,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->peer_dst_ip.family = AF_INET;
       }
       else if (tpl->tpl[NF9_IPV4_NEXT_HOP].len) {
-	if (chptr->plugin->cfg.use_ip_next_hop) {
+	if (use_ip_next_hop) {
           memcpy(&pbgp->peer_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_NEXT_HOP].off, MIN(tpl->tpl[NF9_IPV4_NEXT_HOP].len, 4));
           pbgp->peer_dst_ip.family = AF_INET;
 	}
@@ -1834,7 +1845,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->peer_dst_ip.family = AF_INET6;
       }
       else if (tpl->tpl[NF9_IPV6_NEXT_HOP].len) {
-	if (chptr->plugin->cfg.use_ip_next_hop) {
+	if (use_ip_next_hop) {
 	  memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_IPV6_NEXT_HOP].len, 16));
 	  pbgp->peer_dst_ip.family = AF_INET6;
 	}
@@ -1846,7 +1857,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   case 8:
     break;
   default:
-    if (chptr->plugin->cfg.use_ip_next_hop) {
+    if (use_ip_next_hop) {
       pbgp->peer_dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->nexthop.s_addr; 
       pbgp->peer_dst_ip.family = AF_INET;
     }
@@ -3995,11 +4006,22 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
+  struct pkt_bgp_primitives *pbgp;
+  int use_ip_next_hop = FALSE;
 
-  /* check network-related primitives against fallback scenarios */
-  if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
+  /* we determine if this is called by exec_plugins() or bgp_srcdst_lookup() */
+  if (chptr) {
+    pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+    use_ip_next_hop = chptr->plugin->cfg.use_ip_next_hop;
+
+    /* check network-related primitives against fallback scenarios */
+    if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_KEEP)) return;
+  }
+  else {
+    pbgp = (struct pkt_bgp_primitives *) (*data);
+    use_ip_next_hop = config.use_ip_next_hop;
+  }
 
   if (sample->bgp_nextHop.type == SFLADDRESSTYPE_IP_V4) {
     pbgp->peer_dst_ip.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;
@@ -4012,7 +4034,7 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   }
 #endif
   else if (sample->nextHop.type == SFLADDRESSTYPE_IP_V4) {
-    if (chptr->plugin->cfg.use_ip_next_hop) {
+    if (use_ip_next_hop) {
       pbgp->peer_dst_ip.address.ipv4.s_addr = sample->nextHop.address.ip_v4.s_addr;
       pbgp->peer_dst_ip.family = AF_INET;
     }
