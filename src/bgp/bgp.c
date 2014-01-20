@@ -519,7 +519,7 @@ void skinny_bgp_daemon()
 
 				  	memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
-				  	Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+				  	Log(LOG_INFO, "INFO ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
 						cap_type, ntohs(cap_data.afi), cap_data.safi);
 				  	peer->cap_mp = TRUE;
 				  	memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
@@ -534,7 +534,7 @@ void skinny_bgp_daemon()
 
 					  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-					  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
+					  Log(LOG_INFO, "INFO ( default/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
 					    cap_type, ntohl(cap_data.as4));
 					  memcpy(&as4_ptr, cap_ptr, 4);
 					  remote_as4 = ntohl(as4_ptr);
@@ -555,7 +555,7 @@ void skinny_bgp_daemon()
 
                                         memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-                                        Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+                                        Log(LOG_INFO, "INFO ( default/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
                                             cap_type, ntohl(cap_data.afi), cap_data.safi, cap_data.sndrcv);
 
 					if (cap_data.sndrcv == 2 /* send */) {
@@ -603,7 +603,7 @@ void skinny_bgp_daemon()
 				}
 			  }
 
-			  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_OPEN: Asn: %u HoldTime: %u\n", inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
+			  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] BGP_OPEN: Asn: %u HoldTime: %u\n", inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
 
 			  bgp_reply_pkt_ptr = bgp_reply_pkt;
 
@@ -637,7 +637,7 @@ void skinny_bgp_daemon()
   			 let's just ignore further BGP OPEN messages */
 		  break;
 	  case BGP_NOTIFICATION:
-		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", inet_ntoa(peer->id.address.ipv4));
+		  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", inet_ntoa(peer->id.address.ipv4));
 		  FD_CLR(peer->fd, &bkp_read_descs);
 		  bgp_peer_close(peer);
 		  goto select_again;
