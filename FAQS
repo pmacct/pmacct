@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
 A: It is http://www.pmacct.net/ . There isn't any official mirror site. 
@@ -78,19 +78,8 @@ A: Granted that the CPU in use for accounting purposes is somewhat 'compatible' 
    recompilation (with "options DEVICE_POLLING"), and a polling-aware NIC. Linux kernel
    2.6.x also supports device polling. 
 
-   Then also look at internal buffering which is applicable to all the pmacctd/nfacctd/
-   sfacctd daemons (for in-depth information you might want to see also 'Communications
-   between core process and plugins' chapter of the INTERNALS document):
-
-   'plugin_buffer_size': turns on bufferization. '1024', '2048' or '4096' are sufficient
-   values for common environments. If the circular queue size (plugin_pipe_size) is not
-   defined, it is calculated the following way: ('plugin_buffer_size' / as) * dss. Where
-   'dss' is the default OS socket size and 'as' is the memory address size (4 bytes for
-   a 32 bit architecture, 8 bytes for 64 bit architectures, etc.).
-
-   'plugin_pipe_size': sets the circular queue size. If bufferization is also enabled,
-   this value has to be greater or equal to the buffer size. Values like 1MB (1024000),
-   2MB (2048000) or 4MB (4096000) are generally sufficient. 
+   Then also look at internal buffering which is applicable to all the daemons. Look
+   up plugin_buffer_size and plugin_pipe_size directives in the CONFIG-KEYS document.
 
 
 Q8: I want to to account both inbound and outbound traffic of my network, with an host

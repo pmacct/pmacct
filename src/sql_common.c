@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -718,9 +718,9 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     if (!Cursor->cbgp) {
       Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
       if (!Cursor->cbgp) goto safe_action;
+      memset(Cursor->cbgp, 0, cb_size);
     }
 
-    memset(Cursor->cbgp, 0, cb_size);
     pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
   }
   else {

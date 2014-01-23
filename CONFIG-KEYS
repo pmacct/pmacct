@@ -153,13 +153,13 @@ DESC:		plugins to be enabled. SQL plugins are available only if configured and c
 
 KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size ]
 DESC:		Defines the size of the kernel socket used read traffic data. On Linux systems, if
-		this configuration directive is not specified default socket size awared is defined
+		this configuration directive is not specified default socket size awarded is defined
 		in /proc/sys/net/core/rmem_default ; the maximum configurable socket size (which can
 		be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
 
 KEY:            bgp_daemon_pipe_size
 DESC:           Defines the size of the kernel socket used for BGP messaging. On Linux systems, if
-                this configuration directive is not specified default socket size awared is defined
+                this configuration directive is not specified default socket size awarded is defined
                 in /proc/sys/net/core/rmem_default ; the maximum configurable socket size (which can
                 be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
 
@@ -167,13 +167,10 @@ KEY:		plugin_pipe_size
 DESC:		Core process and each of the plugins are run into different processes. To exchange
 		data, they set up a communication channel structured as a circular queue (referred
 		as pipe). This directive sets the total size, in bytes, of such queue. Its default
-		size is set depending on the Operating System. Whenever facing heavy traffic loads,
-		this size can be adjusted to store more data. Read INTERNALS, 'Communications between
-		core process and plugin' section for further details.
-		In nfacctd and sfacctd daemons, this directive also sets the receive buffer size of
-		the socket listening from the network for NetFlow and sFlow messages respectively. In
-		the following example the pipe between the Core process and the plugin 'test' is set
-		to 10M, whereas the receiving socket of the Core process is set to 2M:
+		size is set to 4MB. Whenever facing heavy traffic loads, this size can be adjusted
+		to store more data. In the following example the pipe between the Core process and
+		the plugin 'test' is set to 10MB, whereas the receiving socket of the Core process
+		is set to 2MB:
 
 		...
 		plugins: memory[test]
@@ -181,28 +178,23 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		plugin_pipe_size[default]: 2048000
 		...
 
-		When enabling debug, informational log messages containing obtained and target pipe
-		sizes are printed. If obtained is less than target, it could mean the maximum socket
-		size granted by the underlying Operating System has to be increased. This can be
-		achieved on Linux, for example, as follows: 
-
-		shell> echo <max plugin_pipe_size value> > /proc/sys/net/core/rmem_max
-		shell> echo <max plugin_pipe_size value> > /proc/sys/net/core/wmem_max
-
-		With reference to nfacctd and sfacctd and the socket listening from the network for
-		NetFlow and sFlow messages, depending on the operating system, it can be that the
-		maximum achieveable socket size is around 1GB.
+		When enabling debug, log messages about obtained and target pipe sizes are printed.
+		If obtained is less than target, it could mean the maximum socket size granted by
+		the Operating System has to be increased. On Linux systems default socket size awarded
+		is defined in /proc/sys/net/core/rmem_default ; the maximum configurable socket size
+		(which can be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
+		(default: 4MB)
 
 KEY:		plugin_buffer_size 
 DESC:		by defining the transfer buffer size, in bytes, this directive enables bufferization
-		of data transfers between core process and active plugins. It is disabled by default
-		which gives best feelings while testing lab environments.
-		The value has to be <= the size defined by 'plugin_pipe_size' and keeping a ratio of
-		1:1000 between the two is generally a good idea. Hence, the queue will be partitioned
-		in plugin_buffer_size/plugin_pipe_size slots. Once a slot is filled, it is delivered
-		to the plugin while the circular queue moves to the next buffer element. For further
-		details, read INTERNALS, 'Communications between core process and plugin' section. A
-		value of 10240 (10KB) is usually ok. (default: 0)
+		of data transfers between core process and active plugins. It is disabled by default,
+		ie. size of a buffer coincides to the size of a single element to be transferred,
+		giving best feelings while testing out the package with small traffic loads. The
+		value has to be minor/equal to the size defined by 'plugin_pipe_size' and keeping a
+		ratio of 1:1000 among the two is considered good practice. The 'plugin_pipe_size'
+		circular queue is hence partitioned in plugin_buffer_size/plugin_pipe_size slots.
+		Once a slot is filled, it is delivered to the plugin while the circular queue moves
+		to the next buffer element. (default: 0) 
 
 KEY:            plugin_pipe_backlog
 VALUES:         [0 <= value < 100]
