@@ -606,18 +606,20 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-        bson_timestamp_t bts;
+        bson_date_t bdate;
   
-        bts.t = pnat->timestamp_start.tv_sec;
-        bts.i = pnat->timestamp_start.tv_usec;
-        bson_append_timestamp(bson_elem, "timestamp_start", &bts);
+	bdate = 1000*pnat->timestamp_start.tv_sec;
+	if (pnat->timestamp_start.tv_usec) bdate += (pnat->timestamp_start.tv_usec/1000);
+
+	bson_append_date(bson_elem, "timestamp_start", bdate);
       }
       if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-        bson_timestamp_t bts;
-  
-        bts.t = pnat->timestamp_end.tv_sec;
-        bts.i = pnat->timestamp_end.tv_usec;
-        bson_append_timestamp(bson_elem, "timestamp_end", &bts);
+        bson_date_t bdate;
+
+        bdate = 1000*pnat->timestamp_end.tv_sec;
+        if (pnat->timestamp_end.tv_usec) bdate += (pnat->timestamp_end.tv_usec/1000);
+
+        bson_append_date(bson_elem, "timestamp_end", bdate);
       }
   
       /* all custom primitives printed here */
