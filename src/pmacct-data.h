@@ -435,6 +435,7 @@ static const struct _dictionary_line dictionary[] = {
   {"maps_refresh", cfg_key_maps_refresh},
   {"maps_index", cfg_key_maps_index},
   {"maps_entries", cfg_key_maps_entries},
+  {"maps_row_len", cfg_key_maps_row_len},
   {"pre_tag_map", cfg_key_pre_tag_map},	
   {"pre_tag_map_entries", cfg_key_maps_entries}, // legacy	
   {"pre_tag_filter", cfg_key_pre_tag_filter},

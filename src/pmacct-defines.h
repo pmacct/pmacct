@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -331,6 +331,11 @@
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
 typedef u_int32_t pm_country_t;
+
+typedef struct {
+  u_int8_t set;
+  int n;
+} s_int_t;
 
 typedef struct {
   u_int8_t set;

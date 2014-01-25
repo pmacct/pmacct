@@ -214,7 +214,8 @@ void load_plugins(struct plugin_requests *req)
   list = plugins_list;
   while (list) {
     if (list->cfg.pre_tag_map) {
-      load_id_file(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc);
+      load_pre_tag_map(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc,
+		       list->cfg.maps_entries, list->cfg.maps_row_len);
     }
 
     list = list->next;
@@ -233,7 +234,8 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 
     if (p->cfg.pre_tag_map && find_id_func) {
       if (reload_map_exec_plugins) {
-        load_id_file(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc);
+        load_pre_tag_map(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc,
+			 p->cfg.maps_entries, p->cfg.maps_row_len);
       }
       find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
     }

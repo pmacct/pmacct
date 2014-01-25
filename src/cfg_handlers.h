@@ -124,6 +124,7 @@ EXT int cfg_key_pcap_savefile(char *, char *, char *);
 EXT int cfg_key_maps_refresh(char *, char *, char *);
 EXT int cfg_key_maps_index(char *, char *, char *);
 EXT int cfg_key_maps_entries(char *, char *, char *);
+EXT int cfg_key_maps_row_len(char *, char *, char *);
 EXT int cfg_key_pre_tag_map(char *, char *, char *);
 EXT int cfg_key_pre_tag_filter(char *, char *, char *);
 EXT int cfg_key_pre_tag2_filter(char *, char *, char *);

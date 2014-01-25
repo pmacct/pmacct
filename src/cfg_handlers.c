@@ -2089,6 +2089,31 @@ int cfg_key_maps_entries(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_maps_row_len(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'maps_row_len' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.maps_row_len = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.maps_row_len = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_maps_index(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2097,16 +2122,8 @@ int cfg_key_maps_index(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.maps_index = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.maps_index = value;
-        changes++;
-        break;
-      }
-    }
-  }
+  for (; list; list = list->next, changes++) list->cfg.maps_index = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'maps_index'. Globalized.\n", filename);
 
   return changes;
 }

@@ -199,7 +199,7 @@ struct id_table {
 #endif
   struct id_entry *e;
   struct id_table_index index[MAX_ID_TABLE_INDEXES];
-  unsigned short int index_num; /* for future */
+  unsigned short int index_num;
   time_t timestamp;
   u_int32_t flags;
 };
@@ -226,6 +226,7 @@ struct pretag_filter {
 #define EXT
 #endif
 EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
+EXT void load_pre_tag_map(int, char *, struct id_table *, struct plugin_requests *, int *, int, int);
 EXT u_int8_t pt_check_neg(char **, u_int32_t *);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);

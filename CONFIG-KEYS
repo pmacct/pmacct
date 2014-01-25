@@ -943,16 +943,21 @@ DESC:		full pathname to a file containing tag mappings. Tags can be internal-onl
 		the Core Process and each plugin can be defined a local pre_tag_map. Result of evaluation of
 		pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/sfprobe plugin.  
 
-KEY:		maps_entries [GLOBAL]
-DESC:		defines the maximum number of entries the Pre-Tagging map can contain. The default value is
-		suitable for most scenarios, though tuning it could be required either to save on memory or
-		to allow for more entries. Refer to the specific map directives documentation in this file
+KEY:		maps_entries
+DESC:		defines the maximum number of entries a map (ie. pre_tag_map) can contain. The default value
+		is suitable for most scenarios, though tuning it could be required either to save on memory
+		or to allow for more entries. Refer to the specific map directives documentation in this file
 		to see which are affected by this setting. (default: 384) 
+
+KEY:            maps_row_len
+DESC:		defines the maximum length of map (ie. pre_tag_map) rows. The default value is suitable for
+		most scenario, though tuning it could be required either to save on memory or to allow for
+		more entries. (default: 256)
 
 KEY:		maps_refresh [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		when enabled, this directive allows to reload map files without restarting the daemon instance. 
-		For example, it may result particularly useful to reload Pre-Tagging entries or Networks map in
+		For example, it may result particularly useful to reload pre_tag_map or networks_file entries in
 		order to reflect some change in the network. After having modified the map files, a SIGUSR2 has
 		to be sent (e.g.: in the simplest case "killall -USR2 pmacctd") to the daemon to notify the
 		change. If such signal is sent to the daemon and this directive is not enabled, the signal is

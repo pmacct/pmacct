@@ -165,10 +165,16 @@
 }
 #endif
 
+/* structure to pass requests: probably plugin_requests
+   name outdated at this point .. */
 struct plugin_requests {
   u_int8_t bpf_filter;		/* On-request packet copy for BPF purposes */
-  void *key_value_table;	/* load_id_file() : table to be filled in from key-value files */
-  int line_num;			/* load_id_file() : line number being processed */
+
+  /* load_id_file() stuff */
+  void *key_value_table;	/* table to be filled in from key-value files */
+  int line_num;			/* line number being processed */
+  int map_entries;		/* number of map entries: wins over global setting */
+  int map_row_len;		/* map row length: wins over global setting */
 };
 
 #include "pmacct-defines.h"

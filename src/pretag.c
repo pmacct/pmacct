@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -43,9 +43,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   struct id_table tmp;
   struct id_entry *ptr, *ptr2;
   FILE *file;
-  char buf[LARGEBUFLEN];
+  char *buf = NULL;
   int v4_num = 0, x, tot_lines = 0, err, index, label_solved, sz;
-  int ignoring, read_len;
+  int ignoring, map_entries, map_row_len;
   struct stat st;
 
 #if defined ENABLE_IPV6
@@ -70,7 +70,23 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   memset(&st, 0, sizeof(st));
   memset(&tmp, 0, sizeof(struct id_table));
 
-  if (!config.maps_entries) config.maps_entries = MAX_PRETAG_MAP_ENTRIES;
+  if (req->map_entries) map_entries = req->map_entries;
+  else if (config.maps_entries) map_entries = config.maps_entries;
+  else map_entries = MAX_PRETAG_MAP_ENTRIES;
+
+  if (req->map_row_len) map_row_len = req->map_row_len;
+  else if (config.maps_row_len) map_row_len = config.maps_row_len;
+  else {
+    if (acct_type == MAP_IGP) map_row_len = LARGEBUFLEN;
+    else map_row_len = SRVBUFLEN;
+  }
+
+  buf = (char *) malloc(map_row_len);
+  if (!buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (load_id_file, readbuf: %u chars).\n", config.name, config.type, map_row_len);
+    goto handle_error;
+  }
+  memset(buf, 0, map_row_len);
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
@@ -78,7 +94,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       goto handle_error;
     }
 
-    sz = sizeof(struct id_entry)*config.maps_entries;
+    sz = sizeof(struct id_entry)*map_entries;
 
     if (t) {
       if (*map_allocated == 0) {
@@ -114,28 +130,24 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     memset(tmp.e, 0, sz);
     if (t) memset(t->e, 0, sz);
 
-    if (acct_type == MAP_IGP) {
-      igp_daemon_map_initialize(filename, req);
-      read_len = LARGEBUFLEN;
-    }
-    else read_len = SRVBUFLEN;
+    if (acct_type == MAP_IGP) igp_daemon_map_initialize(filename, req);
 
     /* first stage: reading Agent ID file and arranging it in a temporary memory table */
     while (!feof(file)) {
       ignoring = FALSE;
       req->line_num = ++tot_lines;
 
-      if (tmp.num >= config.maps_entries) {
+      if (tmp.num >= map_entries) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): map '%s' cut to the first %u entries. Number of entries can be configured via 'maps_entries'.\n",
-		config.name, config.type, filename, config.maps_entries);
+		config.name, config.type, filename, map_entries);
 	break;
       }
-      memset(buf, 0, read_len);
-      if (fgets(buf, read_len, file)) {
+      memset(buf, 0, map_row_len);
+      if (fgets(buf, map_row_len, file)) {
         if (!iscomment(buf) && !isblankline(buf)) {
-	  if (strlen(buf) == (read_len-1) && !strchr(buf, '\n')) {
+	  if (strlen(buf) == (map_row_len-1) && !strchr(buf, '\n')) {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): line too long (max %u chars). Line %d in map '%s' ignored.\n",
-			config.name, config.type, read_len, tot_lines, filename);
+			config.name, config.type, map_row_len, tot_lines, filename);
 	    continue;
 	  }
           if (!check_not_valid_char(filename, buf, '|')) {
@@ -592,12 +604,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   }
 
   if (tmp.e) free(tmp.e) ;
+  if (buf) free(buf) ;
+
   Log(LOG_INFO, "INFO ( %s/%s ): map '%s' successfully (re)loaded.\n", config.name, config.type, filename);
 
   return;
 
   handle_error:
   if (*map_allocated && tmp.e) free(tmp.e) ;
+  if (buf) free(buf);
+
   if (t && t->timestamp) {
     Log(LOG_WARNING, "WARN ( %s/%s ): Rolling back the old map '%s'.\n", config.name, config.type, filename);
 
@@ -630,6 +646,23 @@ char *pt_check_range(char *str)
     return ptr;
   }
   else return NULL;
+}
+
+void load_pre_tag_map(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req,
+		      int *map_allocated, int map_entries, int map_row_len)
+{
+  struct plugin_requests local_req;
+
+  if (req) {
+    memcpy(&local_req, req, sizeof(struct plugin_requests));
+    local_req.map_entries = map_entries;
+    local_req.map_row_len = map_row_len;
+
+    load_id_file(acct_type, filename, t, &local_req, map_allocated);
+  }
+  else {
+    load_id_file(acct_type, filename, t, req, map_allocated);
+  }
 }
 
 void pretag_init_vars(struct packet_ptrs *pptrs, struct id_table *t)

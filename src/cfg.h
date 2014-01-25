@@ -227,6 +227,7 @@ struct configuration {
   int maps_refresh;
   int maps_index;
   int maps_entries;
+  int maps_row_len;
   char *pre_tag_map;
   struct id_table ptm;
   int ptm_alloc;
