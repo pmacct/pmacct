@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -102,6 +102,8 @@ struct NF9_DATA_FLOWSET_HEADER {
 /* ... */
 #define NF9_IPV6_SRC_ADDR		27
 #define NF9_IPV6_DST_ADDR		28
+#define NF9_IPV6_SRC_MASK               29
+#define NF9_IPV6_DST_MASK               30
 /* ... */
 #define NF9_FLOW_SAMPLER_ID             48
 #define NF9_FLOW_SAMPLER_MODE           49
@@ -853,22 +855,22 @@ nf9_init_template(void)
           rcount++;
         }
         if (config.nfprobe_what_to_count & COUNT_SRC_NMASK) {
-          v6_template.r[rcount].type = htons(NF9_SRC_MASK);
+          v6_template.r[rcount].type = htons(NF9_IPV6_SRC_MASK);
           v6_template.r[rcount].length = htons(1);
           v6_int_template.r[rcount].handler = flow_to_flowset_src_nmask_handler;
           v6_int_template.r[rcount].length = 1;
-          v6_template_out.r[rcount].type = htons(NF9_SRC_MASK);
+          v6_template_out.r[rcount].type = htons(NF9_IPV6_SRC_MASK);
           v6_template_out.r[rcount].length = htons(1);
           v6_int_template_out.r[rcount].handler = flow_to_flowset_src_nmask_handler;
           v6_int_template_out.r[rcount].length = 1;
           rcount++;
         }
         if (config.nfprobe_what_to_count & COUNT_DST_NMASK) {
-          v6_template.r[rcount].type = htons(NF9_DST_MASK);
+          v6_template.r[rcount].type = htons(NF9_IPV6_DST_MASK);
           v6_template.r[rcount].length = htons(1);
           v6_int_template.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
           v6_int_template.r[rcount].length = 1;
-          v6_template_out.r[rcount].type = htons(NF9_DST_MASK);
+          v6_template_out.r[rcount].type = htons(NF9_IPV6_DST_MASK);
           v6_template_out.r[rcount].length = htons(1);
           v6_int_template_out.r[rcount].handler = flow_to_flowset_dst_nmask_handler;
           v6_int_template_out.r[rcount].length = 1;
