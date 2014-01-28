@@ -651,17 +651,16 @@ char *pt_check_range(char *str)
 void load_pre_tag_map(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req,
 		      int *map_allocated, int map_entries, int map_row_len)
 {
-  struct plugin_requests local_req;
+  if (req) {
+    req->map_entries = map_entries;
+    req->map_row_len = map_row_len;
+  }
+
+  load_id_file(acct_type, filename, t, req, map_allocated);
 
   if (req) {
-    memcpy(&local_req, req, sizeof(struct plugin_requests));
-    local_req.map_entries = map_entries;
-    local_req.map_row_len = map_row_len;
-
-    load_id_file(acct_type, filename, t, &local_req, map_allocated);
-  }
-  else {
-    load_id_file(acct_type, filename, t, req, map_allocated);
+    req->map_entries = FALSE;
+    req->map_row_len = FALSE;
   }
 }
 
