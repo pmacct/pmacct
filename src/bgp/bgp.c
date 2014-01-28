@@ -937,14 +937,8 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
 
 	if (ret < 0) return ret; 
 
-	if (!mp_nlri) {
-	  ptr += attr_len;
-	  to_the_end -= attr_len;
-	}
-	else {
-	  ptr += to_the_end;
-	  to_the_end = 0;
-	}
+	ptr += attr_len;
+	to_the_end -= attr_len;
   }
 
   if (as4_path) {

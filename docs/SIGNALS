@@ -5,8 +5,8 @@ process says goodbye when its last child dies or is terminated.
 
 Core process:
 SIGCHLD:	used to handle gracefully his loved child processes;
-SIGHUP:         reopens the logging infrastructure. Works with both syslog
-		and logfiles;
+SIGHUP:         reopens the logging infrastructure. Works with both syslog and
+		logfiles;
 SIGUSR1:        returns various statistics via either console or syslog; the
 		syslog level used is NOTICE; the facility is selected through
 		configuration (ie. key 'syslog'). The feature works for all
@@ -28,7 +28,8 @@ SIGPIPE:	ignored;
 Plugin (SQL, noSQL, memory, print, tee, probes, etc.) processes:
 SIGPIPE:	ignored;
 SIGCHLD:	ignored;
-SIGHUP:		inherited by Core Process; 
+SIGHUP:		reopens the logging infrastructure. Works with both syslog and
+                logfiles;	
 SIGUSR1:	ignored;
 SIGUSR2:        if 'maps_refresh' configuration directive is enabled it causes
 		Ports and Networks maps to be reloaded;
