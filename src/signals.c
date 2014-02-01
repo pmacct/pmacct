@@ -132,7 +132,8 @@ void my_sigint_handler(int signum)
   if (config.acct_type == ACCT_PM && !config.uacctd_group /* XXX */) {
     if (config.dev) {
       if (pcap_stats(glob_pcapt, &ps) < 0) printf("\npcap_stats: %s\n", pcap_geterr(glob_pcapt));
-      printf("\n%u packets received by filter\n", ps.ps_recv);
+      printf("\n");
+      printf("%u packets received by filter\n", ps.ps_recv);
       printf("%u packets dropped by kernel\n", ps.ps_drop);
     }
   }
@@ -170,7 +171,8 @@ void push_stats()
   if (config.acct_type == ACCT_PM) {
     if (config.dev) {
       if (pcap_stats(glob_pcapt, &ps) < 0) Log(LOG_INFO, "\npcap_stats: %s\n", pcap_geterr(glob_pcapt));
-      Log(LOG_NOTICE, "\n%s: (%u) %u packets received by filter\n", config.dev, now, ps.ps_recv);
+      Log(LOG_NOTICE, "\n");
+      Log(LOG_NOTICE, "%s: (%u) %u packets received by filter\n", config.dev, now, ps.ps_recv);
       Log(LOG_NOTICE, "%s: (%u) %u packets dropped by kernel\n", config.dev, now, ps.ps_drop);
     }
   }
