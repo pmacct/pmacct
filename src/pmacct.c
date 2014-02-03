@@ -608,7 +608,7 @@ int main(int argc,char **argv)
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   char *pcust = NULL;
-  char clibuf[clibufsz], *bufptr;
+  char *clibuf, *bufptr;
   unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
   char path[128], file[128], password[9], rd_str[SRVBUFLEN];
@@ -640,6 +640,8 @@ int main(int argc,char **argv)
   char *topN_howmany_ptr, *endptr;
 
   /* Administrativia */
+  clibuf = malloc(clibufsz);
+
   memset(&q, 0, sizeof(struct query_header));
   memset(&empty_addr, 0, sizeof(struct pkt_primitives));
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
