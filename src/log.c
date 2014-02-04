@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -43,11 +43,8 @@ void Log(short int level, char *msg, ...)
     vsnprintf(syslog_string, LOGSTRLEN, msg, ap);
     va_end(ap);
 
-    if (config.syslog) {
-      sbrk(LOGSTRLEN);
-      syslog(level, syslog_string);
-      sbrk(-LOGSTRLEN);
-    }
+    if (config.syslog) syslog(level, syslog_string);
+
     if (config.logfile_fd) { 
       char timebuf[SRVBUFLEN];
       struct tm *tmnow;
