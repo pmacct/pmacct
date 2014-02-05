@@ -1275,7 +1275,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data, dummy;
   struct pkt_extras *extras;
-  struct pkt_bgp_primitives *dummy_pbgp = NULL;
+  struct pkt_bgp_primitives dummy_pbgp;
   struct ports_table pt;
   struct pollfd pfd;
   struct timezone tz;
@@ -1392,6 +1392,7 @@ sort_version:
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
   memset(&dummy, 0, sizeof(dummy));
+  memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
 
   load_networks(config.networks_file, &nt, &nc);
   set_net_funcs(&nt);
@@ -1459,14 +1460,14 @@ read_data:
       else rg->ptr += bufsz;
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
+      extras = (struct pkt_extras *) ((u_char *)data+PdataSz);
 
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
-
 	if (config.networks_file) {
 	  memcpy(&dummy.primitives.src_ip, &data->primitives.src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &data->primitives.dst_ip, HostAddrSz);
 
-          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp, &nfd);
+          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, &dummy_pbgp, &nfd);
 
 	  if (config.nfacctd_as == NF_AS_NEW) {
 	    data->primitives.src_as = dummy.primitives.src_as;
@@ -1477,14 +1478,16 @@ read_data:
 	    data->primitives.src_nmask = dummy.primitives.src_nmask;
             data->primitives.dst_nmask = dummy.primitives.dst_nmask;
 	  }
+
+          if (config.nfacctd_net == NF_NET_NEW) {
+            memcpy(&extras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
+          }
 	}
 
 	if (config.ports_file) {
 	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	}
-
-        extras = (struct pkt_extras *) ((u_char *)data+PdataSz);
 
 	handle_hostbyteorder_packet(data);
 	flow_cb((void *)&cb_ctxt, data, extras);
@@ -1494,6 +1497,7 @@ read_data:
 	  dataptr = (unsigned char *) data;
 	  dataptr += PdataSz + PextrasSz;
 	  data = (struct pkt_data *) dataptr;
+          extras = (struct pkt_extras *) ((u_char *)data+PdataSz);
 	}
       }
       goto read_data;
