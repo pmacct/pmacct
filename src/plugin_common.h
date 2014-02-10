@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -18,6 +18,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+
+/* includes */
+#include "net_aggr.h"
+#include "ports_aggr.h"
 
 /* defines */
 #define DEFAULT_PRINT_REFRESH_TIME 10 
@@ -69,6 +73,7 @@ EXT void P_sum_mac_insert(struct primitives_ptrs *);
 EXT struct chained_cache *P_cache_search(struct primitives_ptrs *);
 EXT void P_cache_insert(struct primitives_ptrs *);
 EXT void P_cache_flush(struct chained_cache *[], int);
+EXT void P_cache_handle_flush_event(struct ports_table *);
 EXT void P_exit_now(int);
 EXT int P_trigger_exec(char *);
 EXT void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);

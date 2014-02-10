@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -361,6 +361,29 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
     /* try to insert again */
     (*insert_func)(prim_ptrs);
+  }
+}
+
+void P_cache_handle_flush_event(struct ports_table *pt)
+{
+  int ret;
+
+  switch (ret = fork()) {
+  case 0: /* Child */
+    (*purge_func)(queries_queue, qq_ptr);
+    exit(0);
+  default: /* Parent */
+    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+    P_cache_flush(queries_queue, qq_ptr);
+    gettimeofday(&flushtime, NULL);
+    refresh_deadline += config.sql_refresh_time;
+    qq_ptr = FALSE;
+    if (reload_map) {
+      load_networks(config.networks_file, &nt, &nc);
+      load_ports(config.ports_file, pt);
+      reload_map = FALSE;
+    }
+    break;
   }
 }
 

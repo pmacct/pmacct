@@ -27,8 +27,6 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "amqp_plugin.h"
-#include "net_aggr.h"
-#include "ports_aggr.h"
 #include "ip_flow.h"
 #include "classifier.h"
 #include "crc32.c"
@@ -187,7 +185,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     now = time(NULL);
 
     if (config.sql_history) {
-      while (now > (basetime.tv_sec + timeslot)) {
+      while (now >= (basetime.tv_sec + timeslot)) {
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
           timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
@@ -196,25 +194,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      if (qq_ptr) {
-	switch (ret = fork()) {
-	case 0: /* Child */
-	  (*purge_func)(queries_queue, qq_ptr);
-          exit(0);
-        default: /* Parent */
-	  if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-          P_cache_flush(queries_queue, qq_ptr);
-	  gettimeofday(&flushtime, NULL);
-    	  refresh_deadline += config.sql_refresh_time; 
-          qq_ptr = FALSE;
-	  if (reload_map) {
-	    load_networks(config.networks_file, &nt, &nc);
-	    load_ports(config.ports_file, &pt);
-	    reload_map = FALSE;
-	  }
-          break;
-        }
-      }
+      if (qq_ptr) P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
@@ -252,26 +232,8 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       else rg->ptr += bufsz;
 
       /* lazy refresh time handling */ 
-      if (now > refresh_deadline) {
-        if (qq_ptr) {
-          switch (ret = fork()) {
-          case 0: /* Child */
-            (*purge_func)(queries_queue, qq_ptr);
-            exit(0);
-          default: /* Parent */
-	    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-            P_cache_flush(queries_queue, qq_ptr);
-	    gettimeofday(&flushtime, NULL);
-            refresh_deadline += config.sql_refresh_time; 
-            qq_ptr = FALSE;
-	    if (reload_map) {
-	      load_networks(config.networks_file, &nt, &nc);
-	      load_ports(config.ports_file, &pt);
-	      reload_map = FALSE;
-	    }
-            break;
-          }
-        }
+      if (now >= refresh_deadline) {
+        if (qq_ptr) P_cache_handle_flush_event(&pt);
       } 
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
