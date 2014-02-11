@@ -410,15 +410,6 @@ if test x"$PCAPLIB" != x""; then
       LIBS="${LIBS} -lpcap -lpfring"
       AC_MSG_RESULT(yes)
       PFRING_LIB_FOUND=1
-
-      # Adding these as prerequisite for PF_RING
-      AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
-        ERROR: missing libnuma devel. Requirement for building PF_RING.
-      ])])
-      AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
-        ERROR: missing librt devel. Requirement for building PF_RING.
-      ])])
-      LIBS="${LIBS} -lrt -lnuma"
     else
       AC_MSG_RESULT(no)
     fi
@@ -455,7 +446,17 @@ if test x"$PFRING_LIB_FOUND" = x""; then
     ERROR: missing pcap library. Refer to: http://www.tcpdump.org/
   ])])
 
-AC_CHECK_LIB([pcap], [pcap_setnonblock], [ AC_DEFINE(PCAP_7, 1) ], [])
+  AC_CHECK_LIB([pcap], [pcap_setnonblock], [ AC_DEFINE(PCAP_7, 1) ], [])
+else
+  AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
+    ERROR: missing libnuma devel. Requirement for building PF_RING.
+  ])])
+
+  AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
+    ERROR: missing librt devel. Requirement for building PF_RING.
+  ])])
+
+  LIBS="${LIBS} -lrt -lnuma"
 fi
 
 dnl packet capture type check; taken from libpcap.
