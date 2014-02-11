@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -89,7 +89,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
 
   ptr = malloc(sizeof(struct template_cache_entry));
   if (!ptr) {
-    Log(LOG_ERR, "ERROR ( default/core ): Unable to allocate enough memory for a new Template Cache Entry.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate enough memory for a new Template Cache Entry.\n", config.name);
     return NULL;
   }
 
@@ -308,17 +308,17 @@ void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *p
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
   addr_to_str(agent_addr, &a);
 
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u agent         : %s:%u\n", version, agent_addr, sid);
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template type : %s\n", version, ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
-  Log(LOG_DEBUG, "DEBUG ( default/core ): NfV%u template ID   : %u\n", version, ntohs(tpl->template_id));
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u agent         : %s:%u\n", config.name, version, agent_addr, sid);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u template type : %s\n", config.name, version, ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u template ID   : %u\n", config.name, version, ntohs(tpl->template_id));
 
   if ( tpl->template_type == 0 || tpl->template_type == 2 ) {
-    Log(LOG_DEBUG, "DEBUG ( default/core ): -----------------------------------------------------\n");
-    Log(LOG_DEBUG, "DEBUG ( default/core ): |    pen     |     field type     | offset |  size  |\n");
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): -----------------------------------------------------\n", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): |    pen     |     field type     | offset |  size  |\n", config.name);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( default/core ): ----------------------------------------\n");
-    Log(LOG_DEBUG, "DEBUG ( default/core ): |     field type     | offset |  size  |\n");
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): ----------------------------------------\n", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): |     field type     | offset |  size  |\n", config.name);
   }
 }
 
@@ -327,41 +327,41 @@ void log_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t
   if (!pen) {
     if (type <= MAX_TPL_DESC_LIST && strlen(tpl_desc_list[type])) { 
       if (!off && vlen)
-        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6s | %6u |\n", 0, tpl_desc_list[type], "tbd", len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s | %6s | %6u |\n", config.name, 0, tpl_desc_list[type], "tbd", len);
       else
-        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18s | %6u | %6u |\n", 0, tpl_desc_list[type], off, len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s | %6u | %6u |\n", config.name, 0, tpl_desc_list[type], off, len);
     }
     else {
       if (!off && vlen)
-        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18u | %6s | %6u |\n", 0, type, "tbd", len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6s | %6u |\n", config.name, 0, type, "tbd", len);
       else
-        Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18u | %6u | %6u |\n", 0, type, off, len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6u | %6u |\n", config.name, 0, type, off, len);
     }
   }
   else {
     if (!off && vlen) 
-      Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18u | %6s | %6u |\n", ntohl(*pen), type, "tbd", len);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6s | %6u |\n", config.name, ntohl(*pen), type, "tbd", len);
     else 
-      Log(LOG_DEBUG, "DEBUG ( default/core ): | %-10u | %-18u | %6u | %6u |\n", ntohl(*pen), type, off, len);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6u | %6u |\n", config.name, ntohl(*pen), type, off, len);
   }
 }
 
 void log_opt_template_field(u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
 {
   if (type <= MAX_OPT_TPL_DESC_LIST && strlen(opt_tpl_desc_list[type]))
-    Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18s | %6u | %6u |\n", opt_tpl_desc_list[type], off, len);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18s | %6u | %6u |\n", config.name, opt_tpl_desc_list[type], off, len);
   else
-    Log(LOG_DEBUG, "DEBUG ( default/core ): | %-18u | %6u | %6u |\n", type, off, len);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18u | %6u | %6u |\n", config.name, type, off, len);
 }
 
 void log_template_footer(u_int16_t size, u_int8_t version)
 {
-  Log(LOG_DEBUG, "DEBUG ( default/core ): -----------------------------------------------------\n");
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): -----------------------------------------------------\n", config.name);
   if (!size)
-    Log(LOG_DEBUG, "DEBUG ( default/core ): Netflow V9/IPFIX record size : %s\n", "tbd");
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %s\n", "tbd", config.name);
   else 
-    Log(LOG_DEBUG, "DEBUG ( default/core ): Netflow V9/IPFIX record size : %u\n", size);
-  Log(LOG_DEBUG, "DEBUG ( default/core ): \n");
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %u\n", config.name, size);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): \n", config.name);
 }
 
 struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version, u_int16_t len)
@@ -397,7 +397,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 
   ptr = malloc(sizeof(struct template_cache_entry));
   if (!ptr) {
-    Log(LOG_ERR, "ERROR ( default/core ): Unable to allocate enough memory for a new Options Template Cache Entry.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate enough memory for a new Options Template Cache Entry.\n", config.name);
     return NULL;
   }
 

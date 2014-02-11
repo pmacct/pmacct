@@ -41,7 +41,7 @@ void nfacctd_bgp_wrapper()
   /* initialize threads pool */
   bgp_pool = allocate_thread_pool(1);
   assert(bgp_pool);
-  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): %d thread(s) initialized\n", 1);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): %d thread(s) initialized\n", config.name, 1);
 
   /* giving a kick to the BGP thread */
   send_to_pool(bgp_pool, skinny_bgp_daemon, NULL);
@@ -111,18 +111,18 @@ void skinny_bgp_daemon()
     trim_spaces(config.nfacctd_bgp_ip);
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): 'nfacctd_bgp_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n");
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): 'nfacctd_bgp_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name);
       exit_all(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bgp_port);
   }
 
   if (!config.nfacctd_bgp_max_peers) config.nfacctd_bgp_max_peers = MAX_BGP_PEERS_DEFAULT;
-  Log(LOG_INFO, "INFO ( default/core/BGP ): maximum BGP peers allowed: %d\n", config.nfacctd_bgp_max_peers);
+  Log(LOG_INFO, "INFO ( %s/core/BGP ): maximum BGP peers allowed: %d\n", config.name, config.nfacctd_bgp_max_peers);
 
   peers = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
   if (!peers) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): Unable to malloc() BGP peers structure. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BGP peers structure. Terminating thread.\n", config.name);
     exit_all(1);
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
@@ -131,18 +131,18 @@ void skinny_bgp_daemon()
 
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bgp_sock < 0) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): thread socket() failed. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): thread socket() failed. Terminating thread.\n", config.name);
     exit_all(1);
   }
   if (config.nfacctd_bgp_ipprec) {
     int opt = config.nfacctd_bgp_ipprec << 5;
 
     rc = setsockopt(config.bgp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
-    if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for IP_TOS (errno: %d).\n", errno);
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BGP ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, errno);
   }
 
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", errno);
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BGP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, errno);
 
   if (config.nfacctd_bgp_pipe_size) {
     int l = sizeof(config.nfacctd_bgp_pipe_size);
@@ -155,7 +155,7 @@ void skinny_bgp_daemon()
     if (config.debug || obtained < config.nfacctd_bgp_pipe_size) {
       Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
       getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-      Log(LOG_INFO, "INFO ( default/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", obtained, config.nfacctd_bgp_pipe_size);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_bgp_pipe_size);
     }
   }
 
@@ -165,13 +165,13 @@ void skinny_bgp_daemon()
     char *ip_address;
 
     ip_address = config.nfacctd_bgp_ip ? config.nfacctd_bgp_ip : null_ip_address;
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", ip_address, config.nfacctd_bgp_port, errno);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, ip_address, config.nfacctd_bgp_port, errno);
     exit_all(1);
   }
 
   rc = listen(config.bgp_sock, 1);
   if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): listen() failed (errno: %d).\n", errno);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): listen() failed (errno: %d).\n", config.name, errno);
     exit_all(1);
   }
 
@@ -187,7 +187,7 @@ void skinny_bgp_daemon()
 
     sa_to_addr(&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( default/core/BGP ): waiting for BGP data on %s:%u\n", srv_string, srv_port);
+    Log(LOG_INFO, "INFO ( %s/core/BGP ): waiting for BGP data on %s:%u\n", config.name, srv_string, srv_port);
   }
 
   /* Preparing ACL, if any */
@@ -209,7 +209,7 @@ void skinny_bgp_daemon()
   /* BGP peers batching checks */
   if ((config.nfacctd_bgp_batch && !config.nfacctd_bgp_batch_interval) ||
       (config.nfacctd_bgp_batch_interval && !config.nfacctd_bgp_batch)) {
-    Log(LOG_WARNING, "WARN ( default/core/BGP ): 'bgp_daemon_batch_interval' and 'bgp_daemon_batch' both set to zero.\n");
+    Log(LOG_WARNING, "WARN ( %s/core/BGP ): 'bgp_daemon_batch_interval' and 'bgp_daemon_batch' both set to zero.\n", config.name);
     config.nfacctd_bgp_batch = 0;
     config.nfacctd_bgp_batch_interval = 0;
   }
@@ -264,7 +264,7 @@ void skinny_bgp_daemon()
 
             /* We briefly accept the new connection to be able to drop it */
 	    if (!log_notification_isset(log_notifications.bgp_peers_throttling)) {
-              Log(LOG_INFO, "INFO ( default/core/BGP ): throttling at BGP peer #%u\n", peers_idx);
+              Log(LOG_INFO, "INFO ( %s/core/BGP ): throttling at BGP peer #%u\n", config.name, peers_idx);
 	      log_notification_set(&log_notifications.bgp_peers_throttling);
 	    }
             fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
@@ -279,7 +279,8 @@ void skinny_bgp_daemon()
 	int fd;
 
 	/* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( default/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_bgp_max_peers' (%d).\n", config.nfacctd_bgp_max_peers);
+        Log(LOG_ERR, "ERROR ( %s/core/BGP ): Insufficient number of BGP peers has been configured by 'nfacctd_bgp_max_peers' (%d).\n",
+			config.name, config.nfacctd_bgp_max_peers);
 	fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
 	close(fd);
 	goto select_again;
@@ -317,12 +318,15 @@ void skinny_bgp_daemon()
 	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
 	  now = time(NULL);
 	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
-            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4));
+            Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n",
+				config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4));
             FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
             bgp_peer_close(&peers[peers_check_idx]);
 	  }
 	  else {
-	    Log(LOG_ERR, "ERROR ( default/core/BGP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n", inet_ntoa(peers[peers_check_idx].id.address.ipv4), (peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
+	    Log(LOG_ERR, "ERROR ( %s/core/BGP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n",
+				config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4),
+				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer);
 	    goto select_again;
@@ -333,7 +337,7 @@ void skinny_bgp_daemon()
 	}
       }
 
-      Log(LOG_INFO, "INFO ( default/core/BGP ): BGP peers usage: %u/%u\n", peers_num, config.nfacctd_bgp_max_peers);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): BGP peers usage: %u/%u\n", config.name, peers_num, config.nfacctd_bgp_max_peers);
 
       if (config.nfacctd_bgp_neighbors_file)
 	write_neighbors_file(config.nfacctd_bgp_neighbors_file);
@@ -351,28 +355,18 @@ void skinny_bgp_daemon()
     } 
 
     if (!peer) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", select_num, select_fd);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", config.name, select_num, select_fd);
       goto select_again;
     }
 
     peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", inet_ntoa(peer->id.address.ipv4), errno);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", config.name, inet_ntoa(peer->id.address.ipv4), errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer);
       goto select_again;
     }
-/*
-    Candidate for removal: tackled later in conjunction with payload reassembly:
-
-    else if (peer->msglen+peer->buf.truncated_len < BGP_HEADER_SIZE) {
-      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (too short).\n", inet_ntoa(peer->id.address.ipv4));
-      FD_CLR(peer->fd, &bkp_read_descs);
-      bgp_peer_close(peer);
-      goto select_again;
-    }
-*/
     else {
       /* Appears a valid peer with a valid BGP message: before
 	 continuing let's see if it's time to send a KEEPALIVE
@@ -398,7 +392,7 @@ void skinny_bgp_daemon()
 	    peer->buf.base = newptr;
 	  }
           else {
-            Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (newptr). Exiting ..\n");
+            Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (newptr). Exiting ..\n", config.name);
             exit_all(1);
           }
 	}
@@ -434,7 +428,7 @@ void skinny_bgp_daemon()
 	      free(aux_buf);
 	    }
 	    else {
-              Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (aux_buf). Exiting ..\n");
+              Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aux_buf). Exiting ..\n", config.name);
 	      exit_all(1);
 	    } 
 	  }
@@ -444,7 +438,8 @@ void skinny_bgp_daemon()
 	  }
 
 	  if (!bgp_marker_check(&bhdr, BGP_MARKER_SIZE)) {
-            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (marker check failed).\n", inet_ntoa(peer->id.address.ipv4));
+            Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (marker check failed).\n",
+				config.name, inet_ntoa(peer->id.address.ipv4));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer);
 	    goto select_again;
@@ -482,7 +477,8 @@ void skinny_bgp_daemon()
 				  opt_len = (u_int8_t) ptr[1];
 
 				  if (opt_len > bopen->bgpo_optlen) {
-				    Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (option length).\n", inet_ntoa(peer->id.address.ipv4));
+				    Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (option length).\n",
+							config.name, inet_ntoa(peer->id.address.ipv4));
 				    FD_CLR(peer->fd, &bkp_read_descs);
 				    bgp_peer_close(peer);
 				    goto select_again;
@@ -507,7 +503,8 @@ void skinny_bgp_daemon()
 				      u_int8_t cap_type = optcap_ptr[0];
 
 				      if (cap_len > optcap_len) {
-                                        Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (malformed capability: %x).\n", inet_ntoa(peer->id.address.ipv4), cap_type);
+                                        Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (malformed capability: %x).\n",
+							config.name, inet_ntoa(peer->id.address.ipv4), cap_type);
                                         FD_CLR(peer->fd, &bkp_read_descs);
                                         bgp_peer_close(peer);
                                         goto select_again;
@@ -519,8 +516,8 @@ void skinny_bgp_daemon()
 
 				  	memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
-				  	Log(LOG_INFO, "INFO ( default/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
-						cap_type, ntohs(cap_data.afi), cap_data.safi);
+				  	Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+							config.name, cap_type, ntohs(cap_data.afi), cap_data.safi);
 				  	peer->cap_mp = TRUE;
 				  	memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
 				  	bgp_open_cap_reply_ptr += opt_len+2;
@@ -534,8 +531,8 @@ void skinny_bgp_daemon()
 
 					  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-					  Log(LOG_INFO, "INFO ( default/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
-					    cap_type, ntohl(cap_data.as4));
+					  Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
+					    		config.name, cap_type, ntohl(cap_data.as4));
 					  memcpy(&as4_ptr, cap_ptr, 4);
 					  remote_as4 = ntohl(as4_ptr);
 					  memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
@@ -543,7 +540,8 @@ void skinny_bgp_daemon()
 					  bgp_open_cap_reply_ptr += opt_len+2;
 					}
 					else {
-					  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
+					  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n",
+							config.name, inet_ntoa(peer->id.address.ipv4));
 					  FD_CLR(peer->fd, &bkp_read_descs);
 					  bgp_peer_close(peer);
 					  goto select_again;
@@ -555,8 +553,8 @@ void skinny_bgp_daemon()
 
                                         memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-                                        Log(LOG_INFO, "INFO ( default/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
-                                            cap_type, ntohl(cap_data.afi), cap_data.safi, cap_data.sndrcv);
+                                        Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+                                            		config.name, cap_type, ntohl(cap_data.afi), cap_data.safi, cap_data.sndrcv);
 
 					if (cap_data.sndrcv == 2 /* send */) {
                                           peer->cap_add_paths = TRUE; 
@@ -584,7 +582,8 @@ void skinny_bgp_daemon()
 				/* It is not valid to use the transitional ASN in the BGP OPEN and
  				   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 				else {
-				  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (invalid AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
+				  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (invalid AS4 option).\n",
+						config.name, inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer);
 				  goto select_again;
@@ -596,14 +595,16 @@ void skinny_bgp_daemon()
  				/* It is not valid to not use the transitional ASN in the BGP OPEN and
 				   present an ASN != remote_as in the 4AS capability */
 				else {
-				  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (mismatching AS4 option).\n", inet_ntoa(peer->id.address.ipv4));
+				  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (mismatching AS4 option).\n",
+						config.name, inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer);
 				  goto select_again;
 				}
 			  }
 
-			  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] BGP_OPEN: Asn: %u HoldTime: %u\n", inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
+			  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
+					inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
 
 			  bgp_reply_pkt_ptr = bgp_reply_pkt;
 
@@ -612,7 +613,8 @@ void skinny_bgp_daemon()
 			  ret = bgp_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
 			  if (ret > 0) bgp_reply_pkt_ptr += ret;
 			  else {
-				Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n", inet_ntoa(peer->id.address.ipv4));
+				Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n",
+						config.name, inet_ntoa(peer->id.address.ipv4));
 				FD_CLR(peer->fd, &bkp_read_descs);
 				bgp_peer_close(peer);
 				goto select_again;
@@ -624,7 +626,8 @@ void skinny_bgp_daemon()
 			  peer->last_keepalive = now;
 		    }
 		    else {
-  			  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported version).\n", inet_ntoa(peer->id.address.ipv4));
+  			  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported version).\n",
+					config.name, inet_ntoa(peer->id.address.ipv4));
 			  FD_CLR(peer->fd, &bkp_read_descs);
 			  bgp_peer_close(peer);
 			  goto select_again;
@@ -637,13 +640,13 @@ void skinny_bgp_daemon()
   			 let's just ignore further BGP OPEN messages */
 		  break;
 	  case BGP_NOTIFICATION:
-		  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", inet_ntoa(peer->id.address.ipv4));
+		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", config.name, inet_ntoa(peer->id.address.ipv4));
 		  FD_CLR(peer->fd, &bkp_read_descs);
 		  bgp_peer_close(peer);
 		  goto select_again;
 		  break;
 	  case BGP_KEEPALIVE:
-		  Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_KEEPALIVE received\n", inet_ntoa(peer->id.address.ipv4));
+		  Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP_KEEPALIVE received\n", config.name, inet_ntoa(peer->id.address.ipv4));
 		  if (peer->status >= OpenSent) {
 		    if (peer->status < Established) peer->status = Established;
 
@@ -652,24 +655,27 @@ void skinny_bgp_daemon()
 		    ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
 		    peer->last_keepalive = now;
 
-		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP_KEEPALIVE sent\n", inet_ntoa(peer->id.address.ipv4));
+		    Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP_KEEPALIVE sent\n", config.name, inet_ntoa(peer->id.address.ipv4));
 		  }
 		  /* If we didn't pass through a successful BGP OPEN exchange just yet
   			 let's temporarily discard BGP KEEPALIVEs */
 		  break;
 	  case BGP_UPDATE:
 		  if (peer->status < Established) {
-		    Log(LOG_DEBUG, "DEBUG ( default/core/BGP ): [Id: %s] BGP UPDATE received (no neighbor). Discarding.\n", inet_ntoa(peer->id.address.ipv4));
+		    Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP UPDATE received (no neighbor). Discarding.\n",
+					config.name, inet_ntoa(peer->id.address.ipv4));
 			FD_CLR(peer->fd, &bkp_read_descs);
 			bgp_peer_close(peer);
 			goto select_again;
 		  }
 
 		  ret = bgp_update_msg(peer, bgp_packet_ptr);
-		  if (ret < 0) Log(LOG_WARNING, "WARN ( default/core/BGP ): [Id: %s] BGP UPDATE: malformed (%d).\n", inet_ntoa(peer->id.address.ipv4), ret);
+		  if (ret < 0) Log(LOG_WARNING, "WARN ( %s/core/BGP ): [Id: %s] BGP UPDATE: malformed (%d).\n",
+						config.name, inet_ntoa(peer->id.address.ipv4), ret);
 		  break;
 	    default:
-	      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported message type).\n", inet_ntoa(peer->id.address.ipv4));
+	      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported message type).\n",
+				config.name, inet_ntoa(peer->id.address.ipv4));
 	      FD_CLR(peer->fd, &bkp_read_descs);
 	      bgp_peer_close(peer);
 	      goto select_again;
@@ -1389,16 +1395,16 @@ log_update:
     else path_id_ho = 0;
 
     if (safi != SAFI_MPLS_VPN)
-      Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	  inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] u Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	  		config.name, inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
     else {
       if (ri && ri->extra) {
         u_char rd_str[SRVBUFLEN];
 
 	bgp_rd2str(rd_str, &ri->extra->rd);
 
-	Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] u RD: '%s' Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	    inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
+	Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] u RD: '%s' Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
+	    		config.name, inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
       }
     }
   }
@@ -1453,16 +1459,16 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
         else path_id_ho = 0;
 
 	if (safi != SAFI_MPLS_VPN)
-	  Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s'\n",
-	      inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm);
+	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] w Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s'\n",
+	      		config.name, inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm);
 	else {
 	  if (ri && ri->extra) {
 	    u_char rd_str[SRVBUFLEN];
 
 	    bgp_rd2str(rd_str, &ri->extra->rd);
 
-            Log(LOG_INFO, "INFO ( default/core/BGP ): [Id: %s] w RD: '%s' Prefix: '%s' Path_Id: %u' Path: '%s' Comms: '%s' EComms: '%s'\n",
-		inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm); 
+            Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] w RD: '%s' Prefix: '%s' Path_Id: %u' Path: '%s' Comms: '%s' EComms: '%s'\n",
+			config.name, inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm); 
 	  }
 	}
   }
@@ -1606,7 +1612,7 @@ struct bgp_info_extra *bgp_info_extra_new(void)
 
   new = malloc(sizeof(struct bgp_info_extra));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_info_extra_new). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name);
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info_extra));
@@ -1638,7 +1644,7 @@ struct bgp_info *bgp_info_new()
 
   new = malloc(sizeof(struct bgp_info));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_info_new). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_new). Exiting ..\n", config.name);
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info));
@@ -1819,7 +1825,7 @@ void bgp_attr_unintern(struct bgp_attr *attr)
 	ret = (struct bgp_attr *) hash_release (attrhash, attr);
 	// assert (ret != NULL);
 	// if (ret) free(attr);
-	if (!ret) Log(LOG_WARNING, "WARN ( default/core/BGP ): bgp_attr_unintern() hash lookup failed.\n");
+	if (!ret) Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_attr_unintern() hash lookup failed.\n", config.name);
 	free(attr);
   }
 
@@ -1839,7 +1845,7 @@ void *bgp_attr_hash_alloc (void *p)
 
   attr = malloc(sizeof (struct bgp_attr));
   if (!attr) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_attr_hash_alloc). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_attr_hash_alloc). Exiting ..\n", config.name);
     exit_all(1);
   }
   else {
@@ -1862,7 +1868,7 @@ int bgp_peer_init(struct bgp_peer *peer)
   peer->buf.len = BGP_MAX_PACKET_SIZE;
   peer->buf.base = malloc(peer->buf.len);
   if (!peer->buf.base) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_peer_init). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name);
     exit_all(1);
   }
   else {
@@ -2700,7 +2706,7 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     return;
 
     malloc_failed:
-    Log(LOG_WARNING, "WARN ( default/core/BGP ): malloc() failed (pkt_to_cache_bgp_primitives).\n");
+    Log(LOG_WARNING, "WARN ( %s/core/BGP ): malloc() failed (pkt_to_cache_bgp_primitives).\n", config.name);
   }
 }
 
@@ -2797,7 +2803,7 @@ void process_bgp_md5_file(int sock, struct bgp_md5_table *bgp_md5)
     }
 
     rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
-    if (rc < 0) Log(LOG_ERR, "WARN ( default/core/BGP ): setsockopt() failed for TCP_MD5SIG (errno: %d).\n", errno);
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BGP ): setsockopt() failed for TCP_MD5SIG (errno: %d).\n", config.name, errno);
 
     idx++;
   }

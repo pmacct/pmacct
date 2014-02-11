@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -358,7 +358,7 @@ void insert_conntrack_ipv4(time_t now, u_int32_t ip_src, u_int32_t ip_dst,
 	conntrack_total_nodes_v4--;
       }
       else {
-	Log(LOG_INFO, "INFO ( default/core ): Conntrack/4 buffer full. Skipping packet.\n");
+	Log(LOG_INFO, "INFO ( %s/core ): Conntrack/4 buffer full. Skipping packet.\n", config.name);
 	return;
       }
     }
@@ -459,7 +459,7 @@ void insert_conntrack_ipv6(time_t now, struct in6_addr *ip_src, struct in6_addr 
 	conntrack_total_nodes_v6--;
       }
       else {
-        Log(LOG_INFO, "INFO ( default/core ): Conntrack/6 buffer full. Skipping packet.\n");
+        Log(LOG_INFO, "INFO ( %s/core ): Conntrack/6 buffer full. Skipping packet.\n", config.name);
         return;
       }
     }

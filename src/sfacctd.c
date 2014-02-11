@@ -334,7 +334,7 @@ int main(int argc,char **argv, char **envp)
   while(list) {
     list->cfg.acct_type = ACCT_SF;
     set_default_preferences(&list->cfg);
-    if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) { 
+    if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
       config.name = list->name;
       config.type = list->type.string;
@@ -347,11 +347,11 @@ int main(int argc,char **argv, char **envp)
   if (config.daemon) {
     list = plugins_list;
     while (list) {
-      if (!strcmp(list->type.string, "print")) printf("WARN ( default/core ): Daemonizing. Hmm, bye bye screen.\n");
+      if (!strcmp(list->type.string, "print")) printf("WARN ( %s/core ): Daemonizing. Hmm, bye bye screen.\n", config.name);
       list = list->next;
     }
     if (debug || config.debug)
-      printf("WARN ( default/core ): debug is enabled; forking in background. Console logging will get lost.\n"); 
+      printf("WARN ( %s/core ): debug is enabled; forking in background. Console logging will get lost.\n", config.name); 
     daemonize();
   }
 
@@ -360,10 +360,10 @@ int main(int argc,char **argv, char **envp)
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
       config.syslog = NULL;
-      printf("WARN ( default/core ): specified syslog facility is not supported; logging to console.\n");
+      printf("WARN ( %s/core ): specified syslog facility is not supported; logging to console.\n", config.name);
     }
     else openlog(NULL, LOG_PID, logf);
-    Log(LOG_INFO, "INFO ( default/core ): Start logging ...\n");
+    Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
   if (config.logfile)
@@ -383,12 +383,12 @@ int main(int argc,char **argv, char **envp)
     if (list->type.id != PLUGIN_ID_CORE) {  
       /* applies to all plugins */
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
-        Log(LOG_ERR, "ERROR ( default/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit(1);
       }
 
       if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {
-        Log(LOG_ERR, "ERROR ( default/core ): 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n", config.name);
         exit(1);
       }
       else if (list->type.id == PLUGIN_ID_TEE) {
@@ -494,7 +494,7 @@ int main(int argc,char **argv, char **envp)
     trim_spaces(config.nfacctd_ip);
     ret = str_to_addr(config.nfacctd_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( default/core ): 'sfacctd_ip' value is not valid. Exiting.\n");
+      Log(LOG_ERR, "ERROR ( %s/core ): 'sfacctd_ip' value is not valid. Exiting.\n", config.name);
       exit(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_port);
@@ -503,13 +503,13 @@ int main(int argc,char **argv, char **envp)
   /* socket creation */
   config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
   if (config.sock < 0) {
-    Log(LOG_ERR, "ERROR ( default/core ): socket() failed.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
     exit(1);
   }
 
   /* bind socket to port */
   rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( default/core ): setsockopt() failed for SO_REUSEADDR.\n");
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 
   if (config.nfacctd_pipe_size) {
     int l = sizeof(config.nfacctd_pipe_size);
@@ -522,7 +522,7 @@ int main(int argc,char **argv, char **envp)
     if (config.debug || obtained < config.nfacctd_pipe_size) {
       Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
       getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-      Log(LOG_INFO, "INFO ( default/core ): sfacctd_pipe_size: obtained=%u target=%u.\n", obtained, config.nfacctd_pipe_size);
+      Log(LOG_INFO, "INFO ( %s/core ): sfacctd_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_pipe_size);
     }
   }
 
@@ -636,12 +636,12 @@ int main(int argc,char **argv, char **envp)
   }
 #else
   if (config.nfacctd_isis) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 
   if (config.nfacctd_bgp) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 #endif
@@ -654,7 +654,7 @@ int main(int argc,char **argv, char **envp)
 
   rc = bind(config.sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( default/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.nfacctd_ip, config.nfacctd_port, errno);
+    Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
     exit(1);
   }
 
@@ -812,7 +812,7 @@ int main(int argc,char **argv, char **envp)
 
     sa_to_addr(&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( default/core ): waiting for sFlow data on %s:%u\n", srv_string, srv_port);
+    Log(LOG_INFO, "INFO ( %s/core ): waiting for sFlow data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
   }
 
@@ -1046,7 +1046,8 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
     addr_to_str(agent_addr, &a);
 
-    Log(LOG_DEBUG, "DEBUG ( default/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n", agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n", 
+			config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
   }
 
   exec_plugins(pptrs, req);
@@ -2142,7 +2143,7 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
 	db_field->ptr = start;
 	db_field->len = length;
       }
-      else Log(LOG_WARNING, "WARN ( default/core ): readv5FlowSample(): no IEs available in SFv5 modules DB.\n");
+      else Log(LOG_WARNING, "WARN ( %s/core ): readv5FlowSample(): no IEs available in SFv5 modules DB.\n", config.name);
 
       if (lengthCheck(sample, start, length) == ERR) return;
     }
@@ -2182,7 +2183,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
     tag = getData32(sample);
     length = getData32(sample);
     start = (u_char *)sample->datap;
-    Log(LOG_DEBUG, "DEBUG ( default/core ): readv5CountersSample(): element tag %s.\n", printTag(tag, buf, 50));
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): readv5CountersSample(): element tag %s.\n", config.name, printTag(tag, buf, 50));
 
     db_field = sfv5_modules_db_get_next_ie(tag); 
     if (db_field) {
@@ -2190,7 +2191,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
       db_field->ptr = start;
       db_field->len = length;
     }
-    else Log(LOG_WARNING, "WARN ( default/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n");
+    else Log(LOG_WARNING, "WARN ( %s/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n", config.name);
 
     skipBytes(sample, length);
   }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /* 
@@ -42,7 +42,7 @@ community_new (void)
 
   tmp = malloc(sizeof (struct community));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_new). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_new). Exiting ..\n", config.name);
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct community));
@@ -69,7 +69,7 @@ community_add_val (struct community *com, u_int32_t val)
   else {
     com->val = malloc(com_length (com));
     if (!com->val) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_add_val). Exiting ..\n");
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_add_val). Exiting ..\n", config.name);
       exit_all(1);
     }
   }
@@ -230,7 +230,7 @@ community_com2str  (struct community *com)
     {
       str = malloc(1);
       if (!str) {
-	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_com2str). Exiting ..\n");
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name);
 	exit_all(1);
       }
       str[0] = '\0';
@@ -269,7 +269,7 @@ community_com2str  (struct community *com)
   /* Allocate memory.  */
   str = pnt = malloc(len);
   if (!str) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_com2str). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name);
     exit_all(1);
   }
   first = 1;
@@ -390,7 +390,7 @@ community_dup (struct community *com)
 
   new = malloc(sizeof (struct community));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_dup). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_dup). Exiting ..\n", config.name);
     exit_all(1);
   }
 
@@ -399,7 +399,7 @@ community_dup (struct community *com)
     {
       new->val = malloc(com->size * 4);
       if (!new->val) {
-        Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_dup). Exiting ..\n");
+        Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_dup). Exiting ..\n", config.name);
         exit_all(1);
       }
       memcpy (new->val, com->val, com->size * 4);
@@ -493,7 +493,7 @@ community_merge (struct community *com1, struct community *com2)
   else {
     com1->val = malloc((com1->size + com2->size) * 4);
     if (!com1->val) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (community_merge). Exiting ..\n");
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_merge). Exiting ..\n", config.name);
       exit_all(1);
     }
   }

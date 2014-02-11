@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -313,7 +313,7 @@ int main(int argc,char **argv, char **envp)
   while (list) {
     list->cfg.acct_type = ACCT_PM;
     set_default_preferences(&list->cfg);
-    if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) { 
+    if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
       config.name = list->name;
       config.type = list->type.string;
@@ -329,7 +329,7 @@ int main(int argc,char **argv, char **envp)
   /* Let's check whether we need superuser privileges */
   if (getuid() != 0) {
     printf("%s (%s)\n\n", UACCTD_USAGE_HEADER, PMACCT_BUILD);
-    printf("ERROR ( default/core ): You need superuser privileges to run this command.\nExiting ...\n\n");
+    printf("ERROR ( %s/core ): You need superuser privileges to run this command.\nExiting ...\n\n", config.name);
     exit(1);
   }
 
@@ -345,11 +345,11 @@ int main(int argc,char **argv, char **envp)
   if (config.daemon) {
     list = plugins_list;
     while (list) {
-      if (!strcmp(list->type.string, "print")) printf("WARN ( default/core ): Daemonizing. Hmm, bye bye screen.\n");
+      if (!strcmp(list->type.string, "print")) printf("WARN ( %s/core ): Daemonizing. Hmm, bye bye screen.\n", config.name);
       list = list->next;
     }
     if (debug || config.debug)
-      printf("WARN ( default/core ): debug is enabled; forking in background. Console logging will get lost.\n"); 
+      printf("WARN ( %s/core ): debug is enabled; forking in background. Console logging will get lost.\n", config.name); 
     daemonize();
   }
 
@@ -358,10 +358,10 @@ int main(int argc,char **argv, char **envp)
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
       config.syslog = NULL;
-      printf("WARN ( default/core ): specified syslog facility is not supported; logging to console.\n");
+      printf("WARN ( %s/core ): specified syslog facility is not supported; logging to console.\n", config.name);
     }
     else openlog(NULL, LOG_PID, logf);
-    Log(LOG_INFO, "INFO ( default/core ): Start logging ...\n");
+    Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
   if (config.logfile)
@@ -380,16 +380,16 @@ int main(int argc,char **argv, char **envp)
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
       if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
-        Log(LOG_ERR, "ERROR ( default/core ): Packet sampling and classification are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
         exit(1);
       }
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
-        Log(LOG_ERR, "ERROR ( default/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit(1);
       }
 
       if (list->type.id == PLUGIN_ID_TEE) {
-        Log(LOG_ERR, "ERROR ( default/core ): 'tee' plugin not supported in 'uacctd'.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugin not supported in 'uacctd'.\n", config.name);
         exit(1);
       }
       else if (list->type.id == PLUGIN_ID_NFPROBE) {
@@ -440,7 +440,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
                                        COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
 				       COUNT_MPLS_VPN_RD)) {
-          Log(LOG_ERR, "ERROR ( default/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
+          Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n", config.name);
           exit(1);
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
@@ -479,7 +479,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
                                        COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
 				       COUNT_MPLS_VPN_RD)) {
-          Log(LOG_ERR, "ERROR ( default/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
+          Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n", config.name);
           exit(1);
         }
 
@@ -606,27 +606,27 @@ int main(int argc,char **argv, char **envp)
 
   ulog_fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_NFLOG);
   if (ulog_fd == -1) {
-    Log(LOG_ERR, "ERROR ( default/core ): Failed to create Netlink ULOG socket\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to create Netlink ULOG socket\n", config.name);
     exit_all(1);
   }
 
-  Log(LOG_INFO, "INFO ( default/core ): Successfully connected Netlink ULOG socket\n");
+  Log(LOG_INFO, "INFO ( %s/core ): Successfully connected Netlink ULOG socket\n", config.name);
 
   /* Turn off netlink errors from overrun. */
   if (setsockopt(ulog_fd, SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, sizeof(one)))
-    Log(LOG_ERR, "ERROR ( default/core ): Failed to turn off netlink ENOBUFS\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to turn off netlink ENOBUFS\n", config.name);
 
   if (config.uacctd_nl_size > ULOG_BUFLEN) {
     /* If configured buffer size is larger than default 4KB */
     if (setsockopt(ulog_fd, SOL_SOCKET, SO_RCVBUF, &config.uacctd_nl_size, sizeof(config.uacctd_nl_size)))
-      Log(LOG_ERR, "ERROR ( default/core ): Failed to set Netlink receive buffer size\n");
+      Log(LOG_ERR, "ERROR ( %s/core ): Failed to set Netlink receive buffer size\n", config.name);
     else
-      Log(LOG_INFO, "INFO ( default/core ): Netlink receive buffer size set to %u\n", config.uacctd_nl_size);
+      Log(LOG_INFO, "INFO ( %s/core ): Netlink receive buffer size set to %u\n", config.name, config.uacctd_nl_size);
   }
 
   ulog_buffer = malloc(config.snaplen);
   if (ulog_buffer == NULL) {
-    Log(LOG_ERR, "ERROR ( default/core ): ULOG buffer malloc() failed\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): ULOG buffer malloc() failed\n", config.name);
     close(ulog_fd);
     exit_all(1);
   }
@@ -638,11 +638,11 @@ int main(int argc,char **argv, char **envp)
   alen = sizeof(nls);
 
   if (bind(ulog_fd, (struct sockaddr *) &nls, sizeof(nls))) {
-    Log(LOG_ERR, "ERROR ( default/core ): bind() to Netlink ULOG socket failed\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): bind() to Netlink ULOG socket failed\n", config.name);
     close(ulog_fd);
     exit_all(1);
   }
-  Log(LOG_INFO, "INFO ( default/core ): Netlink ULOG: binding to group %x\n", config.uacctd_group);
+  Log(LOG_INFO, "INFO ( %s/core ): Netlink ULOG: binding to group %x\n", config.name, config.uacctd_group);
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */
@@ -701,7 +701,7 @@ int main(int argc,char **argv, char **envp)
       cb_data.bta_table = (u_char *) &bta_table;
     }
     else {
-      Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n");
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
       exit(1);
     }
 
@@ -718,12 +718,12 @@ int main(int argc,char **argv, char **envp)
   }
 #else
   if (config.nfacctd_isis) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 
   if (config.nfacctd_bgp) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 #endif
@@ -735,7 +735,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   if (config.nfacctd_flow_to_rd_map) { 
-    Log(LOG_ERR, "ERROR ( default/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n", config.name);
     exit(1);
   } 
 
@@ -760,7 +760,7 @@ int main(int argc,char **argv, char **envp)
         /* We can't deal with permanent errors.
          * Just sleep a bit.
          */
-        Log(LOG_ERR, "ERROR ( default/core ): Syscall returned %d: %s. Sleeping for 1 sec.\n", errno, strerror(errno));
+        Log(LOG_ERR, "ERROR ( %s/core ): Syscall returned %d: %s. Sleeping for 1 sec.\n", config.name, errno, strerror(errno));
         sleep(1);
       }
     }

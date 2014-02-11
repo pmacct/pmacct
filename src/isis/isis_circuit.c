@@ -81,7 +81,7 @@ isis_circuit_new ()
     }
   else
     {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can't calloc isis circuit\n");
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): Can't calloc isis circuit\n", config.name);
       return NULL;
     }
 

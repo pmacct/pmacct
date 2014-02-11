@@ -63,7 +63,7 @@ isis_event_circuit_state_change (struct isis_circuit *circuit, int up)
   assert (area);
   area->circuit_state_changes++;
 
-  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) circuit %s\n", circuit->area->area_tag, up ? "up" : "down");
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Evt (%s) circuit %s\n", config.name, circuit->area->area_tag, up ? "up" : "down");
 
   /*
    * Regenerate LSPs this affects
@@ -79,7 +79,7 @@ isis_event_system_type_change (struct isis_area *area, int newtype)
   struct listnode *node;
   struct isis_circuit *circuit;
 
-  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) system type change %s -> %s\n", area->area_tag,
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Evt (%s) system type change %s -> %s\n", config.name, area->area_tag,
 	       circuit_t2string (area->is_type), circuit_t2string (newtype));
 
   if (area->is_type == newtype)
@@ -158,8 +158,8 @@ void
 isis_event_circuit_type_change (struct isis_circuit *circuit, int newtype)
 {
 
-  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) circuit type change %s -> %s\n",
-	       circuit->area->area_tag,
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Evt (%s) circuit type change %s -> %s\n",
+	       config.name, circuit->area->area_tag,
 	       circuit_t2string (circuit->circuit_is_type),
 	       circuit_t2string (newtype));
 
@@ -168,8 +168,8 @@ isis_event_circuit_type_change (struct isis_circuit *circuit, int newtype)
 
   if (!(newtype & circuit->area->is_type))
     {
-      Log(LOG_ERR, "ERROR (default/core/ISIS ): ISIS-Evt (%s) circuit type change - invalid level %s because area is %s\n",
-		circuit->area->area_tag,
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): ISIS-Evt (%s) circuit type change - invalid level %s because area is %s\n",
+		config.name, circuit->area->area_tag,
 		circuit_t2string (newtype),
 		circuit_t2string (circuit->area->is_type));
       return;
@@ -235,8 +235,8 @@ isis_event_adjacency_state_change (struct isis_adjacency *adj, int newstate)
   if (!adj || !adj->circuit || !adj->circuit->area)
     return;
 
-  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) Adjacency State change\n",
-		adj->circuit->area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Evt (%s) Adjacency State change\n",
+		config.name, adj->circuit->area->area_tag);
 
   /* LSP generation again */
   lsp_regenerate_schedule (adj->circuit->area);
@@ -249,8 +249,8 @@ isis_event_adjacency_state_change (struct isis_adjacency *adj, int newstate)
 void
 isis_event_auth_failure (char *area_tag, const char *error_string, u_char *sysid)
 {
-  Log(LOG_DEBUG, "DEBUG (default/core/ISIS ): ISIS-Evt (%s) Authentication failure %s from %s\n",
-		area_tag, error_string, sysid_print (sysid));
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Evt (%s) Authentication failure %s from %s\n",
+		config.name, area_tag, error_string, sysid_print (sysid));
 
   return;
 }

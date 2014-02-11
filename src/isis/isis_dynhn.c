@@ -97,7 +97,7 @@ isis_dynhn_insert (u_char * id, struct hostname *hostname, int level)
   dyn = calloc(1, sizeof (struct isis_dynhn));
   if (!dyn)
     {
-      Log(LOG_WARNING, "WARN (default/core/ISIS ): isis_dynhn_insert(): out of memory!\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): isis_dynhn_insert(): out of memory!\n", config.name);
       return;
     }
 

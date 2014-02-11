@@ -316,7 +316,7 @@ int main(int argc,char **argv, char **envp)
   while(list) {
     list->cfg.acct_type = ACCT_PM;
     set_default_preferences(&list->cfg);
-    if (!strcmp(list->name, "default") && !strcmp(list->type.string, "core")) {
+    if (!strcmp(list->type.string, "core")) {
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
       config.name = list->name;
       config.type = list->type.string;
@@ -333,7 +333,7 @@ int main(int argc,char **argv, char **envp)
   if (!config.pcap_savefile) {
     if (getuid() != 0) {
       printf("%s (%s)\n\n", PMACCTD_USAGE_HEADER, PMACCT_BUILD);
-      printf("ERROR ( default/core ): You need superuser privileges to run this command.\nExiting ...\n\n");
+      printf("ERROR ( %s/core ): You need superuser privileges to run this command.\nExiting ...\n\n", config.name);
       exit(1);
     }
   }
@@ -341,11 +341,11 @@ int main(int argc,char **argv, char **envp)
   if (config.daemon) {
     list = plugins_list;
     while (list) {
-      if (!strcmp(list->type.string, "print")) printf("WARN ( default/core ): Daemonizing. Hmm, bye bye screen.\n");
+      if (!strcmp(list->type.string, "print")) printf("WARN ( %s/core ): Daemonizing. Hmm, bye bye screen.\n", config.name);
       list = list->next;
     }
     if (debug || config.debug)
-      printf("WARN ( default/core ): debug is enabled; forking in background. Console logging will get lost.\n"); 
+      printf("WARN ( %s/core ): debug is enabled; forking in background. Console logging will get lost.\n", config.name); 
     daemonize();
   }
 
@@ -354,10 +354,10 @@ int main(int argc,char **argv, char **envp)
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
       config.syslog = NULL;
-      printf("WARN ( default/core ): specified syslog facility is not supported; logging to console.\n");
+      printf("WARN ( %s/core ): specified syslog facility is not supported; logging to console.\n", config.name);
     }
     else openlog(NULL, LOG_PID, logf);
-    Log(LOG_INFO, "INFO ( default/core ): Start logging ...\n");
+    Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
   if (config.logfile)
@@ -376,16 +376,16 @@ int main(int argc,char **argv, char **envp)
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
       if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
-        Log(LOG_ERR, "ERROR ( default/core ): Packet sampling and classification are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
         exit(1);
       }
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
-        Log(LOG_ERR, "ERROR ( default/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit(1);
       }
 
       if (list->type.id == PLUGIN_ID_TEE) {
-        Log(LOG_ERR, "ERROR ( default/core ): 'tee' plugin not supported in 'pmacctd'.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugin not supported in 'pmacctd'.\n", config.name);
         exit(1);
       }
       else if (list->type.id == PLUGIN_ID_NFPROBE) {
@@ -436,7 +436,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
 				       COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
 				       COUNT_MPLS_VPN_RD)) {
-	  Log(LOG_ERR, "ERROR ( default/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n");
+	  Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n", config.name);
 	  exit(1);
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
@@ -475,7 +475,7 @@ int main(int argc,char **argv, char **envp)
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|
 				       COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
 				       COUNT_MPLS_VPN_RD)) {
-          Log(LOG_ERR, "ERROR ( default/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n");
+          Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n", config.name);
           exit(1);
         }
 
@@ -583,20 +583,20 @@ int main(int argc,char **argv, char **envp)
   /* If any device/savefile have been specified, choose a suitable device
      where to listen for traffic */ 
   if (!config.dev && !config.pcap_savefile) {
-    Log(LOG_WARNING, "WARN ( default/core ): Selecting a suitable device.\n");
+    Log(LOG_WARNING, "WARN ( %s/core ): Selecting a suitable device.\n", config.name);
     config.dev = pcap_lookupdev(errbuf); 
     if (!config.dev) {
-      Log(LOG_WARNING, "WARN ( default/core ): Unable to find a suitable device. Exiting.\n");
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to find a suitable device. Exiting.\n", config.name);
       exit_all(1);
     }
-    else Log(LOG_DEBUG, "DEBUG ( default/core ): device is %s\n", config.dev);
+    else Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.dev);
   }
 
   /* reading filter; if it exists, we'll take an action later */
   if (!strlen(config_file)) config.clbuf = copy_argv(&argv[optind]);
 
   if (config.dev && config.pcap_savefile) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'interface' (-i) and 'pcap_savefile' (-I) directives are mutually exclusive. Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'interface' (-i) and 'pcap_savefile' (-I) directives are mutually exclusive. Exiting.\n", config.name);
     exit_all(1); 
   }
 
@@ -604,7 +604,7 @@ int main(int argc,char **argv, char **envp)
   if (config.dev) {
     if ((device.dev_desc = pcap_open_live(config.dev, psize, config.promisc, 1000, errbuf)) == NULL) {
       if (!config.if_wait) {
-        Log(LOG_ERR, "ERROR ( default/core ): pcap_open_live(): %s\n", errbuf);
+        Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_live(): %s\n", config.name, errbuf);
         exit_all(1);
       }
       else {
@@ -615,7 +615,7 @@ int main(int argc,char **argv, char **envp)
   }
   else if (config.pcap_savefile) {
     if ((device.dev_desc = pcap_open_offline(config.pcap_savefile, errbuf)) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core ): pcap_open_offline(): %s\n", errbuf);
+      Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
       exit_all(1);
     }
   }
@@ -628,7 +628,7 @@ int main(int argc,char **argv, char **envp)
 #if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
     Setsocksize(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
     getsockopt(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
-    Log(LOG_DEBUG, "DEBUG ( default/core ): pmacctd_pipe_size: obtained=%u target=%u.\n", x, config.nfacctd_pipe_size);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): pmacctd_pipe_size: obtained=%u target=%u.\n", config.name, x, config.nfacctd_pipe_size);
 #endif
   }
 
@@ -641,16 +641,16 @@ int main(int argc,char **argv, char **envp)
 
   /* we need to solve some link constraints */
   if (device.data == NULL) {
-    Log(LOG_ERR, "ERROR ( default/core ): data link not supported: %d\n", device.link_type); 
+    Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, device.link_type); 
     exit_all(1);
   }
-  else Log(LOG_INFO, "OK ( default/core ): link type is: %d\n", device.link_type); 
+  else Log(LOG_INFO, "OK ( %s/core ): link type is: %d\n", config.name, device.link_type); 
 
   if (device.link_type != DLT_EN10MB && device.link_type != DLT_IEEE802 && device.link_type != DLT_LINUX_SLL) {
     list = plugins_list;
     while (list) {
       if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
-        Log(LOG_ERR, "ERROR ( default/core ): MAC aggregation not available for link type: %d\n", device.link_type);
+        Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, device.link_type);
         exit_all(1);
       }
       list = list->next;
@@ -663,14 +663,14 @@ int main(int argc,char **argv, char **envp)
   if (!config.dev || pcap_lookupnet(config.dev, &localnet, &netmask, errbuf) < 0) {
     localnet = 0;
     netmask = 0;
-    if (config.dev) Log(LOG_WARNING, "WARN ( default/core ): %s\n", errbuf);
+    if (config.dev) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
   }
 
   if (pcap_compile(device.dev_desc, &filter, config.clbuf, 0, netmask) < 0)
-    Log(LOG_WARNING, "WARN: %s\nWARN ( default/core ): going on without a filter\n", pcap_geterr(device.dev_desc));
+    Log(LOG_WARNING, "WARN: %s\nWARN ( %s/core ): going on without a filter\n", config.name, pcap_geterr(device.dev_desc));
   else {
     if (pcap_setfilter(device.dev_desc, &filter) < 0)
-      Log(LOG_WARNING, "WARN: %s\nWARN ( default/core ): going on without a filter\n", pcap_geterr(device.dev_desc));
+      Log(LOG_WARNING, "WARN: %s\nWARN ( %s/core ): going on without a filter\n", config.name, pcap_geterr(device.dev_desc));
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
@@ -737,7 +737,7 @@ int main(int argc,char **argv, char **envp)
       cb_data.bta_table = (u_char *) &bta_table;
     }
     else {
-      Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n");
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
       exit(1);
     }
 
@@ -754,12 +754,12 @@ int main(int argc,char **argv, char **envp)
   }
 #else
   if (config.nfacctd_isis) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 
   if (config.nfacctd_bgp) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 #endif
@@ -771,7 +771,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   if (config.nfacctd_flow_to_rd_map) {
-    Log(LOG_ERR, "ERROR ( default/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n", config.name);
     exit(1);
   }
 
@@ -794,7 +794,7 @@ int main(int argc,char **argv, char **envp)
   /* When reading packets from a savefile, things are lightning fast; we will sit 
      here just few seconds, thus allowing plugins to complete their startup operations */ 
   if (config.pcap_savefile) {
-    Log(LOG_INFO, "INFO ( default/core ): PCAP capture file, sleeping for 2 seconds\n");
+    Log(LOG_INFO, "INFO ( %s/core ): PCAP capture file, sleeping for 2 seconds\n", config.name);
     sleep(2);
   }
 
@@ -802,7 +802,7 @@ int main(int argc,char **argv, char **envp)
      and reopening again our listening device */
   for(;;) {
     if (!device.active) {
-      Log(LOG_WARNING, "WARN ( default/core ): %s has become unavailable; throttling ...\n", config.dev);
+      Log(LOG_WARNING, "WARN ( %s/core ): %s has become unavailable; throttling ...\n", config.name, config.dev);
       throttle_loop:
       sleep(5); /* XXX: user defined ? */
       if ((device.dev_desc = pcap_open_live(config.dev, psize, config.promisc, 1000, errbuf)) == NULL)
@@ -816,7 +816,7 @@ int main(int argc,char **argv, char **envp)
     if (config.pcap_savefile) {
       if (config.sf_wait) {
 	fill_pipe_buffer();
-	Log(LOG_INFO, "INFO ( default/core ): finished reading PCAP capture file\n");
+	Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
 	wait(NULL);
       }
       stop_all_childs();

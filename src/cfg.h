@@ -297,6 +297,7 @@ struct plugins_list_entry {
 EXT void evaluate_configuration(char *, int);
 EXT int parse_configuration_file(char *);
 EXT int parse_plugin_names(char *, int, int);
+EXT void parse_core_process_name(char *, int, int);
 EXT int create_plugin(char *, char *, char *);
 EXT int delete_plugin_by_id(int);
 EXT struct plugins_list_entry *search_plugin_by_pipe(int);

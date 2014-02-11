@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -64,7 +64,7 @@ void nfacctd_isis_wrapper()
   /* initialize threads pool */
   isis_pool = allocate_thread_pool(1);
   assert(isis_pool);
-  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): %d thread(s) initialized\n", 1);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): %d thread(s) initialized\n", config.name, 1);
 
   /* giving a kick to the BGP thread */
   send_to_pool(isis_pool, skinny_isis_daemon, NULL);
@@ -104,17 +104,17 @@ void skinny_isis_daemon()
   master = thread_master_create();
 
   if (!config.nfacctd_isis_iface && !config.igp_daemon_map) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): No 'isis_daemon_iface' and 'igp_daemon_map' values specified. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( %s/core/ISIS ): No 'isis_daemon_iface' and 'igp_daemon_map' values specified. Terminating thread.\n", config.name);
     exit_all(1);
   }
   else if (config.nfacctd_isis_iface && config.igp_daemon_map) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_iface' and 'igp_daemon_map' are mutually exclusive. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( %s/core/ISIS ): 'isis_daemon_iface' and 'igp_daemon_map' are mutually exclusive. Terminating thread.\n", config.name);
     exit_all(1);
   }
 
   if (config.nfacctd_isis_iface) {
     if ((device.dev_desc = pcap_open_live(config.nfacctd_isis_iface, 65535, 0, 1000, errbuf)) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): pcap_open_live(): %s\n", errbuf);
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): pcap_open_live(): %s\n", config.name, errbuf);
       exit(1);
     }
 
@@ -125,11 +125,11 @@ void skinny_isis_daemon()
     }
 
     if (device.data == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): data link not supported: %d\n", device.link_type);
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): data link not supported: %d\n", config.name, device.link_type);
       return;
     }
     else {
-      Log(LOG_INFO, "OK ( default/core/ISIS ): link type is: %d\n", device.link_type);
+      Log(LOG_INFO, "OK ( %s/core/ISIS ): link type is: %d\n", config.name, device.link_type);
       cb_data.device = &device;
     }
   }
@@ -148,10 +148,10 @@ void skinny_isis_daemon()
   area->is_type = IS_LEVEL_2;
   area->newmetric = TRUE;
   isis_listnode_add(isis->area_list, area);
-  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): New IS-IS area instance %s\n", area->area_tag);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): New IS-IS area instance %s\n", config.name, area->area_tag);
   if (config.nfacctd_isis_net) area_net_title(area, config.nfacctd_isis_net);
   else {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_net' value is not specified. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( %s/core/ISIS ): 'isis_daemon_net' value is not specified. Terminating thread.\n", config.name);
     exit_all(1);
   }
 
@@ -172,12 +172,12 @@ void skinny_isis_daemon()
     trim_spaces(config.nfacctd_isis_ip);
     ret = str_to_addr(config.nfacctd_isis_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n");
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): 'isis_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name);
       exit_all(1);
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): 'isis_daemon_ip' value is not specified. Terminating thread.\n");
+    Log(LOG_ERR, "ERROR ( %s/core/ISIS ): 'isis_daemon_ip' value is not specified. Terminating thread.\n", config.name);
     exit_all(1);
   }
 
@@ -806,9 +806,9 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       }
     }
     else {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): required key missing at line %d in map '%s'. Required keys are:\n",
-		req->line_num, filename);
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): node, area_id, adj_metric or reach_metric or reach6_metric.\n");
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): required key missing at line %d in map '%s'. Required keys are:\n",
+		config.name, req->line_num, filename);
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): node, area_id, adj_metric or reach_metric or reach6_metric.\n", config.name);
     }
   }
   else Log(LOG_ERR, "ERROR ( %s ): Invalid pointer to entry. ", filename);
@@ -822,8 +822,8 @@ void igp_daemon_map_initialize(char *filename, struct plugin_requests *req)
     p = pcap_open_dead(DLT_CHDLC, RECEIVE_LSP_BUFFER_SIZE+sizeof(struct chdlc_header)+sizeof(struct isis_fixed_hdr));
 
     if ((idmm_fd = pcap_dump_open(p, config.igp_daemon_map_msglog)) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): Can not open igp_daemon_map_msglog '%s' (%s).\n",
-                config.igp_daemon_map_msglog, pcap_geterr(p));
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): Can not open igp_daemon_map_msglog '%s' (%s).\n",
+                config.name, config.igp_daemon_map_msglog, pcap_geterr(p));
       exit_all(1);
     }
   }
@@ -838,8 +838,8 @@ int igp_daemon_map_handle_len(int *rem_len, int len, struct plugin_requests *req
 {
   *rem_len -= len;
   if (*rem_len < 0) {
-    Log(LOG_ERR, "ERROR ( default/core/ISIS ): Resulting LSP longer than %u. Ignoring line %d in map '%s'.\n",
-		RECEIVE_LSP_BUFFER_SIZE, req->line_num, filename);
+    Log(LOG_ERR, "ERROR ( %s/core/ISIS ): Resulting LSP longer than %u. Ignoring line %d in map '%s'.\n",
+		config.name, RECEIVE_LSP_BUFFER_SIZE, req->line_num, filename);
     return TRUE;
   }
 
@@ -858,7 +858,7 @@ int igp_daemon_map_handle_lsp_id(char *lsp_id, struct host_addr *addr)
     if (!memcmp(sysid, sysid_fragment_table[idx].sysid, ISIS_SYS_ID_LEN)) {
       /* check if maximum segment number reached */
       if (sysid_fragment_table[idx].frag_num == 255) {
-	Log(LOG_WARNING, "WARN ( default/core/ISIS ): Maximum segment number (255) reached for sysid: '%s'\n", sysid);
+	Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Maximum segment number (255) reached for sysid: '%s'\n", config.name, sysid);
 	memset(lsp_id, 0, ISIS_SYS_ID_LEN + 2);
 
 	return TRUE;
@@ -886,7 +886,7 @@ int igp_daemon_map_handle_lsp_id(char *lsp_id, struct host_addr *addr)
     return FALSE;
   }
   else {
-    Log(LOG_WARNING, "WARN ( default/core/ISIS ): Maximum number of nodes (%u) reached in igp_daemon_map\n", MAX_IGP_MAP_NODES);
+    Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Maximum number of nodes (%u) reached in igp_daemon_map\n", config.name, MAX_IGP_MAP_NODES);
     memset(lsp_id, 0, ISIS_SYS_ID_LEN + 2);
 
     return TRUE;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -135,7 +135,7 @@ int create_fragment(u_int32_t now, struct ip_fragment *fp, u_int8_t is_candidate
 
   if (!ipft_total_nodes) {
     if (now > emergency_prune+EMER_PRUNE_INTERVAL) {
-      Log(LOG_INFO, "INFO ( default/core ): Fragment/4 buffer full. Skipping fragments.\n");
+      Log(LOG_INFO, "INFO ( %s/core ): Fragment/4 buffer full. Skipping fragments.\n", config.name);
       emergency_prune = now;
       prune_old_fragments(now, 0);
     }
@@ -149,7 +149,7 @@ int create_fragment(u_int32_t now, struct ip_fragment *fp, u_int8_t is_candidate
       newf = (struct ip_fragment *) malloc(sizeof(struct ip_fragment));
       if (!newf) { 
 	if (now > emergency_prune+EMER_PRUNE_INTERVAL) {
-	  Log(LOG_INFO, "INFO ( default/core ): Fragment/4 buffer full. Skipping fragments.\n");
+	  Log(LOG_INFO, "INFO ( %s/core ): Fragment/4 buffer full. Skipping fragments.\n", config.name);
 	  emergency_prune = now;
 	  prune_old_fragments(now, 0);
 	}
@@ -181,7 +181,7 @@ int create_fragment(u_int32_t now, struct ip_fragment *fp, u_int8_t is_candidate
     fp = (struct ip_fragment *) malloc(sizeof(struct ip_fragment));  
     if (!fp) {
       if (now > emergency_prune+EMER_PRUNE_INTERVAL) {
-        Log(LOG_INFO, "INFO ( default/core ): Fragment/4 buffer full. Skipping fragments.\n");
+        Log(LOG_INFO, "INFO ( %s/core ): Fragment/4 buffer full. Skipping fragments.\n", config.name);
         emergency_prune = now;
         prune_old_fragments(now, 0);
       }
@@ -277,8 +277,8 @@ void notify_orphan_fragment(struct ip_fragment *frag)
   memcpy(&a.address.ipv4, &frag->ip_dst, 4);
   addr_to_str(dst_host, &a);
   id = ntohs(frag->ip_id);
-  Log(LOG_DEBUG, "DEBUG ( default/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s proto=%u id=%u\n",
-		  src_host, dst_host, frag->ip_p, id);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s proto=%u id=%u\n",
+		  config.name, src_host, dst_host, frag->ip_p, id);
 }
 
 #if defined ENABLE_IPV6
@@ -397,7 +397,7 @@ int create_fragment6(u_int32_t now, struct ip6_fragment *fp, u_int8_t is_candida
 
   if (!ipft6_total_nodes) { 
     if (now > emergency_prune6+EMER_PRUNE_INTERVAL) {
-      Log(LOG_INFO, "INFO ( default/core ): Fragment/6 buffer full. Skipping fragments.\n");
+      Log(LOG_INFO, "INFO ( %s/core ): Fragment/6 buffer full. Skipping fragments.\n", config.name);
       emergency_prune6 = now;
       prune_old_fragments6(now, 0);
     }
@@ -411,7 +411,7 @@ int create_fragment6(u_int32_t now, struct ip6_fragment *fp, u_int8_t is_candida
       newf = (struct ip6_fragment *) malloc(sizeof(struct ip6_fragment));
       if (!newf) {
 	if (now > emergency_prune6+EMER_PRUNE_INTERVAL) {
-	  Log(LOG_INFO, "INFO ( default/core ): Fragment/6 buffer full. Skipping fragments.\n");
+	  Log(LOG_INFO, "INFO ( %s/core ): Fragment/6 buffer full. Skipping fragments.\n", config.name);
 	  emergency_prune6 = now;
 	  prune_old_fragments6(now, 0);
 	}
@@ -443,7 +443,7 @@ int create_fragment6(u_int32_t now, struct ip6_fragment *fp, u_int8_t is_candida
     fp = (struct ip6_fragment *) malloc(sizeof(struct ip6_fragment));
     if (!fp) {
       if (now > emergency_prune6+EMER_PRUNE_INTERVAL) {
-        Log(LOG_INFO, "INFO ( default/core ): Fragment/6 buffer full. Skipping fragments.\n");
+        Log(LOG_INFO, "INFO ( %s/core ): Fragment/6 buffer full. Skipping fragments.\n", config.name);
         emergency_prune6 = now;
         prune_old_fragments6(now, 0);
       }
@@ -531,6 +531,7 @@ void notify_orphan_fragment6(struct ip6_fragment *frag)
   ip6_addr_cpy(&a.address.ipv6, &frag->dst);
   addr_to_str(dst_host, &a);
   id = ntohl(frag->id);
-  Log(LOG_DEBUG, "DEBUG ( default/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s id=%u\n", src_host, dst_host, id);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s id=%u\n",
+			config.name, src_host, dst_host, id);
 }
 #endif

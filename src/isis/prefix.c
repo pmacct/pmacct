@@ -83,7 +83,7 @@ isis_prefix_copy (struct isis_prefix *dest, const struct isis_prefix *src)
 #endif /* ENABLE_IPV6 */
   else
     {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): isis_prefix_copy(): Unknown address family %d\n", src->family);
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): isis_prefix_copy(): Unknown address family %d\n", config.name, src->family);
       assert (0);
     }
 

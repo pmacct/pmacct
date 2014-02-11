@@ -51,8 +51,8 @@
  * using stream_put..._at() functions.
  */
 #define STREAM_WARN_OFFSETS(S) \
-  Log(LOG_WARNING, "WARN ( default/core/ISIS ): &(struct stream): %p, size: %lu, endp: %lu, getp: %lu\n", \
-             (S), \
+  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): &(struct stream): %p, size: %lu, endp: %lu, getp: %lu\n", \
+             config.name, (S), \
              (unsigned long) (S)->size, \
              (unsigned long) (S)->getp, \
              (unsigned long) (S)->endp)\
@@ -67,7 +67,8 @@
 
 #define STREAM_BOUND_WARN(S, WHAT) \
   do { \
-    Log(LOG_WARNING, "WARN ( default/core/ISIS ): %s: Attempt to %s out of bounds", __func__, (WHAT)); \
+    Log(LOG_WARNING, "WARN ( %s/core/ISIS ): %s: Attempt to %s out of bounds", config.name, \
+    __func__, (WHAT)); \
     STREAM_WARN_OFFSETS(S); \
     assert (0); \
   } while (0)
@@ -77,8 +78,8 @@
   do { \
     if (((S)->endp + (Z)) > (S)->size) \
       { \
-        Log(LOG_WARNING, "WARN ( default/core/ISIS ): CHECK_SIZE: truncating requested size %lu\n", \
-                   (unsigned long) (Z)); \
+        Log(LOG_WARNING, "WARN ( %s/core/ISIS ): CHECK_SIZE: truncating requested size %lu\n", \
+                   config.name, (unsigned long) (Z)); \
         STREAM_WARN_OFFSETS(S); \
         (Z) = (S)->size - (S)->endp; \
       } \
@@ -94,7 +95,7 @@ stream_new (size_t size)
   
   if (size == 0)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): stream_new(): called with 0 size!\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): stream_new(): called with 0 size!\n", config.name);
       return NULL;
     }
   
@@ -759,7 +760,8 @@ stream_read_try(struct stream *s, int fd, size_t size)
   /* Error: was it transient (return -2) or fatal (return -1)? */
   if (ERRNO_IO_RETRY(errno))
     return -2;
-  Log(LOG_WARNING, "WARN ( default/core/ISIS ): %s: read failed on fd %d: %s\n", __func__, fd, strerror(errno));
+  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): %s: read failed on fd %d: %s\n",
+			config.name, __func__, fd, strerror(errno));
   return -1;
 }
 
@@ -791,7 +793,8 @@ stream_recvfrom (struct stream *s, int fd, size_t size, int flags,
   /* Error: was it transient (return -2) or fatal (return -1)? */
   if (ERRNO_IO_RETRY(errno))
     return -2;
-  Log(LOG_WARNING, "WARN ( default/core/ISIS ): %s: read failed on fd %d: %s\n", __func__, fd, strerror(errno));
+  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): %s: read failed on fd %d: %s\n",
+			config.name, __func__, fd, strerror(errno));
   return -1;
 }
 

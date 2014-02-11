@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /* 
@@ -246,7 +246,7 @@ str2prefix_ipv4 (const char *str, struct prefix_ipv4 *p)
     {
       cp = malloc ((pnt - str) + 1);
       if (!cp) {
-	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (str2prefix_ipv4). Exiting ..\n");
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (str2prefix_ipv4). Exiting ..\n", config.name);
 	exit_all(1);
       }
       strncpy (cp, str, pnt - str);
@@ -395,7 +395,7 @@ str2prefix_ipv6 (const char *str, struct prefix_ipv6 *p)
 
       cp = malloc((pnt - str) + 1);
       if (!cp) {
-	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (str2prefix_ipv6). Exiting ..\n");
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (str2prefix_ipv6). Exiting ..\n", config.name);
 	exit_all(1);
       }
       strncpy (cp, str, pnt - str);
@@ -639,7 +639,7 @@ prefix_new ()
 
   p = malloc (sizeof *p);
   if (!p) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (prefix_new). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (prefix_new). Exiting ..\n", config.name);
     exit_all(1);
   }
   memset(p, 0, sizeof *p); 

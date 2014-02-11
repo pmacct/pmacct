@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -142,9 +142,12 @@ int parse_configuration_file(char *filename)
      plugin names if 'pmacctd' has been invoked commandline;
      if any plugin has been activated we default to a single
      'imt' plugin */ 
-  create_plugin(filename, "default", "core");
+  if (!cmdlineflag) parse_core_process_name(filename, rows, FALSE);
+  else parse_core_process_name(filename, rows, TRUE);
+
   if (!cmdlineflag) num = parse_plugin_names(filename, rows, FALSE);
   else num = parse_plugin_names(filename, rows, TRUE);
+
   if (!num) {
     Log(LOG_WARNING, "WARN ( %s ): No plugin has been activated; defaulting to in-memory table.\n", filename); 
     num = create_plugin(filename, "default", "memory");
@@ -315,6 +318,34 @@ void sanitize_cfg(int rows, char *filename)
 
     rindex++;
   }
+}
+
+void parse_core_process_name(char *filename, int rows, int ignore_names)
+{
+  int index = 0, found = 0;
+  char key[SRVBUFLEN], name[SRVBUFLEN], *start, *end;
+
+  /* searching for 'plugins' key */
+  while (index < rows) {
+    memset(key, 0, SRVBUFLEN);
+    start = NULL; end = NULL;
+
+    start = cfg[index];
+    end = strchr(cfg[index], ':');
+    if (end > start) {
+      strlcpy(key, cfg[index], (end-start)+1);
+      if (!strncmp(key, "core_proc_name", sizeof("core_proc_name"))) {
+        start = end+1;
+        strlcpy(name, start, SRVBUFLEN);
+	found = TRUE;
+        break;
+      }
+    }
+    index++;
+  }
+
+  if (!found || ignore_names) create_plugin(filename, "default", "core");
+  else create_plugin(filename, name, "core");
 }
 
 /* parse_plugin_names() leaves cfg array untouched: parses the key 'plugins'

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -132,7 +132,8 @@ int ip_handler(register struct packet_ptrs *pptrs)
   if (config.handle_fragments) {
     if (pptrs->l4_proto == IPPROTO_TCP || pptrs->l4_proto == IPPROTO_UDP) {
       if (off+MyTLHdrSz > caplen) {
-        Log(LOG_INFO, "INFO ( default/core ): short IPv4 packet read (%u/%u/frags). Snaplen issue ?\n", caplen, off+MyTLHdrSz);
+        Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/frags). Snaplen issue ?\n",
+			config.name, caplen, off+MyTLHdrSz);
         return FALSE;
       }
       pptrs->tlh_ptr = ptr;
@@ -176,7 +177,8 @@ int ip_handler(register struct packet_ptrs *pptrs)
 
       if (pptrs->l4_proto == IPPROTO_TCP) {
         if (off_l4+TCPFlagOff+1 > caplen) {
-          Log(LOG_INFO, "INFO ( default/core ): short IPv4 packet read (%u/%u/flows). Snaplen issue ?\n", caplen, off_l4+TCPFlagOff+1);
+          Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/flows). Snaplen issue ?\n",
+			config.name, caplen, off_l4+TCPFlagOff+1);
           return FALSE;
         }
         if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_SYN) pptrs->tcp_flags |= TH_SYN;
@@ -232,7 +234,7 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   /* length checks */
   if (off+IP6HdrSz > caplen) return FALSE; /* IP packet truncated */
   if (plen == 0 && ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_nxt != IPPROTO_NONE) {
-    Log(LOG_INFO, "INFO ( default/core ): NULL IPv6 payload length. Jumbo packets are currently not supported.\n");
+    Log(LOG_INFO, "INFO ( %s/core ): NULL IPv6 payload length. Jumbo packets are currently not supported.\n", config.name);
     return FALSE;
   }
 
@@ -277,7 +279,8 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   if (config.handle_fragments) {
     if (pptrs->l4_proto == IPPROTO_TCP || pptrs->l4_proto == IPPROTO_UDP) {
       if (off+MyTLHdrSz > caplen) {
-        Log(LOG_INFO, "INFO ( default/core ): short IPv6 packet read (%u/%u/frags). Snaplen issue ?\n", caplen, off+MyTLHdrSz);
+        Log(LOG_INFO, "INFO ( %s/core ): short IPv6 packet read (%u/%u/frags). Snaplen issue ?\n",
+			config.name, caplen, off+MyTLHdrSz);
         return FALSE;
       }
 
@@ -319,7 +322,8 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 
       if (pptrs->l4_proto == IPPROTO_TCP) {
         if (off_l4+TCPFlagOff+1 > caplen) {
-          Log(LOG_INFO, "INFO ( default/core ): short IPv6 packet read (%u/%u/flows). Snaplen issue ?\n", caplen, off_l4+TCPFlagOff+1);
+          Log(LOG_INFO, "INFO ( %s/core ): short IPv6 packet read (%u/%u/flows). Snaplen issue ?\n",
+			config.name, caplen, off_l4+TCPFlagOff+1);
           return FALSE;
         }
         if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_SYN) pptrs->tcp_flags |= TH_SYN;
@@ -449,7 +453,7 @@ int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
   }
   else {
     th->tf = NULL;
-    Log(LOG_WARNING, "WARN ( default/core ): GTP tunnel handler not loaded due to invalid options: '%s'\n", opts);
+    Log(LOG_WARNING, "WARN ( %s/core ): GTP tunnel handler not loaded due to invalid options: '%s'\n", config.name, opts);
   }
 
   return 0;
@@ -476,7 +480,7 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
     gtp_hdr_len = 8;
     break;
   default:
-    Log(LOG_INFO, "INFO ( default/core ): unsupported GTP version %u\n", gtp_version);
+    Log(LOG_INFO, "INFO ( %s/core ): unsupported GTP version %u\n", config.name, gtp_version);
     return FALSE;
   }
 
@@ -537,7 +541,8 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
     }
   }
   else {
-    Log(LOG_INFO, "INFO ( default/core ): short GTP packet read (%u/%u/tunnel). Snaplen issue ?\n", caplen, off + gtp_hdr_len);
+    Log(LOG_INFO, "INFO ( %s/core ): short GTP packet read (%u/%u/tunnel). Snaplen issue ?\n",
+			config.name, caplen, off + gtp_hdr_len);
     return FALSE;
   }
 

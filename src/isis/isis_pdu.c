@@ -177,7 +177,7 @@ authentication_check (struct isis_passwd *one, struct isis_passwd *theother)
 {
   if (one->type != theother->type)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Unsupported authentication type %d\n", theother->type);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Unsupported authentication type %d\n", config.name, theother->type);
       return 1;			/* Auth fail (different authentication types) */
     }
   switch (one->type)
@@ -188,7 +188,7 @@ authentication_check (struct isis_passwd *one, struct isis_passwd *theother)
       return memcmp (one->passwd, theother->passwd, one->len);
       break;
     default:
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Unsupported authentication type\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Unsupported authentication type\n", config.name);
       break;
     }
   return 0;			/* Auth pass */
@@ -294,7 +294,7 @@ process_p2p_hello (struct isis_circuit *circuit)
   if ((stream_get_endp (circuit->rcv_stream) -
        stream_get_getp (circuit->rcv_stream)) < ISIS_P2PHELLO_HDRLEN)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Packet too short\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Packet too short\n", config.name);
       return ISIS_WARNING;
     }
 
@@ -421,7 +421,7 @@ process_p2p_hello (struct isis_circuit *circuit)
 	      if (adj->adj_state != ISIS_ADJ_UP)
 		{
 		  /* (7) reject - wrong system type event */
-		  Log(LOG_WARNING, "WARN ( default/core/ISIS ): wrongSystemType\n");
+		  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): wrongSystemType\n", config.name);
 		  return ISIS_WARNING;	/* Reject */
 		}
 	      else if (adj->adj_usage == ISIS_ADJ_LEVEL1)
@@ -507,7 +507,7 @@ process_p2p_hello (struct isis_circuit *circuit)
 	      if (adj->adj_state != ISIS_ADJ_UP)
 		{
 		  /* (5) reject - wrong system type event */
-		  Log(LOG_WARNING, "WARN ( default/core/ISIS ): wrongSystemType\n");
+		  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): wrongSystemType\n", config.name);
 		  return ISIS_WARNING;	/* Reject */
 		}
 	      else if ((adj->adj_usage == ISIS_ADJ_LEVEL1AND2) ||
@@ -565,7 +565,7 @@ process_p2p_hello (struct isis_circuit *circuit)
 	      if (adj->adj_state != ISIS_ADJ_UP)
 		{
 		  /* (6) reject - Area Mismatch event */
-		  Log(LOG_WARNING, "WARN ( default/core/ISIS ): AreaMismatch\n");
+		  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): AreaMismatch\n", config.name);
 		  return ISIS_WARNING;	/* Reject */
 		}
 	      else if (adj->adj_usage == ISIS_ADJ_LEVEL1)
@@ -667,7 +667,7 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
   if ((stream_get_endp (circuit->rcv_stream) -
        stream_get_getp (circuit->rcv_stream)) < ISIS_LSP_HDR_LEN)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Packet too short\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Packet too short\n", config.name);
       return ISIS_WARNING;
     }
 
@@ -681,8 +681,8 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
   if (iso_csum_verify (STREAM_PNT (circuit->rcv_stream) + 4,
 		       ntohs (hdr->pdu_len) - 12, &hdr->checksum))
     {
-      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): LSP %s invalid LSP checksum 0x%04x\n",
-		  circuit->area->area_tag,
+      Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Upd (%s): LSP %s invalid LSP checksum 0x%04x\n",
+		  config.name, circuit->area->area_tag,
 		  rawlspid_print (hdr->lsp_id), ntohs (hdr->checksum));
 
       return ISIS_WARNING;
@@ -692,8 +692,8 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
   if (circuit->ext_domain)
     {
       Log(LOG_DEBUG,
-	 "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): LSP %s received at level %d over circuit with externalDomain = true\n",
-	 circuit->area->area_tag,
+	 "DEBUG ( %s/core/ISIS ): ISIS-Upd (%s): LSP %s received at level %d over circuit with externalDomain = true\n",
+	 config.name, circuit->area->area_tag,
 	 rawlspid_print (hdr->lsp_id), level);
 
       return ISIS_WARNING;
@@ -702,8 +702,8 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
   /* 7.3.15.1 a) 2,3 - manualL2OnlyMode not implemented */
   if (!accept_level (level, circuit->circuit_is_type))
     {
-      Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): LSP %s received at level %d over circuit of type %s\n",
-		  circuit->area->area_tag,
+      Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Upd (%s): LSP %s received at level %d over circuit of type %s\n",
+		  config.name, circuit->area->area_tag,
 		  rawlspid_print (hdr->lsp_id),
 		  level, circuit_t2string (circuit->circuit_is_type));
 
@@ -820,12 +820,13 @@ dontcheckadj:
 		      && circuit->u.bc.is_dr[level - 1] == 1))
 		{
 		  lsp->lsp_header->seq_num = htonl (ntohl (hdr->seq_num) + 1);
-		  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): LSP LEN: %d\n",
-				ntohs (lsp->lsp_header->pdu_len));
+		  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): LSP LEN: %d\n",
+				config.name, ntohs (lsp->lsp_header->pdu_len));
 		  fletcher_checksum (STREAM_DATA (lsp->pdu) + 12,
 				   ntohs (lsp->lsp_header->pdu_len) - 12, 12);
 		  ISIS_FLAGS_SET_ALL (lsp->SRMflags);
-		  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): (1) re-originating LSP %s new seq 0x%08x\n",
+		  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Upd (%s): (1) re-originating LSP %s new seq 0x%08x\n",
+				config.name,
 				circuit->area->area_tag,
 				rawlspid_print (hdr->lsp_id),
 				ntohl (lsp->lsp_header->seq_num));
@@ -868,8 +869,8 @@ dontcheckadj:
 			   ntohs (lsp->lsp_header->pdu_len) - 12, 12);
 
 	  ISIS_FLAGS_SET_ALL (lsp->SRMflags);
-	  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Upd (%s): (2) re-originating LSP %s new seq 0x%08x\n",
-			circuit->area->area_tag,
+	  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Upd (%s): (2) re-originating LSP %s new seq 0x%08x\n",
+			config.name, circuit->area->area_tag,
 			rawlspid_print (hdr->lsp_id),
 			ntohl (lsp->lsp_header->seq_num));
 	  lsp->lsp_header->rem_lifetime =
@@ -901,7 +902,7 @@ dontcheckadj:
 	      lsp0 = lsp_search (lspid, circuit->area->lspdb[level - 1]);
 	      if (!lsp0)
 		{
-		  Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): Got lsp frag, while zero lsp not database\n");
+		  Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): Got lsp frag, while zero lsp not database\n", config.name);
 		  return ISIS_OK;
 		}
 	    }
@@ -981,7 +982,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
       len = ntohs (chdr->pdu_len);
       if (len < ISIS_CSNP_HDRLEN)
 	{
-	  Log(LOG_WARNING, "WARN ( default/core/ISIS ): Received a CSNP with bogus length!\n");
+	  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Received a CSNP with bogus length!\n", config.name);
 	  return ISIS_OK;
 	}
     }
@@ -994,7 +995,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
       len = ntohs (phdr->pdu_len);
       if (len < ISIS_PSNP_HDRLEN)
 	{
-	  Log(LOG_WARNING, "WARN ( default/core/ISIS ): Received a CSNP with bogus length!\n");
+	  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Received a CSNP with bogus length!\n", config.name);
 	  return ISIS_OK;
 	}
     }
@@ -1040,7 +1041,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
 
   if (retval > ISIS_WARNING)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): something went very wrong processing SNP\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): something went very wrong processing SNP\n", config.name);
       free_tlvs (&tlvs);
       return retval;
     }
@@ -1167,7 +1168,7 @@ process_csnp (int level, struct isis_circuit *circuit, u_char * ssnpa)
   if ((stream_get_endp (circuit->rcv_stream) -
        stream_get_getp (circuit->rcv_stream)) < ISIS_CSNP_HDRLEN)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Packet too short ( < %d)\n", ISIS_CSNP_HDRLEN);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Packet too short ( < %d)\n", config.name, ISIS_CSNP_HDRLEN);
       return ISIS_WARNING;
     }
 
@@ -1180,7 +1181,7 @@ process_psnp (int level, struct isis_circuit *circuit, u_char * ssnpa)
   if ((stream_get_endp (circuit->rcv_stream) -
        stream_get_getp (circuit->rcv_stream)) < ISIS_PSNP_HDRLEN)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Packet too short\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Packet too short\n", config.name);
       return ISIS_WARNING;
     }
 
@@ -1272,7 +1273,7 @@ int isis_handle_pdu (struct isis_circuit *circuit, u_char * ssnpa)
 
   if ((hdr->idrp != ISO10589_ISIS) && (hdr->idrp != ISO9542_ESIS))
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Not an IS-IS or ES-IS packet IDRP=%02x\n", hdr->idrp);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Not an IS-IS or ES-IS packet IDRP=%02x\n", config.name, hdr->idrp);
       return ISIS_ERROR;
     }
 
@@ -1308,28 +1309,28 @@ int isis_handle_pdu (struct isis_circuit *circuit, u_char * ssnpa)
 
   if (hdr->length < ISIS_MINIMUM_FIXED_HDR_LEN)
     {
-      Log(LOG_ERR, "ERROR ( default/core/ISIS ): Fixed header length = %d\n", hdr->length);
+      Log(LOG_ERR, "ERROR ( %s/core/ISIS ): Fixed header length = %d\n", config.name, hdr->length);
       return ISIS_ERROR;
     }
 
   if (hdr->version1 != 1)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Unsupported ISIS version %u\n", hdr->version1);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Unsupported ISIS version %u\n", config.name, hdr->version1);
       return ISIS_WARNING;
     }
   /* either 6 or 0 */
   if ((hdr->id_len != 0) && (hdr->id_len != ISIS_SYS_ID_LEN))
     {
       Log(LOG_ERR, 
-	 "ERROR ( default/core/ISIS ): IDFieldLengthMismatch: ID Length field in a received PDU  %u, while the parameter for this IS is %u\n",
-	 hdr->id_len,
+	 "ERROR ( %s/core/ISIS ): IDFieldLengthMismatch: ID Length field in a received PDU  %u, while the parameter for this IS is %u\n",
+	 config.name, hdr->id_len,
 	 ISIS_SYS_ID_LEN);
       return ISIS_ERROR;
     }
 
   if (hdr->version2 != 1)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): Unsupported ISIS version %u\n", hdr->version2);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Unsupported ISIS version %u\n", config.name, hdr->version2);
       return ISIS_WARNING;
     }
   /* either 3 or 0 */
@@ -1337,8 +1338,8 @@ int isis_handle_pdu (struct isis_circuit *circuit, u_char * ssnpa)
       && (hdr->max_area_addrs != isis->max_area_addrs))
     {
       Log(LOG_ERR,
-		"ERROR ( default/core/ISIS ): maximumAreaAddressesMismatch: maximumAreaAdresses in a received PDU %u while the parameter for this IS is %u\n",
-		hdr->max_area_addrs, isis->max_area_addrs);
+		"ERROR ( %s/core/ISIS ): maximumAreaAddressesMismatch: maximumAreaAdresses in a received PDU %u while the parameter for this IS is %u\n",
+		config.name, hdr->max_area_addrs, isis->max_area_addrs);
       return ISIS_ERROR;
     }
 
@@ -1403,7 +1404,7 @@ fill_fixed_hdr (struct isis_fixed_hdr *hdr, u_char pdu_type)
       hdr->length = ISIS_PSNP_HDRLEN;
       break;
     default:
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): fill_fixed_hdr(): unknown pdu type %d\n", pdu_type);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): fill_fixed_hdr(): unknown pdu type %d\n", config.name, pdu_type);
       return;
     }
   hdr->length += ISIS_FIXED_HDR_LEN;
@@ -1448,7 +1449,7 @@ send_hello (struct isis_circuit *circuit, int level)
 
   if (circuit->interface->mtu == 0)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): circuit has zero MTU\n");
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): circuit has zero MTU\n", config.name);
       return ISIS_WARNING;
     }
 
@@ -1544,7 +1545,7 @@ send_hello (struct isis_circuit *circuit, int level)
 
   retval = circuit->tx (circuit, level);
   if (retval)
-    Log(LOG_WARNING, "WARN ( default/core/ISIS ): sending of LAN Level %d Hello failed\n", level);
+    Log(LOG_WARNING, "WARN ( %s/core/ISIS ): sending of LAN Level %d Hello failed\n", config.name, level);
 
   return retval;
 }
@@ -1687,9 +1688,9 @@ int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
       for (ALL_LIST_ELEMENTS_RO (lsps, node, lsp))
       {
 	if (config.nfacctd_isis_msglog) 
-          Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): PSNP entry %s, seq 0x%08x,"
+          Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Snp (%s): PSNP entry %s, seq 0x%08x,"
                     " cksum 0x%04x, lifetime %us\n",
-                    circuit->area->area_tag,
+                    config.name, circuit->area->area_tag,
                     rawlspid_print (lsp->lsp_header->lsp_id),
                     ntohl (lsp->lsp_header->seq_num),
                     ntohs (lsp->lsp_header->checksum),
@@ -1737,8 +1738,8 @@ int send_psnp (int level, struct isis_circuit *circuit)
 
 
 	      if (config.nfacctd_isis_msglog)
-                Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): Sent L%d PSNP on %s, length %ld\n",
-                            circuit->area->area_tag, level,
+                Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Snp (%s): Sent L%d PSNP on %s, length %ld\n",
+                            config.name, circuit->area->area_tag, level,
                             circuit->interface->name,
                             /* FIXME: use %z when we stop supporting old
                              * compilers. */
@@ -1852,14 +1853,14 @@ send_csnp (struct isis_circuit *circuit, int level)
       retval = build_csnp (level, start, stop, list, circuit);
 
       if (config.nfacctd_isis_msglog) {
-        Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): Sent L%d CSNP on %s, length %ld\n",
-                     circuit->area->area_tag, level, circuit->interface->name,
+        Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Snp (%s): Sent L%d CSNP on %s, length %ld\n",
+                     config.name, circuit->area->area_tag, level, circuit->interface->name,
                      /* FIXME: use %z when we stop supporting old compilers. */
                      (unsigned long) STREAM_SIZE (circuit->snd_stream));
 	for (ALL_LIST_ELEMENTS_RO (list, node, lsp)) {
-          Log(LOG_DEBUG, "DEBUG ( default/core/ISIS ): ISIS-Snp (%s): CSNP entry %s, seq 0x%08x,"
+          Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Snp (%s): CSNP entry %s, seq 0x%08x,"
                         " cksum 0x%04x, lifetime %us\n",
-                        circuit->area->area_tag,
+                        config.name, circuit->area->area_tag,
                         rawlspid_print (lsp->lsp_header->lsp_id),
                         ntohl (lsp->lsp_header->seq_num),
                         ntohs (lsp->lsp_header->checksum),

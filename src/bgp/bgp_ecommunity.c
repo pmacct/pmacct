@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -44,7 +44,7 @@ ecommunity_new ()
 
   tmp = malloc(sizeof (struct ecommunity));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_new). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_new). Exiting ..\n", config.name);
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct ecommunity));
@@ -79,7 +79,7 @@ ecommunity_add_val (struct ecommunity *ecom, struct ecommunity_val *eval)
       ecom->size++;
       ecom->val = malloc(ecom_length (ecom));
       if (!ecom->val) {
-	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_add_val). Exiting ..\n");
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name);
 	exit_all(1);
       }
       memcpy (ecom->val, eval->val, ECOMMUNITY_SIZE);
@@ -163,7 +163,7 @@ ecommunity_dup (struct ecommunity *ecom)
 
   new = malloc(sizeof (struct ecommunity));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_dup). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_dup). Exiting ..\n", config.name);
     exit_all(1);
   }
   new->size = ecom->size;
@@ -171,7 +171,7 @@ ecommunity_dup (struct ecommunity *ecom)
     {
       new->val = malloc(ecom->size * ECOMMUNITY_SIZE);
       if (!new->val) {
-	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_dup). Exiting ..\n");
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_dup). Exiting ..\n", config.name);
 	exit_all(1);
       }
       memcpy (new->val, ecom->val, ecom->size * ECOMMUNITY_SIZE);
@@ -199,7 +199,7 @@ ecommunity_merge (struct ecommunity *ecom1, struct ecommunity *ecom2)
   else {
     ecom1->val = malloc((ecom1->size + ecom2->size) * ECOMMUNITY_SIZE);
     if (!ecom1->val) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_merge). Exiting ..\n");
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_merge). Exiting ..\n", config.name);
       exit_all(1);
     }
   }
@@ -627,7 +627,7 @@ ecommunity_ecom2str (struct ecommunity *ecom, int format)
     {
       str_buf = malloc(1);
       if (!str_buf) {
-	Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n");
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name);
 	exit_all(1);
       }
       str_buf[0] = '\0';
@@ -637,7 +637,7 @@ ecommunity_ecom2str (struct ecommunity *ecom, int format)
   /* Prepare buffer.  */
   str_buf = malloc(ECOMMUNITY_STR_DEFAULT_LEN + 1);
   if (!str_buf) {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name);
     exit_all(1);
   }
   str_size = ECOMMUNITY_STR_DEFAULT_LEN + 1;

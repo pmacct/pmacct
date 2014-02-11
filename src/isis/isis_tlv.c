@@ -134,8 +134,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
       value_len = 0;
       if (pnt + length > stream + size)
 	{
-	  Log(LOG_WARNING, "WARN ( default/core/ISIS ): ISIS-TLV (%s): TLV (type %d, length %d) exceeds packet boundaries\n",
-		areatag, type, length);
+	  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): ISIS-TLV (%s): TLV (type %d, length %d) exceeds packet boundaries\n",
+		config.name, areatag, type, length);
 	  retval = ISIS_WARNING;
 	  break;
 	}
@@ -647,8 +647,8 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 	  break;
 
 	default:
-	  Log(LOG_WARNING, "WARN ( default/core/ISIS ): ISIS-TLV (%s): unsupported TLV type %d, length %d\n",
-		     areatag, type, length);
+	  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): ISIS-TLV (%s): unsupported TLV type %d, length %d\n",
+		     	config.name, areatag, type, length);
 
 	  retval = ISIS_WARNING;
 	  pnt += length;
@@ -665,7 +665,7 @@ add_tlv (u_char tag, u_char len, u_char * value, struct stream *stream)
 
   if (STREAM_SIZE (stream) - stream_get_endp (stream) < (unsigned) len + 2)
     {
-      Log(LOG_WARNING, "WARN ( default/core/ISIS ): No room for TLV of type %d\n", tag);
+      Log(LOG_WARNING, "WARN ( %s/core/ISIS ): No room for TLV of type %d\n", config.name, tag);
       return ISIS_WARNING;
     }
 
@@ -698,7 +698,7 @@ tlv_add_area_addrs (struct list *area_addrs, struct stream *stream)
   return add_tlv (AREA_ADDRESSES, pos - value, value, stream);
 
 err:
-  Log(LOG_WARNING, "WARN ( default/core/ISIS ): tlv_add_area_addrs(): TLV longer than 255\n");
+  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): tlv_add_area_addrs(): TLV longer than 255\n", config.name);
   return ISIS_WARNING;
 }
 
@@ -1064,6 +1064,6 @@ tlv_add_padding (struct stream *stream)
   return ISIS_OK;
 
 err:
-  Log(LOG_WARNING, "WARN ( default/core/ISIS ): tlv_add_padding(): no room for tlv\n");
+  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): tlv_add_padding(): no room for tlv\n", config.name);
   return ISIS_WARNING;
 }

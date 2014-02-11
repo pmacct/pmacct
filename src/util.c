@@ -1314,7 +1314,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core ): allow file '%s' not found\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/core ): allow file '%s' not found\n", config.name, filename);
       exit(1);
     }
 
@@ -1325,7 +1325,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
       if (fgets(buf, SRVBUFLEN, file)) {
         if (!sanitize_buf(buf)) {
           if (str_to_addr(buf, &t->table[index])) index++;
-          else Log(LOG_WARNING, "WARN ( default/core ): 'nfacctd_allow_file': Bad IP address '%s'. Ignored.\n", buf);
+          else Log(LOG_WARNING, "WARN ( %s/core ): 'nfacctd_allow_file': Bad IP address '%s'. Ignored.\n", config.name, buf);
         }
       }
     }
@@ -1346,7 +1346,7 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( default/core/BGP ): BGP MD5 file '%s' not found\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): BGP MD5 file '%s' not found\n", config.name, filename);
       exit(1);
     }
 
@@ -1371,7 +1371,7 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
 	  }
 
           if (ret > 0 && len > 0) index++;
-          else Log(LOG_WARNING, "WARN ( default/core/BGP ): 'bgp_daemon_md5_file': line '%s' ignored.\n", buf);
+          else Log(LOG_WARNING, "WARN ( %s/core/BGP ): 'bgp_daemon_md5_file': line '%s' ignored.\n", config.name, buf);
         }
       }
     }

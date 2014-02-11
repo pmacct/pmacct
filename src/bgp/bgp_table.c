@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /* 
@@ -48,7 +48,7 @@ bgp_table_init (afi_t afi, safi_t safi)
     rt->safi = safi;
   }
   else {
-    Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_table_init). Exiting ..\n");
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_table_init). Exiting ..\n", config.name);
     exit_all(1);
   }
   
@@ -80,7 +80,7 @@ bgp_node_create ()
   return rn;
 
   malloc_failed:
-  Log(LOG_ERR, "ERROR ( default/core/BGP ): malloc() failed (bgp_node_create). Exiting ..\n");
+  Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_node_create). Exiting ..\n", config.name);
   exit_all(1);
 }
 
@@ -128,7 +128,8 @@ bgp_node_free_aggressive (struct bgp_node *node)
         comm = ri->attr->community ? ri->attr->community->str : empty;
         ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
 
-        Log(LOG_INFO, "INFO ( default/core/BGP ): d Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n", prefix_str, aspath, comm, ecomm);
+        Log(LOG_INFO, "INFO ( %s/core/BGP ): d Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n",
+			config.name, prefix_str, aspath, comm, ecomm);
       }
 
       next = ri->next;

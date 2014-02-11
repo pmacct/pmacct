@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -186,7 +186,7 @@ void create_flow(struct timeval *now, struct ip_flow *fp, u_int8_t is_candidate,
 
   if (!flt_total_nodes) {
     if (now->tv_sec > flt_emergency_prune+FLOW_TABLE_EMER_PRUNE_INTERVAL) {
-      Log(LOG_INFO, "INFO ( default/core ): Flow/4 buffer full. Skipping flows.\n"); 
+      Log(LOG_INFO, "INFO ( %s/core ): Flow/4 buffer full. Skipping flows.\n", config.name); 
       flt_emergency_prune = now->tv_sec;
       prune_old_flows(now);
     }
@@ -201,7 +201,7 @@ void create_flow(struct timeval *now, struct ip_flow *fp, u_int8_t is_candidate,
       newf = (struct ip_flow *) malloc(sizeof(struct ip_flow));
       if (!newf) { 
 	if (now->tv_sec > flt_emergency_prune+FLOW_TABLE_EMER_PRUNE_INTERVAL) {
-	  Log(LOG_INFO, "INFO ( default/core ): Flow/4 buffer finished memory. Skipping flows.\n");
+	  Log(LOG_INFO, "INFO ( %s/core ): Flow/4 buffer finished memory. Skipping flows.\n", config.name);
 	  flt_emergency_prune = now->tv_sec;
 	  prune_old_flows(now);
 	}
@@ -238,7 +238,7 @@ void create_flow(struct timeval *now, struct ip_flow *fp, u_int8_t is_candidate,
     fp = (struct ip_flow *) malloc(sizeof(struct ip_flow));  
     if (!fp) {
       if (now->tv_sec > flt_emergency_prune+FLOW_TABLE_EMER_PRUNE_INTERVAL) {
-        Log(LOG_INFO, "INFO ( default/core ): Flow/4 buffer finished memory. Skipping flows.\n");
+        Log(LOG_INFO, "INFO ( %s/core ): Flow/4 buffer finished memory. Skipping flows.\n", config.name);
         flt_emergency_prune = now->tv_sec;
         prune_old_flows(now);
       }
@@ -543,7 +543,7 @@ void create_flow6(struct timeval *now, struct ip_flow6 *fp, u_int8_t is_candidat
 
   if (!flt6_total_nodes) {
     if (now->tv_sec > flt6_emergency_prune+FLOW_TABLE_EMER_PRUNE_INTERVAL) {
-      Log(LOG_INFO, "INFO ( default/core ): Flow/6 buffer full. Skipping flows.\n");
+      Log(LOG_INFO, "INFO ( %s/core ): Flow/6 buffer full. Skipping flows.\n", config.name);
       flt6_emergency_prune = now->tv_sec;
       prune_old_flows6(now);
     }
@@ -558,7 +558,7 @@ void create_flow6(struct timeval *now, struct ip_flow6 *fp, u_int8_t is_candidat
       newf = (struct ip_flow6 *) malloc(sizeof(struct ip_flow6));
       if (!newf) {
 	if (now->tv_sec > flt6_emergency_prune+FLOW_TABLE_EMER_PRUNE_INTERVAL) {
-	  Log(LOG_INFO, "INFO ( default/core ): Flow/6 buffer full. Skipping flows.\n");
+	  Log(LOG_INFO, "INFO ( %s/core ): Flow/6 buffer full. Skipping flows.\n", config.name);
 	  flt6_emergency_prune = now->tv_sec;
 	  prune_old_flows6(now);
 	}
@@ -594,7 +594,7 @@ void create_flow6(struct timeval *now, struct ip_flow6 *fp, u_int8_t is_candidat
     fp = (struct ip_flow6 *) malloc(sizeof(struct ip_flow6));
     if (!fp) {
       if (now->tv_sec > flt6_emergency_prune+FLOW_TABLE_EMER_PRUNE_INTERVAL) {
-        Log(LOG_INFO, "INFO ( default/core ): Flow/6 buffer full. Skipping flows.\n");
+        Log(LOG_INFO, "INFO ( %s/core ): Flow/6 buffer full. Skipping flows.\n", config.name);
         flt6_emergency_prune = now->tv_sec;
         prune_old_flows6(now);
       }
