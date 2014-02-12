@@ -441,6 +441,12 @@ int main(int argc,char **argv, char **envp)
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
 
+        if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
+          list->cfg.nfacctd_as |= NF_AS_NEW;
+
+        if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
+          list->cfg.nfacctd_net |= NF_NET_NEW;
+
 	list->cfg.data_type = PIPE_TYPE_METADATA;
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
       }

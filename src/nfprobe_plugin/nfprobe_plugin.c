@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -1463,26 +1463,13 @@ read_data:
       extras = (struct pkt_extras *) ((u_char *)data+PdataSz);
 
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
-	if (config.networks_file) {
-	  memcpy(&dummy.primitives.src_ip, &data->primitives.src_ip, HostAddrSz);
-	  memcpy(&dummy.primitives.dst_ip, &data->primitives.dst_ip, HostAddrSz);
+        for (num = 0; net_funcs[num]; num++)
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, &dummy_pbgp, &nfd);
 
-          for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, &dummy_pbgp, &nfd);
-
-	  if (config.nfacctd_as == NF_AS_NEW) {
-	    data->primitives.src_as = dummy.primitives.src_as;
-	    data->primitives.dst_as = dummy.primitives.dst_as;
-	  }
-
-	  if (config.nfacctd_net == NF_NET_NEW) {
-	    data->primitives.src_nmask = dummy.primitives.src_nmask;
-            data->primitives.dst_nmask = dummy.primitives.dst_nmask;
-	  }
-
-          if (config.nfacctd_net == NF_NET_NEW) {
-            memcpy(&extras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
-          }
-	}
+	/* XXX: hacky: bgp next-hop */
+        if (config.nfacctd_net & NF_NET_NEW && dummy_pbgp.peer_dst_ip.family) {
+          memcpy(&extras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
+        }
 
 	if (config.ports_file) {
 	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
