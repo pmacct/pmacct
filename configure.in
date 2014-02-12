@@ -448,13 +448,14 @@ if test x"$PFRING_LIB_FOUND" = x""; then
 
   AC_CHECK_LIB([pcap], [pcap_setnonblock], [ AC_DEFINE(PCAP_7, 1) ], [])
 else
-  AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
-    ERROR: missing libnuma devel. Requirement for building PF_RING.
-  ])])
+  dnl Unable to test: we should check for these libs
+  #AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
+  #  ERROR: missing libnuma devel. Requirement for building PF_RING.
+  #])])
 
-  AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
-    ERROR: missing librt devel. Requirement for building PF_RING.
-  ])])
+  #AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
+  #  ERROR: missing librt devel. Requirement for building PF_RING.
+  #])])
 
   LIBS="${LIBS} -lrt -lnuma"
 fi
