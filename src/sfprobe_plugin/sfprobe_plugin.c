@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /* 
@@ -567,7 +567,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_payload *hdr;
   struct pkt_data dummy;
-  struct pkt_bgp_primitives *dummy_pbgp = NULL;
+  struct pkt_bgp_primitives dummy_pbgp;
   struct pollfd pfd;
   struct timezone tz;
   unsigned char *pipebuf, *pipebuf_ptr;
@@ -691,20 +691,31 @@ read_data:
 
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 	if (config.networks_file) {
+	  memset(&dummy.primitives, 0, sizeof(dummy.primitives));
+	  memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
+
 	  memcpy(&dummy.primitives.src_ip, &hdr->src_ip, HostAddrSz);
 	  memcpy(&dummy.primitives.dst_ip, &hdr->dst_ip, HostAddrSz);
+	  dummy.primitives.src_nmask = hdr->src_nmask;
+	  dummy.primitives.dst_nmask = hdr->dst_nmask;
 
-	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, dummy_pbgp, &nfd);
+	  for (num = 0; net_funcs[num]; num++) (*net_funcs[num])(&nt, &nc, &dummy.primitives, &dummy_pbgp, &nfd);
 
-          if (config.nfacctd_as == NF_AS_NEW) {
+	  /* hacky */
+	  if (config.nfacctd_as & NF_AS_NEW && dummy.primitives.src_as)
 	    hdr->src_as = dummy.primitives.src_as;
-	    hdr->dst_as = dummy.primitives.dst_as;
-          }
 
-          if (config.nfacctd_net == NF_NET_NEW) {
-            hdr->src_nmask = dummy.primitives.src_nmask;
-            hdr->dst_nmask = dummy.primitives.dst_nmask;
-          }
+	  if (config.nfacctd_as & NF_AS_NEW && dummy.primitives.dst_as)
+	    hdr->dst_as = dummy.primitives.dst_as;
+
+          if (config.nfacctd_net & NF_NET_NEW && dummy.primitives.src_nmask)
+	    hdr->src_nmask = dummy.primitives.src_nmask;
+
+          if (config.nfacctd_net & NF_NET_NEW && dummy.primitives.dst_nmask)
+	    hdr->dst_nmask = dummy.primitives.dst_nmask;
+
+          if (config.nfacctd_net & NF_NET_NEW && dummy_pbgp.peer_dst_ip.family)
+            memcpy(&hdr->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
 	}
 	
 	readPacket(&sp, hdr, pipebuf_ptr);

@@ -1466,9 +1466,10 @@ read_data:
         for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, &dummy_pbgp, &nfd);
 
-	/* XXX: hacky: bgp next-hop */
+	/* hacky: bgp next-hop */
         if (config.nfacctd_net & NF_NET_NEW && dummy_pbgp.peer_dst_ip.family) {
           memcpy(&extras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
+          memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
         }
 
 	if (config.ports_file) {

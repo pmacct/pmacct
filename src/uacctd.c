@@ -467,13 +467,12 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
-        if (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP) {
+        if (list->cfg.networks_file || (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP)) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
           list->cfg.what_to_count |= COUNT_PEER_DST_IP;
         }
-        if ((list->cfg.nfacctd_bgp && list->cfg.nfacctd_net == NF_NET_BGP) ||
-            (list->cfg.nfacctd_isis && list->cfg.nfacctd_net == NF_NET_IGP)) {
+        if (list->cfg.networks_file || list->cfg.networks_mask || list->cfg.nfacctd_net) {
           list->cfg.what_to_count |= COUNT_SRC_NMASK;
           list->cfg.what_to_count |= COUNT_DST_NMASK;
         }
@@ -493,6 +492,12 @@ int main(int argc,char **argv, char **envp)
         list->cfg.what_to_count |= COUNT_VLAN;
         list->cfg.what_to_count |= COUNT_COS;
 #endif
+
+        if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
+          list->cfg.nfacctd_as |= NF_AS_NEW;
+
+        if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
+          list->cfg.nfacctd_net |= NF_NET_NEW;
 
 	list->cfg.data_type = PIPE_TYPE_PAYLOAD;
       }
