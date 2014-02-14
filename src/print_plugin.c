@@ -204,7 +204,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     now = time(NULL);
 
     if (config.sql_history) {
-      while (now >= (basetime.tv_sec + timeslot)) {
+      while (now > (basetime.tv_sec + timeslot)) {
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
           timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
@@ -251,7 +251,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       else rg->ptr += bufsz;
 
       /* lazy refresh time handling */ 
-      if (now >= refresh_deadline) {
+      if (now > refresh_deadline) {
         if (qq_ptr) P_cache_handle_flush_event(&pt);
       } 
 

@@ -45,7 +45,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   struct networks_table bkt;
   struct networks_table_metadata *mdt = NULL;
   char buf[SRVBUFLEN], *bufptr, *delim, *peer_as, *as, *net, *mask, *nh;
-  int rows, eff_rows = 0, j, buflen, fields;
+  int rows, eff_rows = 0, j, buflen, fields, prev[128];
   unsigned int index, fake_row = 0;
   struct stat st;
 
@@ -297,7 +297,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
       /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num; index++) {
-	int current, next, prev[128];
+	int current, next;
 
         if (!index) {
 	  current = 0; next = eff_rows;
@@ -1343,7 +1343,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   struct networks_table bkt;
   struct networks_table_metadata *mdt = 0;
   char buf[SRVBUFLEN], *bufptr, *delim, *peer_as, *as, *net, *mask, *nh;
-  int rows, eff_rows = 0, j, buflen, fields;
+  int rows, eff_rows = 0, j, buflen, fields, prev[128];
   unsigned int index, fake_row = 0;
   u_int32_t tmpmask[4], tmpnet[4];
   struct stat st;
@@ -1596,7 +1596,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
       /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num6; index++) {
-        int current, next, prev[128];
+        int current, next;
 
         if (!index) {
           current = 0; next = eff_rows;
