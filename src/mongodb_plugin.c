@@ -191,6 +191,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     if (config.sql_history) {
       while (now > (basetime.tv_sec + timeslot)) {
+	new_basetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
           timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
@@ -199,7 +200,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      if (qq_ptr) P_cache_handle_flush_event(&pt);
+      P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
@@ -237,9 +238,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       else rg->ptr += bufsz;
 
       /* lazy refresh time handling */ 
-      if (now > refresh_deadline) {
-        if (qq_ptr) P_cache_handle_flush_event(&pt);
-      } 
+      if (now > refresh_deadline) P_cache_handle_flush_event(&pt);
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
@@ -434,7 +433,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       if (queue[j]->pcust) pcust = queue[j]->pcust;
       else pcust = empty_pcust;
   
-      if (!queue[j]->valid) continue;
+      if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
       if (config.what_to_count & COUNT_ID) bson_append_long(bson_elem, "tag", data->id);
       if (config.what_to_count & COUNT_ID2) bson_append_long(bson_elem, "tag2", data->id2);

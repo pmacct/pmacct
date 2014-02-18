@@ -91,7 +91,7 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   else res_cust = FALSE;
 
   if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust) {
-    if (cache_ptr->valid == TRUE) {
+    if (cache_ptr->valid == PRINT_CACHE_INUSE) {
       if (cache_ptr->next) {
         cache_ptr = cache_ptr->next;
         goto start;
@@ -205,7 +205,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
   if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust) {
     /* aliasing of entries */
-    if (cache_ptr->valid == TRUE) { 
+    if (cache_ptr->valid == PRINT_CACHE_INUSE) { 
       if (cache_ptr->next) {
 	cache_ptr = cache_ptr->next;
 	goto start;
@@ -292,12 +292,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       cache_ptr->packet_counter += data->cst.pa;
       cache_ptr->flow_counter += data->cst.fa;
     }
-    cache_ptr->valid = TRUE;
+    cache_ptr->valid = PRINT_CACHE_INUSE;
     cache_ptr->basetime.tv_sec = ibasetime.tv_sec;
     cache_ptr->basetime.tv_usec = ibasetime.tv_usec;
   }
   else {
-    if (cache_ptr->valid == TRUE) {
+    if (cache_ptr->valid == PRINT_CACHE_INUSE) {
       /* everything is ok; summing counters */
       cache_ptr->packet_counter += data->pkt_num;
       cache_ptr->flow_counter += data->flo_num;
@@ -322,7 +322,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
         cache_ptr->packet_counter += data->cst.pa;
         cache_ptr->flow_counter += data->cst.fa;
       }
-      cache_ptr->valid = TRUE;
+      cache_ptr->valid = PRINT_CACHE_INUSE;
       cache_ptr->basetime.tv_sec = ibasetime.tv_sec;
       cache_ptr->basetime.tv_usec = ibasetime.tv_usec;
       queries_queue[qq_ptr] = cache_ptr;
@@ -368,22 +368,57 @@ void P_cache_handle_flush_event(struct ports_table *pt)
 {
   int ret;
 
+  if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
+
   switch (ret = fork()) {
   case 0: /* Child */
     (*purge_func)(queries_queue, qq_ptr);
+
     exit(0);
   default: /* Parent */
     if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+
     P_cache_flush(queries_queue, qq_ptr);
+
     gettimeofday(&flushtime, NULL);
     refresh_deadline += config.sql_refresh_time;
     qq_ptr = FALSE;
+    memset(&new_basetime, 0, sizeof(new_basetime));
+
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, pt);
       reload_map = FALSE;
     }
+
     break;
+  }
+}
+
+void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
+{
+  struct timeval commit_basetime;
+  int j;
+
+  memset(&commit_basetime, 0, sizeof(commit_basetime));
+
+  /* check-pointing */
+  if (new_basetime.tv_sec) commit_basetime.tv_sec = new_basetime.tv_sec;
+  else commit_basetime.tv_sec = basetime.tv_sec; 
+
+  /* mark committed entries as such */
+  if (!exiting) {
+    for (j = 0, pqq_ptr = 0; j < index; j++) {
+      if (commit_basetime.tv_sec >= queue[j]->basetime.tv_sec) {
+        pending_queries_queue[pqq_ptr] = queue[j];
+        pqq_ptr++;
+      }
+      else queue[j]->valid = PRINT_CACHE_COMMITTED;
+    }
+  }
+  else {
+    for (j = 0, pqq_ptr = 0; j < index; j++)
+      queue[j]->valid = PRINT_CACHE_COMMITTED;
   }
 }
 
@@ -392,7 +427,7 @@ void P_cache_flush(struct chained_cache *queue[], int index)
   int j;
 
   for (j = 0; j < index; j++) {
-    queue[j]->valid = FALSE;
+    queue[j]->valid = PRINT_CACHE_FREE;
     queue[j]->next = NULL;
   }
 
@@ -462,6 +497,7 @@ void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 
 void P_exit_now(int signum)
 {
+  if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, TRUE);
   (*purge_func)(queries_queue, qq_ptr);
 
   wait(NULL);
@@ -520,6 +556,8 @@ void P_init_historical_acct(time_t now)
   }
 
   basetime.tv_sec = t;
+
+  memset(&new_basetime, 0, sizeof(new_basetime));
 }
 
 void P_eval_historical_acct(struct timeval *stamp, struct timeval *basetime, time_t timeslot)

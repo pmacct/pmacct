@@ -31,6 +31,12 @@
 #define AVERAGE_CHAIN_LEN 10
 #define PRINT_CACHE_ENTRIES 16411
 
+/* cache element states */
+#define PRINT_CACHE_FREE	0
+#define PRINT_CACHE_COMMITTED	1
+#define PRINT_CACHE_INUSE	2 
+#define PRINT_CACHE_ERROR	255
+
 /* structures */
 struct scratch_area {
   unsigned char *base;
@@ -51,7 +57,7 @@ struct chained_cache {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
-  int valid;
+  u_int8_t valid;
   struct timeval basetime;
   struct chained_cache *next;
 };
@@ -72,6 +78,7 @@ EXT void P_sum_mac_insert(struct primitives_ptrs *);
 #endif
 EXT struct chained_cache *P_cache_search(struct primitives_ptrs *);
 EXT void P_cache_insert(struct primitives_ptrs *);
+EXT void P_cache_mark_flush(struct chained_cache *[], int, int);
 EXT void P_cache_flush(struct chained_cache *[], int);
 EXT void P_cache_handle_flush_event(struct ports_table *);
 EXT void P_exit_now(int);
@@ -92,7 +99,7 @@ EXT time_t refresh_deadline;
 EXT void (*basetime_init)(time_t);
 EXT void (*basetime_eval)(struct timeval *, struct timeval *, time_t);
 EXT int (*basetime_cmp)(struct timeval *, struct timeval *);
-EXT struct timeval basetime, ibasetime;
+EXT struct timeval basetime, ibasetime, new_basetime;
 EXT time_t timeslot;
 EXT int dyn_table;
 
