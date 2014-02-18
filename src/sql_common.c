@@ -445,6 +445,61 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
   }
 }
 
+void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_deadline, struct ports_table *pt)
+{
+  int ret;
+
+  switch (ret = fork()) {
+  case 0: /* Child */
+    /* we have to ignore signals to avoid loops: because we are already forked */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+    pm_setproctitle("%s %s [%s]", config.type, "Plugin -- DB Writer", config.name);
+
+    if (qq_ptr && sql_writers.flags != CHLD_ALERT) {
+      if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
+      if (!strcmp(config.type, "mysql"))
+        (*sqlfunc_cbr.connect)(&p, config.sql_host);
+      else
+        (*sqlfunc_cbr.connect)(&p, NULL);
+      (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
+      (*sqlfunc_cbr.close)(&bed);
+    }
+
+    if (config.sql_trigger_exec) {
+      if (idata->now > idata->triggertime) sql_trigger_exec(config.sql_trigger_exec);
+    }
+
+    exit(0);
+  default: /* Parent */
+    if (ret == -1) { /* Something went wrong */
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
+      sql_writers.active--;
+    }
+
+    if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, idata);
+    gettimeofday(&idata->flushtime, NULL);
+    while (idata->now > *refresh_deadline)
+      *refresh_deadline += config.sql_refresh_time;
+    while (idata->now > idata->triggertime && idata->t_timeslot > 0) {
+      idata->triggertime  += idata->t_timeslot;
+    if (config.sql_trigger_time == COUNT_MONTHLY)
+      idata->t_timeslot = calc_monthly_timeslot(idata->triggertime, config.sql_trigger_time_howmany, ADD);
+    }
+    idata->new_basetime = FALSE;
+    glob_new_basetime = FALSE;
+    qq_ptr = pqq_ptr;
+    memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
+
+    if (reload_map) {
+      load_networks(config.networks_file, &nt, &nc);
+      load_ports(config.ports_file, pt);
+      reload_map = FALSE;
+    }
+    break;
+  }
+}
+
 struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t basetime)
 {
   struct pkt_data *pdata = prim_ptrs->data;
@@ -526,7 +581,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_primitives *srcdst = &data->primitives;
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
-  int ret;
+  int ret, insert_status;
 
   /* pro_rating vars */
   int time_delta = 0, time_total = 0;
@@ -614,6 +669,8 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   Cursor = &cache[idata->modulo];
 
   start:
+  insert_status = SQL_INSERT_INSERT;
+
   if (idata->hash != Cursor->signature) {
     if (Cursor->valid == SQL_CACHE_INUSE) {
       follow_chain:
@@ -625,30 +682,25 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         if (lru_head.lru_next && lru_head.lru_next->valid != SQL_CACHE_INUSE &&
 	    ((idata->now-lru_head.lru_next->lru_tag) > STALE_M*config.sql_refresh_time)) {
           newElem = lru_head.lru_next;
-	  if (newElem != Cursor) { 
-            ReBuildChain(Cursor, newElem);
-            Cursor = newElem;
-            goto insert; /* we have successfully reused a stale element */
-	  }
-	  /* if the last LRU element is our cursor and is still in use,
-	     we are forced to abort the LRU idea and create a new brand
-	     new element */
-	  else goto create;
+	  /* if (newElem != Cursor) */
+	  /* check removed: Cursor must be SQL_CACHE_INUSE; newElem must be not SQL_CACHE_INUSE */
+          ReBuildChain(Cursor, newElem);
+          Cursor = newElem;
+          /* we have successfully reused a stale element */
         }
         else {
-	  create:
           newElem = (struct db_cache *) malloc(sizeof(struct db_cache));
           if (newElem) {
             memset(newElem, 0, sizeof(struct db_cache));
             BuildChain(Cursor, newElem);
             Cursor = newElem;
-            goto insert; /* creating a new element */
+            /* creating a new element */
           }
-          else goto safe_action; /* we should have finished memory */
+          else insert_status = SQL_INSERT_SAFE_ACTION; /* we should have finished memory */
         }
       }
     }
-    else goto insert; /* we found a no more valid entry; let's insert here our data */
+    /* we found a no more valid entry; let's insert here our data */
   }
   else {
     if (Cursor->valid == SQL_CACHE_INUSE) {
@@ -685,166 +737,164 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
       if (!res_data && !res_bgp && !res_nat && !res_mpls && !res_cust) {
         /* additional check: time */
-        if ((Cursor->basetime != basetime) && config.sql_history) {
-          // if (!staleElem && Cursor->chained) staleElem = Cursor;
-          goto follow_chain;
-        }
+        if ((Cursor->basetime != basetime) && config.sql_history) goto follow_chain;
 
         /* additional check: bytes counter overflow */
-        if (Cursor->bytes_counter > CACHE_THRESHOLD) {
-          // if (!staleElem && Cursor->chained) staleElem = Cursor;
-          goto follow_chain;
-        }
+        if (Cursor->bytes_counter > CACHE_THRESHOLD) goto follow_chain;
 
-        goto update;
+	/* All is good: let's update the matching entry */
+        insert_status = SQL_INSERT_UPDATE;
       }
       else goto follow_chain;
     }
-    else goto insert;
   }
 
-  insert:
-  if (qq_ptr < qq_size) {
-    queries_queue[qq_ptr] = Cursor;
-    qq_ptr++;
-  }
-  else SafePtr = Cursor;
-
-  /* we add the new entry in the cache */
-  memcpy(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
-
-  if (pbgp) {
-    /* releasing stale information and starting from scratch */
-    if (!Cursor->cbgp) {
-      Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
-      if (!Cursor->cbgp) goto safe_action;
-      memset(Cursor->cbgp, 0, cb_size);
+  if (insert_status == SQL_INSERT_INSERT) {
+    if (qq_ptr < qq_size) {
+      queries_queue[qq_ptr] = Cursor;
+      qq_ptr++;
     }
-
-    pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
-  }
-  else {
-    if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
-  }
-
-  if (pnat) {
-    if (!Cursor->pnat) {
-      Cursor->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
-      if (!Cursor->pnat) goto safe_action;
+    else SafePtr = Cursor;
+  
+    /* we add the new entry in the cache */
+    memcpy(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
+  
+    if (pbgp) {
+      /* releasing stale information and starting from scratch */
+      if (!Cursor->cbgp) {
+        Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
+        if (!Cursor->cbgp) goto safe_action;
+        memset(Cursor->cbgp, 0, cb_size);
+      }
+  
+      pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
     }
-    memcpy(Cursor->pnat, pnat, pn_size);
-  }
-  else {
-    if (Cursor->pnat) free(Cursor->pnat);
-    Cursor->pnat = NULL;
-  }
-
-  if (pmpls) {
-    if (!Cursor->pmpls) {
-      Cursor->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
-      if (!Cursor->pmpls) goto safe_action;
+    else {
+      if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
     }
-    memcpy(Cursor->pmpls, pmpls, pm_size);
-  }
-  else {
-    if (Cursor->pmpls) free(Cursor->pmpls);
-    Cursor->pmpls = NULL;
-  }
-
-  if (pcust) {
-    if (!Cursor->pcust) {
-      Cursor->pcust = malloc(pc_size);
-      if (!Cursor->pcust) goto safe_action;
+  
+    if (pnat) {
+      if (!Cursor->pnat) {
+        Cursor->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
+        if (!Cursor->pnat) goto safe_action;
+      }
+      memcpy(Cursor->pnat, pnat, pn_size);
     }
-    memcpy(Cursor->pcust, pcust, pc_size);
-  }
-  else {
-    if (Cursor->pcust) free(Cursor->pcust);
-    Cursor->pcust = NULL;
+    else {
+      if (Cursor->pnat) free(Cursor->pnat);
+      Cursor->pnat = NULL;
+    }
+  
+    if (pmpls) {
+      if (!Cursor->pmpls) {
+        Cursor->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
+        if (!Cursor->pmpls) goto safe_action;
+      }
+      memcpy(Cursor->pmpls, pmpls, pm_size);
+    }
+    else {
+      if (Cursor->pmpls) free(Cursor->pmpls);
+      Cursor->pmpls = NULL;
+    }
+  
+    if (pcust) {
+      if (!Cursor->pcust) {
+        Cursor->pcust = malloc(pc_size);
+        if (!Cursor->pcust) goto safe_action;
+      }
+      memcpy(Cursor->pcust, pcust, pc_size);
+    }
+    else {
+      if (Cursor->pcust) free(Cursor->pcust);
+      Cursor->pcust = NULL;
+    }
+  
+    Cursor->packet_counter = data->pkt_num;
+    Cursor->flows_counter = data->flo_num;
+    Cursor->bytes_counter = data->pkt_len;
+    Cursor->flow_type = data->flow_type;
+    Cursor->tcp_flags = data->tcp_flags;
+    if (config.what_to_count & COUNT_CLASS) {
+      Cursor->bytes_counter += data->cst.ba;
+      Cursor->packet_counter += data->cst.pa;
+      Cursor->flows_counter += data->cst.fa;
+      Cursor->tentatives = data->cst.tentatives;
+    }
+    Cursor->valid = SQL_CACHE_INUSE;
+    Cursor->basetime = basetime;
+    Cursor->start_tag = idata->now;
+    Cursor->lru_tag = idata->now;
+    Cursor->signature = idata->hash;
+    /* We are not so fancy to reuse elements which have
+       not been malloc()'d before */
+    if (Cursor->chained) AddToLRUTail(Cursor); 
+    if (SafePtr) goto safe_action;
+    if (staleElem) SwapChainedElems(Cursor, staleElem);
+    insert_status = SQL_INSERT_PRO_RATING;
   }
 
-  Cursor->packet_counter = data->pkt_num;
-  Cursor->flows_counter = data->flo_num;
-  Cursor->bytes_counter = data->pkt_len;
-  Cursor->flow_type = data->flow_type;
-  Cursor->tcp_flags = data->tcp_flags;
-  if (config.what_to_count & COUNT_CLASS) {
-    Cursor->bytes_counter += data->cst.ba;
-    Cursor->packet_counter += data->cst.pa;
-    Cursor->flows_counter += data->cst.fa;
-    Cursor->tentatives = data->cst.tentatives;
+  if (insert_status == SQL_INSERT_UPDATE) {
+    Cursor->packet_counter += data->pkt_num;
+    Cursor->flows_counter += data->flo_num;
+    Cursor->bytes_counter += data->pkt_len;
+    Cursor->flow_type = data->flow_type;
+    Cursor->tcp_flags |= data->tcp_flags;
+    if (config.what_to_count & COUNT_CLASS) {
+      Cursor->bytes_counter += data->cst.ba;
+      Cursor->packet_counter += data->cst.pa;
+      Cursor->flows_counter += data->cst.fa;
+      Cursor->tentatives = data->cst.tentatives;
+    }
+    insert_status = SQL_INSERT_PRO_RATING;
   }
-  Cursor->valid = SQL_CACHE_INUSE;
-  Cursor->basetime = basetime;
-  Cursor->start_tag = idata->now;
-  Cursor->lru_tag = idata->now;
-  Cursor->signature = idata->hash;
-  /* We are not so fancy to reuse elements which have
-     not been malloc()'d before */
-  if (Cursor->chained) AddToLRUTail(Cursor); 
-  if (SafePtr) goto safe_action;
-  if (staleElem) SwapChainedElems(Cursor, staleElem);
-  goto pro_rating;
 
-  update:
-  Cursor->packet_counter += data->pkt_num;
-  Cursor->flows_counter += data->flo_num;
-  Cursor->bytes_counter += data->pkt_len;
-  Cursor->flow_type = data->flow_type;
-  Cursor->tcp_flags |= data->tcp_flags;
-  if (config.what_to_count & COUNT_CLASS) {
-    Cursor->bytes_counter += data->cst.ba;
-    Cursor->packet_counter += data->cst.pa;
-    Cursor->flows_counter += data->cst.fa;
-    Cursor->tentatives = data->cst.tentatives;
-  }
-  // goto pro_rating;
-
-  pro_rating:
-  if (config.acct_type == ACCT_NF && config.nfacctd_pro_rating && config.sql_history) {
-    if ((basetime + timeslot) < data->time_end.tv_sec) {
-      basetime += timeslot;
-      goto new_timeslot; 
+  if (insert_status == SQL_INSERT_PRO_RATING) {
+    if (config.acct_type == ACCT_NF && config.nfacctd_pro_rating && config.sql_history) {
+      if ((basetime + timeslot) < data->time_end.tv_sec) {
+        basetime += timeslot;
+        goto new_timeslot; 
+      }
     }
   }
 
-  return;
+  if (insert_status == SQL_INSERT_SAFE_ACTION) {
+    safe_action:
 
-  safe_action:
-  Log(LOG_WARNING, "WARN ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
-
-  if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
-  switch (ret = fork()) {
-  case 0: /* Child */
-    signal(SIGINT, SIG_IGN);
-    signal(SIGHUP, SIG_IGN);
-    pm_setproctitle("%s [%s]", "SQL Plugin -- DB Writer (urgent)", config.name);
-
-    if (qq_ptr && sql_writers.flags != CHLD_ALERT) {
-      if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
-      (*sqlfunc_cbr.connect)(&p, config.sql_host);
-      (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
-      (*sqlfunc_cbr.close)(&bed);
+    Log(LOG_WARNING, "WARN ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
+  
+    if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
+    switch (ret = fork()) {
+    case 0: /* Child */
+      signal(SIGINT, SIG_IGN);
+      signal(SIGHUP, SIG_IGN);
+      pm_setproctitle("%s [%s]", "SQL Plugin -- DB Writer (urgent)", config.name);
+  
+      if (qq_ptr && sql_writers.flags != CHLD_ALERT) {
+        if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
+        (*sqlfunc_cbr.connect)(&p, config.sql_host);
+        (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
+        (*sqlfunc_cbr.close)(&bed);
+      }
+  
+      exit(0);
+    default: /* Parent */
+      if (ret == -1) { /* Something went wrong */
+        Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer (urgent): %s\n", config.name, config.type, strerror(errno));
+        sql_writers.active--;
+      }
+  
+      qq_ptr = pqq_ptr;
+      memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+      break;
     }
-
-    exit(0);
-  default: /* Parent */
-    if (ret == -1) { /* Something went wrong */
-      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer (urgent): %s\n", config.name, config.type, strerror(errno));
-      sql_writers.active--;
+    if (SafePtr) {
+      queries_queue[qq_ptr] = Cursor;
+      qq_ptr++;
     }
-
-    qq_ptr = pqq_ptr;
-    memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
-    break;
-  }
-  if (SafePtr) {
-    queries_queue[qq_ptr] = Cursor;
-    qq_ptr++;
-  }
-  else {
-    Cursor = &cache[idata->modulo];
-    goto start;
+    else {
+      Cursor = &cache[idata->modulo];
+      goto start;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -62,6 +62,11 @@
 #define SPACELEFT(x) (sizeof(x)-strlen(x))
 #define SPACELEFT_LEN(x,y) (sizeof(x)-y)
 #define SPACELEFT_PTR(x,y) (y-strlen(x))
+
+#define SQL_INSERT_INSERT	0x00000001
+#define SQL_INSERT_UPDATE	0x00000002
+#define SQL_INSERT_PRO_RATING	0x00000004
+#define SQL_INSERT_SAFE_ACTION	0x00000008
 
 struct multi_values {
   int buffer_offset;      /* multi-values buffer offset where to write next query */ 
@@ -299,6 +304,7 @@ EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct
 EXT void sql_cache_modulo(struct primitives_ptrs *, struct insert_data *);
 EXT int sql_cache_flush(struct db_cache *[], int, struct insert_data *, int);
 EXT int sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
+EXT void sql_cache_handle_flush_event(struct insert_data *, time_t *, struct ports_table *);
 EXT void sql_cache_insert(struct primitives_ptrs *, struct insert_data *);
 EXT struct db_cache *sql_cache_search(struct primitives_ptrs *, time_t);
 EXT int sql_trigger_exec(char *);

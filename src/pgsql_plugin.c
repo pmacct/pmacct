@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -134,53 +134,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     switch (ret) {
     case 0: /* poll(): timeout */
       if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
-      switch (ret = fork()) {
-      case 0: /* Child */
-	/* we have to ignore signals to avoid loops:
-	   because we are already forked */
-	signal(SIGINT, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
-	pm_setproctitle("%s [%s]", "PostgreSQL Plugin -- DB Writer", config.name);
-
-	if (qq_ptr && sql_writers.flags != CHLD_ALERT) {
-	  if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
-	  (*sqlfunc_cbr.connect)(&p, NULL);
-          (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, &idata); 
-	  (*sqlfunc_cbr.close)(&bed);
-	}
-
-	if (config.sql_trigger_exec) {
-	  if (idata.now > idata.triggertime) sql_trigger_exec(config.sql_trigger_exec);
-	}
-
-        exit(0);
-      default: /* Parent */
-        if (ret == -1) { /* Something went wrong */
-          Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
-          sql_writers.active--;
-        }
-
-	if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
-	gettimeofday(&idata.flushtime, NULL);
-	while (idata.now > refresh_deadline)
-	  refresh_deadline += config.sql_refresh_time; 
-	while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
-	  idata.triggertime  += idata.t_timeslot;
-	  if (config.sql_trigger_time == COUNT_MONTHLY)
-	    idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
-	}
-	idata.new_basetime = FALSE;
-	glob_new_basetime = FALSE;
-	qq_ptr = pqq_ptr;
-	memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
-
-	if (reload_map) {
-	  load_networks(config.networks_file, &nt, &nc);
-	  load_ports(config.ports_file, &pt);
-	  reload_map = FALSE;
-	}
-        break;
-      }
+      sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
       break;
     default: /* poll(): received data */
       read_data:
@@ -222,53 +176,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       /* lazy sql refresh handling */ 
       if (idata.now > refresh_deadline) {
         if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
-        switch (ret = fork()) {
-        case 0: /* Child */
-          /* we have to ignore signals to avoid loops:
-	     because we are already forked */
-	  signal(SIGINT, SIG_IGN);
-	  signal(SIGHUP, SIG_IGN);
-	  pm_setproctitle("%s [%s]", "PostgreSQL Plugin -- DB Writer", config.name);
-
-          if (qq_ptr && sql_writers.flags != CHLD_ALERT) {
-	    if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
-            (*sqlfunc_cbr.connect)(&p, NULL); 
-            (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, &idata);
-	    (*sqlfunc_cbr.close)(&bed);
-	  }
-
-	  if (config.sql_trigger_exec) {
-            if (idata.now > idata.triggertime) sql_trigger_exec(config.sql_trigger_exec);
-          }
-
-          exit(0);
-        default: /* Parent */
-          if (ret == -1) { /* Something went wrong */
-            Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
-            sql_writers.active--;
-          }
-
-	  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, &idata);
-	  gettimeofday(&idata.flushtime, NULL);
-	  while (idata.now > refresh_deadline)
-	    refresh_deadline += config.sql_refresh_time; 
-	  while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
-            idata.triggertime  += idata.t_timeslot;
-            if (config.sql_trigger_time == COUNT_MONTHLY)
-              idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
-          }
-	  idata.new_basetime = FALSE;
-	  glob_new_basetime = FALSE;
-	  qq_ptr = pqq_ptr;
-	  memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
-
-	  if (reload_map) {
-	    load_networks(config.networks_file, &nt, &nc);
-	    load_ports(config.ports_file, &pt);
-	    reload_map = FALSE;
-	  }
-          break;
-        }
+        sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
       } 
       else {
         if (config.sql_trigger_exec) {
