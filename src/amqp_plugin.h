@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -21,6 +21,7 @@
 
 /* includes */
 #include <amqp.h>
+#include <amqp_tcp_socket.h>
 #include <sys/poll.h>
 
 /* structures */

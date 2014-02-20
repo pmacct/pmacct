@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -47,6 +47,7 @@ struct sfv5_modules_desc {
 EXT void sfv5_modules_db_init();
 EXT struct sfv5_modules_db_field *sfv5_modules_db_get_ie(u_int32_t);
 EXT struct sfv5_modules_db_field *sfv5_modules_get_next_ie(u_int32_t);
+EXT struct sfv5_modules_db_field *sfv5_modules_db_get_next_ie(u_int32_t);
 
 EXT struct sfv5_modules_desc sfv5_modules;
 #undef EXT

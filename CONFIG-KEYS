@@ -62,11 +62,10 @@ DESC:		aggregate captured traffic data by selecting the specified set of primiti
 		tagging engines (pre_tag_map, post_tag) are in use. 'class' enables reception
 		of L7 traffic classes when Packet/Flow Classification engine (classifiers) is
 		in use. (default: src_host).
-NOTES:		* Some primitives (ie. tag2, src_as_path, src_std_comm, src_ext_comm, src_med
-		  and src_local_pref primitives) are not part of any default SQL table schema
-		  shipped with pmacct. Always check out documentation related to the RDBMS in
-		  use (ie. 'sql/README.mysql') which will point you to extra primitive-related
-		  documentation, if required.
+NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
+		  any default SQL table schema shipped. Always check out documentation related
+		  to the RDBMS in use (ie. 'sql/README.mysql') which will point you to extra
+		  primitive-related documentation, if required.
 		* List of the aggregation primitives available to each specific pmacct daemon
 		  is available via -a command-line option, ie. "pmacctd -a". 
 		* sampling_rate: if counters renormalization is enabled this field will report
@@ -807,6 +806,16 @@ DESC:		Name of the AMQP routing key to attach to published data. Dynamic names a
 		$pre_tag	Value of the tag primitive of the record being processed.
 
                 $post_tag	Configured value of post_tag.
+
+KEY:		amqp_persistent_msg
+VALUES:         [ true | false ]
+DESC:		Marks messages as persistent so that a queue content does not get lost if RabbitMQ restarts.
+		Note from RabbitMQ docs: "Marking messages as persistent doesn't fully guarantee that a
+		message won't be lost. Although it tells RabbitMQ to save message to the disk, there is
+		still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
+		Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
+		not really written to the disk. The persistence guarantees aren't strong, but it is more
+		than enough for our simple task queue.".
 		
 KEY:		print_markers
 VALUES:		[ true | false ]

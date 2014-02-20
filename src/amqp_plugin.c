@@ -279,6 +279,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   char *empty_pcust = NULL;
+  struct amqp_basic_properties_t_ amqp_msg_props;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
@@ -313,6 +314,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
+  memset(&amqp_msg_props, 0, sizeof(amqp_msg_props));
 
   amqp_conn = amqp_new_connection();
 
@@ -353,6 +355,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     return;
   }
 
+  if (config.amqp_persistent_msg) {
+    amqp_msg_props._flags = (AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG);
+    amqp_msg_props.content_type = amqp_cstring_bytes("text/json");
+    amqp_msg_props.delivery_mode = 2; /* persistent delivery */
+  }
+
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
@@ -383,11 +391,11 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       if (is_routing_key_dyn) amqp_handle_routing_key_dyn_strings(config.sql_table, SRVBUFLEN, orig_amqp_routing_key,
 								  queue[j]);  
 
-      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s]: %s\n", config.name,
-                            config.type, config.sql_db, config.sql_table, json_str);
+      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
+                            config.type, config.sql_db, config.sql_table, amqp_msg_props.delivery_mode, json_str);
 
       amqp_basic_publish(amqp_conn, 1, amqp_cstring_bytes(config.sql_db), amqp_cstring_bytes(config.sql_table),
-			 0, 0, NULL, amqp_cstring_bytes(json_str));
+			 0, 0, &amqp_msg_props, amqp_cstring_bytes(json_str));
 
       amqp_ret = amqp_get_rpc_reply(amqp_conn);
       if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
