@@ -133,6 +133,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pipebuf = (unsigned char *) Malloc(config.buffer_size);
   cache = (struct chained_cache *) Malloc(config.print_cache_entries*dbc_size); 
   queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  pending_queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   sa.base = (unsigned char *) Malloc(sa.size);
   sa.ptr = sa.base;
   sa.next = NULL;
@@ -164,6 +165,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(pipebuf, 0, config.buffer_size);
   memset(cache, 0, config.print_cache_entries*sizeof(struct chained_cache));
   memset(queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  memset(pending_queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
 
