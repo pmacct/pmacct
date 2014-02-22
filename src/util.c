@@ -1604,6 +1604,13 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   char tstamp_str[SRVBUFLEN];
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
+  char json_pack_int_fmt[5];
+
+  json_pack_int_fmt[0] = '{';
+  json_pack_int_fmt[1] = 's';
+  json_pack_int_fmt[2] = JANSSON_INT_PACK;
+  json_pack_int_fmt[3] = '}';
+  json_pack_int_fmt[4] = '\0';
   
   if (wtc & COUNT_ID) {
     kv = json_pack("{sI}", "tag", pbase->id);
@@ -1639,13 +1646,13 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_VLAN) {
-    kv = json_pack("{sI}", "vlan", pbase->vlan_id);
+    kv = json_pack(json_pack_int_fmt, "vlan", pbase->vlan_id);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_COS) {
-    kv = json_pack("{sI}", "cos", pbase->cos);
+    kv = json_pack(json_pack_int_fmt, "cos", pbase->cos);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1659,13 +1666,13 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 #endif
 
   if (wtc & COUNT_SRC_AS) {
-    kv = json_pack("{sI}", "as_src", pbase->src_as);
+    kv = json_pack(json_pack_int_fmt, "as_src", pbase->src_as);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_DST_AS) {
-    kv = json_pack("{sI}", "as_dst", pbase->dst_as);
+    kv = json_pack(json_pack_int_fmt, "as_dst", pbase->dst_as);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1702,25 +1709,25 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_LOCAL_PREF) {
-    kv = json_pack("{sI}", "local_pref", pbgp->local_pref);
+    kv = json_pack(json_pack_int_fmt, "local_pref", pbgp->local_pref);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_MED) {
-    kv = json_pack("{sI}", "med", pbgp->med);
+    kv = json_pack(json_pack_int_fmt, "med", pbgp->med);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_PEER_SRC_AS) {
-    kv = json_pack("{sI}", "peer_as_src", pbgp->peer_src_as);
+    kv = json_pack(json_pack_int_fmt, "peer_as_src", pbgp->peer_src_as);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_PEER_DST_AS) {
-    kv = json_pack("{sI}", "peer_as_dst", pbgp->peer_dst_as);
+    kv = json_pack(json_pack_int_fmt, "peer_as_dst", pbgp->peer_dst_as);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1740,13 +1747,13 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_IN_IFACE) {
-    kv = json_pack("{sI}", "iface_in", pbase->ifindex_in);
+    kv = json_pack(json_pack_int_fmt, "iface_in", pbase->ifindex_in);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_OUT_IFACE) {
-    kv = json_pack("{sI}", "iface_out", pbase->ifindex_out);
+    kv = json_pack(json_pack_int_fmt, "iface_out", pbase->ifindex_out);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1773,25 +1780,25 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_SRC_NMASK) {
-    kv = json_pack("{sI}", "mask_src", pbase->src_nmask);
+    kv = json_pack(json_pack_int_fmt, "mask_src", pbase->src_nmask);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_DST_NMASK) {
-    kv = json_pack("{sI}", "mask_dst", pbase->dst_nmask);
+    kv = json_pack(json_pack_int_fmt, "mask_dst", pbase->dst_nmask);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_SRC_PORT) {
-    kv = json_pack("{sI}", "port_src", pbase->src_port);
+    kv = json_pack(json_pack_int_fmt, "port_src", pbase->src_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_DST_PORT) {
-    kv = json_pack("{sI}", "port_dst", pbase->dst_port);
+    kv = json_pack(json_pack_int_fmt, "port_dst", pbase->dst_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1807,7 +1814,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
-  if (wtc & COUNT_DST_HOST_COUNTRY) {
+  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
     if (pbase->dst_ip_country > 0)
       kv = json_pack("{ss}", "country_ip_dst", GeoIP_code_by_id(pbase->dst_ip_country));
     else
@@ -1826,19 +1833,19 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 
   if (wtc & COUNT_IP_PROTO) {
     if (!config.num_protos) kv = json_pack("{ss}", "ip_proto", _protocols[pbase->proto].name);
-    else kv = json_pack("{sI}", "ip_proto", _protocols[pbase->proto].number);
+    else kv = json_pack(json_pack_int_fmt, "ip_proto", _protocols[pbase->proto].number);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_IP_TOS) {
-    kv = json_pack("{sI}", "tos", pbase->tos);
+    kv = json_pack(json_pack_int_fmt, "tos", pbase->tos);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_SAMPLING_RATE) {
-    kv = json_pack("{sI}", "sampling_rate", pbase->sampling_rate);
+    kv = json_pack(json_pack_int_fmt, "sampling_rate", pbase->sampling_rate);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1863,37 +1870,37 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_PORT) {
-    kv = json_pack("{sI}", "post_nat_port_src", pnat->post_nat_src_port);
+    kv = json_pack(json_pack_int_fmt, "post_nat_port_src", pnat->post_nat_src_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_POST_NAT_DST_PORT) {
-    kv = json_pack("{sI}", "post_nat_port_dst", pnat->post_nat_dst_port);
+    kv = json_pack(json_pack_int_fmt, "post_nat_port_dst", pnat->post_nat_dst_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_NAT_EVENT) {
-    kv = json_pack("{sI}", "nat_event", pnat->nat_event);
+    kv = json_pack(json_pack_int_fmt, "nat_event", pnat->nat_event);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
-    kv = json_pack("{sI}", "mpls_label_top", pmpls->mpls_label_top);
+    kv = json_pack(json_pack_int_fmt, "mpls_label_top", pmpls->mpls_label_top);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
-    kv = json_pack("{sI}", "mpls_label_bottom", pmpls->mpls_label_bottom);
+    kv = json_pack(json_pack_int_fmt, "mpls_label_bottom", pmpls->mpls_label_bottom);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
-    kv = json_pack("{sI}", "mpls_stack_depth", pmpls->mpls_stack_depth);
+    kv = json_pack(json_pack_int_fmt, "mpls_stack_depth", pmpls->mpls_stack_depth);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
