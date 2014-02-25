@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /* 
@@ -27,6 +27,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define _BGP_TABLE_H_
 
 #define DEFAULT_BGP_INFO_HASH 13
+#define DEFAULT_BGP_INFO_AS_PATHS_HASH 1
 
 /* AFI and SAFI type. */
 typedef u_int16_t afi_t;

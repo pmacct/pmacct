@@ -1419,14 +1419,23 @@ DESC:           full pathname to a file containing the BGP peers (IP address onl
 
 KEY:		bgp_table_peer_buckets [GLOBAL]
 VALUES:		[ 1-1000 ]
-DESC:		From version 0.12.4, a shared BGP RIB is worked out from announcements sent by all BGP
-		peers. Routing information related to BGP prefixes is kept per-peer in order to simulate
-		a multi-RIB environment and is internally structured as an hash with conflict chains.
+DESC:		Routing information related to BGP prefixes is kept per-peer in order to simulate a
+		multi-RIB environment and is internally structured as an hash with conflict chains.
 		This parameter sets the number of buckets of such hash structure; the value is directly
-		related to the number of expected BGP peers, should never exceed such amount and is best
-		set to 1/10 of the expected number of peers. The default value proved to work fine up to
-		aprox 100 BGP peers in lab. More buckets means better CPU usage but also increased memory
-		footprint - and vice-versa. (default: 13)
+		related to the number of expected BGP peers, should never exceed such amount and: a) if
+		only best-path is received this is best set to 1/10 of the expected peers; b) if add-
+		paths is received this is best set to 1/1 of the expected peers. The default value
+		proved to work fine up to aprox 100 BGP peers sending best-path only, in lab. More
+		buckets means better CPU usage but also increased memory footprint - and vice-versa.
+		(default: 13)
+
+KEY:		bgp_table_as_path_buckets [GLOBAL]
+VALUE:		[ 1-128 ]
+DESC:		With same background information as bgp_table_peer_buckets, this parameter sets the
+		number of buckets in which per-peer BGP ADD-PATHs information is distributed (hence
+		effectively creating a second dimension on top of bgp_table_peer_buckets when BGP
+		ADD-PATHs is received). It is recommended to set this value to maximum 1/3 of the
+		configured maximum number of paths per prefix to be exported. (default: 1)
 
 KEY:		isis_daemon
 VALUES:		[ true | false ]
@@ -1463,7 +1472,7 @@ DESC:	 	enables IS-IS messages logging: as this can get easily verbose, it is in
 
 KEY:		[ geoip_ipv4_file | geoip_ipv6_file ]
 DESC:		If pmacct is compiled with --enable-geoip, this defines full pathname to the Maxmind GeoIP
-		IPv4/IPv6 database file to use.  
+		v1 IPv4/IPv6 database file to use.  
 
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)

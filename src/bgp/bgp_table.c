@@ -71,8 +71,8 @@ bgp_node_create ()
   if (rn) {
     memset (rn, 0, sizeof (struct bgp_node));
 
-    rn->info = (void **) malloc(sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
-    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * config.bgp_table_peer_buckets);
+    rn->info = (void **) malloc(sizeof(struct bgp_info *) * (config.bgp_table_peer_buckets * config.bgp_table_as_path_buckets));
+    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * (config.bgp_table_peer_buckets * config.bgp_table_as_path_buckets));
     else goto malloc_failed;
   }
   else goto malloc_failed;
@@ -114,7 +114,7 @@ bgp_node_free_aggressive (struct bgp_node *node)
   struct bgp_info *ri, *next;
   u_int32_t ri_idx;
 
-  for (ri_idx = 0; ri_idx < config.bgp_table_peer_buckets; ri_idx++) {
+  for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_as_path_buckets); ri_idx++) {
     for (ri = node->info[ri_idx]; ri; ri = next) {
       if (config.nfacctd_bgp_msglog) {
         char empty[] = "";
@@ -292,7 +292,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   struct bgp_node *node;
   struct bgp_node *matched;
   struct bgp_info *info;
-  u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
+  u_int32_t modulo = bgp_route_info_modulo(peer, NULL);
 
   matched = NULL;
   node = table->top;
@@ -410,7 +410,7 @@ bgp_node_delete (struct bgp_node *node)
   u_int32_t ri_idx;
 
   assert (node->lock == 0);
-  for (ri_idx = 0; ri_idx < config.bgp_table_peer_buckets; ri_idx++)
+  for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_as_path_buckets); ri_idx++)
     assert (node->info[ri_idx] == NULL);
 
   if (node->l_left && node->l_right)

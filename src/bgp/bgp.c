@@ -128,6 +128,7 @@ void skinny_bgp_daemon()
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
+  if (!config.bgp_table_as_path_buckets) config.bgp_table_as_path_buckets = DEFAULT_BGP_INFO_AS_PATHS_HASH;
 
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bgp_sock < 0) {
@@ -152,11 +153,9 @@ void skinny_bgp_daemon()
     Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
-    if (config.debug || obtained < config.nfacctd_bgp_pipe_size) {
-      Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
-      getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_bgp_pipe_size);
-    }
+    Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+    getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+    Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_bgp_pipe_size);
   }
 
   rc = bind(config.bgp_sock, (struct sockaddr *) &server, slen);
@@ -554,7 +553,7 @@ void skinny_bgp_daemon()
                                         memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
                                         Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
-                                            		config.name, cap_type, ntohl(cap_data.afi), cap_data.safi, cap_data.sndrcv);
+                                            		config.name, cap_type, ntohs(cap_data.afi), cap_data.safi, cap_data.sndrcv);
 
 					if (cap_data.sndrcv == 2 /* send */) {
                                           peer->cap_add_paths = TRUE; 
@@ -1167,6 +1166,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	/* handle path identifier */
 	if (peer->cap_add_paths) {
 	  memcpy(&path_id, pnt, 4);
+	  path_id = ntohl(path_id);
 	  pnt += 4;
 	}
 
@@ -1258,7 +1258,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL, *new = NULL;
   struct bgp_attr *attr_new = NULL;
-  u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
+  u_int32_t modulo = bgp_route_info_modulo(peer, path_id);
 
   route = bgp_node_get(rib[afi][safi], p);
 
@@ -1417,7 +1417,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 {
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
-  u_int32_t modulo = peer->fd % config.bgp_table_peer_buckets;
+  u_int32_t modulo = bgp_route_info_modulo(peer, path_id);
 
   /* Lookup node. */
   route = bgp_node_get(rib[afi][safi], p);
@@ -2089,7 +2089,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
-  u_int32_t modulo, peer_idx, *peer_idx_ptr;
+  u_int32_t modulo, local_modulo, modulo_idx;
+  u_int32_t peer_idx, *peer_idx_ptr;
   safi_t safi;
   rd_t rd;
 
@@ -2170,7 +2171,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   if (peer) {
     struct host_addr peer_dst_ip;
 
-    modulo = peer->fd % config.bgp_table_peer_buckets;
+    modulo = bgp_route_info_modulo(peer, NULL);
 
     if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
       /* administrativia */
@@ -2228,34 +2229,39 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
           pptrs->lm_method_dst = NF_NET_BGP;
         }
 
-        for (info = result->info[modulo]; info; info = info->next) {
-	  if (info->peer == peer) {
-	    int no_match = FALSE;
+        for (local_modulo = modulo, modulo_idx = 0; modulo_idx < config.bgp_table_as_path_buckets; local_modulo++, modulo_idx++) {
+          for (info = result->info[local_modulo]; info; info = info->next) {
+	    if (info->peer == peer) {
+	      int no_match = FALSE;
 
-	    /* flagging additional checks are required */
-	    if (safi == SAFI_MPLS_VPN) no_match++;
-	    if (peer->cap_add_paths) no_match++;
+	      /* flagging additional checks are required */
+	      if (safi == SAFI_MPLS_VPN) no_match++;
+	      if (peer->cap_add_paths) no_match++;
  
-	    if (safi == SAFI_MPLS_VPN) {
-	      if (info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) no_match--;
-	    }
+	      if (safi == SAFI_MPLS_VPN) {
+	        if (info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) no_match--;
+	      }
 
-	    if (peer->cap_add_paths) {
-	      if (info->attr) {
-		if (info->attr->mp_nexthop.family == peer_dst_ip.family) {
-		  if (!memcmp(&info->attr->mp_nexthop, &peer_dst_ip, HostAddrSz)) no_match--;
-		}
-		else if (info->attr->nexthop.s_addr && peer_dst_ip.family == AF_INET) {
-		  if (info->attr->nexthop.s_addr == peer_dst_ip.address.ipv4.s_addr) no_match--;
-		}
+	      if (peer->cap_add_paths) {
+	        if (info->attr) {
+		  if (info->attr->mp_nexthop.family == peer_dst_ip.family) {
+		    if (!memcmp(&info->attr->mp_nexthop, &peer_dst_ip, HostAddrSz)) no_match--;
+		  }
+		  else if (info->attr->nexthop.s_addr && peer_dst_ip.family == AF_INET) {
+		    if (info->attr->nexthop.s_addr == peer_dst_ip.address.ipv4.s_addr) no_match--;
+		  }
+	        }
+	      }
+
+	      if (!no_match) {
+	        pptrs->bgp_dst_info = (char *) info;
+	        break;
 	      }
 	    }
-
-	    if (!no_match) {
-	      pptrs->bgp_dst_info = (char *) info;
-	      break;
-	    }
 	  }
+
+	  /* if having results, let's not potentially look in other buckets */
+	  if (pptrs->bgp_dst_info) break;
         }
       }
     }
@@ -2298,31 +2304,36 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
           pptrs->lm_method_dst = NF_NET_BGP;
         }
 
-        for (info = result->info[modulo]; info; info = info->next) {
-          if (info->peer == peer) {
-            int no_match = FALSE;
+        for (local_modulo = modulo, modulo_idx = 0; modulo_idx < config.bgp_table_as_path_buckets; local_modulo++, modulo_idx++) {
+          for (info = result->info[local_modulo]; info; info = info->next) {
+            if (info->peer == peer) {
+              int no_match = FALSE;
 
-            /* flagging additional checks are required */
-            if (safi == SAFI_MPLS_VPN) no_match++;
-            if (peer->cap_add_paths) no_match++;
+              /* flagging additional checks are required */
+              if (safi == SAFI_MPLS_VPN) no_match++;
+              if (peer->cap_add_paths) no_match++;
 
-            if (safi == SAFI_MPLS_VPN) {
-              if (info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) no_match--;
-            }
+              if (safi == SAFI_MPLS_VPN) {
+                if (info->extra && !memcmp(&info->extra->rd, &rd, sizeof(rd_t))) no_match--;
+              } 
 
-            if (peer->cap_add_paths) {
-              if (info->attr) {
-                if (info->attr->mp_nexthop.family == peer_dst_ip.family) {
-                  if (!memcmp(&info->attr->mp_nexthop, &peer_dst_ip, HostAddrSz)) no_match--;
+              if (peer->cap_add_paths) {
+                if (info->attr) {
+                  if (info->attr->mp_nexthop.family == peer_dst_ip.family) {
+                    if (!memcmp(&info->attr->mp_nexthop, &peer_dst_ip, HostAddrSz)) no_match--;
+                  }
                 }
               }
-            }
 
-            if (!no_match) {
-	      pptrs->bgp_dst_info = (char *) info;
-	      break;
+              if (!no_match) {
+	        pptrs->bgp_dst_info = (char *) info;
+	        break;
+	      }
 	    }
           }
+
+          /* if having results, let's not potentially look in other buckets */
+          if (pptrs->bgp_dst_info) break;
         }
       }
     }
@@ -2365,7 +2376,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
         result = (struct bgp_node *) pptrs->bgp_dst;
         if (result && prefix_match(&result->p, &default_prefix)) {
           default_node = result;
-          info = result->info[modulo];
+          info = result->info[local_modulo];
           pptrs->bgp_dst = NULL;
           pptrs->bgp_dst_info = NULL;
         }
@@ -2449,7 +2460,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   }
 
   if (nh_peer) {
-    modulo = nh_peer->fd % config.bgp_table_peer_buckets;
+    modulo = bgp_route_info_modulo(nh_peer, NULL);
 
     memset(&ch, 0, sizeof(ch));
     ch.family = AF_INET;
@@ -2807,4 +2818,15 @@ void process_bgp_md5_file(int sock, struct bgp_md5_table *bgp_md5)
 
     idx++;
   }
+}
+
+u_int32_t bgp_route_info_modulo(struct bgp_peer *peer, path_id_t *path_id)
+{
+  path_id_t local_path_id = 1;
+
+  if (path_id && *path_id) local_path_id = *path_id;
+
+  return (((peer->fd * config.bgp_table_as_path_buckets) +
+	  ((local_path_id - 1) % config.bgp_table_as_path_buckets)) %
+	  (config.bgp_table_peer_buckets * config.bgp_table_as_path_buckets));
 }

@@ -2594,6 +2594,23 @@ int cfg_key_nfacctd_bgp_table_peer_buckets(char *filename, char *name, char *val
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_table_as_path_buckets(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 128)) {
+    Log(LOG_ERR, "WARN ( %s ): 'bgp_table_as_path_buckets' has to be in the range 1-128.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_as_path_buckets = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_as_path_buckets'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_batch_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

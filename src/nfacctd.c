@@ -507,11 +507,9 @@ int main(int argc,char **argv, char **envp)
     Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, sizeof(config.nfacctd_pipe_size));
     getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
-    if (config.debug || obtained < config.nfacctd_pipe_size) {
-      Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
-      getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-      Log(LOG_INFO, "INFO ( %s/core ): nfacctd_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_pipe_size);
-    }
+    Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+    Log(LOG_INFO, "INFO ( %s/core ): nfacctd_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_pipe_size);
   }
 
   /* Multicast: memberships handling */
