@@ -2438,7 +2438,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 #endif
   char *saved_agent = pptrs->f_agent;
   pm_id_t bta;
-  u_int32_t modulo;
+  u_int32_t modulo, local_modulo, modulo_idx;
 
   start_again:
 
@@ -2484,8 +2484,10 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     result_node = (struct bgp_node *) result;
 
     if (result_node) {
-      for (info = result_node->info[modulo]; info; info = info->next) {
-        if (info->peer == nh_peer) break;
+      for (local_modulo = modulo, modulo_idx = 0; modulo_idx < config.bgp_table_as_path_buckets; local_modulo++, modulo_idx++) {
+        for (info = result_node->info[modulo]; info; info = info->next) {
+          if (info->peer == nh_peer) break;
+	}
       }
     }
     else info = NULL;

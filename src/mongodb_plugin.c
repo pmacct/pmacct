@@ -470,6 +470,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         else
           bson_append_null(bson_elem, "comms");
       }
+
+      if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
+        bgp_comm = pbgp->ext_comms;
+        while (bgp_comm) {
+          bgp_comm = strchr(pbgp->ext_comms, ' ');
+          if (bgp_comm) *bgp_comm = '_';
+        }
+
+        if (strlen(pbgp->ext_comms))
+          bson_append_string(bson_elem, "comms", pbgp->ext_comms);
+        else
+          bson_append_null(bson_elem, "comms");
+      }
   
       if (config.what_to_count & COUNT_AS_PATH) {
         as_path = pbgp->as_path;
@@ -496,6 +509,47 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         addr_to_str(ip_address, &pbgp->peer_dst_ip);
         bson_append_string(bson_elem, "peer_ip_dst", ip_address);
       }
+
+      if (config.what_to_count & COUNT_SRC_STD_COMM) {
+        bgp_comm = pbgp->src_std_comms;
+        while (bgp_comm) {
+          bgp_comm = strchr(pbgp->src_std_comms, ' ');
+          if (bgp_comm) *bgp_comm = '_';
+        }
+
+        if (strlen(pbgp->src_std_comms))
+          bson_append_string(bson_elem, "src_comms", pbgp->src_std_comms);
+        else
+          bson_append_null(bson_elem, "src_comms");
+      }
+
+      if (config.what_to_count & COUNT_SRC_EXT_COMM && !(config.what_to_count & COUNT_SRC_STD_COMM)) {
+        bgp_comm = pbgp->src_ext_comms;
+        while (bgp_comm) {
+          bgp_comm = strchr(pbgp->src_ext_comms, ' ');
+          if (bgp_comm) *bgp_comm = '_';
+        }
+
+        if (strlen(pbgp->src_ext_comms))
+          bson_append_string(bson_elem, "src_comms", pbgp->src_ext_comms);
+        else
+          bson_append_null(bson_elem, "src_comms");
+      }
+
+      if (config.what_to_count & COUNT_SRC_AS_PATH) {
+        as_path = pbgp->src_as_path;
+        while (as_path) {
+          as_path = strchr(pbgp->src_as_path, ' ');
+          if (as_path) *as_path = '_';
+        }
+        if (strlen(pbgp->src_as_path))
+          bson_append_string(bson_elem, "src_as_path", pbgp->src_as_path);
+        else
+          bson_append_null(bson_elem, "src_as_path");
+      }
+
+      if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "src_local_pref", pbgp->src_local_pref);
+      if (config.what_to_count & COUNT_MED) bson_append_int(bson_elem, "src_med", pbgp->src_med);
   
       if (config.what_to_count & COUNT_IN_IFACE) bson_append_int(bson_elem, "iface_in", data->ifindex_in);
       if (config.what_to_count & COUNT_OUT_IFACE) bson_append_int(bson_elem, "iface_out", data->ifindex_out);

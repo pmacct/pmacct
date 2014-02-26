@@ -166,8 +166,8 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
 #endif
     printf("SRC_AS      ");
     printf("DST_AS      "); 
-    printf("BGP_COMMS                ");
-    printf("SRC_BGP_COMMS            ");
+    printf("COMMS                    ");
+    printf("SRC_COMMS                ");
     printf("AS_PATH                  ");
     printf("SRC_AS_PATH              ");
     printf("PREF     ");
@@ -262,9 +262,9 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS      ");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS      "); 
     if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
-      printf("BGP_COMMS                ");
+      printf("COMMS                   ");
     if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
-      printf("SRC_BGP_COMMS            ");
+      printf("SRC_COMMS               ");
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
     if (what_to_count & COUNT_SRC_AS_PATH) printf("SRC_AS_PATH              ");
     if (what_to_count & COUNT_LOCAL_PREF) printf("PREF     ");
@@ -378,8 +378,8 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
 #endif
     printf("%sSRC_AS", write_sep(sep, &count));
     printf("%sDST_AS", write_sep(sep, &count)); 
-    printf("%sBGP_COMMS", write_sep(sep, &count));
-    printf("%sSRC_BGP_COMMS", write_sep(sep, &count));
+    printf("%sCOMMS", write_sep(sep, &count));
+    printf("%sSRC_COMMS", write_sep(sep, &count));
     printf("%sAS_PATH", write_sep(sep, &count));
     printf("%sSRC_AS_PATH", write_sep(sep, &count));
     printf("%sPREF", write_sep(sep, &count));
@@ -465,9 +465,9 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("%sSRC_AS", write_sep(sep, &count));
     if (what_to_count & COUNT_DST_AS) printf("%sDST_AS", write_sep(sep, &count)); 
     if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
-      printf("%sBGP_COMMS", write_sep(sep, &count));
+      printf("%sCOMMS", write_sep(sep, &count));
     if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
-      printf("%sSRC_BGP_COMMS", write_sep(sep, &count));
+      printf("%sSRC_COMMS", write_sep(sep, &count));
     if (what_to_count & COUNT_AS_PATH) printf("%sAS_PATH", write_sep(sep, &count));
     if (what_to_count & COUNT_SRC_AS_PATH) printf("%sSRC_AS_PATH", write_sep(sep, &count));
     if (what_to_count & COUNT_LOCAL_PREF) printf("%sPREF", write_sep(sep, &count));
@@ -2044,7 +2044,7 @@ int main(int argc,char **argv)
 	  }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", empty_aspath);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->as_path);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->src_as_path);
           }
         }
 
@@ -2975,6 +2975,22 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_decref(kv);
   }
 
+  if (wtc & COUNT_EXT_COMM && !(wtc & COUNT_STD_COMM)) {
+    bgp_comm = pbgp->ext_comms;
+    while (bgp_comm) {
+      bgp_comm = strchr(pbgp->ext_comms, ' ');
+      if (bgp_comm) *bgp_comm = '_';
+    }
+
+    if (strlen(pbgp->ext_comms))
+      kv = json_pack("{ss}", "comms", pbgp->ext_comms);
+    else
+      kv = json_pack("{ss}", "comms", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   if (wtc & COUNT_AS_PATH) {
     as_path = pbgp->as_path;
     while (as_path) {
@@ -3024,6 +3040,65 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc & COUNT_PEER_DST_IP) {
     addr_to_str(ip_address, &pbgp->peer_dst_ip);
     kv = json_pack("{ss}", "peer_ip_dst", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_SRC_STD_COMM) {
+    bgp_comm = pbgp->src_std_comms;
+    while (bgp_comm) {
+      bgp_comm = strchr(pbgp->src_std_comms, ' ');
+      if (bgp_comm) *bgp_comm = '_';
+    }
+
+    if (strlen(pbgp->src_std_comms))
+      kv = json_pack("{ss}", "src_comms", pbgp->src_std_comms);
+    else
+      kv = json_pack("{ss}", "src_comms", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_SRC_EXT_COMM && !(wtc & COUNT_SRC_STD_COMM)) {
+    bgp_comm = pbgp->src_ext_comms;
+    while (bgp_comm) {
+      bgp_comm = strchr(pbgp->src_ext_comms, ' ');
+      if (bgp_comm) *bgp_comm = '_';
+    }
+
+    if (strlen(pbgp->src_ext_comms))
+      kv = json_pack("{ss}", "src_comms", pbgp->src_ext_comms);
+    else
+      kv = json_pack("{ss}", "src_comms", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_SRC_AS_PATH) {
+    as_path = pbgp->src_as_path;
+    while (as_path) {
+      as_path = strchr(pbgp->src_as_path, ' ');
+      if (as_path) *as_path = '_';
+    }
+    if (strlen(pbgp->src_as_path))
+      kv = json_pack("{ss}", "src_as_path", pbgp->src_as_path);
+    else
+      kv = json_pack("{ss}", "src_as_path", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_SRC_LOCAL_PREF) {
+    kv = json_pack(json_pack_int_fmt, "src_local_pref", pbgp->src_local_pref);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_SRC_MED) {
+    kv = json_pack(json_pack_int_fmt, "src_med", pbgp->src_med);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }

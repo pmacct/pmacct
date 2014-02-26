@@ -449,21 +449,75 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           else
   	  fprintf(f, "%-22u   ", 0);
         }
+
+        if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
+          bgp_comm = pbgp->ext_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->ext_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+
+          if (strlen(pbgp->ext_comms))
+            fprintf(f, "%-22s   ", pbgp->ext_comms);
+          else
+          fprintf(f, "%-22u   ", 0);
+        }
+
+        if (config.what_to_count & COUNT_SRC_STD_COMM) {
+          bgp_comm = pbgp->src_std_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->src_std_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+
+          if (strlen(pbgp->src_std_comms))
+            fprintf(f, "%-22s   ", pbgp->src_std_comms);
+          else
+          fprintf(f, "%-22u   ", 0);
+        }
+
+        if (config.what_to_count & COUNT_SRC_EXT_COMM && !(config.what_to_count & COUNT_SRC_STD_COMM)) {
+          bgp_comm = pbgp->src_ext_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->src_ext_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+
+          if (strlen(pbgp->src_ext_comms))
+            fprintf(f, "%-22s   ", pbgp->src_ext_comms);
+          else
+          fprintf(f, "%-22u   ", 0);
+        }
   
         if (config.what_to_count & COUNT_AS_PATH) {
           as_path = pbgp->as_path;
           while (as_path) {
-  	  as_path = strchr(pbgp->as_path, ' ');
-  	  if (as_path) *as_path = '_';
+  	    as_path = strchr(pbgp->as_path, ' ');
+  	    if (as_path) *as_path = '_';
           }
           if (strlen(pbgp->as_path))
   	  fprintf(f, "%-22s   ", pbgp->as_path);
           else
   	  fprintf(f, "%-22s   ", empty_aspath);
         }
+
+        if (config.what_to_count & COUNT_SRC_AS_PATH) {
+          as_path = pbgp->src_as_path;
+          while (as_path) {
+            as_path = strchr(pbgp->src_as_path, ' ');
+            if (as_path) *as_path = '_';
+          }
+          if (strlen(pbgp->src_as_path))
+          fprintf(f, "%-22s   ", pbgp->src_as_path);
+          else
+          fprintf(f, "%-22s   ", empty_aspath);
+        }
   
-        if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%-5u  ", pbgp->local_pref);
-        if (config.what_to_count & COUNT_MED) fprintf(f, "%-5u  ", pbgp->med);
+        if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%-7u  ", pbgp->local_pref);
+        if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%-7u  ", pbgp->src_local_pref);
+        if (config.what_to_count & COUNT_MED) fprintf(f, "%-6u  ", pbgp->med);
+        if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "%-6u  ", pbgp->src_med);
+
         if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%-10u  ", pbgp->peer_src_as);
         if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%-10u  ", pbgp->peer_dst_as);
   
@@ -682,12 +736,51 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           else
             fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
         }
+
+        if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
+          bgp_comm = pbgp->ext_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->ext_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+
+          if (strlen(pbgp->ext_comms))
+            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->ext_comms);
+          else
+            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+        }
+
+        if (config.what_to_count & COUNT_SRC_STD_COMM) {
+          bgp_comm = pbgp->src_std_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->src_std_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+
+          if (strlen(pbgp->src_std_comms))
+            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->src_std_comms);
+          else
+            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+        }
+
+        if (config.what_to_count & COUNT_SRC_EXT_COMM && !(config.what_to_count & COUNT_SRC_STD_COMM)) {
+          bgp_comm = pbgp->src_ext_comms;
+          while (bgp_comm) {
+            bgp_comm = strchr(pbgp->src_ext_comms, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+
+          if (strlen(pbgp->src_ext_comms))
+            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->src_ext_comms);
+          else
+            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+        }
   
         if (config.what_to_count & COUNT_AS_PATH) {
           as_path = pbgp->as_path;
           while (as_path) {
-  	  as_path = strchr(pbgp->as_path, ' ');
-  	  if (as_path) *as_path = '_';
+  	    as_path = strchr(pbgp->as_path, ' ');
+  	    if (as_path) *as_path = '_';
           }
 
 	  if (strlen(pbgp->as_path))
@@ -695,9 +788,25 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	  else
 	    fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
         }
+
+        if (config.what_to_count & COUNT_SRC_AS_PATH) {
+          as_path = pbgp->src_as_path;
+          while (as_path) {
+            as_path = strchr(pbgp->src_as_path, ' ');
+            if (as_path) *as_path = '_';
+          }
+
+          if (strlen(pbgp->src_as_path))
+            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->src_as_path);
+          else
+            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+        }
   
         if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->local_pref);
+        if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->src_local_pref);
         if (config.what_to_count & COUNT_MED) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->med);
+        if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->src_med);
+
         if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->peer_src_as);
         if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->peer_dst_as);
   
@@ -855,10 +964,14 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 #endif
   if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "SRC_AS      ");
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS      ");
-  if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "BGP_COMMS                ");
+  if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "COMMS                    ");
+  if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "SRC_COMMS                ");
   if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "AS_PATH                  ");
-  if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF   ");
-  if (config.what_to_count & COUNT_MED) fprintf(f, "MED    ");
+  if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "SRC_AS_PATH              ");
+  if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF     ");
+  if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "SRC_PREF ");
+  if (config.what_to_count & COUNT_MED) fprintf(f, "MED     ");
+  if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "SRC_MED ");
   if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "PEER_SRC_AS ");
   if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "PEER_DST_AS ");
   if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP      ");
@@ -944,10 +1057,14 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 #endif
   if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "%sSRC_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%sDST_AS", write_sep(sep, &count));
-  if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "%sBGP_COMMS", write_sep(sep, &count));
+  if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
+  if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "%sAS_PATH", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "%sSRC_AS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%sPREF", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%sSRC_PREF", write_sep(sep, &count));
   if (config.what_to_count & COUNT_MED) fprintf(f, "%sMED", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "%sSRC_MED", write_sep(sep, &count));
   if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%sPEER_SRC_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%sPEER_DST_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "%sPEER_SRC_IP", write_sep(sep, &count));
