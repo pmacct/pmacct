@@ -109,9 +109,11 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       else {
         ptr = t->e ;
 
+	/* freeing up resources before memset() */
         if (config.maps_index && pretag_index_have_one(t)) {
 	  pretag_index_destroy(t);
 	}
+	for (index = 0; index < t->num; index++) pcap_freecode(&t->e[index].filter);
 
         memset(t, 0, sizeof(struct id_table));
         t->e = ptr ;

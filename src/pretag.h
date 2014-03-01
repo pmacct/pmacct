@@ -190,16 +190,16 @@ struct id_table_index {
 struct id_table {
   char *filename;
   int type;
-  unsigned short int num;
+  unsigned int num;
   struct id_entry *ipv4_base;
-  unsigned short int ipv4_num;
+  unsigned int ipv4_num;
 #if defined ENABLE_IPV6
   struct id_entry *ipv6_base;
-  unsigned short int ipv6_num;
+  unsigned int ipv6_num;
 #endif
   struct id_entry *e;
   struct id_table_index index[MAX_ID_TABLE_INDEXES];
-  unsigned short int index_num;
+  unsigned int index_num;
   time_t timestamp;
   u_int32_t flags;
 };

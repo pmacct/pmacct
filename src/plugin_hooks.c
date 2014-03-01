@@ -211,23 +211,48 @@ void load_plugins(struct plugin_requests *req)
   sort_pipe_channels();
 
   /* define pre_tag_map(s) now so that they don't finish unnecessarily in plugin memory space */
-  list = plugins_list;
-  while (list) {
-    if (list->cfg.pre_tag_map) {
-      load_pre_tag_map(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc,
-		       list->cfg.maps_entries, list->cfg.maps_row_len);
+  {
+    int ptm_index = 0, ptm_global = FALSE;
+    char *ptm_ptr = NULL;
+
+    list = plugins_list;
+
+    while (list) {
+      if (list->cfg.pre_tag_map) {
+        if (!ptm_index) {
+          ptm_ptr = list->cfg.pre_tag_map;
+          ptm_global = TRUE;
+        }
+        else {
+          if (!ptm_ptr || strcmp(ptm_ptr, list->cfg.pre_tag_map))
+            ptm_global = FALSE;
+        }
+
+        load_pre_tag_map(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc,
+                         list->cfg.maps_entries, list->cfg.maps_row_len);
+      }
+
+      list = list->next;
+      ptm_index++;
     }
 
-    list = list->next;
+    /* enforcing global flag */
+    list = plugins_list;
+
+    while (list) {
+      list->cfg.ptm_global = ptm_global;
+      list = list->next;
+    }
   }
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
 {
+  pm_id_t saved_tag = 0, saved_tag2 = 0;
   int num, size, already_reprocessed = 0;
   u_int32_t savedptr;
   char *bptr;
-  int index;
+  int index, got_tags = FALSE;
 
   for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
     struct plugins_list_entry *p = channels_list[index].plugin;
@@ -237,7 +262,15 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
         load_pre_tag_map(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc,
 			 p->cfg.maps_entries, p->cfg.maps_row_len);
       }
-      find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
+
+      if (p->cfg.ptm_global && got_tags) {
+        pptrs->tag = saved_tag;
+        pptrs->tag2 = saved_tag2;
+      }
+      else {
+        find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
+        got_tags = TRUE;
+      }
     }
 
     if (evaluate_filters(&channels_list[index].agg_filter, pptrs->packet_ptr, pptrs->pkthdr) &&
@@ -321,6 +354,11 @@ reprocess:
 	if (channels_list[index].reprocess) goto reprocess;
       }
     }
+
+    saved_tag = pptrs->tag;
+    saved_tag2 = pptrs->tag2;
+    pptrs->tag = 0;
+    pptrs->tag2 = 0;
   }
 
   reload_map_exec_plugins = FALSE;

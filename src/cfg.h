@@ -233,6 +233,7 @@ struct configuration {
   char *pre_tag_map;
   struct id_table ptm;
   int ptm_alloc;
+  int ptm_global;
   pm_id_t post_tag;
   int ext_sampling_rate;
   int sampling_rate;
