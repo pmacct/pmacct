@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -183,7 +183,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
         following_chain = FALSE;
       }
     }
-    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
   else if (q->type & WANT_STATUS) {
     for (idx = 0; idx < config.buckets; idx++) {
@@ -204,7 +204,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
       enQueue_elem(sd, &rb, &bd, sizeof(struct bucket_desc), sizeof(struct bucket_desc));
       elem += sizeof(struct acc);
     }
-    send(sd, rb.buf, rb.packed, 0);
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0);
   }
   else if (q->type & WANT_MATCH || q->type & WANT_COUNTER) {
     unsigned int j;
@@ -353,7 +353,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	if (q->type & WANT_COUNTER) enQueue_elem(sd, &rb, &abuf, PdataSz, PdataSz); /* enqueue accumulated data */
       }
     }
-    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
   else if (q->type & WANT_CLASS_TABLE) {
     struct stripped_class dummy;
@@ -370,7 +370,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
     memset(&dummy, 0, sizeof(dummy));
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
-    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
   else if (q->type & WANT_CUSTOM_PRIMITIVES_TABLE) {
     struct imt_custom_primitives custom_primitives_registry;
@@ -393,7 +393,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
       memset(&dummy, 0, sizeof(dummy));
       enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
     }
-    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
   else if (q->type & WANT_PKT_LEN_DISTRIB_TABLE) {
     struct stripped_pkt_len_distrib dummy, real;
@@ -411,10 +411,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     send_pldt_dummy:
     memset(&dummy, 0, sizeof(dummy));
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
-    send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
 
-  /* end EOF */
+  /* wait a bit due to setnonblocking() then send EOF */
+  usleep(1000);
   send(sd, emptybuf, LARGEBUFLEN, 0);
 
   if (dummy_pcust) free(dummy_pcust);
