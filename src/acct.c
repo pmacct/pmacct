@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -47,7 +47,7 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
-  if (pcust) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
+  if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
   pos = hash % config.buckets;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -151,7 +151,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
-  if (pcust) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
+  if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
   pos = hash % config.buckets;
       
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
