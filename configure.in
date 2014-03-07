@@ -1245,24 +1245,6 @@ AC_ARG_ENABLE(jansson,
     fi
 
     AC_DEFINE(WITH_JANSSON, 1)
-
-    AC_MSG_CHECKING(whether to pack integers as 'i' in Jansson)
-    AC_ARG_ENABLE(jansson-pack-int-i,
-    	[  --enable-jansson-pack-int-i      Select to pack integers as 'i' (default: no)],
-    	[ case "$enableval" in
-    	yes)
-		AC_MSG_RESULT(yes)
-		AC_DEFINE(JANSSON_INT_PACK, 'i')
-    	;;
-    	no)
-		AC_MSG_RESULT(no)
-		AC_DEFINE(JANSSON_INT_PACK, 'I')
-    	;;
-    	esac
-    	],
-		AC_MSG_RESULT(no)
-        	AC_DEFINE(JANSSON_INT_PACK, 'I')
-    )
     ;;
   no)
     AC_MSG_RESULT(no)

@@ -837,6 +837,9 @@ DESC:		Defines the print plugin output format. 'formatted' enables tabular outpu
 		not requiring a table title). 'event' versions of the output strip trailing bytes and packets
 		counters. 'json' format requires compiling the package against Jansson library (downloadable at
 		the following URL: http://www.digip.org/jansson/) (default: formatted)
+NOTES:		* Jansson library does not seem to have concept of unsigned integers. integers up to 32 bits
+		  are packed as 'I', ie. 64 bits signed integers, working around the issue. No work around is
+		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes). 
 
 KEY:            print_output_separator
 DESC:           Defines the print plugin output separator. Value is expected to be a single character and
