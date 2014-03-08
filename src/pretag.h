@@ -170,6 +170,8 @@ struct id_entry {
   u_int8_t ret;
   pt_stack_t stack;
   pt_bitmap_t last_matched;
+  u_int8_t id_inc;
+  u_int8_t id2_inc;
 };
 
 typedef int (*pretag_copier)(struct id_entry *, void *);

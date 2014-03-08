@@ -28,11 +28,13 @@
 ! list of currently supported keys follows:
 !
 ! 'set_tag'		SET: tag assigned to a matching packet, flow or sample;
+!			tag can be also defined auto-increasing, ie. <tag #>++;
 !			its use is mutually exclusive to set_tag2. The resulting
 !			label is written to the 'tag' field when using memory
 !			tables and 'agent_id' when using a SQL plugin. Legacy
-!			name for this primitive is 'id'. 
+!			name for this primitive is 'id'.  
 ! 'set_tag2'		SET: tag assigned to a matching packet, flow or sample;
+!			tag can be also defined auto-increasing, ie. <tag #>++;
 !			its use is mutually exclusive to 'set_tag'. The resulting
 !			label is written to the 'tag2' field when using memory
 !			tables and 'agent_id2' when using a SQL plugin. If using
@@ -162,6 +164,14 @@ set_tag=12	ip=192.168.1.1	in=3
 set_tag=13	ip=192.168.1.1  nexthop=10.0.0.254
 set_tag=14	ip=192.168.1.1  engine_type=1 engine_set_tag=0
 set_tag=15	ip=192.168.1.1  in=3 filter='src net 192.168.0.0/24' 
+
+!
+! The following rule applies to sFlow, for example, to prevent aggregation of samples
+! in conjunction with having 'timestamp_start' part of the aggregation method. In this
+! example "1" is the selected floor value and "++" instructs to increase the value at
+! every pre_tag_map iteration.
+!
+set_tag=1++	ip=0.0.0.0/0
 
 !
 ! The following rule applies to 'pmacctd'; it will return an error if applied to either

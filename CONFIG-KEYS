@@ -613,7 +613,7 @@ DESC:           sets the maximum number of concurrent writer processes the SQL p
 		lost at this stage) and an error message is printed out. Triggers (sql_trigger_exec) will
 		continue working in any case. (default: 10) 
 
-KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries ]
+KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries ]
 DESC:		SQL and other plugins sport a Plugin Memory Cache (PMC) meant to accumulate bytes/packets
 		counters until next purging event (for further insights take a look to 'sql_refresh_time'). 
 		This directive sets the number of PMC buckets. Default value is suitable for most common

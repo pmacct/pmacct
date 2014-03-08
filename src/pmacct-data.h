@@ -406,6 +406,7 @@ static const struct _dictionary_line dictionary[] = {
   {"amqp_exchange_type", cfg_key_amqp_exchange_type},
   {"amqp_routing_key", cfg_key_sql_table},
   {"amqp_persistent_msg", cfg_key_amqp_persistent_msg},
+  {"amqp_cache_entries", cfg_key_print_cache_entries},
   {"nfacctd_proc_name", cfg_key_proc_name},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},

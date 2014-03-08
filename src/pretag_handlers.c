@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -32,9 +32,9 @@
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct host_addr a;
-  char *endptr = NULL;
+  char *endptr = NULL, *incptr;
   pm_id_t j = 0, z = 0;
-  int x;
+  int x, inc = 0;
 
   e->id = 0;
   e->flags = FALSE;
@@ -80,6 +80,11 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
     e->flags = BPAS_MAP_RCODE_BGP;
   }
   else {
+    if (incptr = strstr(value, "++")) {
+      inc = TRUE;
+      *incptr = '\0';
+    }
+
     j = strtoull(value, &endptr, 10);
     if (j > UINT32_MAX) {
       Log(LOG_ERR, "ERROR ( %s ): Invalid TAG/ID specified. ", filename);
@@ -89,6 +94,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
 
   e->id = j; 
   if (z) e->id2 = z;
+  if (inc) e->id_inc = TRUE;
 
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
     for (x = 0; e->set_func[x]; x++) {
@@ -107,9 +113,14 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
 
 int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  char *endptr = NULL;
+  char *endptr = NULL, *incptr;
   pm_id_t j;
-  int x;
+  int x, inc = 0;
+
+  if (incptr = strstr(value, "++")) {
+    inc = TRUE;
+    *incptr = '\0';
+  }
 
   j = strtoull(value, &endptr, 10);
   if (j > UINT32_MAX) {
@@ -117,6 +128,7 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
     return TRUE;
   }
   e->id2 = j;
+  if (inc) e->id2_inc = TRUE;
 
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
     for (x = 0; e->set_func[x]; x++) {
@@ -1934,6 +1946,8 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
     }
   }
 
+  if (entry->id_inc) entry->id++;
+
   if (entry->flags == BTA_MAP_RCODE_ID_ID2) {
     return BTA_MAP_RCODE_ID_ID2; /* cap */
   }
@@ -1947,6 +1961,8 @@ int pretag_id2_handler(struct packet_ptrs *pptrs, void *id, void *e)
   pm_id_t *tid = id;
 
   *tid = entry->id2;
+
+  if (entry->id2_inc) entry->id2++;
 
   return PRETAG_MAP_RCODE_ID2; /* cap */
 }
