@@ -2611,6 +2611,21 @@ int cfg_key_nfacctd_bgp_table_as_path_buckets(char *filename, char *name, char *
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_table_as_path_hash(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strncmp(value_ptr, "path_id", strlen("path_id"))) value = BGP_ASPATH_HASH_PATHID;
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bgp_table_as_path_hash' value.\n", filename);
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_as_path_hash = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_as_path_hash'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_batch_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

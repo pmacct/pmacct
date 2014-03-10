@@ -1446,6 +1446,13 @@ DESC:		With same background information as bgp_table_peer_buckets, this paramete
 		ADD-PATHs is received). It is recommended to set this value to maximum 1/3 of the
 		configured maximum number of paths per prefix to be exported. (default: 1)
 
+KEY:            bgp_table_as_path_hash [GLOBAL]
+VALUE:          [ path_id ]
+DESC:		If bgp_table_as_path_buckets is greater than 1, hence allowing for spread of AS-PATHs
+		over available buckets, this allows to set the hashing to be used. By default hashing
+		happens against the BGP ADD-PATH path_id field. Other fields (ie. BGP next-hop is on
+		the radar) will be supported in future. (default: path_id)
+
 KEY:		isis_daemon
 VALUES:		[ true | false ]
 DESC:		Enables the skinny IS-IS daemon thread. This feature requires the package to be supporting

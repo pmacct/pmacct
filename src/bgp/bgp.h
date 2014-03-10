@@ -186,7 +186,7 @@ EXT void bgp_srcdst_lookup(struct packet_ptrs *);
 EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
 EXT void write_neighbors_file(char *);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
-EXT u_int32_t bgp_route_info_modulo(struct bgp_peer *, path_id_t *);
+EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
@@ -209,6 +209,7 @@ EXT char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 EXT struct bgp_comm_range peer_src_as_ifrange; 
 EXT struct bgp_comm_range peer_src_as_asrange; 
 EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
+EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 
 #undef EXT
 #endif 

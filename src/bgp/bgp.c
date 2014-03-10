@@ -130,6 +130,13 @@ void skinny_bgp_daemon()
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bgp_table_as_path_buckets) config.bgp_table_as_path_buckets = DEFAULT_BGP_INFO_AS_PATHS_HASH;
 
+  if (config.bgp_table_as_path_hash == BGP_ASPATH_HASH_PATHID)
+    bgp_route_info_modulo = bgp_route_info_modulo_pathid; 
+  else {
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unknown 'bgp_table_as_path_hash' value. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
+
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bgp_sock < 0) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): thread socket() failed. Terminating thread.\n", config.name);
@@ -2089,7 +2096,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
-  u_int32_t modulo, local_modulo, modulo_idx;
+  u_int32_t modulo, local_modulo, modulo_idx, modulo_max;
   u_int32_t peer_idx, *peer_idx_ptr;
   safi_t safi;
   rd_t rd;
@@ -2173,6 +2180,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 
     modulo = bgp_route_info_modulo(peer, NULL);
 
+    // XXX: to be optimized 
+    if (config.bgp_table_as_path_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_as_path_buckets; 
+    else modulo_max = 1;
+
     if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
       /* administrativia */
       struct pkt_bgp_primitives pbgp, *pbgp_ptr = &pbgp;
@@ -2229,7 +2240,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
           pptrs->lm_method_dst = NF_NET_BGP;
         }
 
-        for (local_modulo = modulo, modulo_idx = 0; modulo_idx < config.bgp_table_as_path_buckets; local_modulo++, modulo_idx++) {
+        for (local_modulo = modulo, modulo_idx = 0; modulo_idx < modulo_max; local_modulo++, modulo_idx++) {
           for (info = result->info[local_modulo]; info; info = info->next) {
 	    if (info->peer == peer) {
 	      int no_match = FALSE;
@@ -2304,7 +2315,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
           pptrs->lm_method_dst = NF_NET_BGP;
         }
 
-        for (local_modulo = modulo, modulo_idx = 0; modulo_idx < config.bgp_table_as_path_buckets; local_modulo++, modulo_idx++) {
+        for (local_modulo = modulo, modulo_idx = 0; modulo_idx < modulo_max; local_modulo++, modulo_idx++) {
           for (info = result->info[local_modulo]; info; info = info->next) {
             if (info->peer == peer) {
               int no_match = FALSE;
@@ -2438,7 +2449,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
 #endif
   char *saved_agent = pptrs->f_agent;
   pm_id_t bta;
-  u_int32_t modulo, local_modulo, modulo_idx;
+  u_int32_t modulo, local_modulo, modulo_idx, modulo_max;
 
   start_again:
 
@@ -2462,6 +2473,10 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   if (nh_peer) {
     modulo = bgp_route_info_modulo(nh_peer, NULL);
 
+    // XXX: to be optimized 
+    if (config.bgp_table_as_path_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_as_path_buckets;
+    else modulo_max = 1;
+
     memset(&ch, 0, sizeof(ch));
     ch.family = AF_INET;
     ch.prefixlen = 32;
@@ -2484,7 +2499,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     result_node = (struct bgp_node *) result;
 
     if (result_node) {
-      for (local_modulo = modulo, modulo_idx = 0; modulo_idx < config.bgp_table_as_path_buckets; local_modulo++, modulo_idx++) {
+      for (local_modulo = modulo, modulo_idx = 0; modulo_idx < modulo_max; local_modulo++, modulo_idx++) {
         for (info = result_node->info[modulo]; info; info = info->next) {
           if (info->peer == nh_peer) break;
 	}
@@ -2822,7 +2837,7 @@ void process_bgp_md5_file(int sock, struct bgp_md5_table *bgp_md5)
   }
 }
 
-u_int32_t bgp_route_info_modulo(struct bgp_peer *peer, path_id_t *path_id)
+u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)
 {
   path_id_t local_path_id = 1;
 

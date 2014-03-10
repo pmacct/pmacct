@@ -182,6 +182,7 @@ EXT int cfg_key_nfacctd_bgp_neighbors_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_md5_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_table_peer_buckets(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_table_as_path_buckets(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_table_as_path_hash(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_batch(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_batch_interval(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_pipe_size(char *, char *, char *);

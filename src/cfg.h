@@ -186,6 +186,7 @@ struct configuration {
   char *nfacctd_bgp_md5_file;
   int bgp_table_peer_buckets;
   int bgp_table_as_path_buckets;
+  int bgp_table_as_path_hash;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;

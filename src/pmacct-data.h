@@ -525,6 +525,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},
   {"bgp_table_peer_buckets", cfg_key_nfacctd_bgp_table_peer_buckets},
   {"bgp_table_as_path_buckets", cfg_key_nfacctd_bgp_table_as_path_buckets},
+  {"bgp_table_as_path_hash", cfg_key_nfacctd_bgp_table_as_path_hash},
   {"flow_to_rd_map", cfg_key_nfacctd_flow_to_rd_map},
   {"isis_daemon", cfg_key_nfacctd_isis},
   {"isis_daemon_ip", cfg_key_nfacctd_isis_ip},
