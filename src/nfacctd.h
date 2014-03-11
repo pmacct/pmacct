@@ -454,6 +454,9 @@ struct data_hdr_v9 {
 #define NF9_ENGINE_TYPE                 38
 #define NF9_ENGINE_ID                   39
 /* ... */
+#define NF9_IPV4_SRC_PREFIX		44
+#define NF9_IPV4_DST_PREFIX		45
+/* ... */
 #define NF9_MPLS_TOP_LABEL_ADDR		47
 /* ... */
 #define NF9_IN_SRC_MAC                  56
@@ -492,6 +495,9 @@ struct data_hdr_v9 {
 #define NF9_LAST_SWITCHED_SEC		151
 #define NF9_FIRST_SWITCHED_MSEC		152
 #define NF9_LAST_SWITCHED_MSEC		153
+/* ... */
+#define NF9_IPV6_DST_PREFIX		169
+#define NF9_IPV6_SRC_PREFIX		170
 /* ... */
 #define NF9_UDP_SRC_PORT                180
 #define NF9_UDP_DST_PORT                181

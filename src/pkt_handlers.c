@@ -1360,15 +1360,25 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
-      pdata->primitives.src_ip.family = AF_INET;
-      break;
+      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
+        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
+        pdata->primitives.src_ip.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_IPV4_SRC_PREFIX].len) {
+        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4)); 
+        pdata->primitives.src_ip.family = AF_INET;
+      }
     }
 #if defined ENABLE_IPV6
-    if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
-      pdata->primitives.src_ip.family = AF_INET6;
-      break;
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
+	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
+        pdata->primitives.src_ip.family = AF_INET6;
+      }
+      if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
+	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
+        pdata->primitives.src_ip.family = AF_INET6;
+      }
     }
 #endif
     break;
@@ -1426,17 +1436,25 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (pptrs->l3_proto == ETHERTYPE_IP) {
-      memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
-      pdata->primitives.dst_ip.family = AF_INET;
-      break;
+      if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+        pdata->primitives.dst_ip.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
+        pdata->primitives.dst_ip.family = AF_INET;
+      }
     }
 #if defined ENABLE_IPV6
-    if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
-      memcpy(&dst_mask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
-
-      pdata->primitives.dst_ip.family = AF_INET6;
-      break;
+    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+      if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+        pdata->primitives.dst_ip.family = AF_INET6;
+      }
+      else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
+        memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
+        pdata->primitives.dst_ip.family = AF_INET6;
+      }
     }
 #endif
     break;
