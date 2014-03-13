@@ -540,17 +540,18 @@ DESC:		enables the optimization of the statements sent to the RDBMS essentially 
 		the 'sql_table_version' directive. (default: false)
 
 KEY:		[ sql_history | print_history | mongo_history | amqp_history ]
-VALUES:		#[m|h|d|w|M]
+VALUES:		#[s|m|h|d|w|M]
 DESC:		enables historical accounting by placing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
 		the time-bin was touched) fields. The supplied value defines the time slot length during
 		which counters are accumulated. For a nice effect, it's adviceable to pair this directive
 		with 'sql_history_roundoff'. In nfacctd, where a flow can span across multiple time-bins,
-		flow counters are pro-rated (seconds timestamp resolution) over involved time-bins.
-		Note that this value is fully disjoint from the 'sql_refresh_time' directive which sets
-		the time intervals at which data has to be written to the RDBMS instead. The final effect
-		is close to time slots in a RRD file. Examples of valid values are: '5m' - five minutes,
-		'1h' - one hour, '4h' - four hours, '1d' - one day, '1w' - one week, '1M' - one month).
+		flow counters can be pro-rated (seconds timestamp resolution) over involved time-bins by
+		setting nfacctd_pro_rating to true. Note that this value is fully disjoint from the
+		*_refresh_time directives which set the time intervals at which data has to be written to
+		the backend instead. The final effect is close to time slots in a RRD file. Examples of
+		valid values are: '300' or '5m' - five minutes, '3600' or '1h' - one hour, '14400' or '4h'
+		- four hours, '86400' or '1d' - one day, '1w' - one week, '1M' - one month).
 
 KEY:            [ sql_history_offset | print_history_offset | mongo_history_offset | amqp_history_offset ]
 DESC:		Sets an offset to timeslots basetime. If history is set to 30 mins (by default creating
@@ -661,11 +662,12 @@ DESC:		defines the executable to be launched at fixed time intervals to post-pro
 		over to the executable.
 
 KEY:		sql_trigger_time
-VALUES:		#[m|h|d|w|M]
+VALUES:		#[s|m|h|d|w|M]
 DESC:		specifies time interval at which the executable specified by 'sql_trigger_exec' has to
 		be launched; if no executables are specified, this key is simply ignored. Values need to be 
-		in the 'sql_history' directive syntax (for example, valid values are '5m', '1h', '4h', '1d',
-		'1w', '1M'; eg. if '1h' is selected, the executable will be fired each hour).
+		in the 'sql_history' directive syntax (for example, valid values are '300' or '5m', '3600'
+		or '1h', '14400' or '4h', '86400' or '1d', '1w', '1M'; eg. if '3600' or '1h' is selected,
+		the executable will be fired each hour).
 
 KEY:		sql_preprocess
 DESC:		allows to process aggregates (via a comma-separated list of conditionals and checks) while

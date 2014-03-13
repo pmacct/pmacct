@@ -3491,10 +3491,14 @@ void parse_time(char *filename, char *value, int *mu, int *howmany)
 {
   int k, j, len;
 
+  *mu = 0;
+  *howmany = 0;
+
   len = strlen(value);
   for (j = 0; j < len; j++) {
     if (!isdigit(value[j])) {
-      if (value[j] == 'm') *mu = COUNT_MINUTELY;
+      if (value[j] == 's') *mu = COUNT_SECONDLY;
+      else if (value[j] == 'm') *mu = COUNT_MINUTELY;
       else if (value[j] == 'h') *mu = COUNT_HOURLY;
       else if (value[j] == 'd') *mu = COUNT_DAILY;
       else if (value[j] == 'w') *mu = COUNT_WEEKLY;
@@ -3511,13 +3515,34 @@ void parse_time(char *filename, char *value, int *mu, int *howmany)
       }
     }
   }
+
+  /* if no measurement unit given, assume it's seconds */
+  if (!(*mu)) *mu = COUNT_SECONDLY;
+
   k = atoi(value);
-  if (k > 0) *howmany = k;
-  else {
-    Log(LOG_WARNING, "WARN ( %s ): ignoring invalid time value: %d\n", filename, k);
-    *mu = 0;
-    *howmany = 0;
+  if (k > 0) {
+    if (*mu == COUNT_SECONDLY) {
+      if (k % 60) {
+        Log(LOG_WARNING, "WARN ( %s ): Ignoring invalid time value: %d (residual secs afters conversion in mins)\n", filename, k);
+	goto exit_lane;
+      }
+      else {
+	k = k / 60;
+	*mu = COUNT_MINUTELY;
+      }
+    }
+    *howmany = k;
   }
+  else {
+    Log(LOG_WARNING, "WARN ( %s ): Ignoring invalid time value: %d (not greater than zero)\n", filename, k);
+    goto exit_lane;
+  }
+
+  return;
+
+exit_lane:
+  *mu = 0;
+  *howmany = 0;
 }
 
 int cfg_key_uacctd_group(char *filename, char *name, char *value_ptr)
