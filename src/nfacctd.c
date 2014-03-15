@@ -1274,16 +1274,24 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	/* Is this option about sampling? */
 	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
 	  u_int8_t t8 = 0;
-	  u_int16_t sampler_id = 0, t16 = 0;
+	  u_int16_t t16 = 0;
+	  u_int32_t sampler_id = 0, t32 = 0;
+
+	  /* Handling the global option scoping case */
+	  if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
 	    memcpy(&t8, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
 	    sampler_id = t8;
 	  }
 	  else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 2) {
-	    memcpy(&sampler_id, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 2);
+	    memcpy(&t16, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 2);
 	    sampler_id = ntohs(t16);
 	  }
+          else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 4) {
+            memcpy(&t32, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
+            sampler_id = ntohl(t32);
+          }
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
 	  if (!sentry) sentry = create_smp_entry_status_table(entry);
@@ -1291,10 +1299,32 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (sentry) {
 	    memset(sentry, 0, sizeof(struct xflow_status_entry_sampling));
-	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
-	    if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) memcpy(&sentry->sample_pool, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 1) {
+	      memcpy(&t8, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	      sentry->sample_pool = t8;
+	    }
+	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 2) {
+	      memcpy(&t16, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	      sentry->sample_pool = ntohs(t16);
+	    }
+	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
+	      memcpy(&t32, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	      sentry->sample_pool = ntohl(t32);
+	    }
+	    if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 1) {
+	      memcpy(&t8, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 1);
+	      sentry->sample_pool = t8;
+	    }
+	    else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 2) {
+	      memcpy(&t16, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 2);
+	      sentry->sample_pool = ntohs(t16);
+	    }
+	    else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) {
+	      memcpy(&t32, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+	      sentry->sample_pool = ntohl(t32);
+	    }
+
 	    sentry->sampler_id = sampler_id;
-	    sentry->sample_pool = ntohl(sentry->sample_pool);
 	    if (ssaved) sentry->next = ssaved;
 	  }
 	}

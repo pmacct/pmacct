@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -37,7 +37,7 @@ struct xflow_status_entry_sampling
   u_int32_t interface;		/* sFlow/NetFlow v9: interface generating the sample */
   u_int32_t sample_pool;	/* sampling rate */
   u_int32_t seqno;		/* sFlow: flow samples sequence number */
-  u_int16_t sampler_id;		/* NetFlow v9: flow sampler ID field */ 
+  u_int32_t sampler_id;		/* NetFlow v9: flow sampler ID field */ 
   struct xflow_status_entry_sampling *next;
 };
 
@@ -92,7 +92,7 @@ EXT void update_good_status_table(struct xflow_status_entry *, u_int32_t);
 EXT void update_bad_status_table(struct xflow_status_entry *);
 EXT void print_status_table(time_t, int);
 EXT struct xflow_status_entry_sampling *search_smp_if_status_table(struct xflow_status_entry_sampling *, u_int32_t);
-EXT struct xflow_status_entry_sampling *search_smp_id_status_table(struct xflow_status_entry_sampling *, u_int16_t, u_int8_t);
+EXT struct xflow_status_entry_sampling *search_smp_id_status_table(struct xflow_status_entry_sampling *, u_int32_t, u_int8_t);
 EXT struct xflow_status_entry_sampling *create_smp_entry_status_table(struct xflow_status_entry *);
 EXT struct xflow_status_entry_class *search_class_id_status_table(struct xflow_status_entry_class *, pm_class_t);
 EXT struct xflow_status_entry_class *create_class_entry_status_table(struct xflow_status_entry *);
