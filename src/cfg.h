@@ -236,6 +236,7 @@ struct configuration {
   int ptm_alloc;
   int ptm_global;
   pm_id_t post_tag;
+  pm_id_t post_tag2;
   int ext_sampling_rate;
   int sampling_rate;
   char *sampling_map;

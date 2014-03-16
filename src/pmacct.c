@@ -247,8 +247,8 @@ void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_cou
     else printf("\n");
   }
   else {
-    if (what_to_count & COUNT_ID) printf("TAG         ");
-    if (what_to_count & COUNT_ID2) printf("TAG2        ");
+    if (what_to_count & COUNT_TAG) printf("TAG         ");
+    if (what_to_count & COUNT_TAG2) printf("TAG2        ");
     if (what_to_count & COUNT_CLASS) printf("CLASS             ");
     if (what_to_count & COUNT_IN_IFACE) printf("IN_IFACE    ");
     if (what_to_count & COUNT_OUT_IFACE) printf("OUT_IFACE   ");
@@ -450,8 +450,8 @@ void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, 
     else printf("\n");
   }
   else {
-    if (what_to_count & COUNT_ID) printf("%sTAG", write_sep(sep, &count));
-    if (what_to_count & COUNT_ID2) printf("%sTAG2", write_sep(sep, &count));
+    if (what_to_count & COUNT_TAG) printf("%sTAG", write_sep(sep, &count));
+    if (what_to_count & COUNT_TAG2) printf("%sTAG2", write_sep(sep, &count));
     if (what_to_count & COUNT_CLASS) printf("%sCLASS", write_sep(sep, &count));
     if (what_to_count & COUNT_IN_IFACE) printf("%sIN_IFACE", write_sep(sep, &count));
     if (what_to_count & COUNT_OUT_IFACE) printf("%sOUT_IFACE", write_sep(sep, &count));
@@ -816,12 +816,12 @@ int main(int argc,char **argv)
           what_to_count |= COUNT_DST_NMASK;
         }
         else if (!strcmp(count_token[count_index], "tag")) {
-	  count_token_int[count_index] = COUNT_ID;
-	  what_to_count |= COUNT_ID;
+	  count_token_int[count_index] = COUNT_TAG;
+	  what_to_count |= COUNT_TAG;
 	}
         else if (!strcmp(count_token[count_index], "tag2")) {
-          count_token_int[count_index] = COUNT_ID2;
-          what_to_count |= COUNT_ID2;
+          count_token_int[count_index] = COUNT_TAG2;
+          what_to_count |= COUNT_TAG2;
         }
         else if (!strcmp(count_token[count_index], "class")) {
           count_token_int[count_index] = COUNT_CLASS;
@@ -1436,14 +1436,14 @@ int main(int argc,char **argv)
 	  u_int32_t value;
 
 	  value = strtoull(match_string_token, &endptr, 10);
-	  request.data.id = value; 
+	  request.data.tag = value; 
 	}
         else if (!strcmp(count_token[match_string_index], "tag2")) {
           char *endptr = NULL;
           u_int32_t value;
 
           value = strtoull(match_string_token, &endptr, 10);
-          request.data.id2 = value;
+          request.data.tag2 = value;
         }
         else if (!strcmp(count_token[match_string_index], "class")) {
 	  struct query_header qhdr;
@@ -1886,14 +1886,14 @@ int main(int argc,char **argv)
 	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
 	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0 ||
 	  pmc_custom_primitives_registry.len) {
-        if (!have_wtc || (what_to_count & COUNT_ID)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.id);
+        if (!have_wtc || (what_to_count & COUNT_TAG)) {
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag);
 	}
 
-        if (!have_wtc || (what_to_count & COUNT_ID2)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.id2);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.id2);
+        if (!have_wtc || (what_to_count & COUNT_TAG2)) {
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag2);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag2);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_CLASS)) {
@@ -2887,14 +2887,14 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
   
-  if (wtc & COUNT_ID) {
-    kv = json_pack("{sI}", "tag", pbase->id);
+  if (wtc & COUNT_TAG) {
+    kv = json_pack("{sI}", "tag", pbase->tag);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
-  if (wtc & COUNT_ID2) {
-    kv = json_pack("{sI}", "tag2", pbase->id2);
+  if (wtc & COUNT_TAG2) {
+    kv = json_pack("{sI}", "tag2", pbase->tag2);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }

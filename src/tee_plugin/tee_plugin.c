@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -192,7 +192,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
-	  if (!evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->id)) {
+	  if (!evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->tag)) {
 	    if (!receivers.pools[pool_idx].balance.func) {
 	      for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
 	        target = &receivers.pools[pool_idx].receivers[recv_idx];
@@ -505,7 +505,7 @@ struct tee_receiver *Tee_hash_tag_balance(void *pool, struct pkt_msg *msg)
   struct tee_receivers_pool *p = pool;
   struct tee_receiver *target = NULL;
 
-  if (p) target = &p->receivers[msg->id % p->num];
+  if (p) target = &p->receivers[msg->tag % p->num];
 
   return target;
 }

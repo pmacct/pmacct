@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -102,8 +102,8 @@ struct template_entry *build_template(struct template_header *th)
   tot_size += ptr->size;
   ptr++;
 
-  ptr->tag = COUNT_ID;
-  ptr->size = sizeof(dummy.primitives.id);
+  ptr->tag = COUNT_TAG;
+  ptr->size = sizeof(dummy.primitives.tag);
   tot_size += ptr->size;
   ptr++;
 
@@ -182,7 +182,7 @@ void set_template_funcs(struct template_header *th, struct template_entry *head)
     case COUNT_IP_PROTO:
       template_funcs[cnt] = TPL_push_proto;
       break;
-    case COUNT_ID:
+    case COUNT_TAG:
       template_funcs[cnt] = TPL_push_id;
       break;
     case COUNT_CLASS:
@@ -323,9 +323,9 @@ void TPL_push_proto(u_char **dst, const struct db_cache *src)
 
 void TPL_push_id(u_char **dst, const struct db_cache *src)
 {
-  int size = sizeof(src->primitives.id);
+  int size = sizeof(src->primitives.tag);
 
-  memcpy(*dst, &src->primitives.id, size);
+  memcpy(*dst, &src->primitives.tag, size);
   *dst += size;
 }
 
@@ -432,8 +432,8 @@ void TPL_pop(u_char *src, struct db_cache *dst, struct template_header *th, u_ch
     case COUNT_IP_PROTO:
       memcpy(&dst->primitives.proto, ptr, sz);
       break;
-    case COUNT_ID:
-      memcpy(&dst->primitives.id, ptr, sz);
+    case COUNT_TAG:
+      memcpy(&dst->primitives.tag, ptr, sz);
       break;
     case COUNT_CLASS:
       memcpy(&dst->primitives.class, ptr, sz);
@@ -522,8 +522,8 @@ void TPL_check_sizes(struct template_header *th, struct db_cache *elem, u_char *
     case COUNT_IP_PROTO:
       if (teptr->size > sizeof(elem->primitives.proto)) goto exit_lane;
       break;
-    case COUNT_ID:
-      if (teptr->size > sizeof(elem->primitives.id)) goto exit_lane;
+    case COUNT_TAG:
+      if (teptr->size > sizeof(elem->primitives.tag)) goto exit_lane;
       break;
     case COUNT_CLASS:
       if (teptr->size > sizeof(elem->primitives.class)) goto exit_lane;

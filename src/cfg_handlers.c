@@ -168,8 +168,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "sum_net")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_NET, count_token);
     else if (!strcmp(count_token, "sum_as")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_AS, count_token);
     else if (!strcmp(count_token, "sum_port")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_PORT, count_token);
-    else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_ID, count_token);
-    else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_ID2, count_token);
+    else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_TAG, count_token);
+    else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_TAG2, count_token);
     else if (!strcmp(count_token, "flows")) cfg_set_aggregate(filename, value, COUNT_INT_FLOWS, count_token);
     else if (!strcmp(count_token, "class")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token);
     else if (!strcmp(count_token, "tcpflags")) cfg_set_aggregate(filename, value, COUNT_INT_TCPFLAGS, count_token);
@@ -1961,6 +1961,32 @@ int cfg_key_post_tag(char *filename, char *name, char *value_ptr)
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.post_tag = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_post_tag2(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  pm_id_t value, changes = 0;
+  char *endptr;
+
+  value = strtoull(value_ptr, &endptr, 10);
+  if (value < 1) {
+    Log(LOG_ERR, "WARN ( %s ): 'post_tag2' cannot be zero.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.post_tag2 = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.post_tag2 = value;
         changes++;
         break;
       }

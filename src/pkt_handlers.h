@@ -54,7 +54,8 @@ EXT void ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void post_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void post_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -107,8 +108,8 @@ EXT void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
@@ -147,8 +148,8 @@ EXT void SF_tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *
 EXT void SF_counters_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void SF_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void SF_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -163,8 +164,8 @@ EXT void SF_peer_dst_as_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void SF_local_pref_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_std_comms_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
-EXT void ptag_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void ptag_id2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void pre_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void pre_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 

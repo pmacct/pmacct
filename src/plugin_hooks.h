@@ -78,7 +78,8 @@ struct channels_list_entry {
   int same_aggregate;
   pkt_handler phandler[N_PRIMITIVES];
   int pipe;
-  pm_id_t id;						/* post-tagging id */
+  pm_id_t tag;						/* post-tagging tag */
+  pm_id_t tag2;						/* post-tagging tag2 */
   struct pretag_filter tag_filter; 			/* filter aggregates basing on their tag */
   struct pretag_filter tag2_filter; 			/* filter aggregates basing on their tag2 */
   struct aggregate_filter agg_filter; 			/* filter aggregates basing on L2-L4 primitives */

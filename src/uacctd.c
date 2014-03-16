@@ -431,8 +431,8 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_flows = TRUE;
 	}
 	if (list->cfg.pre_tag_map) {
-	  list->cfg.what_to_count |= COUNT_ID;
-	  list->cfg.what_to_count |= COUNT_ID2;
+	  list->cfg.what_to_count |= COUNT_TAG;
+	  list->cfg.what_to_count |= COUNT_TAG2;
 	}
 	list->cfg.what_to_count |= COUNT_IN_IFACE;
 	list->cfg.what_to_count |= COUNT_OUT_IFACE;
@@ -477,8 +477,8 @@ int main(int argc,char **argv, char **envp)
           list->cfg.what_to_count |= COUNT_DST_NMASK;
         }
 	if (list->cfg.pre_tag_map) {
-	  list->cfg.what_to_count |= COUNT_ID;
-	  list->cfg.what_to_count |= COUNT_ID2;
+	  list->cfg.what_to_count |= COUNT_TAG;
+	  list->cfg.what_to_count |= COUNT_TAG2;
 	}
         if (list->cfg.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|COUNT_AS_PATH|
                                        COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_SRC_STD_COMM|

@@ -569,7 +569,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     ptr_end += strlen(tag_string);
     len -= strlen(tag_string);
 
-    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.id); 
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag); 
     else snprintf(buf, newlen, "%llu", zero_tag);
 
     strncat(buf, ptr_end, len);
@@ -590,7 +590,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     ptr_end += strlen(tag2_string);
     len -= strlen(tag2_string);
 
-    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.id2);
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag2);
     else snprintf(buf, newlen, "%llu", zero_tag);
 
     strncat(buf, ptr_end, len);
@@ -874,13 +874,13 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
   int class = FALSE;
   int flows = FALSE;
 
-  if (*wtc & COUNT_ID) {
-    *wtc ^= COUNT_ID;
+  if (*wtc & COUNT_TAG) {
+    *wtc ^= COUNT_TAG;
     tag = TRUE;
   }
 
-  if (*wtc & COUNT_ID2) {
-    *wtc ^= COUNT_ID2;
+  if (*wtc & COUNT_TAG2) {
+    *wtc ^= COUNT_TAG2;
     tag2 = TRUE;
   }
 
@@ -926,8 +926,8 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
     }
   }
 
-  if (tag) *wtc |= COUNT_ID;
-  if (tag2) *wtc |= COUNT_ID2;
+  if (tag) *wtc |= COUNT_TAG;
+  if (tag2) *wtc |= COUNT_TAG2;
   if (class) *wtc |= COUNT_CLASS;
   if (flows) *wtc |= COUNT_FLOWS;
 }
@@ -1432,8 +1432,8 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
   }
 
   if (bta_map_caching && xsmc && timeval_cmp(&xsmc->stamp, &reload_map_tstamp) > 0) {
-    *tag = xsmc->id;
-    *tag2 = xsmc->id2;
+    *tag = xsmc->tag;
+    *tag2 = xsmc->tag2;
     ret = xsmc->ret;
     memcpy(&pptrs->lookup_bgp_port, &xsmc->port, sizeof(s_uint16_t));
   }
@@ -1441,8 +1441,8 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
     if (find_id_func) {
       ret = find_id_func(t, pptrs, tag, tag2);
       if (xsmc) {
-	xsmc->id = *tag;
-	xsmc->id2 = *tag2;
+	xsmc->tag = *tag;
+	xsmc->tag2 = *tag2;
 	xsmc->ret = ret;
 	memcpy(&xsmc->port, &pptrs->lookup_bgp_port, sizeof(s_uint16_t));
 	gettimeofday(&xsmc->stamp, NULL);
@@ -1605,14 +1605,14 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
 
-  if (wtc & COUNT_ID) {
-    kv = json_pack("{sI}", "tag", pbase->id);
+  if (wtc & COUNT_TAG) {
+    kv = json_pack("{sI}", "tag", pbase->tag);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
-  if (wtc & COUNT_ID2) {
-    kv = json_pack("{sI}", "tag2", pbase->id2);
+  if (wtc & COUNT_TAG2) {
+    kv = json_pack("{sI}", "tag2", pbase->tag2);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }

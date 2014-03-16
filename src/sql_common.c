@@ -1124,12 +1124,12 @@ int sql_evaluate_primitives(int primitive)
       }
     }
 
-    what_to_count |= COUNT_ID;
+    what_to_count |= COUNT_TAG;
 
     /* aggregation primitives listed below are not part of any default SQL schema; hence
        no matter if SQL statements optimization is enabled or not, they have to be passed
        on blindly */
-    if (config.what_to_count & COUNT_ID2) what_to_count |= COUNT_ID2;
+    if (config.what_to_count & COUNT_TAG2) what_to_count |= COUNT_TAG2;
     if (config.what_to_count & COUNT_COS) what_to_count |= COUNT_COS;
     if (config.what_to_count & COUNT_ETHERTYPE) what_to_count |= COUNT_ETHERTYPE;
     if (config.what_to_count & COUNT_MPLS_VPN_RD) what_to_count |= COUNT_MPLS_VPN_RD;
@@ -2233,15 +2233,15 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if (what_to_count & COUNT_ID) {
+  if (what_to_count & COUNT_TAG) {
     int count_it = FALSE;
 
     if ((config.sql_table_version < 2) && !assume_custom_table) {
-      if (config.what_to_count & COUNT_ID) {
+      if (config.what_to_count & COUNT_TAG) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Tag/ID accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
         exit_plugin(1);	
       }
-      else what_to_count ^= COUNT_ID;
+      else what_to_count ^= COUNT_TAG;
     }
     else count_it = TRUE;
 
@@ -2254,13 +2254,13 @@ int sql_evaluate_primitives(int primitive)
       strncat(insert_clause, "agent_id", SPACELEFT(insert_clause));
       strncat(values[primitive].string, "%llu", SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, "agent_id=%llu", SPACELEFT(where[primitive].string));
-      values[primitive].type = where[primitive].type = COUNT_ID;
-      values[primitive].handler = where[primitive].handler = count_id_handler;
+      values[primitive].type = where[primitive].type = COUNT_TAG;
+      values[primitive].handler = where[primitive].handler = count_tag_handler;
       primitive++;
     }
   }
 
-  if (what_to_count & COUNT_ID2) {
+  if (what_to_count & COUNT_TAG2) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
@@ -2269,8 +2269,8 @@ int sql_evaluate_primitives(int primitive)
     strncat(insert_clause, "agent_id2", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%llu", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, "agent_id2=%llu", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_ID2;
-    values[primitive].handler = where[primitive].handler = count_id2_handler;
+    values[primitive].type = where[primitive].type = COUNT_TAG2;
+    values[primitive].handler = where[primitive].handler = count_tag2_handler;
     primitive++;
   }
 

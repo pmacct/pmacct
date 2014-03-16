@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -103,7 +103,7 @@ void print_data(struct db_cache *cache_elem, u_int32_t wtc, int num)
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN];
 
   printf("%-8d  ", num);
-  printf("%-5d  ", data->id);
+  printf("%-5d  ", data->tag);
 #if defined (HAVE_L2)
   etheraddr_string(data->eth_shost, src_mac);
   printf("%-17s  ", src_mac);
@@ -507,7 +507,7 @@ int MY_evaluate_primitives(int primitive)
     what_to_count |= COUNT_DST_PORT;
     what_to_count |= COUNT_IP_TOS;
     what_to_count |= COUNT_IP_PROTO;
-    what_to_count |= COUNT_ID;
+    what_to_count |= COUNT_TAG;
     what_to_count |= COUNT_VLAN;
     if (lh.what_to_count & COUNT_SUM_PORT) what_to_count |= COUNT_SUM_PORT; 
     if (lh.what_to_count & COUNT_SUM_MAC) what_to_count |= COUNT_SUM_MAC; 
@@ -714,15 +714,15 @@ int MY_evaluate_primitives(int primitive)
     primitive++;
   }
 
-  if (what_to_count & COUNT_ID) {
+  if (what_to_count & COUNT_TAG) {
     int count_it = FALSE;
                                                                                             
     if ((lh.sql_table_version < 2) && !assume_custom_table) {
-      if (lh.what_to_count & COUNT_ID) {
+      if (lh.what_to_count & COUNT_TAG) {
         printf("ERROR: The use of IDs requires SQL table version 2. Exiting.\n");
         exit(1);
       }
-      else what_to_count ^= COUNT_ID;
+      else what_to_count ^= COUNT_TAG;
     }
     else count_it = TRUE;
 
@@ -735,8 +735,8 @@ int MY_evaluate_primitives(int primitive)
       strncat(insert_clause, "agent_id", SPACELEFT(insert_clause));
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, "agent_id=%u", SPACELEFT(where[primitive].string));
-      values[primitive].type = where[primitive].type = COUNT_ID;
-      values[primitive].handler = where[primitive].handler = count_id_handler;
+      values[primitive].type = where[primitive].type = COUNT_TAG;
+      values[primitive].handler = where[primitive].handler = count_tag_handler;
       primitive++;
     }
   }

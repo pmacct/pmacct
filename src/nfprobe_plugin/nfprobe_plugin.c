@@ -300,12 +300,12 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
       direction = config.nfprobe_direction;
       break;
     case DIRECTION_TAG:
-      if (p->id == 1) direction = DIRECTION_IN;
-      else if (p->id == 2) direction = DIRECTION_OUT;
+      if (p->tag == 1) direction = DIRECTION_IN;
+      else if (p->tag == 2) direction = DIRECTION_OUT;
       break;
     case DIRECTION_TAG2:
-      if (p->id2 == 1) direction = DIRECTION_IN;
-      else if (p->id2 == 2) direction = DIRECTION_OUT;
+      if (p->tag2 == 1) direction = DIRECTION_IN;
+      else if (p->tag2 == 2) direction = DIRECTION_OUT;
       break;
     }
 
@@ -334,12 +334,12 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
         flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? config.nfprobe_ifindex : 0;
         break;
       case IFINDEX_TAG:
-        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->id : 0;
-	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->id : 0;
+        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->tag : 0;
+	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->tag : 0;
 	break;
       case IFINDEX_TAG2:
-        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->id2 : 0;
-	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->id2 : 0;
+        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->tag2 : 0;
+	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->tag2 : 0;
         break;
       default:
         flow->ifindex[ndx] = 0;
@@ -364,12 +364,12 @@ l2_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
   if (config.nfprobe_direction) {
     switch (config.nfprobe_direction) {
     case DIRECTION_TAG:
-      if (p->id == 1) direction = DIRECTION_IN;
-      else if (p->id == 2) direction = DIRECTION_OUT;
+      if (p->tag == 1) direction = DIRECTION_IN;
+      else if (p->tag == 2) direction = DIRECTION_OUT;
       break;
     case DIRECTION_TAG2:
-      if (p->id2 == 1) direction = DIRECTION_IN;
-      else if (p->id2 == 2) direction = DIRECTION_OUT;
+      if (p->tag2 == 1) direction = DIRECTION_IN;
+      else if (p->tag2 == 2) direction = DIRECTION_OUT;
       break;
     }
 
@@ -415,8 +415,8 @@ ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   flow->packets[ndx] = data->pkt_num;
   flow->flows[ndx] = data->flo_num;
   flow->class = p->class;
-  flow->tag[ndx] = p->id;
-  flow->tag2[ndx] = p->id2;
+  flow->tag[ndx] = p->tag;
+  flow->tag2[ndx] = p->tag2;
 
   *isfrag = 0;
 
@@ -465,8 +465,8 @@ ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
   flow->packets[ndx] = data->pkt_num; 
   flow->flows[ndx] = data->flo_num;
   flow->class = p->class;
-  flow->tag[ndx] = p->id;
-  flow->tag2[ndx] = p->id2;
+  flow->tag[ndx] = p->tag;
+  flow->tag2[ndx] = p->tag2;
 
   *isfrag = 0;
 

@@ -412,8 +412,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
       if (f && config.print_output & PRINT_OUTPUT_FORMATTED) {
-        if (config.what_to_count & COUNT_ID) fprintf(f, "%-10llu  ", data->id);
-        if (config.what_to_count & COUNT_ID2) fprintf(f, "%-10llu  ", data->id2);
+        if (config.what_to_count & COUNT_TAG) fprintf(f, "%-10llu  ", data->tag);
+        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10llu  ", data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
         if (config.what_to_count & COUNT_SRC_MAC) {
@@ -705,8 +705,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         else fprintf(f, "\n");
       }
       else if (f && config.print_output & PRINT_OUTPUT_CSV) {
-        if (config.what_to_count & COUNT_ID) fprintf(f, "%s%llu", write_sep(sep, &count), data->id);
-        if (config.what_to_count & COUNT_ID2) fprintf(f, "%s%llu", write_sep(sep, &count), data->id2);
+        if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag);
+        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
         if (config.what_to_count & COUNT_SRC_MAC) {
@@ -952,8 +952,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
 void P_write_stats_header_formatted(FILE *f, int is_event)
 {
-  if (config.what_to_count & COUNT_ID) fprintf(f, "TAG         ");
-  if (config.what_to_count & COUNT_ID2) fprintf(f, "TAG2        ");
+  if (config.what_to_count & COUNT_TAG) fprintf(f, "TAG         ");
+  if (config.what_to_count & COUNT_TAG2) fprintf(f, "TAG2        ");
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS             ");
 #if defined HAVE_L2
   if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "SRC_MAC            ");
@@ -1045,8 +1045,8 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   char *sep = config.print_output_separator;
   int count = 0;
 
-  if (config.what_to_count & COUNT_ID) fprintf(f, "%sTAG", write_sep(sep, &count));
-  if (config.what_to_count & COUNT_ID2) fprintf(f, "%sTAG2", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_TAG) fprintf(f, "%sTAG", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_TAG2) fprintf(f, "%sTAG2", write_sep(sep, &count));
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "%sCLASS", write_sep(sep, &count));
 #if defined HAVE_L2
   if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));

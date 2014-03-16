@@ -435,8 +435,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   
       if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
-      if (config.what_to_count & COUNT_ID) bson_append_long(bson_elem, "tag", data->id);
-      if (config.what_to_count & COUNT_ID2) bson_append_long(bson_elem, "tag2", data->id2);
+      if (config.what_to_count & COUNT_TAG) bson_append_long(bson_elem, "tag", data->tag);
+      if (config.what_to_count & COUNT_TAG2) bson_append_long(bson_elem, "tag2", data->tag2);
       if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
       if (config.what_to_count & COUNT_SRC_MAC) {

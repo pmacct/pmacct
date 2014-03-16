@@ -686,42 +686,47 @@ void evaluate_packet_handlers()
     }
 
     if (config.acct_type == ACCT_PM || config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
-      if (channels_list[index].aggregation & COUNT_ID) {
+      if (channels_list[index].aggregation & COUNT_TAG) {
 	/* we infer 'pre_tag_map' from configuration because it's global */
         if (channels_list[index].plugin->cfg.pre_tag_map) {
-	  channels_list[index].phandler[primitives] = ptag_id_handler;
+	  channels_list[index].phandler[primitives] = pre_tag_handler;
 	  primitives++;
 	}
 
 	if (config.acct_type == ACCT_NF) {
-	  channels_list[index].phandler[primitives] = NF_id_handler;
+	  channels_list[index].phandler[primitives] = NF_tag_handler;
 	  primitives++;
 	}
 	else if (config.acct_type == ACCT_SF) {
-	  channels_list[index].phandler[primitives] = SF_id_handler;
+	  channels_list[index].phandler[primitives] = SF_tag_handler;
 	  primitives++;
 	}
 
-	if (channels_list[index].id) { 
-	  channels_list[index].phandler[primitives] = id_handler; 
+	if (channels_list[index].tag) { 
+	  channels_list[index].phandler[primitives] = post_tag_handler; 
 	  primitives++;
 	}
       }
     }
 
     if (config.acct_type == ACCT_PM || config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
-      if (channels_list[index].aggregation & COUNT_ID2) {
+      if (channels_list[index].aggregation & COUNT_TAG2) {
         if (channels_list[index].plugin->cfg.pre_tag_map) {
-          channels_list[index].phandler[primitives] = ptag_id2_handler;
+          channels_list[index].phandler[primitives] = pre_tag2_handler;
           primitives++;
         }
 
         if (config.acct_type == ACCT_NF) {
-          channels_list[index].phandler[primitives] = NF_id2_handler;
+          channels_list[index].phandler[primitives] = NF_tag2_handler;
           primitives++;
         }
         else if (config.acct_type == ACCT_SF) {
-          channels_list[index].phandler[primitives] = SF_id2_handler;
+          channels_list[index].phandler[primitives] = SF_tag2_handler;
+          primitives++;
+        }
+
+        if (channels_list[index].tag2) {
+          channels_list[index].phandler[primitives] = post_tag2_handler;
           primitives++;
         }
       }
@@ -1053,11 +1058,18 @@ void counters_renormalize_handler(struct channels_list_entry *chptr, struct pack
   pptrs->renormalized = TRUE;
 }
 
-void id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void post_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  pdata->primitives.id = chptr->id;
+  pdata->primitives.tag = chptr->tag;
+}
+
+void post_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->primitives.tag2 = chptr->tag2;
 }
 
 void flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1163,8 +1175,8 @@ void tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   pmsg->len = pptrs->f_len;
   memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
   memcpy(&pmsg->payload, pptrs->f_header, MIN(sizeof(pmsg->payload), pptrs->f_len));
-  pmsg->id = pptrs->tag;
-  pmsg->id2 = pptrs->tag2;
+  pmsg->tag = pptrs->tag;
+  pmsg->tag2 = pptrs->tag2;
 }
 
 void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2482,18 +2494,18 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
   pdata->flow_type = pptrs->flow_type;
 }
 
-void ptag_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void pre_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  pdata->primitives.id = pptrs->tag;
+  pdata->primitives.tag = pptrs->tag;
 }
 
-void ptag_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void pre_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  pdata->primitives.id2 = pptrs->tag2;
+  pdata->primitives.tag2 = pptrs->tag2;
 }
 
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2709,13 +2721,13 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 
   if (config.sampling_map) {
     if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
-      pdata->primitives.sampling_rate = xsentry->st.id;
+      pdata->primitives.sampling_rate = xsentry->st.tag;
     }
     else {
       NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
 
       if (xsentry) {
-        xsentry->st.id = pdata->primitives.sampling_rate;
+        xsentry->st.tag = pdata->primitives.sampling_rate;
         gettimeofday(&xsentry->st.stamp, NULL);
       }
     }
@@ -3264,7 +3276,7 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   }
 }
 
-void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -3274,8 +3286,8 @@ void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   case 10:
   case 9:
     if (tpl->tpl[NF9_CUST_TAG].len && !pptrs->have_tag) {
-      memcpy(&pdata->primitives.id, pptrs->f_data+tpl->tpl[NF9_CUST_TAG].off, tpl->tpl[NF9_CUST_TAG].len);
-      pdata->primitives.id = ntohl(pdata->primitives.id);
+      memcpy(&pdata->primitives.tag, pptrs->f_data+tpl->tpl[NF9_CUST_TAG].off, tpl->tpl[NF9_CUST_TAG].len);
+      pdata->primitives.tag = ntohl(pdata->primitives.tag);
     }
     break;
   default:
@@ -3283,7 +3295,7 @@ void NF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   }
 }
 
-void NF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -3293,8 +3305,8 @@ void NF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   case 10:
   case 9:
     if (tpl->tpl[NF9_CUST_TAG2].len && !pptrs->have_tag2) {
-      memcpy(&pdata->primitives.id2, pptrs->f_data+tpl->tpl[NF9_CUST_TAG2].off, tpl->tpl[NF9_CUST_TAG2].len);
-      pdata->primitives.id2 = ntohl(pdata->primitives.id2);
+      memcpy(&pdata->primitives.tag2, pptrs->f_data+tpl->tpl[NF9_CUST_TAG2].off, tpl->tpl[NF9_CUST_TAG2].len);
+      pdata->primitives.tag2 = ntohl(pdata->primitives.tag2);
     }
     break;
   default:
@@ -3400,13 +3412,13 @@ void NF_counters_map_renormalize_handler(struct channels_list_entry *chptr, stru
   if (pptrs->renormalized) return;
 
   if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
-    pptrs->st = xsentry->st.id;
+    pptrs->st = xsentry->st.tag;
   }
   else { 
     NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
 
     if (xsentry) {
-      xsentry->st.id = pptrs->st;
+      xsentry->st.tag = pptrs->st;
       gettimeofday(&xsentry->st.stamp, NULL);
     }
   }
@@ -3910,13 +3922,13 @@ void SF_counters_map_renormalize_handler(struct channels_list_entry *chptr, stru
   if (pptrs->renormalized) return;
 
   if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
-    pptrs->st = xsentry->st.id;
+    pptrs->st = xsentry->st.tag;
   }
   else {
     SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
 
     if (xsentry) {
-      xsentry->st.id = pptrs->st;
+      xsentry->st.tag = pptrs->st;
       gettimeofday(&xsentry->st.stamp, NULL);
     }
   }
@@ -4121,13 +4133,13 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 
   if (config.sampling_map) {
     if (sampling_map_caching && xsentry && timeval_cmp(&xsentry->st.stamp, &reload_map_tstamp) > 0) {
-      pdata->primitives.sampling_rate = xsentry->st.id;
+      pdata->primitives.sampling_rate = xsentry->st.tag;
     }
     else {
       SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
 
       if (xsentry) {
-        xsentry->st.id = pdata->primitives.sampling_rate;
+        xsentry->st.tag = pdata->primitives.sampling_rate;
         gettimeofday(&xsentry->st.stamp, NULL);
       }
     }
@@ -4162,20 +4174,20 @@ void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   pdata->cst.stamp.tv_usec = 0;
 }
 
-void SF_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void SF_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (!pptrs->have_tag) pdata->primitives.id = sample->tag;
+  if (!pptrs->have_tag) pdata->primitives.tag = sample->tag;
 }
 
-void SF_id2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void SF_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (!pptrs->have_tag2) pdata->primitives.id2 = sample->tag2;
+  if (!pptrs->have_tag2) pdata->primitives.tag2 = sample->tag2;
 }
 
 void sampling_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

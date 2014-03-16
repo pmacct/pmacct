@@ -815,6 +815,8 @@ DESC:		Name of the AMQP routing key to attach to published data. Dynamic names a
 
                 $post_tag	Configured value of post_tag.
 
+                $post_tag2	Configured value of post_tag2.
+
 KEY:		amqp_persistent_msg
 VALUES:         [ true | false ]
 DESC:		Marks messages as persistent so that a queue content does not get lost if RabbitMQ restarts.
@@ -1012,11 +1014,11 @@ DESC:		it expects one or more tags (when multiple tags are supplied, they need t
 		in the range 10..20) and any combination of these. This directive makes sense if coupled with
 		'pre_tag_map'; it could be used in conjunction with 'aggregate_filter'.
 
-KEY:            post_tag 
+KEY:            [ post_tag | post_tag2 ] 
 VALUES:         [ 1-2^64-1 ]
 DESC:           it expects a tag as value. Post-Tagging is evaluated in the plugins. The tag is used as 'tag'
-		primitive value. Its use hence makes sense if such primitive is enabled as part of the plugin
-		aggregation method.
+		(post_tag) or 'tag2' (post_tag2) primitive value. Use of these directives hence makes sense
+		if tag and/or tag2 primitives are part of the plugin aggregation method.
 
 KEY:		sampling_rate
 VALUES:		[ >= 1 ]

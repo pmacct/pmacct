@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -559,18 +559,18 @@ void count_timestamp_handler(const struct db_cache *cache_elem, struct insert_da
   *ptr_values += strlen(*ptr_values);
 }
 
-void count_id_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+void count_tag_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.id);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.id);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.tag);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.tag);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
-void count_id2_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+void count_tag2_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.id2);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.id2);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.tag2);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.tag2);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

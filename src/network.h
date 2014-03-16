@@ -419,8 +419,8 @@ struct pkt_primitives {
   pm_country_t src_ip_country;
   pm_country_t dst_ip_country;
 #endif
-  pm_id_t id;
-  pm_id_t id2;
+  pm_id_t tag;
+  pm_id_t tag2;
   pm_class_t class;
   u_int32_t sampling_rate;
   u_int16_t pkt_len_distrib;
@@ -474,8 +474,8 @@ struct pkt_msg {
   u_int32_t seqno;
   u_int16_t len;
   u_char payload[PKT_MSG_SIZE];
-  pm_id_t id;
-  pm_id_t id2;
+  pm_id_t tag;
+  pm_id_t tag2;
   u_int16_t pad;
 };
 

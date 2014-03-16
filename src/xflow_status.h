@@ -51,8 +51,8 @@ struct xflow_status_entry_class
 
 struct xflow_status_map_cache
 {
-  pm_id_t id;
-  pm_id_t id2;
+  pm_id_t tag;
+  pm_id_t tag2;
   s_uint16_t port;		/* BGP port */
   int ret;
   struct timeval stamp;

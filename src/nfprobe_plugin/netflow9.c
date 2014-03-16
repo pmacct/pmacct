@@ -674,7 +674,7 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
-	if (config.nfprobe_what_to_count & COUNT_ID) {
+	if (config.nfprobe_what_to_count & COUNT_TAG) {
 	  v4_template.r[rcount].type = htons(NF9_CUST_TAG);
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_tag_handler;
@@ -685,7 +685,7 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
-        if (config.nfprobe_what_to_count & COUNT_ID2) {
+        if (config.nfprobe_what_to_count & COUNT_TAG2) {
           v4_template.r[rcount].type = htons(NF9_CUST_TAG2);
           v4_template.r[rcount].length = htons(4);
           v4_int_template.r[rcount].handler = flow_to_flowset_tag2_handler;
@@ -986,7 +986,7 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
-        if (config.nfprobe_what_to_count & COUNT_ID) {
+        if (config.nfprobe_what_to_count & COUNT_TAG) {
 	  v6_template.r[rcount].type = htons(NF9_CUST_TAG);
 	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_tag_handler;
@@ -997,7 +997,7 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
-        if (config.nfprobe_what_to_count & COUNT_ID2) {
+        if (config.nfprobe_what_to_count & COUNT_TAG2) {
           v6_template.r[rcount].type = htons(NF9_CUST_TAG2);
           v6_template.r[rcount].length = htons(4);
           v6_int_template.r[rcount].handler = flow_to_flowset_tag2_handler;

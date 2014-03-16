@@ -378,7 +378,8 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->agg_filter.table = cfg->bpfp_a_table;
       chptr->agg_filter.num = (int *) &cfg->bpfp_a_num; 
       chptr->bufsize = cfg->buffer_size;
-      chptr->id = cfg->post_tag;
+      chptr->tag = cfg->post_tag;
+      chptr->tag2 = cfg->post_tag2;
       if (cfg->sampling_rate && plugin_type != PLUGIN_ID_SFPROBE) { /* sfprobe cares for itself */
 	chptr->s.rate = cfg->sampling_rate;
 
@@ -617,8 +618,8 @@ void fill_pipe_buffer()
 int check_shadow_status(struct packet_ptrs *pptrs, struct channels_list_entry *mychptr)
 {
   if (pptrs->shadow) {
-    if (pptrs->tag && mychptr->aggregation & COUNT_ID) return FALSE;
-    else if (pptrs->tag2 && mychptr->aggregation & COUNT_ID2) return FALSE;
+    if (pptrs->tag && mychptr->aggregation & COUNT_TAG) return FALSE;
+    else if (pptrs->tag2 && mychptr->aggregation & COUNT_TAG2) return FALSE;
     else return TRUE;
   } 
   else return FALSE;

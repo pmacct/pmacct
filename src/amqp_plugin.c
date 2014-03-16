@@ -491,7 +491,7 @@ void amqp_handle_routing_key_dyn_strings(char *new, int newlen, char *old, struc
     ptr_end += ptr_len;
     len -= ptr_len;
 
-    snprintf(buf, newlen, "%u", elem->primitives.id);
+    snprintf(buf, newlen, "%u", elem->primitives.tag);
     strncat(buf, ptr_end, len);
 
     len = strlen(buf);
