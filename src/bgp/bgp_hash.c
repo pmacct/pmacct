@@ -62,7 +62,7 @@ struct hash *
 hash_create (unsigned int (*hash_key) (void *), 
              int (*hash_cmp) (const void *, const void *))
 {
-  return hash_create_size (HASHTABSIZE, hash_key, hash_cmp);
+  return hash_create_size (config.bgp_table_attr_hash_buckets, hash_key, hash_cmp);
 }
 
 /* Utility function for hash_get().  When this function is specified

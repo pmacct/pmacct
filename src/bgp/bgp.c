@@ -128,12 +128,13 @@ void skinny_bgp_daemon()
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
-  if (!config.bgp_table_as_path_buckets) config.bgp_table_as_path_buckets = DEFAULT_BGP_INFO_AS_PATHS_HASH;
+  if (!config.bgp_table_per_peer_buckets) config.bgp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
+  if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
 
-  if (config.bgp_table_as_path_hash == BGP_ASPATH_HASH_PATHID)
+  if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
     bgp_route_info_modulo = bgp_route_info_modulo_pathid; 
   else {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unknown 'bgp_table_as_path_hash' value. Terminating thread.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unknown 'bgp_table_per_peer_hash' value. Terminating thread.\n", config.name);
     exit_all(1);
   }
 
@@ -2181,7 +2182,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     modulo = bgp_route_info_modulo(peer, NULL);
 
     // XXX: to be optimized 
-    if (config.bgp_table_as_path_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_as_path_buckets; 
+    if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_per_peer_buckets; 
     else modulo_max = 1;
 
     if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
@@ -2474,7 +2475,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     modulo = bgp_route_info_modulo(nh_peer, NULL);
 
     // XXX: to be optimized 
-    if (config.bgp_table_as_path_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_as_path_buckets;
+    if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_per_peer_buckets;
     else modulo_max = 1;
 
     memset(&ch, 0, sizeof(ch));
@@ -2843,7 +2844,7 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
 
   if (path_id && *path_id) local_path_id = *path_id;
 
-  return (((peer->fd * config.bgp_table_as_path_buckets) +
-	  ((local_path_id - 1) % config.bgp_table_as_path_buckets)) %
-	  (config.bgp_table_peer_buckets * config.bgp_table_as_path_buckets));
+  return (((peer->fd * config.bgp_table_per_peer_buckets) +
+	  ((local_path_id - 1) % config.bgp_table_per_peer_buckets)) %
+	  (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets));
 }

@@ -1436,26 +1436,35 @@ DESC:		Routing information related to BGP prefixes is kept per-peer in order to 
 		multi-RIB environment and is internally structured as an hash with conflict chains.
 		This parameter sets the number of buckets of such hash structure; the value is directly
 		related to the number of expected BGP peers, should never exceed such amount and: a) if
-		only best-path is received this is best set to 1/10 of the expected peers; b) if add-
-		paths is received this is best set to 1/1 of the expected peers. The default value
+		only best-path is received this is best set to 1/10 of the expected peers; b) if BGP
+		ADD-PATHs is received this is best set to 1/1 of the expected peers. The default value
 		proved to work fine up to aprox 100 BGP peers sending best-path only, in lab. More
 		buckets means better CPU usage but also increased memory footprint - and vice-versa.
 		(default: 13)
 
-KEY:		bgp_table_as_path_buckets [GLOBAL]
+KEY:		bgp_table_per_peer_buckets [GLOBAL]
 VALUE:		[ 1-128 ]
 DESC:		With same background information as bgp_table_peer_buckets, this parameter sets the
-		number of buckets in which per-peer BGP ADD-PATHs information is distributed (hence
-		effectively creating a second dimension on top of bgp_table_peer_buckets when BGP
-		ADD-PATHs is received). It is recommended to set this value to maximum 1/3 of the
-		configured maximum number of paths per prefix to be exported. (default: 1)
+		number of buckets over which per-peer information is distributed (hence effectively
+		creating a second dimension on top of bgp_table_peer_buckets, useful when much BGP
+		information per peer is received, ie. in case of BGP ADD-PATHs). Default proved to
+		work fine if BGP sessions are passing best-path only. In case of BGP ADD-PATHs it is
+		instead recommended to set this value to 1/3 of the configured maximum number of
+		paths per prefix to be exported. (default: 1)
 
-KEY:            bgp_table_as_path_hash [GLOBAL]
+KEY:            bgp_table_attr_hash_buckets [GLOBAL]
+VALUE:          [ 1-1000000 ]
+DESC:		Sets the number of buckets of BGP attributes hashes (ie. AS-PATH, communities, etc.).
+		Default proved to work fine if BGP sessions are passing best-path only. In case of 
+		BGP ADD-PATHs it is instead recommended to raise this value; a value of 65535 proved
+		to work OK for 25 concurrent BGP ADD-PATHs sessions. (default: 1024)
+
+KEY:            bgp_table_per_peer_hash [GLOBAL]
 VALUE:          [ path_id ]
-DESC:		If bgp_table_as_path_buckets is greater than 1, hence allowing for spread of AS-PATHs
-		over available buckets, this allows to set the hashing to be used. By default hashing
-		happens against the BGP ADD-PATH path_id field. Other fields (ie. BGP next-hop is on
-		the radar) will be supported in future. (default: path_id)
+DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to set the
+		hashing to be used. By default hashing happens against the BGP ADD-PATH path_id field.
+		Hashing over other fields or field combinations (hashing over BGP next-hop is on the
+		radar) are planned to be supported in future. (default: path_id)
 
 KEY:		isis_daemon
 VALUES:		[ true | false ]
