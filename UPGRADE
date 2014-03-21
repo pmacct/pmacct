@@ -8,6 +8,15 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:     >= 1.5.0rc3
+FROM:   <= 1.5.0rc2
+TOPIC:  SQL plugins, agent_id2 field
+DESC:	Over the years, agent_id, agent_id2 fields were found confusing to
+	store tag, tag2 primitives respectively. agent_id is now renamed 'tag'
+	and backwards compatibility is preserved by issuing schema version #9.
+	agent_id2 is not defined in any sql_table_schema instead and hence its
+	renaming will be disruptive for existing deployments.
+
 TO:     >= 1.5.0rc2
 FROM:   <= 1.5.0rc1
 TOPIC:  print plugin, dynamic file names and pointer to latest file
@@ -28,6 +37,17 @@ DESC:	Time-related variables substitution is now based solely on the value of
 	based on the value of print_refresh_time. While this breaks backward-
 	compatibility, it makes print plugin acting consistently to the rest of
 	pmacct plugins. 
+
+TO:     >= 1.5.0rc1
+FROM:   <= 0.14.3
+TOPIC:  print plugin, no entries to print_output_file
+DESC:	In line with SQL plugins, in case there are no entries to account for the
+	last print_refresh_time period, the purge function will not be invoked.
+	As a result of that, if print_output_file contains time-based variables
+	and if required to, output files will not be created anymore in case of
+	no traffic to account for. Until 0.14.3, under same conditions, an empty
+	output file (title only in case of formatted, CSV output) would have been
+	printed out. 
 
 TO:	>= 1.5.0rc1
 FROM:	<= 0.14.3

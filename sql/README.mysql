@@ -57,7 +57,8 @@ Similarly, BGP tables:
 - Aggregation primitives to SQL schema mapping:
   Aggregation primitive => SQL table field
   * tag => agent_id (INT(4) UNSIGNED NOT NULL)
-  * tag2 => agent_id2 (INT(4) UNSIGNED NOT NULL, see README.agent_id2)
+    - tag => tag (INT(4) UNSIGNED NOT NULL, if sql_table_version >= 9)
+  * tag2 => tag2 (INT(4) UNSIGNED NOT NULL, see README.tag2)
   * src_as => as_src (INT(4) UNSIGNED NOT NULL)
   * dst_as => as_dst (INT(4) UNSIGNED NOT NULL)
   * peer_src_as => peer_as_src (INT(4) UNSIGNED NOT NULL)
@@ -102,9 +103,9 @@ Similarly, BGP tables:
   * dst_net => ip_dst (CHAR(15) NOT NULL, see README.IPv6)
     - dst_net => ip_dst (INT(4) UNSIGNED NOT NULL, if sql_num_hosts: true)
   * src_port => src_port (INT(2) UNSIGNED NOT NULL)
-    - src_port => port_src (INT(2) UNSIGNED NOT NULL, if sql_table_version >= 8 or sql_table_type == bgp)
+    - src_port => port_src (INT(2) UNSIGNED NOT NULL, if sql_table_version >= 8)
   * dst_port => dst_port (INT(2) UNSIGNED NOT NULL)
-    - dst_port => port_dst (INT(2) UNSIGNED NOT NULL, if sql_table_version >= 8 or sql_table_type == bgp)
+    - dst_port => port_dst (INT(2) UNSIGNED NOT NULL, if sql_table_version >= 8)
   * tcpflags => tcp_flags (INT(4) UNSIGNED NOT NULL)
   * proto => ip_proto (CHAR(6) NOT NULL)
     - proto => ip_proto (INT(1) UNSIGNED NOT NULL, if sql_num_protos: true)

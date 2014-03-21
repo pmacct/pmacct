@@ -2251,9 +2251,16 @@ int sql_evaluate_primitives(int primitive)
         strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
         strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
-      strncat(insert_clause, "agent_id", SPACELEFT(insert_clause));
+      if (config.sql_table_version < 9 || (config.sql_table_version >= SQL_TABLE_VERSION_BGP
+	  && config.sql_table_version < SQL_TABLE_VERSION_BGP+9)) {
+        strncat(insert_clause, "agent_id", SPACELEFT(insert_clause));
+        strncat(where[primitive].string, "agent_id=%llu", SPACELEFT(where[primitive].string));
+      }
+      else {
+        strncat(insert_clause, "tag", SPACELEFT(insert_clause));
+        strncat(where[primitive].string, "tag=%llu", SPACELEFT(where[primitive].string));
+      }
       strncat(values[primitive].string, "%llu", SPACELEFT(values[primitive].string));
-      strncat(where[primitive].string, "agent_id=%llu", SPACELEFT(where[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_TAG;
       values[primitive].handler = where[primitive].handler = count_tag_handler;
       primitive++;
@@ -2266,9 +2273,9 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
-    strncat(insert_clause, "agent_id2", SPACELEFT(insert_clause));
+    strncat(insert_clause, "tag2", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%llu", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "agent_id2=%llu", SPACELEFT(where[primitive].string));
+    strncat(where[primitive].string, "tag2=%llu", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_TAG2;
     values[primitive].handler = where[primitive].handler = count_tag2_handler;
     primitive++;

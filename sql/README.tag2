@@ -1,16 +1,16 @@
 This document doesn't replace documentation relevant to the database software you are
 using, ie. README.mysql, README.pgsql or README.sqlite3.
 
-The 'agent_id2' field.
+The 'tag2' field.
 Such field is being introduced to better support traffic matrix scenarios, where it
-can be handy to have a tag to represent "qualities" of the source (say, agent_id) and
-an additional one to represent "qualities" of the destination (say, agent_id2). But of
+can be handy to have a tag to represent "qualities" of the source (say, tag) and
+an additional one to represent "qualities" of the destination (say, tag2). But of
 course this is only an example. The guidelines below (typically in MySQL format) are
 to add such primitive to the SQL schema:
 
-* agent_id2 field:
-  - "agent_id2 INT(4) UNSIGNED NOT NULL," to declare the field itself
-  - "PRIMARY KEY (..., agent_id2, ...)" to put it in the primary key 
+* tag2 field:
+  - "tag2 INT(4) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., tag2, ...)" to put it in the primary key 
 
 The primitive is not declared as part of any default table version; yet will not fail
 version checks which are enabled when 'sql_optimize_clauses' feature is disabled.

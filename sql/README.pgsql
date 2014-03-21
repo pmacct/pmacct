@@ -70,7 +70,8 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
 - Aggregation primitives to SQL schema mapping:
   Aggregation primitive => SQL table field
   * tag => agent_id (BIGINT NOT NULL DEFAULT 0)
-  * tag2 => agent_id2 (BIGINT NOT NULL DEFAULT 0, see README.agent_id2)
+    - tag => tag (BIGINT NOT NULL DEFAULT 0, if sql_table_version >= 9)
+  * tag2 => tag2 (BIGINT NOT NULL DEFAULT 0, see README.tag2)
   * src_as => as_src (BIGINT NOT NULL DEFAULT 0)
   * dst_as => as_dst (BIGINT NOT NULL DEFAULT 0)
   * peer_src_as => peer_as_src (BIGINT NOT NULL DEFAULT 0)

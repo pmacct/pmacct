@@ -1,0 +1,28 @@
+drop database if exists pmacct;
+create database pmacct;
+
+use pmacct;
+
+drop table if exists acct_v9; 
+create table acct_v9 (
+	tag INT(4) UNSIGNED NOT NULL,
+	class_id CHAR(16) NOT NULL,
+	mac_src CHAR(17) NOT NULL,
+	mac_dst CHAR(17) NOT NULL,
+	vlan INT(2) UNSIGNED NOT NULL,
+	as_src INT(4) UNSIGNED NOT NULL,
+	as_dst INT(4) UNSIGNED NOT NULL,
+	ip_src CHAR(15) NOT NULL,
+	ip_dst CHAR(15) NOT NULL,
+	port_src INT(2) UNSIGNED NOT NULL,
+	port_dst INT(2) UNSIGNED NOT NULL,
+	tcp_flags INT(4) UNSIGNED NOT NULL,
+	ip_proto CHAR(6) NOT NULL, 
+	tos INT(4) UNSIGNED NOT NULL, 
+        packets INT UNSIGNED NOT NULL,
+	bytes BIGINT UNSIGNED NOT NULL,
+	flows INT UNSIGNED NOT NULL,
+	stamp_inserted DATETIME NOT NULL,
+	stamp_updated DATETIME,
+	PRIMARY KEY (tag, class_id, mac_src, mac_dst, vlan, as_src, as_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
+);
