@@ -1876,6 +1876,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  break;
 #endif
 	case NF9_FTYPE_NAT_EVENT:
+	  /* XXX: aggregate_filter & NAX64 case */
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
 	    reset_ip4(pptrs);

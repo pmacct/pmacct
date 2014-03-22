@@ -1371,7 +1371,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 10:
   case 9:
-    if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (pptrs->l3_proto == ETHERTYPE_IP || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
         memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4)); 
         pdata->primitives.src_ip.family = AF_INET;
@@ -1382,7 +1382,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       }
     }
 #if defined ENABLE_IPV6
-    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
 	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
         pdata->primitives.src_ip.family = AF_INET6;
@@ -1447,7 +1447,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 10:
   case 9:
-    if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (pptrs->l3_proto == ETHERTYPE_IP || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
         memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
         pdata->primitives.dst_ip.family = AF_INET;
@@ -1458,7 +1458,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       }
     }
 #if defined ENABLE_IPV6
-    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
         memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
         pdata->primitives.dst_ip.family = AF_INET6;
