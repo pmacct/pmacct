@@ -86,6 +86,8 @@ void skinny_bgp_daemon()
   memset(&client, 0, sizeof(client));
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
   memset(&allow, 0, sizeof(struct hosts_table));
+
+  if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
   bgp_attr_init();
 
   /* socket creation for BGP server: IPv4 only */
@@ -129,7 +131,6 @@ void skinny_bgp_daemon()
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bgp_table_per_peer_buckets) config.bgp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
-  if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
 
   if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
     bgp_route_info_modulo = bgp_route_info_modulo_pathid; 
