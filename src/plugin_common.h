@@ -24,9 +24,8 @@
 #include "ports_aggr.h"
 
 /* defines */
-#define DEFAULT_PRINT_REFRESH_TIME 10 
-#define DEFAULT_MONGO_REFRESH_TIME 60 
-#define DEFAULT_AMQP_REFRESH_TIME 60 
+#define DEFAULT_PLUGIN_COMMON_REFRESH_TIME 60 
+#define DEFAULT_PLUGIN_COMMON_WRITERS_NO 10
 
 #define AVERAGE_CHAIN_LEN 10
 #define PRINT_CACHE_ENTRIES 16411
@@ -68,6 +67,8 @@ struct chained_cache {
 #else
 #define EXT
 #endif
+EXT void P_set_signals();
+EXT void P_init_default_values();
 EXT struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
 EXT unsigned int P_cache_modulo(struct primitives_ptrs *);
 EXT void P_sum_host_insert(struct primitives_ptrs *);

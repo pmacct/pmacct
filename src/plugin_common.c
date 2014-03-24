@@ -30,6 +30,63 @@
 #include "crc32.c"
 
 /* Functions */
+void P_set_signals()
+{
+  signal(SIGINT, P_exit_now);
+  /* XXX: SIGHUP? */
+  signal(SIGUSR1, SIG_IGN);
+  signal(SIGUSR2, reload_maps);
+  signal(SIGPIPE, SIG_IGN);
+  signal(SIGCHLD, ignore_falling_child);
+}
+ 
+void P_init_default_values()
+{
+  if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
+  if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_logfile(config.logfile);
+  }
+
+  reload_map = FALSE;
+
+  basetime_init = NULL;
+  basetime_eval = NULL;
+  basetime_cmp = NULL;
+  memset(&basetime, 0, sizeof(basetime));
+  memset(&ibasetime, 0, sizeof(ibasetime));
+  memset(&timeslot, 0, sizeof(timeslot));
+
+  if (!config.sql_refresh_time) config.sql_refresh_time = DEFAULT_PLUGIN_COMMON_REFRESH_TIME;
+  if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES;
+  if (!config.sql_max_writers) config.sql_max_writers = DEFAULT_PLUGIN_COMMON_WRITERS_NO;
+
+  pp_size = sizeof(struct pkt_primitives);
+  pb_size = sizeof(struct pkt_bgp_primitives);
+  pn_size = sizeof(struct pkt_nat_primitives);
+  pm_size = sizeof(struct pkt_mpls_primitives);
+  pc_size = config.cpptrs.len;
+  dbc_size = sizeof(struct chained_cache);
+
+  memset(&sa, 0, sizeof(struct scratch_area));
+  sa.num = config.print_cache_entries*AVERAGE_CHAIN_LEN;
+  sa.size = sa.num*dbc_size;
+
+  cache = (struct chained_cache *) Malloc(config.print_cache_entries*dbc_size);
+  queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  pending_queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  sa.base = (unsigned char *) Malloc(sa.size);
+  sa.ptr = sa.base;
+  sa.next = NULL;
+
+  memset(cache, 0, config.print_cache_entries*sizeof(struct chained_cache));
+  memset(queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  memset(pending_queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
+  memset(sa.base, 0, sa.size);
+  memset(&flushtime, 0, sizeof(flushtime));
+  memset(&sql_writers, 0, sizeof(sql_writers));
+}
+
 unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
 {
   struct pkt_data *pdata = prim_ptrs->data;
@@ -347,10 +404,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
     if (config.type_id == PLUGIN_ID_PRINT && config.sql_table)
       Log(LOG_WARNING, "WARN ( %s/%s ): Make sure print_output_file_append is set to true.\n", config.name, config.type);
 
+    if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
+
     /* Writing out to replenish cache space */
     switch (ret = fork()) {
     case 0: /* Child */
-      (*purge_func)(queries_queue, qq_ptr);
+      if (sql_writers.flags != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
       exit(0);
     default: /* Parent */
       if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
@@ -372,7 +431,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
 
   switch (ret = fork()) {
   case 0: /* Child */
-    (*purge_func)(queries_queue, qq_ptr);
+    if (sql_writers.flags != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
 
     exit(0);
   default: /* Parent */
@@ -398,7 +457,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
 void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
 {
   struct timeval commit_basetime;
-  int j;
+  int j, local_retired = sql_writers.retired;
 
   memset(&commit_basetime, 0, sizeof(commit_basetime));
 
@@ -419,6 +478,19 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
   else {
     for (j = 0, pqq_ptr = 0; j < index; j++)
       queue[j]->valid = PRINT_CACHE_COMMITTED;
+  }
+
+  /* Imposing maximum number of writers */
+  sql_writers.active -= MIN(sql_writers.active, local_retired);
+  sql_writers.retired -= local_retired;
+
+  if (sql_writers.active <= config.sql_max_writers) {
+    sql_writers.flags = 0;
+    sql_writers.active++;
+  }
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, sql_writers.active);
+    sql_writers.flags = CHLD_ALERT;
   }
 }
 
@@ -498,7 +570,7 @@ void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 void P_exit_now(int signum)
 {
   if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, TRUE);
-  (*purge_func)(queries_queue, qq_ptr);
+  if (sql_writers.flags != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
 
   wait(NULL);
   exit_plugin(0);

@@ -605,14 +605,14 @@ DESC:           enables recovery mode; recovery mechanism kicks in if DB fails. 
 		a the full path to an alternate database file (e.g., because you have multiple file
 		system on a box) to use in the case the primary backend fails.
 
-KEY:            sql_max_writers
-DESC:           sets the maximum number of concurrent writer processes the SQL plugin is allowed to fire.
-		This setting allows pmacct to degrade gracefully during major database outages. The value 
-		is splitted as follows: up to N-1 concurrent processes will have full functionalities; Nth
-		process will go for a recovery mechanism (sql_recovery_logfile, sql_recovery_backup_host),
-		if any is configured; all processes beyond Nth will stop managing data (so, data will be
-		lost at this stage) and an error message is printed out. Triggers (sql_trigger_exec) will
-		continue working in any case. (default: 10) 
+KEY:            [ sql_max_writers | print_max_writers | mongo_max_writers | amqp_max_writers ]
+DESC:           sets the maximum number of concurrent writer processes the plugin is allowed to start.
+		This setting allows pmacct to degrade gracefully during major backend lock/outages/
+		unavailability. The value is split as follows: up to N-1 concurrent processes will
+		queue up; the Nth process will go for a recovery mechanism, if configured (like:
+		sql_recovery_logfile, sql_recovery_backup_host for SQL plugins), writers beyond Nth
+		will stop managing data (so, data will be lost at this stage) and an error message is
+		printed out. (default: 10)
 
 KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries ]
 DESC:		SQL and other plugins sport a Plugin Memory Cache (PMC) meant to accumulate bytes/packets

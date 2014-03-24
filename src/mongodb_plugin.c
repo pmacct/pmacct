@@ -58,30 +58,11 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "MongoDB Plugin", config.name);
-  if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
-  if (config.logfile) {
-    fclose(config.logfile_fd);
-    config.logfile_fd = open_logfile(config.logfile);
-  }
 
-  reload_map = FALSE;
-
-  basetime_init = NULL;
-  basetime_eval = NULL;
-  basetime_cmp = NULL;
-  memset(&basetime, 0, sizeof(basetime));
-  memset(&ibasetime, 0, sizeof(ibasetime));
-  memset(&timeslot, 0, sizeof(timeslot));
-
-  /* signal handling */
-  signal(SIGINT, P_exit_now);
-  signal(SIGUSR1, SIG_IGN);
-  signal(SIGUSR2, reload_maps);
-  signal(SIGPIPE, SIG_IGN);
-  signal(SIGCHLD, SIG_IGN);
-
-  if (!config.sql_refresh_time)
-    config.sql_refresh_time = DEFAULT_MONGO_REFRESH_TIME;
+  P_set_signals();
+  P_init_default_values();
+  pipebuf = (unsigned char *) Malloc(config.buffer_size);
+  memset(pipebuf, 0, config.buffer_size);
 
   if (!config.mongo_insert_batch)
     config.mongo_insert_batch = DEFAULT_MONGO_INSERT_BATCH;
@@ -115,28 +96,8 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
   }
   
-  pp_size = sizeof(struct pkt_primitives);
-  pb_size = sizeof(struct pkt_bgp_primitives);
-  pn_size = sizeof(struct pkt_nat_primitives);
-  pm_size = sizeof(struct pkt_mpls_primitives);
-  pc_size = config.cpptrs.len;
-
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
-
-  dbc_size = sizeof(struct chained_cache);
-  if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES; 
-  memset(&sa, 0, sizeof(struct scratch_area));
-  sa.num = config.print_cache_entries*AVERAGE_CHAIN_LEN;
-  sa.size = sa.num*dbc_size;
-
-  pipebuf = (unsigned char *) Malloc(config.buffer_size);
-  cache = (struct chained_cache *) Malloc(config.print_cache_entries*dbc_size); 
-  queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
-  pending_queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
-  sa.base = (unsigned char *) Malloc(sa.size);
-  sa.ptr = sa.base;
-  sa.next = NULL;
 
   pfd.fd = pipe_fd;
   pfd.events = POLLIN;
@@ -161,13 +122,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
-
-  memset(pipebuf, 0, config.buffer_size);
-  memset(cache, 0, config.print_cache_entries*sizeof(struct chained_cache));
-  memset(queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
-  memset(pending_queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
-  memset(sa.base, 0, sa.size);
-  memset(&flushtime, 0, sizeof(flushtime));
 
   mongo_init(&db_conn);
   mongo_set_op_timeout(&db_conn, 1000);
