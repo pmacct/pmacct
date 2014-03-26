@@ -407,16 +407,23 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
     if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
 
     /* Writing out to replenish cache space */
-    switch (ret = fork()) {
-    case 0: /* Child */
-      if (sql_writers.flags != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
-      exit(0);
-    default: /* Parent */
-      if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-      P_cache_flush(queries_queue, qq_ptr);
-      qq_ptr = FALSE;
-      break;
+    if (sql_writers.flags != CHLD_ALERT) {
+      switch (ret = fork()) {
+      case 0: /* Child */
+        (*purge_func)(queries_queue, qq_ptr);
+        exit(0);
+      default: /* Parent */
+        if (ret == -1) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+	  sql_writers.active--;
+	}
+
+	break;
+      }
     }
+
+    P_cache_flush(queries_queue, qq_ptr);
+    qq_ptr = FALSE;
 
     /* try to insert again */
     (*insert_func)(prim_ptrs);
@@ -429,28 +436,32 @@ void P_cache_handle_flush_event(struct ports_table *pt)
 
   if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
 
-  switch (ret = fork()) {
-  case 0: /* Child */
-    if (sql_writers.flags != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
+  if (sql_writers.flags != CHLD_ALERT) {
+    switch (ret = fork()) {
+    case 0: /* Child */
+      (*purge_func)(queries_queue, qq_ptr);
+      exit(0);
+    default: /* Parent */
+      if (ret == -1) {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+        sql_writers.active--;
+      }
 
-    exit(0);
-  default: /* Parent */
-    if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-
-    P_cache_flush(queries_queue, qq_ptr);
-
-    gettimeofday(&flushtime, NULL);
-    refresh_deadline += config.sql_refresh_time;
-    qq_ptr = FALSE;
-    memset(&new_basetime, 0, sizeof(new_basetime));
-
-    if (reload_map) {
-      load_networks(config.networks_file, &nt, &nc);
-      load_ports(config.ports_file, pt);
-      reload_map = FALSE;
+      break;
     }
+  }
 
-    break;
+  P_cache_flush(queries_queue, qq_ptr);
+
+  gettimeofday(&flushtime, NULL);
+  refresh_deadline += config.sql_refresh_time;
+  qq_ptr = FALSE;
+  memset(&new_basetime, 0, sizeof(new_basetime));
+
+  if (reload_map) {
+    load_networks(config.networks_file, &nt, &nc);
+    load_ports(config.ports_file, pt);
+    reload_map = FALSE;
   }
 }
 
@@ -484,7 +495,7 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
   sql_writers.active -= MIN(sql_writers.active, local_retired);
   sql_writers.retired -= local_retired;
 
-  if (sql_writers.active <= config.sql_max_writers) {
+  if (sql_writers.active < config.sql_max_writers) {
     sql_writers.flags = 0;
     sql_writers.active++;
   }

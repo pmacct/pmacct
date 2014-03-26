@@ -825,7 +825,7 @@ DESC:		Marks messages as persistent so that a queue content does not get lost if
 		still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
 		Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
 		not really written to the disk. The persistence guarantees aren't strong, but it is more
-		than enough for our simple task queue.".
+		than enough for our simple task queue.". (default: false)
 		
 KEY:		print_markers
 VALUES:		[ true | false ]
