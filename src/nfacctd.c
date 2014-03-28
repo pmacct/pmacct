@@ -491,8 +491,24 @@ int main(int argc,char **argv, char **envp)
   /* socket creation */
   config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
   if (config.sock < 0) {
-    Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
-    exit(1);
+#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+    /* retry with IPv4 */
+    if (!config.nfacctd_ip) {
+      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
+
+      sa4->sin_family = AF_INET;
+      sa4->sin_addr.s_addr = htonl(0);
+      sa4->sin_port = htons(config.nfacctd_port);
+      slen = sizeof(struct sockaddr_in);
+
+      config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
+    }
+#endif
+
+    if (config.sock < 0) {
+      Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
+      exit(1);
+    }
   }
 
   /* bind socket to port */

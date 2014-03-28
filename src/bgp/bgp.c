@@ -141,8 +141,24 @@ void skinny_bgp_daemon()
 
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bgp_sock < 0) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): thread socket() failed. Terminating thread.\n", config.name);
-    exit_all(1);
+#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+    /* retry with IPv4 */
+    if (!config.nfacctd_bgp_ip) {
+      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
+
+      sa4->sin_family = AF_INET;
+      sa4->sin_addr.s_addr = htonl(0);
+      sa4->sin_port = htons(config.nfacctd_bgp_port);
+      slen = sizeof(struct sockaddr_in);
+
+      config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+    }
+#endif
+
+    if (config.bgp_sock < 0) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): thread socket() failed. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
   }
   if (config.nfacctd_bgp_ipprec) {
     int opt = config.nfacctd_bgp_ipprec << 5;
