@@ -1,5 +1,108 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.0rc3
-pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+
+1.5.0rc3 -- XX-04-2014
+  + BGP daemon: support for BGP ADD-PATH capability draft-ietf-idr-add-paths
+    has been introduced, useful to advertise known paths when BGP multi-path
+    is enabled in a network. The correct BGP info is linked to traffic data
+    using BGP next-hop (or IP next-hop if use_ip_next_hop is set to true) as
+    selector among the paths available.
+  + pre_tag_map: de-globalized the feature so that, while Pre-Tagging is
+    evaluated in the Core Process, each plugin can be defined a own/local
+    pre_tag_map.
+  + maps_row_len: directive introduced to define the maximum length of map
+    (ie. pre_tag_map) rows. The default value is suitable for most scenarios,
+    though tuning it could be required either to save on memory or to allow
+    for longer entries (ie. filters).
+  + Introduced use_ip_next_hop config directive: when IP prefix aggregation
+    (ie. nfacctd_net) is set to 'netflow', 'sflow' or 'fallback' populate
+    'peer_dst_ip' field from NetFlow/sFlow IP next hop field if BGP next-hop
+    is not available.
+  + AMQP plugin: implemented persistent messaging via amqp_persistent_msg
+    configuration directive so to protect against RabbitMQ restarts. Feature
+    is courtesy by Nick Douma.
+  + pmacct in-memory plugin client: -T option now supports how many entries
+    to show via '<bytes | packets | flows>,[<# how many>]' argument syntax.
+  + nfprobe plugin: take BGP next-hop from a defined networks_file. This is
+    in addition to existing feature to take BGP next-hop from a BGP feed.
+  + Set of *_proc_name configuration directives renamed to core_proc_name.
+    Value of core_proc_name is now applied to logging functions and process
+    title.
+  + Re-implemented reverse BGP lookup based primitives, src_as_path src_med
+    src_std_comm src_ext_comm and src_local_pref, in print, MongoDB and
+    AMQP plugins. Primitives have also been re-documented.
+  + pre_tag_map: set_tag and set_tag2 can now be auto-increasing values, ie.
+    "set_tag=1++": "1" being the selected floor value at startup and "++"
+    instructs to increase the tag value at every pre_tag_map iteration. Many
+    thanks to Brent Van Dussen and Gabriel Snook for their support.
+  + Added support for NetFlow v9/IPFIX source/destination IPv4/IPv6 prefixes
+    encoded as flow types: #44, #45, #169 and #170.
+  + [sql|print|mongo|amqp]_history and sql_trigger_time can now be specified
+    also in seconds, ie. as '300' or '300s' alternatively to '5m'. This is to
+    ease syncronization of these values against refresh time to the backend,
+    ie. sql_refresh_time.
+  + Added post_tag2 configuration directive to set tag2 similarly to what
+    post_tag does.
+  + SQL plugins: agent_id, agent_id2 fields renamed to tag, tag2. Issued SQL
+    table schema #9 for agent_id backward compatibility. Renaming agent_id2
+    to tag2 is going to be disruptive to existing deployments instead.
+    UPGRADE doc updated. 
+  + print, MongoDB, AMQP plugins: added [print|mongo|amqp]_max_writers set of
+    configuration directives to port from SQL plugins the idea of max number
+    of concurrent writer processes the plugin is allowed to start.
+  + util.c: comments can now start with a '#' symbol in addition to existing
+    '!'.
+  ! fix, BGP daemon: removed a non-contextual BGP message length check. Same
+    check is already done in the part handling payload reassembly.
+  ! fix, BGP daemon: MP_REACH_NLRI not assumed to be anymore at the end of a
+    route announcement. 
+  ! fix, MySQL plugin: added linking of pmacct code against -lstdc++ and
+    -lrt if MySQL plugin is enabled, pre-requisite for MySQL 5.6. Many
+    thanks to Stefano Birmani for reporting the issue.
+  ! fix, sql_common.c: memory leak affecting AS-PATH and BGP communities.
+    Version 1.5.0rc2 affected. Thanks to Brent Van Dussen for his support
+    solving the issue.
+  ! fix, MongoDB plugin: timestamp_start, timestamp_end moved from timestamp
+    type, reserved for internal use, to date.
+  ! fix, print, memory, MongoDB, AMQP plugins: if no AS_PATH information is
+    available an empty string, ie. "", is placed as value (instead of former
+    "^$"). Similar stream-lining was done for communities. Many thanks to
+    Brent Van Dussen and Elisa Jasinska for reporting the issue.
+  ! fix, AMQP, MongoDB plugins: increased default refresh time to 60 secs,
+    up from 10 and in line with SQL plugins value.
+  ! fix, nfprobe plugin: IPv6 source/destination masks passed as IE #29 and
+    #30 and not anymore as their IPv4 counterparts.
+  ! fix, pmacct.c: clibuf variable now malloc'd at runtime so to not impact
+    the data segment.
+  ! fix, log.c: removed sbrk() calls when logging to Syslog.
+  ! fix, pmacctd: If compiling against PF_RING, check and compile against
+    libnuma and librt which are new requirement since version 5.6.2. Thanks
+    to Joan Juvanteny for reporting the issue.
+  ! fix, net_aggr.c: 'prev' array to keep track of hierarchies of networks
+    was being re-initialized by some compilers. Thanks to Joan Juvanteny for
+    reporting the issue.
+  ! fix, MongoDB, JSON outputs: dst_host_country primitive was not properly
+    shown. Patch is courtesy by Stig Thormodsrud.
+  ! fix, pre_tag_map: a memory leak was found when reloading rules containing
+    'filter' keywords. Thanks to Matt Jenkins for his support resolving the
+    issue.
+  ! fix, server.c: countered a timing issue to ensure EOF is sent after data.
+    Issue was originated by conjunction of non-blocking socket and multiple
+    CPU cores. Thanks to Juan Camilo Cardona and Joel Ouellette Jr for their
+    support.
+  ! fix, acct.c: added length check to hash_crc32() of custom primitives as
+    selective pmacct IMT client queries, ie. -M and -N, were failing to match
+    entries. Thanks to Joel Ouellette Jr for his support.
+  ! fix, nfacctd: NetFlow v9/IPFIX sampling correlation has been improved by
+    placing system scoped sampling options in a separate table. Such table is
+    queried if no matching sampler ID is found for a given <exporter IP addr,
+    source ID>. Sampling-related fields (ie. sampler ID, interval, etc.) are
+    now all supported if 1, 2 or 4 bytes long.
+  ! fix, nfacctd: improved handling of the NAT64 case for NSEL. Thanks to 
+    Gregoire Leroy for his support.
+  ! fix, nfacctd, sfacctd and BGP daemon: if IPv6 is enabled, IPv4 mapped is
+    supported and can't obtain an IPv6 socket to listen to, retry with a IPv4
+    one.
 
 1.5.0rc2 -- 25-12-2013
   + nfacctd: introduced support for variable-length IPFIX fields for custom-
