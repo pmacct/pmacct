@@ -1,7 +1,7 @@
-pmacct (Promiscuous mode IP Accounting package) v1.5.0rc3
+pmacct (Promiscuous mode IP Accounting package) v1.5.0
 pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 
-1.5.0rc3 -- XX-04-2014
+1.5.0rc3 -- 18-04-2014
   + BGP daemon: support for BGP ADD-PATH capability draft-ietf-idr-add-paths
     has been introduced, useful to advertise known paths when BGP multi-path
     is enabled in a network. The correct BGP info is linked to traffic data
