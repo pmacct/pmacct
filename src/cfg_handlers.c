@@ -2260,16 +2260,32 @@ int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog(char *filename, char *name, char *value_ptr)
+int cfg_key_nfacctd_bgp_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog_file'. Globalized.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog = value;
-  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog'. Globalized.\n", filename);
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_msglog_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "json"))
+    value = PRINT_OUTPUT_JSON;
+  else {
+    Log(LOG_WARNING, "WARN ( %s ): Invalid bgp_daemon_msglog_output value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_output = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog_output'. Globalized.\n", filename);
 
   return changes;
 }

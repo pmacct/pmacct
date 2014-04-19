@@ -8,6 +8,16 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.5.0rc3
+FROM:	<= 1.5.0rc2
+TOPIC:	MySQL plugin, additional libraries required when compiling
+DESC:	MySQL 5.6 and later require linking against libstdc++ and librt. For
+	this reason, when compiling MySQL plugin, it's now required that the
+	development packages for these two libraries must be installed on the
+	host system. Checks for this are introduced at configure script time.  
+	It is not checked which MySQL version is installed so the requirement
+	for these libraries is made retroactive.
+
 TO:     >= 1.5.0rc3
 FROM:   <= 1.5.0rc2
 TOPIC:  SQL plugins, agent_id2 field

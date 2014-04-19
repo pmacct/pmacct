@@ -238,6 +238,9 @@ void skinny_bgp_daemon()
     config.nfacctd_bgp_batch_interval = 0;
   }
 
+  if (!config.nfacctd_bgp_msglog_output)
+    config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
+
   for (;;) {
     select_again:
     select_fd = config.bgp_sock;
@@ -1343,7 +1346,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 	  bgp_unlock_node (route);
 
-	  if (config.nfacctd_bgp_msglog)
+	  if (config.nfacctd_bgp_msglog_file)
 		goto log_update;
 
 	  return 0;
@@ -1381,7 +1384,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   /* route_node_get lock */
   bgp_unlock_node(route);
 
-  if (config.nfacctd_bgp_msglog) {
+  if (config.nfacctd_bgp_msglog_file) {
     ri = new;
     goto log_update;
   }
@@ -1467,7 +1470,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
     }
   }
 
-  if (ri && config.nfacctd_bgp_msglog) {
+  if (ri && config.nfacctd_bgp_msglog_file) {
 	char empty[] = "";
 	char prefix_str[INET6_ADDRSTRLEN];
 	char *aspath, *comm, *ecomm;

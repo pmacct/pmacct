@@ -116,7 +116,7 @@ bgp_node_free_aggressive (struct bgp_node *node)
 
   for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++) {
     for (ri = node->info[ri_idx]; ri; ri = next) {
-      if (config.nfacctd_bgp_msglog) {
+      if (config.nfacctd_bgp_msglog_file) {
         char empty[] = "";
         char prefix_str[INET6_ADDRSTRLEN];
         char *aspath, *comm, *ecomm;

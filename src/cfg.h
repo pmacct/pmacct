@@ -155,7 +155,8 @@ struct configuration {
   int sfacctd_renormalize;
   int nfacctd_disable_checks;
   int nfacctd_bgp;
-  int nfacctd_bgp_msglog;
+  int nfacctd_bgp_msglog_output;
+  char *nfacctd_bgp_msglog_file;
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
   u_int64_t nfacctd_bgp_pipe_size;

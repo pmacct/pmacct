@@ -1260,11 +1260,6 @@ DESC:		sets the maximum number of neighbors the BGP daemon can peer to. Upon rea
 		with the BGP daemon are as NetFlow/sFlow probes on-board software routers and firewalls.
 		(default: 10)
 
-KEY:		bgp_daemon_msglog
-VALUES:		[ true | false ]
-DESC:		enables BGP messages logging: as this can get easily verbose, it is intended for debug and
-		troubleshooting purposes only. (default: false)
-
 KEY:		bgp_daemon_batch_interval
 DESC:		To prevent all BGP peers to contend resources, this defines the time interval, in seconds,
 		between any two BGP peer batches. The first peer in a batch sets the base time, that is the
