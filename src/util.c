@@ -366,8 +366,6 @@ FILE *open_logfile(char *filename)
 {
   char timebuf[SRVBUFLEN];
   FILE *file = NULL;
-  struct tm *tmnow;
-  time_t now;
   uid_t owner = -1;
   gid_t group = -1;
 
@@ -493,6 +491,8 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
   char ref_string[] = "$ref", hst_string[] = "$hst", psi_string[] = "$peer_src_ip";
   char tag_string[] = "$tag", tag2_string[] = "$tag2";
   char *ptr_start, *ptr_end;
+
+  if (!new || !old || !prim_ptrs) return;
 
   oldlen = strlen(old);
   if (oldlen <= newlen) strcpy(new, old);

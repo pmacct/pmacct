@@ -104,6 +104,13 @@ struct bgp_peer {
   u_int8_t cap_add_paths;
   u_int32_t msglen;
   struct bgp_peer_buf buf;
+  struct bgp_peer_log *log;
+};
+
+struct bgp_peer_log {
+  FILE *fd;
+  int refcnt;
+  char filename[SRVBUFLEN];
 };
 
 struct bgp_nlri {
@@ -176,6 +183,9 @@ EXT void bgp_attr_unintern (struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
 EXT int bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
+EXT void bgp_peer_log_init(struct bgp_peer *);
+EXT void bgp_peer_log_close(struct bgp_peer *);
+EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
@@ -199,6 +209,7 @@ EXT void bgp_config_checks(struct configuration *);
 
 /* global variables */
 EXT struct bgp_peer *peers;
+EXT struct bgp_peer_log *peers_log;
 EXT struct hash *attrhash;
 EXT struct hash *ashash;
 EXT struct hash *comhash;

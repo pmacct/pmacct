@@ -129,6 +129,15 @@ void skinny_bgp_daemon()
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
+  if (config.nfacctd_bgp_msglog_file) {
+    peers_log = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
+    if (!peers_log) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BGP peers log structure. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
+    memset(peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
+  }
+
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bgp_table_per_peer_buckets) config.bgp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
 
@@ -1904,6 +1913,8 @@ int bgp_peer_init(struct bgp_peer *peer)
     ret = FALSE;
   }
 
+  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_init(peer);
+
   return ret;
 }
 
@@ -1921,6 +1932,92 @@ void bgp_peer_close(struct bgp_peer *peer)
 
   if (config.nfacctd_bgp_neighbors_file)
     write_neighbors_file(config.nfacctd_bgp_neighbors_file);
+
+  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_close(peer); 
+}
+
+void bgp_peer_log_init(struct bgp_peer *peer)
+{
+  int peer_idx, have_it;
+  char log_filename[SRVBUFLEN];
+
+  if (!peers_log || !peer || peer->log) return;
+
+  bgp_peer_log_dynname(log_filename, SRVBUFLEN, config.nfacctd_bgp_msglog_file, peer); 
+
+  for (peer_idx = 0, have_it = 0; peer_idx < config.nfacctd_bgp_max_peers; peer_idx++) {
+    if (!peers_log[peer_idx].fd) {
+      peers_log[peer_idx].fd = open_logfile(log_filename);
+      if (peers_log[peer_idx].fd) {
+        strcpy(peers_log[peer_idx].filename, log_filename);
+	have_it = TRUE;
+      }
+      break;
+    }
+    else if (!strcmp(log_filename, peers_log[peer_idx].filename)) {
+      have_it = TRUE;
+      break;
+    }
+  }
+
+  if (have_it) {
+    peer->log = &peers_log[peer_idx];
+    peers_log[peer_idx].refcnt++;
+  }
+}
+
+void bgp_peer_log_close(struct bgp_peer *peer)
+{
+  struct bgp_peer_log *log_ptr;
+
+  if (!peers_log || !peer || peer->log) return;
+
+  log_ptr = peer->log;
+
+  assert(peer->log->refcnt);
+  peer->log->refcnt--;
+  peer->log = NULL;
+
+  if (!log_ptr->refcnt) {
+    fclose(log_ptr->fd);
+    memset(log_ptr, 0, sizeof(struct bgp_peer_log));
+  }
+}
+
+void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
+{
+  int oldlen;
+  char psi_string[] = "$peer_src_ip";
+  char *ptr_start, *ptr_end;
+
+  if (!new || !old || !peer) return;
+
+  oldlen = strlen(old);
+  if (oldlen <= newlen) strcpy(new, old);
+
+  ptr_start = strstr(new, psi_string);
+  if (ptr_start) {
+    char empty_peer_src_ip[] = "null";
+    char peer_src_ip[SRVBUFLEN];
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(psi_string);
+    len -= strlen(psi_string);
+
+    if (peer->addr.family) addr_to_str(peer_src_ip, &peer->addr);
+    else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(empty_peer_src_ip));
+
+    escape_ip_uscores(peer_src_ip);
+    snprintf(buf, newlen, "%s", peer_src_ip);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
 }
 
 int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct aspath *as4path)
