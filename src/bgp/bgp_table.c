@@ -31,7 +31,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "bgp.h"
 
 static void bgp_node_delete (struct bgp_node *);
-static void bgp_node_free_aggressive (struct bgp_node *);
+static void bgp_node_free_aggressive (struct bgp_node *, safi_t);
 static void bgp_table_free (struct bgp_table *);
 
 struct bgp_table *
@@ -109,7 +109,7 @@ bgp_node_free (struct bgp_node *node)
 /* Free route node aggressively: also attributes and info;
    should be meant to be invoked only by bgp_table_free() */
 static void
-bgp_node_free_aggressive (struct bgp_node *node)
+bgp_node_free_aggressive (struct bgp_node *node, safi_t safi)
 {
   struct bgp_info *ri, *next;
   u_int32_t ri_idx;
@@ -117,19 +117,9 @@ bgp_node_free_aggressive (struct bgp_node *node)
   for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++) {
     for (ri = node->info[ri_idx]; ri; ri = next) {
       if (config.nfacctd_bgp_msglog_file) {
-        char empty[] = "";
-        char prefix_str[INET6_ADDRSTRLEN];
-        char *aspath, *comm, *ecomm;
+        char event_type[] = "delete";
 
-        memset(prefix_str, 0, INET6_ADDRSTRLEN);
-        prefix2str(&node->p, prefix_str, INET6_ADDRSTRLEN);
-
-        aspath = ri->attr->aspath ? ri->attr->aspath->str : empty;
-        comm = ri->attr->community ? ri->attr->community->str : empty;
-        ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
-
-        Log(LOG_INFO, "INFO ( %s/core/BGP ): d Prefix: %s Path: '%s' Comms: '%s' EComms: '%s'\n",
-			config.name, prefix_str, aspath, comm, ecomm);
+        bgp_peer_log_msg(ri->peer, node, ri->attr, ri, safi, event_type);
       }
 
       next = ri->next;
@@ -177,11 +167,11 @@ bgp_table_free (struct bgp_table *rt)
 	  else
 	    node->l_right = NULL;
 
-	  bgp_node_free_aggressive (tmp_node);
+	  bgp_node_free_aggressive (tmp_node, rt->safi);
 	}
       else
 	{
-	  bgp_node_free_aggressive (tmp_node);
+	  bgp_node_free_aggressive (tmp_node, rt->safi);
 	  break;
 	}
     }

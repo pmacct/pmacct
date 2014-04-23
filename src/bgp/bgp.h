@@ -185,7 +185,10 @@ EXT int bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
 EXT void bgp_peer_log_init(struct bgp_peer *);
 EXT void bgp_peer_log_close(struct bgp_peer *);
+EXT void bgp_peer_log_seq_init();
+EXT void bgp_peer_log_seq_increment();
 EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
+EXT void bgp_peer_log_msg(struct bgp_peer *, struct bgp_node *, struct bgp_attr *, struct bgp_info *, safi_t, char *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
@@ -221,6 +224,7 @@ EXT struct bgp_comm_range peer_src_as_ifrange;
 EXT struct bgp_comm_range peer_src_as_asrange; 
 EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
+EXT u_int64_t log_seq;
 
 #undef EXT
 #endif 

@@ -27,6 +27,9 @@
 #include "bgp.h"
 #include "bgp_hash.h"
 #include "thread_pool.h"
+#ifdef WITH_JANSSON
+#include <jansson.h>
+#endif
 
 /* variables to be exported away */
 thread_pool_t *bgp_pool;
@@ -136,6 +139,7 @@ void skinny_bgp_daemon()
       exit_all(1);
     }
     memset(peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
+    bgp_peer_log_seq_init();
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -1406,47 +1410,107 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 log_update:
   {
+    char event_type[] = "update";
+
+    bgp_peer_log_msg(peer, route, attr_new, ri, safi, event_type);
+  }
+
+  return 0;
+}
+
+void bgp_peer_log_msg(struct bgp_peer *peer, struct bgp_node *route, struct bgp_attr *attr_new, struct bgp_info *ri, safi_t safi, char *event_type)
+{
+  if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN];
+    struct timeval tv;
+    json_t *obj = json_object(), *kv;
+
     char empty[] = "";
     char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
-    char *aspath, *comm, *ecomm; 
+    char *aspath, *comm, *ecomm;
     u_int32_t lp, med;
     struct rd_ip  *rdi;
     struct rd_as  *rda;
     struct rd_as4 *rda4;
     path_id_t path_id_ho;
 
+    kv = json_pack("{sI}", "seq", log_seq);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+    bgp_peer_log_seq_increment();
+
+    gettimeofday(&tv, NULL);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, TRUE);
+    kv = json_pack("{ss}", "timestamp", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
     memset(prefix_str, 0, INET6_ADDRSTRLEN);
-    memset(nexthop_str, 0, INET6_ADDRSTRLEN);
     prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
+    kv = json_pack("{ss}", "ip_prefix", prefix_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
-    aspath = attr_new->aspath ? attr_new->aspath->str : empty;
-    comm = attr_new->community ? attr_new->community->str : empty;
-    ecomm = attr_new->ecommunity ? attr_new->ecommunity->str : empty;
-    lp = attr_new->local_pref;
-    med = attr_new->med;
-
+    memset(nexthop_str, 0, INET6_ADDRSTRLEN);
     if (attr_new->mp_nexthop.family) addr_to_str(nexthop_str, &attr_new->mp_nexthop);
     else inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
+    kv = json_pack("{ss}", "bgp_nexthop", nexthop_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
     if (ri && ri->extra) path_id_ho = ntohl(ri->extra->path_id);
     else path_id_ho = 0;
+    kv = json_pack("{sI}", "as_path_id", path_id_ho);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
-    if (safi != SAFI_MPLS_VPN)
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] u Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	  		config.name, inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
-    else {
-      if (ri && ri->extra) {
-        u_char rd_str[SRVBUFLEN];
+    aspath = attr_new->aspath ? attr_new->aspath->str : empty;
+    kv = json_pack("{ss}", "as_path", aspath);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
-	bgp_rd2str(rd_str, &ri->extra->rd);
+    comm = attr_new->community ? attr_new->community->str : empty;
+    kv = json_pack("{ss}", "comms", comm);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
-	Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] u RD: '%s' Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s' LP: '%u' MED: '%u' Nexthop: '%s'\n",
-	    		config.name, inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm, lp, med, nexthop_str);
-      }
+    ecomm = attr_new->ecommunity ? attr_new->ecommunity->str : empty;
+    kv = json_pack("{ss}", "ecomms", ecomm);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    lp = attr_new->local_pref;
+    kv = json_pack("{sI}", "local_pref", lp);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    med = attr_new->med;
+    kv = json_pack("{sI}", "med", med);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (safi == SAFI_MPLS_VPN) {
+      u_char rd_str[SRVBUFLEN];
+
+      bgp_rd2str(rd_str, &ri->extra->rd);
+      kv = json_pack("{ss}", "rd", rd_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
     }
-  }
 
-  return 0;
+    write_and_free_json(peer->log->fd, obj);
+#endif
+  }
 }
 
 int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
@@ -1480,34 +1544,9 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   }
 
   if (ri && config.nfacctd_bgp_msglog_file) {
-	char empty[] = "";
-	char prefix_str[INET6_ADDRSTRLEN];
-	char *aspath, *comm, *ecomm;
-	path_id_t path_id_ho;
+    char event_type[] = "withdraw";
 
-	memset(prefix_str, 0, INET6_ADDRSTRLEN);
-	prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
-
-	aspath = ri->attr->aspath ? ri->attr->aspath->str : empty;
-	comm = ri->attr->community ? ri->attr->community->str : empty;
-	ecomm = ri->attr->ecommunity ? ri->attr->ecommunity->str : empty;
-
-	if (ri && ri->extra) path_id_ho = ntohl(ri->extra->path_id);
-        else path_id_ho = 0;
-
-	if (safi != SAFI_MPLS_VPN)
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] w Prefix: '%s' Path_Id: '%u' Path: '%s' Comms: '%s' EComms: '%s'\n",
-	      		config.name, inet_ntoa(peer->id.address.ipv4), prefix_str, path_id_ho, aspath, comm, ecomm);
-	else {
-	  if (ri && ri->extra) {
-	    u_char rd_str[SRVBUFLEN];
-
-	    bgp_rd2str(rd_str, &ri->extra->rd);
-
-            Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] w RD: '%s' Prefix: '%s' Path_Id: %u' Path: '%s' Comms: '%s' EComms: '%s'\n",
-			config.name, inet_ntoa(peer->id.address.ipv4), rd_str, prefix_str, path_id_ho, aspath, comm, ecomm); 
-	  }
-	}
+    bgp_peer_log_msg(peer, route, ri->attr, ri, safi, event_type);
   }
 
   /* Withdraw specified route from routing table. */
@@ -1963,6 +2002,36 @@ void bgp_peer_log_init(struct bgp_peer *peer)
   if (have_it) {
     peer->log = &peers_log[peer_idx];
     peers_log[peer_idx].refcnt++;
+
+    if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+      char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN], event_type[] = "init";
+      struct timeval tv;
+      json_t *obj = json_object(), *kv;
+
+      kv = json_pack("{sI}", "seq", log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment();
+
+      gettimeofday(&tv, NULL);
+      compose_timestamp(tstamp_str, SRVBUFLEN, &tv, TRUE);
+      kv = json_pack("{ss}", "timestamp", tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      addr_to_str(ip_address, peer->addr);
+      kv = json_pack("{ss}", "peer_ip_src", ip_address);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      kv = json_pack("{ss}", "event_type", event_type);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      write_and_free_json(peer->log->fd, obj);
+#endif
+    }
   }
 }
 
@@ -1978,10 +2047,52 @@ void bgp_peer_log_close(struct bgp_peer *peer)
   peer->log->refcnt--;
   peer->log = NULL;
 
+  if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN], event_type[] = "close";
+    struct timeval tv;
+    json_t *obj = json_object(), *kv;
+
+    kv = json_pack("{sI}", "seq", log_seq);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+    bgp_peer_log_seq_increment();
+
+    gettimeofday(&tv, NULL);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, TRUE);
+    kv = json_pack("{ss}", "timestamp", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    write_and_free_json(log_ptr->fd, obj);
+#endif
+  }
+
   if (!log_ptr->refcnt) {
     fclose(log_ptr->fd);
     memset(log_ptr, 0, sizeof(struct bgp_peer_log));
   }
+}
+
+void bgp_peer_log_seq_init()
+{
+  log_seq = 0;
+}
+
+void bgp_peer_log_seq_increment()
+{
+  /* Jansson does not support unsigned 64 bit integers, let's wrap at 2^63-1 */
+  if (log_seq == INT64T_THRESHOLD) log_seq = 0;
+  else log_seq++;
 }
 
 void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
