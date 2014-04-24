@@ -2050,6 +2050,7 @@ void write_and_free_json(FILE *f, void *obj)
   
   if (tmpbuf) {
     fprintf(f, "%s\n", tmpbuf);
+    fflush(f);
     free(tmpbuf);
   }
 }

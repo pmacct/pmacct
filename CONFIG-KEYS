@@ -1275,6 +1275,18 @@ DESC:		To prevent all BGP peers to contend resources, this defines the amount of
 		bgp_daemon_init_batch is set to zero, default, initial BGP peer batching is disabled.
 		(default: 0)
 
+KEY:            bgp_daemon_msglog_file
+DESC:		Enables streamed logging of BGP messages/events. Each log entry features a time reference,
+		BGP peer IP address, event type and a sequence number (to order events when time reference
+		is not granular enough). BGP UPDATE messages also contain full prefix and BGP attributes
+		information.
+
+KEY:		bgp_daemon_msglog_output
+VALUES:         [ json ]
+DESC:		Defines output format for the streamed logging of BGP messages/events. Only JSON format is
+		currently supported and requires compiling against Jansson library (--enable-jansson when
+		configuring for compiling). (default: json)
+
 KEY:		bgp_aspath_radius
 DESC:		cuts down AS-PATHs to the specified number of ASN hops. If the same ASN is repeated multiple
 		times (ie. as effect of prepending), each of them is regarded as one hop. By default AS-PATHs

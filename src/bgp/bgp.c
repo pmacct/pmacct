@@ -353,6 +353,8 @@ void skinny_bgp_daemon()
       }
 #endif
 
+      if (config.nfacctd_bgp_msglog_file) bgp_peer_log_init(peer);
+
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
@@ -1331,6 +1333,8 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	  bgp_unlock_node (route);
 	  bgp_attr_unintern(attr_new);
 
+	  if (config.nfacctd_bgp_msglog_file) goto log_update;
+
 	  return 0;
 	}
 	else {
@@ -1359,8 +1363,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 	  bgp_unlock_node (route);
 
-	  if (config.nfacctd_bgp_msglog_file)
-		goto log_update;
+	  if (config.nfacctd_bgp_msglog_file) goto log_update;
 
 	  return 0;
 	}
@@ -1446,7 +1449,7 @@ void bgp_peer_log_msg(struct bgp_peer *peer, struct bgp_node *route, struct bgp_
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    addr_to_str(ip_address, peer->addr);
+    addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", "peer_ip_src", ip_address);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -1952,8 +1955,6 @@ int bgp_peer_init(struct bgp_peer *peer)
     ret = FALSE;
   }
 
-  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_init(peer);
-
   return ret;
 }
 
@@ -1961,6 +1962,8 @@ void bgp_peer_close(struct bgp_peer *peer)
 {
   afi_t afi;
   safi_t safi;
+
+  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_close(peer); 
 
   close(peer->fd);
   peer->fd = 0;
@@ -1971,8 +1974,6 @@ void bgp_peer_close(struct bgp_peer *peer)
 
   if (config.nfacctd_bgp_neighbors_file)
     write_neighbors_file(config.nfacctd_bgp_neighbors_file);
-
-  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_close(peer); 
 }
 
 void bgp_peer_log_init(struct bgp_peer *peer)
@@ -2020,7 +2021,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
-      addr_to_str(ip_address, peer->addr);
+      addr_to_str(ip_address, &peer->addr);
       kv = json_pack("{ss}", "peer_ip_src", ip_address);
       json_object_update_missing(obj, kv);
       json_decref(kv);
@@ -2039,7 +2040,7 @@ void bgp_peer_log_close(struct bgp_peer *peer)
 {
   struct bgp_peer_log *log_ptr;
 
-  if (!peers_log || !peer || peer->log) return;
+  if (!peers_log || !peer || !peer->log) return;
 
   log_ptr = peer->log;
 
@@ -2064,7 +2065,7 @@ void bgp_peer_log_close(struct bgp_peer *peer)
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    addr_to_str(ip_address, peer->addr);
+    addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", "peer_ip_src", ip_address);
     json_object_update_missing(obj, kv);
     json_decref(kv);

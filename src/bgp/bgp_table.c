@@ -55,13 +55,6 @@ bgp_table_init (afi_t afi, safi_t safi)
   return rt;
 }
 
-void
-bgp_table_finish (struct bgp_table **rt)
-{
-  bgp_table_free (*rt);
-  *rt = NULL;
-}
-
 static struct bgp_node *
 bgp_node_create ()
 {
