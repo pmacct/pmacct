@@ -6,7 +6,8 @@ process says goodbye when its last child dies or is terminated.
 Core process:
 SIGCHLD:	used to handle gracefully his loved child processes;
 SIGHUP:         reopens the logging infrastructure. Works with both syslog and
-		logfiles;
+		logfiles; it also works with streamed logging of BGP messages/
+		events (bgp_daemon_msglog_file)
 SIGUSR1:        returns various statistics via either console or syslog; the
 		syslog level used is NOTICE; the facility is selected through
 		configuration (ie. key 'syslog'). The feature works for all

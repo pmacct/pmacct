@@ -85,6 +85,7 @@ void skinny_bgp_daemon()
 
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
+  reload_log_bgp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
@@ -264,6 +265,7 @@ void skinny_bgp_daemon()
     select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
     if (select_num < 0) goto select_again;
 
+    /* signals handling */
     if (reload_map_bgp_thread) {
       if (config.nfacctd_bgp_md5_file) {
 	unload_bgp_md5_file(&bgp_md5);
@@ -273,6 +275,18 @@ void skinny_bgp_daemon()
       }
       reload_map_bgp_thread = FALSE;
     }
+
+    if (reload_log_bgp_thread) {
+      for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+	if (peers_log[peers_idx].fd) {
+	  fclose(peers_log[peers_idx].fd);
+	  peers_log[peers_idx].fd = open_logfile(peers_log[peers_idx].filename);
+	}
+	else break;
+      }
+    }
+
+    if (config.nfacctd_bgp_msglog_file) gettimeofday(&log_tstamp, NULL);
 
     /* New connection is coming in */ 
     if (FD_ISSET(config.bgp_sock, &read_descs)) {
@@ -1415,18 +1429,20 @@ log_update:
   {
     char event_type[] = "update";
 
-    bgp_peer_log_msg(peer, route, attr_new, ri, safi, event_type);
+    bgp_peer_log_msg(route, ri, safi, event_type);
   }
 
   return 0;
 }
 
-void bgp_peer_log_msg(struct bgp_peer *peer, struct bgp_node *route, struct bgp_attr *attr_new, struct bgp_info *ri, safi_t safi, char *event_type)
+void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type)
 {
+  struct bgp_peer *peer = ri->peer;
+  struct bgp_attr *attr = ri->attr;
+
   if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN];
-    struct timeval tv;
     json_t *obj = json_object(), *kv;
 
     char empty[] = "";
@@ -1443,8 +1459,7 @@ void bgp_peer_log_msg(struct bgp_peer *peer, struct bgp_node *route, struct bgp_
     json_decref(kv);
     bgp_peer_log_seq_increment();
 
-    gettimeofday(&tv, NULL);
-    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, TRUE);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
     kv = json_pack("{ss}", "timestamp", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -1465,8 +1480,8 @@ void bgp_peer_log_msg(struct bgp_peer *peer, struct bgp_node *route, struct bgp_
     json_decref(kv);
 
     memset(nexthop_str, 0, INET6_ADDRSTRLEN);
-    if (attr_new->mp_nexthop.family) addr_to_str(nexthop_str, &attr_new->mp_nexthop);
-    else inet_ntop(AF_INET, &attr_new->nexthop, nexthop_str, INET6_ADDRSTRLEN);
+    if (attr->mp_nexthop.family) addr_to_str(nexthop_str, &attr->mp_nexthop);
+    else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
     kv = json_pack("{ss}", "bgp_nexthop", nexthop_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -1477,27 +1492,27 @@ void bgp_peer_log_msg(struct bgp_peer *peer, struct bgp_node *route, struct bgp_
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    aspath = attr_new->aspath ? attr_new->aspath->str : empty;
+    aspath = attr->aspath ? attr->aspath->str : empty;
     kv = json_pack("{ss}", "as_path", aspath);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    comm = attr_new->community ? attr_new->community->str : empty;
+    comm = attr->community ? attr->community->str : empty;
     kv = json_pack("{ss}", "comms", comm);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    ecomm = attr_new->ecommunity ? attr_new->ecommunity->str : empty;
+    ecomm = attr->ecommunity ? attr->ecommunity->str : empty;
     kv = json_pack("{ss}", "ecomms", ecomm);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    lp = attr_new->local_pref;
+    lp = attr->local_pref;
     kv = json_pack("{sI}", "local_pref", lp);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    med = attr_new->med;
+    med = attr->med;
     kv = json_pack("{sI}", "med", med);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -1549,7 +1564,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   if (ri && config.nfacctd_bgp_msglog_file) {
     char event_type[] = "withdraw";
 
-    bgp_peer_log_msg(peer, route, ri->attr, ri, safi, event_type);
+    bgp_peer_log_msg(route, ri, safi, event_type);
   }
 
   /* Withdraw specified route from routing table. */
@@ -2007,7 +2022,6 @@ void bgp_peer_log_init(struct bgp_peer *peer)
     if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
       char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN], event_type[] = "init";
-      struct timeval tv;
       json_t *obj = json_object(), *kv;
 
       kv = json_pack("{sI}", "seq", log_seq);
@@ -2015,8 +2029,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
       json_decref(kv);
       bgp_peer_log_seq_increment();
 
-      gettimeofday(&tv, NULL);
-      compose_timestamp(tstamp_str, SRVBUFLEN, &tv, TRUE);
+      compose_timestamp(tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
       kv = json_pack("{ss}", "timestamp", tstamp_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
@@ -2051,7 +2064,6 @@ void bgp_peer_log_close(struct bgp_peer *peer)
   if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN], event_type[] = "close";
-    struct timeval tv;
     json_t *obj = json_object(), *kv;
 
     kv = json_pack("{sI}", "seq", log_seq);
@@ -2059,8 +2071,7 @@ void bgp_peer_log_close(struct bgp_peer *peer)
     json_decref(kv);
     bgp_peer_log_seq_increment();
 
-    gettimeofday(&tv, NULL);
-    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, TRUE);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
     kv = json_pack("{ss}", "timestamp", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);

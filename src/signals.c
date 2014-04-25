@@ -161,6 +161,8 @@ void reload()
     config.logfile_fd = open_logfile(config.logfile);
   }
 
+  if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;
+
   signal(SIGHUP, reload);
 }
 
