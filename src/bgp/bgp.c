@@ -286,7 +286,10 @@ void skinny_bgp_daemon()
       }
     }
 
-    if (config.nfacctd_bgp_msglog_file) gettimeofday(&log_tstamp, NULL);
+    if (config.nfacctd_bgp_msglog_file) {
+      gettimeofday(&log_tstamp, NULL);
+      compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
+    }
 
     /* New connection is coming in */ 
     if (FD_ISSET(config.bgp_sock, &read_descs)) {
@@ -984,6 +987,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
 	case BGP_ATTR_LOCAL_PREF:
 		ret = bgp_attr_parse_local_pref(peer, attr_len, attr, ptr, flag);
 		break;
+	case BGP_ATTR_ORIGIN:
+		ret = bgp_attr_parse_origin(peer, attr_len, attr, ptr, flag);
+		break;
 	case BGP_ATTR_MP_REACH_NLRI:
 		ret = bgp_attr_parse_mp_reach(peer, attr_len, attr, ptr, mp_update);
 		mp_nlri = TRUE;
@@ -1049,10 +1055,7 @@ int bgp_attr_parse_nexthop(struct bgp_peer *peer, u_int16_t len, struct bgp_attr
 
 int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
-  if (len == 0) {
-	attr->community = NULL;
-	return 0;
-  }
+  if (len == 0) attr->community = NULL;
   else attr->community = (struct community *) community_parse((u_int32_t *)ptr, len);
 
   return 0;
@@ -1091,6 +1094,17 @@ int bgp_attr_parse_local_pref(struct bgp_peer *peer, u_int16_t len, struct bgp_a
   memcpy(&tmp, ptr, 4);
   attr->local_pref = ntohl(tmp);
   ptr += 4;
+
+  return 0;
+}
+
+/* Origin attribute. */
+int bgp_attr_parse_origin(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
+{
+  if (len != 1) return -1;
+
+  memcpy(&attr->local_pref, ptr, 1);
+  ptr += 1;
 
   return 0;
 }
@@ -1442,25 +1456,19 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
 
   if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN];
+    char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
     char empty[] = "";
     char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
-    char *aspath, *comm, *ecomm;
-    u_int32_t lp, med;
-    struct rd_ip  *rdi;
-    struct rd_as  *rda;
-    struct rd_as4 *rda4;
-    path_id_t path_id_ho;
+    char *aspath;
 
     kv = json_pack("{sI}", "seq", log_seq);
     json_object_update_missing(obj, kv);
     json_decref(kv);
     bgp_peer_log_seq_increment();
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
-    kv = json_pack("{ss}", "timestamp", tstamp_str);
+    kv = json_pack("{ss}", "timestamp", log_tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -1486,36 +1494,42 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    if (ri && ri->extra) path_id_ho = ntohl(ri->extra->path_id);
-    else path_id_ho = 0;
-    kv = json_pack("{sI}", "as_path_id", path_id_ho);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    if (ri && ri->extra && ri->extra->path_id) {
+      kv = json_pack("{sI}", "as_path_id", ri->extra->path_id);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
 
     aspath = attr->aspath ? attr->aspath->str : empty;
     kv = json_pack("{ss}", "as_path", aspath);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    comm = attr->community ? attr->community->str : empty;
-    kv = json_pack("{ss}", "comms", comm);
+    if (attr->community) {
+      kv = json_pack("{ss}", "comms", attr->community->str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    if (attr->ecommunity) {
+      kv = json_pack("{ss}", "ecomms", attr->ecommunity->str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    kv = json_pack("{sI}", "origin", attr->origin);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    ecomm = attr->ecommunity ? attr->ecommunity->str : empty;
-    kv = json_pack("{ss}", "ecomms", ecomm);
+    kv = json_pack("{sI}", "local_pref", attr->local_pref);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    lp = attr->local_pref;
-    kv = json_pack("{sI}", "local_pref", lp);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-
-    med = attr->med;
-    kv = json_pack("{sI}", "med", med);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    if (attr->med) {
+      kv = json_pack("{sI}", "med", attr->med);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
 
     if (safi == SAFI_MPLS_VPN) {
       u_char rd_str[SRVBUFLEN];
@@ -2021,7 +2035,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
 
     if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-      char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN], event_type[] = "init";
+      char ip_address[INET6_ADDRSTRLEN], event_type[] = "init";
       json_t *obj = json_object(), *kv;
 
       kv = json_pack("{sI}", "seq", log_seq);
@@ -2029,8 +2043,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
       json_decref(kv);
       bgp_peer_log_seq_increment();
 
-      compose_timestamp(tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
-      kv = json_pack("{ss}", "timestamp", tstamp_str);
+      kv = json_pack("{ss}", "timestamp", log_tstamp_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
@@ -2063,7 +2076,7 @@ void bgp_peer_log_close(struct bgp_peer *peer)
 
   if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    char ip_address[INET6_ADDRSTRLEN], tstamp_str[SRVBUFLEN], event_type[] = "close";
+    char ip_address[INET6_ADDRSTRLEN], event_type[] = "close";
     json_t *obj = json_object(), *kv;
 
     kv = json_pack("{sI}", "seq", log_seq);
@@ -2071,8 +2084,7 @@ void bgp_peer_log_close(struct bgp_peer *peer)
     json_decref(kv);
     bgp_peer_log_seq_increment();
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
-    kv = json_pack("{ss}", "timestamp", tstamp_str);
+    kv = json_pack("{ss}", "timestamp", log_tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 

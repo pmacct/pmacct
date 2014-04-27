@@ -2035,7 +2035,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   tmpbuf = json_dumps(obj, 0);
-  free(obj);
+  json_decref(obj);
 
   return tmpbuf;
 }
@@ -2046,7 +2046,7 @@ void write_and_free_json(FILE *f, void *obj)
   json_t *json_obj = (json_t *) obj;
 
   tmpbuf = json_dumps(json_obj, 0);
-  free(obj);
+  json_decref(json_obj);
   
   if (tmpbuf) {
     fprintf(f, "%s\n", tmpbuf);

@@ -3305,7 +3305,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   tmpbuf = json_dumps(obj, 0);
-  free(obj);
+  json_decref(obj);
 
   return tmpbuf;
 }

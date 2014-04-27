@@ -162,6 +162,7 @@ EXT int bgp_attr_parse_as4path(struct bgp_peer *, u_int16_t, struct bgp_attr *, 
 EXT int bgp_attr_parse_nexthop(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_med(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 EXT int bgp_attr_parse_local_pref(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
+EXT int bgp_attr_parse_origin(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 EXT int bgp_attr_parse_mp_reach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 EXT int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 EXT int bgp_nlri_parse(struct bgp_peer *, void *, struct bgp_nlri *);
@@ -226,6 +227,7 @@ EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT u_int64_t log_seq;
 EXT struct timeval log_tstamp;
+EXT char log_tstamp_str[SRVBUFLEN];
 
 #undef EXT
 #endif 
