@@ -1017,6 +1017,7 @@ void sql_exit_gracefully(int signum)
   idata.committed_basetime = glob_committed_basetime;
   if (config.sql_backup_host || config.sql_recovery_logfile) idata.recover = TRUE;
   if (config.what_to_count & COUNT_CLASS) config.sql_aggressive_classification = FALSE;
+  if (config.sql_locking_style) idata.locks = sql_select_locking_style(config.sql_locking_style);
 
   sql_cache_flush(queries_queue, qq_ptr, &idata, TRUE);
   if (sql_writers.flags != CHLD_ALERT) {
@@ -2824,6 +2825,7 @@ int sql_select_locking_style(char *lock)
 
   if (!strcmp(lock, "table")) return PM_LOCK_EXCLUSIVE;
   else if (!strcmp(lock, "row")) return PM_LOCK_ROW_EXCLUSIVE;
+  else if (!strcmp(lock, "none")) return PM_LOCK_NONE;
 
   Log(LOG_WARNING, "WARN ( %s/%s ): sql_locking_style value '%s' is unknown. Ignored.\n", config.name, config.type, lock);
 

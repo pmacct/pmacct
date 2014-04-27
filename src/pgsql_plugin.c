@@ -659,6 +659,9 @@ int PG_compose_static_queries()
   else {
     if (config.sql_locking_style) lock = sql_select_locking_style(config.sql_locking_style); 
     switch (lock) {
+    case PM_LOCK_NONE:
+      snprintf(lock_clause, sizeof(lock_clause), "BEGIN;");
+      break;
     case PM_LOCK_ROW_EXCLUSIVE:
       snprintf(lock_clause, sizeof(lock_clause), "BEGIN; LOCK %s IN ROW EXCLUSIVE MODE;", config.sql_table);
       break;

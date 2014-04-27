@@ -48,6 +48,7 @@
 /* lock types */
 #define PM_LOCK_EXCLUSIVE	0
 #define PM_LOCK_ROW_EXCLUSIVE	1
+#define PM_LOCK_NONE		2
 
 /* cache element states */
 #define SQL_CACHE_FREE		0

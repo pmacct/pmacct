@@ -1114,16 +1114,17 @@ DESC:		usually 5 to 10 packets are required to classify a stream by the 'classif
 		sql_dont_try_update and sql_use_copy directives (default: false) 
 
 KEY:		sql_locking_style
-DESC:		defines the locking style for the SQL table. Supported values are: "table", the plugin will
-		lock the entire table when writing data to the DB. It serializes access to the table whenever
-		multiple plugins need to access it simultaneously. Slower but light and safe, ie. no risk for
-		deadlocks and transaction-friendly; "row", the plugin will lock only the rows it needs to
-		UPDATE/DELETE. It results in better overral performances but has some noticeable drawbacks in
-		dealing with transactions and making the UPDATE-then-INSERT mechanism work smoothly. The user
-		need to take cares on his own; a simple and safe enough protection can be tagging uniquely
-		data coming from each plugin (see pre_tag_map, post_tag). In MySQL the use of an InnoDB table
-		is mandatory. This config directive currently applies only to PostgreSQL and MySQL plugins.
-		(default: table)
+VALUES:		[ table | row | none ]
+DESC:		defines the locking style for the SQL table. MySQL supports "table" and "none" values whereas
+		PostgreSQL supports "table", "row" and "none" values. With "table" value, the plugin will lock
+		the entire table when writing data to the DB with the effect of serializing access to the
+		table whenever multiple plugins need to access it simultaneously. Slower but light and safe,
+		ie. no risk for deadlocks and transaction-friendly; "row", the plugin will lock only the rows
+		it needs to UPDATE/DELETE. It results in better overral performances but has some noticeable
+		drawbacks in dealing with transactions and making the UPDATE-then-INSERT mechanism work
+		smoothly; "none" disables locking: while this method can help in some cases, ie. when grants
+		over the whole database (requirement for "table" locking in MySQL) is not available, it is not
+		recommended since serialization allows to contain database load. (default: table)
 
 KEY:		classifier_tentatives [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		number of tentatives to classify a stream. Usually 5 "full" (ie. carrying payload) packets are
