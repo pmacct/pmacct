@@ -2685,6 +2685,60 @@ int cfg_key_nfacctd_bgp_table_per_peer_hash(char *filename, char *name, char *va
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_table_dump_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_table_dump_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "json"))
+    value = PRINT_OUTPUT_JSON;
+  else {
+    Log(LOG_WARNING, "WARN ( %s ): Invalid bgp_table_dump_output value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_output = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_output'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_table_dump_refresh_time(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0, i, len = strlen(value_ptr);
+
+  for (i = 0; i < len; i++) {
+    if (!isdigit(value_ptr[i]) && !isspace(value_ptr[i])) {
+      Log(LOG_ERR, "WARN ( %s ): 'bgp_table_dump_refresh_time' is expected in secs but contains non-digit chars: '%c'\n", filename, value_ptr[i]);
+      return ERR;
+    }
+  }
+
+  value = atoi(value_ptr);
+  if (value < 60 || value > 3600) {
+    Log(LOG_ERR, "WARN ( %s ): 'bgp_table_dump_refresh_time' value has to be >= 60 and <= 3600 secs.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_refresh_time = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_refresh_time'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_batch_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

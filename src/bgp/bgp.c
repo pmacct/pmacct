@@ -71,7 +71,7 @@ void skinny_bgp_daemon()
   int clen = sizeof(client), yes=1;
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
-  time_t now;
+  time_t now, dump_refresh_deadline;
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
 
@@ -255,6 +255,29 @@ void skinny_bgp_daemon()
   if (!config.nfacctd_bgp_msglog_output)
     config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
 
+  if (!config.bgp_table_dump_output)
+    config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
+
+  if (config.bgp_table_dump_file) {
+    char dump_roundoff[] = "m";
+    time_t tmp_time;
+
+    if (config.bgp_table_dump_refresh_time) {
+      gettimeofday(&log_tstamp, NULL);
+      dump_refresh_deadline = log_tstamp.tv_sec;
+      tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
+      while ((tmp_time+config.bgp_table_dump_refresh_time) < dump_refresh_deadline) {
+        tmp_time += config.bgp_table_dump_refresh_time;
+      }
+      dump_refresh_deadline = tmp_time;
+      dump_refresh_deadline += config.bgp_table_dump_refresh_time; /* it's a deadline not a basetime */
+    }
+    else {
+      config.bgp_table_dump_file = NULL;
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): 'bgp_table_dump_file' ignored due to invalid 'bgp_table_dump_refresh_time'.\n", config.name);
+    }
+  }
+
   for (;;) {
     select_again:
     select_fd = config.bgp_sock;
@@ -286,9 +309,16 @@ void skinny_bgp_daemon()
       }
     }
 
-    if (config.nfacctd_bgp_msglog_file) {
+    if (config.nfacctd_bgp_msglog_file || config.bgp_table_dump_file) {
       gettimeofday(&log_tstamp, NULL);
       compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
+
+      if (config.bgp_table_dump_file) {
+	while (log_tstamp.tv_sec > dump_refresh_deadline) {
+	  // XXX
+	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
+	}
+      }
     }
 
     /* New connection is coming in */ 

@@ -189,6 +189,9 @@ struct configuration {
   int bgp_table_per_peer_buckets;
   int bgp_table_attr_hash_buckets;
   int bgp_table_per_peer_hash;
+  int bgp_table_dump_output;
+  char *bgp_table_dump_file;
+  int bgp_table_dump_refresh_time;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;
