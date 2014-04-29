@@ -201,6 +201,7 @@ EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
 EXT void write_neighbors_file(char *);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
+EXT void bgp_handle_dump_event();
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);

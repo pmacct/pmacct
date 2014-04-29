@@ -1463,6 +1463,12 @@ void calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
   *timeout = ((deadline-now)+1)*1000;
 }
 
+/* secs version of calc_refresh_timeout() */
+void calc_refresh_timeout_sec(time_t deadline, time_t now, int *timeout)
+{
+  *timeout = ((deadline-now)+1);
+}
+
 int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
 {
   char *count_token, *range_ptr;

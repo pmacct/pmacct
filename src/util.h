@@ -89,6 +89,7 @@ EXT void load_bgp_md5_file(char *, struct bgp_md5_table *);
 EXT void unload_bgp_md5_file(struct bgp_md5_table *);
 EXT int BTA_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void calc_refresh_timeout(time_t, time_t, int *);
+EXT void calc_refresh_timeout_sec(time_t, time_t, int *);
 EXT int load_tags(char *, struct pretag_filter *, char *);
 EXT int evaluate_tags(struct pretag_filter *, pm_id_t);
 EXT void load_pkt_len_distrib_bins();

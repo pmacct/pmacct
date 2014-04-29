@@ -74,6 +74,7 @@ void skinny_bgp_daemon()
   time_t now, dump_refresh_deadline;
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
+  struct timeval dump_refresh_timeout, *drt_ptr;
 
   /* BGP peer batching vars */
   int bgp_current_batch_elem = 0;
@@ -280,12 +281,24 @@ void skinny_bgp_daemon()
 
   for (;;) {
     select_again:
+
     select_fd = config.bgp_sock;
     for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++)
       if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
     select_fd++;
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
-    select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
+
+    if (config.bgp_table_dump_file) {
+      int delta;
+
+      calc_refresh_timeout_sec(dump_refresh_deadline, log_tstamp.tv_sec, &delta);
+      dump_refresh_timeout.tv_sec = delta;
+      dump_refresh_timeout.tv_usec = 0;
+      drt_ptr = &dump_refresh_timeout;
+    }
+    else drt_ptr = NULL;
+
+    select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
     /* signals handling */
@@ -315,11 +328,18 @@ void skinny_bgp_daemon()
 
       if (config.bgp_table_dump_file) {
 	while (log_tstamp.tv_sec > dump_refresh_deadline) {
-	  // XXX
+	  bgp_handle_dump_event();
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
 	}
       }
     }
+
+    /* 
+       If select_num == 0 then we got out of select() due to a timeout rather
+       than because we had a message from a peeer to handle. By now we did all
+       routine checks and can happily return to selet() again.
+    */ 
+    if (!select_num) goto select_again;
 
     /* New connection is coming in */ 
     if (FD_ISSET(config.bgp_sock, &read_descs)) {
@@ -3129,4 +3149,47 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
   return (((peer->fd * config.bgp_table_per_peer_buckets) +
 	  ((local_path_id - 1) % config.bgp_table_per_peer_buckets)) %
 	  (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets));
+}
+
+void bgp_handle_dump_event()
+{
+  int ret, peers_idx;
+  struct bgp_peer *peer;
+  struct bgp_table *table;
+  struct bgp_node *node;
+  afi_t afi;
+  safi_t safi;
+
+  switch (ret = fork()) {
+  case 0: /* Child */
+    /* we have to ignore signals to avoid loops: because we are already forked */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+    pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BGP Dump Writer", config.name);
+
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+      if (peers[peers_idx].fd) {
+        peer = &peers[peers_idx];
+
+	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+	    table = rib[afi][safi];
+	    node = bgp_table_top(table);
+
+	    if (node) {
+	      // XXX: go next from here and dump
+	    }
+	  }
+	}
+      }
+    }
+
+    exit(0);
+  default: /* Parent */
+    if (ret == -1) { /* Something went wrong */
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): Unable to fork DB writer: %s\n", config.name, strerror(errno));
+    }
+
+    break;
+  }
 }
