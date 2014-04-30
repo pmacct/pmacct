@@ -362,7 +362,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.logfile)
   {
-    config.logfile_fd = open_logfile(config.logfile);
+    config.logfile_fd = open_logfile(config.logfile, "a");
     list = plugins_list;
     while (list) {
       list->cfg.logfile_fd = config.logfile_fd ;

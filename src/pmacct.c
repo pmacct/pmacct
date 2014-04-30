@@ -1027,8 +1027,14 @@ int main(int argc,char **argv)
         want_output = PRINT_OUTPUT_FORMATTED;
       else if (!strcmp(optarg, "csv"))
         want_output = PRINT_OUTPUT_CSV;
-      else if (!strcmp(optarg, "json"))
+      else if (!strcmp(optarg, "json")) {
+#ifdef WITH_JANSSON
         want_output = PRINT_OUTPUT_JSON;
+#else
+        want_output = PRINT_OUTPUT_JSON;
+        printf("WARN: -O set to json but will produce no output (missing --enable-jansson).\n");
+#endif
+      }
       else if (!strcmp(optarg, "event_formatted")) {
 	want_output = PRINT_OUTPUT_FORMATTED;
         want_output |= PRINT_OUTPUT_EVENT;

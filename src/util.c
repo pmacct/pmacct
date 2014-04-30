@@ -362,7 +362,7 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   return (final-base);
 }	
 
-FILE *open_logfile(char *filename)
+FILE *open_logfile(char *filename, char *mode)
 {
   char timebuf[SRVBUFLEN];
   FILE *file = NULL;
@@ -372,7 +372,7 @@ FILE *open_logfile(char *filename)
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
-  file = fopen(filename, "a"); 
+  file = fopen(filename, mode); 
   if (file) {
     if (chown(filename, owner, group) == -1)
       printf("WARN: Unable to chown() logfile '%s': %s\n", filename, strerror(errno));

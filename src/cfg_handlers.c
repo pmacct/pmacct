@@ -1847,8 +1847,14 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_FORMATTED;
   else if (!strcmp(value_ptr, "csv"))
     value = PRINT_OUTPUT_CSV;
-  else if (!strcmp(value_ptr, "json"))
+  else if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
     value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN ( %s ): print_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
   else if (!strcmp(value_ptr, "event_formatted")) {
     value = PRINT_OUTPUT_FORMATTED;
     value |= PRINT_OUTPUT_EVENT;
@@ -2277,8 +2283,14 @@ int cfg_key_nfacctd_bgp_msglog_output(char *filename, char *name, char *value_pt
   int value, changes = 0;
 
   lower_string(value_ptr);
-  if (!strcmp(value_ptr, "json"))
+  if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
     value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN ( %s ): bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
   else {
     Log(LOG_WARNING, "WARN ( %s ): Invalid bgp_daemon_msglog_output value '%s'\n", filename, value_ptr);
     return ERR;
@@ -2702,8 +2714,14 @@ int cfg_key_nfacctd_bgp_table_dump_output(char *filename, char *name, char *valu
   int value, changes = 0;
 
   lower_string(value_ptr);
-  if (!strcmp(value_ptr, "json"))
+  if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
     value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN ( %s ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
   else {
     Log(LOG_WARNING, "WARN ( %s ): Invalid bgp_table_dump_output value '%s'\n", filename, value_ptr);
     return ERR;

@@ -158,7 +158,7 @@ void reload()
   }
   else if (config.logfile) {
     fclose(config.logfile_fd);
-    config.logfile_fd = open_logfile(config.logfile);
+    config.logfile_fd = open_logfile(config.logfile, "a");
   }
 
   if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;

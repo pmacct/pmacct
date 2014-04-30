@@ -253,11 +253,19 @@ void skinny_bgp_daemon()
     config.nfacctd_bgp_batch_interval = 0;
   }
 
-  if (!config.nfacctd_bgp_msglog_output)
+  if (!config.nfacctd_bgp_msglog_output && config.nfacctd_bgp_msglog_file)
+#ifdef WITH_JANSSON
     config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+#endif
 
-  if (!config.bgp_table_dump_output)
+  if (!config.bgp_table_dump_output && config.bgp_table_dump_file)
+#ifdef WITH_JANSSON
     config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+#endif
 
   if (config.bgp_table_dump_file) {
     char dump_roundoff[] = "m";
@@ -316,7 +324,7 @@ void skinny_bgp_daemon()
       for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
 	if (peers_log[peers_idx].fd) {
 	  fclose(peers_log[peers_idx].fd);
-	  peers_log[peers_idx].fd = open_logfile(peers_log[peers_idx].filename);
+	  peers_log[peers_idx].fd = open_logfile(peers_log[peers_idx].filename, "a");
 	}
 	else break;
       }
@@ -420,7 +428,7 @@ void skinny_bgp_daemon()
       }
 #endif
 
-      if (config.nfacctd_bgp_msglog_file) bgp_peer_log_init(peer);
+      if (config.nfacctd_bgp_msglog_file) bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output);
 
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
@@ -1493,18 +1501,18 @@ log_update:
   {
     char event_type[] = "update";
 
-    bgp_peer_log_msg(route, ri, safi, event_type);
+    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
   }
 
   return 0;
 }
 
-void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type)
+void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type, int output)
 {
   struct bgp_peer *peer = ri->peer;
   struct bgp_attr *attr = ri->attr;
 
-  if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
+  if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
@@ -1513,14 +1521,17 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
     char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char *aspath;
 
-    kv = json_pack("{sI}", "seq", log_seq);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-    bgp_peer_log_seq_increment();
+    /* no need for seq and timestamp for "dump" event_type */
+    if (strcmp(event_type, "dump")) {
+      kv = json_pack("{sI}", "seq", log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment();
 
-    kv = json_pack("{ss}", "timestamp", log_tstamp_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+      kv = json_pack("{ss}", "timestamp", log_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
 
     addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", "peer_ip_src", ip_address);
@@ -1628,7 +1639,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   if (ri && config.nfacctd_bgp_msglog_file) {
     char event_type[] = "withdraw";
 
-    bgp_peer_log_msg(route, ri, safi, event_type);
+    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
   }
 
   /* Withdraw specified route from routing table. */
@@ -2042,7 +2053,7 @@ void bgp_peer_close(struct bgp_peer *peer)
   afi_t afi;
   safi_t safi;
 
-  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_close(peer); 
+  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_close(peer, config.nfacctd_bgp_msglog_output); 
 
   close(peer->fd);
   peer->fd = 0;
@@ -2055,7 +2066,7 @@ void bgp_peer_close(struct bgp_peer *peer)
     write_neighbors_file(config.nfacctd_bgp_neighbors_file);
 }
 
-void bgp_peer_log_init(struct bgp_peer *peer)
+void bgp_peer_log_init(struct bgp_peer *peer, int output)
 {
   int peer_idx, have_it;
   char log_filename[SRVBUFLEN];
@@ -2066,7 +2077,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
 
   for (peer_idx = 0, have_it = 0; peer_idx < config.nfacctd_bgp_max_peers; peer_idx++) {
     if (!peers_log[peer_idx].fd) {
-      peers_log[peer_idx].fd = open_logfile(log_filename);
+      peers_log[peer_idx].fd = open_logfile(log_filename, "a");
       if (peers_log[peer_idx].fd) {
         strcpy(peers_log[peer_idx].filename, log_filename);
 	have_it = TRUE;
@@ -2083,7 +2094,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
     peer->log = &peers_log[peer_idx];
     peers_log[peer_idx].refcnt++;
 
-    if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
+    if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
       char ip_address[INET6_ADDRSTRLEN], event_type[] = "init";
       json_t *obj = json_object(), *kv;
@@ -2112,7 +2123,7 @@ void bgp_peer_log_init(struct bgp_peer *peer)
   }
 }
 
-void bgp_peer_log_close(struct bgp_peer *peer)
+void bgp_peer_log_close(struct bgp_peer *peer, int output)
 {
   struct bgp_peer_log *log_ptr;
 
@@ -2124,7 +2135,7 @@ void bgp_peer_log_close(struct bgp_peer *peer)
   peer->log->refcnt--;
   peer->log = NULL;
 
-  if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_JSON) {
+  if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN], event_type[] = "close";
     json_t *obj = json_object(), *kv;
@@ -3153,12 +3164,18 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
 
 void bgp_handle_dump_event()
 {
+  char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
+  char event_type[] = "dump";
   int ret, peers_idx;
   struct bgp_peer *peer;
   struct bgp_table *table;
   struct bgp_node *node;
+  struct bgp_peer_log peer_log;
   afi_t afi;
   safi_t safi;
+
+  /* pre-flight check */
+  if (!config.bgp_table_dump_file || !config.bgp_table_dump_refresh_time) return;
 
   switch (ret = fork()) {
   case 0: /* Child */
@@ -3166,18 +3183,48 @@ void bgp_handle_dump_event()
     signal(SIGINT, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BGP Dump Writer", config.name);
+    memset(last_filename, 0, sizeof(last_filename));
+    memset(current_filename, 0, sizeof(current_filename));
+    memset(&peer_log, 0, sizeof(struct bgp_peer_log));
 
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
       if (peers[peers_idx].fd) {
         peer = &peers[peers_idx];
+	peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
+
+        strlcpy(last_filename, current_filename, strlen(current_filename));
+	bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_file, peer);
+	strftime_same(current_filename, SRVBUFLEN, tmpbuf, &log_tstamp.tv_sec);
+
+	/*
+	   we close last_filename and open current_filename in case they differ;
+	   we are safe with this approach until $peer_src_ip is the only variable
+	   supported as part of  bgp_table_dump_file configuration directive.
+        */
+	if (strcmp(last_filename, current_filename)) {
+	  if (peer->log->fd && strlen(last_filename)) fclose(peer->log->fd);
+	  peer->log->fd = open_logfile(current_filename, "w");
+	}
 
 	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
 	    table = rib[afi][safi];
 	    node = bgp_table_top(table);
 
-	    if (node) {
-	      // XXX: go next from here and dump
+	    while (node) {
+	      u_int32_t modulo = bgp_route_info_modulo(peer, NULL);
+	      u_int32_t peer_buckets;
+	      struct bgp_info *ri;
+
+	      for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
+	        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
+		  if (ri->peer == peer) {
+	            bgp_peer_log_msg(node, ri, safi, event_type, config.bgp_table_dump_output);
+		  }
+		}
+	      }
+
+	      node = bgp_route_next(node);
 	    }
 	  }
 	}

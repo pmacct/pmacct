@@ -115,7 +115,7 @@ bgp_node_free_aggressive (struct bgp_node *node, safi_t safi)
       if (config.nfacctd_bgp_msglog_file) {
         char event_type[] = "delete";
 
-        bgp_peer_log_msg(node, ri, safi, event_type);
+        bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
       }
 
       next = ri->next;
