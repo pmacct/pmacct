@@ -107,7 +107,7 @@ EXT void write_and_free_json(FILE *, void *);
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
 EXT void print_primitives(int, char *);
-EXT int mkdir_multilevel(const char *, int);
+EXT int mkdir_multilevel(const char *, int, uid_t, gid_t);
 EXT char bin_to_hex(int);
 EXT int print_hex(const u_char *, u_char *, int);
 

@@ -2069,7 +2069,7 @@ void bgp_peer_close(struct bgp_peer *peer)
 void bgp_peer_log_init(struct bgp_peer *peer, int output)
 {
   int peer_idx, have_it;
-  char log_filename[SRVBUFLEN];
+  char log_filename[SRVBUFLEN], event_type[] = "log_init";
 
   if (!peers_log || !peer || peer->log) return;
 
@@ -2096,7 +2096,7 @@ void bgp_peer_log_init(struct bgp_peer *peer, int output)
 
     if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-      char ip_address[INET6_ADDRSTRLEN], event_type[] = "init";
+      char ip_address[INET6_ADDRSTRLEN];
       json_t *obj = json_object(), *kv;
 
       kv = json_pack("{sI}", "seq", log_seq);
@@ -2125,6 +2125,7 @@ void bgp_peer_log_init(struct bgp_peer *peer, int output)
 
 void bgp_peer_log_close(struct bgp_peer *peer, int output)
 {
+  char event_type[] = "log_close";
   struct bgp_peer_log *log_ptr;
 
   if (!peers_log || !peer || !peer->log) return;
@@ -2137,7 +2138,7 @@ void bgp_peer_log_close(struct bgp_peer *peer, int output)
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    char ip_address[INET6_ADDRSTRLEN], event_type[] = "close";
+    char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
     kv = json_pack("{sI}", "seq", log_seq);
@@ -2213,6 +2214,64 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     len = strlen(buf);
     *ptr_start = '\0';
     strncat(new, buf, len);
+  }
+}
+
+void bgp_peer_dump_init(struct bgp_peer *peer, int output)
+{
+  char event_type[] = "dump_init";
+
+  if (!peer || !peer->log || !peer->log->fd) return;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = json_object(), *kv;
+
+    kv = json_pack("{ss}", "timestamp", log_tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, &peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    write_and_free_json(peer->log->fd, obj);
+#endif
+  }
+}
+
+void bgp_peer_dump_close(struct bgp_peer *peer, int output)
+{
+  char event_type[] = "dump_close";
+
+  if (!peer || !peer->log || !peer->log->fd) return;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = json_object(), *kv;
+
+    kv = json_pack("{ss}", "timestamp", log_tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, &peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    write_and_free_json(peer->log->fd, obj);
+#endif
   }
 }
 
@@ -3167,7 +3226,7 @@ void bgp_handle_dump_event()
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char event_type[] = "dump";
   int ret, peers_idx;
-  struct bgp_peer *peer;
+  struct bgp_peer *peer, *saved_peer;
   struct bgp_table *table;
   struct bgp_node *node;
   struct bgp_peer_log peer_log;
@@ -3187,12 +3246,11 @@ void bgp_handle_dump_event()
     memset(current_filename, 0, sizeof(current_filename));
     memset(&peer_log, 0, sizeof(struct bgp_peer_log));
 
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
       if (peers[peers_idx].fd) {
         peer = &peers[peers_idx];
 	peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 
-        strlcpy(last_filename, current_filename, strlen(current_filename));
 	bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_file, peer);
 	strftime_same(current_filename, SRVBUFLEN, tmpbuf, &log_tstamp.tv_sec);
 
@@ -3202,9 +3260,10 @@ void bgp_handle_dump_event()
 	   supported as part of  bgp_table_dump_file configuration directive.
         */
 	if (strcmp(last_filename, current_filename)) {
-	  if (peer->log->fd && strlen(last_filename)) fclose(peer->log->fd);
+	  if (saved_peer && saved_peer->log && strlen(last_filename)) fclose(saved_peer->log->fd);
 	  peer->log->fd = open_logfile(current_filename, "w");
 	}
+	bgp_peer_dump_init(peer, config.bgp_table_dump_output);
 
 	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
@@ -3228,6 +3287,10 @@ void bgp_handle_dump_event()
 	    }
 	  }
 	}
+
+        saved_peer = peer;
+        strlcpy(last_filename, current_filename, SRVBUFLEN);
+        bgp_peer_dump_close(peer, config.bgp_table_dump_output);
       }
     }
 

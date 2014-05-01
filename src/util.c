@@ -364,13 +364,26 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
 
 FILE *open_logfile(char *filename, char *mode)
 {
-  char timebuf[SRVBUFLEN];
+  char timebuf[SRVBUFLEN], buf[LARGEBUFLEN];
   FILE *file = NULL;
   uid_t owner = -1;
   gid_t group = -1;
+  int ret;
+
+  strlcpy(buf, filename, LARGEBUFLEN);
 
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
+
+  ret = mkdir_multilevel(buf, TRUE, owner, group);
+  if (ret) {
+    printf("ERROR: Unable to open_logfile() '%s': mkdir_multilevel() failed.\n", buf);
+    file = NULL;
+
+    return file;
+  }
+
+  ret = access(buf, F_OK);
 
   file = fopen(filename, mode); 
   if (file) {
@@ -390,6 +403,8 @@ void close_print_output_file(FILE *f, char *table_schema, char *current_table, s
   char latest_fname[SRVBUFLEN], buf[LARGEBUFLEN];
   int ret, rewrite_latest = FALSE;
   u_int16_t offset;
+  uid_t owner = -1;
+  gid_t group = -1;
 
   /* first-off let's close current file */
   fclose(f);
@@ -397,13 +412,16 @@ void close_print_output_file(FILE *f, char *table_schema, char *current_table, s
   /* get out if we miss a piece */
   if (!table_schema || !current_table || !prim_ptrs) return;
 
+  if (config.files_uid) owner = config.files_uid;
+  if (config.files_gid) group = config.files_gid;
+
   /* let's compose latest filename */
   memset(buf, 0, LARGEBUFLEN);
   strlcpy(latest_fname, table_schema, SRVBUFLEN);
   handle_dynname_internal_strings_same(buf, LARGEBUFLEN, latest_fname, prim_ptrs);
 
   /* create dir structure to get to file, if needed */
-  ret = mkdir_multilevel(latest_fname, TRUE);
+  ret = mkdir_multilevel(latest_fname, TRUE, owner, group);
   if (ret) {
     Log(LOG_ERR, "ERROR: Unable to open print_latest_file '%s': mkdir_multilevel() failed.\n", buf);
     return;
@@ -447,7 +465,7 @@ FILE *open_print_output_file(char *filename, int *append)
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
-  ret = mkdir_multilevel(buf, TRUE);
+  ret = mkdir_multilevel(buf, TRUE, owner, group);
   if (ret) {
     Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s': mkdir_multilevel() failed.\n", buf);
     file = NULL;
@@ -2353,7 +2371,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
   }
 }
 
-int mkdir_multilevel(const char *path, int trailing_filename)
+int mkdir_multilevel(const char *path, int trailing_filename, uid_t owner, gid_t group)
 {
   char opath[SRVBUFLEN];
   char *p;
@@ -2367,6 +2385,7 @@ int mkdir_multilevel(const char *path, int trailing_filename)
       if (len && access(opath, F_OK)) {
         ret = mkdir(opath, S_IRWXU);
         if (ret) return ret;
+        if (chown(opath, owner, group) == -1) return ret;
       }
       *p = '/';
     }

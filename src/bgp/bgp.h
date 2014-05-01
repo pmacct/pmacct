@@ -190,6 +190,8 @@ EXT void bgp_peer_log_seq_init();
 EXT void bgp_peer_log_seq_increment();
 EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
 EXT void bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int);
+EXT void bgp_peer_dump_init(struct bgp_peer *, int);
+EXT void bgp_peer_dump_close(struct bgp_peer *, int);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);

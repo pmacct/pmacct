@@ -216,12 +216,14 @@ DESC:		Defines the mask for newly created files (log, pid, etc.). A mask less th
 KEY:            files_uid
 DESC:           Defines the system user id (UID) for files opened for writing (log, pid, etc.); this
 		is indeed possible only when running the daemon as super-user; by default this is left
-		untouched. 
+		untouched. This is also applied to any intermediary directory structure which might be
+		created. 
 
 KEY:            files_gid
 DESC:           Defines the system group id (GID) for files opened for writing (log, pid, etc.); this
 		is indeed possible only when running the daemon as super-user; by default this is left
-		untouched.
+		untouched. This is also applied to any intermediary directory structure which might be
+		created. 
 
 KEY:		interface (-i) [GLOBAL, NO_NFACCTD]
 DESC:		interface on which 'pmacctd' listens. If such directive isn't supplied, a libpcap
@@ -1280,7 +1282,9 @@ KEY:            bgp_daemon_msglog_file
 DESC:		Enables streamed logging of BGP messages/events. Each log entry features a time reference,
 		BGP peer IP address, event type and a sequence number (to order events when time reference
 		is not granular enough). BGP UPDATE messages also contain full prefix and BGP attributes
-		information.
+		information. The list of supported filename variables follows:
+
+                $peer_src_ip    BGP peer IP address.
 
 KEY:		bgp_daemon_msglog_output
 VALUES:         [ json ]
@@ -1473,6 +1477,41 @@ DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to
 		hashing to be used. By default hashing happens against the BGP ADD-PATH path_id field.
 		Hashing over other fields or field combinations (hashing over BGP next-hop is on the
 		radar) are planned to be supported in future. (default: path_id)
+
+KEY:            bgp_table_dump_file
+DESC:           Enables dump of BGP tables at regular time intervals (bgp_table_dump_refresh_time) into
+		files. Each dump event features a time reference and BGP peer IP address along with full
+		prefix and BGP attributes information. The list of supported filename variables follows:
+
+                %d              The day of the month as a decimal number (range 01 to 31).
+
+                %H              The hour as a decimal number using a 24 hour clock (range 00 to 23).
+
+                %m              The month as a decimal number (range 01 to 12).
+
+                %M              The minute as a decimal number (range 00 to 59).
+
+                %s              The number of seconds since Epoch, ie., since 1970-01-01 00:00:00 UTC.
+
+                %w              The day of the week as a decimal, range 0 to 6, Sunday being 0.
+
+                %W              The week number of the current year as a decimal number, range
+                                00 to 53,  starting  with the first Monday as the first day of
+                                week 01.
+
+                %Y              The year as a decimal number including the century.
+
+                $peer_src_ip    BGP peer IP address.
+
+KEY:            bgp_table_dump_output
+VALUES:         [ json ]
+DESC:           Defines output format for the dump of BGP tables. Only JSON format is currently
+		supported and requires compiling against Jansson library (--enable-jansson when
+		configuring for compiling). (default: json)
+
+KEY:		bgp_table_dump_refresh_time
+DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP tables
+		to files. 
 
 KEY:		isis_daemon
 VALUES:		[ true | false ]
