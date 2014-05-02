@@ -28,8 +28,8 @@ COMMON=
 
 all: $(TARGETS)
 
-libbgp.a: bgp.o bgp_aspath.o bgp_community.o bgp_ecommunity.o bgp_hash.o bgp_prefix.o bgp_table.o $(COMMON)
-	ar rc $@ bgp.o bgp_aspath.o bgp_community.o bgp_ecommunity.o bgp_hash.o bgp_prefix.o bgp_table.o $(COMMON)
+libbgp.a: bgp.o bgp_aspath.o bgp_community.o bgp_ecommunity.o bgp_hash.o bgp_prefix.o bgp_table.o bgp_logdump.o $(COMMON)
+	ar rc $@ bgp.o bgp_aspath.o bgp_community.o bgp_ecommunity.o bgp_hash.o bgp_prefix.o bgp_table.o bgp_logdump.o $(COMMON)
 	$(RANLIB) $@
 
 clean:

@@ -24,6 +24,7 @@
 #include "bgp_table.h"
 #include "bgp_community.h"
 #include "bgp_ecommunity.h"
+#include "bgp_logdump.h"
 
 #ifndef _BGP_H_
 #define _BGP_H_
@@ -107,12 +108,6 @@ struct bgp_peer {
   struct bgp_peer_log *log;
 };
 
-struct bgp_peer_log {
-  FILE *fd;
-  int refcnt;
-  char filename[SRVBUFLEN];
-};
-
 struct bgp_nlri {
   afi_t afi;
   safi_t safi;
@@ -184,14 +179,7 @@ EXT void bgp_attr_unintern (struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
 EXT int bgp_peer_init(struct bgp_peer *);
 EXT void bgp_peer_close(struct bgp_peer *);
-EXT void bgp_peer_log_init(struct bgp_peer *, int);
-EXT void bgp_peer_log_close(struct bgp_peer *, int);
-EXT void bgp_peer_log_seq_init();
-EXT void bgp_peer_log_seq_increment();
-EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
-EXT void bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int);
-EXT void bgp_peer_dump_init(struct bgp_peer *, int);
-EXT void bgp_peer_dump_close(struct bgp_peer *, int);
+EXT void bgp_peer_info_delete(struct bgp_peer *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 EXT void load_comm_patterns(char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
@@ -203,7 +191,6 @@ EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
 EXT void write_neighbors_file(char *);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
-EXT void bgp_handle_dump_event();
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
@@ -216,7 +203,6 @@ EXT void bgp_config_checks(struct configuration *);
 
 /* global variables */
 EXT struct bgp_peer *peers;
-EXT struct bgp_peer_log *peers_log;
 EXT struct hash *attrhash;
 EXT struct hash *ashash;
 EXT struct hash *comhash;
@@ -228,9 +214,6 @@ EXT struct bgp_comm_range peer_src_as_ifrange;
 EXT struct bgp_comm_range peer_src_as_asrange; 
 EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
-EXT u_int64_t log_seq;
-EXT struct timeval log_tstamp;
-EXT char log_tstamp_str[SRVBUFLEN];
 
 #undef EXT
 #endif 
