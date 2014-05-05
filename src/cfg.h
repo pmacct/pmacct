@@ -96,6 +96,7 @@ struct configuration {
   int flow_hashsz;
   int conntrack_bufsz;
   int flow_lifetime;
+  int flow_tcp_lifetime;
   int num_protos;
   int num_hosts;
   char *imt_plugin_path;

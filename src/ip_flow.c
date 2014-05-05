@@ -72,8 +72,11 @@ void init_ip4_flow_handler()
   if (config.flow_lifetime) flow_generic_lifetime = config.flow_lifetime;
   else flow_generic_lifetime = FLOW_GENERIC_LIFETIME; 
 
-  if (config.classifiers_path) flow_tcpest_lifetime = FLOW_TCPEST_LIFETIME;
-  else flow_tcpest_lifetime = flow_generic_lifetime;
+  if (config.flow_tcp_lifetime) flow_tcpest_lifetime = config.flow_tcp_lifetime;
+  else {
+    if (config.classifiers_path) flow_tcpest_lifetime = FLOW_TCPEST_LIFETIME;
+    else flow_tcpest_lifetime = flow_generic_lifetime;
+  }
 }
 
 void ip_flow_handler(struct packet_ptrs *pptrs)
@@ -412,8 +415,11 @@ void init_ip6_flow_handler()
   if (config.flow_lifetime) flow_generic_lifetime = config.flow_lifetime;
   else flow_generic_lifetime = FLOW_GENERIC_LIFETIME;
 
-  if (config.classifiers_path) flow_tcpest_lifetime = FLOW_TCPEST_LIFETIME;
-  else flow_tcpest_lifetime = flow_generic_lifetime;
+  if (config.flow_tcp_lifetime) flow_tcpest_lifetime = config.flow_tcp_lifetime;
+  else {
+    if (config.classifiers_path) flow_tcpest_lifetime = FLOW_TCPEST_LIFETIME;
+    else flow_tcpest_lifetime = flow_generic_lifetime;
+  }
 }
 
 void ip_flow6_handler(struct packet_ptrs *pptrs)

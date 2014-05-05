@@ -2990,6 +2990,23 @@ int cfg_key_pmacctd_flow_lifetime(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pmacctd_flow_tcp_lifetime(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'pmacctd_flow_tcp_lifetime' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.flow_tcp_lifetime = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'pmacctd_flow_tcp_lifetime'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pmacctd_ext_sampling_rate(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

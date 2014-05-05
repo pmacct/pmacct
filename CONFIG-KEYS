@@ -1070,8 +1070,14 @@ DESC:           defines the maximum size of the connection tracking buffer. In c
 		of equal size will be allocated. The value is expected in bytes (default: 8 Mb).
 
 KEY:            [ pmacctd_flow_lifetime | uacctd_flow_lifetime ] [GLOBAL, NO_NFACCTD]
-DESC:           defines how long a flow could remain inactive (ie. no packets belonging to such flow are received)
-		before considering it expired. The value is expected in seconds. (default: 60 secs) 
+DESC:           defines how long a non-TCP flow could remain inactive (ie. no packets belonging to such flow
+		are received) before considering it expired. The value is expected in seconds. (default: 60
+		secs) 
+
+KEY:            [ pmacctd_flow_tcp_lifetime | uacctd_flow_tcp_lifetime ] [GLOBAL, NO_NFACCTD]
+DESC:           defines how long a TCP flow could remain inactive (ie. no packets belonging to such flow are
+		received) before considering it expired. The value is expected in seconds. (default: 60 secs
+		if classification is disabled; 432000 secs, or 120 hours, if clssification is enabled instead)
 
 KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampling_rate |
 		  sfacctd_ext_sampling_rate ] [GLOBAL]
