@@ -85,6 +85,9 @@ void P_init_default_values()
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
   memset(&sql_writers, 0, sizeof(sql_writers));
+
+  /* handling purge preprocessor */
+  set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_PRINT);
 }
 
 unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
@@ -477,6 +480,8 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
   else commit_basetime.tv_sec = basetime.tv_sec; 
 
   /* mark committed entries as such */
+  /* XXX: can't mark just yet: missing implementation of handling pending queries queue entries */ 
+  /*
   if (!exiting) {
     for (j = 0, pqq_ptr = 0; j < index; j++) {
       if (commit_basetime.tv_sec >= queue[j]->basetime.tv_sec) {
@@ -490,6 +495,10 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
     for (j = 0, pqq_ptr = 0; j < index; j++)
       queue[j]->valid = PRINT_CACHE_COMMITTED;
   }
+  */
+
+  for (j = 0, pqq_ptr = 0; j < index; j++)
+    queue[j]->valid = PRINT_CACHE_COMMITTED;
 
   /* Imposing maximum number of writers */
   sql_writers.active -= MIN(sql_writers.active, local_retired);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -18,6 +18,15 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+
+/* defines */
+#define PREP_DICT_SQL	1
+#define PREP_DICT_PRINT	2 
+
+/* structures */
+struct _preprocess_dictionary_line {
+  char key[SRVBUFLEN];
+};
 
 struct preprocess {
   u_int32_t qnum;
@@ -52,12 +61,16 @@ struct _fsrc_queue {
   u_int32_t num;
 };
 
+/* typedefs */
+typedef int (*sql_preprocess_func) (struct db_cache *[], int *, int);
+typedef int (*P_preprocess_func) (struct chained_cache *[], int *, int);
+
 #if (!defined __PREPROCESS_C)
 #define EXT extern
 #else
 #define EXT
 #endif
-EXT void set_preprocess_funcs(char *, struct preprocess *);
+EXT void set_preprocess_funcs(char *, struct preprocess *, int);
 EXT int cond_qnum(struct db_cache *[], int *, int);
 EXT int check_minp(struct db_cache *[], int *, int);
 EXT int check_minb(struct db_cache *[], int *, int);
@@ -78,7 +91,8 @@ EXT int mandatory_invalidate(struct db_cache *[], int *, int);
 EXT int mandatory_validate(struct db_cache *[], int *, int);
 EXT void check_validity(struct db_cache *, int);
 
-EXT preprocess_func preprocess_funcs[2*N_FUNCS]; /* 20 */
+EXT sql_preprocess_func sql_preprocess_funcs[2*N_FUNCS]; /* 20 */
+EXT P_preprocess_func P_preprocess_funcs[2*N_FUNCS]; /* 20 */
 EXT struct preprocess prep;
 EXT struct _fsrc_queue fsrc_queue;
 #undef EXT

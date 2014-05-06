@@ -159,6 +159,9 @@ void sql_init_default_values(struct extra_primitives *extras)
   dbc_size = sizeof(struct db_cache);
 
   memset(&sql_writers, 0, sizeof(sql_writers));
+
+  /* handling purge preprocessor */
+  set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_SQL);
 }
 
 void sql_init_historical_acct(time_t now, struct insert_data *idata)

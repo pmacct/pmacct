@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -23,14 +23,22 @@
 
 #include "pmacct.h"
 #include "pmacct-data.h"
+#define __PLUGIN_COMMON_EXPORT
+#include "plugin_common.h"
+#undef __PLUGIN_COMMON_EXPORT
+#define __SQL_COMMON_EXPORT
 #include "sql_common.h"
+#undef __SQL_COMMON_EXPORT
+#include "preprocess.h"
+#include "preprocess-data.h"
 
-void set_preprocess_funcs(char *string, struct preprocess *prep)
+void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 {
   char *token, *sep, *key, *value;
-  int j = 0;
+  int dindex, err, j = 0;
 
-  memset(preprocess_funcs, 0, sizeof(preprocess_funcs));
+  memset(sql_preprocess_funcs, 0, sizeof(sql_preprocess_funcs));
+  memset(P_preprocess_funcs, 0, sizeof(P_preprocess_funcs));
   memset(prep, 0, sizeof(struct preprocess));
 
   if (!string) return;
@@ -40,7 +48,7 @@ void set_preprocess_funcs(char *string, struct preprocess *prep)
   while (token = extract_token(&string, ',')) {
     sep = strchr(token, '=');
     if (!sep) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): Malformed preprocess string. Discarded.\n", config.name, config.type);
+      Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: malformed input string. Ignored.\n", config.name, config.type);
       return; 
     }
     else {
@@ -49,59 +57,84 @@ void set_preprocess_funcs(char *string, struct preprocess *prep)
       value = sep+1;
     } 
 
+    /* validation against dictionaries */
+    if (dictionary == PREP_DICT_SQL) {
+      for (dindex = 0; strcmp(sql_prep_dict[dindex].key, ""); dindex++) {
+        if (!strcmp(sql_prep_dict[dindex].key, key)) {
+          err = FALSE;
+          break;
+        }
+        else err = E_NOTFOUND; /* key not found */
+      }
+    }
+    else if (dictionary == PREP_DICT_PRINT) {
+      for (dindex = 0; strcmp(print_prep_dict[dindex].key, ""); dindex++) {
+        if (!strcmp(print_prep_dict[dindex].key, key)) {
+          err = FALSE;
+          break;      
+        }           
+        else err = E_NOTFOUND; /* key not found */
+      }
+    }
+
+    if (err == E_NOTFOUND) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: unknown keyword %s. Ignored.\n", config.name, config.type, key);
+      continue;
+    }
+
     if (!strcmp(key, "qnum")) {
       prep->qnum = atoi(value);
-      if (!prep->qnum) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'qnum' value.\n", config.name, config.type);
+      if (!prep->qnum) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'qnum' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "minp")) {
       prep->minp = atoi(value);
-      if (!prep->minp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'minp' value.\n", config.name, config.type);
+      if (!prep->minp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'minp' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "minf")) {
       prep->minf = atoi(value);
-      if (!prep->minf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'minf' value.\n", config.name, config.type);
+      if (!prep->minf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'minf' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "minb")) {
       prep->minb = atoi(value);
-      if (!prep->minb) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'minb' value.\n", config.name, config.type);
+      if (!prep->minb) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'minb' value.\n", config.name, config.type);
     }
 
     else if (!strcmp(key, "maxp")) {
       prep->maxp = atoi(value);
-      if (!prep->maxp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'maxp' value.\n", config.name, config.type);
+      if (!prep->maxp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'maxp' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "maxf")) {
       prep->maxf = atoi(value);
-      if (!prep->maxf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'maxf' value.\n", config.name, config.type);
+      if (!prep->maxf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'maxf' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "maxb")) {
       prep->maxb = atoi(value);
-      if (!prep->maxb) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'maxb' value.\n", config.name, config.type);
+      if (!prep->maxb) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'maxb' value.\n", config.name, config.type);
     }
 
     else if (!strcmp(key, "maxbpp")) {
       prep->maxbpp = atoi(value);
-      if (!prep->maxbpp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'maxbpp' value.\n", config.name, config.type);
+      if (!prep->maxbpp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'maxbpp' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "maxppf")) {
       prep->maxppf = atoi(value);
-      if (!prep->maxppf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'maxppf' value.\n", config.name, config.type);
+      if (!prep->maxppf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'maxppf' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "minbpp")) {
       prep->minbpp = atoi(value);
-      if (!prep->minbpp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'minbpp' value.\n", config.name, config.type);
+      if (!prep->minbpp) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'minbpp' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "minppf")) {
       prep->minppf = atoi(value);
-      if (!prep->minppf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'minppf' value.\n", config.name, config.type);
+      if (!prep->minppf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'minppf' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "fss")) {
       prep->fss = atoi(value);
-      if (!prep->fss) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'fss' value.\n", config.name, config.type);
+      if (!prep->fss) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'fss' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "fsrc")) {
       prep->fsrc = atoi(value);
-      if (!prep->fsrc) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'fsrc' value.\n", config.name, config.type);
+      if (!prep->fsrc) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'fsrc' value.\n", config.name, config.type);
       else {
 	fsrc_queue.num = 0;
 	memset(&fsrc_queue.head, 0, sizeof(struct fsrc_queue_elem)); 
@@ -109,17 +142,17 @@ void set_preprocess_funcs(char *string, struct preprocess *prep)
     }
     else if (!strcmp(key, "usrf")) {
       prep->usrf = atoi(value);
-      if (!prep->usrf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'usrf' value.\n", config.name, config.type);
+      if (!prep->usrf) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'usrf' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "adjb")) {
       prep->adjb = atoi(value);
-      if (!prep->adjb) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'adjb' value.\n", config.name, config.type);
+      if (!prep->adjb) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'adjb' value.\n", config.name, config.type);
     }
     else if (!strcmp(key, "recover")) {
       prep->recover = atoi(value);
-      if (!prep->recover) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: Invalid 'recover' value.\n", config.name, config.type);
+      if (!prep->recover) Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: invalid 'recover' value.\n", config.name, config.type);
     }
-    else Log(LOG_ERR, "ERROR ( %s/%s ): Invalid preprocess key: '%s'. Ignored.\n", config.name, config.type, key);
+    else Log(LOG_ERR, "ERROR ( %s/%s ): preprocess: invalid key: '%s'. Ignored.\n", config.name, config.type, key);
   }
 
   /* Post checks: almost one check should have been specified */
@@ -128,116 +161,116 @@ void set_preprocess_funcs(char *string, struct preprocess *prep)
       (!prep->maxbpp) && (!prep->maxppf) && (!prep->minbpp) &&
       (!prep->minppf) && (!prep->fss) && (!prep->fsrc) &&
       (!prep->usrf) && (!prep->adjb)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): 'sql_preprocess' does not contain any check. Ignored.\n", config.name, config.type); 
+    Log(LOG_ERR, "ERROR ( %s/%s ): preprocess: does not contain any checks. Ignored.\n", config.name, config.type); 
     return;
   } 
 
   /* 1st step: insert conditionals */
   if (prep->qnum) {
-    preprocess_funcs[j] = cond_qnum;
+    sql_preprocess_funcs[j] = cond_qnum;
     j++;
   }
 
   /* 2nd step: invalidation of committed cache entries - if at
      least one check was specified; each check will selectively
      re-validate entries that pass tests successfully */
-  preprocess_funcs[j] = mandatory_invalidate;
+  sql_preprocess_funcs[j] = mandatory_invalidate;
   j++;
 
   /* 3rd step: insert checks */
   if (prep->minp) {
-    preprocess_funcs[j] = check_minp;
+    sql_preprocess_funcs[j] = check_minp;
     prep->num++;
     j++;
     prep->checkno++;
   } 
 
   if (prep->minf) {
-    preprocess_funcs[j] = check_minf;
+    sql_preprocess_funcs[j] = check_minf;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->minb) {
-    preprocess_funcs[j] = check_minb;
+    sql_preprocess_funcs[j] = check_minb;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->maxp) {
-    preprocess_funcs[j] = check_maxp;
+    sql_preprocess_funcs[j] = check_maxp;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->maxf) {
-    preprocess_funcs[j] = check_maxf;
+    sql_preprocess_funcs[j] = check_maxf;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->maxb) {
-    preprocess_funcs[j] = check_maxb;
+    sql_preprocess_funcs[j] = check_maxb;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->maxbpp) {
-    preprocess_funcs[j] = check_maxbpp;
+    sql_preprocess_funcs[j] = check_maxbpp;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->maxppf) {
-    preprocess_funcs[j] = check_maxppf;
+    sql_preprocess_funcs[j] = check_maxppf;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->minbpp) {
-    preprocess_funcs[j] = check_minbpp;
+    sql_preprocess_funcs[j] = check_minbpp;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->minppf) {
-    preprocess_funcs[j] = check_minppf;
+    sql_preprocess_funcs[j] = check_minppf;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->fss) {
-    preprocess_funcs[j] = check_fss;
+    sql_preprocess_funcs[j] = check_fss;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->fsrc) {
-    preprocess_funcs[j] = check_fsrc;
+    sql_preprocess_funcs[j] = check_fsrc;
     prep->num++;
     j++;
     prep->checkno++;
   }
 
   if (prep->usrf) {
-    preprocess_funcs[j] = action_usrf;
+    sql_preprocess_funcs[j] = action_usrf;
     prep->num++;
     j++;
     prep->actionno++;
   }
 
   if (prep->adjb) {
-    preprocess_funcs[j] = action_adjb;
+    sql_preprocess_funcs[j] = action_adjb;
     prep->num++;
     j++;
     prep->actionno++;
@@ -248,7 +281,7 @@ void set_preprocess_funcs(char *string, struct preprocess *prep)
      - if in 'any' mode, any entry with 'points >= 1' is valid
      - if in 'all' mode, any entry with 'points == number of conditions' is valid 
   */
-  preprocess_funcs[j] = mandatory_validate;
+  sql_preprocess_funcs[j] = mandatory_validate;
   j++;
 }
 

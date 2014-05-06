@@ -20,9 +20,16 @@
 */
 
 /* includes */
+#if (!defined __SQL_COMMON_EXPORT)
 #include <sys/poll.h>
 #include "net_aggr.h"
 #include "ports_aggr.h"
+
+/* including plugin_common.h exporteable part as pre-requisite for preprocess.h inclusion later */
+#define __PLUGIN_COMMON_EXPORT
+#include "plugin_common.h"
+#undef __PLUGIN_COMMON_EXPORT
+#endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
 
 /* defines */
 #define DEFAULT_DB_REFRESH_TIME 60
@@ -153,7 +160,6 @@ struct logfile {
 };
 
 typedef void (*dbop_handler) (const struct db_cache *, struct insert_data *, int, char **, char **);
-typedef int (*preprocess_func) (struct db_cache *[], int *, int);
 
 struct frags {
   dbop_handler handler;
@@ -199,7 +205,8 @@ struct sqlfunc_cb_registry {
   /* flush and query wrapper are common for all SQL plugins */
 };
 
-/* the following include depends on structure definition above */
+#if (!defined __SQL_COMMON_EXPORT)
+
 #include "log_templates.h"
 #include "preprocess.h"
 
@@ -385,4 +392,4 @@ EXT struct largebuf logbuf;
 EXT struct largebuf envbuf;
 EXT time_t now; /* PostgreSQL */
 #undef EXT
-
+#endif /* #if (!defined __SQL_COMMON_EXPORT) */

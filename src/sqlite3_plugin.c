@@ -90,9 +90,6 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   idata.num_primitives = SQLI_compose_static_queries();
   glob_num_primitives = idata.num_primitives; 
 
-  /* handling purge preprocessor */
-  set_preprocess_funcs(config.sql_preprocess, &prep); 
-
   /* setting up environment variables */
   SQL_SetENV();
 
@@ -374,8 +371,8 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   memset(&dummy_data, 0, sizeof(dummy_data));
 
-  for (j = 0, stop = 0; (!stop) && preprocess_funcs[j]; j++)
-    stop = preprocess_funcs[j](queue, &index, j); 
+  for (j = 0, stop = 0; (!stop) && sql_preprocess_funcs[j]; j++)
+    stop = sql_preprocess_funcs[j](queue, &index, j); 
   if (config.what_to_count & COUNT_CLASS)
     sql_invalidate_shadow_entries(queue, &index);
   idata->ten = index;

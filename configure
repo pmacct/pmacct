@@ -3885,7 +3885,7 @@ EOF
 fi
 
   if test x"$USING_SQL" = x"yes"; then
-    PLUGINS="${PLUGINS} sql_common.c sql_handlers.c log_templates.c preprocess.c"
+    PLUGINS="${PLUGINS} sql_common.c sql_handlers.c log_templates.c"
     LIBS="${LIBS} -lm -lz"
   fi
 
