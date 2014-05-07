@@ -63,6 +63,7 @@ struct chained_cache {
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
   u_int8_t valid;
+  u_int8_t prep_valid;
   struct timeval basetime;
   struct chained_cache *next;
 };

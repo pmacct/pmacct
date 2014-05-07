@@ -242,7 +242,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
   char *as_path, *bgp_comm, default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
-  int qn = 0, i, j, db_status, batch_idx, go_to_pending;
+  int qn = 0, i, j, stop, db_status, batch_idx, go_to_pending;
   time_t stamp, start, duration;
   char current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs;
@@ -321,6 +321,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
+  for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
+    stop = P_preprocess_funcs[j](queue, &index, j);
+
   memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
 
@@ -343,6 +346,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
   for (j = 0, batch_idx = 0; j < index; j++) {
     go_to_pending = FALSE;
+
+    if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
     if (dyn_table) {
       time_t stamp = 0;

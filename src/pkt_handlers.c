@@ -2758,10 +2758,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 	    sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
 	  } 
         }
-        if (sentry) {
-	  pdata->primitives.sampling_rate = sentry->sample_pool;
-	  printf("CI PASSO 3: %u\n", sentry->sample_pool);
-        }
+        if (sentry) pdata->primitives.sampling_rate = sentry->sample_pool;
       }
       /* SAMPLING_INTERVAL part of the NetFlow v9/IPFIX record seems to be reality, ie. FlowMon by Invea-Tech */
       else if (tpl->tpl[NF9_SAMPLING_INTERVAL].len || tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len) {

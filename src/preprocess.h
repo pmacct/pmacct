@@ -86,10 +86,13 @@ EXT int check_fss(struct db_cache *[], int *, int);
 EXT int check_fsrc(struct db_cache *[], int *, int);
 EXT int action_usrf(struct db_cache *[], int *, int);
 EXT int action_adjb(struct db_cache *[], int *, int);
+EXT int P_check_minp(struct chained_cache *[], int *, int);
 
 EXT int mandatory_invalidate(struct db_cache *[], int *, int);
 EXT int mandatory_validate(struct db_cache *[], int *, int);
 EXT void check_validity(struct db_cache *, int);
+EXT int P_mandatory_invalidate(struct chained_cache *[], int *, int);
+EXT void P_check_validity(struct chained_cache *, int);
 
 EXT sql_preprocess_func sql_preprocess_funcs[2*N_FUNCS]; /* 20 */
 EXT P_preprocess_func P_preprocess_funcs[2*N_FUNCS]; /* 20 */

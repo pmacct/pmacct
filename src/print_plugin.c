@@ -257,7 +257,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
-  int j, is_event = FALSE, qn = 0, go_to_pending;
+  int j, stop, is_event = FALSE, qn = 0, go_to_pending;
   time_t start, duration;
   char tmpbuf[LONGLONGSRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs, elem_prim_ptrs;
@@ -280,6 +280,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   memset(&dummy_data, 0, sizeof(dummy_data));
   memset(&elem_prim_ptrs, 0, sizeof(elem_prim_ptrs));
   memset(&elem_dummy_data, 0, sizeof(elem_dummy_data));
+
+
+  for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
+    stop = P_preprocess_funcs[j](queue, &index, j);
 
   memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
@@ -326,6 +330,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   for (j = 0; j < index; j++) {
     int count = 0;
     go_to_pending = FALSE;
+
+    if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
     if (dyn_table) {
       time_t stamp = 0;

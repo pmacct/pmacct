@@ -671,29 +671,30 @@ DESC:		specifies time interval at which the executable specified by 'sql_trigger
 		or '1h', '14400' or '4h', '86400' or '1d', '1w', '1M'; eg. if '3600' or '1h' is selected,
 		the executable will be fired each hour).
 
-KEY:		sql_preprocess
+KEY:		[ sql_preprocess | print_preprocess | mongo_preprocess | amqp_preprocess ]
 DESC:		allows to process aggregates (via a comma-separated list of conditionals and checks) while
-		purging data to the RDBMS thus resulting in a powerful selection tier; aggregates filtered
-		out may be just discarded or saved through the recovery mechanism (if enabled). The set of
-		available preprocessing directives follows:
+		purging data to the backend thus resulting in a powerful selection tier; aggregates filtered
+		out may be just discarded or saved through the recovery mechanism (if enabled, if supported
+		by the backend). The set of available preprocessing directives follows:
 		
 		KEY: qnum
 		DESC: conditional. Subsequent checks will be evaluated only if the number of queries to be
-		      created during the current cache-to-DB purging event is '>=' qnum value. 
+		      created during the current cache-to-DB purging event is '>=' qnum value. SQL plugins
+		      only. 
 
 		KEY: minp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of packets is '>=' minp value. 
+		      only if the number of packets is '>=' minp value. All plugins. 
 
 		KEY: minf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of flows is '>=' minf value.
+		      only if the number of flows is '>=' minf value. SQL plugins only.
 
 		KEY: minb
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
 		      only if the bytes counter is '>=' minb value. An interesting idea is to set its value 
 		      to a fraction of the link capacity. Remember that you have also a timeframe reference:
-		      the 'sql_refresh_time' seconds.
+		      the 'sql_refresh_time' seconds. SQL plugins only.
 
 		      For example, given the following parameters:
 		      Link Capacity = 8Mbit/s, THreshold = 0.1%, TImeframe = 60s 
@@ -704,31 +705,31 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 
 		KEY: maxp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of packets is '<' maxp value.
+		      only if the number of packets is '<' maxp value. SQL plugins only.
 
 		KEY: maxf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of flows is '<' maxf value.
+		      only if the number of flows is '<' maxf value. SQL plugins only.
 
 		KEY: maxb
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the bytes counter is '<' maxb value. 
+		      only if the bytes counter is '<' maxb value. SQL plugins only. 
 
 		KEY: maxbpp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of bytes per packet is '<' maxbpp value.
+		      only if the number of bytes per packet is '<' maxbpp value. SQL plugins only.
 
 		KEY: maxppf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of packets per flow is '<' maxppf value.
+		      only if the number of packets per flow is '<' maxppf value. SQL plugins only.
 
 		KEY: minbpp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of bytes per packet is '>=' minbpp value.
+		      only if the number of bytes per packet is '>=' minbpp value. SQL plugins only.
 
 		KEY: minppf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of packets per flow is '>=' minppf value.
+		      only if the number of packets per flow is '>=' minppf value. SQL plugins only.
 
 		KEY: fss 
 		DESC: check. Enforces flow (aggregate) size dependent sampling, computed against the bytes
@@ -743,6 +744,7 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 		      http://www.research.att.com/~duffield/pubs/DLT01-usage.pdf and N.G. Duffield and C. Lund,
 		      "Predicting Resource Usage and Estimation Accuracy in an IP Flow Measurement Collection
 		      Infrastructure", http://www.research.att.com/~duffield/pubs/p313-duffield-lund.pdf
+		      SQL plugins only.
 
 		KEY: fsrc
 		DESC: check. Enforces flow (aggregate) sampling under hard resource constraints, computed
@@ -753,6 +755,7 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 		      For further references: http://www.research.att.com/projects/flowsamp/ and specifically
 		      to the paper: N.G. Duffield, C. Lund, M. Thorup, "Flow Sampling Under Hard Resource
 		      Constraints", http://www.research.att.com/~duffield/pubs/DLT03-constrained.pdf 
+		      SQL plugins only.
 
 		KEY: usrf 
 		DESC: action. Applies the renormalization factor 'usrf' to counters of each aggregate. Its use 
@@ -761,19 +764,20 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 		      Cisco and Juniper). The factor is applied to recovered aggregates also. It would be also
 		      adviceable to hold the equality 'sql_refresh_time' = 'sql_history'. Before using this action
 		      to renormalize counters generated by sFlow, take also a read of the 'sfacctd_renormalize'
-		      key.
+		      key. SQL plugins only.
 
 		KEY: adjb 
 		DESC: action. Adds (or subtracts) 'adjb' bytes to the bytes counter multiplied by the number of
 		      packet in each aggregate. This is a particularly useful action when - for example - fixed
 		      lower (link, llc, etc.) layer sizes need to be included into the bytes counter (as explained
-		      by Q7 in FAQS document).
+		      by Q7 in FAQS document). SQL plugins only.
 
 		KEY: recover
 		DESC: action. If previously evaluated checks have marked the aggregate as invalid, a positive
 		      'recover' value makes the packet to be handled through the recovery mechanism (if enabled).  
+		      SQL plugins only.
 
-KEY:		sql_preprocess_type
+KEY:		[ sql_preprocess_type | print_preprocess_type | mongo_preprocess_type | amqp_preprocess_type ]
 VALUES:		[ any | all ]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
 		are valid if they just match one of the checks (any) or all of them (all) (default: any).

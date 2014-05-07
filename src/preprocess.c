@@ -35,7 +35,7 @@
 void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 {
   char *token, *sep, *key, *value;
-  int dindex, err, j = 0;
+  int dindex, err, sql_idx = 0, p_idx = 0;
 
   memset(sql_preprocess_funcs, 0, sizeof(sql_preprocess_funcs));
   memset(P_preprocess_funcs, 0, sizeof(P_preprocess_funcs));
@@ -167,113 +167,155 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 
   /* 1st step: insert conditionals */
   if (prep->qnum) {
-    sql_preprocess_funcs[j] = cond_qnum;
-    j++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = cond_qnum;
+      sql_idx++;
+    }
   }
 
   /* 2nd step: invalidation of committed cache entries - if at
      least one check was specified; each check will selectively
      re-validate entries that pass tests successfully */
-  sql_preprocess_funcs[j] = mandatory_invalidate;
-  j++;
+  if (dictionary == PREP_DICT_SQL) {
+    sql_preprocess_funcs[sql_idx] = mandatory_invalidate;
+    sql_idx++;
+  }
+  else if (dictionary == PREP_DICT_PRINT) {
+    P_preprocess_funcs[p_idx] = P_mandatory_invalidate;
+    p_idx++;
+  }
 
   /* 3rd step: insert checks */
   if (prep->minp) {
-    sql_preprocess_funcs[j] = check_minp;
-    prep->num++;
-    j++;
-    prep->checkno++;
-  } 
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_minp;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_minp;
+      prep->num++;
+      p_idx++;
+      prep->checkno++;
+    }
+  }
 
   if (prep->minf) {
-    sql_preprocess_funcs[j] = check_minf;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_minf;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->minb) {
-    sql_preprocess_funcs[j] = check_minb;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_minb;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->maxp) {
-    sql_preprocess_funcs[j] = check_maxp;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_maxp;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->maxf) {
-    sql_preprocess_funcs[j] = check_maxf;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_maxf;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->maxb) {
-    sql_preprocess_funcs[j] = check_maxb;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_maxb;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->maxbpp) {
-    sql_preprocess_funcs[j] = check_maxbpp;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_maxbpp;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->maxppf) {
-    sql_preprocess_funcs[j] = check_maxppf;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_maxppf;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->minbpp) {
-    sql_preprocess_funcs[j] = check_minbpp;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_minbpp;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->minppf) {
-    sql_preprocess_funcs[j] = check_minppf;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_minppf;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->fss) {
-    sql_preprocess_funcs[j] = check_fss;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_fss;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->fsrc) {
-    sql_preprocess_funcs[j] = check_fsrc;
-    prep->num++;
-    j++;
-    prep->checkno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = check_fsrc;
+      prep->num++;
+      sql_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->usrf) {
-    sql_preprocess_funcs[j] = action_usrf;
-    prep->num++;
-    j++;
-    prep->actionno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = action_usrf;
+      prep->num++;
+      sql_idx++;
+      prep->actionno++;
+    }
   }
 
   if (prep->adjb) {
-    sql_preprocess_funcs[j] = action_adjb;
-    prep->num++;
-    j++;
-    prep->actionno++;
+    if (dictionary == PREP_DICT_SQL) {
+      sql_preprocess_funcs[sql_idx] = action_adjb;
+      prep->num++;
+      sql_idx++;
+      prep->actionno++;
+    }
   }
 
   /* 
@@ -281,8 +323,10 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
      - if in 'any' mode, any entry with 'points >= 1' is valid
      - if in 'all' mode, any entry with 'points == number of conditions' is valid 
   */
-  sql_preprocess_funcs[j] = mandatory_validate;
-  j++;
+  if (dictionary == PREP_DICT_SQL) {
+    sql_preprocess_funcs[sql_idx] = mandatory_validate;
+    sql_idx++;
+  }
 }
 
 void check_validity(struct db_cache *entry, int seq)
@@ -648,4 +692,53 @@ int mandatory_validate(struct db_cache *queue[], int *num, int seq)
   }
 
   return FALSE;
+}
+
+int P_mandatory_invalidate(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  /* Two validation mechanisms are used: if ALL checks have to be
+     successful, prep_valid is a) initializated to a base value,
+     b) incremented at every test concluding positively and c)
+     checked for prep_valid == seq; if instead ANY check has to
+     be successful, a) prep_valid is initializeted to zero, b) is
+     brought to a positive value by the first positive test and c)
+     finally checked for a non-zero value */
+  for (x = 0; x < *num; x++) {
+    if (config.sql_preprocess_type == 0) queue[x]->prep_valid = 0;
+    else queue[x]->prep_valid = seq;
+
+    if (prep.checkno && queue[x]->valid == PRINT_CACHE_COMMITTED)
+      queue[x]->valid = PRINT_CACHE_FREE;
+  }
+
+  return FALSE;
+}
+
+int P_check_minp(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->packet_counter >= prep.minp) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+void P_check_validity(struct chained_cache *entry, int seq)
+{
+  if (config.sql_preprocess_type == 0) {
+    if (entry->prep_valid > 0 && entry->valid == PRINT_CACHE_FREE)
+      entry->valid = PRINT_CACHE_COMMITTED;
+  }
+  else {
+    if (entry->prep_valid == seq) entry->valid = PRINT_CACHE_COMMITTED;
+    else entry->valid = PRINT_CACHE_FREE;
+  }
 }
