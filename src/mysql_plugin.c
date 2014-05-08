@@ -489,8 +489,8 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (pqq_ptr) goto start;
   
   idata->elap_time = time(NULL)-start; 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u, ET: %u) ***\n", 
-		config.name, config.type, writer_pid, idata->qn, idata->elap_time); 
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n", 
+		config.name, config.type, writer_pid, idata->qn, index, idata->elap_time); 
 
   if (config.sql_trigger_exec) {
     if (!config.debug) idata->elap_time = time(NULL)-start;

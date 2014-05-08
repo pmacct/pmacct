@@ -374,8 +374,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   amqp_destroy_connection(amqp_conn);
 
   duration = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, qn, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
+		config.name, config.type, writer_pid, qn, index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
