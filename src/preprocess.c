@@ -208,6 +208,12 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
       sql_idx++;
       prep->checkno++;
     }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_minf;
+      prep->num++;
+      p_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->minb) {
@@ -215,6 +221,12 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
       sql_preprocess_funcs[sql_idx] = check_minb;
       prep->num++;
       sql_idx++;
+      prep->checkno++;
+    }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_minb;
+      prep->num++;
+      p_idx++;
       prep->checkno++;
     }
   }
@@ -271,6 +283,12 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
       sql_idx++;
       prep->checkno++;
     }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_minbpp;
+      prep->num++;
+      p_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->minppf) {
@@ -278,6 +296,12 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
       sql_preprocess_funcs[sql_idx] = check_minppf;
       prep->num++;
       sql_idx++;
+      prep->checkno++;
+    }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_minppf;
+      prep->num++;
+      p_idx++;
       prep->checkno++;
     }
   }
@@ -723,6 +747,68 @@ int P_check_minp(struct chained_cache *queue[], int *num, int seq)
   for (x = 0; x < *num; x++) {
     if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->packet_counter >= prep.minp) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+int P_check_minb(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->bytes_counter >= prep.minb) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+int P_check_minf(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->flow_counter >= prep.minf) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+int P_check_minbpp(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->bytes_counter/queue[x]->packet_counter >= prep.minbpp) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+int P_check_minppf(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  if (!queue[0]->flow_counter) return FALSE;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->packet_counter/queue[x]->flow_counter >= prep.minppf) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
     }

@@ -688,13 +688,13 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 
 		KEY: minf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of flows is '>=' minf value. SQL plugins only.
+		      only if the number of flows is '>=' minf value. All plugins.
 
 		KEY: minb
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
 		      only if the bytes counter is '>=' minb value. An interesting idea is to set its value 
 		      to a fraction of the link capacity. Remember that you have also a timeframe reference:
-		      the 'sql_refresh_time' seconds. SQL plugins only.
+		      the 'sql_refresh_time' seconds. All plugins. 
 
 		      For example, given the following parameters:
 		      Link Capacity = 8Mbit/s, THreshold = 0.1%, TImeframe = 60s 
@@ -725,11 +725,11 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 
 		KEY: minbpp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of bytes per packet is '>=' minbpp value. SQL plugins only.
+		      only if the number of bytes per packet is '>=' minbpp value. All plugins. 
 
 		KEY: minppf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of packets per flow is '>=' minppf value. SQL plugins only.
+		      only if the number of packets per flow is '>=' minppf value. All plugins. 
 
 		KEY: fss 
 		DESC: check. Enforces flow (aggregate) size dependent sampling, computed against the bytes

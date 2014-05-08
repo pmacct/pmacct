@@ -87,6 +87,10 @@ EXT int check_fsrc(struct db_cache *[], int *, int);
 EXT int action_usrf(struct db_cache *[], int *, int);
 EXT int action_adjb(struct db_cache *[], int *, int);
 EXT int P_check_minp(struct chained_cache *[], int *, int);
+EXT int P_check_minb(struct chained_cache *[], int *, int);
+EXT int P_check_minf(struct chained_cache *[], int *, int);
+EXT int P_check_minbpp(struct chained_cache *[], int *, int);
+EXT int P_check_minppf(struct chained_cache *[], int *, int);
 
 EXT int mandatory_invalidate(struct db_cache *[], int *, int);
 EXT int mandatory_validate(struct db_cache *[], int *, int);

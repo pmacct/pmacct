@@ -240,7 +240,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
   char default_amqp_routing_key[] = "acct";
-  int i, j, stop, amqp_status, batch_idx, is_routing_key_dyn = FALSE;
+  int i, j, stop, amqp_status, batch_idx, is_routing_key_dyn = FALSE, qn = 0;
   time_t start, duration;
   pid_t writer_pid = getpid();
 
@@ -365,6 +365,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       } 
 
       free(json_str);
+      qn++;
     }
   }
 
@@ -374,7 +375,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, index, duration);
+		config.name, config.type, writer_pid, qn, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
