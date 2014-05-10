@@ -356,7 +356,7 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 void check_validity(struct db_cache *entry, int seq)
 {
   if (config.sql_preprocess_type == 0) {
-    if (entry->prep_valid > 0 && entry->valid == SQL_CACHE_FREE)
+    if (entry->prep_valid > 0 && entry->valid == SQL_CACHE_INVALID)
       entry->valid = SQL_CACHE_COMMITTED;
   }
   else {
@@ -376,7 +376,7 @@ int check_minp(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->packet_counter >= prep.minp) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -391,7 +391,7 @@ int check_minb(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->bytes_counter >= prep.minb) queue[x]->prep_valid++; 
 
       check_validity(queue[x], seq);
@@ -406,7 +406,7 @@ int check_minf(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->flows_counter >= prep.minf) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -421,7 +421,7 @@ int check_maxp(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->packet_counter < prep.maxp) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -436,7 +436,7 @@ int check_maxb(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->bytes_counter < prep.maxb) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -451,7 +451,7 @@ int check_maxf(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->flows_counter < prep.maxf) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -466,7 +466,7 @@ int check_maxbpp(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->bytes_counter/queue[x]->packet_counter < prep.maxbpp) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -483,7 +483,7 @@ int check_maxppf(struct db_cache *queue[], int *num, int seq)
   if (!queue[0]->flows_counter) return FALSE;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->packet_counter/queue[x]->flows_counter < prep.maxppf) queue[x]->prep_valid++;
 
       check_validity(queue[x], seq);
@@ -498,7 +498,7 @@ int check_minbpp(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->bytes_counter/queue[x]->packet_counter >= prep.minbpp) queue[x]->prep_valid++; 
 
       check_validity(queue[x], seq);
@@ -515,7 +515,7 @@ int check_minppf(struct db_cache *queue[], int *num, int seq)
   if (!queue[0]->flows_counter) return FALSE;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       if (queue[x]->packet_counter/queue[x]->flows_counter >= prep.minppf) queue[x]->prep_valid++; 
 
       check_validity(queue[x], seq);
@@ -533,7 +533,7 @@ int check_fss(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       res = (float) queue[x]->bytes_counter/t;
       if (res < 1) p += res;
       if (p >= 1 || res >= 1) {
@@ -572,7 +572,7 @@ int check_fsrc(struct db_cache *queue[], int *num, int seq)
   /* no need to sample */ 
   if (*num <= prep.fsrc) {
     for (x = 0; x < *num; x++) {
-      if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+      if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
         queue[x]->prep_valid++;
         check_validity(queue[x], seq);
       }
@@ -582,7 +582,7 @@ int check_fsrc(struct db_cache *queue[], int *num, int seq)
 
   /* 1st stage: computing the m+1==max flows with highest z */ 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == SQL_CACHE_FREE || queue[x]->valid == SQL_CACHE_COMMITTED) {
+    if (queue[x]->valid == SQL_CACHE_INVALID || queue[x]->valid == SQL_CACHE_COMMITTED) {
       gettimeofday(&tv, NULL);
       srandom((unsigned int)tv.tv_usec);
       w = (float) (random()/(RAND_MAX+1.0));
@@ -693,7 +693,7 @@ int mandatory_invalidate(struct db_cache *queue[], int *num, int seq)
     else queue[x]->prep_valid = seq;
 
     if (prep.checkno && queue[x]->valid == SQL_CACHE_COMMITTED)
-      queue[x]->valid = SQL_CACHE_FREE; 
+      queue[x]->valid = SQL_CACHE_INVALID; 
   }
 
   return FALSE;
@@ -709,10 +709,7 @@ int mandatory_validate(struct db_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    // if (!prep.checkno) queue[x]->valid = SQL_CACHE_INUSE; 
-    // if (config.sql_preprocess_type == 1 && (queue[x]->valid-1) < (prep.num-prep.actionno))
-    //   queue[x]->valid = SQL_CACHE_FREE; 
-    if (queue[x]->valid == SQL_CACHE_FREE && prep.recover) queue[x]->valid = SQL_CACHE_ERROR;
+    if (queue[x]->valid == SQL_CACHE_INVALID && prep.recover) queue[x]->valid = SQL_CACHE_ERROR;
   }
 
   return FALSE;
@@ -734,7 +731,7 @@ int P_mandatory_invalidate(struct chained_cache *queue[], int *num, int seq)
     else queue[x]->prep_valid = seq;
 
     if (prep.checkno && queue[x]->valid == PRINT_CACHE_COMMITTED)
-      queue[x]->valid = PRINT_CACHE_FREE;
+      queue[x]->valid = PRINT_CACHE_INVALID;
   }
 
   return FALSE;
@@ -745,7 +742,7 @@ int P_check_minp(struct chained_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->packet_counter >= prep.minp) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
@@ -760,7 +757,7 @@ int P_check_minb(struct chained_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->bytes_counter >= prep.minb) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
@@ -775,7 +772,7 @@ int P_check_minf(struct chained_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->flow_counter >= prep.minf) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
@@ -790,7 +787,7 @@ int P_check_minbpp(struct chained_cache *queue[], int *num, int seq)
   int x;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->bytes_counter/queue[x]->packet_counter >= prep.minbpp) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
@@ -807,7 +804,7 @@ int P_check_minppf(struct chained_cache *queue[], int *num, int seq)
   if (!queue[0]->flow_counter) return FALSE;
 
   for (x = 0; x < *num; x++) {
-    if (queue[x]->valid == PRINT_CACHE_FREE || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->packet_counter/queue[x]->flow_counter >= prep.minppf) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
@@ -820,7 +817,7 @@ int P_check_minppf(struct chained_cache *queue[], int *num, int seq)
 void P_check_validity(struct chained_cache *entry, int seq)
 {
   if (config.sql_preprocess_type == 0) {
-    if (entry->prep_valid > 0 && entry->valid == PRINT_CACHE_FREE)
+    if (entry->prep_valid > 0 && entry->valid == PRINT_CACHE_INVALID)
       entry->valid = PRINT_CACHE_COMMITTED;
   }
   else {

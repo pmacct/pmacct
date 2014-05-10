@@ -427,10 +427,67 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
 
     P_cache_flush(queries_queue, qq_ptr);
     qq_ptr = FALSE;
+    if (pqq_ptr) {
+      P_cache_insert_pending(pending_queries_queue, pqq_ptr, pqq_container);
+      pqq_ptr = 0;
+    }
 
     /* try to insert again */
     (*insert_func)(prim_ptrs);
   }
+}
+
+void P_cache_insert_pending(struct chained_cache *queue[], int index, struct chained_cache *container)
+{
+  struct chained_cache *cache_ptr;
+  struct primitives_ptrs prim_ptrs;
+  struct pkt_data pdata;
+  unsigned int modulo, j;
+
+  if (!index || !container) return;
+
+  for (j = 0; j < index; j++) {
+    memset(&pdata, 0, sizeof(pdata));
+    memcpy(&pdata.primitives, &queue[j]->primitives, pp_size);
+    prim_ptrs.data = &pdata;
+    prim_ptrs.pbgp = queue[j]->pbgp;
+    prim_ptrs.pnat = queue[j]->pnat;
+    prim_ptrs.pmpls = queue[j]->pmpls;
+    prim_ptrs.pcust = queue[j]->pcust;
+
+    modulo = P_cache_modulo(&prim_ptrs);
+    cache_ptr = &cache[modulo];
+
+    start:
+    if (cache_ptr->valid == PRINT_CACHE_INUSE) {
+      if (cache_ptr->next) {
+        cache_ptr = cache_ptr->next;
+        goto start;
+      }
+      else {
+        cache_ptr = P_cache_attach_new_node(cache_ptr);
+        if (!cache_ptr) {
+          Log(LOG_WARNING, "WARN ( %s/%s ): Finished cache entries. Pending entries will be lost.\n", config.name, config.type);
+          Log(LOG_WARNING, "WARN ( %s/%s ): You may want to set a larger print_cache_entries value.\n", config.name, config.type);
+          break;
+        }
+        else {
+          queries_queue[qq_ptr] = cache_ptr;
+          qq_ptr++;
+        }
+      }
+    }
+    else {
+      queries_queue[qq_ptr] = cache_ptr;
+      qq_ptr++;
+    }
+
+    memcpy(cache_ptr, &container[j], dbc_size); 
+    cache_ptr->valid = PRINT_CACHE_INUSE;
+    cache_ptr->next = NULL;
+  }
+
+  free(container);
 }
 
 void P_cache_handle_flush_event(struct ports_table *pt)
@@ -461,6 +518,11 @@ void P_cache_handle_flush_event(struct ports_table *pt)
   qq_ptr = FALSE;
   memset(&new_basetime, 0, sizeof(new_basetime));
 
+  if (pqq_ptr) {
+    P_cache_insert_pending(pending_queries_queue, pqq_ptr, pqq_container);
+    pqq_ptr = 0;
+  }
+
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
     load_ports(config.ports_file, pt);
@@ -480,25 +542,29 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
   else commit_basetime.tv_sec = basetime.tv_sec; 
 
   /* mark committed entries as such */
-  /* XXX: can't mark just yet: missing implementation of handling pending queries queue entries */ 
-  /*
   if (!exiting) {
     for (j = 0, pqq_ptr = 0; j < index; j++) {
-      if (commit_basetime.tv_sec >= queue[j]->basetime.tv_sec) {
+      if (commit_basetime.tv_sec < queue[j]->basetime.tv_sec) {
         pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
       else queue[j]->valid = PRINT_CACHE_COMMITTED;
+    }
+
+    pqq_container = (struct chained_cache *) malloc(pqq_ptr*dbc_size);
+    
+    /* we copy un-committed elements to a container structure for re-insertion
+       in cache. As we copy elements out of the cache we mark entries as free */
+    for (j = 0; j < pqq_ptr; j++) {
+      memcpy(&pqq_container[j], pending_queries_queue[j], dbc_size);
+      pending_queries_queue[j]->valid = PRINT_CACHE_FREE;
+      pending_queries_queue[j] = &pqq_container[j];
     }
   }
   else {
     for (j = 0, pqq_ptr = 0; j < index; j++)
       queue[j]->valid = PRINT_CACHE_COMMITTED;
   }
-  */
-
-  for (j = 0, pqq_ptr = 0; j < index; j++)
-    queue[j]->valid = PRINT_CACHE_COMMITTED;
 
   /* Imposing maximum number of writers */
   sql_writers.active -= MIN(sql_writers.active, local_retired);

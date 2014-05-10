@@ -40,6 +40,7 @@
 #define PRINT_CACHE_FREE	0
 #define PRINT_CACHE_COMMITTED	1
 #define PRINT_CACHE_INUSE	2 
+#define PRINT_CACHE_INVALID	3 
 #define PRINT_CACHE_ERROR	255
 
 /* structures */
@@ -90,6 +91,7 @@ EXT void P_sum_mac_insert(struct primitives_ptrs *);
 #endif
 EXT struct chained_cache *P_cache_search(struct primitives_ptrs *);
 EXT void P_cache_insert(struct primitives_ptrs *);
+EXT void P_cache_insert_pending(struct chained_cache *[], int, struct chained_cache *);
 EXT void P_cache_mark_flush(struct chained_cache *[], int, int);
 EXT void P_cache_flush(struct chained_cache *[], int);
 EXT void P_cache_handle_flush_event(struct ports_table *);
@@ -102,7 +104,7 @@ EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function
 EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
-EXT struct chained_cache **queries_queue, **pending_queries_queue;
+EXT struct chained_cache **queries_queue, **pending_queries_queue, *pqq_container;
 EXT struct timeval flushtime;
 EXT int qq_ptr, pqq_ptr, pp_size, pb_size, pn_size, pm_size, pc_size;
 EXT int dbc_size, quit; 
