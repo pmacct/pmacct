@@ -3454,7 +3454,7 @@ fi
 #define WITH_RABBITMQ 1
 EOF
 
-    PLUGINS="${PLUGINS} amqp_plugin.c"
+    PLUGINS="${PLUGINS} amqp_common.c amqp_plugin.c"
     ;;
   no)
     echo "$ac_t""no" 1>&6

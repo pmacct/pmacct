@@ -26,6 +26,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
+#include "amqp_common.h"
 #include "amqp_plugin.h"
 #include "ip_flow.h"
 #include "classifier.h"
@@ -54,6 +55,8 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
+  struct p_amqp_host amqp_host;
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -66,6 +69,8 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   timeout = config.sql_refresh_time*1000;
 
+  // XXX
+  p_amqp_init_host(&amqp_host);
   if (!config.sql_user) config.sql_user = rabbitmq_user;
   if (!config.sql_passwd) config.sql_passwd = rabbitmq_pwd;
 

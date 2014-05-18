@@ -1042,7 +1042,7 @@ dnl USING_SQL="yes"
     fi
 
     AC_DEFINE(WITH_RABBITMQ, 1)
-    PLUGINS="${PLUGINS} amqp_plugin.c"
+    PLUGINS="${PLUGINS} amqp_common.c amqp_plugin.c"
     ;;
   no)
     AC_MSG_RESULT(no)
