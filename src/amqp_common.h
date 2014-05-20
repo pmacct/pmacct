@@ -28,13 +28,16 @@ struct p_amqp_host {
   char *user;
   char *passwd;
   char *exchange;
-  char *exhange_type;
+  char *exchange_type;
   char *routing_key;
+  char *host;
   int persistent_msg;
 
   amqp_connection_state_t conn;
   amqp_socket_t *socket;
   amqp_rpc_reply_t ret;
+  struct amqp_basic_properties_t_ msg_props;
+  int status;
 };
 
 /* prototypes */
@@ -45,6 +48,18 @@ struct p_amqp_host {
 #endif
 
 EXT void p_amqp_init_host(struct p_amqp_host *);
+EXT void p_amqp_set_user(struct p_amqp_host *, char *);
+EXT void p_amqp_set_passwd(struct p_amqp_host *, char *);
+EXT void p_amqp_set_exchange(struct p_amqp_host *, char *);
+EXT void p_amqp_set_routing_key(struct p_amqp_host *, char *);
+EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
+EXT void p_amqp_set_host(struct p_amqp_host *, char *);
+EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
+
+EXT int p_amqp_connect(struct p_amqp_host *);
+EXT int p_amqp_publish(struct p_amqp_host *, char *);
+EXT void p_amqp_close(struct p_amqp_host *);
 
 /* global vars */
+
 #undef EXT

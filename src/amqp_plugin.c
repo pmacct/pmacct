@@ -55,8 +55,6 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
-  struct p_amqp_host amqp_host;
-
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -69,10 +67,12 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   timeout = config.sql_refresh_time*1000;
 
-  // XXX
-  p_amqp_init_host(&amqp_host);
   if (!config.sql_user) config.sql_user = rabbitmq_user;
   if (!config.sql_passwd) config.sql_passwd = rabbitmq_pwd;
+
+  p_amqp_init_host(&amqpp_amqp_host);
+  p_amqp_set_user(&amqpp_amqp_host, config.sql_user);
+  p_amqp_set_passwd(&amqpp_amqp_host, config.sql_passwd);
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -240,20 +240,16 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   char *empty_pcust = NULL;
-  struct amqp_basic_properties_t_ amqp_msg_props;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
   char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
-  char default_amqp_routing_key[] = "acct";
-  int i, j, stop, amqp_status, batch_idx, is_routing_key_dyn = FALSE, qn = 0;
+  char default_amqp_routing_key[] = "acct", localhost[] = "127.0.0.1";
+  int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret;
   time_t start, duration;
   pid_t writer_pid = getpid();
 
-  amqp_connection_state_t amqp_conn;
-  amqp_socket_t *amqp_socket = NULL;
-  amqp_rpc_reply_t amqp_ret;
-
   /* setting some defaults */
+  if (!config.sql_host) config.sql_host = localhost;
   if (!config.sql_db) config.sql_db = default_amqp_exchange;
   if (!config.sql_table) config.sql_table = default_amqp_routing_key;
   else {
@@ -265,6 +261,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   }
   if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
 
+  p_amqp_set_exchange(&amqpp_amqp_host, config.sql_db);
+  p_amqp_set_routing_key(&amqpp_amqp_host, config.sql_table);
+  p_amqp_set_exchange_type(&amqpp_amqp_host, config.amqp_exchange_type);
+  p_amqp_set_host(&amqpp_amqp_host, config.sql_host);
+  p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
+
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
@@ -275,52 +277,9 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
-  memset(&amqp_msg_props, 0, sizeof(amqp_msg_props));
 
-  amqp_conn = amqp_new_connection();
-
-  amqp_socket = amqp_tcp_socket_new(amqp_conn);
-  if (!socket) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: no socket\n", config.name, config.type);
-    return;
-  }
-
-  if (config.sql_host)
-    amqp_status = amqp_socket_open(amqp_socket, config.sql_host, 5672/* default port */);
-  else 
-    amqp_status = amqp_socket_open(amqp_socket, "127.0.0.1", 5672 /* default port */);
-
-  if (amqp_status) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: unable to open socket\n", config.name, config.type);
-    return;
-  }
-
-  amqp_ret = amqp_login(amqp_conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, config.sql_user, config.sql_passwd);
-  if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: login\n", config.name, config.type);
-    return;
-  }
-
-  amqp_channel_open(amqp_conn, 1);
-
-  amqp_ret = amqp_get_rpc_reply(amqp_conn);
-  if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: unable to open channel\n", config.name, config.type);
-    return;
-  }
-
-  amqp_exchange_declare(amqp_conn, 1, amqp_cstring_bytes(config.sql_db), amqp_cstring_bytes(config.amqp_exchange_type), 0, 0, amqp_empty_table);
-  amqp_ret = amqp_get_rpc_reply(amqp_conn);
-  if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: exchange declare\n", config.name, config.type);
-    return;
-  }
-
-  if (config.amqp_persistent_msg) {
-    amqp_msg_props._flags = (AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG);
-    amqp_msg_props.content_type = amqp_cstring_bytes("text/json");
-    amqp_msg_props.delivery_mode = 2; /* persistent delivery */
-  }
+  ret = p_amqp_connect(&amqpp_amqp_host);
+  if (ret) return;
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
     stop = P_preprocess_funcs[j](queue, &index, j);
@@ -354,29 +313,20 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 			 &queue[j]->basetime);
 
     if (json_str) {
-      if (is_routing_key_dyn) amqp_handle_routing_key_dyn_strings(config.sql_table, SRVBUFLEN, orig_amqp_routing_key,
-								  queue[j]);  
+      if (is_routing_key_dyn) {
+	amqp_handle_routing_key_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
+	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
+      }
 
-      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
-                            config.type, config.sql_db, config.sql_table, amqp_msg_props.delivery_mode, json_str);
-
-      amqp_basic_publish(amqp_conn, 1, amqp_cstring_bytes(config.sql_db), amqp_cstring_bytes(config.sql_table),
-			 0, 0, &amqp_msg_props, amqp_cstring_bytes(json_str));
-
-      amqp_ret = amqp_get_rpc_reply(amqp_conn);
-      if (amqp_ret.reply_type != AMQP_RESPONSE_NORMAL) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: publishing\n", config.name, config.type);
-	return;
-      } 
-
+      ret = p_amqp_publish(&amqpp_amqp_host, json_str);
       free(json_str);
       qn++;
+
+      if (ret) return;
     }
   }
 
-  amqp_channel_close(amqp_conn, 1, AMQP_REPLY_SUCCESS);
-  amqp_connection_close(amqp_conn, AMQP_REPLY_SUCCESS);
-  amqp_destroy_connection(amqp_conn);
+  p_amqp_close(&amqpp_amqp_host);
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
