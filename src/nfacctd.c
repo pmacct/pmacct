@@ -34,6 +34,9 @@
 #include "net_aggr.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
 
 /* variables to be exported away */
 int debug;
@@ -367,6 +370,14 @@ int main(int argc,char **argv, char **envp)
       list = list->next;
     }
   }
+
+#if defined WITH_RABBITMQ
+  if (config.log_amqp_routing_key) {
+    log_init_amqp_host();
+    ret = p_amqp_connect(&log_amqp_host, AMQP_PUBLISH_LOG);
+    if (ret) log_amqp_host.routing_key = NULL;
+  }
+#endif
 
   /* Enforcing policies over aggregation methods */
   list = plugins_list;

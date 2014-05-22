@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -65,6 +65,7 @@ EXT void log_notifications_init(struct _log_notifications *);
 EXT void log_notification_set(u_int8_t *);
 EXT void log_notification_unset(u_int8_t *);
 EXT int log_notification_isset(u_int8_t);
+EXT void log_init_amqp_host();
 
 /* global vars */
 EXT struct _log_notifications log_notifications;

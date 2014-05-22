@@ -45,7 +45,6 @@ EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
 EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit; 
 EXT time_t refresh_deadline;
-EXT struct p_amqp_host amqpp_amqp_host;
 
 EXT struct timeval sbasetime;
 EXT int dyn_table;

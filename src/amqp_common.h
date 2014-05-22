@@ -23,6 +23,10 @@
 #include <amqp.h>
 #include <amqp_tcp_socket.h>
 
+/* defines */
+#define AMQP_PUBLISH_MSG	1
+#define AMQP_PUBLISH_LOG	2
+
 /* structures */
 struct p_amqp_host {
   char *user;
@@ -56,10 +60,11 @@ EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
 EXT void p_amqp_set_host(struct p_amqp_host *, char *);
 EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
 
-EXT int p_amqp_connect(struct p_amqp_host *);
-EXT int p_amqp_publish(struct p_amqp_host *, char *);
-EXT void p_amqp_close(struct p_amqp_host *);
+EXT int p_amqp_connect(struct p_amqp_host *, int);
+EXT int p_amqp_publish(struct p_amqp_host *, char *, int);
+EXT void p_amqp_close(struct p_amqp_host *, int);
 
 /* global vars */
+EXT struct p_amqp_host amqpp_amqp_host, log_amqp_host;
 
 #undef EXT

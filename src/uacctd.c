@@ -33,6 +33,9 @@
 #include "ip_flow.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
 
 /* variables to be exported away */
 int debug;
@@ -93,7 +96,7 @@ int main(int argc,char **argv, char **envp)
   struct bpf_program filter;
   struct pcap_device device;
   char errbuf[PCAP_ERRBUF_SIZE];
-  int index, logf;
+  int index, logf, ret;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
@@ -373,6 +376,14 @@ int main(int argc,char **argv, char **envp)
       list = list->next;
     }
   }
+
+#if defined WITH_RABBITMQ
+  if (config.log_amqp_routing_key) {
+    log_init_amqp_host();
+    ret = p_amqp_connect(&log_amqp_host, AMQP_PUBLISH_LOG);
+    if (ret) log_amqp_host.routing_key = NULL;
+  }
+#endif
 
   /* Enforcing policies over aggregation methods */
   list = plugins_list;

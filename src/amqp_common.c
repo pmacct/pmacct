@@ -67,7 +67,7 @@ void p_amqp_set_persistent_msg(struct p_amqp_host *amqp_host, int opt)
   if (amqp_host) amqp_host->persistent_msg = opt;
 }
 
-int p_amqp_connect(struct p_amqp_host *amqp_host)
+int p_amqp_connect(struct p_amqp_host *amqp_host, int type)
 {
   amqp_host->conn = amqp_new_connection();
 
@@ -102,7 +102,7 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
                         amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, amqp_empty_table);
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: exchange declare\n", config.name, config.type);
+    if (type == AMQP_PUBLISH_LOG) amqp_host->routing_key = NULL;
     return ERR;
   }
 
@@ -115,26 +115,32 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
   return SUCCESS;
 }
 
-int p_amqp_publish(struct p_amqp_host *amqp_host, char *json_str)
+int p_amqp_publish(struct p_amqp_host *amqp_host, char *json_str, int type)
 {
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
-			config.type, amqp_host->exchange, amqp_host->routing_key,
-			amqp_host->msg_props.delivery_mode, json_str);
-
-  amqp_basic_publish(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
-		     amqp_cstring_bytes(amqp_host->routing_key), 0, 0, &amqp_host->msg_props,
-		     amqp_cstring_bytes(json_str));
-
-  amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
-  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: publishing\n", config.name, config.type);
-    return ERR;
+  if (type == AMQP_PUBLISH_MSG) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
+			  config.type, amqp_host->exchange, amqp_host->routing_key,
+			  amqp_host->msg_props.delivery_mode, json_str);
   }
+
+  if (amqp_host->status == AMQP_STATUS_OK) {  
+    amqp_basic_publish(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
+		       amqp_cstring_bytes(amqp_host->routing_key), 0, 0, &amqp_host->msg_props,
+		       amqp_cstring_bytes(json_str));
+
+    amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
+    if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+      if (type == AMQP_PUBLISH_LOG) amqp_host->routing_key = NULL;
+      Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: publishing\n", config.name, config.type);
+      return ERR;
+    }
+  }
+  else return ERR;
 
   return SUCCESS;
 }
 
-void p_amqp_close(struct p_amqp_host *amqp_host)
+void p_amqp_close(struct p_amqp_host *amqp_host, int type)
 {
   amqp_channel_close(amqp_host->conn, 1, AMQP_REPLY_SUCCESS);
   amqp_connection_close(amqp_host->conn, AMQP_REPLY_SUCCESS);

@@ -23,6 +23,9 @@
 
 /* includes */
 #include "pmacct.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif 
 
 /* functions */
 void Log(short int level, char *msg, ...)
@@ -32,7 +35,11 @@ void Log(short int level, char *msg, ...)
   
   if ((level == LOG_DEBUG) && (!config.debug && !debug)) return;
 
+#if defined WITH_RABBITMQ
+  if (!config.syslog && !config.logfile_fd && !log_amqp_host.routing_key) {
+#else
   if (!config.syslog && !config.logfile_fd) {
+#endif
     va_start(ap, msg);
     vprintf(msg, ap);
     va_end(ap);
@@ -45,7 +52,7 @@ void Log(short int level, char *msg, ...)
 
     if (config.syslog) syslog(level, syslog_string);
 
-    if (config.logfile_fd) { 
+    if (config.logfile_fd) {
       char timebuf[SRVBUFLEN];
       struct tm *tmnow;
       time_t now;
@@ -57,6 +64,20 @@ void Log(short int level, char *msg, ...)
       fprintf(config.logfile_fd, "%s %s", timebuf, syslog_string);
       fflush(config.logfile_fd);
     }
+
+#if defined WITH_RABBITMQ
+    if (log_amqp_host.routing_key) {
+      char *json_str = NULL;
+      int ret;
+
+      json_str = compose_log_json(syslog_string);
+
+      if (json_str) {
+        ret = p_amqp_publish(&log_amqp_host, json_str, AMQP_PUBLISH_LOG);
+        free(json_str);
+      }
+    }
+#endif
   }
 }
 
@@ -95,3 +116,21 @@ int log_notification_isset(u_int8_t elem)
   else return FALSE;
 }
 
+#if defined WITH_RABBITMQ
+void log_init_amqp_host()
+{
+  p_amqp_init_host(&log_amqp_host);
+
+  p_amqp_set_user(&log_amqp_host, config.log_amqp_user);
+  p_amqp_set_passwd(&log_amqp_host, config.log_amqp_passwd);
+  p_amqp_set_exchange(&log_amqp_host, config.log_amqp_exchange);
+  p_amqp_set_routing_key(&log_amqp_host, config.log_amqp_routing_key);
+  p_amqp_set_exchange_type(&log_amqp_host, config.log_amqp_exchange_type);
+  p_amqp_set_host(&log_amqp_host, config.log_amqp_host);
+  p_amqp_set_persistent_msg(&log_amqp_host, config.log_amqp_persistent_msg);
+}
+#else
+void log_init_amqp_host()
+{
+}
+#endif

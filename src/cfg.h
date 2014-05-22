@@ -222,6 +222,13 @@ struct configuration {
   int active_plugins;
   char *logfile; 
   FILE *logfile_fd; 
+  char *log_amqp_host;
+  char *log_amqp_user;
+  char *log_amqp_passwd;
+  char *log_amqp_exchange;
+  char *log_amqp_exchange_type;
+  char *log_amqp_routing_key;
+  int log_amqp_persistent_msg;
   char *pidfile; 
   int networks_mask;
   char *networks_file;
