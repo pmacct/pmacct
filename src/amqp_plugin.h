@@ -48,7 +48,4 @@ EXT time_t refresh_deadline;
 
 EXT struct timeval sbasetime;
 EXT int dyn_table;
-
-static char rabbitmq_user[] = "guest";
-static char rabbitmq_pwd[] = "guest";
 #undef EXT

@@ -242,14 +242,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
-  char default_amqp_exchange[] = "pmacct", default_amqp_exchange_type[] = "direct";
-  char default_amqp_routing_key[] = "acct", localhost[] = "127.0.0.1";
   int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret;
   time_t start, duration;
   pid_t writer_pid = getpid();
 
   /* setting some defaults */
-  if (!config.sql_host) config.sql_host = localhost;
+  if (!config.sql_host) config.sql_host = default_amqp_host;
   if (!config.sql_db) config.sql_db = default_amqp_exchange;
   if (!config.sql_table) config.sql_table = default_amqp_routing_key;
   else {

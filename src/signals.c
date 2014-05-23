@@ -106,7 +106,10 @@ void my_sigint_handler(int signum)
   if (config.syslog) closelog();
 
 #if defined WITH_RABBITMQ
-  if (log_amqp_host.routing_key) p_amqp_close(&log_amqp_host, AMQP_PUBLISH_LOG);
+  if (log_amqp_host.routing_key) {
+    p_amqp_close(&log_amqp_host, AMQP_PUBLISH_LOG);
+    p_amqp_init_host(&log_amqp_host);
+  }
 #endif
 
   /* We are about to exit, but it may take a while - because of the

@@ -292,6 +292,18 @@ KEY:		logfile
 DESC:           enables logging to a file (bypassing syslog); expected value is a pathname (default: none,
 		console logging)
 
+KEY:		log_amqp_host
+DESC:		defines the AMQP/RabbitMQ server IP (default: localhost).
+
+KEY:		log_amqp_user
+DESC:		defines the username to use when connecting to the AMQP/RabbitMQ server (default: guest).
+
+KEY:		log_amqp_passwd
+DESC:		defines the password to use when connecting to the server (default: guest).
+
+KEY:		log_amqp_routing_key
+DESC:		Name of the AMQP routing key to attach to published data.
+
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		writes PID of Core process to the specified file. PIDs of the active plugins are written
 		aswell by employing the following syntax: 'path/to/pidfile-<plugin_type>-<plugin_name>'.
@@ -503,13 +515,13 @@ KEY:		[ sql_user | mongo_user | amqp_user ]
 DESC:		defines the username to use when connecting to the server. In MongoDB, if both
 		mongo_user and mongo_passwd directives are omitted, authentication is disabled;
 		if only one of the two is specified, the other is set to its default value.
-		(default: pmacct).
+		(default: pmacct; amqp_user default: guest).
 
 KEY:		[ sql_passwd | mongo_passwd | amqp_passwd ]
-DESC:		defines the password to use when connecting to the server.In MongoDB, if both
+DESC:		defines the password to use when connecting to the server. In MongoDB, if both
                 mongo_user and mongo_passwd directives are omitted, authentication is disabled;
 		if only one of the two is specified, the other is set to its default value.
-		(default: arealsmartpwd).
+		(default: arealsmartpwd; amqp_passwd: guest).
 
 KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time ] (-r)
 DESC:		time interval, in seconds, between consecutive executions of the plugin cache scanner. The
@@ -803,10 +815,10 @@ DESC:           full pathname to a file containing a list of indexes to apply to
 		src_host, dst_host
 		src_port, dst_port
 
-KEY:		amqp_exchange
+KEY:		[ amqp_exchange | log_amqp_exchange ]
 DESC:		Name of the AMQP exchange to publish data (default: pmacct).
 
-KEY:		amqp_exchange_type
+KEY:		[ amqp_exchange_type | log_amqp_exchange_type ]
 DESC:		Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
 		supported. (default: direct).
 

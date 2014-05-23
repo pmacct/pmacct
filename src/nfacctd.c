@@ -375,7 +375,7 @@ int main(int argc,char **argv, char **envp)
   if (config.log_amqp_routing_key) {
     log_init_amqp_host();
     ret = p_amqp_connect(&log_amqp_host, AMQP_PUBLISH_LOG);
-    if (ret) log_amqp_host.routing_key = NULL;
+    if (ret) p_amqp_init_host(&log_amqp_host);
   }
 #endif
 

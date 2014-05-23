@@ -67,4 +67,10 @@ EXT void p_amqp_close(struct p_amqp_host *, int);
 /* global vars */
 EXT struct p_amqp_host amqpp_amqp_host, log_amqp_host;
 
+static char rabbitmq_user[] = "guest";
+static char rabbitmq_pwd[] = "guest";
+static char default_amqp_exchange[] = "pmacct";
+static char default_amqp_exchange_type[] = "direct";
+static char default_amqp_routing_key[] = "acct";
+static char default_amqp_host[] = "127.0.0.1";
 #undef EXT

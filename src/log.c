@@ -121,6 +121,12 @@ void log_init_amqp_host()
 {
   p_amqp_init_host(&log_amqp_host);
 
+  if (!config.log_amqp_user) config.log_amqp_user = rabbitmq_user;  
+  if (!config.log_amqp_passwd) config.log_amqp_passwd = rabbitmq_pwd;
+  if (!config.log_amqp_exchange) config.log_amqp_exchange = default_amqp_exchange;
+  if (!config.log_amqp_exchange_type) config.log_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.log_amqp_host) config.log_amqp_host = default_amqp_host;
+
   p_amqp_set_user(&log_amqp_host, config.log_amqp_user);
   p_amqp_set_passwd(&log_amqp_host, config.log_amqp_passwd);
   p_amqp_set_exchange(&log_amqp_host, config.log_amqp_exchange);
