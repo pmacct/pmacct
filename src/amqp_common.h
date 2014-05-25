@@ -66,6 +66,7 @@ EXT void p_amqp_close(struct p_amqp_host *, int);
 
 /* global vars */
 EXT struct p_amqp_host amqpp_amqp_host, log_amqp_host;
+EXT struct p_amqp_host bgp_daemon_msglog_amqp_host, bgp_table_dump_amqp_host;
 
 static char rabbitmq_user[] = "guest";
 static char rabbitmq_pwd[] = "guest";

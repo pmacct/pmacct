@@ -26,6 +26,9 @@
 #include "pmacct.h"
 #include "bgp.h"
 #include "bgp_hash.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
@@ -432,3 +435,53 @@ void bgp_handle_dump_event()
     break;
   }
 }
+
+#if defined WITH_RABBITMQ
+void bgp_daemon_msglog_init_amqp_host()
+{
+  p_amqp_init_host(&bgp_daemon_msglog_amqp_host);
+
+  if (!config.nfacctd_bgp_msglog_amqp_user) config.nfacctd_bgp_msglog_amqp_user = rabbitmq_user;
+  if (!config.nfacctd_bgp_msglog_amqp_passwd) config.nfacctd_bgp_msglog_amqp_passwd = rabbitmq_pwd;
+  if (!config.nfacctd_bgp_msglog_amqp_exchange) config.nfacctd_bgp_msglog_amqp_exchange = default_amqp_exchange;
+  if (!config.nfacctd_bgp_msglog_amqp_exchange_type) config.nfacctd_bgp_msglog_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.nfacctd_bgp_msglog_amqp_host) config.nfacctd_bgp_msglog_amqp_host = default_amqp_host;
+
+  p_amqp_set_user(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_user);
+  p_amqp_set_passwd(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_passwd);
+  p_amqp_set_exchange(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_exchange);
+  p_amqp_set_routing_key(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_routing_key);
+  p_amqp_set_exchange_type(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_exchange_type);
+  p_amqp_set_host(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_host);
+  p_amqp_set_persistent_msg(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_persistent_msg);
+}
+#else
+void bgp_daemon_msglog_init_amqp_host()
+{
+}
+#endif
+
+#if defined WITH_RABBITMQ
+void bgp_table_dump_init_amqp_host()
+{
+  p_amqp_init_host(&bgp_table_dump_amqp_host);
+
+  if (!config.bgp_table_dump_amqp_user) config.bgp_table_dump_amqp_user = rabbitmq_user;
+  if (!config.bgp_table_dump_amqp_passwd) config.bgp_table_dump_amqp_passwd = rabbitmq_pwd;
+  if (!config.bgp_table_dump_amqp_exchange) config.bgp_table_dump_amqp_exchange = default_amqp_exchange;
+  if (!config.bgp_table_dump_amqp_exchange_type) config.bgp_table_dump_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.bgp_table_dump_amqp_host) config.bgp_table_dump_amqp_host = default_amqp_host;
+
+  p_amqp_set_user(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_user);
+  p_amqp_set_passwd(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_passwd);
+  p_amqp_set_exchange(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange);
+  p_amqp_set_routing_key(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_routing_key);
+  p_amqp_set_exchange_type(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange_type);
+  p_amqp_set_host(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_host);
+  p_amqp_set_persistent_msg(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_persistent_msg);
+}
+#else
+void bgp_table_dump_init_amqp_host()
+{
+}
+#endif

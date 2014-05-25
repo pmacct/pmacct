@@ -134,7 +134,7 @@ void skinny_bgp_daemon()
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
-  if (config.nfacctd_bgp_msglog_file) {
+  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
     peers_log = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
     if (!peers_log) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BGP peers log structure. Terminating thread.\n", config.name);
@@ -142,6 +142,7 @@ void skinny_bgp_daemon()
     }
     memset(peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
     bgp_peer_log_seq_init();
+    bgp_daemon_msglog_init_amqp_host();
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -267,7 +268,7 @@ void skinny_bgp_daemon()
     Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
-  if (config.bgp_table_dump_file) {
+  if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
     char dump_roundoff[] = "m";
     time_t tmp_time;
 
@@ -285,6 +286,8 @@ void skinny_bgp_daemon()
       config.bgp_table_dump_file = NULL;
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): 'bgp_table_dump_file' ignored due to invalid 'bgp_table_dump_refresh_time'.\n", config.name);
     }
+
+    bgp_table_dump_init_amqp_host();
   }
 
   for (;;) {

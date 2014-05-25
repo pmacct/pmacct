@@ -158,6 +158,13 @@ struct configuration {
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;
   char *nfacctd_bgp_msglog_file;
+  char *nfacctd_bgp_msglog_amqp_host;
+  char *nfacctd_bgp_msglog_amqp_user;
+  char *nfacctd_bgp_msglog_amqp_passwd;
+  char *nfacctd_bgp_msglog_amqp_exchange;
+  char *nfacctd_bgp_msglog_amqp_exchange_type;
+  char *nfacctd_bgp_msglog_amqp_routing_key;
+  int nfacctd_bgp_msglog_amqp_persistent_msg;
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
   u_int64_t nfacctd_bgp_pipe_size;
@@ -193,6 +200,13 @@ struct configuration {
   int bgp_table_dump_output;
   char *bgp_table_dump_file;
   int bgp_table_dump_refresh_time;
+  char *bgp_table_dump_amqp_host;
+  char *bgp_table_dump_amqp_user;
+  char *bgp_table_dump_amqp_passwd;
+  char *bgp_table_dump_amqp_exchange;
+  char *bgp_table_dump_amqp_exchange_type;
+  char *bgp_table_dump_amqp_routing_key;
+  int bgp_table_dump_amqp_persistent_msg;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;
