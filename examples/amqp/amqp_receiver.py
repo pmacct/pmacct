@@ -6,24 +6,30 @@
 
 import pika
 
+amqp_exchange = "pmacct"
+amqp_type = "direct"
+amqp_routing_key = "acct"
+amqp_host = "localhost"
+amqp_queue = "acct_1"
+
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
+        host=amqp_host))
 channel = connection.channel()
 
-channel.exchange_declare(exchange='pmacct', type='direct')
+channel.exchange_declare(exchange=amqp_exchange, type=amqp_type)
 
-channel.queue_declare(queue='acct_1')
+channel.queue_declare(queue=amqp_queue)
 
-channel.queue_bind(exchange='pmacct', routing_key='acct', queue='acct_1')
+channel.queue_bind(exchange=amqp_exchange, routing_key=amqp_routing_key, queue=amqp_queue)
 
 print ' [*] Example inspired from: http://www.rabbitmq.com/getstarted.html'
-print ' [*] Waiting for messages on E=pmacct,direct RK=acct Q=acct_1 H=localhost. Edit code to change any parameter. To exit press CTRL+C'
+print ' [*] Waiting for messages on E =', amqp_exchange, ',', amqp_type, 'RK =', amqp_routing_key, 'Q =', amqp_queue, 'H =', amqp_host, '. Edit code to change any parameter. To exit press CTRL+C'
 
 def callback(ch, method, properties, body):
     print " [x] Received %r" % (body,)
 
 channel.basic_consume(callback,
-                      queue='acct_1',
+                      queue=amqp_queue,
                       no_ack=True)
 
 channel.start_consuming()
