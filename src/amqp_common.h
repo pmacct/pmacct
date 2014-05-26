@@ -27,6 +27,8 @@
 #define AMQP_PUBLISH_MSG	1
 #define AMQP_PUBLISH_LOG	2
 
+#define AMQP_DEFAULT_RETRY	60
+
 /* structures */
 struct p_amqp_host {
   char *user;
@@ -42,6 +44,7 @@ struct p_amqp_host {
   amqp_rpc_reply_t ret;
   struct amqp_basic_properties_t_ msg_props;
   int status;
+  time_t last_fail;
 };
 
 /* prototypes */
@@ -59,10 +62,15 @@ EXT void p_amqp_set_routing_key(struct p_amqp_host *, char *);
 EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
 EXT void p_amqp_set_host(struct p_amqp_host *, char *);
 EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
+EXT void p_amqp_set_last_fail(struct p_amqp_host *, time_t);
+
+EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
+EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 
 EXT int p_amqp_connect(struct p_amqp_host *, int);
 EXT int p_amqp_publish(struct p_amqp_host *, char *, int);
 EXT void p_amqp_close(struct p_amqp_host *, int);
+EXT int p_amqp_is_alive(struct p_amqp_host *);
 
 /* global vars */
 EXT struct p_amqp_host amqpp_amqp_host, log_amqp_host;

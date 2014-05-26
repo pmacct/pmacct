@@ -108,11 +108,12 @@ bgp_node_free_aggressive (struct bgp_node *node, safi_t safi)
   u_int32_t ri_idx;
 
   /* XXX: this should be moved further outside */
-  if (config.nfacctd_bgp_msglog_file) gettimeofday(&log_tstamp, NULL);
+  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+    gettimeofday(&log_tstamp, NULL);
 
   for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++) {
     for (ri = node->info[ri_idx]; ri; ri = next) {
-      if (config.nfacctd_bgp_msglog_file) {
+      if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
         char event_type[] = "delete";
 
         bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output);

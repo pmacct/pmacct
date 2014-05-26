@@ -26,6 +26,9 @@
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
@@ -2078,6 +2081,24 @@ void write_and_free_json(FILE *f, void *obj)
     free(tmpbuf);
   }
 }
+
+#ifdef WITH_RABBITMQ
+void write_and_free_json_amqp(void *amqp_log, void *obj, int type)
+{
+  struct p_amqp_host *alog = (struct p_amqp_host *) amqp_log;
+
+  char *tmpbuf = NULL;
+  json_t *json_obj = (json_t *) obj;
+
+  tmpbuf = json_dumps(json_obj, 0);
+  json_decref(json_obj);
+
+  if (tmpbuf) {
+    p_amqp_publish(alog, tmpbuf, type);
+    free(tmpbuf);
+  }
+}
+#endif
 #else
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
@@ -2092,6 +2113,11 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 void write_and_free_json(FILE *f, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+}
+
+void write_and_free_json_amqp(void *amqp_log, void *obj, int type)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_amqp(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 #endif
 

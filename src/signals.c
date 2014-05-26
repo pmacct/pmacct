@@ -174,8 +174,8 @@ void reload()
 
 #if defined WITH_RABBITMQ
   if (log_amqp_host.routing_key) {
-    p_amqp_close(&log_amqp_host, AMQP_PUBLISH_LOG);
-    p_amqp_connect(&log_amqp_host, AMQP_PUBLISH_LOG);
+    p_amqp_close(&log_amqp_host, FALSE);
+    p_amqp_connect(&log_amqp_host, FALSE);
   }
 #endif
 

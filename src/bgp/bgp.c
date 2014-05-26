@@ -27,6 +27,9 @@
 #include "bgp.h"
 #include "bgp_hash.h"
 #include "thread_pool.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
@@ -135,6 +138,11 @@ void skinny_bgp_daemon()
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
+    if (config.nfacctd_bgp_msglog_file && config.nfacctd_bgp_msglog_amqp_routing_key) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_daemon_msglog_file and bgp_daemon_msglog_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
+
     peers_log = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
     if (!peers_log) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BGP peers log structure. Terminating thread.\n", config.name);
@@ -142,7 +150,15 @@ void skinny_bgp_daemon()
     }
     memset(peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
     bgp_peer_log_seq_init();
-    bgp_daemon_msglog_init_amqp_host();
+
+    if (config.nfacctd_bgp_msglog_amqp_routing_key) {
+#ifdef WITH_RABBITMQ
+      bgp_daemon_msglog_init_amqp_host();
+      p_amqp_connect(&bgp_daemon_msglog_amqp_host, AMQP_PUBLISH_MSG);
+#else
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect() not possible due to missing --enable-rabbitmq\n", config.name);
+#endif
+    }
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -254,7 +270,8 @@ void skinny_bgp_daemon()
     config.nfacctd_bgp_batch_interval = 0;
   }
 
-  if (!config.nfacctd_bgp_msglog_output && config.nfacctd_bgp_msglog_file)
+  if (!config.nfacctd_bgp_msglog_output && (config.nfacctd_bgp_msglog_file ||
+      config.nfacctd_bgp_msglog_amqp_routing_key))
 #ifdef WITH_JANSSON
     config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
 #else
@@ -333,7 +350,8 @@ void skinny_bgp_daemon()
       }
     }
 
-    if (config.nfacctd_bgp_msglog_file || config.bgp_table_dump_file) {
+    if (config.nfacctd_bgp_msglog_file || config.bgp_table_dump_file ||
+	config.nfacctd_bgp_msglog_amqp_routing_key) {
       gettimeofday(&log_tstamp, NULL);
       compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
 
@@ -431,7 +449,8 @@ void skinny_bgp_daemon()
       }
 #endif
 
-      if (config.nfacctd_bgp_msglog_file) bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output);
+      if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output);
 
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
@@ -1422,7 +1441,8 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	  bgp_unlock_node (route);
 	  bgp_attr_unintern(attr_new);
 
-	  if (config.nfacctd_bgp_msglog_file) goto log_update;
+	  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+	    goto log_update;
 
 	  return 0;
 	}
@@ -1452,7 +1472,8 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 	  bgp_unlock_node (route);
 
-	  if (config.nfacctd_bgp_msglog_file) goto log_update;
+	  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+	    goto log_update;
 
 	  return 0;
 	}
@@ -1489,7 +1510,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   /* route_node_get lock */
   bgp_unlock_node(route);
 
-  if (config.nfacctd_bgp_msglog_file) {
+  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
     ri = new;
     goto log_update;
   }
@@ -1540,7 +1561,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
     }
   }
 
-  if (ri && config.nfacctd_bgp_msglog_file) {
+  if (ri && config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
     char event_type[] = "withdraw";
 
     bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
@@ -1965,7 +1986,8 @@ void bgp_peer_close(struct bgp_peer *peer)
   */ 
   if (config.bgp_table_dump_file) bgp_peer_info_delete(peer);
 
-  if (config.nfacctd_bgp_msglog_file) bgp_peer_log_close(peer, config.nfacctd_bgp_msglog_output); 
+  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+    bgp_peer_log_close(peer, config.nfacctd_bgp_msglog_output); 
 
   close(peer->fd);
   peer->fd = 0;
@@ -2005,7 +2027,7 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
         for (peer_buckets = 0; node_refcnt && peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
-	      if (config.nfacctd_bgp_msglog_file) {
+	      if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
 		char event_type[] = "delete";
 
 		bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output);

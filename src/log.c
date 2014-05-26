@@ -36,7 +36,7 @@ void Log(short int level, char *msg, ...)
   if ((level == LOG_DEBUG) && (!config.debug && !debug)) return;
 
 #if defined WITH_RABBITMQ
-  if (!config.syslog && !config.logfile_fd && !log_amqp_host.routing_key) {
+  if (!config.syslog && !config.logfile_fd && p_amqp_is_alive(&log_amqp_host) == ERR) {
 #else
   if (!config.syslog && !config.logfile_fd) {
 #endif
@@ -66,7 +66,7 @@ void Log(short int level, char *msg, ...)
     }
 
 #if defined WITH_RABBITMQ
-    if (log_amqp_host.routing_key) {
+    if (p_amqp_is_alive(&log_amqp_host) == SUCCESS) {
       char *json_str = NULL;
       int ret;
 
