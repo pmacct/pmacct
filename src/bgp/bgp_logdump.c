@@ -40,12 +40,8 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
   struct bgp_attr *attr = ri->attr;
 
 #ifdef WITH_RABBITMQ
-  if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-    // XXX: save routing key somewhere?
-
-    bgp_peer_log_dynname(log_rk, SRVBUFLEN, config.nfacctd_bgp_msglog_amqp_routing_key, peer);
-    p_amqp_set_routing_key(peer->amqp_log, log_rk);
-  }
+  if (config.nfacctd_bgp_msglog_amqp_routing_key)
+    p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -142,8 +138,8 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
 
 #ifdef WITH_RABBITMQ
     if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-      write_and_free_json_amqp(peer->amqp_log, obj, AMQP_PUBLISH_MSG);
-      p_amqp_unset_routing_key(peer->amqp_log);
+      write_and_free_json_amqp(peer->log->amqp_host, obj, AMQP_PUBLISH_MSG);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
     }
 #endif
 #endif
@@ -153,53 +149,44 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
 void bgp_peer_log_init(struct bgp_peer *peer, int output)
 {
   int peer_idx, have_it;
-  char log_filename[SRVBUFLEN], log_rk[SRVBUFLEN], event_type[] = "log_init";
+  char log_filename[SRVBUFLEN], event_type[] = "log_init";
 
-  if (!peers_log || !peer || peer->log || peer->amqp_log) return;
+  if (!peers_log || !peer || peer->log) return;
 
   if (config.nfacctd_bgp_msglog_file)
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, config.nfacctd_bgp_msglog_file, peer); 
 
-#ifdef WITH_RABBITMQ
   if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-    // XXX: save routing key somewhere?
-
-    bgp_peer_log_dynname(log_rk, SRVBUFLEN, config.nfacctd_bgp_msglog_amqp_routing_key, peer); 
+    bgp_peer_log_dynname(log_filename, SRVBUFLEN, config.nfacctd_bgp_msglog_amqp_routing_key, peer); 
   }
-#endif
 
-  if (config.nfacctd_bgp_msglog_file) {
-    for (peer_idx = 0, have_it = 0; peer_idx < config.nfacctd_bgp_max_peers; peer_idx++) {
-      if (!peers_log[peer_idx].fd) {
+  for (peer_idx = 0, have_it = 0; peer_idx < config.nfacctd_bgp_max_peers; peer_idx++) {
+    if (!peers_log[peer_idx].refcnt) {
+      if (config.nfacctd_bgp_msglog_file)
 	peers_log[peer_idx].fd = open_logfile(log_filename, "a");
-	if (peers_log[peer_idx].fd) {
-          strcpy(peers_log[peer_idx].filename, log_filename);
-	  have_it = TRUE;
-        }
-	break;
-      }
-      else if (!strcmp(log_filename, peers_log[peer_idx].filename)) {
-	have_it = TRUE;
-	break;
-      }
+
+#ifdef WITH_RABBITMQ
+      if (config.nfacctd_bgp_msglog_amqp_routing_key)
+        peers_log[peer_idx].amqp_host = &bgp_daemon_msglog_amqp_host;
+#endif
+      
+      strcpy(peers_log[peer_idx].filename, log_filename);
+      have_it = TRUE;
+      break;
+    }
+    else if (!strcmp(log_filename, peers_log[peer_idx].filename)) {
+      have_it = TRUE;
+      break;
     }
   }
-
-#ifdef WITH_RABBITMQ
-  if (config.nfacctd_bgp_msglog_amqp_routing_key) have_it = TRUE;
-#endif
 
   if (have_it) {
-    if (config.nfacctd_bgp_msglog_file) {
-      peer->log = &peers_log[peer_idx];
-      peers_log[peer_idx].refcnt++;
-    }
+    peer->log = &peers_log[peer_idx];
+    peers_log[peer_idx].refcnt++;
 
 #ifdef WITH_RABBITMQ
-    if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-      peer->amqp_log = &bgp_daemon_msglog_amqp_host;
-      p_amqp_set_routing_key(peer->amqp_log, log_rk);
-    }
+    if (config.nfacctd_bgp_msglog_amqp_routing_key)
+      p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
     if (output == PRINT_OUTPUT_JSON) {
@@ -230,8 +217,8 @@ void bgp_peer_log_init(struct bgp_peer *peer, int output)
 
 #ifdef WITH_RABBITMQ
       if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-	write_and_free_json_amqp(peer->amqp_log, obj, AMQP_PUBLISH_MSG); 
-	p_amqp_unset_routing_key(peer->amqp_log);
+	write_and_free_json_amqp(peer->log->amqp_host, obj, AMQP_PUBLISH_MSG); 
+	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
 #endif
 #endif
@@ -241,32 +228,23 @@ void bgp_peer_log_init(struct bgp_peer *peer, int output)
 
 void bgp_peer_log_close(struct bgp_peer *peer, int output)
 {
-  char log_rk[SRVBUFLEN], event_type[] = "log_close";
+  char event_type[] = "log_close";
   struct bgp_peer_log *log_ptr;
   void *amqp_log_ptr;
 
-  if (!peers_log || !peer || (!peer->log && !peer->amqp_log)) return;
+  if (!peers_log || !peer || !peer->log) return;
 
 #ifdef WITH_RABBITMQ
-  if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-    // XXX: save routing key somewhere?
-
-    bgp_peer_log_dynname(log_rk, SRVBUFLEN, config.nfacctd_bgp_msglog_amqp_routing_key, peer);
-    p_amqp_set_routing_key(peer->amqp_log, log_rk);
-  }
+  if (config.nfacctd_bgp_msglog_amqp_routing_key)
+    p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
   log_ptr = peer->log;
-  amqp_log_ptr = peer->amqp_log;
+  amqp_log_ptr = peer->log->amqp_host;
 
-  if (config.nfacctd_bgp_msglog_file) {
-    assert(peer->log->refcnt);
-    peer->log->refcnt--;
-    peer->log = NULL;
-  }
-
-  if (config.nfacctd_bgp_msglog_amqp_routing_key) 
-    peer->amqp_log = NULL;
+  assert(peer->log->refcnt);
+  peer->log->refcnt--;
+  peer->log = NULL;
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
@@ -303,9 +281,11 @@ void bgp_peer_log_close(struct bgp_peer *peer, int output)
 #endif
   }
 
-  if (config.nfacctd_bgp_msglog_file && !log_ptr->refcnt) {
-    fclose(log_ptr->fd);
-    memset(log_ptr, 0, sizeof(struct bgp_peer_log));
+  if (!log_ptr->refcnt) {
+    if (config.nfacctd_bgp_msglog_file && !log_ptr->refcnt) {
+      fclose(log_ptr->fd);
+      memset(log_ptr, 0, sizeof(struct bgp_peer_log));
+    }
   }
 }
 

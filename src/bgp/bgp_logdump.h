@@ -27,6 +27,7 @@ struct bgp_peer_log {
   FILE *fd;
   int refcnt;
   char filename[SRVBUFLEN];
+  void *amqp_host;
 };
 
 /* prototypes */

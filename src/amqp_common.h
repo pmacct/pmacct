@@ -64,6 +64,8 @@ EXT void p_amqp_set_host(struct p_amqp_host *, char *);
 EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
 EXT void p_amqp_set_last_fail(struct p_amqp_host *, time_t);
 
+EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
+
 EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
 EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 

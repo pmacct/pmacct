@@ -165,6 +165,7 @@ struct configuration {
   char *nfacctd_bgp_msglog_amqp_exchange_type;
   char *nfacctd_bgp_msglog_amqp_routing_key;
   int nfacctd_bgp_msglog_amqp_persistent_msg;
+  int nfacctd_bgp_msglog_amqp_retry;
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
   u_int64_t nfacctd_bgp_pipe_size;
@@ -243,6 +244,7 @@ struct configuration {
   char *log_amqp_exchange_type;
   char *log_amqp_routing_key;
   int log_amqp_persistent_msg;
+  int log_amqp_retry;
   char *pidfile; 
   int networks_mask;
   char *networks_file;

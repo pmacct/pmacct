@@ -361,6 +361,17 @@ void skinny_bgp_daemon()
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
 	}
       }
+
+#ifdef WITH_RABBITMQ
+      if (config.nfacctd_bgp_msglog_amqp_routing_key) {
+        time_t last_fail = p_amqp_get_last_fail(&bgp_daemon_msglog_amqp_host);
+
+	if (last_fail && (last_fail + AMQP_DEFAULT_RETRY < log_tstamp.tv_sec)) {
+          bgp_daemon_msglog_init_amqp_host();
+          p_amqp_connect(&bgp_daemon_msglog_amqp_host, AMQP_PUBLISH_MSG);
+	}
+      }
+#endif
     }
 
     /* 

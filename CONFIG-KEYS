@@ -292,17 +292,52 @@ KEY:		logfile
 DESC:           enables logging to a file (bypassing syslog); expected value is a pathname (default: none,
 		console logging)
 
-KEY:		log_amqp_host
+KEY:		[ amqp_host | log_amqp_host | bgp_daemon_msglog_amqp_host ]
 DESC:		defines the AMQP/RabbitMQ server IP (default: localhost).
 
-KEY:		log_amqp_user
+KEY:		[ amqp_user | log_amqp_user | bgp_daemon_msglog_amqp_user ]
 DESC:		defines the username to use when connecting to the AMQP/RabbitMQ server (default: guest).
 
-KEY:		log_amqp_passwd
+KEY:		[ amqp_passwd | log_amqp_passwd | bgp_daemon_msglog_amqp_passwd ]
 DESC:		defines the password to use when connecting to the server (default: guest).
 
-KEY:		log_amqp_routing_key
-DESC:		Name of the AMQP routing key to attach to published data.
+KEY:		[ amqp_routing_key | log_amqp_routing_key | bgp_daemon_msglog_amqp_routing_key ]
+DESC:		Name of the AMQP routing key to attach to published data. Dynamic names are supported through
+                the use of variables, which are computed at the moment when data is purged to the backend.
+		Dynamic names are not supported for log_amqp_routing_key. The list of variables supported
+		by amqp_routing_key:
+
+                $peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
+
+                $pre_tag        Value of the tag primitive of the record being processed.
+
+                $post_tag       Configured value of post_tag.
+
+                $post_tag2      Configured value of post_tag2.
+
+		The list of variables supported by bgp_daemon_msglog_amqp_routing_key:
+
+		$peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
+
+		(default: amqp_routing_key: acct; log_amqp_routing_key, bgp_daemon_msglog_amqp_routing_key
+		 no default value).
+
+KEY:            [ amqp_exchange | log_amqp_exchange | bgp_daemon_msglog_amqp_exchange ]
+DESC:           Name of the AMQP exchange to publish data (default: pmacct).
+
+KEY:            [ amqp_exchange_type | log_amqp_exchange_type | bgp_daemon_msglog_amqp_exchange_type ]
+DESC:           Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
+                supported. (default: direct).
+
+KEY:            [ amqp_persistent_msg | bgp_daemon_msglog_amqp_persistent_msg ]
+VALUES:         [ true | false ]
+DESC:           Marks messages as persistent so that a queue content does not get lost if RabbitMQ restarts.
+                Note from RabbitMQ docs: "Marking messages as persistent doesn't fully guarantee that a
+                message won't be lost. Although it tells RabbitMQ to save message to the disk, there is
+                still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
+                Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
+                not really written to the disk. The persistence guarantees aren't strong, but it is more
+                than enough for our simple task queue.". (default: false)
 
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		writes PID of Core process to the specified file. PIDs of the active plugins are written
@@ -508,20 +543,20 @@ DESC:		this switch makes sense only when using PostgreSQL plugin and supplied de
 		fields because making use of IP prefix labels, transparently to pmacct - making this
 		configuration switch deprecated. (default: 'typed').
 
-KEY:	 	[ sql_host | mongo_host | amqp_host ]
+KEY:	 	[ sql_host | mongo_host ]
 DESC:		defines the backend server IP/hostname (default: localhost).
 
-KEY:		[ sql_user | mongo_user | amqp_user ]
+KEY:		[ sql_user | mongo_user ]
 DESC:		defines the username to use when connecting to the server. In MongoDB, if both
 		mongo_user and mongo_passwd directives are omitted, authentication is disabled;
 		if only one of the two is specified, the other is set to its default value.
-		(default: pmacct; amqp_user default: guest).
+		(default: pmacct).
 
-KEY:		[ sql_passwd | mongo_passwd | amqp_passwd ]
+KEY:		[ sql_passwd | mongo_passwd ]
 DESC:		defines the password to use when connecting to the server. In MongoDB, if both
                 mongo_user and mongo_passwd directives are omitted, authentication is disabled;
 		if only one of the two is specified, the other is set to its default value.
-		(default: arealsmartpwd; amqp_passwd: guest).
+		(default: arealsmartpwd).
 
 KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time ] (-r)
 DESC:		time interval, in seconds, between consecutive executions of the plugin cache scanner. The
@@ -815,36 +850,6 @@ DESC:           full pathname to a file containing a list of indexes to apply to
 		src_host, dst_host
 		src_port, dst_port
 
-KEY:		[ amqp_exchange | log_amqp_exchange ]
-DESC:		Name of the AMQP exchange to publish data (default: pmacct).
-
-KEY:		[ amqp_exchange_type | log_amqp_exchange_type ]
-DESC:		Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
-		supported. (default: direct).
-
-KEY:		amqp_routing_key
-DESC:		Name of the AMQP routing key to attach to published data. Dynamic names are supported through
-		the use of variables, which are computed at the moment when data is purged to the backend. The
-		list of supported variables follows (default: acct): 
-
-                $peer_src_ip	Value of the peer_src_ip primitive of the record being processed. 
-
-		$pre_tag	Value of the tag primitive of the record being processed.
-
-                $post_tag	Configured value of post_tag.
-
-                $post_tag2	Configured value of post_tag2.
-
-KEY:		amqp_persistent_msg
-VALUES:         [ true | false ]
-DESC:		Marks messages as persistent so that a queue content does not get lost if RabbitMQ restarts.
-		Note from RabbitMQ docs: "Marking messages as persistent doesn't fully guarantee that a
-		message won't be lost. Although it tells RabbitMQ to save message to the disk, there is
-		still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
-		Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
-		not really written to the disk. The persistence guarantees aren't strong, but it is more
-		than enough for our simple task queue.". (default: false)
-		
 KEY:		print_markers
 VALUES:		[ true | false ]
 DESC:		Enables the use of START/END markers each time data is written to 'stdout'. Start marker returns 

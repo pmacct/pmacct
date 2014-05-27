@@ -77,6 +77,13 @@ void p_amqp_set_last_fail(struct p_amqp_host *amqp_host, time_t timestamp)
   if (amqp_host) amqp_host->last_fail = timestamp;
 }
 
+time_t p_amqp_get_last_fail(struct p_amqp_host *amqp_host)
+{
+  if (amqp_host) return amqp_host->last_fail;
+
+  return FALSE;
+}
+
 void p_amqp_unset_last_fail(struct p_amqp_host *amqp_host)
 {
   if (amqp_host) amqp_host->last_fail = FALSE;
