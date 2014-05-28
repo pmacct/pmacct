@@ -276,7 +276,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
 
-  ret = p_amqp_connect(&amqpp_amqp_host, AMQP_PUBLISH_MSG);
+  ret = p_amqp_connect(&amqpp_amqp_host);
   if (ret) return;
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
@@ -316,7 +316,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
       }
 
-      ret = p_amqp_publish(&amqpp_amqp_host, json_str, AMQP_PUBLISH_MSG);
+      ret = p_amqp_publish(&amqpp_amqp_host, json_str);
       free(json_str);
       qn++;
 
@@ -324,7 +324,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     }
   }
 
-  p_amqp_close(&amqpp_amqp_host, AMQP_PUBLISH_MSG);
+  p_amqp_close(&amqpp_amqp_host, FALSE);
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",

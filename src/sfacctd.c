@@ -42,9 +42,6 @@
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
 #include "crc32.c"
-#if defined WITH_RABBITMQ
-#include "amqp_common.h"
-#endif
 
 /* variables to be exported away */
 int debug;
@@ -114,7 +111,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
-  u_int16_t ret;
+  int ret;
   SFSample spp;
 
 #if defined ENABLE_IPV6
@@ -378,14 +375,6 @@ int main(int argc,char **argv, char **envp)
       list = list->next;
     }
   }
-
-#if defined WITH_RABBITMQ
-  if (config.log_amqp_routing_key) {
-    log_init_amqp_host();
-    ret = p_amqp_connect(&log_amqp_host, AMQP_PUBLISH_LOG);
-    if (ret) p_amqp_init_host(&log_amqp_host);
-  }
-#endif
 
   /* Enforcing policies over aggregation methods */
   list = plugins_list;

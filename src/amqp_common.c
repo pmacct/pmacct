@@ -89,7 +89,7 @@ void p_amqp_unset_last_fail(struct p_amqp_host *amqp_host)
   if (amqp_host) amqp_host->last_fail = FALSE;
 }
 
-int p_amqp_connect(struct p_amqp_host *amqp_host, int type)
+int p_amqp_connect(struct p_amqp_host *amqp_host)
 {
   amqp_host->conn = amqp_new_connection();
 
@@ -142,18 +142,16 @@ int p_amqp_connect(struct p_amqp_host *amqp_host, int type)
   return SUCCESS;
 }
 
-int p_amqp_publish(struct p_amqp_host *amqp_host, char *json_str, int type)
+int p_amqp_publish(struct p_amqp_host *amqp_host, char *json_str)
 {
   if (p_amqp_is_alive(amqp_host) == ERR) {
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
 
-  if (type == AMQP_PUBLISH_MSG) {
-    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
-			  config.type, amqp_host->exchange, amqp_host->routing_key,
-			  amqp_host->msg_props.delivery_mode, json_str);
-  }
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
+			config.type, amqp_host->exchange, amqp_host->routing_key,
+			amqp_host->msg_props.delivery_mode, json_str);
 
   amqp_host->status = amqp_basic_publish(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
 					 amqp_cstring_bytes(amqp_host->routing_key), 0, 0, &amqp_host->msg_props,

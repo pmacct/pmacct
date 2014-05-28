@@ -96,12 +96,6 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       load_id_file(MAP_BGP_SRC_MED, config.nfacctd_bgp_src_med_map, (struct id_table *)cb_data->bmed_table, &req, &bmed_map_allocated);
     if (config.nfacctd_bgp)
       load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
-/*
-    if (config.aggregate_primitives) {
-      req.key_value_table = (void *) &custom_primitives_registry;
-      load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
-    }
-*/
 
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);

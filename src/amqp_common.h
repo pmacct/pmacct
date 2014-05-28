@@ -24,9 +24,6 @@
 #include <amqp_tcp_socket.h>
 
 /* defines */
-#define AMQP_PUBLISH_MSG	1
-#define AMQP_PUBLISH_LOG	2
-
 #define AMQP_DEFAULT_RETRY	60
 
 /* structures */
@@ -69,14 +66,15 @@ EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
 EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
 EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 
-EXT int p_amqp_connect(struct p_amqp_host *, int);
-EXT int p_amqp_publish(struct p_amqp_host *, char *, int);
+EXT int p_amqp_connect(struct p_amqp_host *);
+EXT int p_amqp_publish(struct p_amqp_host *, char *);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
 
 /* global vars */
-EXT struct p_amqp_host amqpp_amqp_host, log_amqp_host;
-EXT struct p_amqp_host bgp_daemon_msglog_amqp_host, bgp_table_dump_amqp_host;
+EXT struct p_amqp_host amqpp_amqp_host;
+EXT struct p_amqp_host bgp_daemon_msglog_amqp_host;
+EXT struct p_amqp_host bgp_table_dump_amqp_host;
 
 static char rabbitmq_user[] = "guest";
 static char rabbitmq_pwd[] = "guest";

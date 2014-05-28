@@ -57,6 +57,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "MySQL Plugin", config.name);
+
   memset(&idata, 0, sizeof(idata));
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {

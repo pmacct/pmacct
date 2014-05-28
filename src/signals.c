@@ -24,9 +24,6 @@
 
 /* includes */
 #include "pmacct.h"
-#if defined WITH_RABBITMQ
-#include "amqp_common.h"
-#endif
 
 /* extern */
 extern struct plugins_list_entry *plugin_list;
@@ -105,13 +102,6 @@ void my_sigint_handler(int signum)
 
   if (config.syslog) closelog();
 
-#if defined WITH_RABBITMQ
-  if (log_amqp_host.routing_key) {
-    p_amqp_close(&log_amqp_host, AMQP_PUBLISH_LOG);
-    p_amqp_init_host(&log_amqp_host);
-  }
-#endif
-
   /* We are about to exit, but it may take a while - because of the
      wait() call. Let's release collector's socket to improve turn-
      around times when restarting the daemon */
@@ -171,13 +161,6 @@ void reload()
     fclose(config.logfile_fd);
     config.logfile_fd = open_logfile(config.logfile, "a");
   }
-
-#if defined WITH_RABBITMQ
-  if (log_amqp_host.routing_key) {
-    p_amqp_close(&log_amqp_host, FALSE);
-    p_amqp_connect(&log_amqp_host, FALSE);
-  }
-#endif
 
   if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;
 

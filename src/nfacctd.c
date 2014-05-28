@@ -34,9 +34,6 @@
 #include "net_aggr.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
-#if defined WITH_RABBITMQ
-#include "amqp_common.h"
-#endif
 
 /* variables to be exported away */
 int debug;
@@ -106,7 +103,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
-  u_int16_t ret;
+  int ret;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -370,14 +367,6 @@ int main(int argc,char **argv, char **envp)
       list = list->next;
     }
   }
-
-#if defined WITH_RABBITMQ
-  if (config.log_amqp_routing_key) {
-    log_init_amqp_host();
-    ret = p_amqp_connect(&log_amqp_host, AMQP_PUBLISH_LOG);
-    if (ret) p_amqp_init_host(&log_amqp_host);
-  }
-#endif
 
   /* Enforcing policies over aggregation methods */
   list = plugins_list;
@@ -872,12 +861,6 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
         set_sampling_table(&pptrs, (u_char *) &sampling_table);
       }
-/*
-      if (config.aggregate_primitives) {
-	req.key_value_table = (void *) &custom_primitives_registry;
-	load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
-      }
-*/
 
       reload_map = FALSE;
       gettimeofday(&reload_map_tstamp, NULL);

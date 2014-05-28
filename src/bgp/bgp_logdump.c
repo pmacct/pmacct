@@ -138,7 +138,7 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
 
 #ifdef WITH_RABBITMQ
     if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-      write_and_free_json_amqp(peer->log->amqp_host, obj, AMQP_PUBLISH_MSG);
+      write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
 #endif
@@ -217,7 +217,7 @@ void bgp_peer_log_init(struct bgp_peer *peer, int output)
 
 #ifdef WITH_RABBITMQ
       if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-	write_and_free_json_amqp(peer->log->amqp_host, obj, AMQP_PUBLISH_MSG); 
+	write_and_free_json_amqp(peer->log->amqp_host, obj); 
 	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
 #endif
@@ -274,7 +274,7 @@ void bgp_peer_log_close(struct bgp_peer *peer, int output)
 
 #ifdef WITH_RABBITMQ
     if (config.nfacctd_bgp_msglog_amqp_routing_key) {
-      write_and_free_json_amqp(amqp_log_ptr, obj, AMQP_PUBLISH_MSG);
+      write_and_free_json_amqp(amqp_log_ptr, obj);
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
 #endif

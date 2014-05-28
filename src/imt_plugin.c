@@ -49,6 +49,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = 0;
   u_int32_t seq = 0;
   int rg_err_count = 0;
+  int ret;
   struct pkt_bgp_primitives *pbgp, empty_pbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
   struct pkt_mpls_primitives *pmpls, empty_pmpls;
@@ -66,6 +67,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "IMT Plugin", config.name);
+
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {
     fclose(config.logfile_fd);
