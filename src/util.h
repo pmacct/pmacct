@@ -104,7 +104,6 @@ EXT char *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 EXT void compose_timestamp(char *, int, struct timeval *, int);
 EXT void write_and_free_json(FILE *, void *);
 EXT void write_and_free_json_amqp(void *, void *);
-EXT char *compose_log_json(char *);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);

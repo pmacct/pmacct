@@ -292,16 +292,16 @@ KEY:		logfile
 DESC:           enables logging to a file (bypassing syslog); expected value is a pathname (default: none,
 		console logging)
 
-KEY:		[ amqp_host | bgp_daemon_msglog_amqp_host ]
+KEY:		[ amqp_host | bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host ]
 DESC:		defines the AMQP/RabbitMQ server IP (default: localhost).
 
-KEY:		[ amqp_user | bgp_daemon_msglog_amqp_user ]
+KEY:		[ amqp_user | bgp_daemon_msglog_amqp_user | bgp_table_dump_amqp_user ]
 DESC:		defines the username to use when connecting to the AMQP/RabbitMQ server (default: guest).
 
-KEY:		[ amqp_passwd | bgp_daemon_msglog_amqp_passwd ]
+KEY:		[ amqp_passwd | bgp_daemon_msglog_amqp_passwd | bgp_table_dump_amqp_passwd ]
 DESC:		defines the password to use when connecting to the server (default: guest).
 
-KEY:		[ amqp_routing_key | bgp_daemon_msglog_amqp_routing_key ]
+KEY:		[ amqp_routing_key | bgp_daemon_msglog_amqp_routing_key | bgp_table_dump_amqp_routing_key ]
 DESC:		Name of the AMQP routing key to attach to published data. Dynamic names are supported through
                 the use of variables, which are computed at the moment when data is purged to the backend.
 		The list of variables supported by amqp_routing_key:
@@ -314,20 +314,22 @@ DESC:		Name of the AMQP routing key to attach to published data. Dynamic names a
 
                 $post_tag2      Configured value of post_tag2.
 
-		The list of variables supported by bgp_daemon_msglog_amqp_routing_key:
+		Variables supported by bgp_daemon_msglog_amqp_routing_key, bgp_table_dump_amqp_routing_key:
 
 		$peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
-		(default: amqp_routing_key: acct; bgp_daemon_msglog_amqp_routing_key no default value).
+		(default: amqp_routing_key: acct)
 
-KEY:            [ amqp_exchange | bgp_daemon_msglog_amqp_exchange ]
+KEY:            [ amqp_exchange | bgp_daemon_msglog_amqp_exchange | bgp_table_dump_amqp_exchange ]
 DESC:           Name of the AMQP exchange to publish data (default: pmacct).
 
-KEY:            [ amqp_exchange_type | bgp_daemon_msglog_amqp_exchange_type ]
+KEY:            [ amqp_exchange_type | bgp_daemon_msglog_amqp_exchange_type |
+		  bgp_table_dump_amqp_exchange_type ]
 DESC:           Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
                 supported (default: direct).
 
-KEY:            [ amqp_persistent_msg | bgp_daemon_msglog_amqp_persistent_msg ]
+KEY:            [ amqp_persistent_msg | bgp_daemon_msglog_amqp_persistent_msg  |
+		  bgp_table_dump_amqp_persistent_msg ]
 VALUES:         [ true | false ]
 DESC:           Marks messages as persistent so that a queue content does not get lost if RabbitMQ restarts.
                 Note from RabbitMQ docs: "Marking messages as persistent doesn't fully guarantee that a

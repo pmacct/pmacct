@@ -2072,6 +2072,8 @@ void write_and_free_json(FILE *f, void *obj)
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
 
+  if (!f) return;
+
   tmpbuf = json_dumps(json_obj, 0);
   json_decref(json_obj);
   
@@ -2118,34 +2120,6 @@ void write_and_free_json(FILE *f, void *obj)
 void write_and_free_json_amqp(void *amqp_log, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_amqp(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-}
-#endif
-
-#ifdef WITH_JANSSON
-char *compose_log_json(char *msg)
-{
-  char *tmpbuf = NULL, empty_string[] = "";
-  json_t *obj = json_object(), *kv;
-
-  if (msg) kv = json_pack("{ss}", "log", msg);
-  else kv = json_pack("{ss}", "log", empty_string);
-
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
-
-  tmpbuf = json_dumps(obj, 0);
-  json_decref(obj);
-
-  return tmpbuf;
-}
-#else
-char *compose_log_json(char *msg)
-{
-  config.log_amqp_routing_key = NULL; /* force to screen if no other logging method is selected */
-
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_log_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-
-  return NULL;
 }
 #endif
 

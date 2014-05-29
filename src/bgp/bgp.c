@@ -164,6 +164,11 @@ void skinny_bgp_daemon()
     }
   }
 
+  if (config.bgp_table_dump_file && config.bgp_table_dump_amqp_routing_key) {
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_table_dump_file and bgp_table_dump_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
+
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bgp_table_per_peer_buckets) config.bgp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
 
@@ -281,7 +286,8 @@ void skinny_bgp_daemon()
     Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
-  if (!config.bgp_table_dump_output && config.bgp_table_dump_file)
+  if (!config.bgp_table_dump_output && (config.bgp_table_dump_file ||
+      config.bgp_table_dump_amqp_routing_key))
 #ifdef WITH_JANSSON
     config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
 #else
@@ -304,7 +310,7 @@ void skinny_bgp_daemon()
     }
     else {
       config.bgp_table_dump_file = NULL;
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): 'bgp_table_dump_file' ignored due to invalid 'bgp_table_dump_refresh_time'.\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): Invalid 'bgp_table_dump_refresh_time'.\n", config.name);
     }
 
     bgp_table_dump_init_amqp_host();
@@ -319,7 +325,7 @@ void skinny_bgp_daemon()
     select_fd++;
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
-    if (config.bgp_table_dump_file) {
+    if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
       int delta;
 
       calc_refresh_timeout_sec(dump_refresh_deadline, log_tstamp.tv_sec, &delta);
@@ -353,12 +359,12 @@ void skinny_bgp_daemon()
       }
     }
 
-    if (config.nfacctd_bgp_msglog_file || config.bgp_table_dump_file ||
-	config.nfacctd_bgp_msglog_amqp_routing_key) {
+    if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || 
+	config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
       gettimeofday(&log_tstamp, NULL);
       compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
 
-      if (config.bgp_table_dump_file) {
+      if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
 	while (log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_handle_dump_event();
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
@@ -366,7 +372,7 @@ void skinny_bgp_daemon()
       }
 
 #ifdef WITH_RABBITMQ
-      if (config.nfacctd_bgp_msglog_amqp_routing_key) {
+      if (config.nfacctd_bgp_msglog_amqp_routing_key) { 
         time_t last_fail = p_amqp_get_last_fail(&bgp_daemon_msglog_amqp_host);
 
 	if (last_fail && (last_fail + config.nfacctd_bgp_msglog_amqp_retry < log_tstamp.tv_sec)) {
@@ -1998,7 +2004,8 @@ void bgp_peer_close(struct bgp_peer *peer)
      bgp_info_delete()/bgp_route_next() in bgp_peer_info_delete()
      that require some more testing in the field.
   */ 
-  if (config.bgp_table_dump_file) bgp_peer_info_delete(peer);
+  if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key)
+    bgp_peer_info_delete(peer);
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
     bgp_peer_log_close(peer, config.nfacctd_bgp_msglog_output); 
