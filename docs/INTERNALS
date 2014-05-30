@@ -7,10 +7,11 @@ V.	Communications between core process and plugins
 VI.	Memory table plugin
 VII.	SQL issues and *SQL plugins
 VIII.	Recovery modes
-IX.	pmacctd flows counter implementation
-X.	Classifier and connection tracking engines
-XI.	Jumps and flow diversions in Pre-Tagging infrastructure
-XII.	BGP daemon thread dimensioning
+IX.	Common plugin structures (print, MongoDB, AMQP plugins) 
+X.	pmacctd flows counter implementation
+XI.	Classifier and connection tracking engines
+XII.	Jumps and flow diversions in Pre-Tagging infrastructure
+XIII.	BGP daemon thread dimensioning
 
 
 I. Introduction
@@ -42,14 +43,16 @@ proto". Comma, because of the unique logical connective "and", is simply intende
 a separator.
 
 
-III. The whole picture
-	  ----[ nfacctd loop ]---------------------------
-         |						  |
-	 |	    [ check ]      [   handle    ]        |
-	 | ... =====[ Allow ]======[ pre_tag_map ]=== ... |
-	 |	    [ table ]				  |
-	 |						  |
-	  ------------------------------------------------
+III. The high-level picture
+	  ----[ nfacctd loop ]--------------------------------------------
+         |						  		  |
+	 |	    [ check ]      [   handle    ]      [ Correlate ]     |
+	 | ... =====[ Allow ]===== [    maps     ]===== [ BGP, IGP  ] ... |
+	 |	    [ table ]				  		  |
+	 |	    nfacctd.c	      pretag.c		  bgp/bgp.c	  |
+	 |			  pretag_handlers.c	 isis/isis.c	  |
+	 |			    pretag-data.h			  |
+	  ----------------------------------------------------------------
 		 \		
 		  |
 		  |
@@ -64,30 +67,38 @@ NetFlow	   |    \	    &&				      |  						 |
 	   |	 |  [    evaluate     ]			      |  [     handle     ]    [ write buffer ]		 |
 	   |	 |  [ packet sampling ]			      |==[ channel buffer ]====[  to plugin   ]==== ...  |
 	   |	 | 												 |
-	   |      \												 | 
+	   |      \					plugin_hooks.c						 | 
 	    -----------------------------------------------------------------------------------------------------
 		   |
 		   |
 		  /
-          ----[ pmacctd loop ]------------------------------------------------------------
-         |								    		  |
-	 |         [   handle   ]     [  handle  ]    [  handle   ]	[ handle ]        |
-	 | ... ====[ link layer ]=====[ IP layer ]====[ fragments ]==== [ flows ]==== ... |
-	 |								    		  |
-	  --------------------------------------------------------------------------------
+          ----[ pmacctd loop ]--------------------------------------------------------------------------------
+         |								    	  			      |
+	 |         [   handle   ]     [  handle  ]    [  handle   ]	[ handle ]     [     handle	]     |
+	 | ... ====[ link layer ]=====[ IP layer ]====[ fragments ]==== [ flows  ]==== [ classification ] ... |
+	 |		ll.c		  nl.c		ip_frag.c       ip_flow.c         classifier.c	      |
+	 |												      |
+	 |	   [   handle    ]      [ Correlate ]     						      |
+         | ... ====[    maps     ]===== [ BGP, IGP  ] ...						      |
+	 |	      pretag.c            bgp/bgp.c							      |
+         |        pretag_handlers.c      isis/isis.c							      |
+         |          pretag-data.h 									      |
+	  ----------------------------------------------------------------------------------------------------
 
+Except for the protocol specifics sfacctd loop is similar to nfacctd loop; same goes
+for uacctd being similar to pmacctd.
 
 IV. Processes Vs. threads 
-pmacctd, nfacctd and sfacctd, the pmacct package daemons, rely over both a multi-thread
-and multi-process architecture. Processes are used to encapsulate each plugin instance
-and, indeed, the Core Process. Threads are used to encapsulate specific functions within
-each process - ie. the BGP daemon thread within the Core Process.
-The Core Process either captures packets via the well-known libpcap API (pmacctd) or
-listens for specific packets coming from the network (nfacctd, for example, listens
-for NetFlow packets); packets are then processed (parsed, filtered, sampled, tagged,
-aggregated and bufferized if required) and sent to the active plugins. Plugins in
-turn pick and handle in some meaningful way aggregated data (struct pkt_data), ie.
-writing them to a SQL database, a memory table, etc. A diagram follows:
+pmacct daemons, ie. pmacctd, nfacctd, rely over both a multi-thread and multi-process
+architecture. Processes are used to encapsulate each plugin instance and, indeed, the
+Core Process. Threads are used to encapsulate specific functions within each process -
+ie. the BGP daemon thread within the Core Process. The Core Process either captures
+packets via the well-known libpcap API (pmacctd) or listens for specific packets coming
+from the network (nfacctd, for example, listens for NetFlow packets); packets are then
+processed (parsed, filtered, sampled, tagged, aggregated and buffered, if required as
+per runtime config) and sent to the active plugins. Plugins in turn pick and handle in
+some meaningful way aggregated data (struct pkt_data), ie. writing them to a RDBMS, a
+memory table, etc. A diagram follows:
 
 					   |===> [ pmacctd/plugin ]
 libpcap			           pipe/shm|
@@ -95,7 +106,7 @@ libpcap			           pipe/shm|
 socket
 
 To conclude a position on threads: threads are a necessity because of the tendency
-modern CPU are built (ie. multi-core). So far pmacct limits iteself to a macro-usage
+modern CPU are built (ie. multi-core). So far pmacct limits itself to a macro-usage
 of threads, ie. where it makes sense to save on IPC or where big memory structures
 would lead the pages' copy-on-write to perform horrendly. The rationale is that fine-
 grained multi-threading can often become a fertile source of bugs.
@@ -110,18 +121,19 @@ Circular queues are encapsulated into a more complex channel structure which als
 copy of the aggregation method, an OOB (Out-of-Band) signalling channel, buffers, one or
 more filters and a pointer to the next free queue element. The Core Process simply loops
 around all established channels, in a round-robin fashion, feeding data to active plugins.
-The circular queue is effectively a shared memory segment; if the Plugin is sleeping (eg.
-because the arrival of new data from the network is not sustained), the Core Process kicks
-the Plugin signalling that new data are now available at the specified memory address; the
-Plugin catches the message and copies the buffer into its private memory space; if it is
-not sleeping, once finished, will check the next queue element to see whether new data are
-available. Either cases, the Plugin continues processing the received buffer.
+The circular queue is effectively a shared memory segment; if the Plugin is sleeping (ie.
+because the arrival of new data from the network is not at sustained rates), then the Core
+Process kicks the specific Plugin flagging that new data is now available at the specified
+memory address; the Plugin catches the message and copies the buffer into its private memory
+space; if the Plugin is not sleeping instead, once finished processing the current element,
+will check the next queue element to see whether new data are available. Either cases, the
+Plugin continues processing the received buffer.
 'plugin_pipe_size' configuration directive aims to tune manually the circular queue size;
 raising its size is vital when facing large volumes of traffic, because the amount of data
 pushed onto the queue is directly (linearly) proportional to the number of packets captured
-by the core process. A small additional space is allocated for the out-of-band signallation
-mechanism, which is pipe-based. 'plugin_buffer_size' defines the transfer buffer size and
-is disabled by default. Its value has to be <= the circular queue size, hence the queue
+by the core process. A small additional space is allocated for the out-of-band signalling
+mechanism, which is UNIX pipe-based. 'plugin_buffer_size' defines the transfer buffer size
+and is disabled by default. Its value has to be <= the circular queue size, hence the queue
 will be divided into 'plugin_buffer_size'/'plugin_pipe_size' chunks. Let's write down a
 few simple equations:
 
@@ -132,12 +144,12 @@ bs = 'plugin_buffer_size' value
 ss = 'plugin_pipe_size' value
 
 	a) no 'plugin_buffer_size' and no 'plugin_pipe_size':
-	   circular queue size = (dss / as) * dbs 
-	   signalling queue size = dss
+	   circular queue size = 4MB
+	   signalling queue size = (4MB / dbs) * as
 
 	b) 'plugin_buffer_size' defined but no 'plugin_pipe_size':
-	   circular queue size = (dss / as) * bs 
-	   signalling queue size = dss
+	   circular queue size = 4MB
+	   signalling queue size = (4MB / bs) * as
 
 	c) no 'plugin_buffer_size' but 'plugin_pipe_size' defined: 
   	   circular queue size = ss 
@@ -147,21 +159,22 @@ ss = 'plugin_pipe_size' value
 	   circular queue size = ss 
 	   signalling queue size = (ss / bs) * as
 	
-Intuitively, the equations above tell that if no 'plugin_pipe_size' is defined, the size
-of the circular queue is inferred by the size of the signalling queue, which is selected
-by the Operating System. If 'plugin_pipe_size' is defined, the circular queue size is set
-to the supplied value and the signalling queue size is adjusted accordingly.
-If 'plugin_buffer_size' is not defined, it's assumed to be sizeof(struct pkt_data), which
-is the size of a single aggregate travelling through the circolar queue; 'sizeof(char *)'
-is the size of a pointer, which is architecture-dependant. 
+If 'plugin_buffer_size' is not defined, it is set to the minimum size possible in order
+to contain one element worth of data for the selected aggregation method. Also, from
+release 1.5.0rc2 a simple and reasonable default value for plugin_pipe_size is picked.
+It is aimed that the signalling queue is able to handle worst-case scenario and address
+the full circular buffer: should that not be possible due to OS restrictions, ie. on
+Linux systems /proc/sys/net/core/[rw]mem_max and /proc/sys/net/core/[rw]mem_default, a
+warning message is printed.
 
 Few final remarks: a) buffer size of 10KB and pipe size of 10MB are well-tailored for most
 common environments; b) by enabling buffering, attaching the collector to a mute interface 
 and doing some pings will not show any result (... data are buffered); c) take care to the
 ratio between the buffer size and pipe size; choose for a ratio not less than 1:100. But 
 keeping it around 1:1000 is strongly adviceable; selecting a reduced ratio could lead to
-filling the queue. You may alternatively do some calculations based on the knowledge of
-your network environment:
+filling the queue: when that happens a warning message indicating the risk of data loss is
+printed. You may alternatively do some calculations based on the knowledge of your network
+environment:
 
 average_traffic = packets per seconds in your network segment
 sizeof(struct pkt_data) = ~70 bytes
@@ -266,15 +279,20 @@ As said before, aggregates are pushed into the DB at regular intervals; to speed
 operation a queue of pending queries is built as nodes are used; this allows to avoid long
 walks through the whole cache structure given, for various reasons (ie. classification,
 sql_startup_delay) not all elements might be eligible for purging.
-When the cache scanner kicks incurrent a new writer process is spawned and in charge of
-processing the pending elements queue; SQL statements are built and sent to the RDBMS.
+When the cache scanner kicks in a new writer process is spawned and in charge of processing
+the pending elements queue; SQL statements are built and sent to the RDBMS. Writers can,
+depending on the conditions of the DB, take long time before completing, ie. longer than
+pmacct interval to purge to the DB, sql_refresh_time. A sql_max_writers feature allows to  
+impose a maximum number of writers to prevent forming an endless queue, hence starving
+system resources, and at the expense of data loss.
 Because we, at this moment, don't known if INSERT queries would create duplicates, an
 UPDATE query is launched first and only if no rows are affected, then an INSERT query
 is trapped. 'sql_dont_try_update' twists this behaviour and skips directly to INSERT
 queries; when enabling this configuration directive, you must be sure there are no risks
 of duplicate aggregates to avoid data loss.
 Data in the cache is never erased but simply marked as invalid; this way while correctess
-of data is still preserved, we avoid the waste of CPU cycles. 
+of data is still preserved, we avoid the waste of CPU cycles (if there is no immediate
+need to free memory up). 
 The number of cache buckets is tunable via the 'sql_cache_entries' configuration key; a
 prime number is strongly advisable to ensure a better data dispersion through the cache. 
 Three notes about the above described process: (a) some time ago the concept of lazy data
@@ -297,8 +315,8 @@ pipe				    |			|
 Now, let's keep an eye on how aggregates are structured on the DB side. Data is simply organized
 in flat tuples, without any external references. After being not full convinced about better
 normalized solutions aimed to satifsy an abstract concept of flexibility, we've (and here come
-into play the load of mails exchanged with Wim Kerkhoff) found that simple means faster. And to
-let the wheel spin quickly is a key achievement, because pmacct needs not only to insert new
+into play the load of mails exchanged with Wim Kerkhoff) found that simple means faster. And
+spinning the wheel quickly is a key achievement, because pmacct needs not only to insert new
 records but also update existing ones, putting under heavy pressure RDBMS when placed in busy
 network environments and an high number of primitives are required. 
 Now a pair of concluding practical notes: (a) default SQL table and its primary key are suitable
@@ -306,7 +324,7 @@ for many normal usages, however unused fields will be filled by zeroes. We took 
 time ago to allow people to compile sources and quickly get involved into the game, without caring
 too much about SQL details (assumption: who is involved in network management, shoult not have
 necessarily to be also involved into SQL stuff). So, everyone with a busy network segment under his
-feets has to carefully tune the table himself to avoid performance constraints; 'sql_optimize_clauses'
+feet has to carefully tune the table himself to avoid performance constraints; 'sql_optimize_clauses'
 configuration key evaluates what primitives have been selected and avoids long 'WHERE' clauses in
 'INSERT' and 'UPDATE' queries. This may involve the creation of auxiliar indexes to let the execution
 of 'UPDATE' queries to work smoothly. A custom table might be created, trading flexibility with disk
@@ -359,6 +377,10 @@ A final statistics screen summarizes what has been successfully written into the
 help reprocess the logfile at a later stage if something goes wrong once again. 
 
 
+IX. Common plugin structures (print, MongoDB, AMQP plugins)
+XXX
+
+
 IX. pmacctd flows counter implementation
 Let's take the definition of IP flows from RFC3954, titled 'Cisco Systems NetFlow Services Export
 Version 9': an IP flow is defined as a set of IP packets passing an observation point in the network
@@ -395,7 +417,7 @@ work:
          |        [ fragment ]   [   flow   ]   [      flow      ]   [ connection ]	   |
          | ... ==>[ handling ]==>[ handling ]==>[ classification ]==>[  tracking  ]==> ... |
          |        [  engine  ]   [  engine  ]   [     engine     ]   [   engine   ]	   |
-	 |						|       \			   |
+	 |	   ip_frag.c	  ip_flow.c	   classifier.c	\     conntrack.c	   |
 	 |						|        \___			   |
 	 |						\            \			   |
 	 |						 \  [ shared  ]			   |
@@ -412,7 +434,7 @@ setting a maximum number of classification tentatives, handling bytes/packets ac
 (still) unknown flows and attaching connection tracking modules whenever required. In case of
 successful classification, accumulators are released and sent to the active plugins, which, in
 turn, whenever possible (ie. counters have not been cleared, sent to the DB, etc.) will move
-such quantities from the 'unknown' class to the newly determined one.
+such amounts from the 'unknown' class to the newly determined one.
 A connection tracking module might be assigned to certain classified streams if they belong to
 a protocol which is known to be based over a control channel (ie. FTP, RTSP, SIP, H.323, etc.).
 However, some protocols (ie. MSN messenger) spawn data channels that can still be distinguished

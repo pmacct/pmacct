@@ -1,12 +1,12 @@
-PMACCTD PLUGIN WRITING HOW-TO
+PMACCT PLUGIN WRITING HOW-TO
 
 SHORT OVERVIEW
-the pmacct plugin architecture is thought to allow people that need
-their own backend to implement it without knowing too much of core
-collectors functionalities and independently by other plugins.
-Below are listed a few steps to hook your plugin in pmacct; pmacct 
-is also extremely open to new ideas, so if you wish to contribute
-your work, you are the most welcome. 
+pmacct plugin architecture is thought to allow to implement own
+backends without knowing much of core collectors functionalities
+and independently by other plugins. Below are listed a few steps
+to hook a new plugin in pmacct; pmacct is also extremely open to
+new ideas, so if you wish to contribute your work, you will be the
+most welcome. 
 
 - minor hacks to configure.in script following the example of what
   has been done there for mysql plugin; same goes for requirements
@@ -32,8 +32,26 @@ your work, you are the most welcome.
   the plugin from within the configuration or command-line. The
   second is effectively the entry point to the plugin.
 
+- [OPTIONAL] If the plugin needs any checks that require visibility
+  in the global configuration for example for compatibility against
+  other plugins instantiated (ie. tee plugin not compatible with any
+  plugins) or the daemon itself (ie. nfprobe plugin only supported
+  in pmacctd and uacctd daemons), such checks can be performed in
+  the daemon code itself (ie. pmacctd.c, nfacctd.c, etc. - look in
+  these files for the "PLUGIN_ID" string for examples). 
+
 - Develop the plugin code. One of the existing plugins can be used
-  as reference for popping data out of the circular buffer. Data
-  structures for parsing such data are defined in network.h file.
-  The basic layout for the main plugin loop can be grasped in the
-  print_plugin.c file by looking at content of the "for (;;)" loop. 
+  as reference - of course, as long as the purpose of the plugin
+  under development is same or similar in function (ie. data is
+  extracted from the circular buffer, then aggregated and cached in
+  memory for a configurable amount of time, ie. print_refresh_time, 
+  and finally purged to the backend. Structures for parsing data
+  coming out of the circular buffer are defined in the network.h
+  file; structures for data caching are in print_common.h (at least
+  three generations of caches were conceived over time: first the
+  one used in the memory plugin; second the one used in SQL plugins,
+  rich in features but challenging to control in size; third, and
+  current, the one used in print, MongoDB and AMQP plugins which is
+  defined, as said, in print_common.h). The basic layout for the
+  main plugin loop can be grasped in the print_plugin.c file by
+  looking at content of the "for (;;)" loop. 

@@ -186,9 +186,9 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		When enabling debug, log messages about obtained and target pipe sizes are printed.
 		If obtained is less than target, it could mean the maximum socket size granted by
 		the Operating System has to be increased. On Linux systems default socket size awarded
-		is defined in /proc/sys/net/core/rmem_default ; the maximum configurable socket size
-		(which can be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
-		(default: 4MB)
+		is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable socket
+		size (which can be changed via sysctl) is defined in /proc/sys/net/core/[rw]mem_max
+		instead. (default: 4MB)
 
 KEY:		plugin_buffer_size 
 DESC:		by defining the transfer buffer size, in bytes, this directive enables bufferization
