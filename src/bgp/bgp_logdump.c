@@ -134,7 +134,7 @@ void bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, 
       json_decref(kv);
     }
 
-    if (config.nfacctd_bgp_msglog_file)
+    if (config.nfacctd_bgp_msglog_file || config.bgp_table_dump_file)
       write_and_free_json(peer->log->fd, obj);
 
 #ifdef WITH_RABBITMQ
