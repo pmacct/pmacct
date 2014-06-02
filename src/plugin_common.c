@@ -762,6 +762,10 @@ int P_test_zero_elem(struct chained_cache *elem)
       if (elem->pnat && elem->pnat->nat_event) return FALSE;
       else return TRUE;
     }
+    else if (elem->flow_type == NF9_FTYPE_OPTION) {
+      /* not really much we can test */
+      return FALSE;
+    }
     else {
       if (elem->bytes_counter || elem->packet_counter || elem->flow_counter) return FALSE;
       else return TRUE;

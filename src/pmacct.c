@@ -3294,7 +3294,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     }
   }
 
-  if (flow_type != NF9_FTYPE_EVENT) {
+  if (flow_type != NF9_FTYPE_EVENT && flow_type != NF9_FTYPE_OPTION) {
     kv = json_pack("{sI}", "packets", packet_counter);
     json_object_update_missing(obj, kv);
     json_decref(kv);

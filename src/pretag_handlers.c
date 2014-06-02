@@ -585,6 +585,8 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
       e->sample_type.n = NF9_FTYPE_TRAFFIC;
     else if (!strncmp(value, "event", strlen("event")))
       e->sample_type.n = NF9_FTYPE_EVENT;
+    else if (!strncmp(value, "option", strlen("option")))
+      e->sample_type.n = NF9_FTYPE_OPTION;
     else {
       Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
       return TRUE;

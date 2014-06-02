@@ -612,7 +612,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         bson_append_date(bson_elem, "stamp_updated", (bson_date_t) 1000*time(NULL));
       }
   
-      if (queue[j]->flow_type != NF9_FTYPE_EVENT) {
+      if (queue[j]->flow_type != NF9_FTYPE_EVENT && queue[j]->flow_type != NF9_FTYPE_OPTION) {
   #if defined HAVE_64BIT_COUNTERS
         bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
         if (config.what_to_count & COUNT_FLOWS) bson_append_long(bson_elem, "flows", queue[j]->flow_counter);

@@ -923,7 +923,7 @@ DESC:		makes 'nfacctd' to ignore timestamps included in NetFlow header and build
 		('sql_history') and an INSERT-only mechanism is in use ('sql_dont_try_update', 'sql_use_copy').
 		(default: false) 
 
-KEY:		nfacctd_pro_rating [ NO_PMACCTD]
+KEY:		nfacctd_pro_rating [NO_PMACCTD]
 VALUES:		[ true | false ]
 DESC:		if nfacctd_time_new is set to false (default) and historical accounting (ie. sql_history) is
 		enabled, this directive enables pro rating of NetFlow/IPFIX flows over time-bins, if needed.
@@ -934,6 +934,12 @@ DESC:		if nfacctd_time_new is set to false (default) and historical accounting (
 		100 bytes during t3. (default: false)
 NOTES:          If NetFlow sampling is enabled, it is recommended to have counters renormalization enabled
                 (nfacctd_renormalize set to true).
+
+KEY:            nfacctd_account_options [GLOBAL, NO_PMACCTD]
+VALUES:         [ true | false ]
+DESC:		if set to true account for NetFlow/IPFIX option records. This will require define custom
+		primitives via aggregate_primitives. pre_tag_map offers sample_type value of 'option' in
+		order to split option data records from flow or event data ones. (default: false)  
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
 VALUES:		[ false | (true|file) | bgp | fallback ]

@@ -1374,6 +1374,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           }
 	}
 
+	if (config.nfacctd_account_options) {
+	  pptrs->f_data = pkt;
+	  pptrs->f_tpl = (u_char *) tpl;
+	  reset_net_status_v(pptrsv);
+	  pptrs->flow_type = NF_evaluate_flow_type(tpl, pptrs);
+
+	  exec_plugins(pptrs, req);
+	}
+
         pkt += tpl->len;
         flowoff += tpl->len;
 
@@ -2065,6 +2074,9 @@ u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_
 
   /* NetFlow Event Logging (NEL): generic NAT event support */
   if (tpl->tpl[NF9_NAT_EVENT].len) ret = NF9_FTYPE_NAT_EVENT;
+
+  /* NetFlow/IPFIX option */
+  if (tpl->template_type == 1) ret = NF9_FTYPE_OPTION;
 
   return ret;
 }

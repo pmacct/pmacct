@@ -253,7 +253,7 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
   for (num = 0; num < idata->num_primitives; num++)
     (*where[num].handler)(cache_elem, idata, num, &ptr_values, &ptr_where);
 
-  if (cache_elem->flow_type == NF9_FTYPE_EVENT) {
+  if (cache_elem->flow_type == NF9_FTYPE_EVENT || cache_elem->flow_type == NF9_FTYPE_OPTION) {
     for (num_set = 0; set_event[num_set].type; num_set++)
       (*set_event[num_set].handler)(cache_elem, idata, num_set, &ptr_set, NULL);
   }
@@ -275,7 +275,7 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
 
   if (config.sql_dont_try_update || !num_set || (mysql_affected_rows(db->desc) == 0)) {
     /* UPDATE failed, trying with an INSERT query */ 
-    if (cache_elem->flow_type == NF9_FTYPE_EVENT) {
+    if (cache_elem->flow_type == NF9_FTYPE_EVENT || cache_elem->flow_type == NF9_FTYPE_OPTION) {
       strncpy(insert_full_clause, insert_clause, SPACELEFT(insert_full_clause));
       strncat(insert_full_clause, insert_nocounters_clause, SPACELEFT(insert_full_clause));
       strncat(ptr_values, ")", SPACELEFT(values_clause));
