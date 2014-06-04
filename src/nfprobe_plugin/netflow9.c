@@ -171,7 +171,11 @@ struct NF9_INTERNAL_OPTIONS_TEMPLATE {
 struct NF9_SOFTFLOWD_DATA_COMMON {
 	u_int32_t last_switched, first_switched;
 	u_int16_t ifindex_in, ifindex_out;
+#if defined HAVE_64BIT_COUNTERS
+	u_int64_t bytes, packets, flows;
+#else
 	u_int32_t bytes, packets, flows;
+#endif
 	u_int16_t src_port, dst_port;
 	u_int8_t direction, protocol, tos;
 	u_int8_t tcp_flags, ipproto;
@@ -220,6 +224,27 @@ static int nf9_pkts_until_template = -1;
 static u_int8_t send_options = FALSE;
 static u_int8_t send_sampling_option = FALSE;
 static u_int8_t send_class_option = FALSE;
+
+/*
+ * XXX: pmXXX_htonll(): similar to htonl() for 64 bits integers; no checks are done
+ * on the length of the buffer.
+ */
+u_int64_t pmXXX_htonll(u_int64_t addr)
+{
+#if defined IM_LITTLE_ENDIAN
+  u_int64_t buf;
+
+  u_int32_t *x = (u_int32_t *)(void *) &addr;
+  u_int32_t *y = (u_int32_t *)(void *) &buf;
+
+  y[0] = htonl(x[1]);
+  y[1] = htonl(x[0]);
+
+  return buf;
+#else
+  return addr;
+#endif
+}
 
 static void
 flow_to_flowset_input_handler(char *flowset, const struct FLOW *flow, int idx, int size)
@@ -446,6 +471,22 @@ nf9_init_template(void)
         v4_template_out.r[rcount].length = htons(4);
         v4_int_template_out.r[rcount].length = 4;
 	rcount++;
+#if defined HAVE_64BIT_COUNTERS
+        v4_template.r[rcount].type = htons(NF9_IN_BYTES);
+        v4_template.r[rcount].length = htons(8);
+        v4_int_template.r[rcount].length = 8;
+        v4_template_out.r[rcount].type = htons(NF9_IN_BYTES);
+        v4_template_out.r[rcount].length = htons(8);
+        v4_int_template_out.r[rcount].length = 8;
+        rcount++;
+        v4_template.r[rcount].type = htons(NF9_IN_PACKETS);
+        v4_template.r[rcount].length = htons(8);
+        v4_int_template.r[rcount].length = 8;
+        v4_template_out.r[rcount].type = htons(NF9_IN_PACKETS);
+        v4_template_out.r[rcount].length = htons(8);
+        v4_int_template_out.r[rcount].length = 8;
+        rcount++;
+#else
 	v4_template.r[rcount].type = htons(NF9_IN_BYTES);
 	v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].length = 4;
@@ -464,6 +505,7 @@ nf9_init_template(void)
         v4_template_out.r[rcount].length = htons(4);
         v4_int_template_out.r[rcount].length = 4;
 	rcount++;
+#endif
 	v4_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v4_template.r[rcount].length = htons(1);
 	v4_int_template.r[rcount].length = 1;
@@ -758,6 +800,22 @@ nf9_init_template(void)
         v6_template_out.r[rcount].length = htons(4);
         v6_int_template_out.r[rcount].length = 4;
 	rcount++;
+#if defined HAVE_64BIT_COUNTERS
+        v6_template.r[rcount].type = htons(NF9_IN_BYTES);
+        v6_template.r[rcount].length = htons(8);
+        v6_int_template.r[rcount].length = 8;
+        v6_template_out.r[rcount].type = htons(NF9_IN_BYTES);
+        v6_template_out.r[rcount].length = htons(8);
+        v6_int_template_out.r[rcount].length = 8;
+        rcount++;
+        v6_template.r[rcount].type = htons(NF9_IN_PACKETS);
+        v6_template.r[rcount].length = htons(8);
+        v6_int_template.r[rcount].length = 8;
+        v6_template_out.r[rcount].type = htons(NF9_IN_PACKETS);
+        v6_template_out.r[rcount].length = htons(8);
+        v6_int_template_out.r[rcount].length = 8;
+        rcount++;
+#else
 	v6_template.r[rcount].type = htons(NF9_IN_BYTES);
 	v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].length = 4;
@@ -776,6 +834,7 @@ nf9_init_template(void)
         v6_template_out.r[rcount].length = htons(4);
         v6_int_template_out.r[rcount].length = 4;
 	rcount++;
+#endif
 	v6_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v6_template.r[rcount].length = htons(1);
 	v6_int_template.r[rcount].length = 1;
@@ -1151,6 +1210,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
     const struct timeval *system_boot_time, u_int *len_used, int direction)
 {
 	u_int freclen, ret_len, nflows, idx;
+	u_int64_t rec64;
 	u_int32_t rec32;
 	u_int8_t rec8;
 	char *ftoft_ptr_0 = ftoft_buf_0;
@@ -1172,6 +1232,15 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	  memcpy(ftoft_ptr_0, &rec32, 4);
 	  ftoft_ptr_0 += 4;
 
+#if defined HAVE_64BIT_COUNTERS
+          rec64 = pmXXX_htonll(flow->octets[0]);
+          memcpy(ftoft_ptr_0, &rec64, 8);
+          ftoft_ptr_0 += 8;
+
+          rec64 = pmXXX_htonll(flow->packets[0]);
+          memcpy(ftoft_ptr_0, &rec64, 8);
+          ftoft_ptr_0 += 8;
+#else
 	  rec32 = htonl(flow->octets[0]);
 	  memcpy(ftoft_ptr_0, &rec32, 4);
 	  ftoft_ptr_0 += 4;
@@ -1179,6 +1248,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	  rec32 = htonl(flow->packets[0]);
   	  memcpy(ftoft_ptr_0, &rec32, 4);
 	  ftoft_ptr_0 += 4;
+#endif
 
           switch (flow->af) {
           case AF_INET:
@@ -1235,6 +1305,15 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	  memcpy(ftoft_ptr_1, &rec32, 4);
 	  ftoft_ptr_1 += 4;
 
+#if defined HAVE_64BIT_COUNTERS
+          rec64 = pmXXX_htonll(flow->octets[1]);
+          memcpy(ftoft_ptr_1, &rec64, 8);
+          ftoft_ptr_1 += 8;
+
+          rec64 = pmXXX_htonll(flow->packets[1]);
+          memcpy(ftoft_ptr_1, &rec64, 8);
+          ftoft_ptr_1 += 8;
+#else
 	  rec32 = htonl(flow->octets[1]);
 	  memcpy(ftoft_ptr_1, &rec32, 4);
 	  ftoft_ptr_1 += 4;
@@ -1242,6 +1321,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	  rec32 = htonl(flow->packets[1]);
 	  memcpy(ftoft_ptr_1, &rec32, 4);
 	  ftoft_ptr_1 += 4;
+#endif
 
           switch (flow->af) {
           case AF_INET:

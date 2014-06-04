@@ -448,9 +448,10 @@ int string_etheraddr(const u_char *asc, char *addr)
 u_int64_t pm_htonll(u_int64_t addr)
 {
 #if defined IM_LITTLE_ENDIAN
-  static u_int64_t buf;
-  register u_int32_t *x = (u_int32_t *)(void *) &addr;
-  register u_int32_t *y = (u_int32_t *)(void *) &buf;
+  u_int64_t buf;
+
+  u_int32_t *x = (u_int32_t *)(void *) &addr;
+  u_int32_t *y = (u_int32_t *)(void *) &buf;
 
   y[0] = htonl(x[1]);
   y[1] = htonl(x[0]);

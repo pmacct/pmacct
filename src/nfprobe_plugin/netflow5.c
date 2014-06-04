@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -124,6 +124,8 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 		if (flows[i]->af != AF_INET)
 			continue;
 		if (flows[i]->octets[0] > 0) {
+			u_int32_t rec32;
+
 			flw->src_ip = flows[i]->addr[0].v4.s_addr;
 			flw->dest_ip = flows[i]->addr[1].v4.s_addr;
 			flw->src_mask = flows[i]->mask[0];
@@ -143,8 +145,17 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 			  if (tmp_as > 65535) flw->dest_as = htons(23456);
 			  else flw->dest_as = htons(tmp_as);
 			}
+#if defined HAVE_64BIT_COUNTERS
+			rec32 = flows[i]->packets[0];
+			flw->flow_packets = htonl(rec32);
+
+			rec32 = flows[i]->octets[0];
+			flw->flow_octets = htonl(rec32);
+#else
 			flw->flow_packets = htonl(flows[i]->packets[0]);
 			flw->flow_octets = htonl(flows[i]->octets[0]);
+#endif
+
 			flw->flow_start =
 			    htonl(timeval_sub_ms(&flows[i]->flow_start,
 			    system_boot_time));
@@ -161,6 +172,8 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 		flw = (struct NF5_FLOW *)(packet + offset);
 
 		if (flows[i]->octets[1] > 0) {
+			u_int32_t rec32;
+
 			flw->src_ip = flows[i]->addr[1].v4.s_addr;
 			flw->dest_ip = flows[i]->addr[0].v4.s_addr;
 			flw->src_mask = flows[i]->mask[1];
@@ -180,8 +193,16 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 			  if (tmp_as > 65535) flw->dest_as = htons(23456);
 			  else flw->dest_as = htons(tmp_as);
 			}
+#if defined HAVE_64BIT_COUNTERS
+			rec32 = flows[i]->packets[1];
+			flw->flow_packets = htonl(rec32);
+
+			rec32 = flows[i]->octets[1];
+			flw->flow_octets = htonl(rec32);
+#else
 			flw->flow_packets = htonl(flows[i]->packets[1]);
 			flw->flow_octets = htonl(flows[i]->octets[1]);
+#endif
 			flw->flow_start =
 			    htonl(timeval_sub_ms(&flows[i]->flow_start,
 			    system_boot_time));
