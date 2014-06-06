@@ -249,19 +249,21 @@ u_int64_t pmXXX_htonll(u_int64_t addr)
 static void
 flow_to_flowset_input_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  u_int16_t rec16;
+  u_int32_t rec32, tmp32;
 
-  rec16 = htons(flow->ifindex[idx]);
-  memcpy(flowset, &rec16, size);
+  rec32 = flow->ifindex[idx]; 
+  tmp32 = htonl(rec32);
+  memcpy(flowset, &tmp32, size);
 }
 
 static void
 flow_to_flowset_output_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  u_int16_t rec16;
+  u_int32_t rec32, tmp32;
 
-  rec16 = htons(flow->ifindex[idx ^ 1]);
-  memcpy(flowset, &rec16, size);
+  rec32 = flow->ifindex[idx ^ 1];
+  tmp32 = htonl(rec32);
+  memcpy(flowset, &tmp32, size);
 }
 
 static void
@@ -514,22 +516,22 @@ nf9_init_template(void)
         v4_int_template_out.r[rcount].length = 1;
 	rcount++;
         v4_template.r[rcount].type = htons(NF9_INPUT_SNMP);
-        v4_template.r[rcount].length = htons(2);
+        v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].handler = flow_to_flowset_input_handler;
-        v4_int_template.r[rcount].length = 2;
+        v4_int_template.r[rcount].length = 4;
         v4_template_out.r[rcount].type = htons(NF9_INPUT_SNMP);
-        v4_template_out.r[rcount].length = htons(2);
+        v4_template_out.r[rcount].length = htons(4);
         v4_int_template_out.r[rcount].handler = flow_to_flowset_input_handler;
-        v4_int_template_out.r[rcount].length = 2;
+        v4_int_template_out.r[rcount].length = 4;
         rcount++;
         v4_template.r[rcount].type = htons(NF9_OUTPUT_SNMP);
-        v4_template.r[rcount].length = htons(2);
+        v4_template.r[rcount].length = htons(4);
 	v4_int_template.r[rcount].handler = flow_to_flowset_output_handler;
-        v4_int_template.r[rcount].length = 2;
+        v4_int_template.r[rcount].length = 4;
         v4_template_out.r[rcount].type = htons(NF9_OUTPUT_SNMP);
-        v4_template_out.r[rcount].length = htons(2);
+        v4_template_out.r[rcount].length = htons(4);
         v4_int_template_out.r[rcount].handler = flow_to_flowset_output_handler;
-        v4_int_template_out.r[rcount].length = 2;
+        v4_int_template_out.r[rcount].length = 4;
         rcount++;
         v4_template.r[rcount].type = htons(NF9_DIRECTION);
         v4_template.r[rcount].length = htons(1);
@@ -843,22 +845,22 @@ nf9_init_template(void)
         v6_int_template_out.r[rcount].length = 1;
 	rcount++;
         v6_template.r[rcount].type = htons(NF9_INPUT_SNMP);
-        v6_template.r[rcount].length = htons(2);
+        v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].handler = flow_to_flowset_input_handler;
-        v6_int_template.r[rcount].length = 2;
+        v6_int_template.r[rcount].length = 4;
         v6_template_out.r[rcount].type = htons(NF9_INPUT_SNMP);
-        v6_template_out.r[rcount].length = htons(2);
+        v6_template_out.r[rcount].length = htons(4);
         v6_int_template_out.r[rcount].handler = flow_to_flowset_input_handler;
-        v6_int_template_out.r[rcount].length = 2;
+        v6_int_template_out.r[rcount].length = 4;
         rcount++;
         v6_template.r[rcount].type = htons(NF9_OUTPUT_SNMP);
-        v6_template.r[rcount].length = htons(2);
+        v6_template.r[rcount].length = htons(4);
 	v6_int_template.r[rcount].handler = flow_to_flowset_output_handler;
-        v6_int_template.r[rcount].length = 2;
+        v6_int_template.r[rcount].length = 4;
         v6_template_out.r[rcount].type = htons(NF9_OUTPUT_SNMP);
-        v6_template_out.r[rcount].length = htons(2);
+        v6_template_out.r[rcount].length = htons(4);
         v6_int_template_out.r[rcount].handler = flow_to_flowset_output_handler;
-        v6_int_template_out.r[rcount].length = 2;
+        v6_int_template_out.r[rcount].length = 4;
         rcount++;
         v6_template.r[rcount].type = htons(NF9_DIRECTION);
         v6_template.r[rcount].length = htons(1);

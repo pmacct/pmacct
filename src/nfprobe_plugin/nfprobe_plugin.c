@@ -501,12 +501,20 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
 {
 	EXPIRY_REMOVE(EXPIRIES, &ft->expiries, flow->expiry);
 
+#if defined HAVE_64BIT_COUNTERS
+        if (flow->octets[0] > (1U << 63) || flow->octets[1] > (1U << 63)) {
+                flow->expiry->expires_at = 0;
+                flow->expiry->reason = R_OVERBYTES;
+                goto out;
+        }
+#else
 	/* Flows over 2Gb traffic */
 	if (flow->octets[0] > (1U << 31) || flow->octets[1] > (1U << 31)) {
 		flow->expiry->expires_at = 0;
 		flow->expiry->reason = R_OVERBYTES;
 		goto out;
 	}
+#endif
 	
 	/* Flows over maximum life seconds */
 	if (ft->maximum_lifetime != 0 && 
