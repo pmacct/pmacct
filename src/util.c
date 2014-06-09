@@ -2180,6 +2180,11 @@ void set_primptrs_funcs(struct extra_primitives *extras)
     primptrs_funcs[idx] = primptrs_set_custom;
     idx++;
   }
+
+  if (extras->off_pkt_extras) {
+    primptrs_funcs[idx] = primptrs_set_extras;
+    idx++;
+  }
 }
 
 void primptrs_set_bgp(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
@@ -2200,6 +2205,11 @@ void primptrs_set_mpls(u_char *base, struct extra_primitives *extras, struct pri
 void primptrs_set_custom(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pcust = (char *) (base + extras->off_custom_primitives);
+}
+
+void primptrs_set_extras(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->pextras = (struct pkt_extras *) (base + extras->off_pkt_extras);
 }
 
 void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct custom_primitives *registry)

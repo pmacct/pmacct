@@ -489,6 +489,7 @@ struct extra_primitives {
   u_int16_t off_pkt_nat_primitives;
   u_int16_t off_pkt_mpls_primitives;
   u_int16_t off_custom_primitives;
+  u_int16_t off_pkt_extras; /* nfprobe only */
 };
 
 struct primitives_ptrs {
@@ -497,6 +498,7 @@ struct primitives_ptrs {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
+  struct pkt_extras *pextras;
 };
 
 typedef void (*primptrs_func) (u_char *, struct extra_primitives *, struct primitives_ptrs *);

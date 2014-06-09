@@ -143,7 +143,10 @@ void load_plugins(struct plugin_requests *req)
 	offset = sizeof(struct pkt_data);
       }
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) chptr->clean_func = pkt_payload_clean;
-      if (list->cfg.data_type & PIPE_TYPE_EXTRAS) chptr->clean_func = pkt_extras_clean;
+      if (list->cfg.data_type & PIPE_TYPE_EXTRAS) {
+	chptr->extras.off_pkt_extras = offset;
+	offset += sizeof(struct pkt_extras);
+      }
       if (list->cfg.data_type & PIPE_TYPE_MSG) chptr->clean_func = pkt_msg_clean;
       if (list->cfg.data_type & PIPE_TYPE_BGP) {
         chptr->extras.off_pkt_bgp_primitives = offset;

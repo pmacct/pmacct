@@ -8,6 +8,18 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.5.0
+FROM:	<= 1.5.0rc3
+TOPIC:	NetFlow/IPFIX, print/AMQP/MongoDB plugins & time syncronization
+DESC:	In 1.5.0 print/AMQP/MongoDB plugins are brought on par to SQL plugins
+	by which flows/data with a future timestamp than the one currently
+	being flushed is retained in the cache - to give further chances to
+	in-memory data aggregation. This is intuitive, consistent behaviour
+	but could happen time syncronization between collector and NetFlow/ 
+	IPFIX agents was not an issue and suddenly it appears pmacct is not
+	writing to the backend anymore. Solution is simply to sync all via
+	NTP and use same timezone (recommended UTC for all).
+
 TO:	>= 1.5.0rc3
 FROM:	<= 1.5.0rc2
 TOPIC:	MySQL plugin, additional libraries required when compiling

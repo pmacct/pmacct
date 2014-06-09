@@ -502,11 +502,20 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
 	EXPIRY_REMOVE(EXPIRIES, &ft->expiries, flow->expiry);
 
 #if defined HAVE_64BIT_COUNTERS
-        if (flow->octets[0] > (1U << 63) || flow->octets[1] > (1U << 63)) {
+        if (config.nfprobe_version == 9 || config.nfprobe_version == 10) {
+	  if (flow->octets[0] > (1ULL << 63) || flow->octets[1] > (1ULL << 63)) { 
                 flow->expiry->expires_at = 0;
                 flow->expiry->reason = R_OVERBYTES;
                 goto out;
+	  }
         }
+	else {
+          if (flow->octets[0] > (1U << 31) || flow->octets[1] > (1U << 31)) {
+                flow->expiry->expires_at = 0;
+                flow->expiry->reason = R_OVERBYTES;
+                goto out;
+          }
+	}
 #else
 	/* Flows over 2Gb traffic */
 	if (flow->octets[0] > (1U << 31) || flow->octets[1] > (1U << 31)) {
@@ -1282,7 +1291,6 @@ parse_engine(char *s, u_int8_t *engine_type, u_int8_t *engine_id)
 void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data, dummy;
-  struct pkt_extras *extras;
   struct pkt_bgp_primitives dummy_pbgp;
   struct ports_table pt;
   struct pollfd pfd;
@@ -1294,6 +1302,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char default_engine[] = "0:0";
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct networks_file_data nfd;
 
@@ -1311,8 +1320,12 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct CB_CTXT cb_ctxt;
   u_int8_t engine_type, engine_id;
 
+  struct extra_primitives extras;
+  struct primitives_ptrs prim_ptrs;
+
   /* XXX: glue */
   memcpy(&config, cfgptr, sizeof(struct configuration));
+  memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "Netflow Probe Plugin", config.name);
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
@@ -1414,6 +1427,9 @@ sort_version:
   pfd.events = POLLIN;
   setnonblocking(pipe_fd);
 
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+  set_primptrs_funcs(&extras);
+
   for(;;) {
 poll_again:
     status->wakeup = TRUE;
@@ -1468,15 +1484,17 @@ read_data:
       else rg->ptr += bufsz;
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
-      extras = (struct pkt_extras *) ((u_char *)data+PdataSz);
 
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
+        for (num = 0; primptrs_funcs[num]; num++)
+          (*primptrs_funcs[num])((u_char *)data, &extras, &prim_ptrs);
+
         for (num = 0; net_funcs[num]; num++)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, &dummy_pbgp, &nfd);
 
 	/* hacky: bgp next-hop */
         if (config.nfacctd_net & NF_NET_NEW && dummy_pbgp.peer_dst_ip.family) {
-          memcpy(&extras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
+          memcpy(&prim_ptrs.pextras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
           memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
         }
 
@@ -1485,15 +1503,15 @@ read_data:
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	}
 
+	prim_ptrs.data = data;
 	handle_hostbyteorder_packet(data);
-	flow_cb((void *)&cb_ctxt, data, extras);
+	flow_cb((void *)&cb_ctxt, prim_ptrs.data, prim_ptrs.pextras);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
 	if (((struct ch_buf_hdr *)pipebuf)->num) {
 	  dataptr = (unsigned char *) data;
-	  dataptr += PdataSz + PextrasSz;
+	  dataptr += datasize;
 	  data = (struct pkt_data *) dataptr;
-          extras = (struct pkt_extras *) ((u_char *)data+PdataSz);
 	}
       }
       goto read_data;
