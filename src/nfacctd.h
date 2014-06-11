@@ -405,6 +405,7 @@ struct data_hdr_v9 {
 
 #define IPFIX_TPL_EBIT                  0x8000 /* IPFIX telmplate enterprise bit */
 #define IPFIX_VARIABLE_LENGTH           65535
+#define PMACCT_PEN                      43874
 
 /* NetFlow V9 stuff */
 #define NF9_TEMPLATE_FLOWSET_ID         0
