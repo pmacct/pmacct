@@ -137,6 +137,9 @@ struct NF9_DATA_FLOWSET_HEADER {
 /* ... */
 #define NF9_FLOW_EXPORTER		144
 /* ... */
+#define NF9_FIRST_SWITCHED_MSEC         152
+#define NF9_LAST_SWITCHED_MSEC          153
+/* ... */
 
 /* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
 #define NF9_CUST_TAG			1
@@ -181,34 +184,6 @@ struct NF9_INTERNAL_OPTIONS_TEMPLATE {
         struct NF9_INTERNAL_TEMPLATE_RECORD r[NF9_OPTIONS_TEMPLATE_NRECORDS];
         u_int16_t tot_rec_len;
 };
-
-/* softflowd data flowset types */
-struct NF9_SOFTFLOWD_DATA_COMMON {
-	u_int32_t last_switched, first_switched;
-	u_int16_t ifindex_in, ifindex_out;
-#if defined HAVE_64BIT_COUNTERS
-	u_int64_t bytes, packets, flows;
-#else
-	u_int32_t bytes, packets, flows;
-#endif
-	u_int16_t src_port, dst_port;
-	u_int8_t direction, protocol, tos;
-	u_int8_t tcp_flags, ipproto;
-	as_t src_as, dst_as;
-	u_int8_t src_mac[6], dst_mac[6];
-	u_int16_t vlan;
-} __packed;
-
-struct NF9_SOFTFLOWD_DATA_V4 {
-	u_int32_t src_addr, dst_addr, bgp_next_hop;
-	struct NF9_SOFTFLOWD_DATA_COMMON c;
-} __packed;
-
-struct NF9_SOFTFLOWD_DATA_V6 {
-	u_int8_t src_addr[16], dst_addr[16];
-	u_int8_t bgp_next_hop[16];
-	struct NF9_SOFTFLOWD_DATA_COMMON c;
-} __packed;
 
 /* Local data: templates and counters */
 #define NF9_SOFTFLOWD_MAX_PACKET_SIZE	512
@@ -486,20 +461,38 @@ nf9_init_template(void)
 	if (config.nfprobe_version == 9) flowset_id = NF9_TEMPLATE_FLOWSET_ID;
 	else if (config.nfprobe_version == 10) flowset_id = IPFIX_TEMPLATE_FLOWSET_ID;
 
-	v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
-	v4_template.r[rcount].length = htons(4);
-	v4_int_template.r[rcount].length = 4;
-	v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED);
-	v4_template_out.r[rcount].length = htons(4);
-	v4_int_template_out.r[rcount].length = 4;
-	rcount++;
-	v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED);
-	v4_template.r[rcount].length = htons(4);
-	v4_int_template.r[rcount].length = 4;
-        v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED);
-        v4_template_out.r[rcount].length = htons(4);
-        v4_int_template_out.r[rcount].length = 4;
-	rcount++;
+	if (config.nfprobe_version == 9) {
+	  v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
+	  v4_template.r[rcount].length = htons(4);
+	  v4_int_template.r[rcount].length = 4;
+	  v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED);
+	  v4_template_out.r[rcount].length = htons(4);
+	  v4_int_template_out.r[rcount].length = 4;
+	  rcount++;
+	  v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED);
+	  v4_template.r[rcount].length = htons(4);
+	  v4_int_template.r[rcount].length = 4;
+          v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED);
+          v4_template_out.r[rcount].length = htons(4);
+          v4_int_template_out.r[rcount].length = 4;
+	  rcount++;
+	}
+	else if (config.nfprobe_version == 10) {
+          v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+          v4_template.r[rcount].length = htons(8);
+          v4_int_template.r[rcount].length = 8;
+          v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+          v4_template_out.r[rcount].length = htons(8);
+          v4_int_template_out.r[rcount].length = 8;
+          rcount++;
+          v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+          v4_template.r[rcount].length = htons(8);
+          v4_int_template.r[rcount].length = 8;
+          v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+          v4_template_out.r[rcount].length = htons(8);
+          v4_int_template_out.r[rcount].length = 8;
+          rcount++;
+	}
 #if defined HAVE_64BIT_COUNTERS
         v4_template.r[rcount].type = htons(NF9_IN_BYTES);
         v4_template.r[rcount].length = htons(8);
@@ -835,20 +828,38 @@ nf9_init_template(void)
         bzero(&v6_int_template_out, sizeof(v6_int_template_out));
         bzero(&v6_pen_int_template_out, sizeof(v6_pen_int_template_out));
 
-	v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
-	v6_template.r[rcount].length = htons(4);
-	v6_int_template.r[rcount].length = 4;
-        v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED);
-        v6_template_out.r[rcount].length = htons(4);
-        v6_int_template_out.r[rcount].length = 4;
-	rcount++;
-	v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED);
-	v6_template.r[rcount].length = htons(4);
-	v6_int_template.r[rcount].length = 4;
-        v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED);
-        v6_template_out.r[rcount].length = htons(4);
-        v6_int_template_out.r[rcount].length = 4;
-	rcount++;
+        if (config.nfprobe_version == 9) {
+	  v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
+	  v6_template.r[rcount].length = htons(4);
+	  v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].length = 4;
+	  rcount++;
+	  v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED);
+	  v6_template.r[rcount].length = htons(4);
+	  v6_int_template.r[rcount].length = 4;
+          v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED);
+          v6_template_out.r[rcount].length = htons(4);
+          v6_int_template_out.r[rcount].length = 4;
+	  rcount++;
+        }
+        else if (config.nfprobe_version == 10) {
+          v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+          v6_template.r[rcount].length = htons(8);
+          v6_int_template.r[rcount].length = 8;
+          v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+          v6_template_out.r[rcount].length = htons(8);
+          v6_int_template_out.r[rcount].length = 8;
+          rcount++;
+          v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+          v6_template.r[rcount].length = htons(8);
+          v6_int_template.r[rcount].length = 8;
+          v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+          v6_template_out.r[rcount].length = htons(8);
+          v6_int_template_out.r[rcount].length = 8;
+          rcount++;
+        }
 #if defined HAVE_64BIT_COUNTERS
         v6_template.r[rcount].type = htons(NF9_IN_BYTES);
         v6_template.r[rcount].length = htons(8);
@@ -1290,13 +1301,30 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	flow_direction[1] = (flow->direction[1] == DIRECTION_UNKNOWN) ? DIRECTION_IN : flow->direction[1];
 	
 	if (direction == flow_direction[0]) {
-	  rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
-	  memcpy(ftoft_ptr_0, &rec32, 4);
-	  ftoft_ptr_0 += 4;
+	  if (config.nfprobe_version == 9) {
+	    rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
+	    memcpy(ftoft_ptr_0, &rec32, 4);
+	    ftoft_ptr_0 += 4;
 
-	  rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
-	  memcpy(ftoft_ptr_0, &rec32, 4);
-	  ftoft_ptr_0 += 4;
+	    rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
+	    memcpy(ftoft_ptr_0, &rec32, 4);
+	    ftoft_ptr_0 += 4;
+	  }
+	  else if (config.nfprobe_version == 10) {
+	    u_int64_t tstamp_msec;
+
+	    tstamp_msec = flow->flow_last.tv_sec * 1000;
+	    tstamp_msec += flow->flow_last.tv_usec / 1000;
+            rec64 = pmXXX_htonll(tstamp_msec);
+            memcpy(ftoft_ptr_0, &rec64, 8);
+            ftoft_ptr_0 += 8;
+
+            tstamp_msec = flow->flow_start.tv_sec * 1000;
+            tstamp_msec += flow->flow_start.tv_usec / 1000;
+            rec64 = pmXXX_htonll(tstamp_msec);
+            memcpy(ftoft_ptr_0, &rec64, 8);
+            ftoft_ptr_0 += 8;
+	  }
 
 #if defined HAVE_64BIT_COUNTERS
           rec64 = pmXXX_htonll(flow->octets[0]);
@@ -1387,13 +1415,30 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	}
 
 	if (direction == flow_direction[1]) {
-	  rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
-	  memcpy(ftoft_ptr_1, &rec32, 4);
-	  ftoft_ptr_1 += 4;
+	  if (config.nfprobe_version == 9) {
+	    rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
+	    memcpy(ftoft_ptr_1, &rec32, 4);
+	    ftoft_ptr_1 += 4;
 	
-	  rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
-	  memcpy(ftoft_ptr_1, &rec32, 4);
-	  ftoft_ptr_1 += 4;
+	    rec32 = htonl(timeval_sub_ms(&flow->flow_start, system_boot_time));
+	    memcpy(ftoft_ptr_1, &rec32, 4);
+	    ftoft_ptr_1 += 4;
+	  }
+          else if (config.nfprobe_version == 10) {
+            u_int64_t tstamp_msec;
+
+            tstamp_msec = flow->flow_last.tv_sec * 1000;
+            tstamp_msec += flow->flow_last.tv_usec / 1000;
+            rec64 = pmXXX_htonll(tstamp_msec);
+            memcpy(ftoft_ptr_1, &rec64, 8);
+            ftoft_ptr_1 += 8;
+
+            tstamp_msec = flow->flow_start.tv_sec * 1000;
+            tstamp_msec += flow->flow_start.tv_usec / 1000;
+            rec64 = pmXXX_htonll(tstamp_msec);
+            memcpy(ftoft_ptr_1, &rec64, 8);
+            ftoft_ptr_1 += 8;
+          }
 
 #if defined HAVE_64BIT_COUNTERS
           rec64 = pmXXX_htonll(flow->octets[1]);
