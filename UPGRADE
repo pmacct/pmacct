@@ -8,6 +8,14 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:     >= 1.5.0
+FROM:   <= 1.5.0rc3
+TOPIC:  NetFlow/IPFIX and tag, tag2 primitives
+DESC:	tag and tag2 primitives can now be exported by nfprobe plugin only
+	using IPFIX transport (nfprobe_version: 10). This is because, being
+	custom pmacct field types, they have moved inside pmacct PEN for a
+	cleaner solution (PENs not being supported by NetFlow v9). 
+
 TO:	>= 1.5.0
 FROM:	<= 1.5.0rc3
 TOPIC:	NetFlow/IPFIX, print/AMQP/MongoDB plugins & time syncronization

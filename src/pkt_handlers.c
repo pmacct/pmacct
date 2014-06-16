@@ -3278,13 +3278,13 @@ void NF_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct utpl_field *utpl = NULL;
 
   switch(hdr->version) {
   case 10:
-  case 9:
-    if (tpl->tpl[NF9_CUST_TAG].len && !pptrs->have_tag) {
-      memcpy(&pdata->primitives.tag, pptrs->f_data+tpl->tpl[NF9_CUST_TAG].off, tpl->tpl[NF9_CUST_TAG].len);
-      pdata->primitives.tag = ntohl(pdata->primitives.tag);
+    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG)) {
+      memcpy(&pdata->primitives.tag, pptrs->f_data+utpl->off, MIN(utpl->len, 8));
+      pdata->primitives.tag = pm_ntohll(pdata->primitives.tag);
     }
     break;
   default:
@@ -3297,14 +3297,15 @@ void NF_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct utpl_field *utpl = NULL;
 
   switch(hdr->version) {
   case 10:
-  case 9:
-    if (tpl->tpl[NF9_CUST_TAG2].len && !pptrs->have_tag2) {
-      memcpy(&pdata->primitives.tag2, pptrs->f_data+tpl->tpl[NF9_CUST_TAG2].off, tpl->tpl[NF9_CUST_TAG2].len);
-      pdata->primitives.tag2 = ntohl(pdata->primitives.tag2);
+    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG2)) {
+      memcpy(&pdata->primitives.tag2, pptrs->f_data+utpl->off, MIN(utpl->len, 8));
+      pdata->primitives.tag2 = pm_ntohll(pdata->primitives.tag2);
     }
+
     break;
   default:
     break;

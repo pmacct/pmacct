@@ -1712,7 +1712,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                   nf10->version = htons(10);
                   nf10->len = 0;
                   nf10->time_sec = htonl(time(NULL));
-                  nf10->package_sequence = htonl(++(*flows_exported));
+                  nf10->package_sequence = htonl(*flows_exported);
 
                   nf10->source_id = 0;
                   sid_ptr = (u_int8_t *) &nf10->source_id;
@@ -1862,6 +1862,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			  dh->c.length += inc;
 
 			  if (config.nfprobe_version == 9) nf9->flows += r;
+			  else if (config.nfprobe_version == 10) *flows_exported += r;
 
 			  last_valid = 0; /* Don't clobber this header now */
 			  if (verbose_flag) {
@@ -1913,7 +1914,9 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		  num_packets++;
 		  nf9_pkts_until_template--;
 		}
-		else --(*flows_exported);
+		else {
+		  if (config.nfprobe_version == 9) --(*flows_exported);
+		}
 
 		class_j += class_i;
 		flow_j += flow_i;

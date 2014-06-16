@@ -505,9 +505,6 @@ struct data_hdr_v9 {
 #define NF9_TCP_SRC_PORT                182
 #define NF9_TCP_DST_PORT                183
 /* ... */
-#define NF9_CUST_TAG			201
-#define NF9_CUST_TAG2			202
-/* ... */
 #define NF9_POST_NAT_IPV4_SRC_ADDR	225
 #define NF9_POST_NAT_IPV4_DST_ADDR	226
 #define NF9_POST_NAT_IPV4_SRC_PORT	227
@@ -548,6 +545,11 @@ struct data_hdr_v9 {
 #define NF9_OPT_SCOPE_LC		3
 #define NF9_OPT_SCOPE_CACHE		4
 #define NF9_OPT_SCOPE_TPL		5
+
+/* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
+#define NF9_CUST_TAG                    1
+#define NF9_CUST_TAG2                   2
+/* CUSTOM TYPES END HERE */
 
 #define MAX_TPL_DESC_LIST 81
 static char *tpl_desc_list[] = {
