@@ -10,7 +10,15 @@ been (and will be) very limited through the development process.
 
 TO:     >= 1.5.0
 FROM:   <= 1.5.0rc3
-TOPIC:  NetFlow/IPFIX and tag, tag2 primitives
+TOPIC:  nfprobe plugin, NetFlow v9 export and flow timestamps
+DESC:	timestamps for nfprobe plugin NetFlow v9 export are now absolute and
+	in msecs, using field types #152 and #153. timestamps_secs can be set
+	to true in order to revert to timestamps relative and in secs, using
+	fields types #21 and #22.
+
+TO:     >= 1.5.0
+FROM:   <= 1.5.0rc3
+TOPIC:  nfprobe plugin, NetFlow/IPFIX exports and tag, tag2 primitives
 DESC:	tag and tag2 primitives can now be exported by nfprobe plugin only
 	using IPFIX transport (nfprobe_version: 10). This is because, being
 	custom pmacct field types, they have moved inside pmacct PEN for a

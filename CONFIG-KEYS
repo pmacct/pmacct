@@ -837,7 +837,9 @@ DESC:		When more checks are to be evaluated, this directive tells whether aggreg
 KEY:		timestamps_secs
 VALUES:		[ true | false ]
 DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to seconds, ie. prevents
-		timestamp_start_residual, timestamp_end_residual fields to be populated (default: false).
+		timestamp_start_residual, timestamp_end_residual fields to be populated. In nfprobe plugin,
+		when exporting via NetFlow v9 (nfprobe_version: 9), allows to fallback to first and last
+		swithed times in seconds (default: false).
 
 
 KEY:		mongo_insert_batch

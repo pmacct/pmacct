@@ -461,7 +461,7 @@ nf9_init_template(void)
 	if (config.nfprobe_version == 9) flowset_id = NF9_TEMPLATE_FLOWSET_ID;
 	else if (config.nfprobe_version == 10) flowset_id = IPFIX_TEMPLATE_FLOWSET_ID;
 
-	if (config.nfprobe_version == 9) {
+	if (config.nfprobe_version == 9 && config.timestamps_secs) {
 	  v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
 	  v4_template.r[rcount].length = htons(4);
 	  v4_int_template.r[rcount].length = 4;
@@ -477,7 +477,7 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 4;
 	  rcount++;
 	}
-	else if (config.nfprobe_version == 10) {
+	else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
           v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
           v4_template.r[rcount].length = htons(8);
           v4_int_template.r[rcount].length = 8;
@@ -828,7 +828,7 @@ nf9_init_template(void)
         bzero(&v6_int_template_out, sizeof(v6_int_template_out));
         bzero(&v6_pen_int_template_out, sizeof(v6_pen_int_template_out));
 
-        if (config.nfprobe_version == 9) {
+        if (config.nfprobe_version == 9 && config.timestamps_secs) {
 	  v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED);
 	  v6_template.r[rcount].length = htons(4);
 	  v6_int_template.r[rcount].length = 4;
@@ -844,7 +844,7 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 4;
 	  rcount++;
         }
-        else if (config.nfprobe_version == 10) {
+        else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
           v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
           v6_template.r[rcount].length = htons(8);
           v6_int_template.r[rcount].length = 8;
@@ -1301,7 +1301,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	flow_direction[1] = (flow->direction[1] == DIRECTION_UNKNOWN) ? DIRECTION_IN : flow->direction[1];
 	
 	if (direction == flow_direction[0]) {
-	  if (config.nfprobe_version == 9) {
+	  if (config.nfprobe_version == 9 && config.timestamps_secs) {
 	    rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
 	    memcpy(ftoft_ptr_0, &rec32, 4);
 	    ftoft_ptr_0 += 4;
@@ -1310,7 +1310,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	    memcpy(ftoft_ptr_0, &rec32, 4);
 	    ftoft_ptr_0 += 4;
 	  }
-	  else if (config.nfprobe_version == 10) {
+	  else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
 	    u_int64_t tstamp_msec;
 
 	    tstamp_msec = flow->flow_last.tv_sec * 1000;
@@ -1415,7 +1415,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	}
 
 	if (direction == flow_direction[1]) {
-	  if (config.nfprobe_version == 9) {
+	  if (config.nfprobe_version == 9 && config.timestamps_secs) {
 	    rec32 = htonl(timeval_sub_ms(&flow->flow_last, system_boot_time));
 	    memcpy(ftoft_ptr_1, &rec32, 4);
 	    ftoft_ptr_1 += 4;
@@ -1424,7 +1424,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	    memcpy(ftoft_ptr_1, &rec32, 4);
 	    ftoft_ptr_1 += 4;
 	  }
-          else if (config.nfprobe_version == 10) {
+          else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
             u_int64_t tstamp_msec;
 
             tstamp_msec = flow->flow_last.tv_sec * 1000;
