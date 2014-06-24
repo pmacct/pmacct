@@ -68,6 +68,11 @@
  */
 #define DEFAULT_MAX_FLOWS	8192
 
+/* Return values from process_packet */
+#define PP_OK           0
+#define PP_BAD_PACKET   -2
+#define PP_MALLOC_FAIL  -3
+
 /* Store a couple of statistics, maybe more in the future */
 struct STATISTIC {
 	double min, mean, max;
@@ -193,6 +198,8 @@ struct FLOW {
 	u_int32_t packets[2];			/* Packets so far */
 	u_int32_t flows[2];			/* Flows so far */
 #endif
+
+	char *pcust[2];				/* space for custom-defined primitives */
 };
 
 /*

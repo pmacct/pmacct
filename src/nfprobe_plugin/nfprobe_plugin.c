@@ -393,9 +393,26 @@ ASN_to_flowrec(struct FLOW *flow, struct pkt_data *data, int ndx)
   return (0);
 }
 
+static int
+cust_to_flowrec(struct FLOW *flow, char *pcust, int ndx)
+{
+  if (pcust) {
+    if (!flow->pcust[ndx]) flow->pcust[ndx] = malloc(config.cpptrs.len);
+    if (flow->pcust[ndx]) memcpy(flow->pcust[ndx], pcust, config.cpptrs.len);
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for flow entries.\n", config.name, config.type);
+      return PP_MALLOC_FAIL;
+    }
+  }
+  else {
+    if (flow->pcust[ndx]) free(flow->pcust[ndx]);
+    flow->pcust[ndx] = NULL;
+  }
+}
+
 /* Convert a IPv4 packet to a partial flow record (used for comparison) */
 static int
-ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int *isfrag, int af)
+ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, char *pcust, int *isfrag, int af)
 {
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -422,6 +439,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
 
   l2_to_flowrec(flow, data, extras, ndx);
   ASN_to_flowrec(flow, data, ndx);
+  cust_to_flowrec(flow, pcust, ndx);
 
   return (transport_to_flowrec(flow, data, extras, p->proto, ndx));
 
@@ -429,7 +447,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
 }
 
 static int
-ipv4_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int *isfrag, int af)
+ipv4_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, char *pcust, int *isfrag, int af)
 {
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -440,12 +458,13 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extr
   if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
 
   l2_to_flowrec_update(flow, data, extras, ndx);
+  cust_to_flowrec(flow, pcust, ndx);
 }
 
 #if defined ENABLE_IPV6
 /* Convert a IPv6 packet to a partial flow record (used for comparison) */
 static int
-ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int *isfrag, int af)
+ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, char *pcust, int *isfrag, int af)
 {
   struct pkt_primitives *p = &data->primitives;
   int ndx, nxt;
@@ -472,6 +491,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
 
   l2_to_flowrec(flow, data, extras, ndx);
   ASN_to_flowrec(flow, data, ndx);
+  cust_to_flowrec(flow, pcust, ndx);
 
   return (transport_to_flowrec(flow, data, extras, p->proto, ndx));
 
@@ -479,7 +499,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *ext
 }
 
 static int
-ipv6_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int *isfrag, int af)
+ipv6_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, char *pcust, int *isfrag, int af)
 {
   struct pkt_primitives *p = &data->primitives;
   struct in6_addr dummy_ipv6; 
@@ -493,6 +513,7 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extr
     flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
 
   l2_to_flowrec_update(flow, data, extras, ndx);
+  cust_to_flowrec(flow, pcust, ndx);
 }
 #endif 
 
@@ -593,12 +614,6 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
 	EXPIRY_INSERT(EXPIRIES, &ft->expiries, flow->expiry);
 }
 
-
-/* Return values from process_packet */
-#define PP_OK		0
-#define PP_BAD_PACKET	-2
-#define PP_MALLOC_FAIL	-3
-
 /*
  * Main per-packet processing function. Take a packet (provided by 
  * libpcap) and attempt to find a matching flow. If no such flow exists, 
@@ -608,8 +623,12 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
  * (the actual expiry is performed elsewhere)
  */
 static int
-process_packet(struct FLOWTRACK *ft, struct pkt_data *data, struct pkt_extras *extras, const struct timeval *received_time)
+process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const struct timeval *received_time)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_extras *extras = prim_ptrs->pextras;
+  char *pcust = prim_ptrs->pcust;
+
   struct FLOW tmp, *flow;
   int frag, af, dont_summarize = (config.acct_type == ACCT_NF ? 1 : 0);
 
@@ -621,18 +640,21 @@ process_packet(struct FLOWTRACK *ft, struct pkt_data *data, struct pkt_extras *e
 
   switch (af) {
   case AF_INET:
-    if (ipv4_to_flowrec(&tmp, data, extras, &frag, af) == -1)
+    if (ipv4_to_flowrec(&tmp, data, extras, pcust, &frag, af) == -1)
       goto bad;
     break;
 #if defined ENABLE_IPV6
   case AF_INET6:
-    if (ipv6_to_flowrec(&tmp, data, extras, &frag, af) == -1)
+    if (ipv6_to_flowrec(&tmp, data, extras, pcust, &frag, af) == -1)
       goto bad;
     break;
 #endif
   default:
   bad: 
     ft->bad_packets += data->pkt_num;
+    if (tmp.pcust[0]) free(tmp.pcust[0]);
+    if (tmp.pcust[1]) free(tmp.pcust[1]);
+
     return (PP_BAD_PACKET);
   }
 
@@ -680,11 +702,11 @@ process_packet(struct FLOWTRACK *ft, struct pkt_data *data, struct pkt_extras *e
     /* Address family dependent items to update */
     switch (flow->af) {
     case AF_INET:
-      ipv4_to_flowrec_update(flow, data, extras, &frag, af);
+      ipv4_to_flowrec_update(flow, data, extras, pcust, &frag, af);
     break;
 #if defined ENABLE_IPV6
     case AF_INET6:
-      ipv6_to_flowrec_update(flow, data, extras, &frag, af);
+      ipv6_to_flowrec_update(flow, data, extras, pcust, &frag, af);
     break;
 #endif
     }
@@ -693,6 +715,9 @@ process_packet(struct FLOWTRACK *ft, struct pkt_data *data, struct pkt_extras *e
     if (!flow->tag[1]) flow->tag[1] = tmp.tag[1];
     if (!flow->tag2[0]) flow->tag2[0] = tmp.tag2[0];
     if (!flow->tag2[1]) flow->tag2[1] = tmp.tag2[1];
+
+    if (tmp.pcust[0]) free(tmp.pcust[0]);
+    if (tmp.pcust[1]) free(tmp.pcust[1]);
   }
 	
   memcpy(&flow->flow_last, received_time, sizeof(flow->flow_last));
@@ -931,6 +956,11 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
 			}
 			update_statistics(ft, expired_flows[i]);
 
+			if (expired_flows[i]->pcust) {
+			  free(expired_flows[i]->pcust[0]);
+			  free(expired_flows[i]->pcust[1]);
+			}
+
 			free(expired_flows[i]);
 		}
 	
@@ -1017,6 +1047,12 @@ delete_all_flows(struct FLOWTRACK *ft)
 		free(flow->expiry);
 
 		ft->num_flows--;
+
+		if (flow->pcust) {
+		  free(flow->pcust[0]);
+		  free(flow->pcust[1]);
+		}
+
 		free(flow);
 		i++;
 	}
@@ -1029,14 +1065,18 @@ delete_all_flows(struct FLOWTRACK *ft)
  * sans datalink headers to process_packet.
  */
 
-static void flow_cb(u_char *user_data, struct pkt_data *data, struct pkt_extras *extras)
+static void flow_cb(u_char *user_data, struct primitives_ptrs *prim_ptrs)
 {
+  struct pkt_data *data = prim_ptrs->data;
   struct CB_CTXT *cb_ctxt = (struct CB_CTXT *)user_data;
   struct timeval tv;
 
-  tv.tv_sec = data->time_start.tv_sec;
-  tv.tv_usec = data->time_start.tv_usec; 
-  if (process_packet(cb_ctxt->ft, data, extras, &tv) == PP_MALLOC_FAIL) cb_ctxt->fatal = 1;
+  if (data) {
+    tv.tv_sec = data->time_start.tv_sec;
+    tv.tv_usec = data->time_start.tv_usec; 
+
+    if (process_packet(cb_ctxt->ft, prim_ptrs, &tv) == PP_MALLOC_FAIL) cb_ctxt->fatal = 1;
+  }
 }
 
 static void
@@ -1505,7 +1545,7 @@ read_data:
 
 	prim_ptrs.data = data;
 	handle_hostbyteorder_packet(data);
-	flow_cb((void *)&cb_ctxt, prim_ptrs.data, prim_ptrs.pextras);
+	flow_cb((void *)&cb_ctxt, &prim_ptrs);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
 	if (((struct ch_buf_hdr *)pipebuf)->num) {
