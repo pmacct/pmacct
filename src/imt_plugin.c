@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -311,8 +311,12 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (go_to_clear) {
       /* When using extended BGP features we need to
 	 free() up memory allocations before erasing */ 
+      /* XXX: given the current use of empty_* vars we have always to
+         free_extra_allocs() in order to prevent memory leaks */
+      /*
       if (extras.off_pkt_bgp_primitives || extras.off_pkt_nat_primitives ||
 	  extras.off_pkt_mpls_primitives || extras.off_custom_primitives)
+      */
 	free_extra_allocs(); 
       clear_memory_pool_table();
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
