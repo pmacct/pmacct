@@ -431,6 +431,73 @@ flow_to_flowset_sampler_id_handler(char *flowset, const struct FLOW *flow, int i
 }
 
 static void
+flow_to_flowset_cp_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  struct custom_primitive_ptrs *cp_entry;
+
+  u_int64_t rec64h, rec64n;
+  u_int32_t rec32h, rec32n;
+  u_int16_t rec16h, rec16n;
+  u_int8_t rec8;
+
+  int cp_idx;
+
+  for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+    cp_entry = &config.cpptrs.primitive[cp_idx];
+
+    if (cp_entry->ptr->field_type) {
+      if (!cp_entry->ptr->pen) {
+	if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT || cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
+	  if (cp_entry->ptr->len == 8) {
+	    memcpy(&rec64h, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len); 
+	    rec64n = pmXXX_htonll(rec64h);
+	    memcpy(flowset, &rec64n, cp_entry->ptr->len);
+	  }
+	  else if (cp_entry->ptr->len == 4) {
+	    memcpy(&rec32h, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+            rec32n = htonl(rec32h);
+            memcpy(flowset, &rec32n, cp_entry->ptr->len);
+	  }
+	  else if (cp_entry->ptr->len == 2) {
+	    memcpy(&rec16h, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+            rec16n = htons(rec16h);
+            memcpy(flowset, &rec16n, cp_entry->ptr->len);
+	  }
+	  else if (cp_entry->ptr->len == 1) {
+	    memcpy(&rec8, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+            memcpy(flowset, &rec8, cp_entry->ptr->len);
+	  }
+	  else {
+	    /* dunno what to do, let's just copy over */
+            memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+	  }
+	}
+	// XXX: to be tested
+	else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_IP) {
+	  if (cp_entry->ptr->len == 4) {
+            memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+	  }
+#if defined ENABLE_IPV6
+	  else if (cp_entry->ptr->len == 16) {
+	    memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+	  }
+	  else {
+            /* dunno what to do, let's just copy over */
+            memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+	  }
+#endif
+	}
+	else {
+	  memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+	}
+
+	flowset += cp_entry->ptr->len;
+      }
+    }
+  }
+}
+
+static void
 nf9_init_template(void)
 {
 	int rcount, rcount_pen, idx, flowset_id = 0; 
@@ -789,6 +856,75 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 4;
           rcount++;
         }
+
+        /* all custom primitives printed here: must be kept last since
+	   only the first field will also have a corresponding handler */
+        {
+	  struct NF9_INTERNAL_TEMPLATE_RECORD *cp_first_record = NULL, *cp_first_record_out = NULL;
+	  struct NF9_INTERNAL_TEMPLATE_RECORD *cp_pen_first_record = NULL, *cp_pen_first_record_out = NULL;
+          int cp_idx, cp_first = FALSE, cp_pen_first = FALSE, cp_len = 0, cp_pen_len = 0;
+
+          for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+	    if (config.cpptrs.primitive[cp_idx].ptr->field_type) {
+	      if (!config.cpptrs.primitive[cp_idx].ptr->pen) {
+		v4_template.r[rcount].type = htons(config.cpptrs.primitive[cp_idx].ptr->field_type);
+		v4_template.r[rcount].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+		v4_int_template.r[rcount].length = 0;
+		v4_template_out.r[rcount].type = htons(config.cpptrs.primitive[cp_idx].ptr->field_type);
+		v4_template_out.r[rcount].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+		v4_int_template_out.r[rcount].length = 0;
+		cp_len += config.cpptrs.primitive[cp_idx].ptr->len;
+
+		if (!cp_first) {
+		  v4_int_template.r[rcount].handler = flow_to_flowset_cp_handler;
+		  v4_int_template_out.r[rcount].handler = flow_to_flowset_cp_handler;
+		  cp_first_record = &v4_int_template.r[rcount];
+		  cp_first_record_out = &v4_int_template_out.r[rcount];
+		  cp_first = TRUE;
+		}
+		else {
+		  v4_int_template.r[rcount].handler = NULL;
+		  v4_int_template_out.r[rcount].handler = NULL;
+		}
+
+		rcount++;
+	      }
+	      else {
+		if (config.nfprobe_version == 10) {
+		  v4_pen_template.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
+		  v4_pen_template.r[rcount_pen].pen = htonl(PMACCT_PEN);
+		  v4_pen_template.r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+		  v4_pen_int_template.r[rcount_pen].length = 0;
+		  v4_pen_template_out.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
+		  v4_pen_template_out.r[rcount_pen].pen = htonl(PMACCT_PEN);
+		  v4_pen_template_out.r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+		  v4_pen_int_template_out.r[rcount_pen].length = 0;
+		  cp_pen_len += config.cpptrs.primitive[cp_idx].ptr->len;
+
+		  if (!cp_pen_first) {
+                    v4_pen_int_template.r[rcount].handler = flow_to_flowset_cp_handler;
+                    v4_pen_int_template_out.r[rcount].handler = flow_to_flowset_cp_handler;
+                    cp_pen_first_record = &v4_pen_int_template.r[rcount];
+                    cp_pen_first_record_out = &v4_pen_int_template_out.r[rcount];
+                    cp_pen_first = TRUE;
+                  }
+                  else {
+                    v4_pen_int_template.r[rcount].handler = NULL;
+                    v4_pen_int_template_out.r[rcount].handler = NULL;
+                  }
+
+		  rcount_pen++;
+		}
+	      }
+
+	      if (cp_first_record) cp_first_record->length = cp_len;
+	      if (cp_first_record_out) cp_first_record_out->length = cp_len;
+	      if (cp_pen_first_record) cp_pen_first_record->length = cp_pen_len;
+	      if (cp_pen_first_record_out) cp_pen_first_record_out->length = cp_pen_len;
+	    }
+          }
+        }
+
 	v4_template.h.c.flowset_id = htons(flowset_id);
 	v4_template.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) +
 				 (sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen));
