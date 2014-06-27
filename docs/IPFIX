@@ -1,0 +1,12 @@
+IPFIX:
+In June 2014 IANA assigned pmacct PEN #43874. Field types 1-32767 are reserved
+to official pmacct project fields definition. Users are welcome to define own
+field types (ie. due to customizations to the pmacct software) and can use for
+the purpose field types from 32768 onwards. 
+
+Official pmacct project fields definition:
+
+ElementID	Name	Data Type	Semantics	Description
+1		tag	unsigned64	identifier	tag primitive value
+2		tag2	unsigned64	identifier	tag2 primitive value
+ 

@@ -70,10 +70,18 @@ name=ttl	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7	len=1   semantics=u_int
 ! (l4:17) plus 4 bytes offset, reads for 2 byte and will present it as unsigned
 ! int.
 !
-name=udp_len            packet_ptr=l4:17+4      len=2   semantics=u_int
+name=udp_len	packet_ptr=l4:17+4      len=2   semantics=u_int
 !
 ! Defines a primitive called 'tcp_win': base pointer is set to the TCP header
 ! (l4:6) plus 14 bytes offset, reads for 2 byte and will present it as unsigned
 ! int.
 !
-name=tcp_win            packet_ptr=l4:6+14      len=2   semantics=u_int
+name=tcp_win	packet_ptr=l4:6+14      len=2   semantics=u_int
+!
+! nfprobe example: defines a primitive called 'ttl': if reading an IPv4 header
+! (l3:0x800) the base pointer is offset by 8 bytes, if reading an IPv6 header
+! (l3:0x86dd) it is offset by 7 bytes; it reads for 1 byte and will present it
+! as unsigned int. The info is carried via NetFlow/IPFIX in field type #192.
+!
+name=ttl	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7  len=1   semantics=u_int	field_type=192
+!

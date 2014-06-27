@@ -1470,6 +1470,21 @@ sort_version:
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
 
+  /* In case of custom primitives, let's do a round of validation */
+  {
+    struct custom_primitive_ptrs *cp_entry;
+    int cp_idx;
+
+    for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+      cp_entry = &config.cpptrs.primitive[cp_idx];
+
+      if (!cp_entry->ptr->field_type) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): custom primitive '%s' has null field_type\n", config.name, config.type, cp_entry->ptr->name);
+        exit_plugin(1);
+      }
+    }
+  }
+
   for(;;) {
 poll_again:
     status->wakeup = TRUE;
