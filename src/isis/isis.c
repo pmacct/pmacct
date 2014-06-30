@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-dlt.h"
 #include "isis.h"
 #include "thread_pool.h"
 
