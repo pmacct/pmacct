@@ -1419,6 +1419,32 @@ int cfg_key_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.amqp_frame_max = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.amqp_frame_max = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_aggressive_classification(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3883,6 +3909,24 @@ int cfg_key_nfacctd_bgp_msglog_amqp_persistent_msg(char *filename, char *name, c
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_msglog_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+      
+  value = value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bgp_daemon_msglog_amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_frame_max = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog_amqp_frame_max'. Globalized.\n", filename);
+  
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_msglog_amqp_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3977,5 +4021,23 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_persistent_msg(char *filename, char *nam
   for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_amqp_persistent_msg = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_amqp_persistent_msg'. Globalized.\n", filename);
 
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_table_dump_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bgp_table_dump_amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_amqp_frame_max = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_amqp_frame_max'. Globalized.\n", filename);
+  
   return changes;
 }

@@ -36,14 +36,14 @@ struct bgp_peer_log {
 #else
 #define EXT
 #endif
-EXT void bgp_peer_log_init(struct bgp_peer *, int);
-EXT void bgp_peer_log_close(struct bgp_peer *, int);
+EXT int bgp_peer_log_init(struct bgp_peer *, int);
+EXT int bgp_peer_log_close(struct bgp_peer *, int);
 EXT void bgp_peer_log_seq_init();
 EXT void bgp_peer_log_seq_increment();
 EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
-EXT void bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int);
-EXT void bgp_peer_dump_init(struct bgp_peer *, int);
-EXT void bgp_peer_dump_close(struct bgp_peer *, int);
+EXT int bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int);
+EXT int bgp_peer_dump_init(struct bgp_peer *, int);
+EXT int bgp_peer_dump_close(struct bgp_peer *, int);
 EXT void bgp_handle_dump_event();
 EXT void bgp_daemon_msglog_init_amqp_host();
 EXT void bgp_table_dump_init_amqp_host();

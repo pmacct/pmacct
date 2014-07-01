@@ -340,6 +340,10 @@ DESC:           Marks messages as persistent so that a queue content does not ge
                 not really written to the disk. The persistence guarantees aren't strong, but it is more
                 than enough for our simple task queue." (default: false).
 
+KEY:		[ amqp_frame_max | bgp_daemong_msglog_amqp_frame_max | bgp_table_dump_frame_max ]
+DESC:		Defines the maximum size, in bytes, of an AMQP frame on the wire to request of the broker
+		for the connection. 4096 is the minimum size, 2^31-1 is the maximum (default: 131072).
+
 KEY:		bgp_daemon_msglog_amqp_retry
 DESC:		Defines the interval of time, in seconds, after which a connection to the RabbitMQ server
 		should be retried after a failure is detected. (default: 60).

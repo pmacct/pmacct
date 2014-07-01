@@ -264,6 +264,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   p_amqp_set_exchange_type(&amqpp_amqp_host, config.amqp_exchange_type);
   p_amqp_set_host(&amqpp_amqp_host, config.sql_host);
   p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
+  p_amqp_set_frame_max(&amqpp_amqp_host, config.amqp_frame_max);
 
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
@@ -318,9 +319,11 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
       ret = p_amqp_publish(&amqpp_amqp_host, json_str);
       free(json_str);
-      qn++;
 
-      if (ret) return;
+      if (!ret) qn++;
+      else break;
+
+      sleep(10); // XXX
     }
   }
 

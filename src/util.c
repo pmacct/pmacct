@@ -2085,9 +2085,10 @@ void write_and_free_json(FILE *f, void *obj)
 }
 
 #ifdef WITH_RABBITMQ
-void write_and_free_json_amqp(void *amqp_log, void *obj)
+int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
   struct p_amqp_host *alog = (struct p_amqp_host *) amqp_log;
+  int ret;
 
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
@@ -2096,9 +2097,11 @@ void write_and_free_json_amqp(void *amqp_log, void *obj)
   json_decref(json_obj);
 
   if (tmpbuf) {
-    p_amqp_publish(alog, tmpbuf);
+    ret = p_amqp_publish(alog, tmpbuf);
     free(tmpbuf);
   }
+
+  return ret;
 }
 #endif
 #else
@@ -2117,9 +2120,11 @@ void write_and_free_json(FILE *f, void *obj)
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
-void write_and_free_json_amqp(void *amqp_log, void *obj)
+int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_amqp(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+
+  return 0;
 }
 #endif
 
