@@ -837,7 +837,7 @@ int main(int argc,char **argv, char **envp)
     spp.rawSampleLen = pptrs.v4.f_len = ret;
     spp.datap = (u_int32_t *) spp.rawSample;
     spp.endp = sflow_packet + spp.rawSampleLen; 
-    reset_tag_status(&pptrs);
+    reset_tag_label_status(&pptrs);
     reset_shadow_status(&pptrs);
 
 #if defined ENABLE_IPV6

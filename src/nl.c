@@ -49,8 +49,9 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.mac_ptr = 0; pptrs.vlan_ptr = 0; pptrs.mpls_ptr = 0;
     pptrs.iph_ptr = 0; pptrs.tlh_ptr = 0; pptrs.payload_ptr = 0;
     pptrs.pf = 0; pptrs.shadow = 0; pptrs.tag = 0; pptrs.tag2 = 0;
-    pptrs.class = 0; pptrs.bpas = 0, pptrs.bta = 0; pptrs.blp = 0;
-    pptrs.bmed = 0; pptrs.bitr = 0; pptrs.bta2 = 0; pptrs.bta_af = 0;
+    pretag_free_label(&pptrs.label); pptrs.class = 0; pptrs.bpas = 0;
+    pptrs.bta = 0; pptrs.blp = 0; pptrs.bmed = 0; pptrs.bitr = 0;
+    pptrs.bta2 = 0; pptrs.bta_af = 0;
     pptrs.tun_layer = 0; pptrs.tun_stack = 0;
     pptrs.f_agent = cb_data->f_agent;
     pptrs.bpas_table = cb_data->bpas_table;

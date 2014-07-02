@@ -869,7 +869,7 @@ int main(int argc,char **argv, char **envp)
     if (data_plugins) {
       /* We will change byte ordering in order to avoid a bunch of ntohs() calls */
       ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
-      reset_tag_status(&pptrs);
+      reset_tag_label_status(&pptrs);
       reset_shadow_status(&pptrs);
     
       switch(((struct struct_header_v5 *)netflow_packet)->version) {

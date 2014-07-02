@@ -261,14 +261,10 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
     struct plugins_list_entry *p = channels_list[index].plugin;
 
     if (p->cfg.pre_tag_map && find_id_func) {
-      if (reload_map_exec_plugins) {
-        load_pre_tag_map(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc,
-			 p->cfg.maps_entries, p->cfg.maps_row_len);
-      }
-
       if (p->cfg.ptm_global && got_tags) {
         pptrs->tag = saved_tag;
         pptrs->tag2 = saved_tag2;
+	// XXX: label
       }
       else {
         find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
@@ -358,10 +354,26 @@ reprocess:
       }
     }
 
+    // XXX: label
     saved_tag = pptrs->tag;
     saved_tag2 = pptrs->tag2;
+
     pptrs->tag = 0;
     pptrs->tag2 = 0;
+  }
+
+  /* check if we have to reload the map: new loop is to
+     ensure we reload it for all plugins and prevent any
+     timing issues with pointers to labels */
+  if (reload_map_exec_plugins) {
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+      struct plugins_list_entry *p = channels_list[index].plugin;
+
+      if (p->cfg.pre_tag_map && find_id_func) {
+        load_pre_tag_map(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc,
+                         p->cfg.maps_entries, p->cfg.maps_row_len);
+      }
+    }
   }
 
   reload_map_exec_plugins = FALSE;

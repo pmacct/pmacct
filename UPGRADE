@@ -36,6 +36,18 @@ DESC:	In 1.5.0 print/AMQP/MongoDB plugins are brought on par to SQL plugins
 	writing to the backend anymore. Solution is simply to sync all via
 	NTP and use same timezone (recommended UTC for all).
 
+TO:     >= 1.5.0rc3
+FROM:   <= 1.5.0rc2
+TOPIC:  nfacctd, sfacctd & plugin_pipe_size
+DESC:	nfacctd_pipe_size and sfacctd_pipe_size configuration directives
+	are being introduced in order to set the socket size between the
+	daemons and the kernel. Until 1.5.0rc2 the same was accomplished,
+	the dirty way, via existing plugin_pipe_size config directive when
+	assigned to the core process. If relying on this trick on 1.5.0rc2
+	and upgrading this can silently create packet loss on 1.5.0r3 and
+	later (packet loss can be checked by veryfing that the counter
+	showed by "netstat -s | grep Rcv" is not increasing).
+
 TO:	>= 1.5.0rc3
 FROM:	<= 1.5.0rc2
 TOPIC:	MySQL plugin, additional libraries required when compiling

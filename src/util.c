@@ -1104,7 +1104,7 @@ void exit_plugin(int status)
   exit(status);
 }
 
-void reset_tag_status(struct packet_ptrs_vector *pptrsv)
+void reset_tag_label_status(struct packet_ptrs_vector *pptrsv)
 {
   pptrsv->v4.tag = FALSE;
   pptrsv->vlan4.tag = FALSE;
@@ -1114,6 +1114,10 @@ void reset_tag_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan4.tag2 = FALSE;
   pptrsv->mpls4.tag2 = FALSE;
   pptrsv->vlanmpls4.tag2 = FALSE;
+  pretag_free_label(&pptrsv->v4.label);
+  pretag_free_label(&pptrsv->vlan4.label);
+  pretag_free_label(&pptrsv->mpls4.label);
+  pretag_free_label(&pptrsv->vlanmpls4.label);
 
 #if defined ENABLE_IPV6
   pptrsv->v6.tag = FALSE;
@@ -1124,6 +1128,10 @@ void reset_tag_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan6.tag2 = FALSE;
   pptrsv->mpls6.tag2 = FALSE;
   pptrsv->vlanmpls6.tag2 = FALSE;
+  pretag_free_label(&pptrsv->v6.label);
+  pretag_free_label(&pptrsv->vlan6.label);
+  pretag_free_label(&pptrsv->mpls5.label);
+  pretag_free_label(&pptrsv->vlanmpls6.label);
 #endif
 }
 

@@ -86,8 +86,8 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
     }
 
     j = strtoull(value, &endptr, 10);
-    if (j > UINT32_MAX) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid TAG/ID specified. ", filename);
+    if (j > UINT64_MAX) {
+      Log(LOG_ERR, "ERROR ( %s ): Invalid set_tag/id specified. ", filename);
       return TRUE;
     } 
   }
@@ -123,8 +123,8 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
   }
 
   j = strtoull(value, &endptr, 10);
-  if (j > UINT32_MAX) {
-    Log(LOG_ERR, "ERROR ( %s ): Invalid TAG2/ID2 specified. ", filename);
+  if (j > UINT64_MAX) {
+    Log(LOG_ERR, "ERROR ( %s ): Invalid set_tag2/id2 specified. ", filename);
     return TRUE;
   }
   e->id2 = j;
@@ -140,6 +140,43 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 
     e->set_func[x] = pretag_id2_handler;
     e->set_func_type[x] = PRETAG_SET_TAG2;
+  }
+
+  return FALSE;
+}
+
+int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  char default_sep = ',';
+  int x, len;
+
+  // XXX: isprint check?
+
+  len = strlen(value);
+  if (len < MAX_LABEL_LEN && !strchr(value, default_sep)) {
+    e->label.val = malloc(len + 1 /* null */);
+    e->label.len = len + 1;
+    strcpy(e->label.val, value);
+    e->label.val[e->label.len] = '\0';
+  }
+  else {
+    e->label.val = NULL;
+    e->label.len = 0;
+
+    Log(LOG_ERR, "ERROR ( %s ): Invaild set_label specified. ", filename);
+    return TRUE;
+  }
+
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
+    for (x = 0; e->set_func[x]; x++) {
+      if (e->set_func_type[x] == PRETAG_SET_LABEL) {
+        Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_label' clauses part of the same statement. ", filename);
+        return TRUE;
+      }
+    }
+
+    e->set_func[x] = pretag_label_handler;
+    e->set_func_type[x] = PRETAG_SET_LABEL;
   }
 
   return FALSE;
@@ -1080,9 +1117,9 @@ int BTA_map_lookup_bgp_port_handler(char *filename, struct id_entry *e, char *va
   return FALSE;
 }
 
-int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int PT_map_entry_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  strlcpy(e->label, value, MAX_LABEL_LEN); 
+  strlcpy(e->entry_label, value, MAX_LABEL_LEN); 
 
   return FALSE;
 }
@@ -1967,6 +2004,15 @@ int pretag_id2_handler(struct packet_ptrs *pptrs, void *id, void *e)
   if (entry->id2_inc) entry->id2++;
 
   return PRETAG_MAP_RCODE_ID2; /* cap */
+}
+
+int pretag_label_handler(struct packet_ptrs *pptrs, void *id, void *e)
+{
+  struct id_entry *entry = e;
+
+  if (id) memcpy(id, &entry->label, sizeof(pm_label_t));
+
+  return PRETAG_MAP_RCODE_LABEL; /* cap */
 }
 
 int SF_pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)

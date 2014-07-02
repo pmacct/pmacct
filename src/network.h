@@ -324,6 +324,8 @@ struct packet_ptrs {
   u_int8_t have_tag; /* have tag? */
   pm_id_t tag2; /* pre tag id2 */
   u_int8_t have_tag2; /* have tag2? */
+  pm_label_t label; /* pre tag label */
+  u_int8_t have_label; /* have label? */
   pm_id_t bpas; /* bgp_peer_as_src */
   pm_id_t blp; /* bgp_src_local_pref */
   pm_id_t bmed; /* bgp_src_med */

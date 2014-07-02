@@ -113,7 +113,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (config.maps_index && pretag_index_have_one(t)) {
 	  pretag_index_destroy(t);
 	}
-	for (index = 0; index < t->num; index++) pcap_freecode(&t->e[index].filter);
+	for (index = 0; index < t->num; index++) {
+	  pcap_freecode(&t->e[index].filter);
+	  pretag_free_label(&t->e[index].label);
+	}
 
         memset(t, 0, sizeof(struct id_table));
         t->e = ptr ;
@@ -341,8 +344,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	    if (!ignoring) {
               /* verifying errors and required fields */
 	      if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
-	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2) 
-		   Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id) and set_tag2 (id2) are mutual exclusive at line %d in map '%s'.\n", 
+	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len) 
+		   Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id), set_tag2 (id2) and set_label are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
                 else if (!err && tmp.e[tmp.num].agent_ip.a.family) {
                   int j, z;
@@ -366,8 +369,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 			config.name, config.type, tot_lines, filename); 
 	      }
 	      else if (acct_type == ACCT_PM) {
-	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2)
-                   Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id) and set_tag2 (id2) are mutual exclusive at line %d in map '%s'.\n", 
+	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2, tmp.e[tmp.num].label.len)
+                   Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id), set_tag2 (id2) and set_label are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
 	        else if (tmp.e[tmp.num].agent_ip.a.family)
 		  Log(LOG_ERR, "ERROR ( %s/%s ): key 'ip' not applicable here. Invalid line %d in map '%s'.\n",
@@ -512,7 +515,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	  else {
 	    for (ptr2 = ptr+1, index = x+1; index < t->ipv4_num; ptr2++, index++) {
-	      if (!strcmp(ptr->jeq.label, ptr2->label)) {
+	      if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
 	        ptr->jeq.ptr = ptr2;
 	        label_solved = TRUE;
 		break;
@@ -534,7 +537,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (ptr->jeq.label) {
           label_solved = FALSE;
           for (ptr2 = ptr+1, index = x+1; index < t->ipv6_num; ptr2++, index++) {
-            if (!strcmp(ptr->jeq.label, ptr2->label)) {
+            if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
               ptr->jeq.ptr = ptr2;
               label_solved = TRUE;
 	      break;
@@ -668,18 +671,42 @@ void load_pre_tag_map(int acct_type, char *filename, struct id_table *t, struct 
 
 void pretag_init_vars(struct packet_ptrs *pptrs, struct id_table *t)
 {
+  if (!pptrs) return;
+
   if (t->type == ACCT_NF) memset(&pptrs->set_tos, 0, sizeof(s_uint8_t));
   if (t->type == MAP_BGP_TO_XFLOW_AGENT) memset(&pptrs->lookup_bgp_port, 0, sizeof(s_uint16_t));
+
+  if (pptrs->label.val) {
+    pretag_free_label(&pptrs->label);
+    pptrs->have_label = FALSE;
+  }
+}
+
+void pretag_free_label(pm_label_t *label)
+{
+  if (label && label->val) {
+    free(label->val); 
+    label->val = NULL;
+    label->len = 0;
+  }
 }
 
 int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   int j = 0;
   pm_id_t id = 0, stop = 0, ret = 0;
+  pm_label_t label_local;
 
   e->last_matched = FALSE;
+
   for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*e->func[j])); j++) {
-    ret = (*e->func[j])(pptrs, &id, e);
+    if (e->func_type[j] == PRETAG_SET_LABEL) {
+      ret = (*e->func[j])(pptrs, &label_local, e);
+    }
+    else {
+      ret = (*e->func[j])(pptrs, &id, e);
+    }
+
     if (ret > TRUE) stop |= ret;
     else stop = ret;
   }
@@ -695,6 +722,26 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       *tag2 = id;
       pptrs->have_tag2 = TRUE;
     } 
+    else if (stop & PRETAG_MAP_RCODE_LABEL) {
+      /* auto-stacking if value exists */
+      if (pptrs->label.len) {
+	char default_sep[] = ",";
+
+        pptrs->label.val = realloc(pptrs->label.val, label_local.len + pptrs->label.len + 1 /* sep */ + 1 /* null */);
+        pptrs->label.len = label_local.len + pptrs->label.len + 1 /* sep */;
+	strncat(pptrs->label.val, default_sep, 1);
+        strncat(pptrs->label.val, label_local.val, label_local.len);
+        pptrs->label.val[pptrs->label.len] = '\0';
+      }
+      else {
+	pptrs->label.val = malloc(label_local.len + 1 /* null */);
+	pptrs->label.len = label_local.len;
+	strncpy(pptrs->label.val, label_local.val, label_local.len);
+	pptrs->label.val[pptrs->label.len] = '\0';
+      }
+
+      pptrs->have_label = TRUE;
+    }
     else if (stop == BTA_MAP_RCODE_ID_ID2) {
       // stack not applicable here
       *tag = id;
@@ -709,8 +756,11 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 	set_shadow_status(pptrs);
 	*tag = 0;
 	*tag2 = 0;
+	if (pptrs->label.val) pretag_free_label(&pptrs->label);
+
 	pptrs->have_tag = FALSE;
-	pptrs->have_tag = FALSE;
+	pptrs->have_tag2 = FALSE;
+	pptrs->have_label = FALSE;
       }
       stop |= PRETAG_MAP_RCODE_JEQ;
     }
@@ -733,6 +783,7 @@ pt_bitmap_t pretag_index_build_bitmap(struct id_entry *ptr, int acct_type)
   if (idx_bmap & PRETAG_SET_TOS) idx_bmap ^= PRETAG_SET_TOS;
   if (idx_bmap & PRETAG_SET_TAG) idx_bmap ^= PRETAG_SET_TAG;
   if (idx_bmap & PRETAG_SET_TAG2) idx_bmap ^= PRETAG_SET_TAG2;
+  if (idx_bmap & PRETAG_SET_LABEL) idx_bmap ^= PRETAG_SET_LABEL;
 
   /* 3) add 'ip' to bitmap, if mandated by the map type */
   if (acct_type == ACCT_NF || acct_type == ACCT_SF ||

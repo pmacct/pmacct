@@ -60,6 +60,7 @@
 #define PRETAG_VLAN_ID			0x10000000
 #define PRETAG_IP			0x20000000
 #define PRETAG_MPLS_PW_ID		0x40000000
+#define PRETAG_SET_LABEL		0x80000000
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -68,6 +69,7 @@
 #define BTA_MAP_RCODE_ID_ID2		0x00001000
 #define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00002000
 #define BPAS_MAP_RCODE_BGP		0x00004000
+#define PRETAG_MAP_RCODE_LABEL		0x00008000
 
 #define PRETAG_FLAG_NEG			0x00000001
 
@@ -129,6 +131,7 @@ typedef struct {
 struct id_entry {
   pm_id_t id;
   pm_id_t id2;
+  pm_label_t label;
   pm_id_t flags;
   pm_id_t pos;
   pt_hostaddr_t agent_ip;
@@ -165,7 +168,7 @@ struct id_entry {
   pt_bitmap_t func_type[N_MAP_HANDLERS];
   pretag_handler set_func[N_MAP_HANDLERS];
   pt_bitmap_t set_func_type[N_MAP_HANDLERS];
-  char label[MAX_LABEL_LEN];
+  char entry_label[MAX_LABEL_LEN];
   pt_jeq_t jeq;
   u_int8_t ret;
   pt_stack_t stack;
@@ -232,6 +235,7 @@ EXT void load_pre_tag_map(int, char *, struct id_table *, struct plugin_requests
 EXT u_int8_t pt_check_neg(char **, u_int32_t *);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
+EXT void pretag_free_label(pm_label_t *);
 EXT int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
 EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
