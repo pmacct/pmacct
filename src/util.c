@@ -1130,7 +1130,7 @@ void reset_tag_label_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlanmpls6.tag2 = FALSE;
   pretag_free_label(&pptrsv->v6.label);
   pretag_free_label(&pptrsv->vlan6.label);
-  pretag_free_label(&pptrsv->mpls5.label);
+  pretag_free_label(&pptrsv->mpls6.label);
   pretag_free_label(&pptrsv->vlanmpls6.label);
 #endif
 }

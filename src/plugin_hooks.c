@@ -252,10 +252,14 @@ void load_plugins(struct plugin_requests *req)
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
 {
   pm_id_t saved_tag = 0, saved_tag2 = 0;
+  pm_label_t saved_label;
+
   int num, size, already_reprocessed = 0;
   u_int32_t savedptr;
   char *bptr;
   int index, got_tags = FALSE;
+
+  pretag_init_label(&saved_label);
 
   for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
     struct plugins_list_entry *p = channels_list[index].plugin;
@@ -264,11 +268,18 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
       if (p->cfg.ptm_global && got_tags) {
         pptrs->tag = saved_tag;
         pptrs->tag2 = saved_tag2;
-	// XXX: label
+	pretag_copy_label(&pptrs->label, &saved_label);
       }
       else {
         find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
-        got_tags = TRUE;
+
+	if (p->cfg.ptm_global) {
+	  saved_tag = pptrs->tag;
+	  saved_tag2 = pptrs->tag2;
+	  pretag_copy_label(&saved_label, &pptrs->label);
+
+          got_tags = TRUE;
+        }
       }
     }
 
@@ -354,12 +365,9 @@ reprocess:
       }
     }
 
-    // XXX: label
-    saved_tag = pptrs->tag;
-    saved_tag2 = pptrs->tag2;
-
     pptrs->tag = 0;
     pptrs->tag2 = 0;
+    pretag_free_label(&pptrs->label);
   }
 
   /* check if we have to reload the map: new loop is to
@@ -376,7 +384,9 @@ reprocess:
     }
   }
 
+  /* cleanups */
   reload_map_exec_plugins = FALSE;
+  pretag_free_label(&saved_label);
 }
 
 struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configuration *cfg, int pipe)

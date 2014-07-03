@@ -342,8 +342,8 @@ typedef u_int64_t pm_id_t;
 typedef u_int32_t pm_country_t;
 
 typedef struct {
-  char *val;
   u_int32_t len;
+  char *val;
 } pm_label_t;
 
 typedef struct {
