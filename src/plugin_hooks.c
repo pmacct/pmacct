@@ -362,6 +362,10 @@ reprocess:
         channels_list[index].hdr.num = 0;
 
 	if (channels_list[index].reprocess) goto reprocess;
+
+	/* if reading from a savefile, let's sleep a bit after
+	   having sent over a buffer worth of data */
+	if (channels_list[index].plugin->cfg.pcap_savefile) usleep(1000); /* 1 msec */ 
       }
     }
 
