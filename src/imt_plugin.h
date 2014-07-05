@@ -61,8 +61,8 @@ struct memory_pool_desc {
 
 struct query_header {
   int type;				/* type of query */
-  u_int64_t what_to_count;		/* aggregation */
-  u_int64_t what_to_count_2;		/* aggregation */
+  pm_cfgreg_t what_to_count;		/* aggregation */
+  pm_cfgreg_t what_to_count_2;		/* aggregation */
   unsigned int num;			/* number of queries */
   unsigned int ip_sz;			/* IP addresses size (in bytes) */
   unsigned int cnt_sz;			/* counters size (in bytes) */
@@ -72,8 +72,8 @@ struct query_header {
 };
 
 struct query_entry {
-  u_int64_t what_to_count;		/* aggregation */
-  u_int64_t what_to_count_2;		/* aggregation */
+  pm_cfgreg_t what_to_count;		/* aggregation */
+  pm_cfgreg_t what_to_count_2;		/* aggregation */
   struct pkt_primitives data;		/* actual data */
   struct pkt_bgp_primitives pbgp;	/* extended BGP data */
   struct pkt_nat_primitives pnat;	/* extended NAT + timestamp data */

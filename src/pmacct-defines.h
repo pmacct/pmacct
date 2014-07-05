@@ -40,6 +40,7 @@
 #define UINT32T_THRESHOLD 4290000000UL
 #define UINT64T_THRESHOLD 18446744073709551360ULL
 #define INT64T_THRESHOLD 9223372036854775807ULL
+#define PM_VARIABLE_LENGTH 65535
 #ifndef UINT8_MAX
 #define UINT8_MAX (255U)
 #endif
@@ -305,6 +306,7 @@
 #define PIPE_TYPE_MSG		0x00000010
 #define PIPE_TYPE_NAT		0x00000020
 #define PIPE_TYPE_MPLS		0x00000040
+#define PIPE_TYPE_VLEN		0x00000080
 
 #define CHLD_WARNING		0x00000001
 #define CHLD_ALERT		0x00000002
@@ -340,8 +342,10 @@
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
 typedef u_int32_t pm_country_t;
+typedef u_int64_t pm_cfgreg_t;
 
 typedef struct {
+  pm_cfgreg_t type;
   u_int32_t len;
   char *val;
 } pm_label_t;

@@ -69,10 +69,10 @@ struct custom_primitives_ptrs {
 };
 
 struct configuration {
-  u_int64_t what_to_count;	/* first registry */
-  u_int64_t what_to_count_2;	/* second registry */
-  u_int64_t nfprobe_what_to_count;
-  u_int64_t nfprobe_what_to_count_2;
+  pm_cfgreg_t what_to_count;	/* first registry */
+  pm_cfgreg_t what_to_count_2;	/* second registry */
+  pm_cfgreg_t nfprobe_what_to_count;
+  pm_cfgreg_t nfprobe_what_to_count_2;
   char *aggregate_primitives;
   struct custom_primitives_ptrs cpptrs;
   char *name;

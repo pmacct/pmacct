@@ -732,9 +732,10 @@ void evaluate_packet_handlers()
       }
     }
 
-    /* Better these two sfprobe-related functions to stay last due
-       to different structure put on the pipe; ie. id/id2 handlers
-       were writing in the middle of the payload */
+    /* struct pkt_vlen_hdr_primitives/off_pkt_vlen_hdr_primitives handling: START */
+    /* struct pkt_vlen_hdr_primitives/off_pkt_vlen_hdr_primitives handling: END */
+
+    /* sfprobe plugin: struct pkt_payload handling */
     if (channels_list[index].aggregation & COUNT_PAYLOAD) {
       if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sfprobe_payload_handler;
@@ -750,6 +751,7 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    /* tee plugin: struct pkt_msg handling */
     if (channels_list[index].aggregation & COUNT_NONE) {
       if (channels_list[index].plugin->type.id == PLUGIN_ID_TEE) {
         if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = tee_payload_handler;

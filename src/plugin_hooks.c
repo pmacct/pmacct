@@ -68,6 +68,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
       if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
+      if (list->cfg.data_type & PIPE_TYPE_VLEN) min_sz += sizeof(struct pkt_vlen_hdr_primitives);
 
       /* If nothing is supplied, let's hint some working default values */
       if (!list->cfg.pipe_size || !list->cfg.buffer_size) {
@@ -135,9 +136,9 @@ void load_plugins(struct plugin_requests *req)
       /* sets new value to be assigned to 'wakeup'; 'TRUE' disables on-request wakeup */ 
       if (list->type.id == PLUGIN_ID_MEMORY) chptr->request = TRUE; 
 
-      /* sets cleaner routine; XXX: we should definitely refine the way it works, maybe
-         by looking at stacking more of them, ie. extras assumes it's automagically piled
-	 with metadata */
+      /* sets fixed/vlen offsets and cleaner routine; XXX: we should refine the cleaner
+	 part: 1) ie. extras assumes it's automagically piled with metadata; 2) what if
+	 multiple vlen components are stacked up? */
       if (list->cfg.data_type & PIPE_TYPE_METADATA) {
 	chptr->clean_func = pkt_data_clean;
 	offset = sizeof(struct pkt_data);
@@ -167,6 +168,17 @@ void load_plugins(struct plugin_requests *req)
 	chptr->extras.off_custom_primitives = offset;
 	offset += list->cfg.cpptrs.len;
       }
+      /* PIPE_TYPE_VLEN at the end of the stack so to not make
+	 vlen other structures (although possible it would not
+	 make much sense) */
+      if (list->cfg.data_type & PIPE_TYPE_VLEN) {
+        chptr->extras.off_pkt_vlen_hdr_primitives = offset;
+        offset += sizeof(struct pkt_vlen_hdr_primitives);
+      }
+      else chptr->extras.off_pkt_vlen_hdr_primitives = 0;
+      /* any further offset beyond this point must be set to
+         PM_VARIABLE_LENGTH so to indicate plugins to resolve
+         value at runtime. */
 
       chptr->datasize = min_sz-ChBufHdrSz;
 
@@ -251,6 +263,7 @@ void load_plugins(struct plugin_requests *req)
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
 {
+  int saved_have_tag = FALSE, saved_have_tag2 = FALSE, saved_have_label = FALSE;
   pm_id_t saved_tag = 0, saved_tag2 = 0;
   pm_label_t saved_label;
 
@@ -269,6 +282,10 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
         pptrs->tag = saved_tag;
         pptrs->tag2 = saved_tag2;
 	pretag_copy_label(&pptrs->label, &saved_label);
+
+        pptrs->have_tag = saved_have_tag;
+        pptrs->have_tag2 = saved_have_tag2;
+        pptrs->have_label = saved_have_label;
       }
       else {
         find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
@@ -277,6 +294,10 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 	  saved_tag = pptrs->tag;
 	  saved_tag2 = pptrs->tag2;
 	  pretag_copy_label(&saved_label, &pptrs->label);
+
+	  saved_have_tag = pptrs->have_tag;
+	  saved_have_tag2 = pptrs->have_tag2;
+	  saved_have_label = pptrs->have_label;
 
           got_tags = TRUE;
         }

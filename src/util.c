@@ -2198,31 +2198,58 @@ void set_primptrs_funcs(struct extra_primitives *extras)
     primptrs_funcs[idx] = primptrs_set_extras;
     idx++;
   }
+
+  if (extras->off_pkt_vlen_hdr_primitives) {
+    primptrs_funcs[idx] = primptrs_set_vlen_hdr;
+    idx++;
+  }
 }
 
 void primptrs_set_bgp(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pbgp = (struct pkt_bgp_primitives *) (base + extras->off_pkt_bgp_primitives);
+  prim_ptrs->vlen_next_off = 0;
 }
 
 void primptrs_set_nat(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pnat = (struct pkt_nat_primitives *) (base + extras->off_pkt_nat_primitives);
+  prim_ptrs->vlen_next_off = 0;
 }
 
 void primptrs_set_mpls(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pmpls = (struct pkt_mpls_primitives *) (base + extras->off_pkt_mpls_primitives);
+  prim_ptrs->vlen_next_off = 0;
 }
 
 void primptrs_set_custom(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pcust = (char *) (base + extras->off_custom_primitives);
+  prim_ptrs->vlen_next_off = 0;
 }
 
 void primptrs_set_extras(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pextras = (struct pkt_extras *) (base + extras->off_pkt_extras);
+  prim_ptrs->vlen_next_off = 0;
+}
+
+void primptrs_set_vlen_hdr(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->pvlen = (struct pkt_vlen_hdr_primitives *) (base + extras->off_pkt_vlen_hdr_primitives);
+  prim_ptrs->vlen_next_off = extras->off_pkt_vlen_hdr_primitives + PvhdrSz + prim_ptrs->pvlen->tot_len;
+
+/*
+  if (extras->off_pkt_vlen_hdr_primitives != PM_VARIABLE_LENGTH) {
+    prim_ptrs->pvlen = (struct pkt_vlen_hdr_primitives *) (base + extras->off_pkt_vlen_hdr_primitives);
+    prim_ptrs->vlen_next_off = extras->off_pkt_vlen_hdr_primitives + PvhdrSz + prim_ptrs->pvlen->tot_len;
+  }
+  else {
+    prim_ptrs->pvlen = (struct pkt_vlen_hdr_primitives *) (base + prim_ptrs->vlen_next_off);
+    prim_ptrs->vlen_next_off = prim_ptrs->vlen_next_off + PvhdrSz + prim_ptrs->pvlen->tot_len;
+  }
+*/
 }
 
 void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct custom_primitives *registry)

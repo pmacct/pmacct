@@ -149,8 +149,8 @@ struct logfile_header {
   u_int16_t sql_table_version;
   u_int16_t sql_optimize_clauses;
   u_int16_t sql_history;
-  u_int64_t what_to_count;
-  u_int64_t what_to_count_2;
+  pm_cfgreg_t what_to_count;
+  pm_cfgreg_t what_to_count_2;
   u_char pad[8];
 };
 

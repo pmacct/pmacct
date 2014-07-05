@@ -1035,7 +1035,7 @@ void sql_exit_gracefully(int signum)
 
 int sql_evaluate_primitives(int primitive)
 {
-  u_int64_t what_to_count = 0, what_to_count_2 = 0, fakes = 0;
+  pm_cfgreg_t what_to_count = 0, what_to_count_2 = 0, fakes = 0;
   short int assume_custom_table = FALSE; 
   char *insert_clause_start_ptr = insert_clause + strlen(insert_clause);
   char default_delim[] = ",", delim_buf[SRVBUFLEN];

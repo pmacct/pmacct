@@ -484,7 +484,7 @@ int PG_evaluate_history(int primitive)
 
 int PG_evaluate_primitives(int primitive)
 {
-  u_int64_t what_to_count = 0, fakes = 0;
+  pm_cfgreg_t what_to_count = 0, fakes = 0;
   short int assume_custom_table = FALSE;
 
   if (lh.sql_optimize_clauses) {

@@ -462,6 +462,11 @@ struct pkt_payload {
   struct host_addr bgp_next_hop;
 };
 
+struct pkt_vlen_hdr_primitives {
+  u_int16_t tot_len;
+  u_int16_t num;
+};
+
 // XXX: eventually deprecate pkt_extras
 struct pkt_extras {
   u_int8_t tcp_flags;
@@ -492,6 +497,7 @@ struct extra_primitives {
   u_int16_t off_pkt_mpls_primitives;
   u_int16_t off_custom_primitives;
   u_int16_t off_pkt_extras; /* nfprobe only */
+  u_int16_t off_pkt_vlen_hdr_primitives;
 };
 
 struct primitives_ptrs {
@@ -501,6 +507,9 @@ struct primitives_ptrs {
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
   struct pkt_extras *pextras;
+  struct pkt_vlen_hdr_primitives *pvlen;
+
+  u_int16_t vlen_next_off;
 };
 
 typedef void (*primptrs_func) (u_char *, struct extra_primitives *, struct primitives_ptrs *);

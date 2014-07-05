@@ -149,7 +149,7 @@ void print_ex_options_error()
   exit(1);
 }
 
-void write_stats_header_formatted(u_int64_t what_to_count, u_int64_t what_to_count_2, u_int8_t have_wtc, int is_event)
+void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, u_int8_t have_wtc, int is_event)
 {
   if (!have_wtc) {
     printf("TAG         ");
@@ -359,7 +359,7 @@ char *write_sep(char *sep, int *count)
   }
 }
 
-void write_stats_header_csv(u_int64_t what_to_count, u_int64_t what_to_count_2, u_int8_t have_wtc, char *sep, int is_event)
+void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, u_int8_t have_wtc, char *sep, int is_event)
 {
   int count = 0;
 
@@ -634,7 +634,7 @@ int main(int argc,char **argv)
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   int topN_howmany, topN_printed;
   int datasize;
-  u_int64_t what_to_count, what_to_count_2, have_wtc;
+  pm_cfgreg_t what_to_count, what_to_count_2, have_wtc;
   u_int32_t tmpnum;
   struct extra_primitives extras;
   char *topN_howmany_ptr, *endptr;

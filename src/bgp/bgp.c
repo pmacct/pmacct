@@ -2805,7 +2805,7 @@ void write_neighbors_file(char *filename)
   }
 }
 
-void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p, u_int64_t what_to_count)
+void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p, pm_cfgreg_t what_to_count)
 {
   if (c && p) {
     c->peer_src_as = p->peer_src_as;

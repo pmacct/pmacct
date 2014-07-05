@@ -74,6 +74,11 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     config.logfile_fd = open_logfile(config.logfile, "a");
   }
 
+  if (extras.off_pkt_vlen_hdr_primitives) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label, are not supported in IMT plugin. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   reload_map = FALSE;
   status->wakeup = TRUE;
 
