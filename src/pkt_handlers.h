@@ -166,6 +166,7 @@ EXT void SF_std_comms_handler(struct channels_list_entry *, struct packet_ptrs *
 
 EXT void pre_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void pre_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void pre_tag_label_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 

@@ -733,6 +733,22 @@ void evaluate_packet_handlers()
     }
 
     /* struct pkt_vlen_hdr_primitives/off_pkt_vlen_hdr_primitives handling: START */
+
+    if (channels_list[index].aggregation_2 & COUNT_LABEL) {
+      if (channels_list[index].plugin->cfg.pre_tag_map) {
+        channels_list[index].phandler[primitives] = pre_tag_label_handler;
+        primitives++;
+      }
+
+/*
+      XXX: for later, to be revamped once label is implemented in nfprobe
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_tag2_handler;
+        primitives++;
+      }
+*/
+    }
+
     /* struct pkt_vlen_hdr_primitives/off_pkt_vlen_hdr_primitives handling: END */
 
     /* sfprobe plugin: struct pkt_payload handling */
@@ -2508,6 +2524,26 @@ void pre_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   pdata->primitives.tag2 = pptrs->tag2;
+}
+
+void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  pm_label_t *label_ptr;
+  char *data_ptr;
+
+  data_ptr = (char *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives + PvhdrSz + pvlen->tot_len); 
+
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz)) return; 
+  label_ptr = &pptrs->label;
+  memcpy(data_ptr, label_ptr, PmLabelTSz);
+  data_ptr += PmLabelTSz;
+
+  if (check_pipe_buffer_space(chptr, pvlen, label_ptr->len)) return;
+  memcpy(data_ptr, label_ptr->val, label_ptr->len);
+  
+  pvlen->num++;
 }
 
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

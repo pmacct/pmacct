@@ -795,6 +795,7 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 	if (pretag_malloc_label(&pptrs->label, label_local.len + 1 /* null */)) return;
 	strncpy(pptrs->label.val, label_local.val, label_local.len);
 	pptrs->label.val[pptrs->label.len] = '\0';
+	pptrs->label.type = label_local.type;
       }
 
       pptrs->have_label = TRUE;

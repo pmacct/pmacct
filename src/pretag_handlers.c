@@ -157,10 +157,12 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
     if (pretag_malloc_label(&e->label, len + 1 /* null */)) return;
     strcpy(e->label.val, value);
     e->label.val[e->label.len] = '\0';
+    e->label.type = COUNT_INT_LABEL;
   }
   else {
     e->label.val = NULL;
     e->label.len = 0;
+    e->label.type = FALSE;
 
     Log(LOG_ERR, "ERROR ( %s ): Invaild set_label specified. ", filename);
     return TRUE;

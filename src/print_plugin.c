@@ -232,7 +232,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
           dataptr = (unsigned char *) data;
-          dataptr += datasize;
+          if (!prim_ptrs.vlen_next_off) dataptr += datasize;
+	  else dataptr += prim_ptrs.vlen_next_off;
           data = (struct pkt_data *) dataptr;
 	}
       }

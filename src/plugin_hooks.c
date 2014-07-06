@@ -267,7 +267,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
   pm_id_t saved_tag = 0, saved_tag2 = 0;
   pm_label_t saved_label;
 
-  int num, size, already_reprocessed = 0;
+  int num, fixed_size, already_reprocessed = 0;
   u_int32_t savedptr;
   char *bptr;
   int index, got_tags = FALSE;
@@ -316,7 +316,8 @@ reprocess:
       /* rg.ptr points to slot's base address into the ring (shared memory); bufptr works
 	 as a displacement into the slot to place sequentially packets */
       bptr = channels_list[index].rg.ptr+ChBufHdrSz+channels_list[index].bufptr; 
-      size = (*channels_list[index].clean_func)(bptr, channels_list[index].datasize);
+      fixed_size = (*channels_list[index].clean_func)(bptr, channels_list[index].datasize);
+      channels_list[index].var_size = 0; 
       savedptr = channels_list[index].bufptr;
       reset_fallback_status(pptrs);
       
@@ -329,7 +330,8 @@ reprocess:
 	channels_list[index].reprocess = FALSE;
 	channels_list[index].bufptr = savedptr;
 	channels_list[index].hdr.num--; /* let's cheat this value as it will get increased later */
-	size = 0;
+	fixed_size = 0;
+	channels_list[index].var_size = 0;
       }
 
       if (channels_list[index].reprocess) {
@@ -343,14 +345,14 @@ reprocess:
         already_reprocessed = TRUE;
 
 	/* Let's cheat the size in order to send out the current buffer */
-	size = channels_list[index].plugin->cfg.pipe_size;
+	fixed_size = channels_list[index].plugin->cfg.pipe_size;
       }
       else {
         channels_list[index].hdr.num++;
-        channels_list[index].bufptr += size;
+        channels_list[index].bufptr += (fixed_size + channels_list[index].var_size);
       }
 
-      if ((channels_list[index].bufptr+size) > channels_list[index].bufend ||
+      if ((channels_list[index].bufptr+fixed_size) > channels_list[index].bufend ||
 	  channels_list[index].hdr.num == INT_MAX) {
 	channels_list[index].hdr.seq++;
 	channels_list[index].hdr.seq %= MAX_SEQNUM;
@@ -662,6 +664,36 @@ void fill_pipe_buffer()
       if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz)
 	Log(LOG_WARNING, "WARN: Failed during write: %s\n", strerror(errno));
     }
+  }
+}
+
+int check_pipe_buffer_space(struct channels_list_entry *mychptr, struct pkt_vlen_hdr_primitives *pvlen, int len)
+{
+  int buf_space = 0;
+
+  /* init to base of current element */
+  buf_space = mychptr->bufend - mychptr->bufptr;
+
+  /* subtract fixed part, current variable part and new var part (len) */
+  buf_space -= mychptr->datasize;
+  buf_space -= pvlen->tot_len;
+  buf_space -= len;
+
+  /* return virdict. if positive fix sizes. if negative take care of triggering a reprocess */
+  if (buf_space >= 0) {
+    mychptr->var_size += len;
+    pvlen->tot_len += len;
+
+    return FALSE;
+  }
+  else {
+    mychptr->bufptr += (mychptr->bufend - mychptr->bufptr);
+    mychptr->reprocess = TRUE;
+    mychptr->var_size = 0;
+    pvlen->tot_len = 0;
+    pvlen->num = 0;
+
+    return TRUE;
   }
 }
 

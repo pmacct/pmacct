@@ -75,6 +75,7 @@ struct channels_list_entry {
   u_int8_t reprocess;					/* do we need to jump back for packet reprocessing ? */
   int datasize;
   int bufsize;		
+  int var_size;
   int same_aggregate;
   pkt_handler phandler[N_PRIMITIVES];
   int pipe;
@@ -109,6 +110,7 @@ EXT int evaluate_filters(struct aggregate_filter *, char *, struct pcap_pkthdr *
 EXT void recollect_pipe_memory(struct channels_list_entry *);
 EXT void init_random_seed();
 EXT void fill_pipe_buffer();
+EXT int check_pipe_buffer_space(struct channels_list_entry *, struct pkt_vlen_hdr_primitives *, int); 
 EXT int check_shadow_status(struct packet_ptrs *, struct channels_list_entry *);
 EXT int pkt_data_clean(void *, int);
 EXT int pkt_payload_clean(void *, int);
