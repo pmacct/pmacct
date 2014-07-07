@@ -323,8 +323,6 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
       if (!ret) qn++;
       else break;
-
-      sleep(10); // XXX
     }
   }
 
