@@ -63,6 +63,7 @@ struct chained_cache {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
+  struct pkt_vlen_hdr_primitives *pvlen;
   u_int8_t valid;
   u_int8_t prep_valid;
   struct timeval basetime;

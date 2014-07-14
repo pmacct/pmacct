@@ -2508,3 +2508,35 @@ int print_hex(const u_char *a, u_char *buf, int len)
     return b;
   }
 }
+
+unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *src)
+{
+  unsigned char *dst = NULL;
+  int len = 0;
+
+  if (!src) return NULL;
+
+  len = PvhdrSz + src->tot_len;
+  dst = malloc(len);
+  memset(dst, 0, len);
+
+  return dst;
+}
+
+void vlen_prims_free(struct pkt_vlen_hdr_primitives *hdr)
+{
+  if (!hdr) return;
+
+  free(hdr);
+
+  hdr = NULL;
+}
+
+int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *src, struct pkt_vlen_hdr_primitives *dst)
+{
+  if (!src || !dst) return ERR;
+
+  if (src->tot_len != dst->tot_len) return (src->tot_len - dst->tot_len);
+
+  return memcmp(src, dst, (src->tot_len + PvhdrSz));
+}

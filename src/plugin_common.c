@@ -98,6 +98,7 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   register unsigned int modulo;
 
   modulo = cache_crc32((unsigned char *)srcdst, pp_size);
@@ -105,6 +106,7 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   if (pnat) modulo ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) modulo ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust) modulo ^= cache_crc32((unsigned char *)pcust, pc_size);
+  if (pvlen) modulo ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
   
   return modulo %= config.print_cache_entries;
 }
@@ -117,10 +119,11 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_time = TRUE;
-  int res_cust = TRUE;
+  int res_cust = TRUE, res_vlen = TRUE;
 
   start:
   res_data = memcmp(&cache_ptr->primitives, data, sizeof(struct pkt_primitives));
@@ -150,7 +153,12 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   }
   else res_cust = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust) {
+  if (pvlen) {
+    if (cache_ptr->pvlen) res_vlen = vlen_prims_cmp(cache_ptr->pvlen, pvlen);
+  }
+  else res_vlen = FALSE;
+
+  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust || res_vlen) {
     if (cache_ptr->valid == PRINT_CACHE_INUSE) {
       if (cache_ptr->next) {
         cache_ptr = cache_ptr->next;
@@ -170,10 +178,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   struct pkt_primitives *srcdst = &data->primitives;
-  int res_data, res_bgp, res_nat, res_mpls, res_time, res_cust;
+  int res_data, res_bgp, res_nat, res_mpls, res_time, res_cust, res_vlen;
 
   /* pro_rating vars */
   int time_delta = 0, time_total = 0;
@@ -234,7 +243,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
 
   start:
-  res_data = res_bgp = res_nat = res_mpls = res_time = res_cust = TRUE;
+  res_data = res_bgp = res_nat = res_mpls = res_time = res_cust = res_vlen = TRUE;
 
   res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives)); 
 
@@ -263,7 +272,12 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
   }
   else res_cust = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust) {
+  if (pvlen) {
+    if (cache_ptr->pvlen) res_vlen = vlen_prims_cmp(cache_ptr->pvlen, pvlen);
+  }
+  else res_vlen = FALSE;
+
+  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust || res_vlen) {
     /* aliasing of entries */
     if (cache_ptr->valid == PRINT_CACHE_INUSE) { 
       if (cache_ptr->next) {
@@ -340,6 +354,19 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
     else {
       if (cache_ptr->pcust) free(cache_ptr->pcust);
       cache_ptr->pcust = NULL;
+    }
+
+    if (pvlen) {
+      if (!cache_ptr->pvlen) cache_ptr->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
+      if (cache_ptr->pvlen) memcpy(cache_ptr->pvlen, pvlen, PvhdrSz + pvlen->tot_len);
+      else {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
+        goto safe_action;
+      }
+    }
+    else {
+      if (cache_ptr->pvlen) vlen_prims_free(cache_ptr->pvlen);
+      cache_ptr->pvlen = NULL;
     }
 
     cache_ptr->packet_counter = data->pkt_num;
@@ -441,12 +468,14 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
 {
   struct chained_cache *cache_ptr;
   struct primitives_ptrs prim_ptrs;
-  struct pkt_data pdata;
+/*  struct pkt_data pdata; */
   unsigned int modulo, j;
 
   if (!index || !container) return;
 
   for (j = 0; j < index; j++) {
+    primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+/*
     memset(&pdata, 0, sizeof(pdata));
     memcpy(&pdata.primitives, &queue[j]->primitives, pp_size);
     prim_ptrs.data = &pdata;
@@ -454,6 +483,8 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
     prim_ptrs.pnat = queue[j]->pnat;
     prim_ptrs.pmpls = queue[j]->pmpls;
     prim_ptrs.pcust = queue[j]->pcust;
+    prim_ptrs.pvlen = queue[j]->pvlen;
+*/
 
     modulo = P_cache_modulo(&prim_ptrs);
     cache_ptr = &cache[modulo];
@@ -787,5 +818,6 @@ void primptrs_set_all_from_chained_cache(struct primitives_ptrs *prim_ptrs, stru
     prim_ptrs->pnat = entry->pnat;
     prim_ptrs->pmpls = entry->pmpls;
     prim_ptrs->pcust = entry->pcust;
+    prim_ptrs->pvlen = entry->pvlen;
   }
 }

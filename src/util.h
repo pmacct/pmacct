@@ -124,4 +124,8 @@ EXT void primptrs_set_vlen_hdr(u_char *, struct extra_primitives *, struct primi
 EXT void custom_primitives_reconcile(struct custom_primitives_ptrs *, struct custom_primitives *);
 EXT void custom_primitive_header_print(char *, int, struct custom_primitive_ptrs *, int);
 EXT void custom_primitive_value_print(char *, int, char *, struct custom_primitive_ptrs *, int);
+
+EXT unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *);
+EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
+EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
 #undef EXT
