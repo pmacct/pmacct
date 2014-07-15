@@ -733,6 +733,7 @@ int pretag_copy_label(pm_label_t *dst, pm_label_t *src)
         return ERR;
       }
 
+      dst->type = src->type;
       strncpy(dst->val, src->val, src->len);
       dst->val[dst->len] = '\0';
     }
@@ -746,6 +747,7 @@ void pretag_free_label(pm_label_t *label)
   if (label && label->val) {
     free(label->val); 
     label->val = NULL;
+    label->type = 0;
     label->len = 0;
   }
 }

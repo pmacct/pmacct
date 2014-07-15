@@ -99,8 +99,8 @@ EXT void version_daemon(char *);
 
 EXT char *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 		      struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
-		      struct pkt_mpls_primitives *, char *, pm_counter_t,
-		      pm_counter_t, pm_counter_t, u_int32_t, struct timeval *);
+		      struct pkt_mpls_primitives *, char *, struct pkt_vlen_hdr_primitives *,
+		      pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t, struct timeval *);
 EXT void compose_timestamp(char *, int, struct timeval *, int);
 EXT void write_and_free_json(FILE *, void *);
 EXT int write_and_free_json_amqp(void *, void *);
@@ -128,4 +128,5 @@ EXT void custom_primitive_value_print(char *, int, char *, struct custom_primiti
 EXT unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
 EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
+EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 #undef EXT

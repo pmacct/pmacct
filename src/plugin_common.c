@@ -356,17 +356,20 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
       cache_ptr->pcust = NULL;
     }
 
+    /* if we have a pvlen from before let's free it
+       up due to the vlen nature of the memory area */
+    if (cache_ptr->pvlen) {
+      vlen_prims_free(cache_ptr->pvlen);
+      cache_ptr->pvlen = NULL;
+    }
+
     if (pvlen) {
-      if (!cache_ptr->pvlen) cache_ptr->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
+      cache_ptr->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
       if (cache_ptr->pvlen) memcpy(cache_ptr->pvlen, pvlen, PvhdrSz + pvlen->tot_len);
       else {
         Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
         goto safe_action;
       }
-    }
-    else {
-      if (cache_ptr->pvlen) vlen_prims_free(cache_ptr->pvlen);
-      cache_ptr->pvlen = NULL;
     }
 
     cache_ptr->packet_counter = data->pkt_num;

@@ -129,6 +129,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (!config.print_output_separator) config.print_output_separator = default_separator;
 
+  if (extras.off_pkt_vlen_hdr_primitives && config.print_output & PRINT_OUTPUT_FORMATTED) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label, are not supported in print plugin with formatted output. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   if (!config.sql_table && config.print_output & PRINT_OUTPUT_FORMATTED)
     P_write_stats_header_formatted(stdout, is_event);
   else if (!config.sql_table && config.print_output & PRINT_OUTPUT_CSV)
@@ -249,6 +254,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   char *pcust = NULL;
+  struct pkt_vlen_hdr_primitives *pvlen = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
@@ -369,6 +375,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   
       if (queue[j]->pcust) pcust = queue[j]->pcust;
       else pcust = empty_pcust;
+
+      if (queue[j]->pvlen) pvlen = queue[j]->pvlen;
+      else pvlen = NULL;
   
       if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
@@ -640,7 +649,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
           fprintf(f, "%-30s ", buf2);
         }
-  
+
         /* all custom primitives printed here */
         {
           char cp_str[SRVBUFLEN];
@@ -651,7 +660,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   	  fprintf(f, "%s  ", cp_str);
           }
         }
-  
+
         if (!is_event) {
   #if defined HAVE_64BIT_COUNTERS
           fprintf(f, "%-20llu  ", queue[j]->packet_counter);
@@ -668,6 +677,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       else if (f && config.print_output & PRINT_OUTPUT_CSV) {
         if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag);
         if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag2);
+	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_label(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
         if (config.what_to_count & COUNT_SRC_MAC) {
@@ -886,7 +896,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         char *json_str;
   
         json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                           &queue[j]->primitives, pbgp, pnat, pmpls, pcust, queue[j]->bytes_counter,
+                           &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
   			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL);
   
         if (json_str) {
@@ -1008,6 +1018,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 
   if (config.what_to_count & COUNT_TAG) fprintf(f, "%sTAG", write_sep(sep, &count));
   if (config.what_to_count & COUNT_TAG2) fprintf(f, "%sTAG2", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_LABEL) fprintf(f, "%sLABEL", write_sep(sep, &count));
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "%sCLASS", write_sep(sep, &count));
 #if defined HAVE_L2
   if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
@@ -1076,4 +1087,13 @@ void P_write_stats_header_csv(FILE *f, int is_event)
     fprintf(f, "%sBYTES\n", write_sep(sep, &count));
   }
   else fprintf(f, "\n");
+}
+
+void P_fprintf_csv_label(FILE *f, struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char *sep, char *empty_string)
+{
+  char *label_ptr = NULL;
+
+  vlen_prims_get(pvlen, wtc, &label_ptr);
+  if (!label_ptr) label_ptr = empty_string;
+  fprintf(f, "%s%s", sep, label_ptr);
 }

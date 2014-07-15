@@ -1631,11 +1631,11 @@ void version_daemon(char *header)
 #ifdef WITH_JANSSON 
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  char *pcust, pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime)
+		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
+		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf = NULL;
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf = NULL, *label_ptr;
   char tstamp_str[SRVBUFLEN];
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
@@ -1648,6 +1648,15 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 
   if (wtc & COUNT_TAG2) {
     kv = json_pack("{sI}", "tag2", pbase->tag2);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_LABEL) {
+    vlen_prims_get(pvlen, COUNT_INT_LABEL, &label_ptr);
+    if (!label_ptr) label_ptr = empty_string;
+
+    kv = json_pack("{ss}", "label", label_ptr);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -2115,8 +2124,8 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
 #else
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  char *pcust, pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime)
+		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
+		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 
@@ -2539,4 +2548,32 @@ int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *src, struct pkt_vlen_hdr_prim
   if (src->tot_len != dst->tot_len) return (src->tot_len - dst->tot_len);
 
   return memcmp(src, dst, (src->tot_len + PvhdrSz));
+}
+
+void vlen_prims_get(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char **res)
+{
+  pm_label_t *label_ptr;
+  char *ptr = (char *) pvlen;
+  int x, rlen;
+
+  if (res) *res = NULL;
+
+  if (!pvlen || !wtc || !res) return;
+
+  ptr += PvhdrSz; 
+  label_ptr = (pm_label_t *) ptr; 
+
+  for (x = 0, rlen = 0; x < pvlen->num && rlen < pvlen->tot_len; x++) {
+    if (label_ptr->type == wtc) {
+      ptr += PmLabelTSz;
+
+      *res = ptr;
+      return; 
+    }
+    else {
+      ptr += (PmLabelTSz + label_ptr->len);
+      rlen += (PmLabelTSz + label_ptr->len);
+      label_ptr = (pm_label_t *) ptr;
+    }
+  }  
 }

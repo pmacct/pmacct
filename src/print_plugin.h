@@ -32,4 +32,5 @@ EXT void print_plugin(int, struct configuration *, void *);
 EXT void P_cache_purge(struct chained_cache *[], int);
 EXT void P_write_stats_header_formatted(FILE *, int);
 EXT void P_write_stats_header_csv(FILE *, int);
+EXT void P_fprintf_csv_label(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
 #undef EXT
