@@ -107,7 +107,7 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   if (pmpls) modulo ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust) modulo ^= cache_crc32((unsigned char *)pcust, pc_size);
   if (pvlen) modulo ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
-  
+
   return modulo %= config.print_cache_entries;
 }
 

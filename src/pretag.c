@@ -682,14 +682,14 @@ void pretag_init_vars(struct packet_ptrs *pptrs, struct id_table *t)
   }
 }
 
-void pretag_init_label(pm_label_t *label)
+void pretag_init_label(pt_label_t *label)
 {
   if (!label) return;
 
-  memset(label, 0, sizeof(pm_label_t));
+  memset(label, 0, sizeof(pt_label_t));
 }
 
-int pretag_malloc_label(pm_label_t *label, int len)
+int pretag_malloc_label(pt_label_t *label, int len)
 {
   if (!label) return ERR;
 
@@ -703,7 +703,7 @@ int pretag_malloc_label(pm_label_t *label, int len)
   return SUCCESS;
 }
 
-int pretag_realloc_label(pm_label_t *label, int len)
+int pretag_realloc_label(pt_label_t *label, int len)
 {
   if (!label) return ERR;
 
@@ -717,7 +717,7 @@ int pretag_realloc_label(pm_label_t *label, int len)
   return SUCCESS;
 }
 
-int pretag_copy_label(pm_label_t *dst, pm_label_t *src)
+int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
 {
   if (!src || !dst) return ERR;
 
@@ -733,7 +733,6 @@ int pretag_copy_label(pm_label_t *dst, pm_label_t *src)
         return ERR;
       }
 
-      dst->type = src->type;
       strncpy(dst->val, src->val, src->len);
       dst->val[dst->len] = '\0';
     }
@@ -742,12 +741,11 @@ int pretag_copy_label(pm_label_t *dst, pm_label_t *src)
   return SUCCESS;
 }
 
-void pretag_free_label(pm_label_t *label)
+void pretag_free_label(pt_label_t *label)
 {
   if (label && label->val) {
     free(label->val); 
     label->val = NULL;
-    label->type = 0;
     label->len = 0;
   }
 }
@@ -756,7 +754,7 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 {
   int j = 0;
   pm_id_t id = 0, stop = 0, ret = 0;
-  pm_label_t label_local;
+  pt_label_t label_local;
 
   e->last_matched = FALSE;
 
@@ -797,7 +795,6 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 	if (pretag_malloc_label(&pptrs->label, label_local.len + 1 /* null */)) return;
 	strncpy(pptrs->label.val, label_local.val, label_local.len);
 	pptrs->label.val[pptrs->label.len] = '\0';
-	pptrs->label.type = label_local.type;
       }
 
       pptrs->have_label = TRUE;

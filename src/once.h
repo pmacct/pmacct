@@ -5,7 +5,8 @@
 #endif
 
 EXT u_int32_t PdataSz, ChBufHdrSz, CharPtrSz, CounterSz, HostAddrSz;
-EXT u_int32_t PpayloadSz, PextrasSz, PmsgSz, PvhdrSz, PmLabelTSz;
+EXT u_int32_t PpayloadSz, PextrasSz, PmsgSz, PvhdrSz, PtLabelTSz;
+EXT u_int32_t PmLabelTSz;
 EXT u_int32_t NfHdrV5Sz, NfHdrV1Sz, NfHdrV7Sz, NfHdrV8Sz, NfHdrV9Sz;
 EXT u_int32_t IpFixHdrSz;
 EXT u_int32_t NfDataHdrV9Sz, NfTplHdrV9Sz, NfOptTplHdrV9Sz;

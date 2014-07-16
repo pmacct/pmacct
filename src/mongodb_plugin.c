@@ -235,6 +235,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   char *pcust = NULL;
+  struct pkt_vlen_hdr_primitives *pvlen = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
@@ -392,11 +393,16 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   
       if (queue[j]->pcust) pcust = queue[j]->pcust;
       else pcust = empty_pcust;
+
+      if (queue[j]->pvlen) pvlen = queue[j]->pvlen;
+      else pvlen = NULL;
   
       if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
       if (config.what_to_count & COUNT_TAG) bson_append_long(bson_elem, "tag", data->tag);
       if (config.what_to_count & COUNT_TAG2) bson_append_long(bson_elem, "tag2", data->tag2);
+      if (config.what_to_count_2 & COUNT_LABEL) MongoDB_append_label(bson_elem, "label", pvlen, COUNT_INT_LABEL); 
+
       if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
       if (config.what_to_count & COUNT_SRC_MAC) {
@@ -725,4 +731,13 @@ void MongoDB_create_indexes(mongo *db_conn, const char *table)
     fclose(f);
   }
   else Log(LOG_WARNING, "WARN ( %s/%s ): mongo_indexes_file '%s' does not exist.\n", config.name, config.type, config.sql_table_schema);
+}
+
+void MongoDB_append_label(bson *bson_elem, char *name, struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc)
+{
+  char *label_ptr = NULL;
+
+  vlen_prims_get(pvlen, wtc, &label_ptr);
+  if (label_ptr) bson_append_string(bson_elem, name, label_ptr); 
+  else bson_append_null(bson_elem, name);
 }

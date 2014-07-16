@@ -131,7 +131,7 @@ typedef struct {
 struct id_entry {
   pm_id_t id;
   pm_id_t id2;
-  pm_label_t label;
+  pt_label_t label;
   pm_id_t flags;
   pm_id_t pos;
   pt_hostaddr_t agent_ip;
@@ -235,11 +235,11 @@ EXT void load_pre_tag_map(int, char *, struct id_table *, struct plugin_requests
 EXT u_int8_t pt_check_neg(char **, u_int32_t *);
 EXT char * pt_check_range(char *);
 EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
-EXT void pretag_init_label(pm_label_t *);
-EXT int pretag_malloc_label(pm_label_t *, int);
-EXT int pretag_realloc_label(pm_label_t *, int);
-EXT int pretag_copy_label(pm_label_t *, pm_label_t *);
-EXT void pretag_free_label(pm_label_t *);
+EXT void pretag_init_label(pt_label_t *);
+EXT int pretag_malloc_label(pt_label_t *, int);
+EXT int pretag_realloc_label(pt_label_t *, int);
+EXT int pretag_copy_label(pt_label_t *, pt_label_t *);
+EXT void pretag_free_label(pt_label_t *);
 EXT int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
 EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);

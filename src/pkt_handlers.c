@@ -2536,12 +2536,13 @@ void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
   data_ptr = (char *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives + PvhdrSz + pvlen->tot_len); 
 
   if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz)) return; 
-  label_ptr = &pptrs->label;
-  memcpy(data_ptr, label_ptr, PmLabelTSz);
+  label_ptr = (pm_label_t *) data_ptr;
+  label_ptr->type = COUNT_INT_LABEL;
+  label_ptr->len = pptrs->label.len;
   data_ptr += PmLabelTSz;
 
-  if (check_pipe_buffer_space(chptr, pvlen, label_ptr->len)) return;
-  memcpy(data_ptr, label_ptr->val, label_ptr->len);
+  if (check_pipe_buffer_space(chptr, pvlen, pptrs->label.len)) return;
+  memcpy(data_ptr, pptrs->label.val, pptrs->label.len);
   
   pvlen->num++;
 }

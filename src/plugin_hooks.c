@@ -265,7 +265,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 {
   int saved_have_tag = FALSE, saved_have_tag2 = FALSE, saved_have_label = FALSE;
   pm_id_t saved_tag = 0, saved_tag2 = 0;
-  pm_label_t saved_label;
+  pt_label_t saved_label;
 
   int num, fixed_size, already_reprocessed = 0;
   u_int32_t savedptr;

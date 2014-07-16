@@ -237,6 +237,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   char *pcust = NULL;
+  struct pkt_vlen_hdr_primitives *pvlen = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
@@ -305,10 +306,13 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->pcust) pcust = queue[j]->pcust;
     else pcust = empty_pcust;
 
+    if (queue[j]->pvlen) pvlen = queue[j]->pvlen;
+    else pvlen = NULL;
+
     if (queue[j]->valid == PRINT_CACHE_FREE) continue;
 
     json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, pmpls, pcust, queue[j]->bytes_counter,
+                         &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
 			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
 			 &queue[j]->basetime);
 
