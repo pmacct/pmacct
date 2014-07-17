@@ -478,16 +478,6 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
 
   for (j = 0; j < index; j++) {
     primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
-/*
-    memset(&pdata, 0, sizeof(pdata));
-    memcpy(&pdata.primitives, &queue[j]->primitives, pp_size);
-    prim_ptrs.data = &pdata;
-    prim_ptrs.pbgp = queue[j]->pbgp;
-    prim_ptrs.pnat = queue[j]->pnat;
-    prim_ptrs.pmpls = queue[j]->pmpls;
-    prim_ptrs.pcust = queue[j]->pcust;
-    prim_ptrs.pvlen = queue[j]->pvlen;
-*/
 
     modulo = P_cache_modulo(&prim_ptrs);
     cache_ptr = &cache[modulo];

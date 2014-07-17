@@ -379,7 +379,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
   char orig_copy_clause[LONGSRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
   time_t start;
-  int j, r, reprocess = 0, stop, go_to_pending, reprocess_idx, bulk_reprocess_idx;
+  int j, r, reprocess = 0, stop, go_to_pending, reprocess_idx, bulk_reprocess_idx, saved_index = index;
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
@@ -552,7 +552,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   idata->elap_time = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, idata->qn, index, idata->elap_time);
+		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time);
 
   if (config.sql_trigger_exec) {
     if (!config.debug) idata->elap_time = time(NULL)-start;

@@ -59,6 +59,7 @@ Similarly, BGP tables:
   * tag => agent_id (INT(4) UNSIGNED NOT NULL)
     - tag => tag (INT(4) UNSIGNED NOT NULL, if sql_table_version >= 9)
   * tag2 => tag2 (INT(4) UNSIGNED NOT NULL, see README.tag2)
+  * label => label (VARCHAR(255) NOT NULL, see README.label)
   * src_as => as_src (INT(4) UNSIGNED NOT NULL)
   * dst_as => as_dst (INT(4) UNSIGNED NOT NULL)
   * peer_src_as => peer_as_src (INT(4) UNSIGNED NOT NULL)

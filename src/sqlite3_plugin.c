@@ -361,7 +361,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 {
   struct db_cache *LastElemCommitted = NULL;
   time_t start;
-  int j, stop, ret, go_to_pending;
+  int j, stop, ret, go_to_pending, saved_index = index;
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
   char tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs;
@@ -472,7 +472,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   
   idata->elap_time = time(NULL)-start; 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n", 
-		config.name, config.type, writer_pid, idata->qn, index, idata->elap_time); 
+		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time); 
 
   if (config.sql_trigger_exec) {
     if (!config.debug) idata->elap_time = time(NULL)-start;

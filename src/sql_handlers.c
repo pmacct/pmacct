@@ -575,6 +575,19 @@ void count_tag2_handler(const struct db_cache *cache_elem, struct insert_data *i
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_label_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *label_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_LABEL, &label_ptr);
+  if (!label_ptr) label_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, label_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, label_ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_class_id_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   char buf[MAX_PROTOCOL_LEN+1];

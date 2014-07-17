@@ -903,3 +903,7 @@ int bgp_rd2str(u_char *str, rd_t *rd)
 void custom_primitive_value_print(char *out, int outlen, char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
 {
 }
+
+void vlen_prims_get(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char **label_ptr)
+{
+}

@@ -244,7 +244,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
-  int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret;
+  int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
   time_t start, duration;
   pid_t writer_pid = getpid();
 
@@ -334,7 +334,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, qn, index, duration);
+		config.name, config.type, writer_pid, qn, saved_index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

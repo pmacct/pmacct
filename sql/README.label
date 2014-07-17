@@ -1,0 +1,14 @@
+This document doesn't replace documentation relevant to the database software you are
+using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'label' field.
+Such field carries variable string tags and is equivalent in purpose to tag and tag2,
+with the exception tag and tag2 are numerical-only. The guidelines below (typically
+in MySQL format) are to add such primitive to the SQL schema:
+
+* label field:
+  - "label VARCHAR(255) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., label, ...)" to put it in the primary key 
+
+The primitive is not declared as part of any default table version; yet will not fail
+version checks which are enabled when 'sql_optimize_clauses' feature is disabled.

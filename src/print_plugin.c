@@ -264,7 +264,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
-  int j, stop, is_event = FALSE, qn = 0, go_to_pending;
+  int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index;
   time_t start, duration;
   char tmpbuf[LONGLONGSRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs, elem_prim_ptrs;
@@ -916,7 +916,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, qn, index, duration);
+		config.name, config.type, writer_pid, qn, saved_index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }

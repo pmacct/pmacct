@@ -294,12 +294,15 @@ void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
 
   idata->hash = cache_crc32((unsigned char *)srcdst, pp_size);
   if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) idata->hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) idata->hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust) idata->hash ^= cache_crc32((unsigned char *)pcust, pc_size);
+  if (pvlen) idata->hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
+
   idata->modulo = idata->hash % config.sql_cache_entries;
 }
 
@@ -430,6 +433,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
 	    PendingElem->pnat = NULL;
 	    PendingElem->pmpls = NULL;
 	    PendingElem->pcust = NULL;
+	    PendingElem->pvlen = NULL;
             RetireElem(PendingElem);
 
             queue[j] = Cursor;
@@ -439,6 +443,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
 	    if (SavedCursor.pnat) free(SavedCursor.pnat);
 	    if (SavedCursor.pmpls) free(SavedCursor.pmpls);
 	    if (SavedCursor.pcust) free(SavedCursor.pcust);
+	    if (SavedCursor.pvlen) free(SavedCursor.pvlen);
           }
           /* We found at least one Cursor->valid == SQL_CACHE_INUSE */
           else SwapChainedElems(PendingElem, Cursor);
@@ -515,10 +520,11 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   unsigned int modulo;
   struct db_cache *Cursor;
   struct insert_data idata;
-  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_cust = TRUE;
+  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_cust = TRUE, res_vlen = TRUE;
 
   sql_cache_modulo(prim_ptrs, &idata);
   modulo = idata.modulo;
@@ -564,7 +570,12 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
       }
       else res_cust = FALSE;
 
-      if (!res_data && !res_bgp && !res_nat && !res_mpls && !res_cust) {
+      if (pvlen && Cursor->pvlen) {
+        res_vlen = vlen_prims_cmp(Cursor->pvlen, pvlen);
+      }
+      else res_vlen = FALSE;
+
+      if (!res_data && !res_bgp && !res_nat && !res_mpls && !res_cust && !res_vlen) {
         /* additional check: time */
         if ((Cursor->basetime < basetime) && config.sql_history)
           goto follow_chain;
@@ -584,6 +595,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   time_t basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
@@ -712,7 +724,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   else {
     if (Cursor->valid == SQL_CACHE_INUSE) {
       int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE;
-      int res_cust = TRUE;
+      int res_cust = TRUE, res_vlen = TRUE;
 
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
@@ -742,7 +754,12 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
       }
       else res_cust = FALSE;
 
-      if (!res_data && !res_bgp && !res_nat && !res_mpls && !res_cust) {
+      if (pvlen && Cursor->pvlen) {
+        res_vlen = vlen_prims_cmp(Cursor->pvlen, pvlen);
+      }
+      else res_vlen = FALSE;
+
+      if (!res_data && !res_bgp && !res_nat && !res_mpls && !res_cust && !res_vlen) {
         /* additional check: time */
         if ((Cursor->basetime != basetime) && config.sql_history) goto follow_chain;
 
@@ -814,6 +831,19 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     else {
       if (Cursor->pcust) free(Cursor->pcust);
       Cursor->pcust = NULL;
+    }
+
+    /* if we have a pvlen from before let's free it
+       up due to the vlen nature of the memory area */
+    if (Cursor->pvlen) {
+      vlen_prims_free(Cursor->pvlen);
+      Cursor->pvlen = NULL;
+    }
+
+    if (pvlen) {
+      Cursor->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
+      if (!Cursor->pvlen) goto safe_action;
+      memcpy(Cursor->pvlen, pvlen, PvhdrSz + pvlen->tot_len);
     }
   
     Cursor->packet_counter = data->pkt_num;
@@ -1164,6 +1194,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_NAT_EVENT) what_to_count_2 |= COUNT_NAT_EVENT;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
+    if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
   }
 
   /* sorting out delimiter */
@@ -2294,6 +2325,20 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
+  if (what_to_count_2 & COUNT_LABEL) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "label", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "label=%\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_LABEL;
+    values[primitive].handler = where[primitive].handler = count_label_handler;
+    primitive++;
+  }
+
   if (what_to_count & COUNT_CLASS) {
     int count_it = FALSE;
 
@@ -2903,5 +2948,6 @@ void primptrs_set_all_from_db_cache(struct primitives_ptrs *prim_ptrs, struct db
     prim_ptrs->pnat = entry->pnat;
     prim_ptrs->pmpls = entry->pmpls;
     prim_ptrs->pcust = entry->pcust;
+    prim_ptrs->pvlen = entry->pvlen;
   }
 }

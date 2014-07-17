@@ -35,10 +35,10 @@ DESC:		daemonizes the process (default: false).
 KEY:		aggregate (-c)
 VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_net,
 		 src_mask, dst_mask, src_as, dst_as, src_port, dst_port, tos, proto, none,
-		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, class,
-		 tcpflags, in_iface, out_iface, std_comm, ext_comm, as_path, peer_src_ip,
-		 peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med, src_std_comm,
-		 src_ext_comm, src_as_path, src_local_pref, src_med, mpls_vpn_rd,
+		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, label,
+		 class, tcpflags, in_iface, out_iface, std_comm, ext_comm, as_path,
+		 peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med,
+		 src_std_comm, src_ext_comm, src_as_path, src_local_pref, src_med, mpls_vpn_rd,
 		 mpls_label_top, mpls_label_bottom, mpls_stack_depth, sampling_rate,
 		 src_host_country, dst_host_country, pkt_len_distrib, nat_event,
 		 post_nat_src_host, post_nat_dst_host, post_nat_src_port, post_nat_dst_port,
@@ -59,10 +59,10 @@ DESC:		aggregate captured traffic data by selecting the specified set of primiti
 		sum_<primitive> are compound primitives which join together both inbound and
 		outbound traffic into a single aggregate. The 'none' primitive allows to make
 		an unique aggregate which accounts for the grand total of traffic flowing
-		through a specific interface. 'tag' and 'tag2' enable generation of tags when
-		tagging engines (pre_tag_map, post_tag) are in use. 'class' enables reception
-		of L7 traffic classes when Packet/Flow Classification engine (classifiers) is
-		in use. (default: src_host).
+		through a specific interface. 'tag', 'tag2' and 'label' enable generation of
+		tags when tagging engines (pre_tag_map, post_tag) are in use. 'class' enables
+		L7 traffic classes when Packet/Flow Classification engine (classifiers) is in
+		use. (default: src_host).
 NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
 		  any default SQL table schema shipped. Always check out documentation related
 		  to the RDBMS in use (ie. 'sql/README.mysql') which will point you to extra
@@ -999,11 +999,12 @@ DESC:           both nfacctd and sfacctd check health of incoming NetFlow/sFlow 
 
 KEY:		pre_tag_map
 DESC:		full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering
-		purposes, see pre_tag_filter configuration directive) or exposed to users (ie. if 'tag' and/or
-		'tag2' primitives are part of the aggregation method). Take a look to the examples/ sub-tree
-		for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is evaluated in
-		the Core Process and each plugin can be defined a local pre_tag_map. Result of evaluation of
-		pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/sfprobe plugin.  
+		purposes, see pre_tag_filter configuration directive) or exposed to users (ie. if 'tag', 'tag2'
+		and/or 'label' primitives are part of the aggregation method). Take a look to the examples/
+		sub-tree for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is
+		evaluated in the Core Process and each plugin can be defined a local pre_tag_map. Result of
+		evaluation of pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/
+		sfprobe plugin.  
 
 KEY:		maps_entries
 DESC:		defines the maximum number of entries a map (ie. pre_tag_map) can contain. The default value

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -69,6 +69,7 @@ Inline void RetireElem(struct db_cache *Cursor)
   if (Cursor->pnat) free(Cursor->pnat);
   if (Cursor->pmpls) free(Cursor->pmpls);
   if (Cursor->pcust) free(Cursor->pcust);
+  if (Cursor->pvlen) free(Cursor->pvlen);
 
   free(Cursor);
 }

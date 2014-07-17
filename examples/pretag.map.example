@@ -1,25 +1,26 @@
-! pre_tag_map: Pre-Tagging map -- multiplexes various fields into a 8-bytes
-! numerical-only ID 
+! Pre-Tagging map -- upon matching a set of given conditions, pre_tag_map does 
+! return numerical (set_tag, set_tag2) or string (label) IDs.
 !
 ! File syntax is key-based. Position of keys inside the same row (rule) is not
 ! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full
 ! match wins (like in firewall rules). Negative values mean negations (ie. match
-! data NOT entering interface 2: 'in=-2'); 'set_tag', 'set_tag2', 'filter' and
-! 'ip' keys don't support negative values. 'label', 'jeq', 'return' and 'stack'
-! keys can be used to alter the standard rule evaluation flow.
+! data NOT entering interface 2: 'in=-2'); 'set_tag', 'set_tag2', 'set_label',
+! 'filter' and 'ip' keys don't support negative values. 'label', 'jeq', 'return'
+! and 'stack' keys can be used to alter the standard rule evaluation flow.
 !
-! nfacctd: valid keys: set_tag, set_tag2, set_tos, ip, in, out, engine_type,
-! engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg, sampling_rate,
-! sample_type, direction, src_mac, vlan; mandatory keys for each rule: ip.
+! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
+! engine_type, engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg,
+! sampling_rate, sample_type, direction, src_mac, vlan; mandatory keys for each
+! rule: ip.
 !
-! sfacctd: valid keys: set_tag, set_tag2, set_tos, ip, in, out, nexthop,
-! bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac, vlan;
-! mandatory keys for each rule: ip.
+! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
+! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
+! vlan; mandatory keys for each rule: ip.
 !
-! pmacctd: valid keys: set_tag, set_tag2 and filter.
+! pmacctd: valid keys: set_tag, set_tag2, set_label and filter.
 !
-! sfacctd, nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, ip;
-! mandatory keys for each rule: ip.
+! sfacctd, nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label,
+! ip; mandatory keys for each rule: ip.
 !
 ! BGP-related keys are independent of the collection method in use, hence apply
 ! to all daemons (BGP daemon must be enabled): src_as, dst_as, src_comms, comms,
@@ -29,20 +30,24 @@
 !
 ! 'set_tag'		SET: tag assigned to a matching packet, flow or sample;
 !			tag can be also defined auto-increasing, ie. <tag #>++;
-!			its use is mutually exclusive to 'set_tag2' within the
-!			same rule. The resulting value is written to the 'tag'
-!			field when using memory tables and 'agent_id' when using
-!			a SQL plugin (unless a schema v9 is used). Legacy name
-!			for this primitive is 'id'.  
+!			its use is mutually exclusive to set_tag2 and set_label
+!			within the same rule. The resulting value is written to
+!			the 'tag' field when using memory tables and 'agent_id'
+!			when using a SQL plugin (unless a schema v9 is used).
+!			Legacy name for this primitive is 'id'.  
 ! 'set_tag2'		SET: tag assigned to a matching packet, flow or sample;
 !			tag can be also defined auto-increasing, ie. <tag #>++;
-!			its use is mutually exclusive to 'set_tag' within the
-!			same rule. The resulting value is written to the 'tag2'
-!			field when using memory tables and 'agent_id2' when
-!			using a SQL plugin (unless a schema v9 is used). If
-!			using a SQL plugin, read more about the 'agent_id2'
+!			its use is mutually exclusive to set_tag and set_label
+!			within the same rule. The resulting value is written to
+!			the 'tag2' field when using memory tables and 'agent_id2'
+!			when using a SQL plugin (unless a schema v9 is used).
+!			If using a SQL plugin, read more about the 'agent_id2'
 !			field in the 'sql/README.agent_id2' document. Legacy
 !			name for this primitive is 'id2'.
+! 'set_label'		SET: string label assigned to a matching packet, flow
+!			or sample; its use is mutually exclusive to tags within
+!			the same rule. The resulting value is written to the
+!			'label' field.
 ! 'set_tos'             SET: Matching packets are set their 'tos' primitive to
 !			the specified value. Currently valid only in nfacctd. If
 !			collecting ingress NetFlow at both trusted and untrusted
@@ -290,4 +295,14 @@ set_tag2=5 label=fivefive
 set_tag2=6 label=sixsix
 set_tag2=7 label=sevenseven
 ! 
+! ===
+!
+! === Basic set_label example
+! Tag as "blabla,blabla2" all NetFlow/sFlow data received from any exporter.
+! If, ie. as a result of JEQ's in a pre_tag_map, multiple 'set_label' are
+! applied, then default operation is append labels and separate by a comma.
+!
+set_label=blabla        ip=0.0.0.0/0    jeq=blabla2
+set_label=blabla2       ip=0.0.0.0/0    label=blabla2
+!
 ! ===

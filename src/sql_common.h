@@ -128,6 +128,7 @@ struct db_cache {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
+  struct pkt_vlen_hdr_primitives *pvlen;
   u_int8_t valid;
   u_int8_t prep_valid;
   unsigned int signature;
@@ -256,6 +257,7 @@ EXT void count_timestamp_handler(const struct db_cache *, struct insert_data *, 
 EXT void count_copy_timestamp_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tag_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tag2_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_label_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_class_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tcpflags_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_post_nat_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

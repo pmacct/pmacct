@@ -72,6 +72,7 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * tag => agent_id (BIGINT NOT NULL DEFAULT 0)
     - tag => tag (BIGINT NOT NULL DEFAULT 0, if sql_table_version >= 9)
   * tag2 => tag2 (BIGINT NOT NULL DEFAULT 0, see README.tag2)
+  * label => label (VARCHAR(255) NOT NULL DEFAULT ' ', see README.label)
   * src_as => as_src (BIGINT NOT NULL DEFAULT 0)
   * dst_as => as_dst (BIGINT NOT NULL DEFAULT 0)
   * peer_src_as => peer_as_src (BIGINT NOT NULL DEFAULT 0)

@@ -244,7 +244,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
   char *as_path, *bgp_comm, default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
-  int qn = 0, i, j, stop, db_status, batch_idx, go_to_pending;
+  int qn = 0, i, j, stop, db_status, batch_idx, go_to_pending, saved_index = index;
   time_t stamp, start, duration;
   char current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs;
@@ -676,7 +676,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, qn, index, duration);
+		config.name, config.type, writer_pid, qn, saved_index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 }
