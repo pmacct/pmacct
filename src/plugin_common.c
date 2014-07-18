@@ -575,7 +575,7 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
       else queue[j]->valid = PRINT_CACHE_COMMITTED;
     }
 
-    pqq_container = (struct chained_cache *) malloc(pqq_ptr*dbc_size);
+    if (pqq_ptr) pqq_container = (struct chained_cache *) malloc(pqq_ptr*dbc_size);
     
     /* we copy un-committed elements to a container structure for re-insertion
        in cache. As we copy elements out of the cache we mark entries as free */

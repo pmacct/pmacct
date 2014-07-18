@@ -919,6 +919,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 		config.name, config.type, writer_pid, qn, saved_index, duration);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
+
+  if (empty_pcust) free(empty_pcust);
 }
 
 void P_write_stats_header_formatted(FILE *f, int is_event)

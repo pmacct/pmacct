@@ -423,7 +423,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 }
 
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct pkt_nat_primitives *d3,
-		struct pkt_mpls_primitives *d4, struct acc *src, u_int64_t w, u_int64_t w2,
+		struct pkt_mpls_primitives *d4, struct acc *src, pm_cfgreg_t w, pm_cfgreg_t w2,
 		struct extra_primitives *extras)
 {
   struct pkt_primitives *s1 = &src->primitives;

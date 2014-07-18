@@ -1294,7 +1294,7 @@ int main(int argc,char **argv)
 
 	/* Handling wildcards meaningfully */
 	if (!strcmp(match_string_token, "*")) {
-          request.what_to_count ^= count_token_int[match_string_index];	  
+          request.what_to_count ^= count_token_int[match_string_index];	// XXX: what about what_to_count_2 ? 
 	  match_string_index++;
 	  continue;
 	}

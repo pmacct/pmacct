@@ -673,12 +673,15 @@ DESC:           sets the maximum number of concurrent writer processes the plugi
 		printed out. (default: 10)
 
 KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries ]
-DESC:		SQL and other plugins sport a Plugin Memory Cache (PMC) meant to accumulate bytes/packets
-		counters until next purging event (for further insights take a look to 'sql_refresh_time'). 
-		This directive sets the number of PMC buckets. Default value is suitable for most common
-		scenarios, however when facing large-scale networks, it's higly recommended to carefully
-		tune this parameter to improve performances. Use a prime number of buckets.
-		(default: sql_cache_entries: 32771, print_cache_entries: 16411)
+DESC:		All plugins have a memory cache in order to store data until next purging event (see
+		sql_refresh_time). In case of network traffic data caching allows to accumulate bytes
+		and packets counters. This directive sets the number of cache buckets. Default value
+		is suitable for most common scenarios, however when facing large-scale networks, it
+		is higly recommended to tune this parameter to improve performances. Use a prime
+		number of buckets. (default: sql_cache_entries: 32771, print_cache_entries: 16411)
+NOTES:		print, AMQP and MongoDB plugins share the same cache structure: as said, this setting
+		defines the amount of buckets. The default value (16411) allows for some 150K entries
+		to fit the cache structure (or roughlt ten times the supplied value).
 
 KEY:		sql_dont_try_update
 VALUES:         [ true | false ]
