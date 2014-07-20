@@ -168,9 +168,9 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       pollagain = FALSE;
+      if ((rg->ptr + bufsz) >= rg->end) rg->ptr = rg->base;
       memcpy(pipebuf, rg->ptr, bufsz);
-      if ((rg->ptr+bufsz) >= rg->end) rg->ptr = rg->base;
-      else rg->ptr += bufsz;
+      rg->ptr += bufsz;
 
       /* lazy sql refresh handling */ 
       if (idata.now > refresh_deadline) {

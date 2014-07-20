@@ -1534,9 +1534,9 @@ read_data:
       }
 
       pollagain = FALSE;
+      if ((rg->ptr + bufsz) >= rg->end) rg->ptr = rg->base;
       memcpy(pipebuf, rg->ptr, bufsz);
-      if ((rg->ptr+bufsz) >= rg->end) rg->ptr = rg->base;
-      else rg->ptr += bufsz;
+      rg->ptr += bufsz;
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 

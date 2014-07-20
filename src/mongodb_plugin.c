@@ -187,9 +187,9 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       pollagain = FALSE;
+      if ((rg->ptr + bufsz) >= rg->end) rg->ptr = rg->base;
       memcpy(pipebuf, rg->ptr, bufsz);
-      if ((rg->ptr+bufsz) >= rg->end) rg->ptr = rg->base;
-      else rg->ptr += bufsz;
+      rg->ptr += bufsz;
 
       /* lazy refresh time handling */ 
       if (now > refresh_deadline) P_cache_handle_flush_event(&pt);
