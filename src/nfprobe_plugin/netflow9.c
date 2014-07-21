@@ -497,31 +497,33 @@ int nf9_init_cp_pen_template(struct IPFIX_PEN_TEMPLATE_ADDENDUM *tpl, struct IPF
   struct NF9_INTERNAL_TEMPLATE_RECORD *cp_pen_first_record = NULL, *cp_pen_first_record_out = NULL;
   int cp_idx, cp_pen_first = FALSE, cp_pen_len = 0;
 
-  if (config.nfprobe_version == 10 && config.cpptrs.primitive[cp_idx].ptr->pen) {
-    tpl->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
-    tpl->r[rcount_pen].pen = htonl(config.cpptrs.primitive[cp_idx].ptr->pen);
-    tpl->r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
-    tpl_int->r[rcount_pen].length = 0;
-    tpl_out->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
-    tpl_out->r[rcount_pen].pen = htonl(config.cpptrs.primitive[cp_idx].ptr->pen);
-    tpl_out->r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
-    tpl_int_out->r[rcount_pen].length = 0;
-    cp_pen_len += config.cpptrs.primitive[cp_idx].ptr->len;
+  for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+    if (config.nfprobe_version == 10 && config.cpptrs.primitive[cp_idx].ptr->pen) {
+      tpl->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
+      tpl->r[rcount_pen].pen = htonl(config.cpptrs.primitive[cp_idx].ptr->pen);
+      tpl->r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+      tpl_int->r[rcount_pen].length = 0;
+      tpl_out->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
+      tpl_out->r[rcount_pen].pen = htonl(config.cpptrs.primitive[cp_idx].ptr->pen);
+      tpl_out->r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+      tpl_int_out->r[rcount_pen].length = 0;
+      cp_pen_len += config.cpptrs.primitive[cp_idx].ptr->len;
 
-    if (!cp_pen_first) {
-      tpl_int->r[rcount_pen].handler = flow_to_flowset_cp_handler;
-      tpl_int_out->r[rcount_pen].handler = flow_to_flowset_cp_handler;
+      if (!cp_pen_first) {
+        tpl_int->r[rcount_pen].handler = flow_to_flowset_cp_handler;
+        tpl_int_out->r[rcount_pen].handler = flow_to_flowset_cp_handler;
 
-      cp_pen_first_record = &tpl_int->r[rcount_pen];
-      cp_pen_first_record_out = &tpl_int_out->r[rcount_pen];
-      cp_pen_first = TRUE;
+        cp_pen_first_record = &tpl_int->r[rcount_pen];
+        cp_pen_first_record_out = &tpl_int_out->r[rcount_pen];
+        cp_pen_first = TRUE;
+      }
+      else {
+        tpl_int->r[rcount_pen].handler = NULL;
+        tpl_int_out->r[rcount_pen].handler = NULL;
+      }
+
+      rcount_pen++;
     }
-    else {
-      tpl_int->r[rcount_pen].handler = NULL;
-      tpl_int_out->r[rcount_pen].handler = NULL;
-    }
-
-    rcount_pen++;
   }
 
   if (cp_pen_first_record) cp_pen_first_record->length = cp_pen_len;
@@ -1425,14 +1427,16 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	  else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
 	    u_int64_t tstamp_msec;
 
-	    tstamp_msec = flow->flow_last.tv_sec * 1000;
-	    tstamp_msec += flow->flow_last.tv_usec / 1000;
+	    tstamp_msec = flow->flow_last.tv_sec;
+	    tstamp_msec = tstamp_msec * 1000;
+	    tstamp_msec += (flow->flow_last.tv_usec / 1000);
             rec64 = pmXXX_htonll(tstamp_msec);
             memcpy(ftoft_ptr_0, &rec64, 8);
             ftoft_ptr_0 += 8;
 
-            tstamp_msec = flow->flow_start.tv_sec * 1000;
-            tstamp_msec += flow->flow_start.tv_usec / 1000;
+            tstamp_msec = flow->flow_start.tv_sec;
+            tstamp_msec = tstamp_msec * 1000;
+            tstamp_msec += (flow->flow_start.tv_usec / 1000);
             rec64 = pmXXX_htonll(tstamp_msec);
             memcpy(ftoft_ptr_0, &rec64, 8);
             ftoft_ptr_0 += 8;
@@ -1539,14 +1543,16 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
           else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
             u_int64_t tstamp_msec;
 
-            tstamp_msec = flow->flow_last.tv_sec * 1000;
-            tstamp_msec += flow->flow_last.tv_usec / 1000;
+            tstamp_msec = flow->flow_last.tv_sec;
+            tstamp_msec = tstamp_msec * 1000;
+            tstamp_msec += (flow->flow_last.tv_usec / 1000);
             rec64 = pmXXX_htonll(tstamp_msec);
             memcpy(ftoft_ptr_1, &rec64, 8);
             ftoft_ptr_1 += 8;
 
-            tstamp_msec = flow->flow_start.tv_sec * 1000;
-            tstamp_msec += flow->flow_start.tv_usec / 1000;
+            tstamp_msec = flow->flow_start.tv_sec;
+            tstamp_msec = tstamp_msec * 1000;
+            tstamp_msec += (flow->flow_start.tv_usec / 1000);
             rec64 = pmXXX_htonll(tstamp_msec);
             memcpy(ftoft_ptr_1, &rec64, 8);
             ftoft_ptr_1 += 8;
