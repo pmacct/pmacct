@@ -200,6 +200,7 @@ struct FLOW {
 #endif
 
 	char *pcust[2];				/* space for custom-defined primitives */
+	struct pkt_vlen_hdr_primitives *pvlen[2]; 	/* space for vlen primitives */
 };
 
 /*

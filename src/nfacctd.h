@@ -549,6 +549,7 @@ struct data_hdr_v9 {
 /* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
 #define NF9_CUST_TAG                    1
 #define NF9_CUST_TAG2                   2
+#define NF9_CUST_LABEL			3
 /* CUSTOM TYPES END HERE */
 
 #define MAX_TPL_DESC_LIST 81
