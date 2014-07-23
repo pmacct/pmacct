@@ -77,12 +77,16 @@ struct NF9_DATA_FLOWSET_HEADER {
 #define NF9_OPTIONS_FLOWSET_ID		1
 #define IPFIX_TEMPLATE_FLOWSET_ID	2
 #define IPFIX_OPTIONS_FLOWSET_ID	3
+#define IPFIX_VLEN_REC_SHORT		1
+#define IPFIX_VLEN_REC_LONG		2
+#define IPFIX_VLEN_REC_SHORT_MAXLEN	254 /* rfc 5101 says less than 255 octets */
 #define NF9_MIN_RECORD_FLOWSET_ID	256
 
 #define PMACCT_PEN			43874
 #define IPFIX_PEN_LEN			4
 #define IPFIX_TPL_EBIT                  0x8000 /* IPFIX telmplate enterprise bit */
 #define IPFIX_VARIABLE_LENGTH		65535
+#define NULL_CHAR_LEN			1
 
 /* Flowset record types the we care about */
 #define NF9_IN_BYTES			1
@@ -478,9 +482,24 @@ flow_to_flowset_tag2_handler(char *flowset, const struct FLOW *flow, int idx, in
 static int
 flow_to_flowset_label_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  // XXX
+  char null_char = '\0', *label_ptr = NULL;
+  int add_len = IPFIX_VLEN_REC_SHORT;
+  u_int8_t len = 0;
 
-  return 0;
+  vlen_prims_get(flow->pvlen[idx], COUNT_INT_LABEL, &label_ptr);
+  if (!label_ptr) {
+    len = NULL_CHAR_LEN;
+    label_ptr = &null_char;
+  }
+  else len = MIN(IPFIX_VLEN_REC_SHORT_MAXLEN, strlen(label_ptr) + 1); // XXX: check available len?
+
+  add_len += len;
+  memcpy(flowset, &len, IPFIX_VLEN_REC_SHORT); 
+  flowset += IPFIX_VLEN_REC_SHORT;
+  memcpy(flowset, label_ptr, len); 
+  flowset[len] = '\0';
+
+  return add_len;
 }
 
 static int
@@ -930,25 +949,25 @@ nf9_init_template(void)
           v4_pen_int_template.r[rcount_pen].handler = flow_to_flowset_tag2_handler;
           v4_pen_int_template.r[rcount_pen].length = rlen;
           v4_pen_template_out.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | NF9_CUST_TAG2);
+          v4_pen_template_out.r[rcount_pen].pen = htonl(PMACCT_PEN);
           v4_pen_template_out.r[rcount_pen].length = htons(rlen);
           v4_pen_int_template_out.r[rcount_pen].handler = flow_to_flowset_tag2_handler;
           v4_pen_int_template_out.r[rcount_pen].length = rlen;
           rcount_pen++;
         }
-/*
-        if (config.nfprobe_version == 10 && config.nfprobe_what_to_count & COUNT_LABEL) {
+        if (config.nfprobe_version == 10 && config.nfprobe_what_to_count_2 & COUNT_LABEL) {
           v4_pen_template.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | NF9_CUST_LABEL);
           v4_pen_template.r[rcount_pen].pen = htonl(PMACCT_PEN);
           v4_pen_template.r[rcount_pen].length = htons(IPFIX_VARIABLE_LENGTH);
           v4_pen_int_template.r[rcount_pen].handler = flow_to_flowset_label_handler;
           v4_pen_int_template.r[rcount_pen].length = IPFIX_VARIABLE_LENGTH;
           v4_pen_template_out.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | NF9_CUST_LABEL);
+          v4_pen_template_out.r[rcount_pen].pen = htonl(PMACCT_PEN);
           v4_pen_template_out.r[rcount_pen].length = htons(IPFIX_VARIABLE_LENGTH);
           v4_pen_int_template_out.r[rcount_pen].handler = flow_to_flowset_label_handler;
           v4_pen_int_template_out.r[rcount_pen].length = IPFIX_VARIABLE_LENGTH;
           rcount_pen++;
         }
-*/
         if (config.sampling_rate || config.ext_sampling_rate) {
           v4_template.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
           v4_template.r[rcount].length = htons(1);
@@ -996,13 +1015,19 @@ nf9_init_template(void)
 	assert(rcount + rcount_pen < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
 
 	for (idx = 0, v4_int_template.tot_rec_len = 0, v4_int_template_out.tot_rec_len = 0; idx < rcount; idx++) {
-	  v4_int_template.tot_rec_len += v4_int_template.r[idx].length;
-	  v4_int_template_out.tot_rec_len += v4_int_template_out.r[idx].length;
+	  if (config.nfprobe_version == 10 && v4_int_template.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v4_int_template.tot_rec_len += v4_int_template.r[idx].length;
+
+	  if (config.nfprobe_version == 10 && v4_int_template_out.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v4_int_template_out.tot_rec_len += v4_int_template_out.r[idx].length;
 	}
 
         for (idx = 0, v4_pen_int_template.tot_rec_len = 0, v4_pen_int_template_out.tot_rec_len = 0; idx < rcount_pen; idx++) {
-          v4_pen_int_template.tot_rec_len += v4_pen_int_template.r[idx].length;
-          v4_pen_int_template_out.tot_rec_len += v4_pen_int_template_out.r[idx].length;
+          if (config.nfprobe_version == 10 && v4_pen_int_template.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v4_pen_int_template.tot_rec_len += v4_pen_int_template.r[idx].length;
+
+          if (config.nfprobe_version == 10 && v4_pen_int_template_out.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v4_pen_int_template_out.tot_rec_len += v4_pen_int_template_out.r[idx].length;
         }
 
 #if defined ENABLE_IPV6
@@ -1323,20 +1348,19 @@ nf9_init_template(void)
           v6_pen_int_template_out.r[rcount_pen].length = rlen;
           rcount_pen++;
         }
-/*
-        if (config.nfprobe_version == 10 && config.nfprobe_what_to_count & COUNT_LABEL) {
+        if (config.nfprobe_version == 10 && config.nfprobe_what_to_count_2 & COUNT_LABEL) {
           v6_pen_template.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | NF9_CUST_LABEL);
           v6_pen_template.r[rcount_pen].pen = htonl(PMACCT_PEN);
           v6_pen_template.r[rcount_pen].length = htons(IPFIX_VARIABLE_LENGTH);
           v6_pen_int_template.r[rcount_pen].handler = flow_to_flowset_label_handler;
           v6_pen_int_template.r[rcount_pen].length = IPFIX_VARIABLE_LENGTH;
           v6_pen_template_out.r[rcount_pen].type = htons(IPFIX_TPL_EBIT | NF9_CUST_LABEL);
+          v6_pen_template_out.r[rcount_pen].pen = htonl(PMACCT_PEN);
           v6_pen_template_out.r[rcount_pen].length = htons(IPFIX_VARIABLE_LENGTH);
           v6_pen_int_template_out.r[rcount_pen].handler = flow_to_flowset_label_handler;
           v6_pen_int_template_out.r[rcount_pen].length = IPFIX_VARIABLE_LENGTH;
           rcount_pen++;
         }
-*/
         if (config.sampling_rate || config.ext_sampling_rate) {
           v6_template.r[rcount].type = htons(NF9_FLOW_SAMPLER_ID);
           v6_template.r[rcount].length = htons(1);
@@ -1384,13 +1408,19 @@ nf9_init_template(void)
 	assert(rcount + rcount_pen < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
 
 	for (idx = 0, v6_int_template.tot_rec_len = 0, v6_int_template_out.tot_rec_len = 0; idx < rcount; idx++) {
-	  v6_int_template.tot_rec_len += v6_int_template.r[idx].length;
-	  v6_int_template_out.tot_rec_len += v6_int_template_out.r[idx].length;
+	  if (config.nfprobe_version == 10 && v6_int_template.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v6_int_template.tot_rec_len += v6_int_template.r[idx].length;
+
+	  if (config.nfprobe_version == 10 && v6_int_template_out.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v6_int_template_out.tot_rec_len += v6_int_template_out.r[idx].length;
 	}
 
         for (idx = 0, v6_pen_int_template.tot_rec_len = 0, v6_pen_int_template_out.tot_rec_len = 0; idx < rcount_pen; idx++) {
-          v6_pen_int_template.tot_rec_len += v6_pen_int_template.r[idx].length;
-          v6_pen_int_template_out.tot_rec_len += v6_pen_int_template_out.r[idx].length;
+          if (config.nfprobe_version == 10 && v6_pen_int_template.r[idx].length == IPFIX_VARIABLE_LENGTH);
+	  else v6_pen_int_template.tot_rec_len += v6_pen_int_template.r[idx].length;
+
+	  if (config.nfprobe_version == 10 && v6_pen_int_template_out.r[idx].length == IPFIX_VARIABLE_LENGTH);
+          else v6_pen_int_template_out.tot_rec_len += v6_pen_int_template_out.r[idx].length;
         }
 #endif
 }
@@ -1490,6 +1520,16 @@ nf9_init_options_template(void)
           class_option_int_template.tot_rec_len += class_option_int_template.r[idx].length;
 }
 
+static void
+nf_flow_to_flowset_inc_len(char **ftoft_ptr, int *add_len, int orig_len, int elem_len)
+{
+  if (!elem_len) *ftoft_ptr += orig_len;
+  else {
+    *ftoft_ptr += elem_len;
+    *add_len += elem_len;
+  }
+}
+
 static int
 nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
     const struct timeval *system_boot_time, u_int *len_used, int direction)
@@ -1500,7 +1540,7 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	u_int8_t rec8;
 	char *ftoft_ptr_0 = ftoft_buf_0;
 	char *ftoft_ptr_1 = ftoft_buf_1;
-	int flow_direction[2], elem_len;
+	int flow_direction[2], elem_len, add_len;
 
 	bzero(ftoft_buf_0, sizeof(ftoft_buf_0));
 	bzero(ftoft_buf_1, sizeof(ftoft_buf_1));
@@ -1560,34 +1600,30 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                 memcpy(ftoft_ptr_0, &rec8, 1);
                 ftoft_ptr_0 += 1;
 		if (flow_direction[0] == DIRECTION_IN) {
-                  for (idx = 5; v4_int_template.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v4_int_template.r[idx].handler; idx++) {
                     elem_len = v4_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v4_int_template.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_int_template.r[idx].length, elem_len); 
                   }
                   freclen = v4_int_template.tot_rec_len;
 
 		  for (idx = 0; v4_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_pen_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v4_pen_int_template.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += v4_pen_int_template.tot_rec_len;
+                  freclen += (v4_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[0] == DIRECTION_OUT) {
-                  for (idx = 5; v4_int_template_out.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v4_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v4_int_template_out.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_int_template_out.r[idx].length, elem_len);
                   }
                   freclen = v4_int_template_out.tot_rec_len;
 
                   for (idx = 0; v4_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v4_pen_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v4_pen_int_template_out.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += v4_pen_int_template_out.tot_rec_len;
+                  freclen += (v4_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #if defined ENABLE_IPV6
@@ -1596,34 +1632,30 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                 memcpy(ftoft_ptr_0, &rec8, 1);
                 ftoft_ptr_0 += 1;
 		if (flow_direction[0] == DIRECTION_IN) {
-                  for (idx = 5; v6_int_template.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v6_int_template.r[idx].handler; idx++) {
                     elem_len = v6_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v6_int_template.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_int_template.r[idx].length, elem_len);
                   }
                   freclen = v6_int_template.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_pen_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v6_pen_int_template.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += v6_pen_int_template.tot_rec_len;
+                  freclen += (v6_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[0] == DIRECTION_OUT) {
-                  for (idx = 5; v6_int_template_out.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v6_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v6_int_template_out.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_int_template_out.r[idx].length, elem_len);
                   }
                   freclen = v6_int_template_out.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v6_pen_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_0 += v6_pen_int_template_out.r[idx].length;
-		    else ftoft_ptr_0 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += v6_pen_int_template_out.tot_rec_len;
+                  freclen += (v6_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #endif
@@ -1684,34 +1716,30 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                 memcpy(ftoft_ptr_1, &rec8, 1);
                 ftoft_ptr_1 += 1;
 		if (flow_direction[1] == DIRECTION_IN) {
-                  for (idx = 5; v4_int_template.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v4_int_template.r[idx].handler; idx++) {
                     elem_len = v4_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v4_int_template.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_int_template.r[idx].length, elem_len);
                   }
                   freclen = v4_int_template.tot_rec_len;
 
                   for (idx = 0; v4_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_pen_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v4_pen_int_template.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += v4_pen_int_template.tot_rec_len;
+                  freclen += (v4_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[1] == DIRECTION_OUT) {
-                  for (idx = 5; v4_int_template_out.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v4_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v4_int_template_out.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_int_template_out.r[idx].length, elem_len);
                   }
                   freclen = v4_int_template_out.tot_rec_len;
 
                   for (idx = 0; v4_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v4_pen_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v4_pen_int_template_out.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += v4_pen_int_template_out.tot_rec_len;
+                  freclen += (v4_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #if defined ENABLE_IPV6
@@ -1720,34 +1748,30 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                 memcpy(ftoft_ptr_1, &rec8, 1);
                 ftoft_ptr_1 += 1;
 		if (flow_direction[1] == DIRECTION_IN) {
-                  for (idx = 5; v6_int_template.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v6_int_template.r[idx].handler; idx++) {
                     elem_len = v6_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v6_int_template.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_int_template.r[idx].length, elem_len);
                   }
                   freclen = v6_int_template.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_pen_int_template.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v6_pen_int_template.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += v6_pen_int_template.tot_rec_len;
+                  freclen += (v6_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[1] == DIRECTION_OUT) {
-                  for (idx = 5; v6_int_template_out.r[idx].handler; idx++) {
+                  for (idx = 5, add_len = 0; v6_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v6_int_template_out.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_int_template_out.r[idx].length, elem_len);
                   }
                   freclen = v6_int_template_out.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v6_pen_int_template_out.r[idx].length);
-                    if (!elem_len) ftoft_ptr_1 += v6_pen_int_template_out.r[idx].length;
-		    else ftoft_ptr_1 += elem_len;
+		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += v6_pen_int_template_out.tot_rec_len;
+                  freclen += (v6_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #endif

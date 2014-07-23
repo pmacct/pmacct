@@ -369,7 +369,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 			config.name, config.type, tot_lines, filename); 
 	      }
 	      else if (acct_type == ACCT_PM) {
-	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2, tmp.e[tmp.num].label.len)
+	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len)
                    Log(LOG_ERR, "ERROR ( %s/%s ): set_tag (id), set_tag2 (id2) and set_label are mutual exclusive at line %d in map '%s'.\n", 
 			config.name, config.type, tot_lines, filename);
 	        else if (tmp.e[tmp.num].agent_ip.a.family)
