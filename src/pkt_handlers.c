@@ -694,7 +694,7 @@ void evaluate_packet_handlers()
 	}
 
 	if (config.acct_type == ACCT_NF) {
-	  channels_list[index].phandler[primitives] = NF_tag_handler;
+	  channels_list[index].phandler[primitives] = NF_cust_tag_handler;
 	  primitives++;
 	}
 	else if (config.acct_type == ACCT_SF) {
@@ -717,7 +717,7 @@ void evaluate_packet_handlers()
         }
 
         if (config.acct_type == ACCT_NF) {
-          channels_list[index].phandler[primitives] = NF_tag2_handler;
+          channels_list[index].phandler[primitives] = NF_cust_tag2_handler;
           primitives++;
         }
         else if (config.acct_type == ACCT_SF) {
@@ -743,7 +743,7 @@ void evaluate_packet_handlers()
 /*
       XXX: for later, to be revamped once label is implemented in nfprobe
       if (config.acct_type == ACCT_NF) {
-        channels_list[index].phandler[primitives] = NF_tag2_handler;
+        channels_list[index].phandler[primitives] = NF_cust_label_handler;
         primitives++;
       }
 */
@@ -3312,7 +3312,7 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   }
 }
 
-void NF_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_cust_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -3331,7 +3331,7 @@ void NF_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   }
 }
 
-void NF_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_cust_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;

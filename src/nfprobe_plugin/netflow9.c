@@ -1534,7 +1534,7 @@ static int
 nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
     const struct timeval *system_boot_time, u_int *len_used, int direction)
 {
-	u_int freclen, ret_len, nflows, idx;
+	u_int freclen_0, freclen_1, ret_len, nflows, idx;
 	u_int64_t rec64;
 	u_int32_t rec32;
 	u_int8_t rec8;
@@ -1604,26 +1604,26 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                     elem_len = v4_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_int_template.r[idx].length, elem_len); 
                   }
-                  freclen = v4_int_template.tot_rec_len;
+                  freclen_0 = v4_int_template.tot_rec_len;
 
 		  for (idx = 0; v4_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v4_pen_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += (v4_pen_int_template.tot_rec_len + add_len);
+                  freclen_0 += (v4_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[0] == DIRECTION_OUT) {
                   for (idx = 5, add_len = 0; v4_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v4_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen = v4_int_template_out.tot_rec_len;
+                  freclen_0 = v4_int_template_out.tot_rec_len;
 
                   for (idx = 0; v4_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v4_pen_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v4_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += (v4_pen_int_template_out.tot_rec_len + add_len);
+                  freclen_0 += (v4_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #if defined ENABLE_IPV6
@@ -1636,26 +1636,26 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                     elem_len = v6_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_int_template.r[idx].length, elem_len);
                   }
-                  freclen = v6_int_template.tot_rec_len;
+                  freclen_0 = v6_int_template.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template.r[idx].handler(ftoft_ptr_0, flow, 0, v6_pen_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += (v6_pen_int_template.tot_rec_len + add_len);
+                  freclen_0 += (v6_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[0] == DIRECTION_OUT) {
                   for (idx = 5, add_len = 0; v6_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v6_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen = v6_int_template_out.tot_rec_len;
+                  freclen_0 = v6_int_template_out.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template_out.r[idx].handler(ftoft_ptr_0, flow, 0, v6_pen_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_0, &add_len, v6_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += (v6_pen_int_template_out.tot_rec_len + add_len);
+                  freclen_0 += (v6_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #endif
@@ -1720,26 +1720,26 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                     elem_len = v4_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_int_template.r[idx].length, elem_len);
                   }
-                  freclen = v4_int_template.tot_rec_len;
+                  freclen_1 = v4_int_template.tot_rec_len;
 
                   for (idx = 0; v4_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v4_pen_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += (v4_pen_int_template.tot_rec_len + add_len);
+                  freclen_1 += (v4_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[1] == DIRECTION_OUT) {
                   for (idx = 5, add_len = 0; v4_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v4_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen = v4_int_template_out.tot_rec_len;
+                  freclen_1 = v4_int_template_out.tot_rec_len;
 
                   for (idx = 0; v4_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v4_pen_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v4_pen_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v4_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += (v4_pen_int_template_out.tot_rec_len + add_len);
+                  freclen_1 += (v4_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #if defined ENABLE_IPV6
@@ -1752,26 +1752,26 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                     elem_len = v6_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_int_template.r[idx].length, elem_len);
                   }
-                  freclen = v6_int_template.tot_rec_len;
+                  freclen_1 = v6_int_template.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template.r[idx].handler(ftoft_ptr_1, flow, 1, v6_pen_int_template.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_pen_int_template.r[idx].length, elem_len);
                   }
-                  freclen += (v6_pen_int_template.tot_rec_len + add_len);
+                  freclen_1 += (v6_pen_int_template.tot_rec_len + add_len);
 		}
 		else if (flow_direction[1] == DIRECTION_OUT) {
                   for (idx = 5, add_len = 0; v6_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v6_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen = v6_int_template_out.tot_rec_len;
+                  freclen_1 = v6_int_template_out.tot_rec_len;
 
                   for (idx = 0; v6_pen_int_template_out.r[idx].handler; idx++) {
                     elem_len = v6_pen_int_template_out.r[idx].handler(ftoft_ptr_1, flow, 1, v6_pen_int_template_out.r[idx].length);
 		    nf_flow_to_flowset_inc_len(&ftoft_ptr_1, &add_len, v6_pen_int_template_out.r[idx].length, elem_len);
                   }
-                  freclen += (v6_pen_int_template_out.tot_rec_len + add_len);
+                  freclen_1 += (v6_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
 #endif
@@ -1781,17 +1781,17 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	}
 
 	if (flow->octets[0] > 0 && direction == flow_direction[0]) {
-		if (ret_len + freclen > len)
+		if (ret_len + freclen_0 > len)
 			return (-1);
-		memcpy(packet + ret_len, ftoft_buf_0, freclen);
-		ret_len += freclen;
+		memcpy(packet + ret_len, ftoft_buf_0, freclen_0);
+		ret_len += freclen_0;
 		nflows++;
 	}
 	if (flow->octets[1] > 0 && direction == flow_direction[1]) {
-		if (ret_len + freclen > len)
+		if (ret_len + freclen_1 > len)
 			return (-1);
-		memcpy(packet + ret_len, ftoft_buf_1, freclen);
-		ret_len += freclen;
+		memcpy(packet + ret_len, ftoft_buf_1, freclen_1);
+		ret_len += freclen_1;
 		nflows++;
 	}
 

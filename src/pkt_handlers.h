@@ -108,10 +108,10 @@ EXT void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_cust_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_cust_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

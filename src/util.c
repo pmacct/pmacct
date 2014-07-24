@@ -2565,9 +2565,11 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char
 
   for (x = 0, rlen = 0; x < pvlen->num && rlen < pvlen->tot_len; x++) {
     if (label_ptr->type == wtc) {
-      ptr += PmLabelTSz;
+      if (label_ptr->len) {
+        ptr += PmLabelTSz;
+        *res = ptr;
+      }
 
-      *res = ptr;
       return; 
     }
     else {

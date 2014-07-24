@@ -433,6 +433,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_TAG;
 	  list->cfg.what_to_count |= COUNT_TAG2;
+	  list->cfg.what_to_count_2 |= COUNT_LABEL;
 	}
 	list->cfg.what_to_count |= COUNT_IN_IFACE;
 	list->cfg.what_to_count |= COUNT_OUT_IFACE;
@@ -453,6 +454,9 @@ int main(int argc,char **argv, char **envp)
 
 	list->cfg.data_type = PIPE_TYPE_METADATA;
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
+
+        if (list->cfg.what_to_count_2 & (COUNT_LABEL))
+          list->cfg.data_type |= PIPE_TYPE_VLEN;
       }
       else if (list->type.id == PLUGIN_ID_SFPROBE) {
         /* If we already renormalizing an external sampling rate,
@@ -510,6 +514,9 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
                         COUNT_MPLS_STACK_DEPTH))
           list->cfg.data_type |= PIPE_TYPE_MPLS;
+
+        if (list->cfg.what_to_count_2 & (COUNT_LABEL))
+          list->cfg.data_type |= PIPE_TYPE_VLEN;
 
 	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
 	if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS))

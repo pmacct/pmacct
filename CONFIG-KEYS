@@ -698,6 +698,9 @@ DESC:		instructs the plugin to build non-UPDATE SQL queries using COPY (in place
 		providing same functionalities of INSERT, COPY is also more efficient. To have effect, this
 		directive requires 'sql_dont_try_update' to be set to true. It applies to PostgreSQL plugin
 		only. (default: false)
+NOTES:		Error handling of the underlying PostgreSQL API is somewhat limited. During a COPY only
+		transmission errors are detected but not syntax/semantic ones, ie. related to the query
+		and/or the table schema. 
 
 KEY:		sql_delimiter
 DESC:		If sql_use_copy is true, uses the supplied character as delimiter. This is thought in cases
