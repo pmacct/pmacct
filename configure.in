@@ -69,9 +69,9 @@ AC_ARG_ENABLE(relax,
 )
 
 dnl: shared object handling
-AC_MSG_CHECKING([whether to disable shared objects])
+AC_MSG_CHECKING([whether to disable linking against shared objects])
 AC_ARG_ENABLE(so,
-        [  --disable-so                     Disable shared objects (default: no)],
+        [  --disable-so                     Disable linking against shared objects (default: no)],
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(no)
           AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
@@ -84,6 +84,9 @@ AC_ARG_ENABLE(so,
           fi
         else
           AC_MSG_RESULT(yes)
+	  if test "x$ac_cv_prog_gcc" = xyes ; then
+		LDFLAGS="-static ${LDFLAGS}"
+	  fi
         fi
         ,
         AC_MSG_RESULT(no)
@@ -505,6 +508,7 @@ AC_ARG_ENABLE(mysql,
   yes)
     AC_MSG_RESULT(yes)
     USING_SQL="yes"
+    USING_MYSQL="yes"
 
     AC_ARG_WITH(mysql-libs,
       [  --with-mysql-libs=DIR            Search for MySQL libs in the specified directory],
@@ -557,13 +561,12 @@ AC_ARG_ENABLE(mysql,
     fi 
 
     # Adding these as prerequisite for MySQL 5.6 
-    AC_CHECK_LIB([stdc++], [main], [], [AC_MSG_ERROR([
+    AC_CHECK_LIB([stdc++], [main], [LIBS="${LIBS} -lstdc++"], [AC_MSG_ERROR([
       ERROR: missing libstdc++ devel. Requirement for building MySQL.
     ])])
-    AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
+    AC_CHECK_LIB([rt], [clock_gettime], [LIBS="${LIBS} -lrt"], [AC_MSG_ERROR([
       ERROR: missing librt devel. Requirement for building MySQL.
     ])])
-    LIBS="${LIBS} -lrt -lstdc++"
 
     AC_ARG_WITH(mysql-includes,
       [  --with-mysql-includes=DIR        Search for MySQL includes in the specified directory],
@@ -631,6 +634,7 @@ AC_ARG_ENABLE(pgsql,
   yes)
     AC_MSG_RESULT(yes)
     USING_SQL="yes"
+    USING_PGSQL="yes"
 
     AC_ARG_WITH(pgsql-libs,
       [  --with-pgsql-libs=DIR            Search for PostgreSQL libs in the specified directory],
@@ -743,6 +747,7 @@ AC_ARG_ENABLE(mongodb,
   yes)
     AC_MSG_RESULT(yes)
 dnl USING_SQL="yes"
+    USING_MONGODB="yes"
 
     AC_ARG_WITH(mongodb-libs,
       [  --with-mongodb-libs=DIR          Search for MongoDB libs in the specified directory],
@@ -845,6 +850,7 @@ AC_ARG_ENABLE(sqlite3,
   yes)
     AC_MSG_RESULT(yes)
     USING_SQL="yes"
+    USING_SQLITE3="yes"
 
     AC_ARG_WITH(sqlite3-libs,
       [  --with-sqlite3-libs=DIR          Search for SQLite3 libs in the specified directory],
@@ -956,6 +962,7 @@ AC_ARG_ENABLE(rabbitmq,
   yes)
     AC_MSG_RESULT(yes)
 dnl USING_SQL="yes"
+    USING_RABBITMQ="yes"
 
     AC_ARG_WITH(rabbitmq-libs,
       [  --with-rabbitmq-libs=DIR         Search for RabbitMQ libs in the specified directory],
@@ -1058,6 +1065,7 @@ AC_ARG_ENABLE(geoip,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    USING_MMGEOIP="yes"
 
     AC_ARG_WITH(geoip-libs,
       [  --with-geoip-libs=DIR            Search for Maxmind GeoIP libs in the specified directory],
@@ -1159,6 +1167,7 @@ AC_ARG_ENABLE(jansson,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    USING_JANSSON="yes"
 
     AC_ARG_WITH(jansson-libs,
       [  --with-jansson-libs=DIR          Search for Jansson libs in the specified directory],
@@ -1255,12 +1264,19 @@ dnl finish: Jansson handling
 
 if test x"$USING_DLOPEN" = x"yes"; then
 	AC_DEFINE(HAVE_DLOPEN, 1)
+else
+	# Adding linking to libdl here 1) if required and 2) in case of --disable-so
+	if test x"$USING_MYSQL" = x"yes" -o x"$USING_SQLITE3" = x"yes"; then
+		AC_CHECK_LIB([dl], [dlopen], [LIBS="${LIBS} -ldl"], [AC_MSG_ERROR([
+		  ERROR: missing libdl devel.
+		])])
+	fi
 fi
 
-  if test x"$USING_SQL" = x"yes"; then
-    PLUGINS="${PLUGINS} sql_common.c sql_handlers.c log_templates.c"
-    LIBS="${LIBS} -lm -lz"
-  fi
+if test x"$USING_SQL" = x"yes"; then
+	PLUGINS="${PLUGINS} sql_common.c sql_handlers.c log_templates.c"
+	LIBS="${LIBS} -lm -lz"
+fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
