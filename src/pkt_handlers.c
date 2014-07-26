@@ -740,13 +740,10 @@ void evaluate_packet_handlers()
         primitives++;
       }
 
-/*
-      XXX: for later, to be revamped once label is implemented in nfprobe
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_cust_label_handler;
         primitives++;
       }
-*/
     }
 
     /* struct pkt_vlen_hdr_primitives/off_pkt_vlen_hdr_primitives handling: END */
@@ -2528,7 +2525,6 @@ void pre_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
 void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   pm_label_t *label_ptr;
   char *data_ptr;
@@ -3343,6 +3339,40 @@ void NF_cust_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG2)) {
       memcpy(&pdata->primitives.tag2, pptrs->f_data+utpl->off, MIN(utpl->len, 8));
       pdata->primitives.tag2 = pm_ntohll(pdata->primitives.tag2);
+    }
+
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_cust_label_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct utpl_field *utpl = NULL;
+  pm_label_t *label_ptr;
+  char *data_ptr;
+
+  switch(hdr->version) {
+  case 10:
+    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_LABEL)) {
+      /* XXX: override pre_tag_map COUNT_INT_LABEL if any */
+
+      data_ptr = (char *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives + PvhdrSz + pvlen->tot_len);
+
+      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz)) return;
+      label_ptr = (pm_label_t *) data_ptr;
+      label_ptr->type = COUNT_INT_LABEL;
+      label_ptr->len = utpl->len;
+      data_ptr += PmLabelTSz;
+
+      if (check_pipe_buffer_space(chptr, pvlen, utpl->len)) return;
+      memcpy(data_ptr, pptrs->f_data+utpl->off, utpl->len);
+
+      pvlen->num++;
     }
 
     break;

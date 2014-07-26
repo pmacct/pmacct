@@ -2014,7 +2014,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			  send_options = TRUE;
 			  send_sampling_option = TRUE;
 			}
-			if (config.nfprobe_what_to_count & COUNT_CLASS) {
+			if (config.nfprobe_what_to_count & COUNT_CLASS && num_class) {
                           memcpy(packet + offset, &class_option_template, class_option_template.tot_len);
                           offset += class_option_template.tot_len;
                           flows++;

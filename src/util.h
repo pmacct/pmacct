@@ -129,4 +129,5 @@ EXT unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
 EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
+EXT void vlen_prims_debug(struct pkt_vlen_hdr_primitives *);
 #undef EXT

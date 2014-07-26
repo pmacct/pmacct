@@ -2248,17 +2248,6 @@ void primptrs_set_vlen_hdr(u_char *base, struct extra_primitives *extras, struct
 {
   prim_ptrs->pvlen = (struct pkt_vlen_hdr_primitives *) (base + extras->off_pkt_vlen_hdr_primitives);
   prim_ptrs->vlen_next_off = extras->off_pkt_vlen_hdr_primitives + PvhdrSz + prim_ptrs->pvlen->tot_len;
-
-/*
-  if (extras->off_pkt_vlen_hdr_primitives != PM_VARIABLE_LENGTH) {
-    prim_ptrs->pvlen = (struct pkt_vlen_hdr_primitives *) (base + extras->off_pkt_vlen_hdr_primitives);
-    prim_ptrs->vlen_next_off = extras->off_pkt_vlen_hdr_primitives + PvhdrSz + prim_ptrs->pvlen->tot_len;
-  }
-  else {
-    prim_ptrs->pvlen = (struct pkt_vlen_hdr_primitives *) (base + prim_ptrs->vlen_next_off);
-    prim_ptrs->vlen_next_off = prim_ptrs->vlen_next_off + PvhdrSz + prim_ptrs->pvlen->tot_len;
-  }
-*/
 }
 
 void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct custom_primitives *registry)
@@ -2578,4 +2567,21 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char
       label_ptr = (pm_label_t *) ptr;
     }
   }  
+}
+
+void vlen_prims_debug(struct pkt_vlen_hdr_primitives *pvlen)
+{
+  pm_label_t *label_ptr;
+  char *ptr = (char *) pvlen;
+  int x = 0;
+
+  printf("VLEN ARRAY: num: %u tot_len: %u\n", pvlen->num, pvlen->tot_len);
+  ptr += PvhdrSz;
+
+  for (x = 0; x < pvlen->num; x++) {
+    label_ptr = (pm_label_t *) ptr;
+    ptr += PmLabelTSz;
+
+    printf("LABEL #%u: type: %llx len: %u val: %s\n", x, label_ptr->type, label_ptr->len, ptr);
+  }
 }

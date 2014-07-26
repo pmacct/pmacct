@@ -1096,6 +1096,15 @@ void P_fprintf_csv_label(FILE *f, struct pkt_vlen_hdr_primitives *pvlen, pm_cfgr
   char *label_ptr = NULL;
 
   vlen_prims_get(pvlen, wtc, &label_ptr);
+  {
+    pm_label_t *label_ptr;
+    char *ptr;
+
+    ptr = (char *) pvlen;
+    ptr += PvhdrSz;
+    label_ptr = (pm_label_t *) ptr;
+    ptr += PmLabelTSz;
+  }
   if (!label_ptr) label_ptr = empty_string;
   fprintf(f, "%s%s", sep, label_ptr);
 }

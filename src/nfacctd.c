@@ -1398,7 +1398,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     else {
       while (flowoff+tpl->len <= flowsetlen) {
         /* Let's bake offsets and lengths if we have variable-length fields */
-        if (tpl->vlen) resolve_vlen_template(pkt, tpl);
+        if (tpl->vlen) {
+	  resolve_vlen_template(pkt, tpl);
+
+	  /* with the record resolved, let's check against flowset length again */ 
+	  if (flowoff+tpl->len > flowsetlen) break;
+	}
 
         pptrs->f_data = pkt;
 	pptrs->f_tpl = (u_char *) tpl;
@@ -1937,7 +1942,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
         pkt += tpl->len;
         flowoff += tpl->len;
-
+	
+	/* we have to reset; let's not do to zero to short-circuit
+	   the case of the last record in a flowset; we can save a
+	   round through resolve_vlen_template() */
+	if (tpl->vlen) tpl->len = 1;
 	FlowSeqInc++;
       }
 

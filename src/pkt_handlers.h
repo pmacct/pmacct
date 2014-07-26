@@ -112,6 +112,7 @@ EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct pa
 EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_cust_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_cust_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_cust_label_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
