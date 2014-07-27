@@ -2516,9 +2516,20 @@ unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *src)
 
   len = PvhdrSz + src->tot_len;
   dst = malloc(len);
-  memset(dst, 0, len);
+  
+  if (dst) {
+    vlen_prims_init((struct pkt_vlen_hdr_primitives *) dst, src->tot_len);
+    memcpy(dst, src, len);
+  }
 
   return dst;
+}
+
+void vlen_prims_init(struct pkt_vlen_hdr_primitives *hdr, int add_len)
+{
+  if (!hdr) return;
+
+  memset(hdr, 0, PvhdrSz + add_len);
 }
 
 void vlen_prims_free(struct pkt_vlen_hdr_primitives *hdr)
@@ -2526,8 +2537,6 @@ void vlen_prims_free(struct pkt_vlen_hdr_primitives *hdr)
   if (!hdr) return;
 
   free(hdr);
-
-  hdr = NULL;
 }
 
 int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *src, struct pkt_vlen_hdr_primitives *dst)
@@ -2539,20 +2548,20 @@ int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *src, struct pkt_vlen_hdr_prim
   return memcmp(src, dst, (src->tot_len + PvhdrSz));
 }
 
-void vlen_prims_get(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char **res)
+void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char **res)
 {
   pm_label_t *label_ptr;
-  char *ptr = (char *) pvlen;
+  char *ptr = (char *) hdr;
   int x, rlen;
 
   if (res) *res = NULL;
 
-  if (!pvlen || !wtc || !res) return;
+  if (!hdr || !wtc || !res) return;
 
   ptr += PvhdrSz; 
   label_ptr = (pm_label_t *) ptr; 
 
-  for (x = 0, rlen = 0; x < pvlen->num && rlen < pvlen->tot_len; x++) {
+  for (x = 0, rlen = 0; x < hdr->num && rlen < hdr->tot_len; x++) {
     if (label_ptr->type == wtc) {
       if (label_ptr->len) {
         ptr += PmLabelTSz;
@@ -2569,19 +2578,74 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char
   }  
 }
 
-void vlen_prims_debug(struct pkt_vlen_hdr_primitives *pvlen)
+void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
 {
   pm_label_t *label_ptr;
-  char *ptr = (char *) pvlen;
+  char *ptr = (char *) hdr;
   int x = 0;
 
-  printf("VLEN ARRAY: num: %u tot_len: %u\n", pvlen->num, pvlen->tot_len);
+  printf("VLEN ARRAY: num: %u tot_len: %u\n", hdr->num, hdr->tot_len);
   ptr += PvhdrSz;
 
-  for (x = 0; x < pvlen->num; x++) {
+  for (x = 0; x < hdr->num; x++) {
     label_ptr = (pm_label_t *) ptr;
     ptr += PmLabelTSz;
 
     printf("LABEL #%u: type: %llx len: %u val: %s\n", x, label_ptr->type, label_ptr->len, ptr);
   }
+}
+
+void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val /*, optional realloc */)
+{
+  pm_label_t *label_ptr;
+  char *ptr = (char *) hdr;
+
+  ptr += (PvhdrSz + hdr->tot_len); 
+  label_ptr = (pm_label_t *) ptr;
+  label_ptr->type = wtc;
+  label_ptr->len = len;
+
+  ptr += PmLabelTSz;
+  memcpy(ptr, val, len);
+
+  hdr->num++;
+  hdr->tot_len += (PmLabelTSz + len);
+}
+
+int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, optional realloc */)
+{
+  pm_label_t *label_ptr;
+  char *ptr = (char *) hdr;
+  int x = 0, ret = 0, jump = 0, off = 0;
+
+  ptr += PvhdrSz;
+  off += PvhdrSz;
+
+  for (x = 0; x < hdr->num; x++) {
+    label_ptr = (pm_label_t *) ptr;
+
+    if (label_ptr->type == wtc) {
+      char *new_ptr = ptr;
+
+      jump = label_ptr->len;
+      new_ptr += (PmLabelTSz + jump);
+      off += (PmLabelTSz + jump);
+      memset(ptr, 0, PmLabelTSz + jump);
+
+      if (x + 1 < hdr->num) memcpy(ptr, new_ptr, hdr->tot_len - off); 
+
+      hdr->num--;
+      hdr->tot_len -= (PmLabelTSz + jump);
+      /* XXX: optional realloc() */
+
+      ret = (PmLabelTSz + jump);
+      break;
+    }
+    else {
+      ptr += (PmLabelTSz + label_ptr->len);
+      off += (PmLabelTSz + label_ptr->len);
+    }
+  }
+
+  return ret;
 }

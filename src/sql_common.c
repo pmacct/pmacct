@@ -843,7 +843,6 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     if (pvlen) {
       Cursor->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
       if (!Cursor->pvlen) goto safe_action;
-      memcpy(Cursor->pvlen, pvlen, PvhdrSz + pvlen->tot_len);
     }
   
     Cursor->packet_counter = data->pkt_num;

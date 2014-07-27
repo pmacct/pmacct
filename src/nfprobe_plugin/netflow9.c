@@ -223,6 +223,7 @@ static struct NF9_OPTIONS_TEMPLATE class_option_template;
 static struct NF9_INTERNAL_OPTIONS_TEMPLATE class_option_int_template;
 static char ftoft_buf_0[NF9_SOFTFLOWD_MAX_PACKET_SIZE*2];
 static char ftoft_buf_1[NF9_SOFTFLOWD_MAX_PACKET_SIZE*2];
+static char packet[NF9_SOFTFLOWD_MAX_PACKET_SIZE];
 
 static int nf9_pkts_until_template = -1;
 static u_int8_t send_options = FALSE;
@@ -472,7 +473,7 @@ static int
 flow_to_flowset_tag2_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
   pm_id_t tag;
- 
+
   tag = pmXXX_htonll(flow->tag2[idx]);
   memcpy(flowset, &tag, size);
 
@@ -519,15 +520,15 @@ flow_to_flowset_cp_handler(char *flowset, const struct FLOW *flow, int idx, int 
   struct custom_primitive_ptrs *cp_entry;
   int cp_idx;
 
-  if (!flow->pcust[idx]) return;
-
   for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
     cp_entry = &config.cpptrs.primitive[cp_idx];
 
-    if (cp_entry->ptr->field_type) {
+    if (flow->pcust[idx] && cp_entry->ptr->field_type)
       memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
-      flowset += cp_entry->ptr->len;
-    }
+    else 
+      memset(flowset, 0, cp_entry->ptr->len);
+
+    flowset += cp_entry->ptr->len;
   }
 
   return 0;
@@ -1923,9 +1924,9 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 	int direction, new_direction;
 	socklen_t errsz;
 	int err, r, flow_i, class_i;
-	u_char packet[NF9_SOFTFLOWD_MAX_PACKET_SIZE];
 	u_int8_t *sid_ptr;
 
+	memset(packet, 0, sizeof(packet));
 	gettimeofday(&now, NULL);
 
 	if (nf9_pkts_until_template == -1) {

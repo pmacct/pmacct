@@ -126,8 +126,11 @@ EXT void custom_primitive_header_print(char *, int, struct custom_primitive_ptrs
 EXT void custom_primitive_value_print(char *, int, char *, struct custom_primitive_ptrs *, int);
 
 EXT unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *);
+EXT void vlen_prims_init(struct pkt_vlen_hdr_primitives *, int);
 EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
 EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 EXT void vlen_prims_debug(struct pkt_vlen_hdr_primitives *);
+EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, char *);
+EXT int vlen_prims_delete(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 #undef EXT

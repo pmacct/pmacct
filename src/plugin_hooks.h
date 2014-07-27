@@ -111,6 +111,7 @@ EXT void recollect_pipe_memory(struct channels_list_entry *);
 EXT void init_random_seed();
 EXT void fill_pipe_buffer();
 EXT int check_pipe_buffer_space(struct channels_list_entry *, struct pkt_vlen_hdr_primitives *, int); 
+EXT void return_pipe_buffer_space(struct channels_list_entry *, int);
 EXT int check_shadow_status(struct packet_ptrs *, struct channels_list_entry *);
 EXT int pkt_data_clean(void *, int);
 EXT int pkt_payload_clean(void *, int);

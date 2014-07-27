@@ -2526,21 +2526,12 @@ void pre_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  pm_label_t *label_ptr;
-  char *data_ptr;
 
-  data_ptr = (char *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives + PvhdrSz + pvlen->tot_len); 
-
-  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz)) return; 
-  label_ptr = (pm_label_t *) data_ptr;
-  label_ptr->type = COUNT_INT_LABEL;
-  label_ptr->len = pptrs->label.len;
-  data_ptr += PmLabelTSz;
-
-  if (check_pipe_buffer_space(chptr, pvlen, pptrs->label.len)) return;
-  memcpy(data_ptr, pptrs->label.val, pptrs->label.len);
-  
-  pvlen->num++;
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + pptrs->label.len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }
+  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, pptrs->label.val);
 }
 
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3353,28 +3344,17 @@ void NF_cust_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
-  pm_label_t *label_ptr;
-  char *data_ptr;
 
   switch(hdr->version) {
   case 10:
     if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_LABEL)) {
-      /* XXX: override pre_tag_map COUNT_INT_LABEL if any */
-
-      data_ptr = (char *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives + PvhdrSz + pvlen->tot_len);
-
-      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz)) return;
-      label_ptr = (pm_label_t *) data_ptr;
-      label_ptr->type = COUNT_INT_LABEL;
-      label_ptr->len = utpl->len;
-      data_ptr += PmLabelTSz;
-
-      if (check_pipe_buffer_space(chptr, pvlen, utpl->len)) return;
-      memcpy(data_ptr, pptrs->f_data+utpl->off, utpl->len);
-
-      pvlen->num++;
+      return_pipe_buffer_space(chptr, vlen_prims_delete(pvlen, COUNT_INT_LABEL));
+      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + utpl->len)) {
+	vlen_prims_init(pvlen, 0);
+	return;
+      }
+      else vlen_prims_insert(pvlen, COUNT_INT_LABEL, utpl->len, pptrs->f_data+utpl->off);
     }
-
     break;
   default:
     break;

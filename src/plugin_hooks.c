@@ -671,6 +671,8 @@ int check_pipe_buffer_space(struct channels_list_entry *mychptr, struct pkt_vlen
 {
   int buf_space = 0;
 
+  if (!mychptr || !pvlen) return ERR;
+
   /* init to base of current element */
   buf_space = mychptr->bufend - mychptr->bufptr;
 
@@ -682,19 +684,24 @@ int check_pipe_buffer_space(struct channels_list_entry *mychptr, struct pkt_vlen
   /* return virdict. if positive fix sizes. if negative take care of triggering a reprocess */
   if (buf_space >= 0) {
     mychptr->var_size += len;
-    pvlen->tot_len += len;
-
     return FALSE;
   }
   else {
     mychptr->bufptr += (mychptr->bufend - mychptr->bufptr);
     mychptr->reprocess = TRUE;
     mychptr->var_size = 0;
-    pvlen->tot_len = 0;
-    pvlen->num = 0;
 
     return TRUE;
   }
+}
+
+void return_pipe_buffer_space(struct channels_list_entry *mychptr, int len)
+{
+  if (!mychptr || !len) return;
+
+  if (mychptr->var_size < len) return;
+
+  mychptr->var_size -= len;
 }
 
 int check_shadow_status(struct packet_ptrs *pptrs, struct channels_list_entry *mychptr)
