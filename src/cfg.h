@@ -49,6 +49,9 @@ struct custom_primitive_entry {
   u_int16_t len;
   u_int16_t alloc_len;
   u_int8_t semantics;
+
+  /* generated internally */
+  pm_cfgreg_t type;
 };
 
 struct custom_primitives {
@@ -338,5 +341,6 @@ EXT void set_default_values();
 /* global vars */
 EXT char *cfg[SRVBUFLEN], *cfg_cmdline[SRVBUFLEN];
 EXT struct custom_primitives custom_primitives_registry;
+EXT pm_cfgreg_t custom_primitives_type;
 EXT int rows;
 #undef EXT

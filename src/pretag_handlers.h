@@ -106,6 +106,7 @@ EXT int custom_primitives_map_packet_ptr_handler(char *, struct id_entry *, char
 EXT int custom_primitives_map_field_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int custom_primitives_map_len_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int custom_primitives_map_semantics_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT void custom_primitives_map_initialize();
 EXT void custom_primitives_map_validate(char *, struct plugin_requests *);
 
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);

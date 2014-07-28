@@ -136,6 +136,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     if (t) memset(t->e, 0, sz);
 
     if (acct_type == MAP_IGP) igp_daemon_map_initialize(filename, req);
+    if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_initialize();
 
     /* first stage: reading Agent ID file and arranging it in a temporary memory table */
     while (!feof(file)) {

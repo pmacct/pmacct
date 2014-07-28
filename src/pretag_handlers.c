@@ -2484,6 +2484,11 @@ int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, 
   return FALSE;
 }
 
+void custom_primitives_map_initialize()
+{
+  custom_primitives_type = (COUNT_INDEX_CP | 0x1);
+}
+
 void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
 {
   struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
@@ -2504,11 +2509,21 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
     else
       valid = FALSE;
 
-    if (valid && (table->num + 1 < MAX_CUSTOM_PRIMITIVES)) table->num++;
+    if (valid && (table->num + 1 < MAX_CUSTOM_PRIMITIVES)) {
+      table->primitive[table->num].type = custom_primitives_type; 
+      custom_primitives_type = (COUNT_INDEX_CP | (custom_primitives_type << 1));
+      table->num++;
+    }
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s len=%u semantics=%u\n",
-	  config.name, config.type, table->num + 1, filename, table->primitive[table->num].name,
-	  table->primitive[table->num].len, table->primitive[table->num].semantics);
+      if (!valid) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s len=%u semantics=%u\n",
+	    config.name, config.type, table->num + 1, filename, table->primitive[table->num].name,
+	    table->primitive[table->num].len, table->primitive[table->num].semantics);
+      }
+      else if (table->num + 1 < MAX_CUSTOM_PRIMITIVES) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Maximum entries (%d) reached in aggregate_primitives\n",
+	    config.name, config.type, MAX_CUSTOM_PRIMITIVES);
+      }
 
       memset(&table->primitive[table->num], 0, sizeof(struct custom_primitive_entry));
     }

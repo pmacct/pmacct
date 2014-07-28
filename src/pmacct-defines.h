@@ -189,7 +189,8 @@
 #define COUNT_INT_CUSTOM_PRIMITIVES	0x0002000000008000ULL
 
 #define COUNT_INDEX_MASK	0xFFFF
-#define COUNT_REGISTRY_MASK	0xFFFFFFFFFFFFULL
+#define COUNT_INDEX_CP		0xFFFF000000000000ULL  /* index 0xffff reserved to custom primitives */
+#define COUNT_REGISTRY_MASK	0x0000FFFFFFFFFFFFULL
 #define COUNT_REGISTRY_BITS	48
 
 /* external: first registry, ie. what_to_count, aggregation, etc. */
