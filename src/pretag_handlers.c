@@ -2421,7 +2421,13 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
     pd_ptr->off = offset;
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    if (config.acct_type != ACCT_PM) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): packet_ptr is only supported in pmacctd. ", config.name, config.type);
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    }
+
     return TRUE;
   }
 
@@ -2439,9 +2445,14 @@ int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *
   if (table) {
     table->primitive[table->num].len = atoi(value);
     if (!table->primitive[table->num].len) {
-      table->primitive[table->num].len = 0; /* pedantic */
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
-      return TRUE;
+      if (config.acct_type == ACCT_NF && !strncmp(value, "vlen", 4)) {
+        table->primitive[table->num].len = PM_VARIABLE_LENGTH;
+      }
+      else {
+        table->primitive[table->num].len = 0; /* pedantic */
+        Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
+        return TRUE;
+      }
     }
   }
   else {
@@ -2506,8 +2517,15 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
 	table->primitive[table->num].alloc_len = table->primitive[table->num].len;
       }
     }
-    else
-      valid = FALSE;
+    else valid = FALSE;
+
+    if (valid && table->primitive[table->num].len == PM_VARIABLE_LENGTH) {
+      if (table->primitive[table->num].semantics != CUSTOM_PRIMITIVE_TYPE_STRING && 
+	  table->primitive[table->num].semantics != CUSTOM_PRIMITIVE_TYPE_RAW) 
+	valid = FALSE;
+
+      table->primitive[table->num].alloc_len = PM_VARIABLE_LENGTH; 
+    }
 
     if (valid && (table->num + 1 < MAX_CUSTOM_PRIMITIVES)) {
       table->primitive[table->num].type = custom_primitives_type; 
@@ -2516,9 +2534,8 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
     }
     else {
       if (!valid) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s len=%u semantics=%u\n",
-	    config.name, config.type, table->num + 1, filename, table->primitive[table->num].name,
-	    table->primitive[table->num].len, table->primitive[table->num].semantics);
+	Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s\n",
+	    config.name, config.type, table->num + 1, filename, table->primitive[table->num].name);
       }
       else if (table->num + 1 < MAX_CUSTOM_PRIMITIVES) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Maximum entries (%d) reached in aggregate_primitives\n",

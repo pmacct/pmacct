@@ -309,6 +309,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): unknown key '%s' at line %d in map '%s'. Ignored.\n",
                                                 config.name, config.type, key, tot_lines, filename);
                     else Log(LOG_ERR, "Line %d ignored.\n", tot_lines);
+		    ignoring = TRUE;
                     break;
                   }
                   key = NULL; value = NULL;

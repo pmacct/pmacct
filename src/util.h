@@ -121,6 +121,7 @@ EXT void primptrs_set_custom(u_char *, struct extra_primitives *, struct primiti
 EXT void primptrs_set_extras(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_vlen_hdr(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 
+EXT int custom_primitives_vlen(struct custom_primitives_ptrs *);
 EXT void custom_primitives_reconcile(struct custom_primitives_ptrs *, struct custom_primitives *);
 EXT void custom_primitive_header_print(char *, int, struct custom_primitive_ptrs *, int);
 EXT void custom_primitive_value_print(char *, int, char *, struct custom_primitive_ptrs *, int);

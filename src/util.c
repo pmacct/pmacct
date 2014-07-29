@@ -2250,6 +2250,19 @@ void primptrs_set_vlen_hdr(u_char *base, struct extra_primitives *extras, struct
   prim_ptrs->vlen_next_off = extras->off_pkt_vlen_hdr_primitives + PvhdrSz + prim_ptrs->pvlen->tot_len;
 }
 
+int custom_primitives_vlen(struct custom_primitives_ptrs *cpptrs)
+{
+  int cpptrs_idx, vlen_prims = 0;
+  struct custom_primitive_entry *cpe;
+
+  for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
+    cpe = cpptrs->primitive[cpptrs_idx].ptr;
+    if (cpe->len == PM_VARIABLE_LENGTH) vlen_prims++;
+  }
+
+  return vlen_prims;
+}
+
 void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct custom_primitives *registry)
 {
   int cpptrs_idx, registry_idx;
@@ -2259,7 +2272,11 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
   for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
     for (registry_idx = 0; registry->primitive[registry_idx].len && registry_idx < registry->num; registry_idx++) {
       if (!strcmp(cpptrs->primitive[cpptrs_idx].name, registry->primitive[registry_idx].name)) {
-	if (cpptrs->len + registry->primitive[cpptrs_idx].len < UINT16_MAX) {
+        if (registry->primitive[registry_idx].len == PM_VARIABLE_LENGTH) {
+	  cpptrs->primitive[cpptrs_idx].ptr = &registry->primitive[registry_idx];
+	  cpptrs->primitive[cpptrs_idx].off = PM_VARIABLE_LENGTH;
+	}
+	else if (cpptrs->len + registry->primitive[registry_idx].len < UINT16_MAX) {
 	  cpptrs->primitive[cpptrs_idx].ptr = &registry->primitive[registry_idx];
 	  cpptrs->primitive[cpptrs_idx].off = cpptrs->len;
 	  cpptrs->len += registry->primitive[registry_idx].alloc_len;
@@ -2283,8 +2300,15 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
     }
     else {
       struct custom_primitive_entry *cpe = cpptrs->primitive[cpptrs_idx].ptr;
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': off=%u len=%u\n", config.name, config.type,
-	cpptrs->primitive[cpptrs_idx].name, cpptrs->primitive[cpptrs_idx].off, cpe->len);
+
+      if (cpptrs->primitive[cpptrs_idx].off != PM_VARIABLE_LENGTH) { 
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': type=%llx off=%u len=%u\n", config.name, config.type,
+	  cpptrs->primitive[cpptrs_idx].name, cpe->type, cpptrs->primitive[cpptrs_idx].off, cpe->len);
+      }
+      else {
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': type=%llx len=vlen\n", config.name, config.type,
+	  cpptrs->primitive[cpptrs_idx].name, cpe->type);
+      } 
     }
   }
 

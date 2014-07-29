@@ -578,6 +578,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while(list) {
     custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+    if (custom_primitives_vlen(&list->cfg.cpptrs)) list->cfg.data_type |= PIPE_TYPE_VLEN;
     list = list->next;
   }
 

@@ -624,8 +624,8 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    /* if cpptrs.len > 0 one or multiple custom primitives are defined */
-    if (channels_list[index].plugin->cfg.cpptrs.len) {
+    /* if cpptrs.num > 0 one or multiple custom primitives are defined */
+    if (channels_list[index].plugin->cfg.cpptrs.num) {
       if (config.acct_type == ACCT_PM) {
 	channels_list[index].phandler[primitives] = custom_primitives_handler;
 	primitives++;
@@ -2975,6 +2975,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
   char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx;
 
@@ -3012,15 +3013,28 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 
               hexbuflen = print_hex(pptrs->f_data+utpl->off, hexbuf, utpl->len);
               if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
-              memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
+
+	      if (cpe->len == PM_VARIABLE_LENGTH) {
+		if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + hexbuflen)) {
+		  vlen_prims_init(pvlen, 0);
+		  return;
+		}
+		else vlen_prims_insert(pvlen, cpe->type, hexbuflen, hexbuf);
+              }
+	      else memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
+	
             }
 	    else {
 	      if (utpl->len == cpe->len) {
 	        memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, cpe->len);
 	      }
               else {
-                if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
-	          memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+utpl->off, MIN(utpl->len, cpe->len));
+                if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
+		  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + utpl->len)) {
+		    vlen_prims_init(pvlen, 0);
+		    return;
+		  }
+		  else vlen_prims_insert(pvlen, cpe->type, utpl->len, pptrs->f_data+utpl->off);
 		}
 	      }
             }
