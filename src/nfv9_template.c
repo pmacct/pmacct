@@ -358,7 +358,7 @@ void log_template_footer(u_int16_t size, u_int8_t version)
 {
   Log(LOG_DEBUG, "DEBUG ( %s/core ): -----------------------------------------------------\n", config.name);
   if (!size)
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %s\n", "tbd", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %s\n", config.name, "tbd");
   else 
     Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %u\n", config.name, size);
   Log(LOG_DEBUG, "DEBUG ( %s/core ): \n", config.name);

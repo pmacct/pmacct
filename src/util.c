@@ -2033,12 +2033,23 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 
   /* all custom primitives printed here */
   {
-    char cp_str[SRVBUFLEN];
     int cp_idx;
 
     for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-      custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
-      kv = json_pack("{ss}", config.cpptrs.primitive[cp_idx].name, cp_str);
+      if (config.cpptrs.primitive[cp_idx].ptr->len != PM_VARIABLE_LENGTH) {
+        char cp_str[SRVBUFLEN];
+
+        custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+        kv = json_pack("{ss}", config.cpptrs.primitive[cp_idx].name, cp_str);
+      }
+      else {
+        char *label_ptr = NULL;
+
+        vlen_prims_get(pvlen, config.cpptrs.primitive[cp_idx].ptr->type, &label_ptr);
+        if (!label_ptr) label_ptr = empty_string;
+        kv = json_pack("{ss}", config.cpptrs.primitive[cp_idx].name, label_ptr);
+      }
+
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }

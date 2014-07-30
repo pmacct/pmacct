@@ -999,7 +999,7 @@ nf9_init_template(void)
 
 	v4_template.h.c.flowset_id = htons(flowset_id);
 	v4_template.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) +
-				 (sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen));
+				 (sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen) );
 	v4_template.h.template_id = htons(NF9_SOFTFLOWD_V4_TEMPLATE_ID + config.nfprobe_id);
 	v4_template.h.count = htons(rcount + rcount_pen);
 	v4_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
@@ -1007,7 +1007,7 @@ nf9_init_template(void)
 
         v4_template_out.h.c.flowset_id = htons(flowset_id);
         v4_template_out.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) +
-				     (sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen));
+				     (sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen) );
         v4_template_out.h.template_id = htons(NF9_SOFTFLOWD_V4_TEMPLATE_ID + config.nfprobe_id + 1);
         v4_template_out.h.count = htons(rcount + rcount_pen);
         v4_template_out.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
@@ -1396,7 +1396,7 @@ nf9_init_template(void)
 	v6_template.h.template_id = htons(NF9_SOFTFLOWD_V6_TEMPLATE_ID + config.nfprobe_id);
 	v6_template.h.count = htons(rcount + rcount_pen);
 	v6_template.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
-	v6_pen_template.tot_len = (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount_pen);
+	v6_pen_template.tot_len = sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen;
 
         v6_template_out.h.c.flowset_id = htons(flowset_id);
         v6_template_out.h.c.length = htons( sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) +
@@ -1404,7 +1404,7 @@ nf9_init_template(void)
         v6_template_out.h.template_id = htons(NF9_SOFTFLOWD_V6_TEMPLATE_ID + config.nfprobe_id + 1);
         v6_template_out.h.count = htons(rcount + rcount_pen);
         v6_template_out.tot_len = sizeof(struct NF9_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount);
-        v6_pen_template_out.tot_len = (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount_pen);
+        v6_pen_template_out.tot_len = sizeof(struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD) * rcount_pen; 
 
 	assert(rcount + rcount_pen < NF9_SOFTFLOWD_TEMPLATE_NRECORDS);
 

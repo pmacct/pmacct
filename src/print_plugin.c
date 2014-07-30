@@ -652,12 +652,23 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
         /* all custom primitives printed here */
         {
-          char cp_str[SRVBUFLEN];
           int cp_idx;
   
           for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-            custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], TRUE);
-  	  fprintf(f, "%s  ", cp_str);
+	    if (config.cpptrs.primitive[cp_idx].ptr->len != PM_VARIABLE_LENGTH) {
+              char cp_str[SRVBUFLEN];
+
+              custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], TRUE);
+	      fprintf(f, "%s  ", cp_str);
+	    }
+	    else {
+	      /* vlen primitives not supported in formatted outputs: we should never get here */
+              char *label_ptr = NULL;
+
+              vlen_prims_get(pvlen, config.cpptrs.primitive[cp_idx].ptr->type, &label_ptr);
+              if (!label_ptr) label_ptr = empty_string;
+              fprintf(f, "%s  ", label_ptr);
+	    }
           }
         }
 
@@ -870,12 +881,22 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   
         /* all custom primitives printed here */
         {
-          char cp_str[SRVBUFLEN];
           int cp_idx;
   
           for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-            custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
-            fprintf(f, "%s%s", write_sep(sep, &count), cp_str);
+            if (config.cpptrs.primitive[cp_idx].ptr->len != PM_VARIABLE_LENGTH) {
+              char cp_str[SRVBUFLEN];
+
+	      custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+              fprintf(f, "%s%s", write_sep(sep, &count), cp_str);
+	    }
+	    else {
+	      char *label_ptr = NULL;
+
+	      vlen_prims_get(pvlen, config.cpptrs.primitive[cp_idx].ptr->type, &label_ptr);
+	      if (!label_ptr) label_ptr = empty_string;
+	      fprintf(f, "%s%s", write_sep(sep, &count), label_ptr);
+	    }
           }
         }
   
@@ -1096,15 +1117,6 @@ void P_fprintf_csv_label(FILE *f, struct pkt_vlen_hdr_primitives *pvlen, pm_cfgr
   char *label_ptr = NULL;
 
   vlen_prims_get(pvlen, wtc, &label_ptr);
-  {
-    pm_label_t *label_ptr;
-    char *ptr;
-
-    ptr = (char *) pvlen;
-    ptr += PvhdrSz;
-    label_ptr = (pm_label_t *) ptr;
-    ptr += PmLabelTSz;
-  }
   if (!label_ptr) label_ptr = empty_string;
   fprintf(f, "%s%s", sep, label_ptr);
 }

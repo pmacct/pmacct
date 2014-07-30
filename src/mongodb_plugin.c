@@ -605,12 +605,22 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   
       /* all custom primitives printed here */
       {
-        char cp_str[SRVBUFLEN];
         int cp_idx;
   
         for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-  	custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
-  	bson_append_string(bson_elem, config.cpptrs.primitive[cp_idx].name, cp_str);
+	  if (config.cpptrs.primitive[cp_idx].ptr->len != PM_VARIABLE_LENGTH) {
+	    char cp_str[SRVBUFLEN];
+
+	    custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], FALSE);
+	    bson_append_string(bson_elem, config.cpptrs.primitive[cp_idx].name, cp_str);
+	  }
+	  else {
+	    char *label_ptr = NULL;
+
+	    vlen_prims_get(pvlen, config.cpptrs.primitive[cp_idx].ptr->type, &label_ptr);
+	    if (!label_ptr) bson_append_null(bson_elem, config.cpptrs.primitive[cp_idx].name);
+	    else bson_append_string(bson_elem, config.cpptrs.primitive[cp_idx].name, label_ptr);
+	  }
         }
       }
   
