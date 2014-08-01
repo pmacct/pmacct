@@ -1998,14 +1998,7 @@ void bgp_peer_close(struct bgp_peer *peer)
   afi_t afi;
   safi_t safi;
 
-  /* 
-     XXX: we should do this anyway, so outside a if statement,
-     but there are currently some concerns about interaction of
-     bgp_info_delete()/bgp_route_next() in bgp_peer_info_delete()
-     that require some more testing in the field.
-  */ 
-  if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key)
-    bgp_peer_info_delete(peer);
+  bgp_peer_info_delete(peer);
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
     bgp_peer_log_close(peer, config.nfacctd_bgp_msglog_output); 
@@ -2036,16 +2029,10 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
       while (node) {
         u_int32_t modulo = bgp_route_info_modulo(peer, NULL);
         u_int32_t peer_buckets;
-	int node_refcnt = node->lock;
         struct bgp_info *ri;
         struct bgp_info *ri_next;
 
-	/*
-	   Cycle over configured bgp_table_per_peer_buckets but we stop
-	   if we guess node could have been free'd by bgp_info_delete() 
-	   due to node->lock == 0 (node_refcnt)
-	*/
-        for (peer_buckets = 0; node_refcnt && peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
+        for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
 	      if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
@@ -2056,7 +2043,6 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
 
 	      ri_next = ri->next; /* let's save pointer to next before free up */
               bgp_info_delete(node, ri, modulo+peer_buckets);
-	      node_refcnt--;
             }
           }
         }
