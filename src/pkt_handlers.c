@@ -1254,6 +1254,7 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx, pd_ptr_idx;
 
@@ -1263,9 +1264,9 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
       
       for (pd_ptr_idx = 0; pd_ptr_idx < MAX_CUSTOM_PRIMITIVE_PD_PTRS && cpe->pd_ptr[pd_ptr_idx].ptr_idx.set; pd_ptr_idx++) {
         if (pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] &&
-	    ((pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]-
-		pptrs->pkt_data_ptrs[0])+
-		cpe->pd_ptr[pd_ptr_idx].off+cpe->len) <
+	    ((pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] -
+		pptrs->pkt_data_ptrs[0]) +
+		cpe->pd_ptr[pd_ptr_idx].off + (cpe->len % PM_VARIABLE_LENGTH)) <
 	    ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen) {
 	  if (!cpe->pd_ptr[pd_ptr_idx].proto.set || 
 	      pptrs->pkt_proto[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] ==
@@ -1279,9 +1280,33 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
               memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
 	    }
 	    else {
-              memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off,
-		     pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off,
-		     cpe->len);
+	      // XXX: maybe prone to SEGV if not a string: check to be added?
+	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
+		char *str_ptr = (pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off); 
+		int remaining_len, str_len;
+
+		remaining_len = (((struct pcap_pkthdr *)pptrs->pkthdr)->caplen -
+				 ((pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] -
+                		   pptrs->pkt_data_ptrs[0]) + cpe->pd_ptr[pd_ptr_idx].off));
+
+		if (remaining_len > 0) {
+		  str_ptr[remaining_len-1] = '\0'; /* maybe too simplistic */
+		  str_len = strlen(str_ptr);
+
+		  if (str_len) {
+                    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + str_len)) {
+                      vlen_prims_init(pvlen, 0);
+                      return;
+                    }
+                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr);
+		  }
+		}
+	      }
+	      else {
+		memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off,
+		       pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off,
+		       cpe->len);
+	      }
 	    }
 	  }
 	}
@@ -2998,11 +3023,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	    if (tpl->tpl[cpe->field_type].len == cpe->len) {
 	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
 	    }
-	    else {
-	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING) {
-	        memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, MIN(tpl->tpl[cpe->field_type].len, cpe->len));
-	      }
-	    }
+	    /* else this is a configuration mistake: do nothing */
 	  }
 	}
 	else {

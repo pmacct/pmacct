@@ -470,10 +470,12 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
 {
   struct chained_cache *cache_ptr;
   struct primitives_ptrs prim_ptrs;
-/*  struct pkt_data pdata; */
+  struct pkt_data pdata;
   unsigned int modulo, j;
 
   if (!index || !container) return;
+
+  prim_ptrs.data = &pdata;
 
   for (j = 0; j < index; j++) {
     primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
@@ -800,9 +802,10 @@ int P_test_zero_elem(struct chained_cache *elem)
 
 void primptrs_set_all_from_chained_cache(struct primitives_ptrs *prim_ptrs, struct chained_cache *entry)
 {
-  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_data *data;
 
   if (prim_ptrs && data && entry) {
+    data = prim_ptrs->data;
     memset(data, 0, PdataSz);
 
     data->primitives = entry->primitives;

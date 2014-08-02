@@ -2444,8 +2444,14 @@ int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *
 
   if (table) {
     table->primitive[table->num].len = atoi(value);
-    if (!table->primitive[table->num].len) {
-      if (config.acct_type == ACCT_NF && !strncmp(value, "vlen", 4)) {
+    if (table->primitive[table->num].len) {
+      if (table->primitive[table->num].len == PM_VARIABLE_LENGTH) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
+        return TRUE;
+      }
+    }
+    else {
+      if ((config.acct_type == ACCT_NF || config.acct_type == ACCT_PM) && !strncmp(value, "vlen", 4)) {
         table->primitive[table->num].len = PM_VARIABLE_LENGTH;
       }
       else {
