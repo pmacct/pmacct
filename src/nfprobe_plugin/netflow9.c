@@ -518,20 +518,88 @@ static int
 flow_to_flowset_cp_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
   struct custom_primitive_ptrs *cp_entry;
-  int cp_idx;
+  char *label_ptr, null_char = '\0';
+  int cp_idx, add_len = 0;
+  u_int8_t len = 0;
 
   for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
     cp_entry = &config.cpptrs.primitive[cp_idx];
 
-    if (flow->pcust[idx] && cp_entry->ptr->field_type)
-      memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
-    else 
-      memset(flowset, 0, cp_entry->ptr->len);
+    if (!cp_entry->ptr->pen) {
+      if (cp_entry->ptr->len != PM_VARIABLE_LENGTH) {
+        if (flow->pcust[idx] && cp_entry->ptr->field_type)
+          memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+        else 
+          memset(flowset, 0, cp_entry->ptr->len);
 
-    flowset += cp_entry->ptr->len;
+        flowset += cp_entry->ptr->len;
+      }
+      else {
+	if (config.nfprobe_version == 10) {
+          vlen_prims_get(flow->pvlen[idx], cp_entry->ptr->type, &label_ptr);
+          if (!label_ptr) {
+	    len = NULL_CHAR_LEN;
+	    label_ptr = &null_char;
+          }
+          else len = MIN(IPFIX_VLEN_REC_SHORT_MAXLEN, strlen(label_ptr) + 1); // XXX: check available len?
+
+          memcpy(flowset, &len, IPFIX_VLEN_REC_SHORT);
+          flowset += IPFIX_VLEN_REC_SHORT;
+          add_len += IPFIX_VLEN_REC_SHORT;
+
+          memcpy(flowset, label_ptr, len);
+          flowset[len] = '\0';
+          flowset += len;
+          add_len += len;
+	}
+      }
+    }
   }
 
-  return 0;
+  return add_len;
+}
+
+static int
+flow_to_flowset_cp_pen_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  struct custom_primitive_ptrs *cp_entry;
+  char *label_ptr, null_char = '\0';
+  int cp_idx, add_len = 0;
+  u_int8_t len = 0;
+
+  for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+    cp_entry = &config.cpptrs.primitive[cp_idx];
+
+    if (config.nfprobe_version == 10 && cp_entry->ptr->pen) {
+      if (cp_entry->ptr->len != PM_VARIABLE_LENGTH) {
+        if (flow->pcust[idx] && cp_entry->ptr->field_type)
+          memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
+        else
+          memset(flowset, 0, cp_entry->ptr->len);
+
+        flowset += cp_entry->ptr->len;
+      }
+      else {
+        vlen_prims_get(flow->pvlen[idx], cp_entry->ptr->type, &label_ptr);
+        if (!label_ptr) {
+          len = NULL_CHAR_LEN;
+          label_ptr = &null_char;
+        }
+        else len = MIN(IPFIX_VLEN_REC_SHORT_MAXLEN, strlen(label_ptr) + 1); // XXX: check available len?
+
+        memcpy(flowset, &len, IPFIX_VLEN_REC_SHORT);
+        flowset += IPFIX_VLEN_REC_SHORT;
+        add_len += IPFIX_VLEN_REC_SHORT;
+
+        memcpy(flowset, label_ptr, len);
+        flowset[len] = '\0';
+        flowset += len;
+        add_len += len;
+      }
+    }
+  }
+
+  return add_len;
 }
 
 int nf9_init_cp_template(struct NF9_SOFTFLOWD_TEMPLATE *tpl, struct NF9_SOFTFLOWD_TEMPLATE *tpl_out,
@@ -539,33 +607,38 @@ int nf9_init_cp_template(struct NF9_SOFTFLOWD_TEMPLATE *tpl, struct NF9_SOFTFLOW
 			 int rcount)
 {
   struct NF9_INTERNAL_TEMPLATE_RECORD *cp_first_record = NULL, *cp_first_record_out = NULL;
+  struct custom_primitive_ptrs *cp_entry;
   int cp_idx, cp_first = FALSE, cp_len = 0;
 
   for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-    if (config.cpptrs.primitive[cp_idx].ptr->field_type) {
-      if (!config.cpptrs.primitive[cp_idx].ptr->pen) {
-        tpl->r[rcount].type = htons(config.cpptrs.primitive[cp_idx].ptr->field_type);
-        tpl->r[rcount].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
-        tpl_int->r[rcount].length = 0;
-        tpl_out->r[rcount].type = htons(config.cpptrs.primitive[cp_idx].ptr->field_type);
-        tpl_out->r[rcount].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
-        tpl_int_out->r[rcount].length = 0;
-        cp_len += config.cpptrs.primitive[cp_idx].ptr->len;
+    cp_entry = &config.cpptrs.primitive[cp_idx];
 
-        if (!cp_first) {
-          tpl_int->r[rcount].handler = flow_to_flowset_cp_handler;
-          tpl_int_out->r[rcount].handler = flow_to_flowset_cp_handler;
+    if (cp_entry->ptr->field_type) {
+      if (!cp_entry->ptr->pen) {
+	if (cp_entry->ptr->len != PM_VARIABLE_LENGTH || config.nfprobe_version == 10) { 
+	  tpl->r[rcount].type = htons(cp_entry->ptr->field_type);
+	  tpl->r[rcount].length = htons(cp_entry->ptr->len);
+	  tpl_int->r[rcount].length = 0;
+	  tpl_out->r[rcount].type = htons(cp_entry->ptr->field_type);
+	  tpl_out->r[rcount].length = htons(cp_entry->ptr->len);
+	  tpl_int_out->r[rcount].length = 0;
+	  cp_len += cp_entry->ptr->len;
 
-          cp_first_record = &tpl_int->r[rcount];
-          cp_first_record_out = &tpl_int_out->r[rcount];
-          cp_first = TRUE;
+	  if (!cp_first) {
+	    tpl_int->r[rcount].handler = flow_to_flowset_cp_handler;
+	    tpl_int_out->r[rcount].handler = flow_to_flowset_cp_handler;
+
+	    cp_first_record = &tpl_int->r[rcount];
+	    cp_first_record_out = &tpl_int_out->r[rcount];
+	    cp_first = TRUE;
+	  }
+	  else {
+	    tpl_int->r[rcount].handler = NULL;
+	    tpl_int_out->r[rcount].handler = NULL;
+	  }
+
+	  rcount++;
         }
-        else {
-          tpl_int->r[rcount].handler = NULL;
-          tpl_int_out->r[rcount].handler = NULL;
-        }
-
-        rcount++;
       }
     }
   }
@@ -581,23 +654,26 @@ int nf9_init_cp_pen_template(struct IPFIX_PEN_TEMPLATE_ADDENDUM *tpl, struct IPF
 			     int rcount_pen)
 {
   struct NF9_INTERNAL_TEMPLATE_RECORD *cp_pen_first_record = NULL, *cp_pen_first_record_out = NULL;
+  struct custom_primitive_ptrs *cp_entry;
   int cp_idx, cp_pen_first = FALSE, cp_pen_len = 0;
 
   for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
-    if (config.nfprobe_version == 10 && config.cpptrs.primitive[cp_idx].ptr->pen) {
-      tpl->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
-      tpl->r[rcount_pen].pen = htonl(config.cpptrs.primitive[cp_idx].ptr->pen);
-      tpl->r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+    cp_entry = &config.cpptrs.primitive[cp_idx];
+
+    if (config.nfprobe_version == 10 && cp_entry->ptr->pen) {
+      tpl->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | cp_entry->ptr->field_type);
+      tpl->r[rcount_pen].pen = htonl(cp_entry->ptr->pen);
+      tpl->r[rcount_pen].length = htons(cp_entry->ptr->len);
       tpl_int->r[rcount_pen].length = 0;
-      tpl_out->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | config.cpptrs.primitive[cp_idx].ptr->field_type);
-      tpl_out->r[rcount_pen].pen = htonl(config.cpptrs.primitive[cp_idx].ptr->pen);
-      tpl_out->r[rcount_pen].length = htons(config.cpptrs.primitive[cp_idx].ptr->len);
+      tpl_out->r[rcount_pen].type = htons(IPFIX_TPL_EBIT | cp_entry->ptr->field_type);
+      tpl_out->r[rcount_pen].pen = htonl(cp_entry->ptr->pen);
+      tpl_out->r[rcount_pen].length = htons(cp_entry->ptr->len);
       tpl_int_out->r[rcount_pen].length = 0;
-      cp_pen_len += config.cpptrs.primitive[cp_idx].ptr->len;
+      cp_pen_len += cp_entry->ptr->len;
 
       if (!cp_pen_first) {
-        tpl_int->r[rcount_pen].handler = flow_to_flowset_cp_handler;
-        tpl_int_out->r[rcount_pen].handler = flow_to_flowset_cp_handler;
+        tpl_int->r[rcount_pen].handler = flow_to_flowset_cp_pen_handler;
+        tpl_int_out->r[rcount_pen].handler = flow_to_flowset_cp_pen_handler;
 
         cp_pen_first_record = &tpl_int->r[rcount_pen];
         cp_pen_first_record_out = &tpl_int_out->r[rcount_pen];
@@ -1526,7 +1602,9 @@ nf_flow_to_flowset_inc_len(char **ftoft_ptr, int *add_len, int orig_len, int ele
 {
   if (!elem_len) *ftoft_ptr += orig_len;
   else {
-    *ftoft_ptr += elem_len;
+    /* hmm, what if sum of all orig_len elements != PM_VARIABLE_LENGTH
+       gets >= PM_VARIABLE_LENGTH ? Unlikely but we may hit a problem .. */
+    *ftoft_ptr += ((orig_len % PM_VARIABLE_LENGTH) + elem_len);
     *add_len += elem_len;
   }
 }

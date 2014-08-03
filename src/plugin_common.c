@@ -475,6 +475,7 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
 
   if (!index || !container) return;
 
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   prim_ptrs.data = &pdata;
 
   for (j = 0; j < index; j++) {
@@ -804,7 +805,7 @@ void primptrs_set_all_from_chained_cache(struct primitives_ptrs *prim_ptrs, stru
 {
   struct pkt_data *data;
 
-  if (prim_ptrs && data && entry) {
+  if (prim_ptrs && entry) {
     data = prim_ptrs->data;
     memset(data, 0, PdataSz);
 

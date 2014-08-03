@@ -419,7 +419,6 @@ vlen_to_flowrec(struct FLOW *flow, struct pkt_vlen_hdr_primitives *pvlen, int nd
     }
 
     flow->pvlen[ndx] = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
-    if (flow->pvlen[ndx]) memcpy(flow->pvlen[ndx], pvlen, PvhdrSz + pvlen->tot_len);
   }
 }
 
