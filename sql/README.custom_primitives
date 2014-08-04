@@ -26,6 +26,12 @@ Semantics is 'u_int', so the field contains a positive integer number, length be
 a single byte. The corresponding SQL field can be defined as follows: "mtlpl INT(1)
 UNSIGNED NOT NULL".  
 
+name=custom_vlen_primitive	field_type=43874:255	len=vlen	semantics=str
+
+Semantics is 'str', so the field contains a string of variable-length.
+The corresponding SQL field can be defined as follows: "custom_vlen_primitive
+VARCHAR(255) NOT NULL".
+
 Custom-defined primitives: primary key and concluding remarks.
 Custom-defined primitives can be no problem included as part of the primary key or
 any other SQL table index. Inclusion is not any different from natively supported

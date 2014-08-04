@@ -27,9 +27,10 @@
 !			supplied aswell via the <PEN>:<value> format. As a
 !			reference the IPFIX standard IE definition table can be
 !			used: http://www.iana.org/assignments/ipfix/ipfix.xhtml
-! 'len'			Length of the primitive, in bytes. Variable length 
-!			fields are currently supported by defining a length
-!			equal to the maximum estimated length of the field.
+! 'len'			Length of the primitive, in bytes. 'vlen' word defines
+!			a primitive to be variable length. In pmacctd and 
+!			uacctd only strings can be defined vlen; in nfacctd
+!			string and raw semantics can be defined vlen.
 ! 'semantics'		Specifies semantics of the primitive. Allowed values
 !			are: 'u_int' (unsigned integer, presented as decimal
 !			number), 'hex' (unsigned integer, presented as hexa-
@@ -84,4 +85,3 @@ name=tcp_win	packet_ptr=l4:6+14      len=2   semantics=u_int
 ! as unsigned int. The info is carried via NetFlow/IPFIX in field type #192.
 !
 name=ttl	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7  len=1   semantics=u_int	field_type=192
-!

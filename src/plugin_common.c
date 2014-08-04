@@ -475,10 +475,9 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
 
   if (!index || !container) return;
 
-  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
-  prim_ptrs.data = &pdata;
-
   for (j = 0; j < index; j++) {
+    memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+    prim_ptrs.data = &pdata;
     primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
 
     modulo = P_cache_modulo(&prim_ptrs);
