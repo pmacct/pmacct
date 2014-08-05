@@ -368,6 +368,14 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
+  if (strlen(config_file)) {
+    char canonical_path[PATH_MAX], *canonical_path_ptr;
+
+    canonical_path_ptr = realpath(config_file, canonical_path);
+    if (canonical_path_ptr) Log(LOG_INFO, "INFO ( %s/core ): Reading configuration file '%s'.\n", config.name, canonical_path);
+  }
+  else Log(LOG_INFO, "INFO ( %s/core ): Reading configuration from cmdline.\n", config.name);
+
   /* Enforcing policies over aggregation methods */
   list = plugins_list;
   while (list) {

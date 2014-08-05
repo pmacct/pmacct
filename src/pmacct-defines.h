@@ -99,6 +99,10 @@
 #define MAX(x, y) (x <= y ? y : x)
 #endif
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 /* acct_type */ 
 #define ACCT_PM		1	/* promiscuous mode */
 #define ACCT_NF		2	/* NetFlow */
