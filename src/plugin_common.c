@@ -524,6 +524,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
   if (sql_writers.flags != CHLD_ALERT) {
     switch (ret = fork()) {
     case 0: /* Child */
+      pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer", config.name);
       (*purge_func)(queries_queue, qq_ptr);
       exit(0);
     default: /* Parent */

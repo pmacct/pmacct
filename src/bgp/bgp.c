@@ -2044,6 +2044,7 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
 	      ri_next = ri->next; /* let's save pointer to next before free up */
               bgp_info_delete(node, ri, modulo+peer_buckets);
             }
+	    else ri_next = ri->next;
           }
         }
 
