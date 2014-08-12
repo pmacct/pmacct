@@ -85,7 +85,7 @@ void usage_client(char *prog)
   printf("  -n\t<bytes | packets | flows | all> \n\tSelect the counters to print (applies to -N)\n");
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth > \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth | label > \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
@@ -623,7 +623,7 @@ int main(int argc,char **argv)
   char match_string[LARGEBUFLEN], *match_string_token, *match_string_ptr;
   char count[128], *count_token[N_PRIMITIVES], *count_ptr;
   int count_index = 0, match_string_index = 0, index = 0;
-  u_int64_t count_token_int[N_PRIMITIVES];
+  pm_cfgreg_t count_token_int[N_PRIMITIVES];
   
   /* getopt() stuff */
   extern char *optarg;
@@ -696,240 +696,244 @@ int main(int argc,char **argv)
       while ((*count_ptr != '\0') && (count_index <= N_PRIMITIVES-1)) {
         count_token[count_index] = pmc_extract_token(&count_ptr, ',');
 	if (!strcmp(count_token[count_index], "src_host")) {
-	  count_token_int[count_index] = COUNT_SRC_HOST;
+	  count_token_int[count_index] = COUNT_INT_SRC_HOST;
 	  what_to_count |= COUNT_SRC_HOST;
 	}
         else if (!strcmp(count_token[count_index], "dst_host")) {
-	  count_token_int[count_index] = COUNT_DST_HOST;
+	  count_token_int[count_index] = COUNT_INT_DST_HOST;
 	  what_to_count |= COUNT_DST_HOST;
 	}
         else if (!strcmp(count_token[count_index], "sum")) {
-	  count_token_int[count_index] = COUNT_SUM_HOST;
+	  count_token_int[count_index] = COUNT_INT_SUM_HOST;
 	  what_to_count |= COUNT_SUM_HOST;
 	}
         else if (!strcmp(count_token[count_index], "src_port")) {
-	  count_token_int[count_index] = COUNT_SRC_PORT;
+	  count_token_int[count_index] = COUNT_INT_SRC_PORT;
 	  what_to_count |= COUNT_SRC_PORT;
 	}
         else if (!strcmp(count_token[count_index], "dst_port")) {
-	  count_token_int[count_index] = COUNT_DST_PORT;
+	  count_token_int[count_index] = COUNT_INT_DST_PORT;
 	  what_to_count |= COUNT_DST_PORT;
 	}
         else if (!strcmp(count_token[count_index], "proto")) {
-	  count_token_int[count_index] = COUNT_IP_PROTO;
+	  count_token_int[count_index] = COUNT_INT_IP_PROTO;
 	  what_to_count |= COUNT_IP_PROTO;
 	}
 #if defined HAVE_L2
         else if (!strcmp(count_token[count_index], "src_mac")) {
-	  count_token_int[count_index] = COUNT_SRC_MAC;
+	  count_token_int[count_index] = COUNT_INT_SRC_MAC;
 	  what_to_count |= COUNT_SRC_MAC;
 	}
         else if (!strcmp(count_token[count_index], "dst_mac")) {
-	  count_token_int[count_index] = COUNT_DST_MAC;
+	  count_token_int[count_index] = COUNT_INT_DST_MAC;
 	  what_to_count |= COUNT_DST_MAC;
 	}
         else if (!strcmp(count_token[count_index], "vlan")) {
-	  count_token_int[count_index] = COUNT_VLAN;
+	  count_token_int[count_index] = COUNT_INT_VLAN;
 	  what_to_count |= COUNT_VLAN;
 	}
         else if (!strcmp(count_token[count_index], "cos")) {
-          count_token_int[count_index] = COUNT_COS;
+          count_token_int[count_index] = COUNT_INT_COS;
           what_to_count |= COUNT_COS;
         }
         else if (!strcmp(count_token[count_index], "etype")) {
-          count_token_int[count_index] = COUNT_ETHERTYPE;
+          count_token_int[count_index] = COUNT_INT_ETHERTYPE;
           what_to_count |= COUNT_ETHERTYPE;
         }
 	else if (!strcmp(count_token[count_index], "sum_mac")) {
-	  count_token_int[count_index] = COUNT_SUM_MAC;
+	  count_token_int[count_index] = COUNT_INT_SUM_MAC;
 	  what_to_count |= COUNT_SUM_MAC;
 	}
 #endif 
         else if (!strcmp(count_token[count_index], "in_iface")) {
-          count_token_int[count_index] = COUNT_IN_IFACE;
+          count_token_int[count_index] = COUNT_INT_IN_IFACE;
           what_to_count |= COUNT_IN_IFACE;
         }
         else if (!strcmp(count_token[count_index], "out_iface")) {
-          count_token_int[count_index] = COUNT_OUT_IFACE;
+          count_token_int[count_index] = COUNT_INT_OUT_IFACE;
           what_to_count |= COUNT_OUT_IFACE;
         }
         else if (!strcmp(count_token[count_index], "tos")) {
-	  count_token_int[count_index] = COUNT_IP_TOS;
+	  count_token_int[count_index] = COUNT_INT_IP_TOS;
 	  what_to_count |= COUNT_IP_TOS;
 	}
 #if defined WITH_GEOIP
         else if (!strcmp(count_token[count_index], "src_host_country")) {
-          count_token_int[count_index] = COUNT_SRC_HOST_COUNTRY;
+          count_token_int[count_index] = COUNT_INT_SRC_HOST_COUNTRY;
           what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
         }
         else if (!strcmp(count_token[count_index], "dst_host_country")) {
-          count_token_int[count_index] = COUNT_DST_HOST_COUNTRY;
+          count_token_int[count_index] = COUNT_INT_DST_HOST_COUNTRY;
           what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
         }
 #endif
         else if (!strcmp(count_token[count_index], "sampling_rate")) {
-	  count_token_int[count_index] = COUNT_SAMPLING_RATE;
+	  count_token_int[count_index] = COUNT_INT_SAMPLING_RATE;
 	  what_to_count_2 |= COUNT_SAMPLING_RATE;
 	}
         else if (!strcmp(count_token[count_index], "none")) {
-	  count_token_int[count_index] = COUNT_NONE;
+	  count_token_int[count_index] = COUNT_INT_NONE;
 	  what_to_count |= COUNT_NONE;
 	}
         else if (!strcmp(count_token[count_index], "src_as")) {
-	  count_token_int[count_index] = COUNT_SRC_AS;
+	  count_token_int[count_index] = COUNT_INT_SRC_AS;
 	  what_to_count |= COUNT_SRC_AS;
 	}
         else if (!strcmp(count_token[count_index], "dst_as")) {
-	  count_token_int[count_index] = COUNT_DST_AS;
+	  count_token_int[count_index] = COUNT_INT_DST_AS;
 	  what_to_count |= COUNT_DST_AS;
 	}
         else if (!strcmp(count_token[count_index], "src_net")) {
-	  count_token_int[count_index] = COUNT_SRC_NET;
+	  count_token_int[count_index] = COUNT_INT_SRC_NET;
 	  what_to_count |= COUNT_SRC_NET;
 	}
         else if (!strcmp(count_token[count_index], "dst_net")) {
-	  count_token_int[count_index] = COUNT_DST_NET;
+	  count_token_int[count_index] = COUNT_INT_DST_NET;
 	  what_to_count |= COUNT_DST_NET;
 	}
         else if (!strcmp(count_token[count_index], "sum_host")) {
-	  count_token_int[count_index] = COUNT_SUM_HOST;
+	  count_token_int[count_index] = COUNT_INT_SUM_HOST;
 	  what_to_count |= COUNT_SUM_HOST;
 	}
         else if (!strcmp(count_token[count_index], "sum_net")) {
-	  count_token_int[count_index] = COUNT_SUM_NET;
+	  count_token_int[count_index] = COUNT_INT_SUM_NET;
 	  what_to_count |= COUNT_SUM_NET;
 	}
         else if (!strcmp(count_token[count_index], "sum_as")) {
-	  count_token_int[count_index] = COUNT_SUM_AS;
+	  count_token_int[count_index] = COUNT_INT_SUM_AS;
 	  what_to_count |= COUNT_SUM_AS;
 	}
         else if (!strcmp(count_token[count_index], "sum_port")) {
-	  count_token_int[count_index] = COUNT_SUM_PORT;
+	  count_token_int[count_index] = COUNT_INT_SUM_PORT;
 	  what_to_count |= COUNT_SUM_PORT;
 	}
         else if (!strcmp(count_token[count_index], "src_mask")) {
-          count_token_int[count_index] = COUNT_SRC_NMASK;
+          count_token_int[count_index] = COUNT_INT_SRC_NMASK;
           what_to_count |= COUNT_SRC_NMASK;
         }
         else if (!strcmp(count_token[count_index], "dst_mask")) {
-          count_token_int[count_index] = COUNT_DST_NMASK;
+          count_token_int[count_index] = COUNT_INT_DST_NMASK;
           what_to_count |= COUNT_DST_NMASK;
         }
         else if (!strcmp(count_token[count_index], "tag")) {
-	  count_token_int[count_index] = COUNT_TAG;
+	  count_token_int[count_index] = COUNT_INT_TAG;
 	  what_to_count |= COUNT_TAG;
 	}
         else if (!strcmp(count_token[count_index], "tag2")) {
-          count_token_int[count_index] = COUNT_TAG2;
+          count_token_int[count_index] = COUNT_INT_TAG2;
           what_to_count |= COUNT_TAG2;
         }
         else if (!strcmp(count_token[count_index], "class")) {
-          count_token_int[count_index] = COUNT_CLASS;
+          count_token_int[count_index] = COUNT_INT_CLASS;
           what_to_count |= COUNT_CLASS;
         }
         else if (!strcmp(count_token[count_index], "pkt_len_distrib")) {
-          count_token_int[count_index] = COUNT_PKT_LEN_DISTRIB;
+          count_token_int[count_index] = COUNT_INT_PKT_LEN_DISTRIB;
           what_to_count_2 |= COUNT_PKT_LEN_DISTRIB;
         }
         else if (!strcmp(count_token[count_index], "std_comm")) {
-          count_token_int[count_index] = COUNT_STD_COMM;
+          count_token_int[count_index] = COUNT_INT_STD_COMM;
           what_to_count |= COUNT_STD_COMM;
         }
         else if (!strcmp(count_token[count_index], "src_std_comm")) {
-          count_token_int[count_index] = COUNT_SRC_STD_COMM;
+          count_token_int[count_index] = COUNT_INT_SRC_STD_COMM;
           what_to_count |= COUNT_SRC_STD_COMM;
         }
         else if (!strcmp(count_token[count_index], "ext_comm")) {
-          count_token_int[count_index] = COUNT_EXT_COMM;
+          count_token_int[count_index] = COUNT_INT_EXT_COMM;
           what_to_count |= COUNT_EXT_COMM;
         }
         else if (!strcmp(count_token[count_index], "src_ext_comm")) {
-          count_token_int[count_index] = COUNT_SRC_EXT_COMM;
+          count_token_int[count_index] = COUNT_INT_SRC_EXT_COMM;
           what_to_count |= COUNT_SRC_EXT_COMM;
         }
         else if (!strcmp(count_token[count_index], "as_path")) {
-          count_token_int[count_index] = COUNT_AS_PATH;
+          count_token_int[count_index] = COUNT_INT_AS_PATH;
           what_to_count |= COUNT_AS_PATH;
         }
         else if (!strcmp(count_token[count_index], "src_as_path")) {
-          count_token_int[count_index] = COUNT_SRC_AS_PATH;
+          count_token_int[count_index] = COUNT_INT_SRC_AS_PATH;
           what_to_count |= COUNT_SRC_AS_PATH;
         }
         else if (!strcmp(count_token[count_index], "local_pref")) {
-          count_token_int[count_index] = COUNT_LOCAL_PREF;
+          count_token_int[count_index] = COUNT_INT_LOCAL_PREF;
           what_to_count |= COUNT_LOCAL_PREF;
         }
         else if (!strcmp(count_token[count_index], "src_local_pref")) {
-          count_token_int[count_index] = COUNT_SRC_LOCAL_PREF;
+          count_token_int[count_index] = COUNT_INT_SRC_LOCAL_PREF;
           what_to_count |= COUNT_SRC_LOCAL_PREF;
 	}
         else if (!strcmp(count_token[count_index], "med")) {
-          count_token_int[count_index] = COUNT_MED;
+          count_token_int[count_index] = COUNT_INT_MED;
           what_to_count |= COUNT_MED;
         }
         else if (!strcmp(count_token[count_index], "src_med")) {
-          count_token_int[count_index] = COUNT_SRC_MED;
+          count_token_int[count_index] = COUNT_INT_SRC_MED;
           what_to_count |= COUNT_SRC_MED;
         }
         else if (!strcmp(count_token[count_index], "peer_src_as")) {
-          count_token_int[count_index] = COUNT_PEER_SRC_AS;
+          count_token_int[count_index] = COUNT_INT_PEER_SRC_AS;
           what_to_count |= COUNT_PEER_SRC_AS;
         }
         else if (!strcmp(count_token[count_index], "peer_dst_as")) {
-          count_token_int[count_index] = COUNT_PEER_DST_AS;
+          count_token_int[count_index] = COUNT_INT_PEER_DST_AS;
           what_to_count |= COUNT_PEER_DST_AS;
         }
         else if (!strcmp(count_token[count_index], "peer_src_ip")) {
-          count_token_int[count_index] = COUNT_PEER_SRC_IP;
+          count_token_int[count_index] = COUNT_INT_PEER_SRC_IP;
           what_to_count |= COUNT_PEER_SRC_IP;
         }
         else if (!strcmp(count_token[count_index], "peer_dst_ip")) {
-          count_token_int[count_index] = COUNT_PEER_DST_IP;
+          count_token_int[count_index] = COUNT_INT_PEER_DST_IP;
           what_to_count |= COUNT_PEER_DST_IP;
         }
         else if (!strcmp(count_token[count_index], "mpls_vpn_rd")) {
-          count_token_int[count_index] = COUNT_MPLS_VPN_RD;
+          count_token_int[count_index] = COUNT_INT_MPLS_VPN_RD;
           what_to_count |= COUNT_MPLS_VPN_RD;
         }
         else if (!strcmp(count_token[count_index], "post_nat_src_host")) {
-          count_token_int[count_index] = COUNT_POST_NAT_SRC_HOST;
+          count_token_int[count_index] = COUNT_INT_POST_NAT_SRC_HOST;
           what_to_count_2 |= COUNT_POST_NAT_SRC_HOST;
         }
         else if (!strcmp(count_token[count_index], "post_nat_dst_host")) {
-          count_token_int[count_index] = COUNT_POST_NAT_DST_HOST;
+          count_token_int[count_index] = COUNT_INT_POST_NAT_DST_HOST;
           what_to_count_2 |= COUNT_POST_NAT_DST_HOST;
         }
         else if (!strcmp(count_token[count_index], "post_nat_src_port")) {
-          count_token_int[count_index] = COUNT_POST_NAT_SRC_PORT;
+          count_token_int[count_index] = COUNT_INT_POST_NAT_SRC_PORT;
           what_to_count_2 |= COUNT_POST_NAT_SRC_PORT;
         }
         else if (!strcmp(count_token[count_index], "post_nat_dst_port")) {
-          count_token_int[count_index] = COUNT_POST_NAT_DST_PORT;
+          count_token_int[count_index] = COUNT_INT_POST_NAT_DST_PORT;
           what_to_count_2 |= COUNT_POST_NAT_DST_HOST;
         }
         else if (!strcmp(count_token[count_index], "nat_event")) {
-          count_token_int[count_index] = COUNT_NAT_EVENT;
+          count_token_int[count_index] = COUNT_INT_NAT_EVENT;
           what_to_count_2 |= COUNT_NAT_EVENT;
         }
         else if (!strcmp(count_token[count_index], "mpls_label_top")) {
-          count_token_int[count_index] = COUNT_MPLS_LABEL_TOP;
+          count_token_int[count_index] = COUNT_INT_MPLS_LABEL_TOP;
           what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
         }
         else if (!strcmp(count_token[count_index], "mpls_label_bottom")) {
-          count_token_int[count_index] = COUNT_MPLS_LABEL_BOTTOM;
+          count_token_int[count_index] = COUNT_INT_MPLS_LABEL_BOTTOM;
           what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
         }
         else if (!strcmp(count_token[count_index], "mpls_stack_depth")) {
-          count_token_int[count_index] = COUNT_MPLS_STACK_DEPTH;
+          count_token_int[count_index] = COUNT_INT_MPLS_STACK_DEPTH;
           what_to_count_2 |= COUNT_MPLS_STACK_DEPTH;
         }
         else if (!strcmp(count_token[count_index], "timestamp_start")) {
-          count_token_int[count_index] = COUNT_TIMESTAMP_START;
+          count_token_int[count_index] = COUNT_INT_TIMESTAMP_START;
           what_to_count_2 |= COUNT_TIMESTAMP_START;
         }
         else if (!strcmp(count_token[count_index], "timestamp_end")) {
-          count_token_int[count_index] = COUNT_TIMESTAMP_END;
+          count_token_int[count_index] = COUNT_INT_TIMESTAMP_END;
           what_to_count_2 |= COUNT_TIMESTAMP_END;
+        }
+        else if (!strcmp(count_token[count_index], "label")) {
+          count_token_int[count_index] = COUNT_INT_LABEL;
+          what_to_count_2 |= COUNT_LABEL;
         }
         else {
 	  strlcpy(custom_primitives_input.primitive[custom_primitives_input.num].name,
@@ -1294,7 +1298,11 @@ int main(int argc,char **argv)
 
 	/* Handling wildcards meaningfully */
 	if (!strcmp(match_string_token, "*")) {
-          request.what_to_count ^= count_token_int[match_string_index];	// XXX: what about what_to_count_2 ? 
+	  pm_cfgreg_t index = (count_token_int[match_string_index] >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
+
+          if (index == 1) request.what_to_count ^= count_token_int[match_string_index];
+          else if (index == 2) request.what_to_count_2 ^= count_token_int[match_string_index];
+
 	  match_string_index++;
 	  continue;
 	}
@@ -1728,6 +1736,11 @@ int main(int argc,char **argv)
 	  request.pnat.timestamp_end.tv_sec = mktime(&tmp);
 	  request.pnat.timestamp_end.tv_usec = residual;
         }
+	else if (!strcmp(count_token[match_string_index], "label")) {
+	  // XXX: to be supported in future
+          printf("ERROR: -M and -N are not supported (yet) against variable-length primitives (ie. label)\n");
+          exit(1);
+	}
         else {
 	  int idx, found;
 

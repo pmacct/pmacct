@@ -54,6 +54,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_nat_primitives *pnat, empty_pnat;
   struct pkt_mpls_primitives *pmpls, empty_pmpls;
   char *pcust, empty_pcust[] = "";
+  struct pkt_vlen_hdr_primitives *pvlen, empty_pvlen;
   struct networks_file_data nfd;
   struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
@@ -168,6 +169,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&empty_pbgp, 0, sizeof(empty_pbgp));
   memset(&empty_pnat, 0, sizeof(empty_pnat));
   memset(&empty_pmpls, 0, sizeof(empty_pmpls));
+  memset(&empty_pvlen, 0, sizeof(empty_pvlen));
 
   /* building a server for interrogations by clients */
   sd = build_query_server(config.imt_plugin_path);
@@ -377,16 +379,19 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  // XXX: to be optimized: remove empty_* vars
           if (extras.off_pkt_bgp_primitives)
 	    pbgp = (struct pkt_bgp_primitives *) ((u_char *)data + extras.off_pkt_bgp_primitives);
-	  else pbgp = (struct pkt_bgp_primitives *) &empty_pbgp;
+	  else pbgp = &empty_pbgp;
           if (extras.off_pkt_nat_primitives) 
             pnat = (struct pkt_nat_primitives *) ((u_char *)data + extras.off_pkt_nat_primitives);
-          else pnat = (struct pkt_nat_primitives *) &empty_pnat;
+          else pnat = &empty_pnat;
           if (extras.off_pkt_mpls_primitives) 
             pmpls = (struct pkt_mpls_primitives *) ((u_char *)data + extras.off_pkt_mpls_primitives);
-          else pmpls = (struct pkt_mpls_primitives *) &empty_pmpls;
+          else pmpls = &empty_pmpls;
           if (extras.off_custom_primitives)
 	    pcust = ((u_char *)data + extras.off_custom_primitives);
           else pcust = empty_pcust;
+	  if (extras.off_pkt_vlen_hdr_primitives)
+	    pvlen = (struct pkt_vlen_hdr_primitives *) ((u_char *)data + extras.off_pkt_vlen_hdr_primitives); 
+	  else pvlen = &empty_pvlen;
 
 	  for (num = 0; net_funcs[num]; num++)
 	    (*net_funcs[num])(&nt, &nc, &data->primitives, pbgp, &nfd);
@@ -405,6 +410,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  prim_ptrs.pnat = pnat;
 	  prim_ptrs.pmpls = pmpls;
 	  prim_ptrs.pcust = pcust;
+	  prim_ptrs.pvlen = pvlen;
 	  
           (*insert_func)(&prim_ptrs);
 
@@ -505,6 +511,10 @@ void free_extra_allocs()
     if (acc_elem->pcust) {
       free(acc_elem->pcust);
       acc_elem->pcust = NULL;
+    }
+    if (acc_elem->pvlen) {
+      free(acc_elem->pvlen);
+      acc_elem->pvlen= NULL;
     }
     if (acc_elem->next) {
       acc_elem = acc_elem->next;

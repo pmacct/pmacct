@@ -42,6 +42,7 @@ struct acc {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
+  struct pkt_vlen_hdr_primitives *pvlen;
   struct acc *next;
 };
 

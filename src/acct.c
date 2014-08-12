@@ -35,6 +35,7 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct acc *elem_acc;
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives); 
@@ -48,6 +49,7 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
+  if (pvlen) hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
   pos = hash % config.buckets;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -73,7 +75,9 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_cust = TRUE; 
+  int res_vlen = TRUE;
 
   res_data = memcmp(&elem->primitives, data, sizeof(struct pkt_primitives));
 
@@ -96,7 +100,10 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   if (pcust && elem->pcust) res_cust = memcmp(elem->pcust, pcust, config.cpptrs.len);
   else res_cust = FALSE;
 
-  return res_data | res_bgp | res_nat | res_mpls | res_cust;
+  if (pvlen && elem->pvlen) res_vlen = vlen_prims_cmp(elem->pvlen, pvlen);
+  else res_vlen = FALSE;
+
+  return res_data | res_bgp | res_nat | res_mpls | res_cust | res_vlen;
 }
 
 void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
@@ -107,6 +114,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
+  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct acc *elem_acc;
   unsigned char *elem, *new_elem;
   int solved = FALSE;
@@ -152,6 +160,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
+  if (pvlen) hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
   pos = hash % config.buckets;
       
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -263,6 +272,22 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 	elem_acc->pcust = NULL;
       }
 
+      /* if we have a pvlen from before let's free it up due to the vlen nature of the memory area */
+      if (elem_acc->pvlen) {
+        vlen_prims_free(elem_acc->pvlen);
+        elem_acc->pvlen = NULL;
+      }
+
+      if (pvlen) {
+        if (!elem_acc->pvlen) {
+          elem_acc->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
+          if (!elem_acc->pvlen) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
+            exit_plugin(1);
+          }
+        }
+      }
+
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
@@ -355,6 +380,22 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         memcpy(elem_acc->pcust, pcust, pc_size);
       }
       else elem_acc->pcust = NULL;
+
+      /* if we have a pvlen from before let's free it up due to the vlen nature of the memory area */
+      if (elem_acc->pvlen) {
+        vlen_prims_free(elem_acc->pvlen);
+        elem_acc->pvlen = NULL;
+      }
+
+      if (pvlen) {
+        if (!elem_acc->pvlen) {
+          elem_acc->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
+          if (!elem_acc->pvlen) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
+            exit_plugin(1);
+          }
+        }
+      }
 
       elem_acc->packet_counter += data->pkt_num;
       elem_acc->flow_counter += data->flo_num;
