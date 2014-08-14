@@ -148,6 +148,8 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           exit_plugin(1); /* we exit silently; something happened at the write end */
       }
 
+      if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
+
       if (((struct ch_buf_hdr *)rg->ptr)->seq != seq) {
         if (!pollagain) {
           pollagain = TRUE;
@@ -167,8 +169,8 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       pollagain = FALSE;
-      if ((rg->ptr + bufsz) >= rg->end) rg->ptr = rg->base;
       memcpy(pipebuf, rg->ptr, bufsz);
+      ((struct ch_buf_hdr *)rg->ptr)->seq = 0;
       rg->ptr += bufsz;
 
       /* lazy sql refresh handling */ 

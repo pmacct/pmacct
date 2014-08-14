@@ -39,8 +39,8 @@ struct ring {
 };
 
 struct ch_buf_hdr {
-  int seq;
-  int num;
+  u_int32_t seq;
+  u_int32_t num;
 };
 
 struct ch_status {
