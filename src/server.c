@@ -78,6 +78,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   struct pkt_nat_primitives dummy_pnat;
   struct pkt_mpls_primitives dummy_pmpls;
   char *dummy_pcust = NULL, *custbuf = NULL;
+  struct pkt_vlen_hdr_primitives dummy_pvlen;
   char emptybuf[LARGEBUFLEN];
   int reset_counter, offset = PdataSz;
 
@@ -94,6 +95,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   memset(&dummy_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(dummy_pcust, 0, config.cpptrs.len); 
   memset(custbuf, 0, config.cpptrs.len); 
+  memset(&dummy_pvlen, 0, sizeof(struct pkt_vlen_hdr_primitives));
 
   memset(emptybuf, 0, LARGEBUFLEN);
   memset(&rb, 0, sizeof(struct reply_buffer));
@@ -130,6 +132,12 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     offset += config.cpptrs.len;
   }
   else q->extras.off_custom_primitives = 0;
+  if (extras->off_pkt_vlen_hdr_primitives) {
+    q->extras.off_pkt_vlen_hdr_primitives = offset;
+    offset += sizeof(struct pkt_vlen_hdr_primitives);
+    /* XXX: handle variable legnth part of this structure */
+  }
+  else q->extras.off_pkt_vlen_hdr_primitives = 0;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Processing data received from client ...\n", config.name, config.type);
 
@@ -170,6 +178,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
         if (extras->off_custom_primitives && acc_elem->pcust) {
           enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
+        }
+
+        if (extras->off_pkt_vlen_hdr_primitives && acc_elem->pvlen) {
+          enQueue_elem(sd, &rb, acc_elem->pvlen, PvhdrSz + acc_elem->pvlen->tot_len, datasize - extras->off_pkt_vlen_hdr_primitives);
         }
       } 
       if (acc_elem->next != NULL) {
@@ -226,6 +238,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	prim_ptrs.pnat = &request.pnat;
 	prim_ptrs.pmpls = &request.pmpls;
 	prim_ptrs.pcust = request.pcust;
+	prim_ptrs.pvlen = request.pvlen;
 
         acc_elem = search_accounting_structure(&prim_ptrs);
         if (acc_elem) { 
@@ -254,6 +267,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	      enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
 	    }
 
+	    if (extras->off_pkt_vlen_hdr_primitives && acc_elem->pvlen) {
+	      enQueue_elem(sd, &rb, acc_elem->pvlen, PvhdrSz + acc_elem->pvlen->tot_len, datasize - extras->off_pkt_vlen_hdr_primitives);
+	    }
+
 	    if (reset_counter) {
 	      if (forked) set_reset_flag(acc_elem);
 	      else reset_counters(acc_elem);
@@ -274,6 +291,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
 	      if (extras->off_custom_primitives)
 		enQueue_elem(sd, &rb, &dummy_pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
+
+	      if (extras->off_pkt_vlen_hdr_primitives)
+		enQueue_elem(sd, &rb, &dummy_pvlen, PvhdrSz, datasize - extras->off_pkt_vlen_hdr_primitives);
 	    }
 	  }
         }
@@ -292,6 +312,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
             if (extras->off_custom_primitives)  
               enQueue_elem(sd, &rb, &dummy_pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
+
+            if (extras->off_pkt_vlen_hdr_primitives) 
+              enQueue_elem(sd, &rb, &dummy_pvlen, PvhdrSz, datasize - extras->off_pkt_vlen_hdr_primitives);
 	  }
 	}
       }
@@ -308,7 +331,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
         for (idx = 0; idx < config.buckets; idx++) {
           if (!following_chain) acc_elem = (struct acc *) elem;
 	  if (!test_zero_elem(acc_elem)) {
-	    // XXX: support for custom primitives
+	    /* XXX: support for custom and vlen primitives */
 	    mask_elem(&tbuf, &bbuf, &nbuf, &mbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives)) &&
@@ -336,6 +359,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
                 if (extras->off_custom_primitives && acc_elem->pcust) {
                   enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
                 }
+		if (extras->off_pkt_vlen_hdr_primitives && acc_elem->pvlen) {
+		  enQueue_elem(sd, &rb, acc_elem->pvlen, PvhdrSz + acc_elem->pvlen->tot_len, datasize - extras->off_pkt_vlen_hdr_primitives);
+		}
 	      }
 	      if (reset_counter) set_reset_flag(acc_elem);
 	    }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 */
 
 /*
@@ -80,6 +80,7 @@ struct query_entry {
   struct pkt_nat_primitives pnat;	/* extended NAT + timestamp data */
   struct pkt_mpls_primitives pmpls;	/* extended MPLS data */
   char *pcust;				/* custom-defined data */
+  struct pkt_vlen_hdr_primitives *pvlen;/* variable-length data */
 };
 
 struct reply_buffer {
