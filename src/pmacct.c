@@ -50,11 +50,13 @@ int pmc_bgp_rd2str(char *, rd_t *);
 int pmc_bgp_str2rd(rd_t *, char *);
 char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
-			struct pkt_mpls_primitives *, char *, pm_counter_t,
-			pm_counter_t, pm_counter_t, u_int32_t, struct timeval *);
+			struct pkt_mpls_primitives *, char *, struct pkt_vlen_hdr_primitives *,
+			pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t, struct timeval *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
 void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
+void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
+void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
 
 /* vars */
 struct imt_custom_primitives pmc_custom_primitives_registry;
@@ -366,6 +368,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
   if (!have_wtc) {
     printf("%sTAG", write_sep(sep, &count));
     printf("%sTAG2", write_sep(sep, &count));
+    printf("%sLABEL", write_sep(sep, &count));
     printf("%sCLASS", write_sep(sep, &count));
     printf("%sIN_IFACE", write_sep(sep, &count));
     printf("%sOUT_IFACE", write_sep(sep, &count));
@@ -452,6 +455,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
   else {
     if (what_to_count & COUNT_TAG) printf("%sTAG", write_sep(sep, &count));
     if (what_to_count & COUNT_TAG2) printf("%sTAG2", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_LABEL) printf("%sLABEL", write_sep(sep, &count));
     if (what_to_count & COUNT_CLASS) printf("%sCLASS", write_sep(sep, &count));
     if (what_to_count & COUNT_IN_IFACE) printf("%sIN_IFACE", write_sep(sep, &count));
     if (what_to_count & COUNT_OUT_IFACE) printf("%sOUT_IFACE", write_sep(sep, &count));
@@ -603,10 +607,12 @@ int main(int argc,char **argv)
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
+  struct pkt_vlen_hdr_primitives empty_pvlen;
   struct query_entry request;
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
+  struct pkt_vlen_hdr_primitives *pvlen = NULL;
   char *pcust = NULL;
   char *clibuf, *bufptr;
   unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
@@ -647,6 +653,7 @@ int main(int argc,char **argv)
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(&empty_pvlen, 0, sizeof(struct pkt_vlen_hdr_primitives));
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
@@ -681,6 +688,10 @@ int main(int argc,char **argv)
   have_wtc = FALSE;
   want_output = PRINT_OUTPUT_FORMATTED;
   is_event = FALSE;
+
+  PvhdrSz = sizeof(struct pkt_vlen_hdr_primitives);
+  PmLabelTSz = sizeof(pm_label_t);
+  PtLabelTSz = sizeof(pt_label_t);
 
   while (!errflag && ((cp = getopt(argc, argv, ARGS_PMACCT)) != -1)) {
     switch (cp) {
@@ -1900,11 +1911,15 @@ int main(int argc,char **argv)
       if (extras.off_custom_primitives) pcust = ((u_char *)elem + extras.off_custom_primitives);
       else pcust = NULL;
 
+      if (extras.off_pkt_vlen_hdr_primitives) pvlen = (struct pkt_vlen_hdr_primitives *) ((u_char *)elem + extras.off_pkt_vlen_hdr_primitives);
+      else pvlen = &empty_pvlen;
+
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0 ||
 	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
 	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0 ||
-	  pmc_custom_primitives_registry.len) {
+	  pmc_custom_primitives_registry.len ||
+	  memcmp(pvlen, &empty_pvlen, sizeof(struct pkt_vlen_hdr_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_TAG)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag);
@@ -1922,6 +1937,11 @@ int main(int argc,char **argv)
 				(acc_elem->primitives.class == 0 || acc_elem->primitives.class > ct_idx ||
 				!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);
 	}
+
+        if (!have_wtc || (what_to_count_2 & COUNT_LABEL)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED); /* case not supported */
+          else if (want_output & PRINT_OUTPUT_CSV) pmc_printf_csv_label(pvlen, COUNT_INT_LABEL, write_sep(sep_ptr, &count), empty_string);
+        }
 
         if (!have_wtc || (what_to_count & COUNT_IN_IFACE)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10u  ", acc_elem->primitives.ifindex_in);
@@ -2419,7 +2439,7 @@ int main(int argc,char **argv)
 	  char *json_str;
 
 	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
-				      &acc_elem->primitives, pbgp, pnat, pmpls, pcust, acc_elem->pkt_len,
+				      &acc_elem->primitives, pbgp, pnat, pmpls, pcust, pvlen, acc_elem->pkt_len,
 				      acc_elem->pkt_num, acc_elem->flo_num, acc_elem->tcp_flags, NULL);
 
 	  if (json_str) {
@@ -2897,12 +2917,12 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
 #ifdef WITH_JANSSON 
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  char *pcust, pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime)
+		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
+		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
-  char tstamp_str[SRVBUFLEN], unknown_pkt_len_distrib[] = "not_recv";
+  char tstamp_str[SRVBUFLEN], unknown_pkt_len_distrib[] = "not_recv", *label_ptr;
   int ret = FALSE;
   json_t *obj = json_object(), *kv;
   
@@ -2914,6 +2934,15 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   if (wtc & COUNT_TAG2) {
     kv = json_pack("{sI}", "tag2", pbase->tag2);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_LABEL) {
+    pmc_vlen_prims_get(pvlen, COUNT_INT_LABEL, &label_ptr);
+    if (!label_ptr) label_ptr = empty_string;
+
+    kv = json_pack("{ss}", "label", label_ptr);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -3296,12 +3325,23 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   /* all custom primitives printed here */
   {
-    char cp_str[SRVBUFLEN];
     int cp_idx;
 
     for (cp_idx = 0; cp_idx < pmc_custom_primitives_registry.num; cp_idx++) {
-      pmc_custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &pmc_custom_primitives_registry.primitive[cp_idx], FALSE);
-      kv = json_pack("{ss}", pmc_custom_primitives_registry.primitive[cp_idx].name, cp_str);
+      if (pmc_custom_primitives_registry.primitive[cp_idx].len != PM_VARIABLE_LENGTH) {
+        char cp_str[SRVBUFLEN];
+
+        pmc_custom_primitive_value_print(cp_str, SRVBUFLEN, pcust, &pmc_custom_primitives_registry.primitive[cp_idx], FALSE);
+        kv = json_pack("{ss}", pmc_custom_primitives_registry.primitive[cp_idx].name, cp_str);
+      }
+      else {
+        char *label_ptr = NULL;
+
+        pmc_vlen_prims_get(pvlen, pmc_custom_primitives_registry.primitive[cp_idx].type, &label_ptr);
+        if (!label_ptr) label_ptr = empty_string;
+        kv = json_pack("{ss}", pmc_custom_primitives_registry.primitive[cp_idx].name, label_ptr);
+      }
+
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
@@ -3331,8 +3371,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 #else
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  char *pcust, pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime)
+		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
+		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
 {
   return NULL;
 }
@@ -3505,4 +3545,43 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
       snprintf(out, outlen, format, eth_str);
     }
   }
+}
+
+void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char **res)
+{
+  pm_label_t *label_ptr;
+  char *ptr = (char *) hdr;
+  int x, rlen;
+
+  if (res) *res = NULL;
+
+  if (!hdr || !wtc || !res) return;
+
+  ptr += PvhdrSz;
+  label_ptr = (pm_label_t *) ptr;
+
+  for (x = 0, rlen = 0; x < hdr->num && rlen < hdr->tot_len; x++) {
+    if (label_ptr->type == wtc) {
+      if (label_ptr->len) {
+        ptr += PmLabelTSz;
+        *res = ptr;
+      }
+
+      return;
+    }
+    else {
+      ptr += (PmLabelTSz + label_ptr->len);
+      rlen += (PmLabelTSz + label_ptr->len);
+      label_ptr = (pm_label_t *) ptr;
+    }
+  }
+}
+
+void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char *sep, char *empty_string)
+{
+  char *label_ptr = NULL;
+
+  pmc_vlen_prims_get(pvlen, wtc, &label_ptr);
+  if (!label_ptr) label_ptr = empty_string;
+  printf("%s%s", sep, label_ptr);
 }

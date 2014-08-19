@@ -105,8 +105,10 @@ struct imt_custom_primitive_entry {
   u_int16_t field_type;
   u_int16_t len;
   u_int8_t semantics;
+
   /* compiled internally */
   u_int16_t off;
+  pm_cfgreg_t type;
 };
 
 struct imt_custom_primitives {

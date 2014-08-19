@@ -410,6 +410,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
       custom_primitives_registry.primitive[idx].field_type = config.cpptrs.primitive[idx].ptr->field_type;
       custom_primitives_registry.primitive[idx].len = config.cpptrs.primitive[idx].ptr->len;
       custom_primitives_registry.primitive[idx].semantics = config.cpptrs.primitive[idx].ptr->semantics;
+      custom_primitives_registry.primitive[idx].type = config.cpptrs.primitive[idx].ptr->type;
     } 
     custom_primitives_registry.num = config.cpptrs.num;
     custom_primitives_registry.len = config.cpptrs.len;
