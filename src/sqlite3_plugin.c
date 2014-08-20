@@ -167,7 +167,6 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       pollagain = FALSE;
       memcpy(pipebuf, rg->ptr, bufsz);
-      ((struct ch_buf_hdr *)rg->ptr)->seq = 0;
       rg->ptr += bufsz;
 
       /* lazy sql refresh handling */ 

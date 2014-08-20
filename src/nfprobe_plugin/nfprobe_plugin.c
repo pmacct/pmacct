@@ -1563,7 +1563,6 @@ read_data:
 
       pollagain = FALSE;
       memcpy(pipebuf, rg->ptr, bufsz);
-      ((struct ch_buf_hdr *)rg->ptr)->seq = 0;
       rg->ptr += bufsz;
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
