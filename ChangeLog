@@ -1,6 +1,95 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.0
 pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 
+1.5.0 -- 28-08-2014
+  + Introduced bgp_daemon_msglog_file config directive to enable streamed
+    logging of BGP messages/events. Each log entry features a time reference,
+    BGP peer IP address, event type and a sequence number (to order events
+    when time reference is not granular enough). BGP UPDATE messages also
+    contain full prefix and BGP attributes information.
+  + Introduced dump of BGP tables at regular time intervals. The filename,
+    which can include variables, is set by bgp_table_dump_file directive.
+    The output format, currently only JSON, can be set in future via the
+    bgp_table_dump_output directive. The time interval between dumps can
+    be set via the bgp_table_dump_refresh_time directive.
+  + Introduced support for internally variable-length primitives (likely
+    candidates are strings). Introduced also the 'label' primitive which
+    is a variable-length string equivalent of tag and tag2 primitives. Its
+    value are set via a 'set_label' statement in a pre_tag_map (see examples/
+    pretag.map.example). If, ie. as a result of JEQ's in a pre_tag_map,
+    multiple 'set_label' are applied, then default operation is append
+    labels and separate by a comma.
+  + pmacct project has been assigned PEN #43874. nfprobe plugin: tag, tag2,
+    label primitives are now encoded in IPFIX making use of the pmacct PEN.
+  + Ported preprocess feature to print, MongoDB and AMQP plugins. Preprocess
+    allows to process aggregates (via a comma-separated list of conditionals
+    and checks) while purging data to the backend thus resulting in a
+    powerful selection tier. minp, minb, minf, minbpp, minppf checks have
+    been currently ported. As a result of the porting a new set of config
+    directives are added, ie. print_preprocess and print_preprocess_type.
+  + print, MongoDB & AMQP plugins: if data (start/base) time is greater than
+    commit time then place in pending queue and after purging event re-insert
+    in cache. Concept ported from SQL plugins.
+  + MySQL, PostgreSQL plugins: sql_locking_style now supports keyword "none"
+    to disable locking. This method can help in certain cases, for example
+    when grants over the whole database (requirement for "table" locking in
+    MySQL) is not available.
+  + util.c: open_logfile() now calls mkdir_multilevel() to allow building
+    intermediate directory levels, if not existing. This brings all log
+    files in line with capabilities of print_output_file directive.
+  + Introduced [u|pm]acctd_flow_tcp_lifetime to defines how long a TCP flow
+    could remain inactive. This is in addition to [u|pm]acctd_flow_lifetime
+    that allows to define the same for generic, ie. non-TCP, flows. Thanks to
+    Stathis Gkotsis for his support.
+  + Introducing nfacctd_account_options: if set to true account for NetFlow/
+    IPFIX option records as well as flow ones. pre_tag_map offers sample_type
+    value of 'option' now to split option data records from flow ones.
+  + nfprobe plugin: support for custom-defined primitives has been introduced
+    in line with other plugins. With such feature it will be possible to
+    augment NetFlow v9/IPFIX records with custom fields (in IPFIX also PENs
+    are supported).
+  + Built a minimal API, for internal use only, around AMQP. Goal is to make
+    re-use of the same AMQP structures for different purposes (logging, ie. BGP
+    daemon dumps, AMQP plugin, etc.).
+  ! fix, BGP daemon: introduced bgp_peer_info_delete() to delete/free BGP
+    info after a BGP peer disconnects.
+  ! fix, print, AMQP, memory plguins: when selecting JSON output, jansson
+    library json_decref() is used in place of free() to free up memory
+    allocated by JSON objects. Using free() was originating memory leaks.
+  ! fix, AMQP plugin: in line with other plugins QN (query number or in case
+    of AMQP messagess number) in log messages now reflects the real number of
+    messages sent to the RabbitMQ message exchange and not just all messages
+    in the queue. Thanks to Gabriel Snook for reporting the issue.
+  ! fix, IMT plugin: memory leak due to missed calls to free_extra_allocs()
+    in case all extras.off_* were null. Thanks to Tim Jackson for his support
+    resolving the issue.
+  ! fix, pmacctd: if reading from a pcap_savefile, introduce a short usleep()
+    after each buffer worth of data so to give time plugins to process/cache
+    it.
+  ! fix, SQL plugins: SQL handler types now include primitives registry index
+  ! fix, print, AMQP & MongoDB plugins: added free() for empty_pcust allocs
+  ! fix, plugin hooks: improved checks to prevent the last buffer on a pipe
+    to plugins (plugin_pipe_size) could go partly out of bounds.
+  ! fix, nfacctd: improved handling of IPFIX vlen records.
+  ! fix, nfprobe: SEGV if custom primitives are defined but array structure
+    is not allocated.
+  ! fix, nfprobe: wrong length was calculated in IPv6 templates for fields
+    with PEN != 0.
+  ! fix, plugin_common.c: declared struct pkt_data in P_cache_insert_pending
+    to be pointed by prim_ptrs. primptrs_set_all_from_chained_cache() is now
+    safe if prim_ptrs is null.
+  ! fix, nfprobe: tackled the case of coexisting 1) PEN and non-PEN custom   
+    primitives and 2) variable and fixed custom primitives.
+  ! fix, plugin_common.c: declared struct pkt_data in P_cache_insert_pending
+    to be pointed by prim_ptrs. primptrs_set_all_from_chained_cache() is now
+    safe if prim_ptrs is null. 
+  ! fix, lofging: selected configuration file is now logged. cfg_file is passed
+    through realpath() in order to always log the absolute path.
+  ! fix, print, MongoDB & AMQP plugins: pm_setproctitle() invoked upon forking
+    writer processes in alignment with SQL plugins.
+  ! fix, pmacct client: it's now possible to query and wildcard on primitives
+    internally allocated over what_to_count_2 registry.
+
 1.5.0rc3 -- 18-04-2014
   + BGP daemon: support for BGP ADD-PATH capability draft-ietf-idr-add-paths
     has been introduced, useful to advertise known paths when BGP multi-path
