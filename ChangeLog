@@ -1,4 +1,4 @@
-pmacct (Promiscuous mode IP Accounting package) v1.5.0
+pmacct (Promiscuous mode IP Accounting package) v1.5.1
 pmacct is Copyright (C) 2003-2014 by Paolo Lucente
 
 1.5.0 -- 28-08-2014
@@ -6,12 +6,14 @@ pmacct is Copyright (C) 2003-2014 by Paolo Lucente
     logging of BGP messages/events. Each log entry features a time reference,
     BGP peer IP address, event type and a sequence number (to order events
     when time reference is not granular enough). BGP UPDATE messages also
-    contain full prefix and BGP attributes information.
+    contain full prefix and BGP attributes information. Example given in
+    QUICKSTART file, chapter XIIf.
   + Introduced dump of BGP tables at regular time intervals. The filename,
     which can include variables, is set by bgp_table_dump_file directive.
     The output format, currently only JSON, can be set in future via the
     bgp_table_dump_output directive. The time interval between dumps can
-    be set via the bgp_table_dump_refresh_time directive.
+    be set via the bgp_table_dump_refresh_time directive. Example given in
+    QUICKSTART file, chapter XIIf.
   + Introduced support for internally variable-length primitives (likely
     candidates are strings). Introduced also the 'label' primitive which
     is a variable-length string equivalent of tag and tag2 primitives. Its
@@ -49,7 +51,7 @@ pmacct is Copyright (C) 2003-2014 by Paolo Lucente
     augment NetFlow v9/IPFIX records with custom fields (in IPFIX also PENs
     are supported).
   + Built a minimal API, for internal use only, around AMQP. Goal is to make
-    re-use of the same AMQP structures for different purposes (logging, ie. BGP
+    re-use of the same AMQP structures for different purposes (logging, BGP
     daemon dumps, AMQP plugin, etc.).
   ! fix, BGP daemon: introduced bgp_peer_info_delete() to delete/free BGP
     info after a BGP peer disconnects.
