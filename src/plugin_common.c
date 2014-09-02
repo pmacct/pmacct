@@ -559,7 +559,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
 void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
 {
   struct timeval commit_basetime;
-  int j, local_retired = sql_writers.retired;
+  int j, local_retired = sql_writers.retired, delay = 0;
 
   memset(&commit_basetime, 0, sizeof(commit_basetime));
 
@@ -567,10 +567,16 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
   if (new_basetime.tv_sec) commit_basetime.tv_sec = new_basetime.tv_sec;
   else commit_basetime.tv_sec = basetime.tv_sec; 
 
+  /* evaluating any delay we may have to introduce */
+  if (config.sql_startup_delay) {
+    if (timeslot) delay = config.sql_startup_delay/timeslot;
+    delay = delay*timeslot;
+  }
+
   /* mark committed entries as such */
   if (!exiting) {
     for (j = 0, pqq_ptr = 0; j < index; j++) {
-      if (commit_basetime.tv_sec < queue[j]->basetime.tv_sec) {
+      if (commit_basetime.tv_sec < (queue[j]->basetime.tv_sec+delay)) {
         pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
@@ -742,6 +748,16 @@ void P_init_historical_acct(time_t now)
   basetime.tv_sec = t;
 
   memset(&new_basetime, 0, sizeof(new_basetime));
+}
+
+void P_init_refresh_deadline(time_t *rd)
+{
+  time_t t;
+
+  t = roundoff_time(*rd, config.sql_history_roundoff);
+  while ((t+config.sql_refresh_time) < *rd) t += config.sql_refresh_time;
+  *rd = t;
+  *rd += (config.sql_refresh_time+config.sql_startup_delay); /* it's a deadline not a basetime */
 }
 
 void P_eval_historical_acct(struct timeval *stamp, struct timeval *basetime, time_t timeslot)

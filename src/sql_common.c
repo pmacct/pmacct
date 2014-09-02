@@ -314,7 +314,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   /* We are seeking how many time-bins data has to be delayed by; residual
      time is taken into account by scanner deadlines (sql_refresh_time) */
   if (config.sql_startup_delay) {
-    delay = config.sql_startup_delay/idata->timeslot; 
+    if (idata->timeslot) delay = config.sql_startup_delay/idata->timeslot; 
     delay = delay*idata->timeslot;
   }
 

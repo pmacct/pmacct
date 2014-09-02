@@ -111,10 +111,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* print_refresh time init: deadline */
   refresh_deadline = now; 
-  t = roundoff_time(refresh_deadline, config.sql_history_roundoff);
-  while ((t+config.sql_refresh_time) < refresh_deadline) t += config.sql_refresh_time;
-  refresh_deadline = t;
-  refresh_deadline += config.sql_refresh_time; /* it's a deadline not a basetime */
+  P_init_refresh_deadline(&refresh_deadline);
 
   if (config.sql_history) {
     basetime_init = P_init_historical_acct;

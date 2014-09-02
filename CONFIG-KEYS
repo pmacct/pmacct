@@ -577,14 +577,15 @@ DESC:		time interval, in seconds, between consecutive executions of the plugin c
 
 		As doing otherwise can originate unexpected behaviours.
 
-KEY:		sql_startup_delay
-DESC:		defines the time, in seconds, the first SQL cache scan event has to be delayed. This delay
+KEY:		[ sql_startup_delay | print_startup_delay | mongo_startup_delay | amqp_startup_delay ]
+DESC:		defines the time, in seconds, the first cache scan event has to be delayed. This delay
 		is, in turn, propagated to the subsequent scans. It comes useful in two scenarios: a) so 
-		that multiple plugins can use the same 'sql_refresh_time' value, allowing them to spread
-		the writes among the length of the time-bin; b) with NetFlow, to keep original flow start
-		time (nfacctd_time_new: false) while enabling the sql_dont_try_update feature (for RDBMS
-		efficiency purposes); in such a context, sql_startup_delay value should be greater (better
-		>= 2x the value) of the NetFlow active flow timeout. (default: 0)
+		that multiple plugins can use the same refresh time (ie. sql_refresh_time) value, allowing
+		them to spread the writes among the length of the time-bin; b) with NetFlow, when using
+		a RDBMS, to keep original flow start time (nfacctd_time_new: false) while enabling the
+		sql_dont_try_update feature (for RDBMS efficiency purposes); in such a context,
+		sql_startup_delay value should be greater (better >= 2x the value) of the NetFlow active
+		flow timeout. (default: 0)
 
 KEY:		sql_optimize_clauses
 VALUES:		[ true | false ]
