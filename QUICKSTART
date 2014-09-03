@@ -252,8 +252,9 @@ mongo_refresh_time: 300
 mongo_table: pmacct.acct
 ...
 
-MongoDB release >= 2.2.0 is recommended. Installation of the MongoDB C driver is
-required.
+MongoDB release >= 2.2.0 is recommended. Installation of the MongoDB C driver 0.8,
+also referred as legacy, is required. Version 0.9 of the driver is not supported
+yet. The driver can be downloaded from http://api.mongodb.org/c/ . 
  
 
 IV. Running the libpcap-based daemon (pmacctd) 
