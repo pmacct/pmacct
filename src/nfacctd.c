@@ -903,8 +903,10 @@ int main(int argc,char **argv, char **envp)
 	process_v9_packet(netflow_packet, ret, &pptrs, &req, ((struct struct_header_v5 *)netflow_packet)->version);
 	break;
       default:
-	notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
-	xflow_tot_bad_datagrams++;
+        if (!config.nfacctd_disable_checks) {
+	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
+	  xflow_tot_bad_datagrams++;
+        }
 	break;
       }
     }
@@ -2000,8 +2002,10 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   nfv = ntohs(((struct struct_header_v5 *)pkt)->version);
 
   if (nfv != 1 && nfv != 5 && nfv != 7 && nfv != 8 && nfv != 9 && nfv != 10) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent);
-    xflow_tot_bad_datagrams++;
+    if (!config.nfacctd_disable_checks) {
+      notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent);
+      xflow_tot_bad_datagrams++;
+    }
     return;
   }
 

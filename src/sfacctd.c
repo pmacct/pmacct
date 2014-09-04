@@ -934,8 +934,10 @@ int main(int argc,char **argv, char **envp)
 	process_SFv2v4_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
 	break;
       default:
-	notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
-	xflow_tot_bad_datagrams++;
+	if (!config.nfacctd_disable_checks) {
+	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
+	  xflow_tot_bad_datagrams++;
+	}
 	break;
       }
     }
@@ -1057,8 +1059,10 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     pptrs->seqno = getData32(spp);
     break;
   default:
-    notify_malf_packet(LOG_INFO, "INFO: Discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
-    xflow_tot_bad_datagrams++;
+    if (!config.nfacctd_disable_checks) {
+      notify_malf_packet(LOG_INFO, "INFO: Discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
+      xflow_tot_bad_datagrams++;
+    }
     return;
   }
 
