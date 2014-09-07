@@ -530,13 +530,25 @@ DESC:		defines the version of the SQL table. SQL table versioning was introduced
 		versioning is 'sql_optimize_clauses' which allows custom mix-and-match of primitives:
 		in such a case you have to build yourself custom SQL schemas and indexes. Check in the
 		'sql/' sub-tree the SQL table profiles which are supported by the pmacct version you are
-		currently using (default: 1)
+		currently using. It is always adviced to explicitely define a sql_table_version in
+		order to predict which primitive will be written to which column. All versioning rules
+		are captured in sql/README.[mysql|sqlite3|pgsql] documents. (default: 1)
 
 KEY:		sql_table_type 
-VALUES		[ bgp ]
-DESC:		optionally combined with "sql_table_version", defines one of the supported SQL table
-		profiles. Currently this directive has to be defined to select one of the default BGP
-		table profiles.
+VALUES		[ original | bgp ]
+DESC:		BGP-related primitives are divided in legacy and non-legacy. Legacy are src_as, dst_as;
+		non-legacy are all the rest. Up to "original" tables v5 src_as and dst_as were written
+		in the same field as src_host and dst_host. From "original" table v6 and if sql_table_type
+		"bgp" is selected, src_as and dst_as are written in their own field (as_src and as_dst
+		respectively). sql_table_type is by default set to "original" and is switched to "bgp"
+		automatically if any non-legacy primitive is in use, ie. peer_dst_ip, as_path, etc. This
+		directive allows to make the selection explicit and/or circumvent default behaviour.
+		Apart from src_as and dst_as, regular table versioning applies to all non-BGP related
+		fields, for example: a) if "sql_table_type: bgp" and "sql_table_version: 1" then the "tag"
+		field will be written in the "agent_id" column whereas; b) if "sql_table_type: bgp" and
+		"sql_table_version: 9" instead, then the "tag" field will be written in the "tag" column.
+		All versioning rules are captured in sql/README.[mysql|sqlite3|pgsql] documents.
+		(default: original).
 
 KEY:		sql_data
 VALUES:		[ typed | unified ]
@@ -998,9 +1010,10 @@ DESC:		defines one or more IPv4/IPv6 multicast groups to be joined by the daemon
 
 KEY:            [ nfacctd_disable_checks | sfacctd_disable_checks ] [GLOBAL, NO_PMACCTD]
 VALUES:         [ true | false ]
-DESC:           both nfacctd and sfacctd check health of incoming NetFlow/sFlow datagrams - actually this is
-		limited to just verifying sequence numbers progression. You may want to disable such feature
-		because of non-standard implementations. By default checks are enabled (default: false)
+DESC:           both nfacctd and sfacctd check health of incoming NetFlow/sFlow datagrams, ie. sequence
+		number checks, protocol version. You may want to disable such feature because of non-
+		standard implementations or multiple protocols (accidentally?) pointed to the same port.
+		By default checks are enabled (default: false)
 
 KEY:		pre_tag_map
 DESC:		full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering

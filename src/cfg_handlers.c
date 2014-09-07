@@ -856,6 +856,14 @@ int cfg_key_sql_table_type(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "bgp"));
+  else if (!strcmp(value_ptr, "original"));
+  else {
+    Log(LOG_WARNING, "WARN ( %s ): Invalid sql_table_type value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_table_type = value_ptr;
   else {
     for (; list; list = list->next) {
