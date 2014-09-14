@@ -407,6 +407,8 @@ struct pkt_primitives {
 #endif
   struct host_addr src_ip;
   struct host_addr dst_ip;
+  struct host_addr src_net;
+  struct host_addr dst_net;
   u_int8_t src_nmask;
   u_int8_t dst_nmask;
   as_t src_as;

@@ -586,6 +586,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"tunnel_0", cfg_key_tunnel_0},
   {"pkt_len_distrib_bins", cfg_key_pkt_len_distrib_bins},
+  {"tmp_net_own_field", cfg_key_tmp_net_own_field},
   {"", NULL},
 };
 

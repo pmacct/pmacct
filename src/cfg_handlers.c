@@ -4050,3 +4050,25 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_frame_max(char *filename, char *name, ch
   
   return changes;
 }
+
+int cfg_key_tmp_net_own_field(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tmp_net_own_field = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tmp_net_own_field = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
