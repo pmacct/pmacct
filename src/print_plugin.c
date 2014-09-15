@@ -529,7 +529,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%-18s  ", empty_rd);
         }
   
-        if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
+        if (config.what_to_count & COUNT_SRC_HOST) {
           addr_to_str(src_host, &data->src_ip);
   #if defined ENABLE_IPV6
   	if (strlen(src_host))
@@ -543,7 +543,23 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%-15s  ", empty_ip4);
   #endif
         }
-        if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
+
+        if (config.what_to_count & COUNT_SRC_NET) {
+          addr_to_str(src_host, &data->src_net);
+  #if defined ENABLE_IPV6
+        if (strlen(src_host))
+            fprintf(f, "%-45s  ", src_host);
+        else
+            fprintf(f, "%-45s  ", empty_ip6);
+  #else
+        if (strlen(src_host))
+            fprintf(f, "%-15s  ", src_host);
+        else
+            fprintf(f, "%-15s  ", empty_ip4);
+  #endif
+        }
+
+        if (config.what_to_count & COUNT_DST_HOST) {
           addr_to_str(dst_host, &data->dst_ip);
   #if defined ENABLE_IPV6
   	if (strlen(dst_host))
@@ -557,6 +573,22 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%-15s  ", empty_ip4);
   #endif
         }
+
+        if (config.what_to_count & COUNT_DST_NET) {
+          addr_to_str(dst_host, &data->dst_net);
+  #if defined ENABLE_IPV6
+        if (strlen(dst_host))
+            fprintf(f, "%-45s  ", dst_host);
+        else
+            fprintf(f, "%-45s  ", empty_ip6);
+  #else
+        if (strlen(dst_host))
+            fprintf(f, "%-15s  ", dst_host);
+        else
+            fprintf(f, "%-15s  ", empty_ip4);
+  #endif
+        }
+
         if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%-3u       ", data->src_nmask);
         if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%-3u       ", data->dst_nmask);
         if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%-5u     ", data->src_port);
@@ -807,12 +839,21 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%s%s", write_sep(sep, &count), rd_str);
         }
   
-        if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
+        if (config.what_to_count & COUNT_SRC_HOST) {
           addr_to_str(src_host, &data->src_ip);
           fprintf(f, "%s%s", write_sep(sep, &count), src_host);
         }
-        if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
+        if (config.what_to_count & COUNT_SRC_NET) {
+          addr_to_str(src_host, &data->src_net);
+          fprintf(f, "%s%s", write_sep(sep, &count), src_host);
+        }
+
+        if (config.what_to_count & COUNT_DST_HOST) {
           addr_to_str(dst_host, &data->dst_ip);
+          fprintf(f, "%s%s", write_sep(sep, &count), dst_host);
+        }
+        if (config.what_to_count & COUNT_DST_NET) {
+          addr_to_str(dst_host, &data->dst_net);
           fprintf(f, "%s%s", write_sep(sep, &count), dst_host);
         }
   
@@ -971,13 +1012,28 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE    ");
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE   ");
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD         ");
+  if (!config.tmp_net_own_field) {
 #if defined ENABLE_IPV6
-  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP                                         ");
-  if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP                                         ");
+    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP                                         ");
+    if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP                                         ");
 #else
-  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP           ");
-  if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP           ");
+    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP           ");
+    if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP           ");
 #endif
+  } 
+  else {
+#if defined ENABLE_IPV6
+    if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP                                         ");
+    if (config.what_to_count & COUNT_SRC_NET) fprintf(f, "SRC_NET                                        ");
+    if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP                                         ");
+    if (config.what_to_count & COUNT_DST_NET) fprintf(f, "DST_NET                                        ");
+#else
+    if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP           ");
+    if (config.what_to_count & COUNT_SRC_NET) fprintf(f, "SRC_NET          ");
+    if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP           ");
+    if (config.what_to_count & COUNT_DST_NET) fprintf(f, "DST_NET          ");
+#endif
+  }
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK  ");
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK  ");
   if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "SRC_PORT  ");
@@ -1065,8 +1121,16 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "%sIN_IFACE", write_sep(sep, &count));
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "%sOUT_IFACE", write_sep(sep, &count));
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "%sMPLS_VPN_RD", write_sep(sep, &count));
-  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
-  if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "%sDST_IP", write_sep(sep, &count));
+  if (!config.tmp_net_own_field) {
+    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
+    if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "%sDST_IP", write_sep(sep, &count));
+  }
+  else {
+    if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
+    if (config.what_to_count & COUNT_SRC_NET) fprintf(f, "%sSRC_NET", write_sep(sep, &count));
+    if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "%sDST_IP", write_sep(sep, &count));
+    if (config.what_to_count & COUNT_DST_NET) fprintf(f, "%sDST_NET", write_sep(sep, &count));
+  }
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%sSRC_MASK", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%sDST_MASK", write_sep(sep, &count));
   if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%sSRC_PORT", write_sep(sep, &count));

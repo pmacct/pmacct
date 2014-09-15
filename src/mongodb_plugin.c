@@ -523,13 +523,50 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         bson_append_string(bson_elem, "mpls_vpn_rd", rd_str);
       }
   
-      if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
-        addr_to_str(src_host, &data->src_ip);
-        bson_append_string(bson_elem, "ip_src", src_host);
+      if (!config.tmp_net_own_field) {
+        if (config.what_to_count & COUNT_SRC_HOST) {
+          addr_to_str(src_host, &data->src_ip);
+          bson_append_string(bson_elem, "ip_src", src_host);
+        }
+
+        if (config.what_to_count & COUNT_SRC_NET) {
+          addr_to_str(src_host, &data->src_net);
+          bson_append_string(bson_elem, "ip_src", src_host);
+        }
       }
-      if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
-        addr_to_str(dst_host, &data->dst_ip);
-        bson_append_string(bson_elem, "ip_dst", dst_host);
+      else {
+        if (config.what_to_count & COUNT_SRC_HOST) {
+          addr_to_str(src_host, &data->src_ip);
+          bson_append_string(bson_elem, "ip_src", src_host);
+        }
+
+        if (config.what_to_count & COUNT_SRC_NET) {
+          addr_to_str(src_host, &data->src_net);
+          bson_append_string(bson_elem, "net_src", src_host);
+        }
+      }
+
+      if (!config.tmp_net_own_field) {
+        if (config.what_to_count & COUNT_DST_HOST) {
+          addr_to_str(dst_host, &data->dst_ip);
+          bson_append_string(bson_elem, "ip_dst", dst_host);
+        }
+
+        if (config.what_to_count & COUNT_DST_NET) {
+          addr_to_str(dst_host, &data->dst_net);
+          bson_append_string(bson_elem, "ip_dst", dst_host);
+        }
+      }
+      else {
+        if (config.what_to_count & COUNT_DST_HOST) {
+          addr_to_str(dst_host, &data->dst_ip);
+          bson_append_string(bson_elem, "ip_dst", dst_host);
+        }
+
+        if (config.what_to_count & COUNT_DST_NET) {
+          addr_to_str(dst_host, &data->dst_net);
+          bson_append_string(bson_elem, "net_dst", dst_host);
+        }
       }
   
       if (config.what_to_count & COUNT_SRC_NMASK) bson_append_int(bson_elem, "mask_src", data->src_nmask);

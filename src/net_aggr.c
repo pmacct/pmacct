@@ -751,12 +751,14 @@ void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
     addrh[0] = ntohl(p->src_ip.address.ipv4.s_addr);
     addrh[0] &= maskbits[0];
     p->src_net.address.ipv4.s_addr = htonl(addrh[0]);
+    p->src_net.family = p->src_ip.family;
   }
 #if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->src_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
     memcpy(&p->src_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    p->src_net.family = p->src_ip.family;
   }
 #endif
 }
@@ -771,12 +773,14 @@ void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc
     addrh[0] = ntohl(p->src_ip.address.ipv4.s_addr);
     addrh[0] &= nt->maskbits[0]; 
     p->src_net.address.ipv4.s_addr = htonl(addrh[0]);
+    p->src_net.family = p->src_ip.family;
   }
 #if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->src_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j]; 
     memcpy(&p->src_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    p->src_net.family = p->src_ip.family;
   }
 #endif
 }
@@ -796,12 +800,14 @@ void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
     addrh[0] = ntohl(p->dst_ip.address.ipv4.s_addr);
     addrh[0] &= maskbits[0];
     p->dst_net.address.ipv4.s_addr = htonl(addrh[0]);
+    p->dst_net.family = p->dst_ip.family;
   }
 #if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->dst_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
     memcpy(&p->dst_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    p->dst_net.family = p->dst_ip.family;
   }
 #endif
 }
@@ -816,12 +822,14 @@ void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc
     addrh[0] = ntohl(p->dst_ip.address.ipv4.s_addr);
     addrh[0] &= nt->maskbits[0];
     p->dst_net.address.ipv4.s_addr = htonl(addrh[0]);
+    p->dst_net.family = p->dst_ip.family;
   }
 #if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->dst_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j];
     memcpy(&p->dst_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
+    p->dst_net.family = p->dst_ip.family;
   }
 #endif
 }
