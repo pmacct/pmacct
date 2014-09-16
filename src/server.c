@@ -473,8 +473,10 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_COS) d1->cos = s1->cos; 
   if (w & COUNT_ETHERTYPE) d1->etype = s1->etype; 
 #endif
-  if (w & (COUNT_SRC_HOST|COUNT_SRC_NET)) memcpy(&d1->src_ip, &s1->src_ip, sizeof(d1->src_ip));
-  if (w & (COUNT_DST_HOST|COUNT_DST_NET)) memcpy(&d1->dst_ip, &s1->dst_ip, sizeof(d1->dst_ip));
+  if (w & COUNT_SRC_HOST) memcpy(&d1->src_ip, &s1->src_ip, sizeof(d1->src_ip));
+  if (w & COUNT_DST_HOST) memcpy(&d1->dst_ip, &s1->dst_ip, sizeof(d1->dst_ip));
+  if (w & COUNT_SRC_NET) memcpy(&d1->src_net, &s1->src_net, sizeof(d1->src_net));
+  if (w & COUNT_DST_NET) memcpy(&d1->dst_net, &s1->dst_net, sizeof(d1->dst_net));
   if (w & COUNT_SRC_NMASK) d1->src_nmask = s1->src_nmask; 
   if (w & COUNT_DST_NMASK) d1->dst_nmask = s1->dst_nmask; 
   if (w & COUNT_SRC_AS) d1->src_as = s1->src_as; 

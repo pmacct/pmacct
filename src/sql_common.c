@@ -1098,13 +1098,23 @@ int sql_evaluate_primitives(int primitive)
 
     what_to_count |= COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_TCPFLAGS|COUNT_IP_PROTO|COUNT_CLASS|COUNT_VLAN|COUNT_IP_TOS;
 
-    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) what_to_count |= COUNT_SRC_HOST;
+    if (config.what_to_count & COUNT_SRC_HOST) what_to_count |= COUNT_SRC_HOST;
     else if (config.what_to_count & COUNT_SUM_HOST) what_to_count |= COUNT_SUM_HOST;
     else if (config.what_to_count & COUNT_SUM_NET) what_to_count |= COUNT_SUM_NET;
     else fakes |= FAKE_SRC_HOST;
 
-    if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) what_to_count |= COUNT_DST_HOST;
+    if (config.what_to_count & COUNT_SRC_NET) {
+      what_to_count |= COUNT_SRC_NET;
+      if (!config.tmp_net_own_field) what_to_count ^= FAKE_SRC_HOST;
+    }
+
+    if (config.what_to_count & COUNT_DST_HOST) what_to_count |= COUNT_DST_HOST;
     else fakes |= FAKE_DST_HOST;
+
+    if (config.what_to_count & COUNT_DST_NET) {
+      what_to_count |= COUNT_DST_NET;
+      if (!config.tmp_net_own_field) what_to_count ^= FAKE_DST_HOST;
+    }
 
     if (config.what_to_count & COUNT_AS_PATH) what_to_count |= COUNT_AS_PATH;
     else fakes |= FAKE_AS_PATH;
@@ -1310,7 +1320,7 @@ int sql_evaluate_primitives(int primitive)
   }
 #endif
 
-  if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET|COUNT_SUM_HOST|COUNT_SUM_NET)) {
+  if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
     int count_it = FALSE;
 
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
@@ -1344,7 +1354,56 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) {
+  if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
+    int count_it = FALSE;
+
+    if (!config.tmp_net_own_field) {
+      if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): IP host accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
+        exit_plugin(1);
+      }
+      else count_it = TRUE;
+    }
+    else count_it = TRUE;
+
+    if (count_it) {
+      if (primitive) {
+        strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+        strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+      }
+      if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
+        if (!config.tmp_net_own_field) {
+	  strncat(insert_clause, "ip_src", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+        }
+	else {
+	  strncat(insert_clause, "net_src", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "net_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	}
+        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
+        values[primitive].type = where[primitive].type = COUNT_INT_SRC_NET;
+        values[primitive].handler = where[primitive].handler = count_src_net_handler;
+        primitive++;
+      }
+      else {
+	if (!config.tmp_net_own_field) {
+          strncat(insert_clause, "ip_src", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "ip_src=\'%s\'", SPACELEFT(where[primitive].string));
+	}
+	else {
+          strncat(insert_clause, "net_src", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "net_src=\'%s\'", SPACELEFT(where[primitive].string));
+	}
+        strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+        values[primitive].type = where[primitive].type = COUNT_INT_SRC_NET;
+        values[primitive].handler = where[primitive].handler = count_src_net_handler;
+        primitive++;
+      }
+    }
+  }
+
+  if (what_to_count & COUNT_DST_HOST) {
     int count_it = FALSE;
 
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
@@ -1374,6 +1433,55 @@ int sql_evaluate_primitives(int primitive)
 	values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST;
 	values[primitive].handler = where[primitive].handler = count_dst_host_handler;
 	primitive++;
+      }
+    }
+  }
+
+  if (what_to_count & COUNT_DST_NET) {
+    int count_it = FALSE;
+
+    if (!config.tmp_net_own_field) {
+      if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): IP host accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
+        exit_plugin(1);
+      }
+      else count_it = TRUE;
+    }
+    else count_it = TRUE;
+
+    if (count_it) {
+      if (primitive) {
+        strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+        strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+      }
+      if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
+	if (!config.tmp_net_own_field) {
+          strncat(insert_clause, "ip_dst", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	}
+	else {
+          strncat(insert_clause, "net_dst", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "net_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	}
+        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
+        values[primitive].type = where[primitive].type = COUNT_INT_DST_NET;
+        values[primitive].handler = where[primitive].handler = count_dst_net_handler;
+        primitive++;
+      }
+      else {
+	if (!config.tmp_net_own_field) {
+          strncat(insert_clause, "ip_dst", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "ip_dst=\'%s\'", SPACELEFT(where[primitive].string));
+	}
+	else {
+          strncat(insert_clause, "net_dst", SPACELEFT(insert_clause));
+          strncat(where[primitive].string, "net_dst=\'%s\'", SPACELEFT(where[primitive].string));
+	}
+        strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+        values[primitive].type = where[primitive].type = COUNT_INT_DST_NET;
+        values[primitive].handler = where[primitive].handler = count_dst_net_handler;
+        primitive++;
       }
     }
   }

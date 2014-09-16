@@ -62,7 +62,7 @@ void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *,
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
 char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
-int want_ipproto_num;
+int want_ipproto_num, tmp_net_own_field;
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -100,6 +100,7 @@ void usage_client(char *prog)
   printf("  -O\tSet output < formatted | csv | json | event_formatted | event_csv > (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
+  printf("  -o\tPrint IP prefixes in a different field than IP addresses (temporary)\n");
   printf("  -V\tPrint version and exit\n");
   printf("\n");
   printf("  See QUICKSTART file in the distribution for examples\n");
@@ -283,15 +284,30 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP      ");
 #endif
     if (what_to_count & COUNT_MPLS_VPN_RD) printf("MPLS_VPN_RD         ");
+    if (!tmp_net_own_field) {
 #if defined ENABLE_IPV6
-    if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP                                         "); 
-    if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP                                         ");
-    if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("DST_IP                                         ");
+      if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP                                         "); 
+      if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP                                         ");
+      if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("DST_IP                                         ");
 #else
-    if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP           ");
-    if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP           ");
-    if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("DST_IP           ");
+      if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("SRC_IP           ");
+      if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("SRC_IP           ");
+      if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("DST_IP           ");
 #endif
+    }
+    else {
+#if defined ENABLE_IPV6
+      if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("SRC_IP                                         ");
+      if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("SRC_NET                                        ");
+      if (what_to_count & COUNT_DST_HOST) printf("DST_IP                                         ");
+      if (what_to_count & COUNT_DST_NET) printf("DST_NET                                        ");
+#else
+      if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("SRC_IP           ");
+      if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("SRC_NET          ");
+      if (what_to_count & COUNT_DST_HOST) printf("DST_IP           ");
+      if (what_to_count & COUNT_DST_NET) printf("DST_NET          ");
+#endif
+    }
     if (what_to_count & COUNT_SRC_NMASK) printf("SRC_MASK  ");
     if (what_to_count & COUNT_DST_NMASK) printf("DST_MASK  "); 
     if (what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) printf("SRC_PORT  ");
@@ -488,15 +504,17 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_PEER_DST_IP) printf("%sPEER_DST_IP", write_sep(sep, &count));
 #endif
     if (what_to_count & COUNT_MPLS_VPN_RD) printf("%sMPLS_VPN_RD", write_sep(sep, &count));
-#if defined ENABLE_IPV6
-    if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("%sSRC_IP", write_sep(sep, &count)); 
-    if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("%sSRC_IP", write_sep(sep, &count));
-    if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("%sDST_IP", write_sep(sep, &count));
-#else
-    if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("%sSRC_IP", write_sep(sep, &count));
-    if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("%sSRC_IP", write_sep(sep, &count));
-    if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("%sDST_IP", write_sep(sep, &count));
-#endif
+    if (!tmp_net_own_field) {
+      if (what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) printf("%sSRC_IP", write_sep(sep, &count));
+      if (what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) printf("%sSRC_IP", write_sep(sep, &count));
+      if (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) printf("%sDST_IP", write_sep(sep, &count));
+    }
+    else {
+      if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("%sSRC_IP", write_sep(sep, &count));
+      if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("%sSRC_NET", write_sep(sep, &count));
+      if (what_to_count & COUNT_DST_HOST) printf("%sDST_IP", write_sep(sep, &count));
+      if (what_to_count & COUNT_DST_NET) printf("%sDST_NET", write_sep(sep, &count));
+    }
     if (what_to_count & COUNT_SRC_NMASK) printf("%sSRC_MASK", write_sep(sep, &count));
     if (what_to_count & COUNT_DST_NMASK) printf("%sDST_MASK", write_sep(sep, &count)); 
     if (what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) printf("%sSRC_PORT", write_sep(sep, &count));
@@ -680,6 +698,7 @@ int main(int argc,char **argv)
   which_counter = FALSE;
   topN_counter = FALSE;
   topN_howmany = FALSE;
+  tmp_net_own_field = FALSE;
   sum_counters = FALSE;
   num_counters = FALSE;
   fetch_from_file = FALSE;
@@ -1032,6 +1051,9 @@ int main(int argc,char **argv)
       break;
     case 'a':
       want_all_fields = TRUE;
+      break;
+    case 'o':
+      tmp_net_own_field = TRUE;
       break;
     case 'r':
       q.type |= WANT_RESET;
@@ -1876,6 +1898,14 @@ int main(int argc,char **argv)
       }
     }
 
+    if ((what_to_count & COUNT_SRC_HOST) && (what_to_count & COUNT_SRC_NET) ||
+        (what_to_count & COUNT_DST_HOST) && (what_to_count & COUNT_DST_NET)) {
+      if (!tmp_net_own_field) {
+        printf("ERROR: src_host, src_net and dst_host, dst_net are mutually exclusive: set -o.\n");
+        exit(1);
+      }
+    }
+
     if (want_output & PRINT_OUTPUT_FORMATTED)
       write_stats_header_formatted(what_to_count, what_to_count_2, have_wtc, is_event);
     else if (want_output & PRINT_OUTPUT_CSV)
@@ -2172,8 +2202,7 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), rd_str);
 	}
 
-	if (!have_wtc || (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST|
-					   COUNT_SRC_NET|COUNT_SUM_NET))) {
+	if (!have_wtc || (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST))) {
 	  addr_to_str(ip_address, &acc_elem->primitives.src_ip);
 
 #if defined ENABLE_IPV6
@@ -2197,7 +2226,31 @@ int main(int argc,char **argv)
 #endif
 	}
 
-	if (!have_wtc || (what_to_count & (COUNT_DST_HOST|COUNT_DST_NET))) {
+        if (!have_wtc || (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET))) {
+          addr_to_str(ip_address, &acc_elem->primitives.src_net);
+
+#if defined ENABLE_IPV6
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#else
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#endif
+        }
+
+	if (!have_wtc || (what_to_count & COUNT_DST_HOST)) {
 	  addr_to_str(ip_address, &acc_elem->primitives.dst_ip);
 
 #if defined ENABLE_IPV6
@@ -2220,6 +2273,30 @@ int main(int argc,char **argv)
           }
 #endif
 	}
+
+        if (!have_wtc || (what_to_count & COUNT_DST_NET)) {
+          addr_to_str(ip_address, &acc_elem->primitives.dst_net);
+
+#if defined ENABLE_IPV6
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#else
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#endif
+        }
 
         if (!have_wtc || (what_to_count & COUNT_SRC_NMASK)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u       ", acc_elem->primitives.src_nmask);
@@ -3163,16 +3240,32 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_decref(kv);
   }
 
-  if (wtc & (COUNT_SRC_HOST|COUNT_SRC_NET)) {
+  if (wtc & COUNT_SRC_HOST) {
     addr_to_str(src_host, &pbase->src_ip);
     kv = json_pack("{ss}", "ip_src", src_host);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
-  if (wtc & (COUNT_DST_HOST|COUNT_DST_NET)) {
+  if (wtc & COUNT_SRC_NET) {
+    addr_to_str(src_host, &pbase->src_net);
+    if (!tmp_net_own_field) kv = json_pack("{ss}", "ip_src", src_host);
+    else kv = json_pack("{ss}", "net_src", src_host);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_DST_HOST) {
     addr_to_str(dst_host, &pbase->dst_ip);
     kv = json_pack("{ss}", "ip_dst", dst_host);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_DST_NET) {
+    addr_to_str(dst_host, &pbase->dst_net);
+    if (!tmp_net_own_field) kv = json_pack("{ss}", "ip_dst", dst_host);
+    else kv = json_pack("{ss}", "net_dst", dst_host);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }

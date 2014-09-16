@@ -1877,66 +1877,34 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
-  if (!config.tmp_net_own_field) { 
-    if (wtc & COUNT_SRC_HOST) {
-      addr_to_str(src_host, &pbase->src_ip);
-      kv = json_pack("{ss}", "ip_src", src_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-
-    if (wtc & COUNT_SRC_NET) {
-      addr_to_str(src_host, &pbase->src_net);
-      kv = json_pack("{ss}", "ip_src", src_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-  }
-  else {
-    if (wtc & COUNT_SRC_HOST) {
-      addr_to_str(src_host, &pbase->src_ip);
-      kv = json_pack("{ss}", "ip_src", src_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-
-    if (wtc & COUNT_SRC_NET) {
-      addr_to_str(src_host, &pbase->src_net);
-      kv = json_pack("{ss}", "net_src", src_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+  if (wtc & COUNT_SRC_HOST) {
+    addr_to_str(src_host, &pbase->src_ip);
+    kv = json_pack("{ss}", "ip_src", src_host);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
   }
 
-  if (!config.tmp_net_own_field) {
-    if (wtc & COUNT_DST_HOST) {
-      addr_to_str(dst_host, &pbase->dst_ip);
-      kv = json_pack("{ss}", "ip_dst", dst_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-
-    if (wtc & COUNT_DST_NET) {
-      addr_to_str(dst_host, &pbase->dst_net);
-      kv = json_pack("{ss}", "ip_dst", dst_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+  if (wtc & COUNT_SRC_NET) {
+    addr_to_str(src_host, &pbase->src_net);
+    if (!config.tmp_net_own_field) kv = json_pack("{ss}", "ip_src", src_host);
+    else kv = json_pack("{ss}", "net_src", src_host);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
   }
-  else {
-    if (wtc & COUNT_DST_HOST) {
-      addr_to_str(dst_host, &pbase->dst_ip);
-      kv = json_pack("{ss}", "ip_dst", dst_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
 
-    if (wtc & COUNT_DST_NET) {
-      addr_to_str(dst_host, &pbase->dst_net);
-      kv = json_pack("{ss}", "net_dst", dst_host);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+  if (wtc & COUNT_DST_HOST) {
+    addr_to_str(dst_host, &pbase->dst_ip);
+    kv = json_pack("{ss}", "ip_dst", dst_host);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc & COUNT_DST_NET) {
+    addr_to_str(dst_host, &pbase->dst_net);
+    if (!config.tmp_net_own_field) kv = json_pack("{ss}", "ip_dst", dst_host);
+    else kv = json_pack("{ss}", "net_dst", dst_host);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
   }
 
   if (wtc & COUNT_SRC_NMASK) {

@@ -1671,3 +1671,10 @@ DESC:		Defines a list of packet length distributions, comma-separated, which is 
 		exact, ie. "0-499,500-999,1000-1499,1500-9000". The maximum amount of bins that can be
 		defined is 255; packet lengths must be in the range 0-9000; if a length is part of more
 		than a single bin the latest definition wins. 
+
+KEY:		tmp_net_own_field
+VALUES:         [ true | false ]
+DESC:		Writes IP prefixes, src_net and dst_net primitives, to a own/distinct field than the
+		one used for IP addresses, src_host and dst_host primitives. This config directive is
+		meant for pmacct 1.5 only in order to save, default setting, backward compatibility.
+		With the next major release this feature will become default behaviour. (default: false) 
