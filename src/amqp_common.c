@@ -32,6 +32,7 @@ void p_amqp_init_host(struct p_amqp_host *amqp_host)
   if (amqp_host) {
     memset(amqp_host, 0, sizeof(struct p_amqp_host));
     amqp_host->frame_max = AMQP_DEFAULT_FRAME_SIZE;
+    amqp_host->heartbeat_interval = AMQP_DEFAULT_HEARTBEAT;
   }
 }
 
@@ -77,6 +78,13 @@ void p_amqp_set_frame_max(struct p_amqp_host *amqp_host, u_int32_t opt)
   }
 }
 
+void p_amqp_set_heartbeat_interval(struct p_amqp_host *amqp_host, u_int32_t opt)
+{
+  if (amqp_host) {
+    amqp_host->heartbeat_interval = opt;
+  }
+}
+
 void p_amqp_set_persistent_msg(struct p_amqp_host *amqp_host, int opt)
 {
   if (amqp_host) amqp_host->persistent_msg = opt;
@@ -118,7 +126,7 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
-  amqp_host->ret = amqp_login(amqp_host->conn, "/", 0, amqp_host->frame_max, 0, AMQP_SASL_METHOD_PLAIN, amqp_host->user, amqp_host->passwd);
+  amqp_host->ret = amqp_login(amqp_host->conn, "/", 0, amqp_host->frame_max, amqp_host->heartbeat_interval, AMQP_SASL_METHOD_PLAIN, amqp_host->user, amqp_host->passwd);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: login\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);

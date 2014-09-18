@@ -142,6 +142,7 @@ struct configuration {
   char *amqp_exchange_type;
   int amqp_persistent_msg;
   u_int32_t amqp_frame_max;
+  u_int32_t amqp_heartbeat_interval;
   int print_cache_entries;
   int print_markers;
   int print_output;
@@ -171,6 +172,7 @@ struct configuration {
   char *nfacctd_bgp_msglog_amqp_routing_key;
   int nfacctd_bgp_msglog_amqp_persistent_msg;
   u_int32_t nfacctd_bgp_msglog_amqp_frame_max;
+  u_int32_t nfacctd_bgp_msglog_amqp_heartbeat_interval;
   int nfacctd_bgp_msglog_amqp_retry;
   char *nfacctd_bgp_ip;
   int nfacctd_bgp_port;
@@ -215,6 +217,7 @@ struct configuration {
   char *bgp_table_dump_amqp_routing_key;
   int bgp_table_dump_amqp_persistent_msg;
   u_int32_t bgp_table_dump_amqp_frame_max;
+  u_int32_t bgp_table_dump_amqp_heartbeat_interval;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;

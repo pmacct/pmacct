@@ -37,6 +37,7 @@ struct p_amqp_host {
   char *host;
   int persistent_msg;
   u_int32_t frame_max;
+  u_int32_t heartbeat_interval;
 
   amqp_connection_state_t conn;
   amqp_socket_t *socket;
@@ -62,6 +63,7 @@ EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
 EXT void p_amqp_set_host(struct p_amqp_host *, char *);
 EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
 EXT void p_amqp_set_frame_max(struct p_amqp_host *, u_int32_t);
+EXT void p_amqp_set_heartbeat_interval(struct p_amqp_host *, u_int32_t);
 EXT void p_amqp_set_last_fail(struct p_amqp_host *, time_t);
 
 EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
