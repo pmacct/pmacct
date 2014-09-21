@@ -70,7 +70,7 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
 - Aggregation primitives to SQL schema mapping:
   Aggregation primitive => SQL table field
   * tag => agent_id (BIGINT NOT NULL DEFAULT 0)
-    - tag => tag (BIGINT NOT NULL DEFAULT 0, if sql_table_version >= 9)
+    - or tag => tag (BIGINT NOT NULL DEFAULT 0, if sql_table_version >= 9)
   * tag2 => tag2 (BIGINT NOT NULL DEFAULT 0, see README.tag2)
   * label => label (VARCHAR(255) NOT NULL DEFAULT ' ', see README.label)
   * src_as => as_src (BIGINT NOT NULL DEFAULT 0)
@@ -109,9 +109,9 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * src_host => ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * dst_host => ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * src_net => ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
-    - src_net => net_src (same definition, if tmp_net_own_field: true)
+    - or src_net => net_src (same definition, if tmp_net_own_field: true)
   * dst_net => ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
-    - dst_net => net_dst (same definition, if tmp_net_own_field: true)
+    - or dst_net => net_dst (same definition, if tmp_net_own_field: true)
   * src_port => port_src (INT NOT NULL DEFAULT 0)
   * dst_port => port_dst (INT NOT NULL DEFAULT 0)
   * tcpflags => tcp_flags (SMALLINT NOT NULL DEFAULT 0)

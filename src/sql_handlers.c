@@ -711,3 +711,158 @@ void fake_as_path_handler(const struct db_cache *cache_elem, struct insert_data 
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
+
+void count_src_host_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " "; 
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->primitives.src_ip);
+  if (cache_elem->primitives.src_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->primitives.src_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+  
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_dst_host_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->primitives.dst_ip);
+  if (cache_elem->primitives.dst_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->primitives.dst_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_src_net_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->primitives.src_net);
+  if (cache_elem->primitives.src_net.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->primitives.src_net.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_dst_net_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->primitives.dst_net);
+  if (cache_elem->primitives.dst_net.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->primitives.dst_net.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_peer_src_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->cbgp->peer_src_ip);
+  if (cache_elem->cbgp->peer_src_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->cbgp->peer_src_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_peer_dst_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->cbgp->peer_dst_ip);
+  if (cache_elem->cbgp->peer_dst_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->cbgp->peer_dst_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_post_nat_src_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->pnat->post_nat_src_ip);
+  if (cache_elem->pnat->post_nat_src_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->pnat->post_nat_src_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_post_nat_dst_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->pnat->post_nat_dst_ip);
+  if (cache_elem->pnat->post_nat_dst_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->pnat->post_nat_dst_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void fake_host_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON";
+
+  aton = aton_v4;
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, fake_host);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, fake_host);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}

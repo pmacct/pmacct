@@ -284,6 +284,16 @@ EXT void fake_comms_handler(const struct db_cache *, struct insert_data *, int, 
 EXT void fake_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void fake_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
+EXT void count_src_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_dst_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_src_net_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_dst_net_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_peer_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_peer_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_post_nat_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_post_nat_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void fake_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+
 #if defined WITH_GEOIP
 EXT void count_src_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_dst_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

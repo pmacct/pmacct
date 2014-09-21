@@ -1337,10 +1337,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
         strncat(insert_clause, "ip_src", SPACELEFT(insert_clause));
-        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-        strncat(where[primitive].string, "ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, "ip_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
         values[primitive].type = where[primitive].type = COUNT_INT_SRC_HOST;
-        values[primitive].handler = where[primitive].handler = count_src_host_handler;
+        values[primitive].handler = where[primitive].handler = count_src_host_aton_handler;
         primitive++;
       }
       else {
@@ -1375,15 +1375,15 @@ int sql_evaluate_primitives(int primitive)
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
         if (!config.tmp_net_own_field) {
 	  strncat(insert_clause, "ip_src", SPACELEFT(insert_clause));
-          strncat(where[primitive].string, "ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+          strncat(where[primitive].string, "ip_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
         }
 	else {
 	  strncat(insert_clause, "net_src", SPACELEFT(insert_clause));
-          strncat(where[primitive].string, "net_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+          strncat(where[primitive].string, "net_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	}
-        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
+        strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
         values[primitive].type = where[primitive].type = COUNT_INT_SRC_NET;
-        values[primitive].handler = where[primitive].handler = count_src_net_handler;
+        values[primitive].handler = where[primitive].handler = count_src_net_aton_handler;
         primitive++;
       }
       else {
@@ -1420,10 +1420,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
         strncat(insert_clause, "ip_dst", SPACELEFT(insert_clause));
-        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-        strncat(where[primitive].string, "ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, "ip_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
         values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST;
-        values[primitive].handler = where[primitive].handler = count_dst_host_handler;
+        values[primitive].handler = where[primitive].handler = count_dst_host_aton_handler;
         primitive++;
       }
       else {
@@ -1458,15 +1458,15 @@ int sql_evaluate_primitives(int primitive)
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
 	if (!config.tmp_net_own_field) {
           strncat(insert_clause, "ip_dst", SPACELEFT(insert_clause));
-          strncat(where[primitive].string, "ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+          strncat(where[primitive].string, "ip_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	}
 	else {
           strncat(insert_clause, "net_dst", SPACELEFT(insert_clause));
-          strncat(where[primitive].string, "net_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+          strncat(where[primitive].string, "net_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	}
-        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
+        strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
         values[primitive].type = where[primitive].type = COUNT_INT_DST_NET;
-        values[primitive].handler = where[primitive].handler = count_dst_net_handler;
+        values[primitive].handler = where[primitive].handler = count_dst_net_aton_handler;
         primitive++;
       }
       else {
@@ -1851,10 +1851,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
         strncat(insert_clause, "peer_ip_src", SPACELEFT(insert_clause));
-        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-        strncat(where[primitive].string, "peer_ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, "peer_ip_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
         values[primitive].type = where[primitive].type = COUNT_INT_PEER_SRC_IP;
-        values[primitive].handler = where[primitive].handler = count_peer_src_ip_handler;
+        values[primitive].handler = where[primitive].handler = count_peer_src_ip_aton_handler;
         primitive++;
       }
       else {
@@ -1885,10 +1885,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
         strncat(insert_clause, "peer_ip_dst", SPACELEFT(insert_clause));
-        strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-        strncat(where[primitive].string, "peer_ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, "peer_ip_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
         values[primitive].type = where[primitive].type = COUNT_INT_PEER_DST_IP;
-        values[primitive].handler = where[primitive].handler = count_peer_dst_ip_handler;
+        values[primitive].handler = where[primitive].handler = count_peer_dst_ip_aton_handler;
         primitive++;
       }
       else {
@@ -2125,10 +2125,10 @@ int sql_evaluate_primitives(int primitive)
     }
     if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
       strncat(insert_clause, "post_nat_ip_src", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-      strncat(where[primitive].string, "post_nat_ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, "post_nat_ip_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_INT_POST_NAT_SRC_HOST;
-      values[primitive].handler = where[primitive].handler = count_post_nat_src_ip_handler;
+      values[primitive].handler = where[primitive].handler = count_post_nat_src_ip_aton_handler;
       primitive++;
     }
     else {
@@ -2149,10 +2149,10 @@ int sql_evaluate_primitives(int primitive)
     }
     if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
       strncat(insert_clause, "post_nat_ip_dst", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-      strncat(where[primitive].string, "post_nat_ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, "post_nat_ip_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_INT_POST_NAT_DST_HOST;
-      values[primitive].handler = where[primitive].handler = count_post_nat_dst_ip_handler;
+      values[primitive].handler = where[primitive].handler = count_post_nat_dst_ip_aton_handler;
       primitive++;
     }
     else {
@@ -2537,10 +2537,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
 	strncat(insert_clause, "ip_src", SPACELEFT(insert_clause));
-	strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-	strncat(where[primitive].string, "ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+	strncat(where[primitive].string, "ip_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	values[primitive].type = where[primitive].type = FAKE_SRC_HOST;
-	values[primitive].handler = where[primitive].handler = fake_host_handler;
+	values[primitive].handler = where[primitive].handler = fake_host_aton_handler;
 	primitive++;
       }
       else {
@@ -2570,10 +2570,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
 	strncat(insert_clause, "ip_dst", SPACELEFT(insert_clause));
-	strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-	strncat(where[primitive].string, "ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+	strncat(where[primitive].string, "ip_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	values[primitive].type = where[primitive].type = FAKE_DST_HOST;
-	values[primitive].handler = where[primitive].handler = fake_host_handler;
+	values[primitive].handler = where[primitive].handler = fake_host_aton_handler;
 	primitive++;
       }
       else {
@@ -2737,10 +2737,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
 	strncat(insert_clause, "peer_ip_src", SPACELEFT(insert_clause));
-	strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-	strncat(where[primitive].string, "peer_ip_src=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+	strncat(where[primitive].string, "peer_ip_src=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	values[primitive].type = where[primitive].type = FAKE_PEER_SRC_IP;
-	values[primitive].handler = where[primitive].handler = fake_host_handler;
+	values[primitive].handler = where[primitive].handler = fake_host_aton_handler;
 	primitive++;
       }
       else {
@@ -2770,10 +2770,10 @@ int sql_evaluate_primitives(int primitive)
       }
       if ((!strcmp(config.type, "sqlite3") || !strcmp(config.type, "mysql")) && config.num_hosts) {
 	strncat(insert_clause, "peer_ip_dst", SPACELEFT(insert_clause));
-	strncat(values[primitive].string, "INET_ATON(\'%s\')", SPACELEFT(values[primitive].string));
-	strncat(where[primitive].string, "peer_ip_dst=INET_ATON(\'%s\')", SPACELEFT(where[primitive].string));
+	strncat(values[primitive].string, "%s(\'%s\')", SPACELEFT(values[primitive].string));
+	strncat(where[primitive].string, "peer_ip_dst=%s(\'%s\')", SPACELEFT(where[primitive].string));
 	values[primitive].type = where[primitive].type = FAKE_PEER_DST_IP;
-	values[primitive].handler = where[primitive].handler = fake_host_handler;
+	values[primitive].handler = where[primitive].handler = fake_host_aton_handler;
 	primitive++;
       }
       else {

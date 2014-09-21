@@ -916,11 +916,11 @@ DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and prese
 KEY:            sql_num_hosts
 VALUES:         [ true | false ]
 DESC:           Defines whether IP addresses should be left numerical (in network bytes ordering) or converted
-		into human-readable strings. Applies to MySQL and SQLite plugins only and assumes the INET_NTOA()
-		function is defined in the RDBMS (which for MySQL is always the case, while for SQLite it is not
-		by default). Since INET_NTOA() is used, unless redefined to some custom-made variant, this feature
-		works for IPv4 addresses only. The feature is also not compatible with making use of IP prefix
-		labels. Default setting is to convert IP addresses into strings. (default: false)
+		into human-readable strings. Applies to MySQL and SQLite plugins only and assumes the INET_ATON()
+		and INET6_ATON() function are defined in the RDBMS. INET_ATON() is always defined in MySQL whereas
+		INET6_ATON() requires MySQL >= 5.6.3. Bothfunctions are not defined by default in SQLite instead.
+		The feature is not compatible with making use of IP prefix labels. Default setting is to convert
+		IP addresses and prefixes into strings. (default: false)
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD]
 DESC:		defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons
