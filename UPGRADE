@@ -8,6 +8,19 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.5.1
+FROM:	<= 1.5.0
+TOPIC:	Increased memory usage by plugin caches
+DESC:	Source and destination IP prefixes aggregaton primitives, src_net and
+	dst_net, now feature a separate field so to not be mutually exclusive
+	with aggregation over IP addresses, ie. src_host and dst_host. In 1.5
+	this can be optionally enabled by setting tmp_net_own_field to true;
+	in later releases this behaviour will become default. The extra fields
+	for IP prefixes do take additional memory in plugins cache - meaning 
+	values for pre-allocated cache enries, ie. print_cache_entries, if
+	configured to tight to available resources might generate SEGV and
+	have to be reviewed downward.
+
 TO:     >= 1.5.0
 FROM:   <= 1.5.0rc3
 TOPIC:  nfprobe plugin, NetFlow v9 export and flow timestamps

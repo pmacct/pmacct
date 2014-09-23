@@ -345,9 +345,9 @@ DESC:		Defines the maximum size, in bytes, of an AMQP frame on the wire to reque
 KEY:            [ amqp_heartbeat_interval | bgp_daemon_msglog_amqp_heartbeat_interval |
 		  bgp_table_dump_heartbeat_interval ]
 DESC:           Defines the heartbeat interval in order to detect general failures of the RabbitMQ server.
-                By default the heartbeat mechanism is disabled with a value of zero. According to RabbitMQ
-		C API, detection takes place only upon publishing a JSON message, ie. not at login or if
-		idle (default: 0).
+                The value is expected in seconds. By default the heartbeat mechanism is disabled with a
+		value of zero. According to RabbitMQ C API, detection takes place only upon publishing a
+		JSON message, ie. not at login or if idle (default: 0).
 
 KEY:		bgp_daemon_msglog_amqp_retry
 DESC:		Defines the interval of time, in seconds, after which a connection to the RabbitMQ server
