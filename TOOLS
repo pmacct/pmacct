@@ -2,8 +2,9 @@ TOOLS DESCRIPTION.
 
 All daemons can print statistics to stdout, keep in memory tables, store
 persistently to open-source RDBMS (MySQL, PostgreSQL, Sqlite 3) to noSQL
-databaes (BerkeleyDB, MongoDB) and to flat-files, and publish to message
-exchanges via AMQP. 
+databates (BerkeleyDB, MongoDB) and to flat-files, and publish to message
+exchanges via AMQP (popularly to insert in ElasticSearch, Cassandra and
+CouchDB). 
 
 pmacctd		libpcap-based accounting daemon: it captures packets from an
 		interface it is bound to. Other than acting as a collector,

@@ -40,7 +40,8 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 'mongodb': a working MongoDB installation can be used for data storage. It is
 	   required to install the MongoDB API C driver.
 'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
-	   for delivery to consumer applications or tools.
+	   for delivery to consumer applications or tools. Popular consumers
+	   are ElasticSearch, Cassandra and CouchDB.
 
 
 II. Configuring pmacct for compilation and installing
