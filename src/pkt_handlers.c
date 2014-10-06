@@ -4322,6 +4322,8 @@ void src_host_country_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   geoip_init();
+  pdata->primitives.src_ip_country = 0;
+
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
       pdata->primitives.src_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
@@ -4339,6 +4341,8 @@ void dst_host_country_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   geoip_init();
+  pdata->primitives.dst_ip_country = 0;
+
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
       pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
