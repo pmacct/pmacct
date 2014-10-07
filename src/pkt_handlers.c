@@ -4308,12 +4308,24 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
 #if defined WITH_GEOIP
 void geoip_init()
 {
-  if (config.geoip_ipv4_file && !config.geoip_ipv4) 
+  if (config.geoip_ipv4_file && !config.geoip_ipv4) { 
     config.geoip_ipv4 = GeoIP_open(config.geoip_ipv4_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
 
+    if (!config.geoip_ipv4 && !log_notification_isset(log_notifications.geoip_ipv4_file_null)) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): geoip_ipv4_file database can't be loaded.\n", config.name, config.type);
+      log_notification_set(&log_notifications.geoip_ipv4_file_null);
+    }
+  }
+
 #if defined ENABLE_IPV6
-  if (config.geoip_ipv6_file && !config.geoip_ipv6) 
+  if (config.geoip_ipv6_file && !config.geoip_ipv6) {
     config.geoip_ipv6 = GeoIP_open(config.geoip_ipv6_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
+
+    if (!config.geoip_ipv6 && !log_notification_isset(log_notifications.geoip_ipv6_file_null)) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): geoip_ipv6_file database can't be loaded.\n", config.name, config.type);
+      log_notification_set(&log_notifications.geoip_ipv6_file_null);
+    }
+  }
 #endif
 }
 
