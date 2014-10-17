@@ -31,6 +31,9 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "crc32.c"
+#ifdef WITH_JANSSON
+#include <jansson.h>
+#endif
 
 /* Functions */
 void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -69,6 +72,10 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (!config.sql_user) config.sql_user = rabbitmq_user;
   if (!config.sql_passwd) config.sql_passwd = rabbitmq_pwd;
+  if (strchr(config.sql_table, '$') && config.sql_multi_values) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'amqp_routing_key' is not compatible with 'amqp_multi_values'. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
 
   p_amqp_init_host(&amqpp_amqp_host);
   p_amqp_set_user(&amqpp_amqp_host, config.sql_user);
@@ -246,6 +253,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   time_t start, duration;
   pid_t writer_pid = getpid();
 
+#ifdef WITH_JANSSON
+  json_t *array = json_array();
+#endif
+
   /* setting some defaults */
   if (!config.sql_host) config.sql_host = default_amqp_host;
   if (!config.sql_db) config.sql_db = default_amqp_exchange;
@@ -314,6 +325,29 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
 			 &queue[j]->basetime);
 
+#ifdef WITH_JANSSON
+    if (json_str && config.sql_multi_values) {
+      json_t *elem;
+      char *tmp_str = json_str;
+      int do_free = FALSE;
+
+      if (json_array_size(array) >= config.sql_multi_values) {
+	json_str = json_dumps(array, 0);
+	json_array_clear(array);
+      }
+      else do_free = TRUE;
+
+      elem = json_loads(json_str, 0, NULL);
+      json_array_append(array, elem);
+      json_decref(elem);
+
+      if (do_free) {
+        free(json_str);
+        json_str = NULL;
+      }
+    }
+#endif
+
     if (json_str) {
       if (is_routing_key_dyn) {
 	amqp_handle_routing_key_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
@@ -327,6 +361,23 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       else break;
     }
   }
+
+#ifdef WITH_JANSSON
+  if (config.sql_multi_values && json_array_size(array)) {
+    char *json_str;
+
+    json_str = json_dumps(array, 0);
+    json_array_clear(array);
+
+    if (json_str) {
+      /* no handling of dyn routing keys here: not compatible */
+      ret = p_amqp_publish(&amqpp_amqp_host, json_str);
+      free(json_str);
+
+      if (!ret) qn++;
+    }
+  }
+#endif
 
   p_amqp_close(&amqpp_amqp_host, FALSE);
 

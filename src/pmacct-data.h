@@ -422,6 +422,7 @@ static const struct _dictionary_line dictionary[] = {
   {"amqp_preprocess_type", cfg_key_sql_preprocess_type},
   {"amqp_startup_delay", cfg_key_sql_startup_delay},
   {"amqp_heartbeat_interval", cfg_key_amqp_heartbeat_interval},
+  {"amqp_multi_values", cfg_key_sql_multi_values},
   {"nfacctd_proc_name", cfg_key_proc_name},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
