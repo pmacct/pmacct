@@ -72,7 +72,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (!config.sql_user) config.sql_user = rabbitmq_user;
   if (!config.sql_passwd) config.sql_passwd = rabbitmq_pwd;
-  if (strchr(config.sql_table, '$') && config.sql_multi_values) {
+  if ((config.sql_table && strchr(config.sql_table, '$')) && config.sql_multi_values) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'amqp_routing_key' is not compatible with 'amqp_multi_values'. Exiting.\n", config.name, config.type);
     exit_plugin(1);
   }
@@ -327,7 +327,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_JANSSON
     if (json_str && config.sql_multi_values) {
-      json_t *elem;
+      json_t *elem = NULL;
       char *tmp_str = json_str;
       int do_free = FALSE;
 
@@ -337,9 +337,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       }
       else do_free = TRUE;
 
-      elem = json_loads(json_str, 0, NULL);
-      json_array_append(array, elem);
-      json_decref(elem);
+      elem = json_loads(tmp_str, 0, NULL);
+      json_array_append_new(array, elem);
 
       if (do_free) {
         free(json_str);
@@ -356,6 +355,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
       ret = p_amqp_publish(&amqpp_amqp_host, json_str);
       free(json_str);
+      json_str = NULL;
 
       if (!ret) qn++;
       else break;
@@ -368,11 +368,13 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
     json_str = json_dumps(array, 0);
     json_array_clear(array);
+    json_decref(array);
 
     if (json_str) {
       /* no handling of dyn routing keys here: not compatible */
       ret = p_amqp_publish(&amqpp_amqp_host, json_str);
       free(json_str);
+      json_str = NULL;
 
       if (!ret) qn++;
     }
