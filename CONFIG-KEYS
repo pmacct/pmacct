@@ -725,13 +725,14 @@ DESC:		If sql_use_copy is true, uses the supplied character as delimiter. This i
 		where the default delimiter is part of any of the supplied strings to be inserted into the
 		database. (default: ',')
 
-KEY:		sql_multi_values
-DESC:		enables the use of multi-values INSERT statements. The value of the directive is intended
-		to be the size (in bytes) of the multi-values buffer. The directive applies only to MySQL
-		and SQLite 3.x plugins. Inserting many rows at the same time is much faster (many times
-		faster in some cases) than using separate single-row INSERT statements. It's adviceable
-		to check the size of this pmacct buffer against the size of the corresponding MySQL buffer
-		(max_allowed_packet). (default: none) 
+KEY:		[ amqp_multi_values | sql_multi_values ]
+DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT statements. The value
+		of the directive is intended to be the size (in bytes) of the multi-values buffer. The directive
+		applies only to MySQL and SQLite 3.x plugins. Inserting many rows at the same time is much
+		faster (many times faster in some cases) than using separate single-row INSERT statements.
+		It's adviceable to check the size of this pmacct buffer against the size of the corresponding
+		MySQL buffer (max_allowed_packet). In AMQP plugin, amqp_multi_values enables similar feature:
+		the value is intended as the amount of elements to pack in each JSON array. (default: 0) 
 
 KEY:		[ sql_trigger_exec | print_trigger_exec | mongo_trigger_exec ]
 DESC:		defines the executable to be launched at fixed time intervals to post-process aggregates;

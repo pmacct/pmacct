@@ -255,6 +255,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_JANSSON
   json_t *array = json_array();
+  int mv_num = 0, mv_num_save = 0;
 #endif
 
   /* setting some defaults */
@@ -334,11 +335,14 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       if (json_array_size(array) >= config.sql_multi_values) {
 	json_str = json_dumps(array, 0);
 	json_array_clear(array);
+        mv_num_save = mv_num;
+        mv_num = 0;
       }
       else do_free = TRUE;
 
       elem = json_loads(tmp_str, 0, NULL);
       json_array_append_new(array, elem);
+      mv_num++;
 
       if (do_free) {
         free(json_str);
@@ -357,7 +361,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       free(json_str);
       json_str = NULL;
 
-      if (!ret) qn++;
+      if (!ret) {
+	if (!config.sql_multi_values) qn++;
+	else qn += mv_num_save;
+      }
       else break;
     }
   }
@@ -376,7 +383,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       free(json_str);
       json_str = NULL;
 
-      if (!ret) qn++;
+      if (!ret) qn += mv_num;
     }
   }
 #endif
