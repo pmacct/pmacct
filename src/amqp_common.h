@@ -35,6 +35,7 @@ struct p_amqp_host {
   char *exchange_type;
   char *routing_key;
   char *host;
+  char *vhost;
   int persistent_msg;
   u_int32_t frame_max;
   u_int32_t heartbeat_interval;
@@ -61,6 +62,7 @@ EXT void p_amqp_set_exchange(struct p_amqp_host *, char *);
 EXT void p_amqp_set_routing_key(struct p_amqp_host *, char *);
 EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
 EXT void p_amqp_set_host(struct p_amqp_host *, char *);
+EXT void p_amqp_set_vhost(struct p_amqp_host *, char *);
 EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
 EXT void p_amqp_set_frame_max(struct p_amqp_host *, u_int32_t);
 EXT void p_amqp_set_heartbeat_interval(struct p_amqp_host *, u_int32_t);
@@ -87,4 +89,5 @@ static char default_amqp_exchange[] = "pmacct";
 static char default_amqp_exchange_type[] = "direct";
 static char default_amqp_routing_key[] = "acct";
 static char default_amqp_host[] = "127.0.0.1";
+static char default_amqp_vhost[] = "/";
 #undef EXT

@@ -294,6 +294,9 @@ DESC:           enables logging to a file (bypassing syslog); expected value is 
 KEY:		[ amqp_host | bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host ]
 DESC:		defines the AMQP/RabbitMQ server IP (default: localhost).
 
+KEY:            [ amqp_vhost | bgp_daemon_msglog_amqp_vhost | bgp_table_dump_amqp_vhost ]
+DESC:           defines the AMQP/RabbitMQ server virtual host (default: "/").
+
 KEY:		[ amqp_user | bgp_daemon_msglog_amqp_user | bgp_table_dump_amqp_user ]
 DESC:		defines the username to use when connecting to the AMQP/RabbitMQ server (default: guest).
 

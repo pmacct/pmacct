@@ -1476,6 +1476,25 @@ int cfg_key_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.amqp_vhost = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.amqp_vhost = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_aggressive_classification(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3871,6 +3890,17 @@ int cfg_key_nfacctd_bgp_msglog_amqp_host(char *filename, char *name, char *value
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_msglog_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_vhost = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog_amqp_vhost'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_msglog_amqp_user(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3996,6 +4026,17 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_host(char *filename, char *name, char *v
 
   for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_amqp_host = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_amqp_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_table_dump_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_amqp_vhost = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_amqp_vhost'. Globalized.\n", filename);
 
   return changes;
 }

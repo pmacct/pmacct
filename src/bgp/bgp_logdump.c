@@ -576,12 +576,14 @@ void bgp_daemon_msglog_init_amqp_host()
   if (!config.nfacctd_bgp_msglog_amqp_exchange) config.nfacctd_bgp_msglog_amqp_exchange = default_amqp_exchange;
   if (!config.nfacctd_bgp_msglog_amqp_exchange_type) config.nfacctd_bgp_msglog_amqp_exchange_type = default_amqp_exchange_type;
   if (!config.nfacctd_bgp_msglog_amqp_host) config.nfacctd_bgp_msglog_amqp_host = default_amqp_host;
+  if (!config.nfacctd_bgp_msglog_amqp_vhost) config.nfacctd_bgp_msglog_amqp_vhost = default_amqp_vhost;
 
   p_amqp_set_user(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_user);
   p_amqp_set_passwd(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_passwd);
   p_amqp_set_exchange(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_exchange);
   p_amqp_set_exchange_type(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_exchange_type);
   p_amqp_set_host(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_host);
+  p_amqp_set_vhost(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_vhost);
   p_amqp_set_persistent_msg(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_persistent_msg);
   p_amqp_set_frame_max(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_frame_max);
   p_amqp_set_heartbeat_interval(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_heartbeat_interval);
@@ -602,12 +604,14 @@ void bgp_table_dump_init_amqp_host()
   if (!config.bgp_table_dump_amqp_exchange) config.bgp_table_dump_amqp_exchange = default_amqp_exchange;
   if (!config.bgp_table_dump_amqp_exchange_type) config.bgp_table_dump_amqp_exchange_type = default_amqp_exchange_type;
   if (!config.bgp_table_dump_amqp_host) config.bgp_table_dump_amqp_host = default_amqp_host;
+  if (!config.bgp_table_dump_amqp_vhost) config.bgp_table_dump_amqp_vhost = default_amqp_vhost;
 
   p_amqp_set_user(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_user);
   p_amqp_set_passwd(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_passwd);
   p_amqp_set_exchange(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange);
   p_amqp_set_exchange_type(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange_type);
   p_amqp_set_host(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_host);
+  p_amqp_set_vhost(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_vhost);
   p_amqp_set_persistent_msg(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_persistent_msg);
   p_amqp_set_frame_max(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_frame_max);
   p_amqp_set_heartbeat_interval(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_heartbeat_interval);

@@ -71,6 +71,11 @@ void p_amqp_set_host(struct p_amqp_host *amqp_host, char *host)
   if (amqp_host) amqp_host->host = host;
 }
 
+void p_amqp_set_vhost(struct p_amqp_host *amqp_host, char *vhost)
+{
+  if (amqp_host) amqp_host->vhost = vhost;
+}
+
 void p_amqp_set_frame_max(struct p_amqp_host *amqp_host, u_int32_t opt)
 {
   if (amqp_host) {
@@ -126,7 +131,7 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
-  amqp_host->ret = amqp_login(amqp_host->conn, "/", 0, amqp_host->frame_max, amqp_host->heartbeat_interval, AMQP_SASL_METHOD_PLAIN, amqp_host->user, amqp_host->passwd);
+  amqp_host->ret = amqp_login(amqp_host->conn, amqp_host->vhost, 0, amqp_host->frame_max, amqp_host->heartbeat_interval, AMQP_SASL_METHOD_PLAIN, amqp_host->user, amqp_host->passwd);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: login\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);

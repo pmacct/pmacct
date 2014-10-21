@@ -270,11 +270,13 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     }
   }
   if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.amqp_vhost) config.amqp_vhost = default_amqp_vhost;
 
   p_amqp_set_exchange(&amqpp_amqp_host, config.sql_db);
   p_amqp_set_routing_key(&amqpp_amqp_host, config.sql_table);
   p_amqp_set_exchange_type(&amqpp_amqp_host, config.amqp_exchange_type);
   p_amqp_set_host(&amqpp_amqp_host, config.sql_host);
+  p_amqp_set_vhost(&amqpp_amqp_host, config.amqp_vhost);
   p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
   p_amqp_set_frame_max(&amqpp_amqp_host, config.amqp_frame_max);
 
