@@ -67,6 +67,7 @@ struct chained_cache {
   u_int8_t valid;
   u_int8_t prep_valid;
   struct timeval basetime;
+  struct pkt_stitching *stitch;
   struct chained_cache *next;
 };
 

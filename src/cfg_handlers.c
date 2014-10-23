@@ -1700,6 +1700,28 @@ int cfg_key_nfacctd_pro_rating(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_stitching(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfacctd_stitching = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_stitching = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_account_options(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

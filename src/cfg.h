@@ -157,6 +157,7 @@ struct configuration {
   int nfacctd_time;
   int nfacctd_pro_rating;
   int nfacctd_account_options;
+  int nfacctd_stitching;
   u_int32_t nfacctd_as;
   u_int32_t nfacctd_net;
   u_int64_t nfacctd_pipe_size;

@@ -488,6 +488,11 @@ struct pkt_msg {
   u_int16_t pad;
 };
 
+struct pkt_stitching {
+  struct timeval timestamp_min;
+  struct timeval timestamp_max;
+};
+
 /* START: BGP section */
 #define MAX_BGP_STD_COMMS       96
 #define MAX_BGP_EXT_COMMS       96
