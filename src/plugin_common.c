@@ -90,6 +90,19 @@ void P_init_default_values()
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_PRINT);
 }
 
+void P_config_checks()
+{
+  if (config.nfacctd_pro_rating && config.nfacctd_stitching) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Pro-rating (ie. nfacctd_pro_rating) and stitching (ie. nfacctd_stitching) are mutual exclusive. Exiting.\n", config.name, config.type);
+    goto exit_lane;
+  }
+
+  return;
+
+exit_lane:
+  exit_plugin(1);
+}
+
 unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
 {
   struct pkt_data *pdata = prim_ptrs->data;
@@ -171,7 +184,7 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   return NULL;
 }
 
-void P_cache_insert(struct primitives_ptrs *prim_ptrs)
+void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
@@ -462,7 +475,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs)
     }
 
     /* try to insert again */
-    (*insert_func)(prim_ptrs);
+    (*insert_func)(prim_ptrs, idata);
   }
 }
 
@@ -635,53 +648,53 @@ struct chained_cache *P_cache_attach_new_node(struct chained_cache *elem)
   else return NULL; /* XXX */
 }
 
-void P_sum_host_insert(struct primitives_ptrs *prim_ptrs)
+void P_sum_host_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
   struct pkt_data *data = prim_ptrs->data;
   struct host_addr tmp;
 
   memcpy(&tmp, &data->primitives.dst_ip, HostAddrSz);
   memset(&data->primitives.dst_ip, 0, HostAddrSz);
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
   memcpy(&data->primitives.src_ip, &tmp, HostAddrSz);
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
 }
 
-void P_sum_port_insert(struct primitives_ptrs *prim_ptrs)
+void P_sum_port_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
   struct pkt_data *data = prim_ptrs->data;
   u_int16_t port;
 
   port = data->primitives.dst_port;
   data->primitives.dst_port = 0;
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
   data->primitives.src_port = port;
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
 }
 
-void P_sum_as_insert(struct primitives_ptrs *prim_ptrs)
+void P_sum_as_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
   struct pkt_data *data = prim_ptrs->data;
   as_t asn;
 
   asn = data->primitives.dst_as;
   data->primitives.dst_as = 0;
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
   data->primitives.src_as = asn;
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
 }
 
 #if defined (HAVE_L2)
-void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs)
+void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
 {
   struct pkt_data *data = prim_ptrs->data;
   u_char macaddr[ETH_ADDR_LEN];
 
   memcpy(macaddr, &data->primitives.eth_dhost, ETH_ADDR_LEN);
   memset(data->primitives.eth_dhost, 0, ETH_ADDR_LEN);
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
   memcpy(&data->primitives.eth_shost, macaddr, ETH_ADDR_LEN);
-  P_cache_insert(prim_ptrs);
+  P_cache_insert(prim_ptrs, idata);
 }
 #endif
 

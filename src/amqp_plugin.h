@@ -37,7 +37,7 @@ EXT void amqp_cache_purge(struct chained_cache *[], int);
 EXT void amqp_handle_routing_key_dyn_strings(char *, int, char *, struct chained_cache *);
 
 /* global vars */
-EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;

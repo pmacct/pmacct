@@ -83,16 +83,17 @@ struct chained_cache {
 #endif
 EXT void P_set_signals();
 EXT void P_init_default_values();
+EXT void P_config_checks();
 EXT struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
 EXT unsigned int P_cache_modulo(struct primitives_ptrs *);
-EXT void P_sum_host_insert(struct primitives_ptrs *);
-EXT void P_sum_port_insert(struct primitives_ptrs *);
-EXT void P_sum_as_insert(struct primitives_ptrs *);
+EXT void P_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
+EXT void P_sum_port_insert(struct primitives_ptrs *, struct insert_data *);
+EXT void P_sum_as_insert(struct primitives_ptrs *, struct insert_data *);
 #if defined (HAVE_L2)
-EXT void P_sum_mac_insert(struct primitives_ptrs *);
+EXT void P_sum_mac_insert(struct primitives_ptrs *, struct insert_data *);
 #endif
 EXT struct chained_cache *P_cache_search(struct primitives_ptrs *);
-EXT void P_cache_insert(struct primitives_ptrs *);
+EXT void P_cache_insert(struct primitives_ptrs *, struct insert_data *);
 EXT void P_cache_insert_pending(struct chained_cache *[], int, struct chained_cache *);
 EXT void P_cache_mark_flush(struct chained_cache *[], int, int);
 EXT void P_cache_flush(struct chained_cache *[], int);
@@ -102,7 +103,7 @@ EXT int P_trigger_exec(char *);
 EXT void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
 
 /* global vars */
-EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;

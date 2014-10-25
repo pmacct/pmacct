@@ -38,7 +38,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ports_table pt;
   unsigned char *pipebuf;
   struct pollfd pfd;
-  time_t t, now;
+  struct insert_data idata;
+  time_t t;
   int timeout, ret, num, is_event;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -62,6 +63,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   P_set_signals();
   P_init_default_values();
+  P_config_checks();
   pipebuf = (unsigned char *) Malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
 
@@ -100,6 +102,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
   }
 
+  memset(&idata, 0, sizeof(idata));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
 
@@ -107,10 +110,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pfd.events = POLLIN;
   setnonblocking(pipe_fd);
 
-  now = time(NULL);
+  idata.now = time(NULL);
 
   /* print_refresh time init: deadline */
-  refresh_deadline = now; 
+  refresh_deadline = idata.now; 
   P_init_refresh_deadline(&refresh_deadline);
 
   if (config.sql_history) {
@@ -118,7 +121,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     basetime_eval = P_eval_historical_acct;
     basetime_cmp = P_cmp_historical_acct;
 
-    (*basetime_init)(now);
+    (*basetime_init)(idata.now);
   }
 
   /* setting number of entries in _protocols structure */
@@ -145,7 +148,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
-    calc_refresh_timeout(refresh_deadline, now, &timeout);
+    calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
     ret = poll(&pfd, 1, timeout);
 
     if (ret <= 0) {
@@ -157,10 +160,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (ret < 0) goto poll_again;
     }
 
-    now = time(NULL);
+    idata.now = time(NULL);
 
     if (config.sql_history) {
-      while (now > (basetime.tv_sec + timeslot)) {
+      while (idata.now > (basetime.tv_sec + timeslot)) {
 	new_basetime.tv_sec = basetime.tv_sec;
         basetime.tv_sec += timeslot;
         if (config.sql_history == COUNT_MONTHLY)
@@ -209,7 +212,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       rg->ptr += bufsz;
 
       /* lazy refresh time handling */ 
-      if (now > refresh_deadline) P_cache_handle_flush_event(&pt);
+      if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
@@ -230,7 +233,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           evaluate_pkt_len_distrib(data);
 
         prim_ptrs.data = data;
-        (*insert_func)(&prim_ptrs);
+        (*insert_func)(&prim_ptrs, &idata);
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {

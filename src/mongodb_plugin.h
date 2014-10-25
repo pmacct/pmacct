@@ -45,7 +45,7 @@ EXT int MongoDB_get_database(char *, int, char *);
 EXT void MongoDB_append_label(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 
 /* global vars */
-EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
