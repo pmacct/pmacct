@@ -389,11 +389,35 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     cache_ptr->bytes_counter = data->pkt_len;
     cache_ptr->flow_type = data->flow_type;
     cache_ptr->tcp_flags = data->tcp_flags;
+
     if (config.what_to_count & COUNT_CLASS) {
       cache_ptr->bytes_counter += data->cst.ba;
       cache_ptr->packet_counter += data->cst.pa;
       cache_ptr->flow_counter += data->cst.fa;
     }
+
+    if (config.nfacctd_stitching) {
+      if (!cache_ptr->stitch) cache_ptr->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
+      if (cache_ptr->stitch) {
+	if (data->time_start.tv_sec) {
+	  memcpy(&cache_ptr->stitch->timestamp_min, &data->time_start, sizeof(struct timeval));
+	}
+	else {
+	  cache_ptr->stitch->timestamp_min.tv_sec = idata->now; 
+	  cache_ptr->stitch->timestamp_min.tv_usec = 0;
+	}
+
+	if (data->time_end.tv_sec) {
+	  memcpy(&cache_ptr->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
+	}
+	else {
+	  cache_ptr->stitch->timestamp_max.tv_sec = idata->now;
+	  cache_ptr->stitch->timestamp_max.tv_usec = 0;
+	}
+      }
+      else Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for flow stitching.\n", config.name, config.type);
+    }
+
     cache_ptr->valid = PRINT_CACHE_INUSE;
     cache_ptr->basetime.tv_sec = ibasetime.tv_sec;
     cache_ptr->basetime.tv_usec = ibasetime.tv_usec;
@@ -406,10 +430,23 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->bytes_counter += data->pkt_len;
       cache_ptr->flow_type = data->flow_type;
       cache_ptr->tcp_flags |= data->tcp_flags;
+
       if (config.what_to_count & COUNT_CLASS) {
         cache_ptr->bytes_counter += data->cst.ba;
         cache_ptr->packet_counter += data->cst.pa;
         cache_ptr->flow_counter += data->cst.fa;
+      }
+
+      if (config.nfacctd_stitching) {
+	if (cache_ptr->stitch) {
+	  if (data->time_end.tv_sec) {
+	    memcpy(&cache_ptr->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
+	  }
+	  else {
+	    cache_ptr->stitch->timestamp_max.tv_sec = idata->now;
+	    cache_ptr->stitch->timestamp_max.tv_usec = 0;
+	  }
+	}
       }
     }
     else {
