@@ -1632,7 +1632,8 @@ void version_daemon(char *header)
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
-		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime,
+		  struct pkt_stitching *stitch)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf = NULL, *label_ptr;
@@ -2047,6 +2048,18 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
+  if (config.nfacctd_stitching && stitch) {
+    compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_min, TRUE);
+    kv = json_pack("{ss}", "timestamp_min", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_max, TRUE);
+    kv = json_pack("{ss}", "timestamp_max", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   /* all custom primitives printed here */
   {
     int cp_idx;
@@ -2152,7 +2165,8 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
-		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime,
+		  struct pkt_stitching *stitch)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 

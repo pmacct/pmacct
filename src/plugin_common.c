@@ -417,6 +417,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       }
       else Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for flow stitching.\n", config.name, config.type);
     }
+    else assert(!cache_ptr->stitch);
 
     cache_ptr->valid = PRINT_CACHE_INUSE;
     cache_ptr->basetime.tv_sec = ibasetime.tv_sec;

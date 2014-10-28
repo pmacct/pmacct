@@ -683,6 +683,24 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%-30s ", buf2);
         }
 
+        if (config.nfacctd_stitching && queue[j]->stitch) {
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
+
+          time1 = queue[j]->stitch->timestamp_min.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_min.tv_usec);
+          fprintf(f, "%-30s ", buf2);
+
+          time1 = queue[j]->stitch->timestamp_max.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_max.tv_usec);
+          fprintf(f, "%-30s ", buf2);
+        }
+
         /* all custom primitives printed here */
         {
           int cp_idx;
@@ -898,27 +916,45 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-            char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-            time_t time1;
-            struct tm *time2;
-  
-            time1 = pnat->timestamp_start.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-            fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
+ 
+          time1 = pnat->timestamp_start.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
+          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
         }
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-            char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-            time_t time1;
-            struct tm *time2;
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
   
-            time1 = pnat->timestamp_end.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-            fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+          time1 = pnat->timestamp_end.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
+          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+        }
+
+        if (config.nfacctd_stitching && queue[j]->stitch) {
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
+
+          time1 = queue[j]->stitch->timestamp_min.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_min.tv_usec);
+          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+
+          time1 = queue[j]->stitch->timestamp_max.tv_sec;
+          time2 = localtime(&time1);
+          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_max.tv_usec);
+          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
         }
   
         /* all custom primitives printed here */
@@ -960,7 +996,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   
         json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
                            &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
-  			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL);
+  			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
+			 queue[j]->stitch);
   
         if (json_str) {
           fprintf(f, "%s\n", json_str);
@@ -1065,6 +1102,10 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "MPLS_STACK_DEPTH  ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
+  if (config.nfacctd_stitching) {
+    fprintf(f, "TIMESTAMP_MIN                  ");
+    fprintf(f, "TIMESTAMP_MAX                  "); 
+  }
 
   /* all custom primitives printed here */
   {
@@ -1157,6 +1198,10 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
+  if (config.nfacctd_stitching) {
+    fprintf(f, "%sTIMESTAMP_MIN", write_sep(sep, &count));
+    fprintf(f, "%sTIMESTAMP_MAX", write_sep(sep, &count));
+  }
 
   /* all custom primitives printed here */
   { 
