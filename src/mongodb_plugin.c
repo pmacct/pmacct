@@ -650,7 +650,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
         bdate_max = 1000*queue[j]->stitch->timestamp_max.tv_sec;
         if (queue[j]->stitch->timestamp_max.tv_usec) bdate_max += (queue[j]->stitch->timestamp_max.tv_usec/1000);
-        bson_append_date(bson_elem, "timestamp_min", bdate_max);
+        bson_append_date(bson_elem, "timestamp_max", bdate_max);
       }
   
       /* all custom primitives printed here */
