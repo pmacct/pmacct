@@ -70,6 +70,7 @@ Inline void RetireElem(struct db_cache *Cursor)
   if (Cursor->pmpls) free(Cursor->pmpls);
   if (Cursor->pcust) free(Cursor->pcust);
   if (Cursor->pvlen) free(Cursor->pvlen);
+  if (Cursor->stitch) free(Cursor->stitch);
 
   free(Cursor);
 }

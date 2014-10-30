@@ -133,6 +133,7 @@ struct db_cache {
   u_int8_t prep_valid;
   unsigned int signature;
   u_int8_t chained;
+  struct pkt_stitching *stitch;
   struct db_cache *prev;
   struct db_cache *next;
   time_t start_tag;	/* time: first packet received */
@@ -276,6 +277,12 @@ EXT void count_timestamp_start_residual_handler(const struct db_cache *, struct 
 EXT void count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_end_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void PG_copy_count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_timestamp_min_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void PG_copy_count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_timestamp_max_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_custom_primitives_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void fake_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void fake_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

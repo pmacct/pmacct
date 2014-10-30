@@ -131,6 +131,12 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * timestamp_end => timestamp_end, timestamp_end_residual:
     - timestamp_end timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_end_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * timestamp_min => timestamp_min, timestamp_min_residual:
+    - timestamp_min timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
+    - timestamp_min_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * timestamp_max => timestamp_max, timestamp_max_residual:
+    - timestamp_max timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
+    - timestamp_max_residual INT NOT NULL DEFAULT 0, see README.timestamp)
 
 - If not using COPY statements (sql_use_copy, sql_dont_try_update both enabled)
   'packets' and 'bytes' counters need to be defined as part of the SQL schema

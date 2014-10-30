@@ -138,6 +138,12 @@ Similarly, BGP tables:
   * timestamp_end => timestamp_end, timestamp_end_residual:
     - timestamp_end DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00', see README.timestamp)
     - timestamp_end_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * timestamp_min => timestamp_min, timestamp_min_residual:
+    - timestamp_min DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00', see README.timestamp)
+    - timestamp_min_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * timestamp_max => timestamp_max, timestamp_max_residual:
+    - timestamp_max DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00', see README.timestamp)
+    - timestamp_max_residual INT NOT NULL DEFAULT 0, see README.timestamp)
 
 - 'packets' and 'bytes' counters need to be defined as part of the SQL schema
   whenever traffic flows are being accounted for; they are not required, and 

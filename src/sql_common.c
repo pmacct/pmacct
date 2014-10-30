@@ -148,6 +148,17 @@ void sql_init_default_values(struct extra_primitives *extras)
     }
   }
 
+  if (config.nfacctd_stitching) {
+    if (config.nfacctd_pro_rating) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Pro-rating (ie. nfacctd_pro_rating) and stitching (ie. nfacctd_stitching) are mutual exclusive. Exiting.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+
+    if (!config.sql_dont_try_update) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): stitching (ie. nfacctd_stitching) behaviour is undefined when sql_dont_try_update is set to false.\n", config.name, config.type);
+    }
+  }
+
   qq_ptr = 0; 
   pqq_ptr = 0;
   qq_size = config.sql_cache_entries+(config.sql_refresh_time*REASONABLE_NUMBER);
@@ -444,6 +455,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
 	    if (SavedCursor.pmpls) free(SavedCursor.pmpls);
 	    if (SavedCursor.pcust) free(SavedCursor.pcust);
 	    if (SavedCursor.pvlen) free(SavedCursor.pvlen);
+	    if (SavedCursor.stitch) free(SavedCursor.stitch);
           }
           /* We found at least one Cursor->valid == SQL_CACHE_INUSE */
           else SwapChainedElems(PendingElem, Cursor);
@@ -850,12 +862,37 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->bytes_counter = data->pkt_len;
     Cursor->flow_type = data->flow_type;
     Cursor->tcp_flags = data->tcp_flags;
+
     if (config.what_to_count & COUNT_CLASS) {
       Cursor->bytes_counter += data->cst.ba;
       Cursor->packet_counter += data->cst.pa;
       Cursor->flows_counter += data->cst.fa;
       Cursor->tentatives = data->cst.tentatives;
     }
+
+    if (config.nfacctd_stitching) {
+      if (!Cursor->stitch) Cursor->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
+      if (Cursor->stitch) {
+        if (data->time_start.tv_sec) {
+          memcpy(&Cursor->stitch->timestamp_min, &data->time_start, sizeof(struct timeval));
+        }
+        else {
+          Cursor->stitch->timestamp_min.tv_sec = idata->now;
+          Cursor->stitch->timestamp_min.tv_usec = 0;
+        }
+
+        if (data->time_end.tv_sec) {
+          memcpy(&Cursor->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
+        }
+        else {
+          Cursor->stitch->timestamp_max.tv_sec = idata->now;
+          Cursor->stitch->timestamp_max.tv_usec = 0;
+        }
+      }
+      else Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for flow stitching.\n", config.name, config.type);
+    }
+    else assert(!Cursor->stitch);
+
     Cursor->valid = SQL_CACHE_INUSE;
     Cursor->basetime = basetime;
     Cursor->start_tag = idata->now;
@@ -875,12 +912,26 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->bytes_counter += data->pkt_len;
     Cursor->flow_type = data->flow_type;
     Cursor->tcp_flags |= data->tcp_flags;
+
     if (config.what_to_count & COUNT_CLASS) {
       Cursor->bytes_counter += data->cst.ba;
       Cursor->packet_counter += data->cst.pa;
       Cursor->flows_counter += data->cst.fa;
       Cursor->tentatives = data->cst.tentatives;
     }
+
+    if (config.nfacctd_stitching) {
+      if (Cursor->stitch) {
+        if (data->time_end.tv_sec) {
+          memcpy(&Cursor->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
+        }
+        else {
+          Cursor->stitch->timestamp_max.tv_sec = idata->now;
+          Cursor->stitch->timestamp_max.tv_usec = 0;
+        }
+      }
+    }
+
     insert_status = SQL_INSERT_PRO_RATING;
   }
 
@@ -2349,6 +2400,109 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_INT_TIMESTAMP_END;
       values[primitive].handler = where[primitive].handler = count_timestamp_end_residual_handler;
+      primitive++;
+    }
+  }
+
+  if (config.nfacctd_stitching) {
+    int use_copy=0;
+
+    /* timestamp_min */
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "timestamp_min", SPACELEFT(insert_clause));
+    if (config.sql_history_since_epoch) {
+      strncat(where[primitive].string, "timestamp_min=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    }
+    else {
+      if (!strcmp(config.type, "mysql")) {
+        strncat(where[primitive].string, "timestamp_min=FROM_UNIXTIME(%u)", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
+      }
+      else if (!strcmp(config.type, "pgsql")) {
+        if (config.sql_use_copy) {
+          strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+          use_copy = TRUE;
+        }
+        else {
+          strncat(where[primitive].string, "timestamp_min=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+        }
+      }
+      else if (!strcmp(config.type, "sqlite3")) {
+        strncat(where[primitive].string, "timestamp_min=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+      }
+    }
+    if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_min_handler;
+    else values[primitive].handler = where[primitive].handler = PG_copy_count_timestamp_min_handler;
+    values[primitive].type = where[primitive].type = FALSE;
+    primitive++;
+
+    if (!config.timestamps_secs) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+
+      strncat(insert_clause, "timestamp_min_residual", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "timestamp_min_residual=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = FALSE;
+      values[primitive].handler = where[primitive].handler = count_timestamp_min_residual_handler;
+      primitive++;
+    }
+
+    /* timestamp_max */
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "timestamp_max", SPACELEFT(insert_clause));
+    if (config.sql_history_since_epoch) {
+      strncat(where[primitive].string, "timestamp_max=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    }
+    else {
+      if (!strcmp(config.type, "mysql")) {
+        strncat(where[primitive].string, "timestamp_max=FROM_UNIXTIME(%u)", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
+      }
+      else if (!strcmp(config.type, "pgsql")) {
+        if (config.sql_use_copy) {
+          strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+          use_copy = TRUE;
+        }
+        else {
+          strncat(where[primitive].string, "timestamp_max=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+        }
+      }
+      else if (!strcmp(config.type, "sqlite3")) {
+        strncat(where[primitive].string, "timestamp_max=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+      }
+    }
+
+    if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_max_handler;
+    else values[primitive].handler = where[primitive].handler = PG_copy_count_timestamp_max_handler;
+    values[primitive].type = where[primitive].type = FALSE;
+    primitive++;
+
+    if (!config.timestamps_secs) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+
+      strncat(insert_clause, "timestamp_max_residual", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "timestamp_max_residual=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = FALSE;
+      values[primitive].handler = where[primitive].handler = count_timestamp_max_residual_handler;
       primitive++;
     }
   }

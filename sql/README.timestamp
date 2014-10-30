@@ -1,17 +1,20 @@
 This document doesn't replace documentation relevant to the database software you are
 using, ie. README.mysql, README.pgsql or README.sqlite3.
 
-The 'timestamp_start' and 'timestamp_end' fields.
-Such fields are being introduced to support logging of traffic and events via pmacct.
-Timestamps resolution is up to the msec level reason for which two additional fields
-are optionally introduced aswell 'timestamp_start_residual', 'timestamp_end_residual':
+The 'timestamp_start', 'timestamp_end', 'timestamp_min' and 'timestamp_max' fields.
+'timestamp_start' and 'timestamp_end' fields are being introduced to support logging
+of traffic and events via pmacct. 'timestamp_min' and 'timestamp_max' fields support
+stitching of flows (or samples if sfacctd or packets if pmacctd), for more info see
+nfacctd_stitching feature in CONFIG-KEYS. 
+
+Timestamps resolution is up to the msec level and for this reason time residual fields 
+are optionally introduced ie. 'timestamp_start_residual', 'timestamp_end_residual':
 this is because support for resolutions beyond the secs level is something not popular
 among the supported RDBMS, ie. only recent versions of MySQL >= 5.6.4 appear to support
-it, hence the choice to go for two separate fields. Timestamp resolution can be cut to
-secs level by setting timestamps_secs config directive to 'true': in this case the two
-fields timestamp_start_residual, timestamp_end_residual can be indeed omitted in the
-table schema. The guidelines below (typically in MySQL format) are to add all the
-described primitives to the SQL schema:
+it, hence the choice to go for two separate fields. Timestamp resolution can be cut
+to secs level by setting timestamps_secs config directive to 'true': in this case the
+residual fields can be omitted in the table schema. The guidelines below (typically
+n MySQL format) are to add all the described primitives to the SQL schema:
 
 * timestamp_start and timestamp_start_residual fields:
   - To declare the fields:
@@ -26,6 +29,9 @@ described primitives to the SQL schema:
     - "timestamp_end_residual INT UNSIGNED NOT NULL,"
   - To add them to the primary key:
     - "PRIMARY KEY (..., timestamp_end, timestamp_end_residual, ...)"
+
+This works similarly for 'timestamp_min', 'timestamp_min_residual', 'timestamp_max'
+and 'timestamp_max_residual'.
 
 The primitive is not declared as part of any default table version; yet will not fail
 version checks which are enabled when 'sql_optimize_clauses' feature is disabled.
