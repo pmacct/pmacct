@@ -28,12 +28,19 @@
 #define PM_AMQP_MIN_FRAME_SIZE	4096
 
 /* structures */
+struct p_amqp_rk_rr {
+  int min; /* unused */
+  int max;
+  int next;
+};
+
 struct p_amqp_host {
   char *user;
   char *passwd;
   char *exchange;
   char *exchange_type;
   char *routing_key;
+  struct p_amqp_rk_rr rk_rr;
   char *host;
   char *vhost;
   int persistent_msg;
@@ -56,10 +63,13 @@ struct p_amqp_host {
 #endif
 
 EXT void p_amqp_init_host(struct p_amqp_host *);
+EXT void p_amqp_init_routing_key_rr(struct p_amqp_host *);
+
 EXT void p_amqp_set_user(struct p_amqp_host *, char *);
 EXT void p_amqp_set_passwd(struct p_amqp_host *, char *);
 EXT void p_amqp_set_exchange(struct p_amqp_host *, char *);
 EXT void p_amqp_set_routing_key(struct p_amqp_host *, char *);
+EXT void p_amqp_set_routing_key_rr(struct p_amqp_host *, int);
 EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
 EXT void p_amqp_set_host(struct p_amqp_host *, char *);
 EXT void p_amqp_set_vhost(struct p_amqp_host *, char *);
@@ -77,6 +87,8 @@ EXT int p_amqp_connect(struct p_amqp_host *);
 EXT int p_amqp_publish(struct p_amqp_host *, char *);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
+
+EXT void p_amqp_handle_routing_key_dyn_rr(char *, int, char *, struct p_amqp_rk_rr *);
 
 /* global vars */
 EXT struct p_amqp_host amqpp_amqp_host;

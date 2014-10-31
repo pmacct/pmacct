@@ -74,8 +74,14 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (!config.sql_user) config.sql_user = rabbitmq_user;
   if (!config.sql_passwd) config.sql_passwd = rabbitmq_pwd;
+
   if ((config.sql_table && strchr(config.sql_table, '$')) && config.sql_multi_values) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'amqp_routing_key' is not compatible with 'amqp_multi_values'. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  if ((config.sql_table && strchr(config.sql_table, '$')) && config.amqp_routing_key_rr) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'amqp_routing_key' is not compatible with 'amqp_routing_key_rr'. Exiting.\n", config.name, config.type);
     exit_plugin(1);
   }
 
@@ -264,6 +270,9 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   /* setting some defaults */
   if (!config.sql_host) config.sql_host = default_amqp_host;
   if (!config.sql_db) config.sql_db = default_amqp_exchange;
+  if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.amqp_vhost) config.amqp_vhost = default_amqp_vhost;
+
   if (!config.sql_table) config.sql_table = default_amqp_routing_key;
   else {
     if (strchr(config.sql_table, '$')) {
@@ -272,8 +281,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       config.sql_table = dyn_amqp_routing_key;
     }
   }
-  if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
-  if (!config.amqp_vhost) config.amqp_vhost = default_amqp_vhost;
+  if (config.amqp_routing_key_rr) {
+    orig_amqp_routing_key = config.sql_table;
+    config.sql_table = dyn_amqp_routing_key;
+  }
 
   p_amqp_set_exchange(&amqpp_amqp_host, config.sql_db);
   p_amqp_set_routing_key(&amqpp_amqp_host, config.sql_table);
@@ -282,6 +293,9 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   p_amqp_set_vhost(&amqpp_amqp_host, config.amqp_vhost);
   p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
   p_amqp_set_frame_max(&amqpp_amqp_host, config.amqp_frame_max);
+
+  p_amqp_init_routing_key_rr(&amqpp_amqp_host);
+  p_amqp_set_routing_key_rr(&amqpp_amqp_host, config.amqp_routing_key_rr);
 
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
@@ -359,6 +373,11 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     if (json_str) {
       if (is_routing_key_dyn) {
 	amqp_handle_routing_key_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
+	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
+      }
+
+      if (config.amqp_routing_key_rr) {
+        p_amqp_handle_routing_key_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &amqpp_amqp_host.rk_rr);
 	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
       }
 

@@ -144,6 +144,7 @@ struct configuration {
   u_int32_t amqp_frame_max;
   u_int32_t amqp_heartbeat_interval;
   char *amqp_vhost;
+  int amqp_routing_key_rr;
   int print_cache_entries;
   int print_markers;
   int print_output;

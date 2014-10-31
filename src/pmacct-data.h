@@ -415,6 +415,7 @@ static const struct _dictionary_line dictionary[] = {
   {"amqp_exchange", cfg_key_sql_db},
   {"amqp_exchange_type", cfg_key_amqp_exchange_type},
   {"amqp_routing_key", cfg_key_sql_table},
+  {"amqp_routing_key_rr", cfg_key_amqp_routing_key_rr},
   {"amqp_persistent_msg", cfg_key_amqp_persistent_msg},
   {"amqp_frame_max", cfg_key_amqp_frame_max},
   {"amqp_cache_entries", cfg_key_print_cache_entries},

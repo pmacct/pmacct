@@ -47,5 +47,4 @@ EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit;
 EXT time_t refresh_deadline;
 
 EXT struct timeval sbasetime;
-EXT int dyn_table;
 #undef EXT
