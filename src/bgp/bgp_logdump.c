@@ -192,6 +192,11 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output)
 #ifdef WITH_RABBITMQ
     if (config.nfacctd_bgp_msglog_amqp_routing_key)
       p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+
+    if (config.nfacctd_bgp_msglog_amqp_routing_key_rr && !p_amqp_get_routing_key_rr(peer->log->amqp_host)) {
+      p_amqp_init_routing_key_rr(peer->log->amqp_host);
+      p_amqp_set_routing_key_rr(peer->log->amqp_host, config.nfacctd_bgp_msglog_amqp_routing_key_rr);
+    }
 #endif
 
     if (output == PRINT_OUTPUT_JSON) {
@@ -357,6 +362,11 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output)
 #ifdef WITH_RABBITMQ
   if (config.bgp_table_dump_amqp_routing_key)
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+
+  if (config.bgp_table_dump_amqp_routing_key_rr && !p_amqp_get_routing_key_rr(peer->log->amqp_host)) {
+    p_amqp_init_routing_key_rr(peer->log->amqp_host);
+    p_amqp_set_routing_key_rr(peer->log->amqp_host, config.bgp_table_dump_amqp_routing_key_rr);
+  }
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {

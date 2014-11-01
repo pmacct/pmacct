@@ -2144,6 +2144,7 @@ void write_and_free_json(FILE *f, void *obj)
 #ifdef WITH_RABBITMQ
 int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
+  char *orig_amqp_routing_key = NULL, dyn_amqp_routing_key[SRVBUFLEN];
   struct p_amqp_host *alog = (struct p_amqp_host *) amqp_log;
   int ret;
 
@@ -2154,8 +2155,17 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
   json_decref(json_obj);
 
   if (tmpbuf) {
+
+    if (alog->rk_rr.max) {
+      orig_amqp_routing_key = p_amqp_get_routing_key(alog);
+      p_amqp_handle_routing_key_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &alog->rk_rr);
+      p_amqp_set_routing_key(alog, dyn_amqp_routing_key);
+    }
+
     ret = p_amqp_publish(alog, tmpbuf);
     free(tmpbuf);
+
+    if (alog->rk_rr.max) p_amqp_set_routing_key(alog, orig_amqp_routing_key);
   }
 
   return ret;

@@ -79,6 +79,8 @@ EXT void p_amqp_set_heartbeat_interval(struct p_amqp_host *, u_int32_t);
 EXT void p_amqp_set_last_fail(struct p_amqp_host *, time_t);
 
 EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
+EXT char *p_amqp_get_routing_key(struct p_amqp_host *);
+EXT int p_amqp_get_routing_key_rr(struct p_amqp_host *);
 
 EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
 EXT void p_amqp_unset_last_fail(struct p_amqp_host *);

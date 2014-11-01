@@ -4003,6 +4003,31 @@ int cfg_key_nfacctd_bgp_msglog_amqp_routing_key(char *filename, char *name, char
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_msglog_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bgp_daemon_msglog_amqp_routing_key_rr' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_routing_key_rr = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_bgp_msglog_amqp_routing_key_rr = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_msglog_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -4139,6 +4164,31 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key(char *filename, char *name, 
 
   for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_amqp_routing_key = value_ptr;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_table_dump_amqp_routing_key'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bgp_table_dump_amqp_routing_key_rr' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_amqp_routing_key_rr = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.bgp_table_dump_amqp_routing_key_rr = value;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }

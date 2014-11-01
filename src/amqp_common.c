@@ -61,6 +61,13 @@ void p_amqp_unset_routing_key(struct p_amqp_host *amqp_host)
   if (amqp_host) amqp_host->routing_key = NULL;
 }
 
+char *p_amqp_get_routing_key(struct p_amqp_host *amqp_host)
+{
+  if (amqp_host) return amqp_host->routing_key;
+
+  return NULL;
+}
+
 void p_amqp_init_routing_key_rr(struct p_amqp_host *amqp_host)
 {
   if (amqp_host) memset(&amqp_host->rk_rr, 0, sizeof(struct p_amqp_rk_rr));
@@ -69,6 +76,13 @@ void p_amqp_init_routing_key_rr(struct p_amqp_host *amqp_host)
 void p_amqp_set_routing_key_rr(struct p_amqp_host *amqp_host, int rk_rr)
 {
   if (amqp_host) amqp_host->rk_rr.max = rk_rr;
+}
+
+int p_amqp_get_routing_key_rr(struct p_amqp_host *amqp_host)
+{
+  if (amqp_host) return amqp_host->rk_rr.max;
+
+  return FALSE;
 }
 
 void p_amqp_set_exchange_type(struct p_amqp_host *amqp_host, char *exchange_type)

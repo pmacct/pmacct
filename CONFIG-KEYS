@@ -322,7 +322,7 @@ DESC:		Name of the AMQP routing key to attach to published data. Dynamic names a
 
 		(default: amqp_routing_key: acct)
 
-KEY:            amqp_routing_key_rr
+KEY:            [ amqp_routing_key_rr | bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_rr ]
 DESC:           Performs round-robin load-balancing over a set of routing keys. The base name for the
 		routing key is defined by amqp_routing_key. amqp_routing_key_rr accepts a positive int
 		value. If amqp_routing_key is set to 'blabla' and amqp_routing_key_rr to 3 then the AMQP
