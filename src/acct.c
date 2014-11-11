@@ -49,7 +49,7 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
-  if (pvlen) hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
+  // if (pvlen) hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
   pos = hash % config.buckets;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
@@ -160,7 +160,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
-  if (pvlen) hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
+  // if (pvlen) hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
   pos = hash % config.buckets;
       
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Selecting bucket %u.\n", config.name, config.type, pos);
