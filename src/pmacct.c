@@ -90,6 +90,7 @@ void usage_client(char *prog)
   printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth | label > \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
+  printf("  -i\tShow time (in seconds) since statistics were last cleared (ie. pmacct -e)\n");
   printf("  -r\tReset counters (applies to -N and -M)\n");
   printf("  -l\tPerform locking of the table\n");
   printf("  -t\tShow memory table status\n");
@@ -655,6 +656,7 @@ int main(int argc,char **argv)
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
   int want_output, want_pkt_len_distrib_table, want_custom_primitives_table;
+  int want_erase_last_tstamp;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   int topN_howmany, topN_printed;
   int datasize;
@@ -685,6 +687,7 @@ int main(int argc,char **argv)
   protocols_number = 0;
   want_stats = FALSE;
   want_erase = FALSE;
+  want_erase_last_tstamp = FALSE;
   want_status = FALSE;
   want_counter = FALSE;
   want_mrtg = FALSE;
@@ -995,6 +998,10 @@ int main(int argc,char **argv)
     case 'e':
       q.type |= WANT_ERASE; 
       want_erase = TRUE;
+      break;
+    case 'i':
+      q.type |= WANT_ERASE_LAST_TSTAMP;
+      want_erase_last_tstamp = TRUE;
       break;
     case 't':
       if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
@@ -2533,6 +2540,18 @@ int main(int argc,char **argv)
     if (want_output & PRINT_OUTPUT_FORMATTED) printf("\nFor a total of: %d entries\n", counter);
   }
   else if (want_erase) printf("OK: Clearing stats.\n");
+  else if (want_erase_last_tstamp) {
+    struct timeval cycle_stamp, table_reset_stamp;
+
+    gettimeofday(&cycle_stamp, NULL);
+    unpacked = Recv(sd, &largebuf);
+
+    if (unpacked == (sizeof(struct query_header) + sizeof(struct timeval))) {
+      memcpy(&table_reset_stamp, (largebuf + sizeof(struct query_header)), sizeof(struct timeval));
+      if (table_reset_stamp.tv_sec) printf("%u\n", cycle_stamp.tv_sec - table_reset_stamp.tv_sec);
+      else printf("never\n");
+    }
+  }
   else if (want_status) {
     unpacked = Recv(sd, &largebuf);
 

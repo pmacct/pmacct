@@ -440,6 +440,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
     if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
+  else if (q->type & WANT_ERASE_LAST_TSTAMP) {
+    enQueue_elem(sd, &rb, &table_reset_stamp, sizeof(table_reset_stamp), sizeof(table_reset_stamp));
+    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
+  }
 
   /* wait a bit due to setnonblocking() then send EOF */
   usleep(1000);

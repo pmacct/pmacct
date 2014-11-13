@@ -171,6 +171,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&empty_pmpls, 0, sizeof(empty_pmpls));
   memset(&empty_pvlen, 0, sizeof(empty_pvlen));
 
+  memset(&table_reset_stamp, 0, sizeof(table_reset_stamp));
+
   /* building a server for interrogations by clients */
   sd = build_query_server(config.imt_plugin_path);
   cLen = sizeof(cAddr);
