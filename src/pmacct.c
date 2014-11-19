@@ -736,6 +736,14 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_INT_DST_HOST;
 	  what_to_count |= COUNT_DST_HOST;
 	}
+        else if (!strcmp(count_token[count_index], "src_net")) {
+          count_token_int[count_index] = COUNT_INT_SRC_NET;
+          what_to_count |= COUNT_SRC_NET;
+        }  
+        else if (!strcmp(count_token[count_index], "dst_net")) {
+          count_token_int[count_index] = COUNT_INT_DST_NET;
+          what_to_count |= COUNT_DST_NET;
+	} 
         else if (!strcmp(count_token[count_index], "sum")) {
 	  count_token_int[count_index] = COUNT_INT_SUM_HOST;
 	  what_to_count |= COUNT_SUM_HOST;
@@ -1348,18 +1356,28 @@ int main(int argc,char **argv)
 	}
 
         if (!strcmp(count_token[match_string_index], "src_host") ||
-	    !strcmp(count_token[match_string_index], "src_net") ||
-	    !strcmp(count_token[match_string_index], "sum_host") ||
-	    !strcmp(count_token[match_string_index], "sum_net")) {
-	  if (!str_to_addr(match_string_token, &request.data.src_ip)) {
-	    printf("ERROR: src_host: Invalid IP address: '%s'\n", match_string_token);
-	    exit(1);
-	  }
+            !strcmp(count_token[match_string_index], "sum_host")) {
+          if (!str_to_addr(match_string_token, &request.data.src_ip)) {
+            printf("ERROR: src_host: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
         }
-        else if (!strcmp(count_token[match_string_index], "dst_host") ||
-		 !strcmp(count_token[match_string_index], "dst_net")) {
+        else if (!strcmp(count_token[match_string_index], "src_net") ||
+	    !strcmp(count_token[match_string_index], "sum_net")) {
+          if (!str_to_addr(match_string_token, &request.data.src_net)) {
+            printf("ERROR: src_host: Invalid IP network: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_host")) {
           if (!str_to_addr(match_string_token, &request.data.dst_ip)) {
             printf("ERROR: dst_host: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_net")) {
+          if (!str_to_addr(match_string_token, &request.data.dst_net)) {
+            printf("ERROR: dst_host: Invalid IP network: '%s'\n", match_string_token);
             exit(1);
           }
         }
