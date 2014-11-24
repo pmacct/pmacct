@@ -1535,6 +1535,29 @@ int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
   return changes;
 }
 
+int load_label_tags(char *filename, struct pretag_label_filter *filter, char *value_ptr)
+{
+  char *count_token, *value;
+  int changes = 0;
+  u_int8_t neg = 0;
+
+  if (!filter || !value_ptr) return changes;
+
+  filter->num = 0;
+
+  while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
+    // XXX: neg = pt_check_neg(&count_token, NULL);
+    value = count_token;
+
+    filter->table[filter->num].neg = neg;
+    filter->table[filter->num].v = value;
+    filter->num++;
+    changes++;
+  }
+
+  return changes;
+}
+
 /* return value:
    TRUE: We want it!
    FALSE: Discard it!

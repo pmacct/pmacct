@@ -348,6 +348,27 @@ int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pre_tag_label_filter(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) {
+    Log(LOG_ERR, "ERROR ( %s ): LABEL filter cannot be global. Not loaded.\n", filename);
+    changes++;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        changes = load_label_tags(filename, &list->cfg.ptlf, value_ptr);
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 
 int cfg_key_pcap_filter(char *filename, char *name, char *value_ptr)
 {

@@ -136,6 +136,7 @@ EXT int cfg_key_maps_row_len(char *, char *, char *);
 EXT int cfg_key_pre_tag_map(char *, char *, char *);
 EXT int cfg_key_pre_tag_filter(char *, char *, char *);
 EXT int cfg_key_pre_tag2_filter(char *, char *, char *);
+EXT int cfg_key_pre_tag_label_filter(char *, char *, char *);
 EXT int cfg_key_post_tag(char *, char *, char *);
 EXT int cfg_key_post_tag2(char *, char *, char *);
 EXT int cfg_key_sampling_rate(char *, char *, char *);

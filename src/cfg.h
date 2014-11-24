@@ -265,6 +265,7 @@ struct configuration {
   struct bpf_program *bpfp_a_table[AGG_FILTER_ENTRIES];
   struct pretag_filter ptf;
   struct pretag_filter pt2f;
+  struct pretag_label_filter ptlf;
   int maps_refresh;
   int maps_index;
   int maps_entries;

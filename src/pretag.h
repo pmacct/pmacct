@@ -128,6 +128,12 @@ typedef struct {
   pm_id_t r;
 } ptt_t;
 
+/* Pre-Tag label table (ptlt) element definition */
+typedef struct {
+  u_int8_t neg;
+  char *v;
+} ptlt_t;
+
 struct id_entry {
   pm_id_t id;
   pm_id_t id2;
@@ -222,6 +228,11 @@ struct _map_index_dictionary_line {
 struct pretag_filter {
   u_int16_t num;
   ptt_t table[MAX_PRETAG_MAP_ENTRIES/4];
+};
+
+struct pretag_label_filter {
+  u_int16_t num;
+  ptlt_t table[MAX_PRETAG_MAP_ENTRIES/4];
 };
 
 /* prototypes */
