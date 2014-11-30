@@ -83,6 +83,7 @@ struct channels_list_entry {
   pm_id_t tag2;						/* post-tagging tag2 */
   struct pretag_filter tag_filter; 			/* filter aggregates basing on their tag */
   struct pretag_filter tag2_filter; 			/* filter aggregates basing on their tag2 */
+  struct pretag_label_filter label_filter;		/* filter aggregates basing on their label */
   struct aggregate_filter agg_filter; 			/* filter aggregates basing on L2-L4 primitives */
   struct sampling s;
   struct plugins_list_entry *plugin;			/* backpointer to the plugin the actual channel belongs to */

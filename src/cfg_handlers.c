@@ -360,7 +360,7 @@ int cfg_key_pre_tag_label_filter(char *filename, char *name, char *value_ptr)
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        changes = load_label_tags(filename, &list->cfg.ptlf, value_ptr);
+        changes = load_labels(filename, &list->cfg.ptlf, value_ptr);
         break;
       }
     }

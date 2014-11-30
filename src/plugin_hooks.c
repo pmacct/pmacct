@@ -307,6 +307,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
     if (evaluate_filters(&channels_list[index].agg_filter, pptrs->packet_ptr, pptrs->pkthdr) &&
         !evaluate_tags(&channels_list[index].tag_filter, pptrs->tag) && 
         !evaluate_tags(&channels_list[index].tag2_filter, pptrs->tag2) && 
+        !evaluate_labels(&channels_list[index].label_filter, &pptrs->label) && 
 	!check_shadow_status(pptrs, &channels_list[index])) {
       /* arranging buffer: supported primitives + packet total length */
 reprocess:
@@ -440,6 +441,7 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       } 
       memcpy(&chptr->tag_filter, &cfg->ptf, sizeof(struct pretag_filter));
       memcpy(&chptr->tag2_filter, &cfg->pt2f, sizeof(struct pretag_filter));
+      memcpy(&chptr->label_filter, &cfg->ptlf, sizeof(struct pretag_label_filter));
       chptr->buf = 0;
       chptr->bufptr = chptr->buf;
       chptr->bufend = cfg->buffer_size-sizeof(struct ch_buf_hdr);

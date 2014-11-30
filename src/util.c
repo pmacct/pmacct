@@ -1535,7 +1535,7 @@ int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
   return changes;
 }
 
-int load_label_tags(char *filename, struct pretag_label_filter *filter, char *value_ptr)
+int load_labels(char *filename, struct pretag_label_filter *filter, char *value_ptr)
 {
   char *count_token, *value;
   int changes = 0;
@@ -1546,11 +1546,12 @@ int load_label_tags(char *filename, struct pretag_label_filter *filter, char *va
   filter->num = 0;
 
   while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
-    // XXX: neg = pt_check_neg(&count_token, NULL);
+    neg = pt_check_neg(&count_token, NULL);
     value = count_token;
 
     filter->table[filter->num].neg = neg;
     filter->table[filter->num].v = value;
+    filter->table[filter->num].len = strlen(value);
     filter->num++;
     changes++;
   }
@@ -1572,6 +1573,22 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
   for (index = 0; index < filter->num; index++) {
     if (filter->table[index].n <= tag && filter->table[index].r >= tag) return (FALSE | filter->table[index].neg);
     else if (filter->table[index].neg) return FALSE;
+  }
+
+  return TRUE;
+}
+
+int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
+{
+  int index;
+
+  if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
+
+  for (index = 0; index < filter->num; index++) {
+    if (filter->table[index].len == label->len && !memcmp(filter->table[index].v, label->val, label->len)) return (FALSE | filter->table[index].neg);
+    else {
+      if (filter->table[index].neg) return FALSE;
+    }
   }
 
   return TRUE;

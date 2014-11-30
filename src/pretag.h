@@ -131,6 +131,7 @@ typedef struct {
 /* Pre-Tag label table (ptlt) element definition */
 typedef struct {
   u_int8_t neg;
+  u_int32_t len;
   char *v;
 } ptlt_t;
 
