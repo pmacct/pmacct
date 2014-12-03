@@ -305,4 +305,9 @@ set_tag2=7 label=sevenseven
 set_label=blabla        ip=0.0.0.0/0    jeq=blabla2
 set_label=blabla2       ip=0.0.0.0/0    label=blabla2
 !
+!
+! pre_tag_label_filter[xxx]: -null
+! pre_tag_label_filter[yyy]: blabla
+! pre_tag_label_filter[zzz]: blabla, blabla2
+!
 ! ===

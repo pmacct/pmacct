@@ -1580,12 +1580,14 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
 
 int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 {
+  char null_label[] = "null";
   int index;
 
   if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
+  if (!label->val) label->val = null_label; 
 
   for (index = 0; index < filter->num; index++) {
-    if (filter->table[index].len == label->len && !memcmp(filter->table[index].v, label->val, label->len)) return (FALSE | filter->table[index].neg);
+    if (!memcmp(filter->table[index].v, label->val, filter->table[index].len)) return (FALSE | filter->table[index].neg);
     else {
       if (filter->table[index].neg) return FALSE;
     }
