@@ -1338,3 +1338,15 @@ by cpdump is serviced; 3) especially in case of copy/paste of configs or if
 using a config from a production system in lab, disable or double-check values
 for internal buffering: if set too high they will retain data internally to
 the daemon. 
+
+A NetFlow/sFlow packet capture in libpcap format suitable for replay can be
+produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
+port <sfacctd/nfacctd listening port>". The output file can be replayed in
+lab with tcpreplay. Before replaying, L2/L3 must be adjusted to reflect the
+lab environment; this can be done with the tcprewrite tool of the tcpreplay
+package, ie.: "tcprewrite --enet-smac=<src MAC address> --enet-dmac=<dst MAC
+address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
+--infile=<input file, ie. output from tcpdump> --outfile=<output file>". Then
+the output file from tcprewrite can be supplied to tcpreplay for the actual
+replay, ie.: "tcpreplay -i <output interface> -x <speed multiplicator> <input
+file>". 
