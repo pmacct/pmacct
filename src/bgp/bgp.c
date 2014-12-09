@@ -1446,7 +1446,10 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	  if (ri->extra && *path_id == ri->extra->path_id);
 	  else continue;
 	}
-	else continue;
+	else {
+	  if (!ri->extra || (ri->extra && !ri->extra->path_id));
+	  else continue;
+	}
       }
 
       break;
@@ -1574,7 +1577,10 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
           if (ri->extra && *path_id == ri->extra->path_id);
           else continue;
         }
-        else continue;
+        else {
+          if (!ri->extra || (ri->extra && !ri->extra->path_id));
+          else continue;
+        }
       }
 
       break;
