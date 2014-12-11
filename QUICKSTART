@@ -1318,7 +1318,7 @@ This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
 
-In case of crashes of an any process, regardless if predictable or not, the
+a) In case of crashes of an any process, regardless if predictable or not, the
 advice is to run the daemon with "ulimit -c unlimited" so to generate a core
 dump. The file is placed in the directory where the daemon is started so it
 is good to take care of that. The core file along with the crashing executable
@@ -1327,7 +1327,7 @@ inspection. Optionally, ie. if the issue can be easily reproduced, the daemon
 can be re-configured for compiling with the --debug flag so to produce extra
 info suitable for troubleshooting.
 
-If nfacctd or sfacctd is in use and the symptom is no output data, check: 1)
+b) If nfacctd or sfacctd is in use and the symptom is no output data, check: 1)
 with tcpdump, ie. "tcpdump -i <interface> -n port <sfacctd/nfacctd listening
 port>", that packets are arriving. Optionally wireshark/tshark can be used,
 in conjunction with decoders (cflow for NetFlow/IPFIX and sflow for sFlow) to
@@ -1339,8 +1339,8 @@ using a config from a production system in lab, disable or double-check values
 for internal buffering: if set too high they will retain data internally to
 the daemon. 
 
-A NetFlow/sFlow packet capture in libpcap format suitable for replay can be
-produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
+c) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
+be produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
 port <sfacctd/nfacctd listening port>". The output file can be replayed in
 lab with tcpreplay. Before replaying, L2/L3 must be adjusted to reflect the
 lab environment; this can be done with the tcprewrite tool of the tcpreplay
@@ -1350,3 +1350,14 @@ address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
 the output file from tcprewrite can be supplied to tcpreplay for the actual
 replay, ie.: "tcpreplay -i <output interface> -x <speed multiplicator> <input
 file>". 
+
+d) Buffering is often an element to tune. While buffering internal to pmacct, 
+plugin_buffer_size and plugin_buffer_size, return warning messages in case of
+data loss, buffering between pmacct and the kernel is more tricky (often it is
+outside control of the application), ie. nfacctd_pipe_size and equivalents. Two
+commands useful to check this kind of buffering on Linux systems are: 1) "cat
+/proc/net/udp" ensuring that "drops" value is not increasing and 2) "netstat
+-s" ensuring, under the section UDP, that errors are not increasing (since this
+command returns system-wide counters, counter-check is: stop the pmacct daemon
+running and, granted the counter was increasing, verify it does not increase
+anymore).

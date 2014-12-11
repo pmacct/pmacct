@@ -1367,6 +1367,8 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
     else if (tpl->tpl[NF9_OUT_VLAN].len)
       memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off, MIN(tpl->tpl[NF9_OUT_VLAN].len, 2));
+    else if (tpl->tpl[NF9_DOT1QVLANID].len)
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
 
     pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
     break;
@@ -1377,6 +1379,20 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
 void NF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_DOT1QPRIORITY].len)
+      memcpy(&pdata->primitives.cos, pptrs->f_data+tpl->tpl[NF9_DOT1QPRIORITY].off, MIN(tpl->tpl[NF9_DOT1QPRIORITY].len, 1));
+
+    break;
+  default:
+    break;
+  }
 }
 
 void NF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
