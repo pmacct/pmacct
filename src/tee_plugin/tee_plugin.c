@@ -289,7 +289,13 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
         i4h->ip_vhl = 4;
         i4h->ip_vhl <<= 4;
         i4h->ip_vhl |= (IP4HdrSz/4);
-        i4h->ip_tos = 0;
+
+	if (config.nfprobe_ipprec) {
+	  int opt = config.nfprobe_ipprec << 5;
+          i4h->ip_tos = opt;
+	}
+	else i4h->ip_tos = 0;
+
 #if !defined BSD
         i4h->ip_len = htons(IP4HdrSz+UDPHdrSz+msg->len);
 #else
@@ -406,6 +412,14 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
     if ((s = socket(addr->sa_family, SOCK_DGRAM, 0)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
       exit_plugin(1);
+    }
+
+    if (config.nfprobe_ipprec) {
+      int opt = config.nfprobe_ipprec << 5;
+      int rc;
+
+      rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+      if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
     }
 
     if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1)

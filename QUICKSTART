@@ -1057,6 +1057,7 @@ tee_receivers[b]: /path/to/tee_receivers_b.lst
 !
 plugin_buffer_size: 10240
 plugin_pipe_size: 1024000
+nfacctd_pipe_size: 1024000
 
 An example of content of a tee_receivers map, ie. /path/to/tee_receivers_a.lst,
 is as follows ('id' is the pool ID and 'ip' a comma-separated list of receivers
