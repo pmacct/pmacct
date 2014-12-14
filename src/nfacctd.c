@@ -2097,20 +2097,28 @@ u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_
 {
   u_int16_t ret = NF9_FTYPE_TRAFFIC;
 
-  if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
-      (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += NF9_FTYPE_VLAN; 
-  if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
+  /* first round: event vs traffic */
+  if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len /* && packets? */) {
+    ret = NF9_FTYPE_EVENT;
+  }
+  else {
+    if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
+        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += NF9_FTYPE_VLAN; 
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
 
-  /* Explicit IP protocol definition first; a bit of heuristics as fallback */
-  if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4);
-  else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) ret += NF9_FTYPE_TRAFFIC_IPV6;
-  else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
-  else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_TRAFFIC_IPV6;
+    /* Explicit IP protocol definition first; a bit of heuristics as fallback */
+    if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4);
+    else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) ret += NF9_FTYPE_TRAFFIC_IPV6;
+    else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
+    else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_TRAFFIC_IPV6;
+  }
+
+  /* second round: overrides */
 
   /* NetFlow Event Logging (NEL): generic NAT event support */
   if (tpl->tpl[NF9_NAT_EVENT].len) ret = NF9_FTYPE_NAT_EVENT;
 
-  /* NetFlow/IPFIX option */
+  /* NetFlow/IPFIX option final override */
   if (tpl->template_type == 1) ret = NF9_FTYPE_OPTION;
 
   return ret;
