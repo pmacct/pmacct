@@ -1442,7 +1442,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
         pdata->primitives.src_ip.family = AF_INET6;
       }
-      if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
+      else if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
 	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
         pdata->primitives.src_ip.family = AF_INET6;
       }
