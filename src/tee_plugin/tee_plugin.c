@@ -433,12 +433,26 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
       exit_plugin(1);
     }
 
+
 #if defined BSD
     setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl));
 #endif
   }
 
-  /* XXX: SNDBUF tuning? */
+  if (config.nfacctd_pipe_size) {
+    int l = sizeof(config.nfacctd_pipe_size);
+    u_int64_t saved = 0, obtained = 0;
+    
+    getsockopt(s, SOL_SOCKET, SO_SNDBUF, &saved, &l);
+    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.nfacctd_pipe_size, sizeof(config.nfacctd_pipe_size));
+    getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
+  
+    if (obtained < saved) {
+      Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &saved, l);
+      getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
+    }
+    Log(LOG_INFO, "INFO ( %s/%s ): nfacctd_pipe_size: obtained=%u target=%u.\n", config.name, config.type, obtained, config.nfacctd_pipe_size);
+  }
 
   if (connect(s, (struct sockaddr *)addr, len) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): connect() error: %s\n", config.name, config.type, strerror(errno));
