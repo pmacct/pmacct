@@ -307,6 +307,7 @@ struct configuration {
   int tee_max_receivers;
   int tee_max_receiver_pools;
   char *tee_receivers;
+  u_int64_t tee_pipe_size;
   int uacctd_group;
   int uacctd_nl_size;
   char *tunnel0;

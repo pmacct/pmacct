@@ -155,11 +155,11 @@ DESC:		plugins to be enabled. SQL plugins are available only if configured and c
 		Then, directives can be bound to such named plugin as: 'directive[name]: value'.
 		(default: memory) 
 
-KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size ]
-DESC:		Defines the size of the kernel socket to read and write (ie. tee plugin) traffic data.
-		On Linux systems, if this configuration directive is not specified default socket size
-		awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable
-		socket size is defined in /proc/sys/net/core/[rw]mem_max instead.
+KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size | tee_pipe_size ]
+DESC:		Defines the size of the kernel socket to read (ie. daemons) and write (ie. tee plugin)
+		traffic data. On Linux systems, if this configuration directive is not specified default
+		socket size awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum
+		configurable socket size is defined in /proc/sys/net/core/[rw]mem_max instead.
 
 KEY:            bgp_daemon_pipe_size
 DESC:           Defines the size of the kernel socket used for BGP messaging. On Linux systems, if

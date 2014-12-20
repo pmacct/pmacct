@@ -524,6 +524,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tee_max_receivers", cfg_key_tee_max_receivers},
   {"tee_max_receiver_pools", cfg_key_tee_max_receiver_pools},
   {"tee_ipprec", cfg_key_nfprobe_ip_precedence},
+  {"tee_pipe_size", cfg_key_tee_pipe_size},
   {"bgp_daemon", cfg_key_nfacctd_bgp},
   {"bgp_daemon_ip", cfg_key_nfacctd_bgp_ip},
   {"bgp_daemon_port", cfg_key_nfacctd_bgp_port},
