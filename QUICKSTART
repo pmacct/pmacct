@@ -395,6 +395,50 @@ sql_history_roundoff: mh
 sql_table_version: 4
 ! ...
 
+Va. NetFlow daemon & accounting NetFlow v9/IPFIX options 
+NetFlow v9/IPFIX can send option records other than flow ones, typically used to send
+to a collector mappings among interface SNMP ifIndexes to interface names or VRF ID's
+to VRF names. nfacctd_account_options enables accounting of option records then these
+should be split from regular flow records. Below is a sample config:
+
+nfacctd_time_new: true
+nfacctd_account_options: true
+!
+plugins: print[data], print[data_options]
+!
+pre_tag_filter[data]: 100
+aggregate[data]: peer_src_ip, in_iface, out_iface, tos, vrf_id_ingress, vrf_id_egress
+print_refresh_time[data]: 300
+print_history[data]: 300
+print_history_roundoff[data]: m
+print_output_file_append[data]: true
+print_output_file[data]: /path/to/flow_%s
+print_output[data]: csv
+!
+pre_tag_filter[data_options]: 200
+aggregate[data_options]: vrf_id_ingress, vrf_name
+print_refresh_time[data_options]: 300
+print_history[data_options]: 300
+print_history_roundoff[data_options]: m
+print_output_file_append[data_options]: true
+print_output_file[data_options]: /path/to/options_%s
+print_output[data_options]: event_csv
+!
+aggregate_primitives: /path/to/primitives.lst
+pre_tag_map: /path/to/pretag.map
+refresh_maps: true
+
+Below is the referenced pretag.map:
+
+set_tag=100     ip=0.0.0.0/0    sample_type=flow
+set_tag=200     ip=0.0.0.0/0    sample_type=option
+
+Below is the referenced primitives.lst:
+
+name=vrf_id_ingress     field_type=234  len=4   semantics=u_int
+name=vrf_id_egress      field_type=235  len=4   semantics=u_int
+name=vrf_name           field_type=236  len=32  semantics=str
+
 VI. Running the ULOG-based daemon (uacctd)
 All examples about pmacctd are also valid for uacctd with the exception of directives
 that apply exclusively to libpcap. If you've skipped examples in section 'IV', please
