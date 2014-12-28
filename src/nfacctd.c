@@ -1305,10 +1305,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	centry = NULL, csaved = NULL;
 
 	/* Is this option about sampling? */
-	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
+	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4) {
 	  u_int8_t t8 = 0;
 	  u_int16_t t16 = 0;
-	  u_int32_t sampler_id = 0, t32 = 0;
+	  u_int32_t sampler_id = 0, t32 = 0, t32_2 = 0;
+	  u_int64_t t64 = 0;
 
 	  /* Handling the global option scoping case */
 	  if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
@@ -1325,6 +1326,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             memcpy(&t32, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
             sampler_id = ntohl(t32);
           }
+          else if (tpl->tpl[NF9_SELECTOR_ID].len == 8) {
+            memcpy(&t64, pkt+tpl->tpl[NF9_SELECTOR_ID].off, 8);
+            sampler_id = pm_ntohll(t64); /* XXX: sampler_id to be moved to 64 bit */
+          }
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
 	  if (!sentry) sentry = create_smp_entry_status_table(entry);
@@ -1333,11 +1338,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (sentry) {
 	    memset(sentry, 0, sizeof(struct xflow_status_entry_sampling));
 	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 1) {
-	      memcpy(&t8, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	      memcpy(&t8, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 1);
 	      sentry->sample_pool = t8;
 	    }
 	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 2) {
-	      memcpy(&t16, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
+	      memcpy(&t16, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 2);
 	      sentry->sample_pool = ntohs(t16);
 	    }
 	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
@@ -1356,6 +1361,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      memcpy(&t32, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
 	      sentry->sample_pool = ntohl(t32);
 	    }
+            else if (tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 && tpl->tpl[NF9_SAMPLING_PKT_SPACE].len == 4) {
+	      u_int32_t pkt_interval = 0, pkt_space = 0;
+
+              memcpy(&t32, pkt+tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].off, 4);
+              memcpy(&t32_2, pkt+tpl->tpl[NF9_SAMPLING_PKT_SPACE].off, 4);
+	      pkt_interval = ntohl(t32);
+	      pkt_space = ntohl(t32_2);
+
+              if (pkt_interval) sentry->sample_pool = ((pkt_interval + pkt_space) / pkt_interval);
+            }
 
 	    sentry->sampler_id = sampler_id;
 	    if (ssaved) sentry->next = ssaved;

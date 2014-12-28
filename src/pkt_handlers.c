@@ -2776,6 +2776,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   u_int16_t t16 = 0;
   u_int32_t sampler_id = 0, sample_pool = 0, t32 = 0;
   u_int8_t t8 = 0;
+  u_int64_t t64 = 0;
 
   if (config.sfacctd_renormalize) {
     pdata->primitives.sampling_rate = 1; /* already renormalized */
@@ -2802,7 +2803,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len) {
+      if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SELECTOR_ID].len == 8) {
         if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
           memcpy(&t8, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
           sampler_id = t8;
@@ -2814,6 +2815,10 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
         else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 4) {
           memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
           sampler_id = ntohl(t32);
+        }
+        else if (tpl->tpl[NF9_SELECTOR_ID].len == 8) {
+          memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_SELECTOR_ID].off, 8);
+          sampler_id = pm_ntohll(t64); /* XXX: sampler_id to be moved to 64 bit */
         }
 
         if (entry) {
@@ -3422,13 +3427,14 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   u_int16_t t16 = 0;
   u_int32_t sampler_id = 0, sample_pool = 0, t32 = 0;
   u_int8_t t8 = 0;
+  u_int64_t t64 = 0;
 
   if (pptrs->renormalized) return;
 
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len) {
+    if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SELECTOR_ID].len == 8) {
       if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
         memcpy(&t8, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
         sampler_id = t8;
@@ -3440,6 +3446,10 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
       else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 4) {
         memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
         sampler_id = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_SELECTOR_ID].len == 8) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_SELECTOR_ID].off, 8);
+        sampler_id = pm_ntohll(t64); /* XXX: sampler_id to be moved to 64 bit */
       }
 
       if (entry) {
@@ -3481,6 +3491,23 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 
       pptrs->renormalized = TRUE;
     }
+    /* case of no SAMPLER_ID, ALU & IPFIX */
+    else {
+      if (entry) {
+        sentry = search_smp_id_status_table(entry->sampling, 0, TRUE);
+        if (!sentry && pptrs->f_status_g) {
+          entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          sentry = search_smp_id_status_table(entry->sampling, 0, FALSE);
+        }
+      }
+      if (sentry) {
+        pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
+        pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;
+
+        pptrs->renormalized = TRUE;
+      }
+    }
+
     break;
   case 5:
     hdr5 = (struct struct_header_v5 *) pptrs->f_header;
