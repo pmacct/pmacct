@@ -1400,7 +1400,7 @@ int main(int argc,char **argv)
 
           res = string_etheraddr(match_string_token, ethaddr);
           if (res) {
-            printf("ERROR: src_mac: Invalid MAC address: '%s'\n", match_string_token);
+            printf("ERROR: dst_mac: Invalid MAC address: '%s'\n", match_string_token);
             exit(1);
           }
           else memcpy(&request.data.eth_dhost, ethaddr, ETH_ADDR_LEN);

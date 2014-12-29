@@ -259,12 +259,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
   int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
+  int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
   pid_t writer_pid = getpid();
 
 #ifdef WITH_JANSSON
   json_t *array = json_array();
-  int mv_num = 0, mv_num_save = 0;
 #endif
 
   /* setting some defaults */

@@ -190,15 +190,16 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		instead. (default: 4MB)
 
 KEY:		plugin_buffer_size 
-DESC:		by defining the transfer buffer size, in bytes, this directive enables bufferization
-		of data transfers between core process and active plugins. It is disabled by default,
+DESC:		by defining the transfer buffer size, in bytes, this directive enables buffering of
+		data transfers between core process and active plugins. It is disabled by default,
 		ie. size of a buffer coincides to the size of a single element to be transferred,
 		giving best feelings while testing out the package with small traffic loads. The
 		value has to be minor/equal to the size defined by 'plugin_pipe_size' and keeping a
 		ratio of 1:1000 among the two is considered good practice. The 'plugin_pipe_size'
 		circular queue is hence partitioned in plugin_buffer_size/plugin_pipe_size slots.
-		Once a slot is filled, it is delivered to the plugin while the circular queue moves
-		to the next buffer element. (default: 0) 
+		Once a buffer is filled, it is delivered to the plugin while the circular queue
+		moves to the next buffer element. (default: 0 [adjusted automatically to the size
+		of a single element to transfer]) 
 
 KEY:            plugin_pipe_backlog
 VALUES:         [0 <= value < 100]
