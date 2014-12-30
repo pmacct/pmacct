@@ -2760,6 +2760,17 @@ int cfg_key_nfacctd_bgp_ip(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_id(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_id = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_id'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

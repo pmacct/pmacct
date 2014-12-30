@@ -180,6 +180,7 @@ struct configuration {
   u_int32_t nfacctd_bgp_msglog_amqp_heartbeat_interval;
   int nfacctd_bgp_msglog_amqp_retry;
   char *nfacctd_bgp_ip;
+  char *nfacctd_bgp_id;
   int nfacctd_bgp_port;
   u_int64_t nfacctd_bgp_pipe_size;
   int nfacctd_bgp_ipprec;

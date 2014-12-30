@@ -874,7 +874,7 @@ int bgp_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
 {
   struct bgp_open *bopen_reply = (struct bgp_open *) msg;
   char my_id_static[] = "1.2.3.4", *my_id = my_id_static;
-  struct host_addr my_id_addr, bgp_ip;
+  struct host_addr my_id_addr, bgp_ip, bgp_id;
   u_int16_t local_as;
   u_int32_t *local_as4;
 
@@ -904,16 +904,32 @@ int bgp_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
   bopen_reply->bgpo_len = htons(BGP_MIN_OPEN_MSG_SIZE + bopen_reply->bgpo_optlen);
 
   if (config.nfacctd_bgp_ip) str_to_addr(config.nfacctd_bgp_ip, &bgp_ip);
+  else memset(&bgp_ip, 0, sizeof(bgp_ip));
 
-  if (config.nfacctd_bgp_ip && !is_any(&bgp_ip)) {
+  if (config.nfacctd_bgp_id) str_to_addr(config.nfacctd_bgp_id, &bgp_id);
+  else memset(&bgp_id, 0, sizeof(bgp_id));
+
+  /* set BGP router-ID trial #1 */
+  memset(&my_id_addr, 0, sizeof(my_id_addr));
+
+  if (config.nfacctd_bgp_id && !is_any(&bgp_id) && !my_id_addr.family) {
+    my_id = config.nfacctd_bgp_id;
+    str_to_addr(my_id, &my_id_addr);
+    if (my_id_addr.family != AF_INET) memset(&my_id_addr, 0, sizeof(my_id_addr));
+  }
+
+  /* set BGP router-ID trial #2 */
+  if (config.nfacctd_bgp_ip && !is_any(&bgp_ip) && !my_id_addr.family) {
     my_id = config.nfacctd_bgp_ip;
     str_to_addr(my_id, &my_id_addr);
-    if (my_id_addr.family != AF_INET) {
-      my_id = my_id_static;
-      str_to_addr(my_id, &my_id_addr);
-    }
+    if (my_id_addr.family != AF_INET) memset(&my_id_addr, 0, sizeof(my_id_addr));
   }
-  else str_to_addr(my_id, &my_id_addr);
+
+  /* set BGP router-ID trial #3 */
+  if (!my_id_addr.family) {
+    my_id = my_id_static;
+    str_to_addr(my_id, &my_id_addr);
+  }
 
   bopen_reply->bgpo_id = my_id_addr.address.ipv4.s_addr;
 

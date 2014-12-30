@@ -1349,8 +1349,15 @@ DESC:		enables the skinny BGP daemon thread. This feature requires the package t
 
 KEY:		bgp_daemon_ip
 DESC:		binds the BGP daemon to a specific interface. Expects as value an IPv4 address. The same is
-		used as BGP Router-ID to its peers - otherwise a dumb "1.2.3.4" value is presented. Setting
-		this directive is highly adviced. (default: 0.0.0.0)
+		value is presented as BGP Router-ID (read more about the BGP Router-ID selection process at
+		the bgp_daemon_id config directive description). Setting this directive is highly adviced.
+		(default: 0.0.0.0)
+
+KEY:            bgp_daemon_id
+DESC:		defines the BGP Router-ID to the supplied value. Expected value is an IPv4 address. If this
+		feature is not used or an invalid IP address is supplied, ie. IPv6, the bgp_daemon_ip value
+		is used instead. If also bgp_daemon_ip is not defined or invalid, the BGP Router-ID defaults
+		to "1.2.3.4". (default: 1.2.3.4) 
 
 KEY:		bgp_daemon_port
 DESC:		binds the BGP daemon to a port different from the standard BGP port: 179/tcp. (default: 179)

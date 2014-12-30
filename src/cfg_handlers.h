@@ -181,6 +181,7 @@ EXT int cfg_key_nfacctd_bgp_msglog_amqp_heartbeat_interval(char *, char *, char 
 EXT int cfg_key_nfacctd_bgp_msglog_amqp_retry(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_max_peers(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_ip(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_id(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_port(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_ip_precedence(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_allow_file(char *, char *, char *);
