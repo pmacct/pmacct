@@ -1380,7 +1380,7 @@ case "$host_os" in
     ;;
 esac
 
-SERVER_LIBS="-lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/"
+SERVER_LIBS="-lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/ -lbmp -Lbmp/"
 
 echo "
 PLATFORM ..... : `uname -m`
@@ -1407,4 +1407,5 @@ AC_SUBST([SERVER_LIBS])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
-	    src/tee_plugin/Makefile src/isis/Makefile ])
+	    src/tee_plugin/Makefile src/isis/Makefile \
+	    src/bmp/Makefile ])
