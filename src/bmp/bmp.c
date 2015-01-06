@@ -24,4 +24,29 @@
 
 /* includes */
 #include "pmacct.h"
+#include "bmp.h"
+#include "thread_pool.h"
 
+/* variables to be exported away */
+thread_pool_t *bmp_pool;
+
+/* Functions */
+#if defined ENABLE_THREADS
+void nfacctd_bmp_wrapper()
+{
+  /* initialize variables */
+  if (!config.nfacctd_bmp_port) config.nfacctd_bmp_port = BMP_TCP_PORT;
+
+  /* initialize threads pool */
+  bmp_pool = allocate_thread_pool(1);
+  assert(bmp_pool);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): %d thread(s) initialized\n", config.name, 1);
+
+  /* giving a kick to the BGP thread */
+  send_to_pool(bmp_pool, skinny_bmp_daemon, NULL);
+}
+#endif
+
+void skinny_bmp_daemon()
+{
+}

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -226,6 +226,16 @@ struct configuration {
   int bgp_table_dump_amqp_persistent_msg;
   u_int32_t bgp_table_dump_amqp_frame_max;
   u_int32_t bgp_table_dump_amqp_heartbeat_interval;
+  int nfacctd_bmp;
+  char *nfacctd_bmp_ip;
+  int nfacctd_bmp_port;
+  u_int64_t nfacctd_bmp_pipe_size;
+  int nfacctd_bmp_max_peers;
+  char *nfacctd_bmp_allow_file;
+  int nfacctd_bmp_ipprec;
+  int nfacctd_bmp_batch;
+  int nfacctd_bmp_batch_interval;
+  char *nfacctd_bmp_neighbors_file;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;

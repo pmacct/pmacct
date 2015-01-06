@@ -18,3 +18,19 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+
+/* defines */
+#define BMP_TCP_PORT	1790
+
+/* prototypes */
+#if (!defined __BMP_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT void nfacctd_bmp_wrapper();
+EXT void skinny_bmp_daemon();
+
+/* global variables */
+
+#undef EXT

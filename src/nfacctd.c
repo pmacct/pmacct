@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -662,6 +662,16 @@ int main(int argc,char **argv, char **envp)
     /* Let's give the BGP thread some advantage to create its structures */
     sleep(5);
   }
+
+  /* starting the BMP thread */
+  if (config.nfacctd_bmp) {
+    req.bpf_filter = TRUE;
+
+    nfacctd_bmp_wrapper();
+
+    /* Let's give the BMP thread some advantage to create its structures */
+    sleep(5);
+  }
 #else
   if (config.nfacctd_isis) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
@@ -670,6 +680,11 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_bgp) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
+    exit(1);
+  }
+
+  if (config.nfacctd_bmp) {
+    Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 #endif

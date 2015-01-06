@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -586,6 +586,20 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_table_dump_amqp_persistent_msg", cfg_key_nfacctd_bgp_table_dump_amqp_persistent_msg},
   {"bgp_table_dump_amqp_frame_max", cfg_key_nfacctd_bgp_table_dump_amqp_frame_max},
   {"bgp_table_dump_amqp_heartbeat_interval", cfg_key_nfacctd_bgp_table_dump_amqp_heartbeat_interval},
+  {"bmp_daemon", cfg_key_nfacctd_bmp},
+  {"bmp_daemon_ip", cfg_key_nfacctd_bmp_ip},
+  {"bmp_daemon_port", cfg_key_nfacctd_bmp_port},
+  {"bmp_daemon_pipe_size", cfg_key_nfacctd_bmp_pipe_size},
+  {"bmp_daemon_max_peers", cfg_key_nfacctd_bmp_max_peers},
+  {"bmp_daemon_allow_file", cfg_key_nfacctd_bmp_allow_file},
+  {"bmp_daemon_ipprec", cfg_key_nfacctd_bmp_ip_precedence},
+  {"bmp_daemon_batch", cfg_key_nfacctd_bmp_batch},
+  {"bmp_daemon_batch_interval", cfg_key_nfacctd_bmp_batch_interval},
+  {"bmp_neighbors_file", cfg_key_nfacctd_bmp_neighbors_file},
+  {"bmp_table_peer_buckets", cfg_key_nfacctd_bmp_table_peer_buckets},
+  {"bmp_table_per_peer_buckets", cfg_key_nfacctd_bmp_table_per_peer_buckets},
+  {"bmp_table_attr_hash_buckets", cfg_key_nfacctd_bmp_table_attr_hash_buckets},
+  {"bmp_table_per_peer_hash", cfg_key_nfacctd_bmp_table_per_peer_hash},
   {"flow_to_rd_map", cfg_key_nfacctd_flow_to_rd_map},
   {"isis_daemon", cfg_key_nfacctd_isis},
   {"isis_daemon_ip", cfg_key_nfacctd_isis_ip},

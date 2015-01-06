@@ -33,10 +33,12 @@ id=2	ip=192.168.2.1:2100,192.168.2.2:2100
 !
 ! Replicate with selective filtering. Replicate datagrams tagged as 100 and
 ! 150 to pool #1; replicate datagrams tagged as 105 and within the tag range
-! 110-120 to pool #2.
+! 110-120 to pool #2. Replicate all datagrams but those tagged as 150 to pool
+! #3. 
 !
 id=1	ip=192.168.1.1:2100			tag=100,150
 id=2	ip=192.168.2.1:2100,192.168.2.2:2100	tag=105,110-120
+id=3	ip=192.168.3.1:2100			tag=-150
 !
 !
 ! Replicate with balancing. Round-robin enabled in pool#1

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -225,6 +225,20 @@ EXT int cfg_key_nfacctd_bgp_table_dump_amqp_heartbeat_interval(char *, char *, c
 EXT int cfg_key_nfacctd_bgp_batch(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_batch_interval(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_pipe_size(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_ip(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_port(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_pipe_size(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_max_peers(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_allow_file(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_ip_precedence(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_batch(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_batch_interval(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_neighbors_file(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_table_peer_buckets(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_table_per_peer_buckets(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_table_attr_hash_buckets(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_table_per_peer_hash(char *, char *, char *);
 EXT int cfg_key_nfacctd_flow_to_rd_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_ip(char *, char *, char *);

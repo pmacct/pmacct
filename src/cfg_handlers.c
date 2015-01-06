@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -2739,7 +2739,7 @@ int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if (value < 1) {
-        Log(LOG_ERR, "WARN ( %s ): 'nfacctd_bgp_max_peers' has to be >= 1.\n", filename);
+        Log(LOG_ERR, "WARN ( %s ): 'bgp_daemon_max_peers' has to be >= 1.\n", filename);
         return ERR;
   }
 
@@ -2963,6 +2963,172 @@ int cfg_key_nfacctd_bgp_batch(char *filename, char *name, char *value_ptr)
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_batch'. Globalized.\n", filename);
 
   return changes;
+}
+
+int cfg_key_nfacctd_bmp(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_ip(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_ip = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_daemon_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_port = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_pipe_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoull(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bmp_daemon_pipe_size' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_pipe_size = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_pipe_size'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_max_peers(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 1) {
+        Log(LOG_ERR, "WARN ( %s ): 'bmp_daemon_max_peers' has to be >= 1.\n", filename);
+        return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_max_peers = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_max_peers'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_allow_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_allow_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_allow_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_ip_precedence(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value < 0) || (value > 7)) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_daemon_ipprec' has to be in the range 0-7.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_ipprec = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_ipprec'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_batch_interval(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_daemon_batch_interval' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_batch_interval = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_batch_interval'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_batch(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_daemon_batch' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_batch = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_batch'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_neighbors_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_neighbors_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_neighbors_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_table_peer_buckets(char *filename, char *name, char *value_ptr)
+{
+}
+
+int cfg_key_nfacctd_bmp_table_per_peer_buckets(char *filename, char *name, char *value_ptr)
+{
+}
+
+int cfg_key_nfacctd_bmp_table_attr_hash_buckets(char *filename, char *name, char *value_ptr)
+{
+}
+
+int cfg_key_nfacctd_bmp_table_per_peer_hash(char *filename, char *name, char *value_ptr)
+{
 }
 
 int cfg_key_nfacctd_isis(char *filename, char *name, char *value_ptr)
