@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /* 
@@ -72,7 +72,7 @@ struct aspath
 #else
 #define EXT
 #endif
-EXT void aspath_init ();
+EXT void aspath_init (struct hash *);
 EXT void aspath_finish (void);
 EXT struct aspath *aspath_parse (char *, size_t, int);
 EXT struct aspath *aspath_dup (struct aspath *);

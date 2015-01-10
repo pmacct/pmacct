@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -62,7 +62,7 @@ struct community
 #else
 #define EXT
 #endif
-EXT void community_init ();
+EXT void community_init (struct hash *);
 EXT void community_free (struct community *);
 EXT struct community *community_uniq_sort (struct community *);
 EXT struct community *community_parse (u_int32_t *, u_short);

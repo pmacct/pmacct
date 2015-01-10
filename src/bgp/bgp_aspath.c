@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /* 
@@ -27,7 +27,6 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define __BGP_ASPATH_C
 
 #include "pmacct.h"
-#include "bgp_hash.h"
 #include "jhash.h"
 #include "bgp.h"
 
@@ -1654,7 +1653,7 @@ aspath_cmp (const void *arg1, const void *arg2)
 
 /* AS path hash initialize. */
 void
-aspath_init ()
+aspath_init (struct hash *ashash)
 {
   ashash = hash_create_size (32767, aspath_key_make, aspath_cmp);
 }

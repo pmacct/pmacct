@@ -20,7 +20,9 @@
 */
 
 /* defines */
-#define BMP_TCP_PORT	1790
+#define BMP_TCP_PORT		1790
+#define BMP_MAX_PACKET_SIZE	4096
+#define BMP_MAX_PEERS_DEFAULT	4
 
 /* prototypes */
 #if (!defined __BMP_C)
@@ -30,7 +32,14 @@
 #endif
 EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
+EXT void bmp_attr_init();
 
 /* global variables */
-
+// EXT struct bgp_peer *peers;
+EXT struct hash *bmp_attrhash;
+EXT struct hash *bmp_ashash;
+EXT struct hash *bmp_comhash;
+EXT struct hash *bmp_ecomhash;
+EXT struct bgp_table *bmp_rib[AFI_MAX][SAFI_MAX];
+// EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 #undef EXT

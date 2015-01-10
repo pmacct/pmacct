@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -25,7 +25,6 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp.h"
-#include "bgp_hash.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -121,7 +120,7 @@ void skinny_bgp_daemon()
     trim_spaces(config.nfacctd_bgp_ip);
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): 'nfacctd_bgp_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): 'bgp_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name);
       exit_all(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bgp_port);
@@ -1832,22 +1831,12 @@ void bgp_info_free(struct bgp_info *ri)
 }
 
 /* Initialization of attributes */
-/*
-void bgp_attr_init(struct bgp_peer *peer)
-{
-  aspath_init(peer);
-  attrhash_init(peer);
-  community_init(peer);
-  ecommunity_init(peer);
-}
-*/
-
 void bgp_attr_init()
 {
-  aspath_init();
-  attrhash_init();
-  community_init();
-  ecommunity_init();
+  aspath_init(ashash);
+  attrhash_init(attrhash);
+  community_init(comhash);
+  ecommunity_init(ecomhash);
 }
 
 unsigned int attrhash_key_make(void *p)
@@ -1906,7 +1895,7 @@ int attrhash_cmp(const void *p1, const void *p2)
   return 0;
 }
 
-void attrhash_init()
+void attrhash_init(struct hash *attrhash)
 {
   attrhash = (struct hash *) hash_create(attrhash_key_make, attrhash_cmp);
 }

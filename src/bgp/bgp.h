@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -19,6 +19,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#include "bgp_hash.h"
 #include "bgp_prefix.h"
 #include "bgp_packet.h"
 #include "bgp_table.h"
@@ -194,7 +195,7 @@ EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
-EXT void attrhash_init();
+EXT void attrhash_init(struct hash *);
 
 EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
 EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *, pm_cfgreg_t);

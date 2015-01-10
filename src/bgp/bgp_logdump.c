@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -25,7 +25,6 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp.h"
-#include "bgp_hash.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif

@@ -226,6 +226,7 @@ struct configuration {
   int bgp_table_dump_amqp_persistent_msg;
   u_int32_t bgp_table_dump_amqp_frame_max;
   u_int32_t bgp_table_dump_amqp_heartbeat_interval;
+  int bmp_sock;
   int nfacctd_bmp;
   char *nfacctd_bmp_ip;
   int nfacctd_bmp_port;

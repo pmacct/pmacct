@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -27,7 +27,6 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define __BGP_ECOMMUNITY_C
 
 #include "pmacct.h"
-#include "bgp_hash.h"
 #include "bgp_prefix.h"
 #include "bgp.h"
 #include "bgp_ecommunity.h"
@@ -283,7 +282,7 @@ ecommunity_cmp (const void *arg1, const void *arg2)
 
 /* Initialize Extended Comminities related hash. */
 void
-ecommunity_init ()
+ecommunity_init (struct hash *ecomhash)
 {
   ecomhash = hash_create (ecommunity_hash_make, ecommunity_cmp);
 }
