@@ -3117,18 +3117,68 @@ int cfg_key_nfacctd_bmp_neighbors_file(char *filename, char *name, char *value_p
 
 int cfg_key_nfacctd_bmp_table_peer_buckets(char *filename, char *name, char *value_ptr)
 {
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 1000)) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_table_peer_buckets' has to be in the range 1-1000.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_table_peer_buckets = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_table_peer_buckets'. Globalized.\n", filename);
+
+  return changes;
 }
 
 int cfg_key_nfacctd_bmp_table_per_peer_buckets(char *filename, char *name, char *value_ptr)
 {
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 128)) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_table_per_peer_buckets' has to be in the range 1-128.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_table_per_peer_buckets = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_table_per_peer_buckets'. Globalized.\n", filename);
+
+  return changes;
 }
 
 int cfg_key_nfacctd_bmp_table_attr_hash_buckets(char *filename, char *name, char *value_ptr)
 {
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 1000000)) {
+    Log(LOG_ERR, "WARN ( %s ): 'bmp_table_attr_hash_buckets' has to be in the range 1-1000000.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_table_attr_hash_buckets = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_table_attr_hash_buckets'. Globalized.\n", filename);
+
+  return changes;
 }
 
 int cfg_key_nfacctd_bmp_table_per_peer_hash(char *filename, char *name, char *value_ptr)
 {
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strncmp(value_ptr, "path_id", strlen("path_id"))) value = BGP_ASPATH_HASH_PATHID;
+  else Log(LOG_WARNING, "WARN ( %s ): Ignoring unknown 'bmp_table_per_peer_hash' value.\n", filename);
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_table_per_peer_hash = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_table_per_peer_hash'. Globalized.\n", filename);
+
+  return changes;
 }
 
 int cfg_key_nfacctd_isis(char *filename, char *name, char *value_ptr)

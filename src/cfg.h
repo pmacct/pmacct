@@ -237,6 +237,10 @@ struct configuration {
   int nfacctd_bmp_batch;
   int nfacctd_bmp_batch_interval;
   char *nfacctd_bmp_neighbors_file;
+  int bmp_table_peer_buckets;
+  int bmp_table_per_peer_buckets;
+  int bmp_table_attr_hash_buckets;
+  int bmp_table_per_peer_hash;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;

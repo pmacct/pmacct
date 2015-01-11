@@ -112,20 +112,18 @@ void skinny_bmp_daemon()
 
   /* XXX: init logging structures, including AMQP */
 
-  /* XXX: init BMP RIB structures
   if (!config.bmp_table_attr_hash_buckets) config.bmp_table_attr_hash_buckets = HASHTABSIZE;
   bmp_attr_init();
 
-  if (!config.bmp_table_peer_buckets) config.bmp_table_peer_buckets = DEFAULT_BMP_INFO_HASH;
-  if (!config.bmp_table_per_peer_buckets) config.bmp_table_per_peer_buckets = DEFAULT_BMP_INFO_PER_PEER_HASH;
+  if (!config.bmp_table_peer_buckets) config.bmp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
+  if (!config.bmp_table_per_peer_buckets) config.bmp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
 
-  if (config.bmp_table_per_peer_hash == BMP_ASPATH_HASH_PATHID)
+  if (config.bmp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
     bmp_route_info_modulo = bgp_route_info_modulo_pathid;
   else {
     Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unknown 'bmp_table_per_peer_hash' value. Terminating thread.\n", config.name);
     exit_all(1);
   }
-  */
 
   config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bmp_sock < 0) {

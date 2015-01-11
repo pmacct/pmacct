@@ -35,11 +35,11 @@ EXT void skinny_bmp_daemon();
 EXT void bmp_attr_init();
 
 /* global variables */
-// EXT struct bgp_peer *peers;
+EXT struct bgp_peer *bmp_peers; // XXX
 EXT struct hash *bmp_attrhash;
 EXT struct hash *bmp_ashash;
 EXT struct hash *bmp_comhash;
 EXT struct hash *bmp_ecomhash;
 EXT struct bgp_table *bmp_rib[AFI_MAX][SAFI_MAX];
-// EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
+EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 #undef EXT
