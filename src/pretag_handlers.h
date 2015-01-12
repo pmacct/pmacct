@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -54,6 +54,7 @@ EXT int PT_map_comms_handler(char *, struct id_entry *, char *, struct plugin_re
 EXT int PT_map_mpls_vpn_rd_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_mpls_pw_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_dst_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_vlan_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_set_tos_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_entry_label_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -75,6 +76,7 @@ EXT int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *, void *);
 EXT int PT_map_index_entries_mpls_pw_id_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_src_mac_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_dst_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_vlan_id_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_ip_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_input_handler(struct id_entry *, void *); 
@@ -88,6 +90,7 @@ EXT int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *, void *);
 EXT int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_src_mac_handler(struct id_entry *, void *); 
+EXT int PT_map_index_fdata_dst_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_vlan_id_handler(struct id_entry *, void *);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */
@@ -138,6 +141,7 @@ EXT int pretag_direction_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_mpls_vpn_rd_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_mpls_pw_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_set_tos_handler(struct packet_ptrs *, void *, void *);
 
@@ -151,6 +155,7 @@ EXT int SF_pretag_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
+EXT int SF_pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_sample_type_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_mpls_pw_id_handler(struct packet_ptrs *, void *, void *);

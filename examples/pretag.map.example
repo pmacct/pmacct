@@ -10,12 +10,12 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg,
-! sampling_rate, sample_type, direction, src_mac, vlan; mandatory keys for each
-! rule: ip.
+! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan; mandatory
+! keys for each rule: ip.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
-! vlan; mandatory keys for each rule: ip.
+! dst_mac, vlan; mandatory keys for each rule: ip.
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label and filter.
 !
@@ -133,6 +133,9 @@
 ! 'src_mac'		MATCH: In NetFlow v9 and IPFIX this is compared against
 !			IE #56, in sFlow against source MAC address field part
 !			of the Extended Switch object.
+! 'dst_mac'             MATCH: In NetFlow v9 and IPFIX this is compared against
+!                       IE #57, in sFlow against destination MAC address field
+!			part of the Extended Switch object.
 ! 'vlan'		MATCH: In NetFlow v9 and IPFIX this is compared against
 !			IE #58, in sFlow against in/out VLAN ID fields part of
 !			the Extended Switch object.

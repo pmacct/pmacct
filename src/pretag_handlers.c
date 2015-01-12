@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -1024,6 +1024,31 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
+int PT_map_dst_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->dst_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  if (string_etheraddr(value, &e->dst_mac.a)) {
+    Log(LOG_ERR, "ERROR ( %s ): Bad destination MAC address '%s'. ", filename, value);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_DST_MAC) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'dst_mac' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_mac_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_mac_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_DST_MAC;
+
+  return FALSE;
+}
+
 int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int tmp, x = 0;
@@ -1914,6 +1939,25 @@ int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
 }
 
+int pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IN_DST_MAC].len) {
+      if (!memcmp(&entry->dst_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6)))
+        return (FALSE | entry->dst_mac.neg);
+      else return (TRUE ^ entry->dst_mac.neg);
+    }
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
 int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2129,6 +2173,15 @@ int SF_pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (!memcmp(entry->src_mac.a, sample->eth_src, ETH_ADDR_LEN)) return (FALSE | entry->src_mac.neg);
   else return (TRUE ^ entry->src_mac.neg);
+}
+
+int SF_pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (!memcmp(entry->dst_mac.a, sample->eth_dst, ETH_ADDR_LEN)) return (FALSE | entry->dst_mac.neg);
+  else return (TRUE ^ entry->dst_mac.neg);
 }
 
 int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -2685,6 +2738,17 @@ int PT_map_index_entries_src_mac_handler(struct id_entry *e, void *src)
   return FALSE;
 }
 
+int PT_map_index_entries_dst_mac_handler(struct id_entry *e, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE;
+
+  memcpy(&e->dst_mac, &src_e->dst_mac, sizeof(pt_etheraddr_t));
+
+  return FALSE;
+}
+
 int PT_map_index_entries_vlan_id_handler(struct id_entry *e, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -3188,6 +3252,30 @@ int PT_map_index_fdata_src_mac_handler(struct id_entry *e, void *src)
   }
   else if (config.acct_type == ACCT_SF) {
     memcpy(&e->src_mac.a, sample->eth_src, ETH_ADDR_LEN);
+  }
+  else return TRUE;
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_dst_mac_handler(struct id_entry *e, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_IN_DST_MAC].len) {
+        memcpy(&e->dst_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
+      }
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    memcpy(&e->dst_mac.a, sample->eth_dst, ETH_ADDR_LEN);
   }
   else return TRUE;
 

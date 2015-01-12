@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -47,6 +47,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"mpls_vpn_rd", PT_map_mpls_vpn_rd_handler},
   {"mpls_pw_id", PT_map_mpls_pw_id_handler},
   {"src_mac", PT_map_src_mac_handler},
+  {"dst_mac", PT_map_dst_mac_handler},
   {"vlan", PT_map_vlan_id_handler},
   {"set_tag", PT_map_id_handler},
   {"set_tag2", PT_map_id2_handler},
@@ -72,6 +73,7 @@ const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_MPLS_VPN_RD, PT_map_index_entries_mpls_vpn_rd_handler},
   {PRETAG_MPLS_PW_ID, PT_map_index_entries_mpls_pw_id_handler},
   {PRETAG_SRC_MAC, PT_map_index_entries_src_mac_handler},
+  {PRETAG_DST_MAC, PT_map_index_entries_dst_mac_handler},
   {PRETAG_VLAN_ID, PT_map_index_entries_vlan_id_handler},
   {0, NULL}
 };
@@ -89,6 +91,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_MPLS_VPN_RD, PT_map_index_fdata_mpls_vpn_rd_handler},
   {PRETAG_MPLS_PW_ID, PT_map_index_fdata_mpls_pw_id_handler},
   {PRETAG_SRC_MAC, PT_map_index_fdata_src_mac_handler},
+  {PRETAG_DST_MAC, PT_map_index_fdata_dst_mac_handler},
   {PRETAG_VLAN_ID, PT_map_index_fdata_vlan_id_handler},
   {0, NULL}
 };
