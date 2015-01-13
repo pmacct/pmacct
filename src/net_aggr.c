@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -464,7 +464,7 @@ struct networks_table_entry *binsearch(struct networks_table *nt, struct network
 
   ret = networks_cache_search(nc, &addr); 
   if (ret) {
-    if (!ret->mask && ret->masknum) return NULL; /* dummy entry identification */
+    if (ret->masknum == 255) return NULL; /* dummy entry identification */
     else return ret;
   }
 
@@ -1826,7 +1826,7 @@ struct networks6_table_entry *binsearch6(struct networks_table *nt, struct netwo
   
   ret = networks_cache_search6(nc, addr);
   if (ret) {
-    if (!ret->mask && ret->masknum) return NULL; /* dummy entry identification */
+    if (ret->masknum == 255) return NULL; /* dummy entry identification */
     else return ret;
   }
 
