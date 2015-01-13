@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -676,7 +676,7 @@ int main(int argc,char **argv, char **envp)
     close(ulog_fd);
     exit_all(1);
   }
-  Log(LOG_INFO, "INFO ( %s/core ): Netlink ULOG: binding to group %x\n", config.name, config.uacctd_group);
+  Log(LOG_INFO, "INFO ( %s/core ): Netlink ULOG: binding to group %u\n", config.name, config.uacctd_group);
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */
