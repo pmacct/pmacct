@@ -52,9 +52,12 @@ void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1;
   char bmp_packet[BMP_MAX_PACKET_SIZE], *bmp_packet_ptr;
+  struct timeval dump_refresh_timeout, *drt_ptr;
   time_t now;
   afi_t afi;
   safi_t safi;
+
+  struct bgp_peer *peer; /* XXX: bgp_peer ? */
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -64,6 +67,10 @@ void skinny_bmp_daemon()
 #endif
   struct hosts_table allow;
   struct host_addr addr;
+
+  /* BMP peer batching vars */
+  int bmp_current_batch_elem = 0;
+  time_t bmp_current_batch_stamp_base = 0;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
@@ -220,7 +227,172 @@ void skinny_bmp_daemon()
 
   /* XXX: more init logging structures, including AMQP */
 
-  /* for (;;) loop */ 
+  for (;;) {
+    select_again:
+
+    select_fd = config.bmp_sock;
+    for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++)
+      if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd;
+    select_fd++;
+    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+
+    /* XXX: logging & refresh timeout handling */
+    drt_ptr = NULL;
+
+    select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
+    if (select_num < 0) goto select_again;
+
+    /* XXX: signals handling, if any */
+
+    /* XXX: if (reload_log_bmp_thread) */
+
+    /* XXX: bgp_handle_dump_event() && bgp_daemon_msglog_init_amqp_host() */
+
+    /* 
+       If select_num == 0 then we got out of select() due to a timeout rather
+       than because we had a message from a peeer to handle. By now we did all
+       routine checks and can happily return to selet() again.
+    */
+    if (!select_num) goto select_again;
+
+    /* New connection is coming in */
+    if (FD_ISSET(config.bmp_sock, &read_descs)) {
+      int peers_check_idx, peers_num;
+
+      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+        if (peers[peers_idx].fd == 0) {
+          now = time(NULL);
+
+          if (bmp_current_batch_elem > 0 || now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
+            peer = &peers[peers_idx];
+            if (bgp_peer_init(peer)) peer = NULL;
+
+            // XXX: log_notification_unset(&log_notifications.bmp_peers_throttling);
+
+            if (config.nfacctd_bmp_batch && peer) {
+              if (now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
+                bmp_current_batch_elem = config.nfacctd_bmp_batch;
+                bmp_current_batch_stamp_base = now;
+              }
+
+              if (bmp_current_batch_elem > 0) bmp_current_batch_elem--;
+            }
+
+            break;
+          }
+          else { /* throttle */
+            int fd = 0;
+
+            /* We briefly accept the new connection to be able to drop it */
+/* 	    XXX:
+            if (!log_notification_isset(log_notifications.bmp_peers_throttling)) {
+              Log(LOG_INFO, "INFO ( %s/core/BMP ): throttling at BMP peer #%u\n", config.name, peers_idx);
+              log_notification_set(&log_notifications.bmp_peers_throttling);
+            }
+*/
+            fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
+            close(fd);
+            goto select_again;
+          }
+        }
+        /* XXX: replenish sessions with expired keepalives */
+      }
+
+      if (!peer) {
+        int fd;
+
+        /* We briefly accept the new connection to be able to drop it */
+        Log(LOG_ERR, "ERROR ( %s/core/BMP ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
+                        config.name, config.nfacctd_bmp_max_peers);
+        fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
+        close(fd);
+        goto select_again;
+      }
+      peer->fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
+
+#if defined ENABLE_IPV6
+      ipv4_mapped_to_ipv4(&client);
+#endif
+
+      /* If an ACL is defined, here we check against and enforce it */
+      if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
+      else allowed = TRUE;
+
+      if (!allowed) {
+        bgp_peer_close(peer);
+        goto select_again;
+      }
+
+      FD_SET(peer->fd, &bkp_read_descs);
+      peer->addr.family = ((struct sockaddr *)&client)->sa_family;
+      if (peer->addr.family == AF_INET) {
+        peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+        peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
+      }
+#if defined ENABLE_IPV6
+      else if (peer->addr.family == AF_INET6) {
+        memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
+        peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
+      }
+#endif
+
+      /* Check: only one TCP connection is allowed per peer */
+      for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
+        if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) {
+          now = time(NULL);
+          if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
+            Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Replenishing stale connection by peer.\n",
+                                config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4));
+            FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
+            bgp_peer_close(&peers[peers_check_idx]);
+          }
+          else {
+            Log(LOG_ERR, "ERROR ( %s/core/BMP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n",
+                                config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4),
+                                (peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
+            FD_CLR(peer->fd, &bkp_read_descs);
+            bgp_peer_close(peer);
+            goto select_again;
+          }
+        }
+        else {
+          if (peers[peers_check_idx].fd) peers_num++;
+        }
+      }
+
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): BMP peers usage: %u/%u\n", config.name, peers_num, config.nfacctd_bmp_max_peers);
+
+      if (config.nfacctd_bmp_neighbors_file)
+        write_neighbors_file(config.nfacctd_bmp_neighbors_file);
+
+      goto select_again;
+    }
+
+    /* We have something coming in: let's lookup which peer is that; XXX: to be optimized */
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      if (peers[peers_idx].fd && FD_ISSET(peers[peers_idx].fd, &read_descs)) {
+        peer = &peers[peers_idx];
+        break;
+      }
+    }
+
+    if (!peer) {
+      Log(LOG_ERR, "ERROR ( %s/core/BMP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", config.name, select_num, select_fd);
+      goto select_again;
+    }
+
+    peer->msglen = ret = recv(peer->fd, bmp_packet, BMP_MAX_PACKET_SIZE, 0);
+
+    if (ret <= 0) {
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Existing BMP connection was reset (%d).\n", config.name, inet_ntoa(peer->id.address.ipv4), errno);
+      FD_CLR(peer->fd, &bkp_read_descs);
+      bgp_peer_close(peer);
+      goto select_again;
+    }
+    else {
+      /* XXX: BMP packet parsing & processing */
+    }
+  }
 }
 
 void bmp_attr_init()
