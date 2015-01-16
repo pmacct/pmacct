@@ -1971,6 +1971,9 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (tpl->tpl[NF9_IN_VLAN].len) {
       memcpy(&vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
     }
+    else if (tpl->tpl[NF9_DOT1QVLANID].len) {
+      memcpy(&vlan_id, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
+    }
     if (entry->vlan_id.n == vlan_id) return (FALSE | entry->vlan_id.neg);
     else return (TRUE ^ entry->vlan_id.neg);
   default:

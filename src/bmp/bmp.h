@@ -24,6 +24,20 @@
 #define BMP_MAX_PACKET_SIZE	4096
 #define BMP_MAX_PEERS_DEFAULT	4
 
+/* BMP message types */
+#define BMP_MSG_ROUTE		0	
+#define	BMP_MSG_STATS		1
+#define BMP_MSG_PEER_DOWN	2
+#define BMP_MSG_PEER_UP		3
+#define	BMP_MSG_INIT		4
+#define BMP_MSG_TERM		5
+
+struct bmp_common_hdr {
+  u_int8_t	version;
+  u_int32_t	len;
+  u_int8_t	type;
+};
+
 /* prototypes */
 #if (!defined __BMP_C)
 #define EXT extern

@@ -57,7 +57,7 @@ void skinny_bmp_daemon()
   afi_t afi;
   safi_t safi;
 
-  struct bgp_peer *peer; /* XXX: bgp_peer ? */
+  struct bgp_peer *peer;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -115,7 +115,12 @@ void skinny_bmp_daemon()
   if (!config.nfacctd_bmp_max_peers) config.nfacctd_bmp_max_peers = BMP_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/core/BMP ): maximum BMP peers allowed: %d\n", config.name, config.nfacctd_bmp_max_peers);
 
-  /* XXX: BMP peers sructure allocation */
+  bmp_peers = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
+  if (!bmp_peers) {
+    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers structure. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
+  memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
 
   /* XXX: init logging structures, including AMQP */
 
@@ -242,10 +247,7 @@ void skinny_bmp_daemon()
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
-    /* XXX: signals handling, if any */
-
     /* XXX: if (reload_log_bmp_thread) */
-
     /* XXX: bgp_handle_dump_event() && bgp_daemon_msglog_init_amqp_host() */
 
     /* 
@@ -267,7 +269,7 @@ void skinny_bmp_daemon()
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
 
-            // XXX: log_notification_unset(&log_notifications.bmp_peers_throttling);
+            log_notification_unset(&log_notifications.bmp_peers_throttling);
 
             if (config.nfacctd_bmp_batch && peer) {
               if (now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
@@ -284,18 +286,15 @@ void skinny_bmp_daemon()
             int fd = 0;
 
             /* We briefly accept the new connection to be able to drop it */
-/* 	    XXX:
             if (!log_notification_isset(log_notifications.bmp_peers_throttling)) {
               Log(LOG_INFO, "INFO ( %s/core/BMP ): throttling at BMP peer #%u\n", config.name, peers_idx);
               log_notification_set(&log_notifications.bmp_peers_throttling);
             }
-*/
             fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
             close(fd);
             goto select_again;
           }
         }
-        /* XXX: replenish sessions with expired keepalives */
       }
 
       if (!peer) {
@@ -339,21 +338,11 @@ void skinny_bmp_daemon()
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) {
-          now = time(NULL);
-          if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
-            Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Replenishing stale connection by peer.\n",
+          Log(LOG_ERR, "ERROR ( %s/core/BMP ): [Id: %s] Refusing new connection from existing peer.\n",
                                 config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4));
-            FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
-            bgp_peer_close(&peers[peers_check_idx]);
-          }
-          else {
-            Log(LOG_ERR, "ERROR ( %s/core/BMP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n",
-                                config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4),
-                                (peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
-            FD_CLR(peer->fd, &bkp_read_descs);
-            bgp_peer_close(peer);
-            goto select_again;
-          }
+          FD_CLR(peer->fd, &bkp_read_descs);
+          bgp_peer_close(peer);
+          goto select_again;
         }
         else {
           if (peers[peers_check_idx].fd) peers_num++;
@@ -368,7 +357,7 @@ void skinny_bmp_daemon()
       goto select_again;
     }
 
-    /* We have something coming in: let's lookup which peer is that; XXX: to be optimized */
+    /* We have something coming in: let's lookup which peer is that; XXX old: to be optimized */
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
       if (peers[peers_idx].fd && FD_ISSET(peers[peers_idx].fd, &read_descs)) {
         peer = &peers[peers_idx];

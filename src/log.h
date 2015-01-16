@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -51,6 +51,7 @@ static const struct _facility_map facility_map[] = {
 struct _log_notifications {
   u_int8_t max_classifiers;
   u_int8_t bgp_peers_throttling;
+  u_int8_t bmp_peers_throttling;
   u_int8_t geoip_ipv4_file_null;
   u_int8_t geoip_ipv6_file_null;
 };
