@@ -237,7 +237,7 @@ void skinny_bmp_daemon()
 
     select_fd = config.bmp_sock;
     for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++)
-      if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd;
+      if (select_fd < bmp_peers[peers_idx].fd) select_fd = bmp_peers[peers_idx].fd;
     select_fd++;
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
@@ -262,11 +262,11 @@ void skinny_bmp_daemon()
       int peers_check_idx, peers_num;
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-        if (peers[peers_idx].fd == 0) {
+        if (bmp_peers[peers_idx].fd == 0) {
           now = time(NULL);
 
           if (bmp_current_batch_elem > 0 || now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
-            peer = &peers[peers_idx];
+            peer = &bmp_peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
 
             log_notification_unset(&log_notifications.bmp_peers_throttling);
@@ -337,15 +337,15 @@ void skinny_bmp_daemon()
 
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
-        if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) {
+        if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].addr))) {
           Log(LOG_ERR, "ERROR ( %s/core/BMP ): [Id: %s] Refusing new connection from existing peer.\n",
-                                config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4));
+                                config.name, inet_ntoa(bmp_peers[peers_check_idx].id.address.ipv4));
           FD_CLR(peer->fd, &bkp_read_descs);
           bgp_peer_close(peer);
           goto select_again;
         }
         else {
-          if (peers[peers_check_idx].fd) peers_num++;
+          if (bmp_peers[peers_check_idx].fd) peers_num++;
         }
       }
 
@@ -359,8 +359,8 @@ void skinny_bmp_daemon()
 
     /* We have something coming in: let's lookup which peer is that; XXX old: to be optimized */
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-      if (peers[peers_idx].fd && FD_ISSET(peers[peers_idx].fd, &read_descs)) {
-        peer = &peers[peers_idx];
+      if (bmp_peers[peers_idx].fd && FD_ISSET(bmp_peers[peers_idx].fd, &read_descs)) {
+        peer = &bmp_peers[peers_idx];
         break;
       }
     }

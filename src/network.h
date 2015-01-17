@@ -260,6 +260,7 @@ struct my_gtphdr_v1 {
 typedef u_int32_t as_t;
 typedef u_int16_t as16_t;
 
+#define RD_LEN		8
 #define RD_TYPE_AS      0
 #define RD_TYPE_IP      1
 #define RD_TYPE_AS4     2
