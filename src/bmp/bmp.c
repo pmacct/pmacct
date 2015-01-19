@@ -378,10 +378,101 @@ void skinny_bmp_daemon()
       bgp_peer_close(peer);
       goto select_again;
     }
-    else {
-      /* XXX: BMP packet parsing & processing */
-    }
+    else bmp_process_packet(bmp_packet, peer->msglen, peer);
   }
+}
+
+void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
+{
+  char *bmp_packet_ptr = bmp_packet;
+  u_int32_t remaining_len, bmp_len;
+
+  struct bmp_common_hdr *bch = NULL;
+
+  remaining_len = len;
+  if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(bmp_packet_ptr, &remaining_len, sizeof(struct bmp_common_hdr)))) {
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name);
+    return;
+  }
+
+  if (bch->version != BMP_V3) {
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: BMP version != %u\n", config.name, BMP_V3);
+    return;
+  } 
+
+  bmp_len = ntohl(bch->len);
+  if (bmp_len != len) {
+    Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): BMP common hdr len (%u) != recv() len (%u)\n", config.name, bmp_len, len);
+/*
+    XXX: parking this for now: debugging with packet trace recv() seems to be true here.  
+
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: BMP len (%u) != recv() len (%u)\n", config.name, bmp_len, len);
+    return;
+*/
+  }
+
+  Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): received message type: %u\n", config.name, bch->type);
+
+  switch (bch->type) {
+  case BMP_MSG_ROUTE:
+    break;
+  case BMP_MSG_STATS:
+    break;
+  case BMP_MSG_PEER_DOWN:
+    break;
+  case BMP_MSG_PEER_UP:
+    bmp_process_msg_peer_up(bmp_packet_ptr, &remaining_len, peer); 
+    break;
+  case BMP_MSG_INIT:
+    bmp_process_msg_init(bmp_packet_ptr, &remaining_len, peer); 
+    break;
+  case BMP_MSG_TERM:
+    break;
+  default:
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: unknown message type %u\n", config.name, bch->type);
+    return;
+  }
+}
+
+void bmp_process_msg_init(char *bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+{
+  struct bmp_init_hdr *bih;
+  u_int16_t bmp_len;
+  char *bmp_init_info;
+
+  while (*len) {
+    if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: failed bmp_get_and_check_length() BMP init hdr\n", config.name);
+      return;
+    }
+
+    bmp_len = ntohs(bih->len);
+    if (!(bmp_init_info = bmp_get_and_check_length(bmp_packet, len, bmp_len))) {
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: failed bmp_get_and_check_length() BMP init info\n", config.name);
+      return;
+    }
+
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): BMP init TLV: %s (%u)\n", config.name, bmp_init_info, bih->type);
+  }
+}
+
+void bmp_process_msg_peer_up(char *bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+{
+  struct bmp_peer_hdr *bph;
+  struct bmp_peer_up_hdr *bpuh;
+}
+
+char *bmp_get_and_check_length(char *bmp_packet_ptr, u_int32_t *pkt_size, u_int32_t len)
+{
+  char *current_ptr = NULL;
+  
+  if ((*pkt_size) >= len) {
+    current_ptr = bmp_packet_ptr;
+    (*pkt_size) -= len;
+    bmp_packet_ptr += len;
+  }
+
+  return current_ptr;
 }
 
 void bmp_attr_init()

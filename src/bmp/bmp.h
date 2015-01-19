@@ -23,6 +23,7 @@
 #define BMP_TCP_PORT		1790
 #define BMP_MAX_PACKET_SIZE	4096
 #define BMP_MAX_PEERS_DEFAULT	4
+#define BMP_V3			3
 
 /* definitions based on draft-ietf-grow-bmp-07 */
 
@@ -35,10 +36,10 @@
 #define BMP_MSG_TERM		5
 
 struct bmp_common_hdr {
-  u_int8_t	version;
+  u_char	version;
   u_int32_t	len;
-  u_int8_t	type;
-};
+  u_char	type;
+} __attribute__ ((packed));
 
 #define BMP_PEER_GLOBAL		0
 #define BMP_PEER_L3VPN		1
@@ -50,15 +51,15 @@ struct bmp_peer_flags {
 */
 
 struct bmp_peer_hdr {
-  u_int8_t	type;
-  u_int8_t	flags;
-  u_int8_t	rd[RD_LEN];
-  u_int8_t	addr[16];
+  u_char	type;
+  u_char	flags;
+  u_char	rd[RD_LEN];
+  u_char	addr[16];
   u_int32_t	asn;
   u_int32_t	bgp_id;
   u_int32_t	tstamp_secs;
   u_int32_t	tstamp_residual;
-};
+} __attribute__ ((packed));
 
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
@@ -67,7 +68,7 @@ struct bmp_peer_hdr {
 struct bmp_init_hdr {
   u_int16_t	type;
   u_int16_t	len;
-};
+} __attribute__ ((packed));
 
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
@@ -80,11 +81,11 @@ struct bmp_init_hdr {
 struct bmp_term_hdr {
   u_int16_t     type;
   u_int16_t     len;
-};
+} __attribute__ ((packed));
 
 struct bmp_stats_hdr {
   u_int32_t	count;
-};
+} __attribute__ ((packed));
 
 #define BMP_STATS_TYPE0		0 /* (32-bit Counter) Number of prefixes rejected by inbound policy */
 #define BMP_STATS_TYPE1		1 /* (32-bit Counter) Number of (known) duplicate prefix advertisements */
@@ -99,7 +100,7 @@ struct bmp_stats_hdr {
 struct bmp_stats_cnt_hdr {
   u_int16_t	type;
   u_int16_t	len;
-};
+} __attribute__ ((packed));
 
 #define BMP_PEER_DOWN_LOC_NOT_MSG	1
 #define BMP_PEER_DOWN_LOC_CODE		2
@@ -107,16 +108,16 @@ struct bmp_stats_cnt_hdr {
 #define BMP_PEER_DOWN_REM_CODE		4
 
 struct bmp_peer_down_hdr {
-  u_int8_t	reason;
-};
+  u_char	reason;
+} __attribute__ ((packed));
 
 struct bmp_peer_up_hdr {
-  u_int8_t	addr[16];
+  u_char	addr[16];
   u_int16_t	loc_port;
   u_int16_t	rem_port;
   /* Sent OPEN Message */
   /* Received OPEN Message */
-};
+} __attribute__ ((packed));
 
 /* prototypes */
 #if (!defined __BMP_C)
@@ -127,6 +128,10 @@ struct bmp_peer_up_hdr {
 EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
 EXT void bmp_attr_init();
+EXT void bmp_process_packet(char *, u_int32_t, struct bgp_peer *);
+EXT void bmp_process_msg_init(char *, u_int32_t *, struct bgp_peer *);
+EXT void bmp_process_msg_peer_up(char *, u_int32_t *, struct bgp_peer *);
+EXT char *bmp_get_and_check_length(char *, u_int32_t *, u_int32_t);
 
 /* global variables */
 EXT struct bgp_peer *bmp_peers; // XXX
