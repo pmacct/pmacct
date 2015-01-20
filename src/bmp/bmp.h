@@ -54,11 +54,11 @@ struct bmp_peer_hdr {
   u_char	type;
   u_char	flags;
   u_char	rd[RD_LEN];
-  u_char	addr[16];
+  u_int32_t	addr[4];
   u_int32_t	asn;
   u_int32_t	bgp_id;
-  u_int32_t	tstamp_secs;
-  u_int32_t	tstamp_residual;
+  u_int32_t	tstamp_sec;
+  u_int32_t	tstamp_usec;
 } __attribute__ ((packed));
 
 #define BMP_INIT_INFO_STRING	0
@@ -112,12 +112,20 @@ struct bmp_peer_down_hdr {
 } __attribute__ ((packed));
 
 struct bmp_peer_up_hdr {
-  u_char	addr[16];
+  u_int32_t	loc_addr[4];
   u_int16_t	loc_port;
   u_int16_t	rem_port;
   /* Sent OPEN Message */
   /* Received OPEN Message */
 } __attribute__ ((packed));
+
+struct bmp_data {
+  u_int8_t family;
+  struct host_addr peer_ip;
+  struct host_addr bgp_id;
+  struct host_addr local_ip;
+  struct timeval tstamp;
+};
 
 /* prototypes */
 #if (!defined __BMP_C)
@@ -129,9 +137,16 @@ EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
 EXT void bmp_attr_init();
 EXT void bmp_process_packet(char *, u_int32_t, struct bgp_peer *);
-EXT void bmp_process_msg_init(char *, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_peer_up(char *, u_int32_t *, struct bgp_peer *);
-EXT char *bmp_get_and_check_length(char *, u_int32_t *, u_int32_t);
+EXT void bmp_process_msg_init(char **, u_int32_t *, struct bgp_peer *);
+EXT void bmp_process_msg_peer_up(char **, u_int32_t *, struct bgp_peer *);
+
+EXT void bmp_peer_hdr_get_family(struct bmp_peer_hdr *, u_int8_t *);
+EXT void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *, struct host_addr *, u_int8_t);
+EXT void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *, struct host_addr *);
+EXT void bmp_peer_hdr_get_tstamp(struct bmp_peer_hdr *, struct timeval *);
+EXT void bmp_peer_up_hdr_get_local_ip(struct bmp_peer_up_hdr *, struct host_addr *, u_int8_t);
+
+EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 
 /* global variables */
 EXT struct bgp_peer *bmp_peers; // XXX

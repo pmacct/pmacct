@@ -390,7 +390,7 @@ void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
   struct bmp_common_hdr *bch = NULL;
 
   remaining_len = len;
-  if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(bmp_packet_ptr, &remaining_len, sizeof(struct bmp_common_hdr)))) {
+  if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &remaining_len, sizeof(struct bmp_common_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name);
     return;
   }
@@ -421,10 +421,10 @@ void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
   case BMP_MSG_PEER_DOWN:
     break;
   case BMP_MSG_PEER_UP:
-    bmp_process_msg_peer_up(bmp_packet_ptr, &remaining_len, peer); 
+    bmp_process_msg_peer_up(&bmp_packet_ptr, &remaining_len, peer); 
     break;
   case BMP_MSG_INIT:
-    bmp_process_msg_init(bmp_packet_ptr, &remaining_len, peer); 
+    bmp_process_msg_init(&bmp_packet_ptr, &remaining_len, peer); 
     break;
   case BMP_MSG_TERM:
     break;
@@ -434,7 +434,7 @@ void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
   }
 }
 
-void bmp_process_msg_init(char *bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
 {
   struct bmp_init_hdr *bih;
   u_int16_t bmp_len;
@@ -452,24 +452,119 @@ void bmp_process_msg_init(char *bmp_packet, u_int32_t *len, struct bgp_peer *pee
       return;
     }
 
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): BMP init TLV: %s (%u)\n", config.name, bmp_init_info, bih->type);
+    Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): BMP init TLV: %s (%u)\n", config.name, bmp_init_info, bih->type);
   }
 }
 
-void bmp_process_msg_peer_up(char *bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
 {
+  struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_peer_up_hdr *bpuh;
+
+  memset(&bdata, 0, sizeof(bdata));
+
+  if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: failed bmp_get_and_check_length() BMP peer hdr (peer up msg)\n", config.name);
+    return;
+  }
+
+  if (!(bpuh = (struct bmp_peer_up_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_up_hdr)))) {
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): packet discarded: failed bmp_get_and_check_length() BMP peer up hdr\n", config.name);
+    return;
+  }
+
+  bmp_peer_hdr_get_family(bph, &bdata.family);
+  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
+  bmp_peer_up_hdr_get_local_ip(bpuh, &bdata.local_ip, bdata.family);
+
+  // XXX: all to be moved to DEBUG
+  { 
+    char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN], local_ip[INET6_ADDRSTRLEN];
+
+    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE);
+    addr_to_str(peer_ip, &bdata.peer_ip);
+    addr_to_str(local_ip, &bdata.local_ip);
+
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [Tstamp: %s] peer type: %u peer_ip: %s peer ASN: %u\n",
+	config.name, inet_ntoa(bdata.bgp_id.address.ipv4), tstamp_str, bph->type, peer_ip, ntohl(bph->asn));
+
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [Tstamp: %s] peer up: local_ip: %s local port: %u remote port: %u\n",
+	config.name, inet_ntoa(bdata.bgp_id.address.ipv4), tstamp_str, local_ip, ntohs(bpuh->loc_port), ntohs(bpuh->rem_port));
+  }
 }
 
-char *bmp_get_and_check_length(char *bmp_packet_ptr, u_int32_t *pkt_size, u_int32_t len)
+void bmp_peer_hdr_get_family(struct bmp_peer_hdr *bph, u_int8_t *family)
+{
+  u_int8_t version;
+
+  if (bph && family) {
+    version = (bph->flags >> 7);
+
+    if (version == 0) (*family) = AF_INET;
+#if defined ENABLE_IPV6
+    else if (version == 1) (*family) = AF_INET6;
+#endif
+  }
+}
+
+void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t family)
+{
+  if (bph && a && family) {
+    a->family = family;
+
+    if (family == AF_INET) a->address.ipv4.s_addr = bph->addr[3]; 
+#if defined ENABLE_IPV6
+    else if (family == AF_INET6) memcpy(&a->address.ipv6, &bph->addr, 16); 
+#endif
+  }
+}
+
+void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *bph, struct host_addr *a)
+{
+  if (bph && a) {
+    a->family = AF_INET;
+    a->address.ipv4.s_addr = bph->bgp_id;
+  }
+}
+
+void bmp_peer_hdr_get_tstamp(struct bmp_peer_hdr *bph, struct timeval *tv)
+{
+  u_int32_t sec, usec;
+
+  if (bph && tv) {
+    if (bph->tstamp_sec) {
+      sec = ntohl(bph->tstamp_sec);
+      usec = ntohl(bph->tstamp_usec);
+
+      tv->tv_sec = sec;
+      tv->tv_usec = usec;
+    }
+  }
+}
+
+void bmp_peer_up_hdr_get_local_ip(struct bmp_peer_up_hdr *bpuh, struct host_addr *a, u_int8_t family)
+{
+  if (bpuh && a && family) {
+    a->family = family;
+
+    if (family == AF_INET) a->address.ipv4.s_addr = bpuh->loc_addr[3];
+#if defined ENABLE_IPV6
+    else if (family == AF_INET6) memcpy(&a->address.ipv6, &bpuh->loc_addr, 16);
+#endif
+  }
+}
+
+char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int32_t len)
 {
   char *current_ptr = NULL;
   
   if ((*pkt_size) >= len) {
-    current_ptr = bmp_packet_ptr;
+    current_ptr = (*bmp_packet_ptr);
     (*pkt_size) -= len;
-    bmp_packet_ptr += len;
+    (*bmp_packet_ptr) += len;
   }
 
   return current_ptr;
