@@ -100,6 +100,7 @@ struct bgp_peer {
   time_t last_keepalive;
   struct host_addr id;
   struct host_addr addr;
+  char addr_str[INET6_ADDRSTRLEN];
   u_int16_t tcp_port;
   u_int8_t cap_mp;
   char *cap_4as;

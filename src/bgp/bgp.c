@@ -2018,6 +2018,7 @@ void bgp_peer_close(struct bgp_peer *peer)
   peer->fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));
+  memset(&peer->addr_str, 0, sizeof(peer->addr_str));
 
   free(peer->buf.base);
 
