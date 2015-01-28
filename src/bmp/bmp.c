@@ -929,8 +929,8 @@ char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int
 
 void bmp_attr_init()
 {
-  aspath_init(bmp_ashash);
-  attrhash_init(bmp_attrhash);
-  community_init(bmp_comhash);
-  ecommunity_init(bmp_ecomhash);
+  aspath_init(&bmp_ashash);
+  attrhash_init(&bmp_attrhash);
+  community_init(&bmp_comhash);
+  ecommunity_init(&bmp_ecomhash);
 }

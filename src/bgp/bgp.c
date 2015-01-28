@@ -1833,10 +1833,10 @@ void bgp_info_free(struct bgp_info *ri)
 /* Initialization of attributes */
 void bgp_attr_init()
 {
-  aspath_init(ashash);
-  attrhash_init(attrhash);
-  community_init(comhash);
-  ecommunity_init(ecomhash);
+  aspath_init(&ashash);
+  attrhash_init(&attrhash);
+  community_init(&comhash);
+  ecommunity_init(&ecomhash);
 }
 
 unsigned int attrhash_key_make(void *p)
@@ -1895,9 +1895,9 @@ int attrhash_cmp(const void *p1, const void *p2)
   return 0;
 }
 
-void attrhash_init(struct hash *attrhash)
+void attrhash_init(struct hash **loc_attrhash)
 {
-  attrhash = (struct hash *) hash_create(attrhash_key_make, attrhash_cmp);
+  (*loc_attrhash) = (struct hash *) hash_create(attrhash_key_make, attrhash_cmp);
 }
 
 /* Internet argument attribute. */

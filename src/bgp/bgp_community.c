@@ -667,8 +667,8 @@ community_hash (void)
 
 /* Initialize comminity related hash. */
 void
-community_init (struct hash *comhash)
+community_init (struct hash **loc_comhash)
 {
-  comhash = hash_create ((unsigned int (*) (void *))community_hash_make,
+  (*loc_comhash) = hash_create ((unsigned int (*) (void *))community_hash_make,
 			 (int (*) (const void *, const void *))community_cmp);
 }

@@ -76,7 +76,7 @@ struct ecommunity_val
 #else
 #define EXT
 #endif
-EXT void ecommunity_init (struct hash *);
+EXT void ecommunity_init (struct hash **);
 EXT void ecommunity_free (struct ecommunity *);
 EXT struct ecommunity *ecommunity_new (void);
 EXT struct ecommunity *ecommunity_parse (u_int8_t *, u_short);

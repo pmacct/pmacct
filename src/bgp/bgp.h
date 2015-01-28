@@ -196,7 +196,7 @@ EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
-EXT void attrhash_init(struct hash *);
+EXT void attrhash_init(struct hash **);
 
 EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
 EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *, pm_cfgreg_t);

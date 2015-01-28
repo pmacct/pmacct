@@ -1653,9 +1653,9 @@ aspath_cmp (const void *arg1, const void *arg2)
 
 /* AS path hash initialize. */
 void
-aspath_init (struct hash *ashash)
+aspath_init (struct hash **loc_ashash)
 {
-  ashash = hash_create_size (32767, aspath_key_make, aspath_cmp);
+  (*loc_ashash) = hash_create_size (32767, aspath_key_make, aspath_cmp);
 }
 
 void

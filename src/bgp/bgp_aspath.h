@@ -72,7 +72,7 @@ struct aspath
 #else
 #define EXT
 #endif
-EXT void aspath_init (struct hash *);
+EXT void aspath_init (struct hash **);
 EXT void aspath_finish (void);
 EXT struct aspath *aspath_parse (char *, size_t, int);
 EXT struct aspath *aspath_dup (struct aspath *);
