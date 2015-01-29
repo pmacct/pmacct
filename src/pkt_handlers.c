@@ -2630,6 +2630,10 @@ void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 4);
       pdata->primitives.ifindex_in = ntohl(iface32);
     }
+    else if (tpl->tpl[NF9_INPUT_PHYSINT].len == 4) {
+      memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_PHYSINT].off, 4);
+      pdata->primitives.ifindex_in = ntohl(iface32);
+    }
     break;
   case 8:
     switch(hdr->aggregation) {
@@ -2702,6 +2706,10 @@ void NF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     }
     else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
       memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 4);
+      pdata->primitives.ifindex_out = ntohl(iface32);
+    }
+    else if (tpl->tpl[NF9_OUTPUT_PHYSINT].len == 4) {
+      memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, 4);
       pdata->primitives.ifindex_out = ntohl(iface32);
     }
     break;

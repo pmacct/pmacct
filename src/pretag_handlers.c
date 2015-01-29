@@ -1076,6 +1076,32 @@ int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
+int PT_map_cvlan_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int tmp, x = 0;
+
+  e->cvlan_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  tmp = atoi(value);
+  if (tmp < 0 || tmp > 4096) {
+    Log(LOG_ERR, "ERROR ( %s ): 'cvlan' need to be in the following range: 0 > value > 4096. ", filename);
+    return TRUE;
+  }
+  e->cvlan_id.n = tmp;
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_CVLAN_ID) {
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'cvlan' clauses part of the same statement. ", filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_cvlan_id_handler;
+  /* else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_vlan_id_handler; */
+  if (e->func[x]) e->func_type[x] = PRETAG_CVLAN_ID;
+
+  return FALSE;
+}
 
 int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
@@ -1200,6 +1226,10 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
 	return (FALSE | neg);
     }
+    else if (tpl->tpl[NF9_INPUT_PHYSINT].len == 4) {
+      if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_PHYSINT].off, tpl->tpl[NF9_INPUT_PHYSINT].len))
+        return (FALSE | neg);
+    }
     else return (TRUE ^ neg);
   case 8: 
     switch(hdr->aggregation) {
@@ -1261,6 +1291,10 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
       if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
 	return (FALSE | neg);
+    }
+    else if (tpl->tpl[NF9_OUTPUT_PHYSINT].len == 4) {
+      if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, tpl->tpl[NF9_OUTPUT_PHYSINT].len))
+        return (FALSE | neg);
     }
     else return (TRUE ^ neg);
   case 8:
@@ -1976,6 +2010,26 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
     if (entry->vlan_id.n == vlan_id) return (FALSE | entry->vlan_id.neg);
     else return (TRUE ^ entry->vlan_id.neg);
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
+int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t cvlan_id = 0;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_DOT1QCVLANID].len) {
+      memcpy(&cvlan_id, pptrs->f_data+tpl->tpl[NF9_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_DOT1QCVLANID].len, 2));
+    }
+    if (entry->cvlan_id.n == cvlan_id) return (FALSE | entry->cvlan_id.neg);
+    else return (TRUE ^ entry->cvlan_id.neg);
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
@@ -2763,6 +2817,17 @@ int PT_map_index_entries_vlan_id_handler(struct id_entry *e, void *src)
   return FALSE;
 }
 
+int PT_map_index_entries_cvlan_id_handler(struct id_entry *e, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !src_e) return TRUE;
+
+  memcpy(&e->cvlan_id, &src_e->cvlan_id, sizeof(pt_uint16_t));
+
+  return FALSE;
+}
+
 int PT_map_index_fdata_ip_handler(struct id_entry *e, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
@@ -2812,6 +2877,10 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, void *src)
         memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 4);
         e->input.n = ntohl(iface32);
       }
+      else if (tpl->tpl[NF9_INPUT_PHYSINT].len == 4) {
+        memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_PHYSINT].off, 4);
+        e->input.n = ntohl(iface32);
+      }
       break; 
     case 8:
       /* unsupported */
@@ -2850,6 +2919,10 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, void *src)
       }
       else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
         memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 4);
+        e->output.n = ntohl(iface32);
+      }
+      else if (tpl->tpl[NF9_OUTPUT_PHYSINT].len == 4) {
+        memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, 4);
         e->output.n = ntohl(iface32);
       }
       break;
@@ -3299,11 +3372,34 @@ int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, void *src)
       if (tpl->tpl[NF9_IN_VLAN].len) {
         memcpy(&e->vlan_id.n, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
       }
+      else if (tpl->tpl[NF9_DOT1QVLANID].len) {
+        memcpy(&e->vlan_id.n, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
+      }
     }
   }
   else if (config.acct_type == ACCT_SF) {
     if (sample->in_vlan) e->vlan_id.n = sample->in_vlan;
     else if (sample->out_vlan) e->vlan_id.n = sample->out_vlan;
+  }
+  else return TRUE;
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_DOT1QCVLANID].len) {
+        memcpy(&e->cvlan_id.n, pptrs->f_data+tpl->tpl[NF9_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_DOT1QCVLANID].len, 2));
+      }
+    }
   }
   else return TRUE;
 

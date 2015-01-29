@@ -1084,7 +1084,7 @@ VALUES:		[ true | false ]
 DESC:		enables indexing of maps to increase lookup speeds on large maps and/or sustained lookup
 		rates. Indexes are automatically defined basing on structure and content of the map, up to
 		a maximum of 8. Indexing of pre_tag_map, bgp_peer_src_as_map, flows_to_rd_map is supported.
-		Only a sub-set of pre_tag_map fields are supported, including: ip, bgp_nexthop, vlan_id,
+		Only a sub-set of pre_tag_map fields are supported, including: ip, bgp_nexthop, vlan, cvlan,
 		src_mac, mpls_vpn_rd, mpls_pw_id, src_as, dst_as, peer_src_as, peer_dst_as, input, output).
 		Only IP addresses, ie. no IP prefixes, are supported as part of the 'ip' field. Also, negations
 		are not supported (ie. 'in=-216' match all but input interface 216). bgp_agent_map and
