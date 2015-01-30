@@ -58,8 +58,10 @@
 !                       in sfacctd this is compared against the AgentId field
 !                       of received sFlow samples. Expected argument are an IP
 !			address or prefix (ie. XXX.XXX.XXX.XXX/NN) 
-! 'in'  		MATCH: Input interface 
-! 'out' 		MATCH: Output interface 
+! 'in'  		MATCH: Input interface. In NFv9/IPFIX this is compared
+!			against IE #10 and, if not existing, against IE #252.  
+! 'out' 		MATCH: Output interface. In NFv9/IPFIX this is compared
+!			against IE #14 and, if not existing, against IE #253. 
 ! 'engine_type'		MATCH: in NFv5 this is compared against the 'engine_type'
 !			header field. In NFv9 it's compared against the 3rd octet
 !			of the 'source_id' header field. Provides uniqueness with
@@ -71,11 +73,13 @@
 !			device.
 ! 'flowset_id'		MATCH: In NFv9/IPFIX this is compared against the flowset
 !			ID field of the flowset header.
-! 'nexthop'		MATCH: IPv4/IPv6 address of the next-hop router
+! 'nexthop'		MATCH: IPv4/IPv6 address of the next-hop router. In NFv9/
+!			IPFIX this is compared against IE #15.
 ! 'bgp_nexthop'		MATCH: IPv4/IPv6 address of the next-hop BGP router. In
 !			MPLS-enabled networks this can be also matched against top
 !			label address where available (ie. egress NetFlow v9/IPFIX
-!			exports).
+!			exports). In NFv9/IPFIX this is compared against IE #18
+!			for IPv4 and IE #62 for IPv6.
 ! 'filter'		MATCH: incoming packets are mateched against the supplied
 !			filter expression (expected in libpcap syntax); the filter
 !			needs to be enclosed in quotes ('). 
@@ -137,10 +141,11 @@
 !                       IE #57, in sFlow against destination MAC address field
 !			part of the Extended Switch object.
 ! 'vlan'		MATCH: In NetFlow v9 and IPFIX this is compared against
-!			IE #58, in sFlow against in/out VLAN ID fields part of
-!			the Extended Switch object.
-! 'cvlan'               MATCH: In NetFlow v9 and IPFIX this is compared against
-!                       IE #245.
+!			IE #58 and, if not existing, against IE #242, in sFlow
+!			against in/out VLAN ID fields part of the Extended Switch
+!			object.
+! 'post_cvlan'          MATCH: In NetFlow v9 and IPFIX this is compared against
+!                       IE #255.
 ! 'label'		SET: Mark the rule with label's value. Labels don't need
 !			to be unique: when jumping, the first matching label wins.
 !			Label value 'next' is reserved for internal use and

@@ -538,13 +538,13 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_DOT1QVLANID			243
 #define NF9_DOT1QPRIORITY		244
-#define NF9_DOT1QCVLANID		245
 /* ... */
 #define NF9_PSEUDOWIREID		249
 /* ... */
 #define NF9_INPUT_PHYSINT		252
 #define NF9_OUTPUT_PHYSINT		253
 /* ... */
+#define NF9_POST_DOT1QCVLANID		255
 #define NF9_ETHERTYPE			256
 /* ... */
 #define NF9_OBSERVATION_TIME_SEC	322
