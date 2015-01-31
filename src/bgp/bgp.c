@@ -148,7 +148,7 @@ void skinny_bgp_daemon()
       exit_all(1);
     }
     memset(peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
-    bgp_peer_log_seq_init();
+    bgp_peer_log_seq_init(&log_seq);
 
     if (config.nfacctd_bgp_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ

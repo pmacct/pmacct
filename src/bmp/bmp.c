@@ -27,6 +27,12 @@
 #include "../bgp/bgp.h"
 #include "bmp.h"
 #include "thread_pool.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
+#ifdef WITH_JANSSON
+#include <jansson.h>
+#endif
 
 /* variables to be exported away */
 thread_pool_t *bmp_pool;
@@ -52,7 +58,6 @@ void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1;
   char bmp_packet[BMP_MAX_PACKET_SIZE], *bmp_packet_ptr;
-  struct timeval dump_refresh_timeout, *drt_ptr;
   time_t now;
   afi_t afi;
   safi_t safi;
@@ -76,7 +81,13 @@ void skinny_bmp_daemon()
   fd_set read_descs, bkp_read_descs;
   int select_fd, select_num;
 
+  /* logdump time management */
+  time_t dump_refresh_deadline;
+  struct timeval dump_refresh_timeout, *drt_ptr;
+
+
   /* initial cleanups */
+  // XXX: reload_log_bmp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
   memset(bmp_packet, 0, BMP_MAX_PACKET_SIZE);
@@ -122,7 +133,37 @@ void skinny_bmp_daemon()
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
 
-  /* XXX: init logging structures, including AMQP */
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+    if (config.nfacctd_bmp_msglog_file && config.nfacctd_bmp_msglog_amqp_routing_key) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): bmp_daemon_msglog_file and bmp_daemon_msglog_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
+
+    bmp_peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
+    if (!bmp_peers_log) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
+    memset(bmp_peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
+    bgp_peer_log_seq_init(&bmp_log_seq);
+
+    if (config.nfacctd_bmp_msglog_amqp_routing_key) {
+#ifdef WITH_RABBITMQ
+      bmp_daemon_msglog_init_amqp_host();
+      p_amqp_connect(&bmp_daemon_msglog_amqp_host);
+
+      if (!config.nfacctd_bmp_msglog_amqp_retry)
+        config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
+#else
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect() not possible due to missing --enable-rabbitmq\n", config.name);
+#endif
+    }
+  }
+
+  if (config.bmp_dump_file && config.bmp_dump_amqp_routing_key) {
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): bmp_dump_file and bmp_dump_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
 
   if (!config.bmp_table_attr_hash_buckets) config.bmp_table_attr_hash_buckets = HASHTABSIZE;
   bmp_attr_init();
@@ -230,7 +271,43 @@ void skinny_bmp_daemon()
     config.nfacctd_bmp_batch_interval = 0;
   }
 
-  /* XXX: more init logging structures, including AMQP */
+  if (!config.nfacctd_bmp_msglog_output && (config.nfacctd_bmp_msglog_file ||
+      config.nfacctd_bmp_msglog_amqp_routing_key))
+#ifdef WITH_JANSSON
+    config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/core/BGP ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+#endif
+
+  if (!config.bmp_dump_output && (config.bmp_dump_file ||
+      config.bmp_dump_amqp_routing_key))
+#ifdef WITH_JANSSON
+    config.bmp_dump_output = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/core/BGP ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+#endif
+
+  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    char dump_roundoff[] = "m";
+    time_t tmp_time;
+
+    if (config.bmp_dump_refresh_time) {
+      gettimeofday(&bmp_log_tstamp, NULL);
+      dump_refresh_deadline = bmp_log_tstamp.tv_sec;
+      tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
+      while ((tmp_time+config.bmp_dump_refresh_time) < dump_refresh_deadline) {
+        tmp_time += config.bmp_dump_refresh_time;
+      }
+      dump_refresh_deadline = tmp_time;
+      dump_refresh_deadline += config.bmp_dump_refresh_time; /* it's a deadline not a basetime */
+    }
+    else {
+      config.bmp_dump_file = NULL;
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): Invalid 'bmp_dump_refresh_time'.\n", config.name);
+    }
+
+    bmp_dump_init_amqp_host();
+  }
 
   for (;;) {
     select_again:
@@ -934,3 +1011,60 @@ void bmp_attr_init()
   community_init(&bmp_comhash);
   ecommunity_init(&bmp_ecomhash);
 }
+
+/* XXX: split in bmp_logdump.c */
+#if defined WITH_RABBITMQ
+void bmp_daemon_msglog_init_amqp_host()
+{
+  p_amqp_init_host(&bmp_daemon_msglog_amqp_host);
+
+  if (!config.nfacctd_bmp_msglog_amqp_user) config.nfacctd_bmp_msglog_amqp_user = rabbitmq_user;
+  if (!config.nfacctd_bmp_msglog_amqp_passwd) config.nfacctd_bmp_msglog_amqp_passwd = rabbitmq_pwd;
+  if (!config.nfacctd_bmp_msglog_amqp_exchange) config.nfacctd_bmp_msglog_amqp_exchange = default_amqp_exchange;
+  if (!config.nfacctd_bmp_msglog_amqp_exchange_type) config.nfacctd_bmp_msglog_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.nfacctd_bmp_msglog_amqp_host) config.nfacctd_bmp_msglog_amqp_host = default_amqp_host;
+  if (!config.nfacctd_bmp_msglog_amqp_vhost) config.nfacctd_bmp_msglog_amqp_vhost = default_amqp_vhost;
+
+  p_amqp_set_user(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_user);
+  p_amqp_set_passwd(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_passwd);
+  p_amqp_set_exchange(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_exchange);
+  p_amqp_set_exchange_type(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_exchange_type);
+  p_amqp_set_host(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_host);
+  p_amqp_set_vhost(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_vhost);
+  p_amqp_set_persistent_msg(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_persistent_msg);
+  p_amqp_set_frame_max(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_frame_max);
+  p_amqp_set_heartbeat_interval(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_heartbeat_interval);
+}
+#else
+void bmp_daemon_msglog_init_amqp_host()
+{
+}
+#endif
+
+#if defined WITH_RABBITMQ
+void bmp_dump_init_amqp_host()
+{
+  p_amqp_init_host(&bmp_dump_amqp_host);
+
+  if (!config.bmp_dump_amqp_user) config.bmp_dump_amqp_user = rabbitmq_user;
+  if (!config.bmp_dump_amqp_passwd) config.bmp_dump_amqp_passwd = rabbitmq_pwd;
+  if (!config.bmp_dump_amqp_exchange) config.bmp_dump_amqp_exchange = default_amqp_exchange;
+  if (!config.bmp_dump_amqp_exchange_type) config.bmp_dump_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.bmp_dump_amqp_host) config.bmp_dump_amqp_host = default_amqp_host;
+  if (!config.bmp_dump_amqp_vhost) config.bmp_dump_amqp_vhost = default_amqp_vhost;
+
+  p_amqp_set_user(&bmp_dump_amqp_host, config.bmp_dump_amqp_user);
+  p_amqp_set_passwd(&bmp_dump_amqp_host, config.bmp_dump_amqp_passwd);
+  p_amqp_set_exchange(&bmp_dump_amqp_host, config.bmp_dump_amqp_exchange);
+  p_amqp_set_exchange_type(&bmp_dump_amqp_host, config.bmp_dump_amqp_exchange_type);
+  p_amqp_set_host(&bmp_dump_amqp_host, config.bmp_dump_amqp_host);
+  p_amqp_set_vhost(&bmp_dump_amqp_host, config.bmp_dump_amqp_vhost);
+  p_amqp_set_persistent_msg(&bmp_dump_amqp_host, config.bmp_dump_amqp_persistent_msg);
+  p_amqp_set_frame_max(&bmp_dump_amqp_host, config.bmp_dump_amqp_frame_max);
+  p_amqp_set_heartbeat_interval(&bmp_dump_amqp_host, config.bmp_dump_amqp_heartbeat_interval);
+}
+#else
+void bmp_dump_init_amqp_host()
+{
+}
+#endif

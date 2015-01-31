@@ -96,6 +96,8 @@ EXT void p_amqp_handle_routing_key_dyn_rr(char *, int, char *, struct p_amqp_rk_
 EXT struct p_amqp_host amqpp_amqp_host;
 EXT struct p_amqp_host bgp_daemon_msglog_amqp_host;
 EXT struct p_amqp_host bgp_table_dump_amqp_host;
+EXT struct p_amqp_host bmp_daemon_msglog_amqp_host;
+EXT struct p_amqp_host bmp_dump_amqp_host;
 
 static char rabbitmq_user[] = "guest";
 static char rabbitmq_pwd[] = "guest";

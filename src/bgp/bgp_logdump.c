@@ -303,9 +303,9 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output)
   return (ret | amqp_ret);
 }
 
-void bgp_peer_log_seq_init()
+void bgp_peer_log_seq_init(u_int64_t *seq)
 {
-  log_seq = 0;
+  (*seq) = 0;
 }
 
 void bgp_peer_log_seq_increment()
