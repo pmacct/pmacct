@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* includes */
+#include "bmp_logdump.h"
+
 /* defines */
 #define BMP_TCP_PORT		1790
 #define BMP_MAX_PACKET_SIZE	4096
@@ -191,10 +194,6 @@ EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 
-/* XXX: split in bmp_logdump.h */
-EXT void bmp_daemon_msglog_init_amqp_host();
-EXT void bmp_dump_init_amqp_host();
-
 /* global variables */
 EXT struct bgp_peer *bmp_peers;
 EXT struct hash *bmp_attrhash;
@@ -203,10 +202,4 @@ EXT struct hash *bmp_comhash;
 EXT struct hash *bmp_ecomhash;
 EXT struct bgp_table *bmp_rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
-
-/* XXX: split in bmp_logdump.h */
-EXT struct bgp_peer_log *bmp_peers_log;
-EXT u_int64_t bmp_log_seq;
-EXT struct timeval bmp_log_tstamp;
-EXT char bmp_log_tstamp_str[SRVBUFLEN];
 #undef EXT

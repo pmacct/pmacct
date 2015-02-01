@@ -59,7 +59,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       kv = json_pack("{sI}", "seq", log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
-      bgp_peer_log_seq_increment();
+      bgp_peer_log_seq_increment(&log_seq);
 
       kv = json_pack("{ss}", "timestamp", log_tstamp_str);
       json_object_update_missing(obj, kv);
@@ -206,7 +206,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output)
       kv = json_pack("{sI}", "seq", log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
-      bgp_peer_log_seq_increment();
+      bgp_peer_log_seq_increment(&log_seq);
 
       kv = json_pack("{ss}", "timestamp", log_tstamp_str);
       json_object_update_missing(obj, kv);
@@ -266,7 +266,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output)
     kv = json_pack("{sI}", "seq", log_seq);
     json_object_update_missing(obj, kv);
     json_decref(kv);
-    bgp_peer_log_seq_increment();
+    bgp_peer_log_seq_increment(&log_seq);
 
     kv = json_pack("{ss}", "timestamp", log_tstamp_str);
     json_object_update_missing(obj, kv);
@@ -308,11 +308,11 @@ void bgp_peer_log_seq_init(u_int64_t *seq)
   (*seq) = 0;
 }
 
-void bgp_peer_log_seq_increment()
+void bgp_peer_log_seq_increment(u_int64_t *seq)
 {
   /* Jansson does not support unsigned 64 bit integers, let's wrap at 2^63-1 */
-  if (log_seq == INT64T_THRESHOLD) log_seq = 0;
-  else log_seq++;
+  if ((*seq) == INT64T_THRESHOLD) (*seq) = 0;
+  else (*seq)++;
 }
 
 void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)

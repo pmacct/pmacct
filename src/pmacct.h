@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -318,7 +318,7 @@ EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 #endif
 EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 EXT int reload_map, reload_map_exec_plugins;
-EXT int reload_map_bgp_thread, reload_log_bgp_thread;
+EXT int reload_map_bgp_thread, reload_log_bgp_thread, reload_log_bmp_thread;
 EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;

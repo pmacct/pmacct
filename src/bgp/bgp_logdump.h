@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -38,8 +38,8 @@ struct bgp_peer_log {
 #endif
 EXT int bgp_peer_log_init(struct bgp_peer *, int);
 EXT int bgp_peer_log_close(struct bgp_peer *, int);
-EXT void bgp_peer_log_seq_init();
-EXT void bgp_peer_log_seq_increment();
+EXT void bgp_peer_log_seq_init(u_int64_t *);
+EXT void bgp_peer_log_seq_increment(u_int64_t *);
 EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
 EXT int bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int);
 EXT int bgp_peer_dump_init(struct bgp_peer *, int);
