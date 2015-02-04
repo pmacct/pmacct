@@ -451,7 +451,7 @@ void skinny_bgp_daemon()
       else allowed = TRUE;
 
       if (!allowed) {
-	bgp_peer_close(peer);
+	bgp_peer_close(peer, FUNC_TYPE_BGP);
 	goto select_again;
       }
 
@@ -469,7 +469,7 @@ void skinny_bgp_daemon()
 #endif
 
       if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
-	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output);
+	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
 
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
@@ -479,14 +479,14 @@ void skinny_bgp_daemon()
             Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n",
 				config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4));
             FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
-            bgp_peer_close(&peers[peers_check_idx]);
+            bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP);
 	  }
 	  else {
 	    Log(LOG_ERR, "ERROR ( %s/core/BGP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n",
 				config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4),
 				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
 	    FD_CLR(peer->fd, &bkp_read_descs);
-	    bgp_peer_close(peer);
+	    bgp_peer_close(peer, FUNC_TYPE_BGP);
 	    goto select_again;
 	  }
         }
@@ -522,7 +522,7 @@ void skinny_bgp_daemon()
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", config.name, inet_ntoa(peer->id.address.ipv4), errno);
       FD_CLR(peer->fd, &bkp_read_descs);
-      bgp_peer_close(peer);
+      bgp_peer_close(peer, FUNC_TYPE_BGP);
       goto select_again;
     }
     else {
@@ -599,7 +599,7 @@ void skinny_bgp_daemon()
             Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (marker check failed).\n",
 				config.name, inet_ntoa(peer->id.address.ipv4));
 	    FD_CLR(peer->fd, &bkp_read_descs);
-	    bgp_peer_close(peer);
+	    bgp_peer_close(peer, FUNC_TYPE_BGP);
 	    goto select_again;
           }
 
@@ -638,7 +638,7 @@ void skinny_bgp_daemon()
 				    Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (option length).\n",
 							config.name, inet_ntoa(peer->id.address.ipv4));
 				    FD_CLR(peer->fd, &bkp_read_descs);
-				    bgp_peer_close(peer);
+				    bgp_peer_close(peer, FUNC_TYPE_BGP);
 				    goto select_again;
 				  } 
 
@@ -664,7 +664,7 @@ void skinny_bgp_daemon()
                                         Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (malformed capability: %x).\n",
 							config.name, inet_ntoa(peer->id.address.ipv4), cap_type);
                                         FD_CLR(peer->fd, &bkp_read_descs);
-                                        bgp_peer_close(peer);
+                                        bgp_peer_close(peer, FUNC_TYPE_BGP);
                                         goto select_again;
                                       }
 				     
@@ -701,7 +701,7 @@ void skinny_bgp_daemon()
 					  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n",
 							config.name, inet_ntoa(peer->id.address.ipv4));
 					  FD_CLR(peer->fd, &bkp_read_descs);
-					  bgp_peer_close(peer);
+					  bgp_peer_close(peer, FUNC_TYPE_BGP);
 					  goto select_again;
 					}
 				      }
@@ -743,7 +743,7 @@ void skinny_bgp_daemon()
 				  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (invalid AS4 option).\n",
 						config.name, inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
-				  bgp_peer_close(peer);
+				  bgp_peer_close(peer, FUNC_TYPE_BGP);
 				  goto select_again;
 				}
 			  }
@@ -756,7 +756,7 @@ void skinny_bgp_daemon()
 				  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (mismatching AS4 option).\n",
 						config.name, inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
-				  bgp_peer_close(peer);
+				  bgp_peer_close(peer, FUNC_TYPE_BGP);
 				  goto select_again;
 				}
 			  }
@@ -774,7 +774,7 @@ void skinny_bgp_daemon()
 				Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n",
 						config.name, inet_ntoa(peer->id.address.ipv4));
 				FD_CLR(peer->fd, &bkp_read_descs);
-				bgp_peer_close(peer);
+				bgp_peer_close(peer, FUNC_TYPE_BGP);
 				goto select_again;
 			  }
 
@@ -787,7 +787,7 @@ void skinny_bgp_daemon()
   			  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported version).\n",
 					config.name, inet_ntoa(peer->id.address.ipv4));
 			  FD_CLR(peer->fd, &bkp_read_descs);
-			  bgp_peer_close(peer);
+			  bgp_peer_close(peer, FUNC_TYPE_BGP);
 			  goto select_again;
 		    }
 
@@ -800,7 +800,7 @@ void skinny_bgp_daemon()
 	  case BGP_NOTIFICATION:
 		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", config.name, inet_ntoa(peer->id.address.ipv4));
 		  FD_CLR(peer->fd, &bkp_read_descs);
-		  bgp_peer_close(peer);
+		  bgp_peer_close(peer, FUNC_TYPE_BGP);
 		  goto select_again;
 		  break;
 	  case BGP_KEEPALIVE:
@@ -823,7 +823,7 @@ void skinny_bgp_daemon()
 		    Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP UPDATE received (no neighbor). Discarding.\n",
 					config.name, inet_ntoa(peer->id.address.ipv4));
 			FD_CLR(peer->fd, &bkp_read_descs);
-			bgp_peer_close(peer);
+			bgp_peer_close(peer, FUNC_TYPE_BGP);
 			goto select_again;
 		  }
 
@@ -835,7 +835,7 @@ void skinny_bgp_daemon()
 	      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported message type).\n",
 				config.name, inet_ntoa(peer->id.address.ipv4));
 	      FD_CLR(peer->fd, &bkp_read_descs);
-	      bgp_peer_close(peer);
+	      bgp_peer_close(peer, FUNC_TYPE_BGP);
 	      goto select_again;
 	    }
 	  }
@@ -2004,15 +2004,33 @@ int bgp_peer_init(struct bgp_peer *peer)
   return ret;
 }
 
-void bgp_peer_close(struct bgp_peer *peer)
+void bgp_peer_close(struct bgp_peer *peer, int type)
 {
   afi_t afi;
   safi_t safi;
 
+  /* pointers to BGP or BMP vars */
+  char *msglog_file, *neighbors_file, *amqp_routing_key;
+  int msglog_output;
+
+  if (type == FUNC_TYPE_BGP) {
+    msglog_file = config.nfacctd_bgp_msglog_file;
+    amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
+    msglog_output = config.nfacctd_bgp_msglog_output;
+    neighbors_file = config.nfacctd_bgp_neighbors_file; 
+  }
+  else if (type == FUNC_TYPE_BMP) {
+    msglog_file = config.nfacctd_bmp_msglog_file;
+    amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
+    msglog_output = config.nfacctd_bmp_msglog_output;
+    neighbors_file = config.nfacctd_bmp_neighbors_file;
+  }
+  else return;
+
   bgp_peer_info_delete(peer);
 
-  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
-    bgp_peer_log_close(peer, config.nfacctd_bgp_msglog_output); 
+  if (msglog_file || amqp_routing_key)
+    bgp_peer_log_close(peer, msglog_output, type); 
 
   close(peer->fd);
   peer->fd = 0;
@@ -2022,8 +2040,8 @@ void bgp_peer_close(struct bgp_peer *peer)
 
   free(peer->buf.base);
 
-  if (config.nfacctd_bgp_neighbors_file)
-    write_neighbors_file(config.nfacctd_bgp_neighbors_file);
+  if (neighbors_file)
+    write_neighbors_file(neighbors_file);
 }
 
 void bgp_peer_info_delete(struct bgp_peer *peer)

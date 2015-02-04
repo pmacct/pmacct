@@ -34,6 +34,80 @@
 #include <jansson.h>
 #endif
 
+int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, u_int16_t cnt_type, u_int64_t cnt_data64, u_int8_t got_data, char *event_type, int output)
+{
+  int ret = 0, amqp_ret = 0;
+
+#ifdef WITH_RABBITMQ
+  if (config.nfacctd_bmp_msglog_amqp_routing_key || config.bmp_dump_amqp_routing_key)
+    p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+#endif
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
+    json_t *obj = json_object(), *kv;
+
+    addr_to_str(peer_ip, bdata->peer_ip);
+
+    /* no need for seq for "dump" event_type */
+    if (strcmp(event_type, "dump")) {
+      kv = json_pack("{sI}", "seq", bmp_log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment(&bmp_log_seq);
+    }
+
+    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE);
+    kv = json_pack("{ss}", "timestamp", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "bmp_router", peer->addr_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(peer_ip, bdata->peer_ip);
+    kv = json_pack("{ss}", "peer_ip", peer_ip);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "counter_type", cnt_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (cnt_type <= BMP_STATS_MAX) {
+      kv = json_pack("{ss}", "counter_type_str", bmp_stats_cnt_types[cnt_type]);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+    else {
+      kv = json_pack("{ss}", "counter_type_str", "Unknown");
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    if (got_data) {
+      kv = json_pack("{sI}", "counter_value", cnt_data64);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    if (config.nfacctd_bmp_msglog_file || config.bmp_dump_file)
+      write_and_free_json(peer->log->fd, obj);
+
+#ifdef WITH_RABBITMQ
+    if (config.nfacctd_bmp_msglog_amqp_routing_key || config.bmp_dump_amqp_routing_key) {
+      amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+    }
+#endif
+#endif
+  }
+
+  return (ret | amqp_ret);
+}
+
 #if defined WITH_RABBITMQ
 void bmp_daemon_msglog_init_amqp_host()
 {

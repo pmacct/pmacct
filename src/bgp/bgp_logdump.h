@@ -36,8 +36,8 @@ struct bgp_peer_log {
 #else
 #define EXT
 #endif
-EXT int bgp_peer_log_init(struct bgp_peer *, int);
-EXT int bgp_peer_log_close(struct bgp_peer *, int);
+EXT int bgp_peer_log_init(struct bgp_peer *, int, int);
+EXT int bgp_peer_log_close(struct bgp_peer *, int, int);
 EXT void bgp_peer_log_seq_init(u_int64_t *);
 EXT void bgp_peer_log_seq_increment(u_int64_t *);
 EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);

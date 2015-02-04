@@ -20,7 +20,6 @@
 */
 
 /* includes */
-#include "bmp_logdump.h"
 
 /* defines */
 #define BMP_TCP_PORT		1790
@@ -155,6 +154,9 @@ struct bmp_data {
   struct host_addr local_ip;
   struct timeval tstamp;
 };
+
+/* more includes */
+#include "bmp_logdump.h"
 
 /* prototypes */
 #if (!defined __BMP_C)

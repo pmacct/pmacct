@@ -31,6 +31,8 @@
 EXT void bmp_daemon_msglog_init_amqp_host();
 EXT void bmp_dump_init_amqp_host();
 
+EXT int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, u_int16_t, u_int64_t, u_int8_t, char *, int);
+
 /* global variables */
 EXT struct bgp_peer_log *bmp_peers_log;
 EXT u_int64_t bmp_log_seq;

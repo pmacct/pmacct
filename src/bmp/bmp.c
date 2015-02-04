@@ -433,7 +433,7 @@ void skinny_bmp_daemon()
       else allowed = TRUE;
 
       if (!allowed) {
-        bgp_peer_close(peer);
+        bgp_peer_close(peer, FUNC_TYPE_BMP);
         goto select_again;
       }
 
@@ -452,13 +452,16 @@ void skinny_bmp_daemon()
       addr_to_str(peer->addr_str, &peer->addr);
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
 
+      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key)
+        bgp_peer_log_init(peer, config.nfacctd_bmp_msglog_output, FUNC_TYPE_BMP);
+
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].addr))) {
           Log(LOG_ERR, "ERROR ( %s/core/BMP ): [Id: %s] Refusing new connection from existing peer.\n",
                                 config.name, bmp_peers[peers_check_idx].addr_str);
           FD_CLR(peer->fd, &bkp_read_descs);
-          bgp_peer_close(peer);
+          bgp_peer_close(peer, FUNC_TYPE_BMP);
           goto select_again;
         }
         else {
@@ -492,7 +495,7 @@ void skinny_bmp_daemon()
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
-      bgp_peer_close(peer);
+      bgp_peer_close(peer, FUNC_TYPE_BMP);
       goto select_again;
     }
     else bmp_process_packet(bmp_packet, peer->msglen, peer);
@@ -781,7 +784,6 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   u_int32_t index, count = 0, cnt_data32;
   u_int16_t cnt_type, cnt_len;
   u_int8_t got_data;
-  char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
 
   memset(&bdata, 0, sizeof(bdata));
 
@@ -806,9 +808,6 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   /* If no timestamp in BMP then let's generate one */
   if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-  compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE);
-  addr_to_str(peer_ip, &bdata.peer_ip);
-
   for (index = 0; index < count; index++) {
     if (!(bsch = (struct bmp_stats_cnt_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_stats_cnt_hdr)))) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [stats] packet discarded: failed bmp_get_and_check_length() BMP stats cnt hdr #%u\n",
@@ -818,7 +817,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
 
     bmp_stats_cnt_hdr_get_type(bsch, &cnt_type);
     bmp_stats_cnt_hdr_get_len(bsch, &cnt_len);
-    cnt_data32 = 0; cnt_data64 = 0, got_data = FALSE;
+    cnt_data32 = 0; cnt_data64 = 0, got_data = TRUE;
 
     switch (cnt_type) {
     case BMP_STATS_TYPE0:
@@ -849,32 +848,21 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
       if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
       break;
     default:
-      if (cnt_len == 4) {
-	bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
-	got_data = TRUE;
+      if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
+      else if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
+      else {
+        bmp_get_and_check_length(bmp_packet, len, cnt_len);
+        got_data = FALSE;
       }
-      else if (cnt_len == 8) {
-	bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
-	got_data = TRUE;
-      }
-      else bmp_get_and_check_length(bmp_packet, len, cnt_len);
       break;
     }
 
     if (cnt_data32 && !cnt_data64) cnt_data64 = cnt_data32; 
-    if (cnt_type <= BMP_STATS_MAX) {
-      Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [stats] [tstamp: %s] [peer_ip: %s] %s (%u): %llu\n",
-		config.name, peer->addr_str, tstamp_str, peer_ip, bmp_stats_cnt_types[cnt_type], cnt_type, cnt_data64);
-    }
-    else {
-      if (got_data) {
-        Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [stats] [tstamp: %s] [peer_ip: %s] %s (%u): %llu\n",
-                config.name, peer->addr_str, tstamp_str, peer_ip, "Unknown", cnt_type, cnt_data64);
-      }
-      else {
-        Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [stats] [tstamp: %s] [peer_ip: %s] unknown stats counter: %u\n",
-                config.name, peer->addr_str, tstamp_str, peer_ip, cnt_type);
-      }
+
+    {
+      char event_type[] = "log";
+
+      bmp_log_msg_stats(peer, &bdata, cnt_type, cnt_data64, got_data, event_type, config.nfacctd_bmp_msglog_output);
     }
   }
 }

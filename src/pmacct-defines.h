@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -344,6 +344,9 @@
 #define CUSTOM_PRIMITIVE_TYPE_IP	4
 #define CUSTOM_PRIMITIVE_TYPE_MAC	5
 #define CUSTOM_PRIMITIVE_TYPE_RAW	6
+
+#define FUNC_TYPE_BGP	1
+#define FUNC_TYPE_BMP	2
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
