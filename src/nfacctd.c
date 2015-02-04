@@ -928,7 +928,7 @@ int main(int argc,char **argv, char **envp)
 	break;
       default:
         if (!config.nfacctd_disable_checks) {
-	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
+	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
 	  xflow_tot_bad_datagrams++;
         }
 	break;
@@ -948,7 +948,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   unsigned short int count = ntohs(hdr_v1->count);
 
   if (len < NfHdrV1Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -988,7 +988,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     }
   }
   else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1002,7 +1002,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   unsigned short int count = ntohs(hdr_v5->count);
 
   if (len < NfHdrV5Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1051,7 +1051,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     }
   }
   else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1065,7 +1065,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   unsigned short int count = ntohs(hdr_v7->count);
 
   if (len < NfHdrV7Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1114,7 +1114,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     }
   }
   else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1128,7 +1128,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   unsigned short int count = ntohs(hdr_v8->count);
 
   if (len < NfHdrV8Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1165,7 +1165,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     }
   }
   else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1196,7 +1196,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   }
 
   if (len < HdrSz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1211,7 +1211,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   process_flowset:
   if (off+NfDataHdrV9Sz >= len) { 
     notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
-			(struct sockaddr *) pptrsv->v4.f_agent);
+			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1220,7 +1220,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (data_hdr->flow_len == 0) {
     notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
-			(struct sockaddr *) pptrsv->v4.f_agent);
+			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1239,12 +1239,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) { 
         notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
-		        (struct sockaddr *) pptrsv->v4.f_agent);
+		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_tot_bad_datagrams++;
         return;
       }
 
-      tpl = handle_template(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff);
+      tpl = handle_template(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
       if (!tpl) return;
 
       tpl_ptr += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
@@ -1266,12 +1266,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) {
         notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
-                        (struct sockaddr *) pptrsv->v4.f_agent);
+                        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_tot_bad_datagrams++;
         return;
       }
 
-      tpl = handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL, flowsetlen-flowoff);
+      tpl = handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, NULL, flowsetlen-flowoff, FlowSeq);
       if (!tpl) return;
 
       /* Increment is not precise for NetFlow v9 but will work */
@@ -1286,7 +1286,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     flowsetlen = ntohs(data_hdr->flow_len);
     if (off+flowsetlen > len) { 
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
-		      (struct sockaddr *) pptrsv->v4.f_agent);
+		      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
       xflow_tot_bad_datagrams++;
       return;
     }
@@ -2033,7 +2033,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 
   /* basic length check against longest NetFlow header */
   if (len < NfHdrV8Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent);
+    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   } 
@@ -2042,7 +2042,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 
   if (nfv != 1 && nfv != 5 && nfv != 7 && nfv != 8 && nfv != 9 && nfv != 10) {
     if (!config.nfacctd_disable_checks) {
-      notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent);
+      notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
       xflow_tot_bad_datagrams++;
     }
     return;
@@ -2191,7 +2191,7 @@ void reset_ip6(struct packet_ptrs *pptrs)
 }
 #endif
 
-void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
+void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa, u_int32_t seq)
 {
   struct host_addr a;
   u_char errstr[SRVBUFLEN];
@@ -2201,8 +2201,12 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
   sa_to_addr(sa, &a, &agent_port);
   addr_to_str(agent_addr, &a);
   if (!config.nfacctd_ip) config.nfacctd_ip = any;
-  snprintf(errstr, SRVBUFLEN, "%s: nfacctd=%s:%u agent=%s:%u \n",
-  ostr, config.nfacctd_ip, config.nfacctd_port, agent_addr, agent_port);
+
+  if (seq) snprintf(errstr, SRVBUFLEN, "%s: nfacctd=%s:%u agent=%s:%u seq=%u\n",
+		ostr, config.nfacctd_ip, config.nfacctd_port, agent_addr, agent_port, seq);
+  else snprintf(errstr, SRVBUFLEN, "%s: nfacctd=%s:%u agent=%s:%u\n",
+		ostr, config.nfacctd_ip, config.nfacctd_port, agent_addr, agent_port);
+
   Log(severity, errstr);
 }
 

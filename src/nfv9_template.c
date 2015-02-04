@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -27,7 +27,8 @@
 #include "nfacctd.h"
 #include "pmacct-data.h"
 
-struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int16_t len)
+struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
+						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry *tpl = NULL;
   u_int8_t version = 0;
@@ -40,14 +41,14 @@ struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
     if (tpl = find_template(hdr->template_id, pptrs, tpl_type, sid))
-      tpl = refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len);
-    else tpl = insert_template(hdr, pptrs, tpl_type, sid, pens, version, len);
+      tpl = refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len, seq);
+    else tpl = insert_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
     if (tpl = find_template(hdr->template_id, pptrs, tpl_type, sid))
-      tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, version, len);
-    else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, version, len);
+      tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, version, len, seq);
+    else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, version, len, seq);
   }
 
   return tpl;
@@ -70,7 +71,8 @@ struct template_cache_entry *find_template(u_int16_t id, struct packet_ptrs *ppt
   return NULL;
 }
 
-struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len)
+struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
+						u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
@@ -111,7 +113,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
   while (count < num) {
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent);
+                        (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
@@ -194,7 +196,8 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
   return ptr;
 }
 
-struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len)
+struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type,
+						u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry backup, *next;
   struct template_field_v9 *field;
@@ -224,7 +227,7 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
   while (count < num) {
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent);
+                        (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
@@ -364,7 +367,8 @@ void log_template_footer(u_int16_t size, u_int8_t version)
   Log(LOG_DEBUG, "DEBUG ( %s/core ): \n", config.name);
 }
 
-struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version, u_int16_t len)
+struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
+							u_int32_t sid, u_int8_t version, u_int16_t len, u_int32_t seq)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
@@ -420,7 +424,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
   while (count) {
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent);
+                        (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
@@ -448,7 +452,8 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
   return ptr;
 }
 
-struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version, u_int16_t len)
+struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type,
+							u_int32_t sid, u_int8_t version, u_int16_t len, u_int32_t seq)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
@@ -492,7 +497,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
   while (count) {
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent);
+                        (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
@@ -573,7 +578,7 @@ u_int8_t get_ipfix_vlen(char *base, u_int16_t *len)
       ptr++;
       len16 = (u_int16_t *) ptr;
       ret = 3;
-      *len = *len16;
+      *len = ntohs(*len16);
     }
   }
 

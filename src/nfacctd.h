@@ -764,7 +764,7 @@ EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);
 EXT void reset_ip4(struct packet_ptrs *);
 EXT void reset_ip6(struct packet_ptrs *);
-EXT void notify_malf_packet(short int, char *, struct sockaddr *);
+EXT void notify_malf_packet(short int, char *, struct sockaddr *, u_int32_t);
 EXT int NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
 EXT char *nfv578_check_status(struct packet_ptrs *);
@@ -779,16 +779,16 @@ EXT struct v8_handler_entry v8_handlers[15];
 #else
 #define EXT
 #endif
-EXT struct template_cache_entry *handle_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t);
+EXT struct template_cache_entry *handle_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
 EXT struct template_cache_entry *find_template(u_int16_t, struct packet_ptrs *, u_int16_t, u_int32_t);
-EXT struct template_cache_entry *insert_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t);
-EXT struct template_cache_entry *refresh_template(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t);
+EXT struct template_cache_entry *insert_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *refresh_template(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 EXT void log_template_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
 EXT void log_opt_template_field(u_int16_t, u_int16_t, u_int16_t, u_int8_t);
 EXT void log_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t, u_int8_t);
 EXT void log_template_footer(u_int16_t, u_int8_t);
-EXT struct template_cache_entry *insert_opt_template(void *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t, u_int16_t);
-EXT struct template_cache_entry *refresh_opt_template(void *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t, u_int16_t);
+EXT struct template_cache_entry *insert_opt_template(void *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *refresh_opt_template(void *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t, u_int16_t, u_int32_t);
 EXT struct utpl_field *ext_db_get_ie(struct template_cache_entry *, u_int32_t, u_int16_t);
 EXT struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *, u_int16_t);
 

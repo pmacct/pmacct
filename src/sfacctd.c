@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -944,7 +944,7 @@ int main(int argc,char **argv, char **envp)
 	break;
       default:
 	if (!config.nfacctd_disable_checks) {
-	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
+	  SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
 	  xflow_tot_bad_datagrams++;
 	}
 	break;
@@ -992,7 +992,7 @@ SFv2v4_read_sampleType:
       readv2v4CountersSample(spp);
       break;
     default:
-      notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 sample", (struct sockaddr *) pptrsv->v4.f_agent);
+      SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 sample", (struct sockaddr *) pptrsv->v4.f_agent);
       xflow_tot_bad_datagrams++;
       return; /* unexpected sampleType; aborting packet */
     }
@@ -1042,7 +1042,7 @@ SFv5_read_sampleType:
       goto SFv5_read_sampleType; /* rewind */
       break;
     default:
-      notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
+      SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
       xflow_tot_bad_datagrams++;
       return; /* unexpected sampleType; aborting packet */ 
     }
@@ -1069,7 +1069,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     break;
   default:
     if (!config.nfacctd_disable_checks) {
-      notify_malf_packet(LOG_INFO, "INFO: Discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
+      SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
       xflow_tot_bad_datagrams++;
     }
     return;
@@ -1124,7 +1124,7 @@ void compute_once()
 #endif
 }
 
-void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
+void SF_notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
 {
   struct host_addr a;
   u_char errstr[SRVBUFLEN];
@@ -2065,7 +2065,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
   case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample); break;
   case INMPACKETTYPE_IPV6: readFlowSample_IPv6(sample); break;
   default: 
-    notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
+    SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     break;
   }
@@ -2087,7 +2087,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
       case INMEXTENDED_USER: readExtendedUser(sample); break;
       case INMEXTENDED_URL: readExtendedUrl(sample); break;
       default: 
-	notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 Extended Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
+	SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 Extended Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
 	xflow_tot_bad_datagrams++;
 	break;
       }

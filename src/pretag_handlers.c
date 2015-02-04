@@ -1901,7 +1901,7 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t direction = 0;
+  u_int8_t direction = 0;
 
   switch (hdr->version) {
   case 10:
