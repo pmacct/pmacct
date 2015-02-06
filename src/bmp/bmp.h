@@ -151,7 +151,8 @@ struct bmp_data {
   u_int8_t family;
   struct host_addr peer_ip;
   struct host_addr bgp_id;
-  struct host_addr local_ip;
+  u_int32_t peer_asn;
+  u_int8_t peer_type;
   struct timeval tstamp;
 };
 
@@ -183,10 +184,12 @@ EXT void bmp_peer_hdr_get_family(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *, struct host_addr *, u_int8_t);
 EXT void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *, struct host_addr *);
 EXT void bmp_peer_hdr_get_tstamp(struct bmp_peer_hdr *, struct timeval *);
-EXT void bmp_peer_hdr_get_asn(struct bmp_peer_hdr *, u_int32_t *);
+EXT void bmp_peer_hdr_get_peer_asn(struct bmp_peer_hdr *, u_int32_t *);
+EXT void bmp_peer_hdr_get_peer_type(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_up_hdr_get_local_ip(struct bmp_peer_up_hdr *, struct host_addr *, u_int8_t);
 EXT void bmp_peer_up_hdr_get_loc_port(struct bmp_peer_up_hdr *, u_int16_t *);
 EXT void bmp_peer_up_hdr_get_rem_port(struct bmp_peer_up_hdr *, u_int16_t *);
+EXT void bmp_peer_down_hdr_get_reason(struct bmp_peer_down_hdr *, u_char *);
 EXT void bmp_peer_down_hdr_get_loc_code(char **, u_int32_t *, u_int16_t *);
 EXT void bmp_stats_hdr_get_count(struct bmp_stats_hdr *, u_int32_t *);
 EXT void bmp_stats_cnt_hdr_get_type(struct bmp_stats_cnt_hdr *, u_int16_t *);

@@ -34,7 +34,7 @@
 #include <jansson.h>
 #endif
 
-int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, u_int16_t cnt_type, u_int64_t cnt_data64, u_int8_t got_data, char *event_type, int output)
+int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, char *event_type, int output, int log_type)
 {
   int ret = 0, amqp_ret = 0;
 
@@ -45,10 +45,12 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, u_int16_t c
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
+    char tstamp_str[SRVBUFLEN];
 
-    addr_to_str(peer_ip, bdata->peer_ip);
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
     /* no need for seq for "dump" event_type */
     if (strcmp(event_type, "dump")) {
@@ -67,30 +69,24 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, u_int16_t c
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    addr_to_str(peer_ip, bdata->peer_ip);
-    kv = json_pack("{ss}", "peer_ip", peer_ip);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-
-    kv = json_pack("{sI}", "counter_type", cnt_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-
-    if (cnt_type <= BMP_STATS_MAX) {
-      kv = json_pack("{ss}", "counter_type_str", bmp_stats_cnt_types[cnt_type]);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-    else {
-      kv = json_pack("{ss}", "counter_type_str", "Unknown");
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-
-    if (got_data) {
-      kv = json_pack("{sI}", "counter_value", cnt_data64);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+    switch (log_type) {
+    case BMP_LOG_TYPE_STATS:
+      ret = bmp_log_msg_stats(peer, bdata, (struct bmp_log_stats *) log_data, event_type, output, obj);
+      break;
+    case BMP_LOG_TYPE_INIT:
+      ret = bmp_log_msg_init(peer, bdata, (struct bmp_log_init *) log_data, event_type, output, obj);
+      break;
+    case BMP_LOG_TYPE_TERM:
+      ret = bmp_log_msg_term(peer, bdata, (struct bmp_log_term *) log_data, event_type, output, obj);
+      break;
+    case BMP_LOG_TYPE_PEER_UP:
+      ret = bmp_log_msg_peer_up(peer, bdata, (struct bmp_log_peer_up *) log_data, event_type, output, obj);
+      break;
+    case BMP_LOG_TYPE_PEER_DOWN:
+      ret = bmp_log_msg_peer_down(peer, bdata, (struct bmp_log_peer_down *) log_data, event_type, output, obj);
+      break;
+    default:
+      break;
     }
 
     if (config.nfacctd_bmp_msglog_file || config.bmp_dump_file)
@@ -105,7 +101,225 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, u_int16_t c
 #endif
   }
 
-  return (ret | amqp_ret);
+  return ret;
+}
+
+int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
+{
+  char bmp_msg_type[] = "stats";
+  int ret = 0;
+#ifdef WITH_JANSSON
+  char ip_address[INET6_ADDRSTRLEN];
+  json_t *obj = (json_t *) vobj, *kv;
+
+  if (!peer || !bdata || !blstats || !vobj) return ret;
+
+  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  addr_to_str(ip_address, &bdata->peer_ip);
+  kv = json_pack("{ss}", "peer_ip", ip_address);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "peer_asn", bdata->peer_asn);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "peer_type", bdata->peer_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "counter_type", blstats->cnt_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  if (blstats->cnt_type <= BMP_STATS_MAX) {
+    kv = json_pack("{ss}", "counter_type_str", bmp_stats_cnt_types[blstats->cnt_type]);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+  else {
+    kv = json_pack("{ss}", "counter_type_str", "Unknown");
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (blstats->got_data) {
+    kv = json_pack("{sI}", "counter_value", blstats->cnt_data);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+#endif
+
+  return ret;
+}
+
+int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_init *blinit, char *event_type, int output, void *vobj)
+{
+  char bmp_msg_type[] = "init";
+  int ret = 0;
+#ifdef WITH_JANSSON
+  json_t *obj = (json_t *) vobj, *kv;
+
+  if (!peer || !vobj) return ret;
+
+  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  if (blinit) {
+    kv = json_pack("{sI}", "bmp_init_data_type", blinit->type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "bmp_init_data_len", blinit->len);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (blinit->type == BMP_INIT_INFO_STRING || blinit->type == BMP_INIT_INFO_SYSDESCR || blinit->type == BMP_INIT_INFO_SYSNAME) {
+      kv = json_pack("{ss}", "bmp_init_data_val", blinit->val);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+  }
+#endif
+
+  return ret;
+}
+
+int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_term *blterm, char *event_type, int output, void *vobj)
+{
+  char bmp_msg_type[] = "term";
+  int ret = 0;
+#ifdef WITH_JANSSON
+  json_t *obj = (json_t *) vobj, *kv;
+
+  if (!peer || !vobj) return ret;
+
+  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  if (blterm) {
+    kv = json_pack("{sI}", "bmp_term_data_type", blterm->type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "bmp_term_data_len", blterm->len);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (blterm->type == BMP_TERM_INFO_STRING) {
+      kv = json_pack("{ss}", "bmp_term_data_val_str", blterm->val);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+    else if (blterm->type == BMP_TERM_INFO_REASON) {
+      kv = json_pack("{sI}", "bmp_term_data_val_reas_type", blterm->reas_type);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      if (blterm->reas_type <= BMP_TERM_REASON_MAX) {
+        kv = json_pack("{ss}", "bmp_term_data_val_reas_str", bmp_term_reason_types[blterm->reas_type]);
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+      }
+    }
+  }
+#endif
+
+  return ret;
+}
+
+int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
+{
+  char bmp_msg_type[] = "peer_up";
+  int ret = 0;
+#ifdef WITH_JANSSON
+  char ip_address[INET6_ADDRSTRLEN];
+  json_t *obj = (json_t *) vobj, *kv;
+
+  if (!peer || !bdata || !blpu || !vobj) return ret;
+
+  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  addr_to_str(ip_address, &bdata->peer_ip);
+  kv = json_pack("{ss}", "peer_ip", ip_address);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "peer_asn", bdata->peer_asn);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "peer_type", bdata->peer_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{ss}", "bgp_id", inet_ntoa(bdata->bgp_id.address.ipv4));
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "local_port", blpu->loc_port);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "remote_port", blpu->rem_port);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  addr_to_str(ip_address, &blpu->local_ip);
+  kv = json_pack("{ss}", "local_ip", ip_address);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+#endif
+
+  return ret;
+}
+
+int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
+{
+  char bmp_msg_type[] = "peer_down";
+  int ret = 0;
+#ifdef WITH_JANSSON
+  char ip_address[INET6_ADDRSTRLEN];
+  json_t *obj = (json_t *) vobj, *kv;
+
+  if (!peer || !bdata || !blpd || !vobj) return ret;
+
+  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  addr_to_str(ip_address, &bdata->peer_ip);
+  kv = json_pack("{ss}", "peer_ip", ip_address);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "peer_asn", bdata->peer_asn);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "peer_type", bdata->peer_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "reason_type", blpd->reason);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
+    kv = json_pack("{sI}", "reason_loc_code", blpd->loc_code);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+#endif
+
+  return ret;
 }
 
 #if defined WITH_RABBITMQ
