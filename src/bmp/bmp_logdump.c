@@ -322,6 +322,30 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   return ret;
 }
 
+void bmp_dump_init_peer(struct bgp_peer *peer)
+{
+  if (!peer) return;
+
+  assert(!peer->bmp_se);
+
+  peer->bmp_se = malloc(sizeof(struct bmp_dump_se_ll));
+  memset(&peer->bmp_se, 0, sizeof(struct bmp_dump_se_ll));
+}
+
+void bmp_dump_close_peer(struct bgp_peer *peer)
+{
+  struct bmp_dump_se_ll *bdsell;
+
+  if (!peer) return;
+
+  bdsell = (struct bmp_dump_se_ll *) peer->bmp_se;
+
+  if (bdsell->start) /* XXX: destroy ll */ ;
+ 
+  free(peer->bmp_se);
+  peer->bmp_se = NULL;
+}
+
 #if defined WITH_RABBITMQ
 void bmp_daemon_msglog_init_amqp_host()
 {

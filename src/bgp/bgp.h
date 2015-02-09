@@ -108,6 +108,7 @@ struct bgp_peer {
   u_int32_t msglen;
   struct bgp_peer_buf buf;
   struct bgp_peer_log *log;
+  void *bmp_se; /* struct bmp_dump_se_ll */
 };
 
 struct bgp_nlri {

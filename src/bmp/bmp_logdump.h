@@ -60,6 +60,27 @@ struct bmp_log_peer_down {
   u_int16_t loc_code;
 };
 
+struct bmp_dump_se {
+  struct bmp_data bdata;
+  union {
+    struct bmp_log_stats stats;
+    struct bmp_log_init init;
+    struct bmp_log_term term;
+    struct bmp_log_peer_up peer_up;
+    struct bmp_log_peer_down peer_down;
+  } se_type;
+};
+
+struct bmp_dump_se_ll_elem {
+  struct bmp_dump_se rec; 
+  struct bmp_dump_se *next;
+};
+
+struct bmp_dump_se_ll {
+  struct bmp_dump_se_ll_elem *start;
+  struct bmp_dump_se_ll_elem *last;
+};
+
 /* prototypes */
 #if (!defined __BMP_LOGDUMP_C)
 #define EXT extern
@@ -68,6 +89,8 @@ struct bmp_log_peer_down {
 #endif
 EXT void bmp_daemon_msglog_init_amqp_host();
 EXT void bmp_dump_init_amqp_host();
+EXT void bmp_dump_init_peer(struct bgp_peer *);
+EXT void bmp_dump_close_peer(struct bgp_peer *);
 
 EXT int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, char *, int, int);
 EXT int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct bmp_log_stats *, char *, int, void *);
@@ -75,6 +98,8 @@ EXT int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_in
 EXT int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term *, char *, int, void *);
 EXT int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
 EXT int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
+
+EXT void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *);
 
 /* global variables */
 EXT struct bgp_peer_log *bmp_peers_log;

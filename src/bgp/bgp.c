@@ -2010,27 +2010,34 @@ void bgp_peer_close(struct bgp_peer *peer, int type)
   safi_t safi;
 
   /* pointers to BGP or BMP vars */
-  char *msglog_file, *neighbors_file, *amqp_routing_key;
+  char *msglog_file, *neighbors_file, *msglog_amqp_routing_key;
+  char *dump_file = NULL, *dump_amqp_routing_key = NULL;
   int msglog_output;
 
   if (type == FUNC_TYPE_BGP) {
     msglog_file = config.nfacctd_bgp_msglog_file;
-    amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
+    msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
     msglog_output = config.nfacctd_bgp_msglog_output;
     neighbors_file = config.nfacctd_bgp_neighbors_file; 
   }
   else if (type == FUNC_TYPE_BMP) {
     msglog_file = config.nfacctd_bmp_msglog_file;
-    amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
+    msglog_amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
     msglog_output = config.nfacctd_bmp_msglog_output;
     neighbors_file = config.nfacctd_bmp_neighbors_file;
+    dump_file = config.bmp_dump_file;
+    dump_amqp_routing_key = config.bmp_dump_amqp_routing_key;
   }
   else return;
 
   bgp_peer_info_delete(peer);
 
-  if (msglog_file || amqp_routing_key)
-    bgp_peer_log_close(peer, msglog_output, type); 
+  if (msglog_file || msglog_amqp_routing_key)
+    bgp_peer_log_close(peer, msglog_output, type);
+
+  /* BMP case only */
+  if (dump_file || dump_amqp_routing_key)
+    bmp_dump_close_peer(peer);
 
   close(peer->fd);
   peer->fd = 0;

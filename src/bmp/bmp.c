@@ -133,15 +133,20 @@ void skinny_bmp_daemon()
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
-    if (config.nfacctd_bmp_msglog_file && config.nfacctd_bmp_msglog_amqp_routing_key) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): bmp_daemon_msglog_file and bmp_daemon_msglog_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
-      exit_all(1);
-    }
+  if (config.nfacctd_bmp_msglog_file && config.nfacctd_bmp_msglog_amqp_routing_key) {
+    Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_daemon_msglog_file and bmp_daemon_msglog_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
 
+  if (config.bmp_dump_file && config.bmp_dump_amqp_routing_key) {
+    Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_dump_file and bmp_dump_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
+
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) { 
     bmp_peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
     if (!bmp_peers_log) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name);
       exit_all(1);
     }
     memset(bmp_peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
@@ -155,14 +160,9 @@ void skinny_bmp_daemon()
       if (!config.nfacctd_bmp_msglog_amqp_retry)
         config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect() not possible due to missing --enable-rabbitmq\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_amqp_connect() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
     }
-  }
-
-  if (config.bmp_dump_file && config.bmp_dump_amqp_routing_key) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): bmp_dump_file and bmp_dump_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
-    exit_all(1);
   }
 
   if (!config.bmp_table_attr_hash_buckets) config.bmp_table_attr_hash_buckets = HASHTABSIZE;
@@ -276,7 +276,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_JANSSON
     config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
 #else
-    Log(LOG_WARNING, "WARN ( %s/core/BGP ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
   if (!config.bmp_dump_output && (config.bmp_dump_file ||
@@ -284,7 +284,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_JANSSON
     config.bmp_dump_output = PRINT_OUTPUT_JSON;
 #else
-    Log(LOG_WARNING, "WARN ( %s/core/BGP ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
   if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
@@ -303,7 +303,7 @@ void skinny_bmp_daemon()
     }
     else {
       config.bmp_dump_file = NULL;
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): Invalid 'bmp_dump_refresh_time'.\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/BMP ): Invalid 'bmp_dump_refresh_time'.\n", config.name);
     }
 
     bmp_dump_init_amqp_host();
@@ -455,6 +455,9 @@ void skinny_bmp_daemon()
       if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key)
         bgp_peer_log_init(peer, config.nfacctd_bmp_msglog_output, FUNC_TYPE_BMP);
 
+      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key)
+	bmp_dump_init_peer(peer);
+
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].addr))) {
@@ -575,10 +578,14 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
 
-  {
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
     char event_type[] = "log";
 
     bmp_log_msg(peer, &bdata, NULL, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
+  }
+
+  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    /* XXX: append to ll */
   }
 
   while (*len) {
@@ -596,7 +603,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       return;
     }
 
-    {
+    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
       char event_type[] = "log";
       struct bmp_log_init blinit;
 
@@ -605,6 +612,10 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       blinit.val = bmp_init_info;
 
       bmp_log_msg(peer, &bdata, &blinit, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
+    }
+
+    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      /* XXX: append to ll */
     }
   }
 }
@@ -619,10 +630,14 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
 
-  {
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
     char event_type[] = "log";
 
     bmp_log_msg(peer, &bdata, NULL, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
+  }
+
+  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    /* XXX: append to ll */
   }
 
   while (*len) {
@@ -642,7 +657,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
 
     if (bth->type == BMP_TERM_INFO_REASON && bmp_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
 
-    {
+    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
       char event_type[] = "log";
       struct bmp_log_term blterm;
 
@@ -652,6 +667,10 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       blterm.reas_type = reason_type;
 
       bmp_log_msg(peer, &bdata, &blterm, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
+    }
+
+    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      /* XXX: append to ll */
     }
   }
 }
@@ -686,7 +705,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
   /* If no timestamp in BMP then let's generate one */
   if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-  {
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
     char event_type[] = "log";
     struct bmp_log_peer_up blpu;
 
@@ -695,6 +714,10 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
     bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
 
     bmp_log_msg(peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
+  }
+
+  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    /* XXX: append to ll */
   }
 }
 
@@ -728,7 +751,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
   /* If no timestamp in BMP then let's generate one */
   if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-  {
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
     char event_type[] = "log";
     struct bmp_log_peer_down blpd;
 
@@ -736,6 +759,10 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
     if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) bmp_peer_down_hdr_get_loc_code(bmp_packet, len, &blpd.loc_code);
 
     bmp_log_msg(peer, &bdata, &blpd, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_DOWN);
+  }
+
+  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    /* XXX: append to ll */
   }
 
   // XXX: withdraw routes from peer
@@ -856,7 +883,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
 
     if (cnt_data32 && !cnt_data64) cnt_data64 = cnt_data32; 
 
-    {
+    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
       char event_type[] = "log";
       struct bmp_log_stats blstats;
 
@@ -865,6 +892,10 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
       blstats.got_data = got_data;
 
       bmp_log_msg(peer, &bdata, &blstats, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_STATS);
+    }
+
+    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      /* XXX: append to ll */
     }
   }
 }
