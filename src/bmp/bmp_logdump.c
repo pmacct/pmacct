@@ -345,7 +345,7 @@ void bmp_dump_close_peer(struct bgp_peer *peer)
 
   bdsell = (struct bmp_dump_se_ll *) peer->bmp_se;
 
-  if (bdsell->start) bmp_dump_se_ll_destroy(bdsell);
+  if (bdsell && bdsell->start) bmp_dump_se_ll_destroy(bdsell);
  
   free(peer->bmp_se);
   peer->bmp_se = NULL;
@@ -473,6 +473,7 @@ void bmp_handle_dump_event()
       if (bmp_peers[peers_idx].fd) {
         peer = &bmp_peers[peers_idx];
         peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
+	bdsell = peer->bmp_se;
 
         if (config.bmp_dump_file) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_file, peer);
         if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
@@ -502,13 +503,38 @@ void bmp_handle_dump_event()
         }
 #endif
 
-	// XXX: bgp_peer_dump_init(peer, config.bgp_table_dump_output);
+	bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
 
-	// XXX
+	if (bdsell && bdsell->start) {
+	  struct bmp_dump_se_ll_elem *se_ll_elem;
+	  char event_type[] = "dump";
+
+	  for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
+	    switch (se_ll_elem->rec.se_type) {
+	    case BMP_LOG_TYPE_STATS:
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.stats, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
+	      break;
+	    case BMP_LOG_TYPE_INIT:
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.init, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
+	      break;
+	    case BMP_LOG_TYPE_TERM:
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.term, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
+	      break;
+	    case BMP_LOG_TYPE_PEER_UP:
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_up, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
+	      break;
+	    case BMP_LOG_TYPE_PEER_DOWN:
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_down, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
+	      break;
+	    default:
+	      break;
+	    }
+	  }
+	}
  
 	saved_peer = peer;
         strlcpy(last_filename, current_filename, SRVBUFLEN);
-        // XXX: bgp_peer_dump_close(peer, config.bmp_dump_output);
+        bgp_peer_dump_close(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
         tables_num++;
       }
     }
@@ -526,6 +552,16 @@ void bmp_handle_dump_event()
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
       Log(LOG_WARNING, "WARN ( %s/core/BMP ): Unable to fork BMP table dump writer: %s\n", config.name, strerror(errno));
+    }
+
+    /* destroy bmp_se linked-list content after dump event */
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      if (bmp_peers[peers_idx].fd) {
+        peer = &bmp_peers[peers_idx];
+        bdsell = peer->bmp_se;
+
+	if (bdsell && bdsell->start) bmp_dump_se_ll_destroy(bdsell);
+      }
     }
 
     break;
