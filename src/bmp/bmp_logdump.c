@@ -329,7 +329,12 @@ void bmp_dump_init_peer(struct bgp_peer *peer)
   assert(!peer->bmp_se);
 
   peer->bmp_se = malloc(sizeof(struct bmp_dump_se_ll));
-  memset(&peer->bmp_se, 0, sizeof(struct bmp_dump_se_ll));
+  if (!peer->bmp_se) {
+    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() bmp_se structure. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
+
+  memset(peer->bmp_se, 0, sizeof(struct bmp_dump_se_ll));
 }
 
 void bmp_dump_close_peer(struct bgp_peer *peer)
@@ -340,10 +345,191 @@ void bmp_dump_close_peer(struct bgp_peer *peer)
 
   bdsell = (struct bmp_dump_se_ll *) peer->bmp_se;
 
-  if (bdsell->start) /* XXX: destroy ll */ ;
+  if (bdsell->start) bmp_dump_se_ll_destroy(bdsell);
  
   free(peer->bmp_se);
   peer->bmp_se = NULL;
+}
+
+void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *extra, int log_type)
+{
+  struct bmp_dump_se_ll *se_ll;
+  struct bmp_dump_se_ll_elem *se_ll_elem;
+
+  if (!peer) return;
+
+  assert(peer->bmp_se);
+
+  se_ll_elem = malloc(sizeof(struct bmp_dump_se_ll_elem));
+  if (!se_ll_elem) {
+    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() se_ll_elem structure. Terminating thread.\n", config.name);
+    exit_all(1);
+  }
+
+  memset(se_ll_elem, 0, sizeof(struct bmp_dump_se_ll_elem));
+
+  if (bdata) memcpy(&se_ll_elem->rec.bdata, bdata, sizeof(struct bmp_data));
+  if (extra && log_type) {
+    switch (log_type) {
+    case BMP_LOG_TYPE_STATS:
+      memcpy(&se_ll_elem->rec.se.stats, extra, sizeof(struct bmp_log_stats));
+      break;
+    case BMP_LOG_TYPE_INIT:
+      memcpy(&se_ll_elem->rec.se.init, extra, sizeof(struct bmp_log_init));
+      break;
+    case BMP_LOG_TYPE_TERM:
+      memcpy(&se_ll_elem->rec.se.term, extra, sizeof(struct bmp_log_term));
+      break;
+    case BMP_LOG_TYPE_PEER_UP:
+      memcpy(&se_ll_elem->rec.se.peer_up, extra, sizeof(struct bmp_log_peer_up));
+      break;
+    case BMP_LOG_TYPE_PEER_DOWN:
+      memcpy(&se_ll_elem->rec.se.peer_down, extra, sizeof(struct bmp_log_peer_down));
+      break;
+    default:
+      break;
+    }
+  }
+
+  se_ll_elem->rec.se_type = log_type;
+  se_ll_elem->next = NULL; /* pedantic */
+
+  se_ll = (struct bmp_dump_se_ll *) peer->bmp_se;
+
+  /* append to an empty ll */
+  if (!se_ll->start) {
+    assert(!se_ll->last);
+
+    se_ll->start = se_ll_elem;
+    se_ll->last = se_ll_elem;
+  }
+  /* append to an existing ll */
+  else {
+    assert(se_ll->last);
+
+    se_ll->last->next = se_ll_elem;
+    se_ll->last = se_ll_elem;
+  }
+}
+
+void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
+{
+  struct bmp_dump_se_ll_elem *se_ll_elem, *se_ll_elem_next;
+
+  if (!bdsell) return;
+
+  if (!bdsell->start) return;
+
+  assert(bdsell->last);
+  for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
+    se_ll_elem_next = se_ll_elem->next;
+    free(se_ll_elem);
+  }
+
+  bdsell->start = NULL;
+  bdsell->last = NULL;
+}
+
+void bmp_handle_dump_event()
+{
+  char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
+  char event_type[] = "dump";
+  int ret, peers_idx, duration, tables_num;
+  pid_t dumper_pid;
+  time_t start;
+
+  struct bgp_peer *peer, *saved_peer;
+  struct bmp_dump_se_ll *bdsell;
+  struct bgp_peer_log peer_log;      
+
+  /* pre-flight check */
+  if ((!config.bmp_dump_file && !config.bmp_dump_amqp_routing_key) || !config.bmp_dump_refresh_time)
+    return;
+
+  switch (ret = fork()) {
+  case 0: /* Child */
+    /* we have to ignore signals to avoid loops: because we are already forked */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+    pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BMP Dump Writer", config.name);
+
+    memset(last_filename, 0, sizeof(last_filename));
+    memset(current_filename, 0, sizeof(current_filename));
+
+#ifdef WITH_RABBITMQ
+    if (config.bmp_dump_amqp_routing_key) {
+      bmp_dump_init_amqp_host();
+      ret = p_amqp_connect(&bmp_dump_amqp_host);
+      if (ret) exit(ret);
+    }
+#endif
+
+    dumper_pid = getpid();
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): *** Dumping BMP tables - START (PID: %u) ***\n", config.name, dumper_pid);
+    start = time(NULL);
+    tables_num = 0;
+
+    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      if (bmp_peers[peers_idx].fd) {
+        peer = &bmp_peers[peers_idx];
+        peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
+
+        if (config.bmp_dump_file) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_file, peer);
+        if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
+
+        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bmp_log_tstamp.tv_sec);
+
+        /*
+	  we close last_filename and open current_filename in case they differ;
+	  we are safe with this approach until $peer_src_ip is the only variable
+	  supported as part of bgp_table_dump_file configuration directive.
+	*/
+        if (config.bmp_dump_file) {
+          if (strcmp(last_filename, current_filename)) {
+            if (saved_peer && saved_peer->log && strlen(last_filename)) fclose(saved_peer->log->fd);
+            peer->log->fd = open_logfile(current_filename, "w");
+          }
+        }
+
+#ifdef WITH_RABBITMQ
+        /*
+	  a bit pedantic maybe but should come at little cost and emulating
+	  bgp_table_dump_file behaviour will work
+	*/
+        if (config.bmp_dump_amqp_routing_key) {
+          peer->log->amqp_host = &bgp_table_dump_amqp_host;
+          strcpy(peer->log->filename, current_filename);
+        }
+#endif
+
+	// XXX: bgp_peer_dump_init(peer, config.bgp_table_dump_output);
+
+	// XXX
+ 
+	saved_peer = peer;
+        strlcpy(last_filename, current_filename, SRVBUFLEN);
+        // XXX: bgp_peer_dump_close(peer, config.bmp_dump_output);
+        tables_num++;
+      }
+    }
+
+#ifdef WITH_RABBITMQ
+    if (config.bmp_dump_amqp_routing_key)
+      p_amqp_close(&bmp_dump_amqp_host, FALSE);
+#endif
+
+    duration = time(NULL)-start;
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): *** Dumping BMP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
+                config.name, dumper_pid, tables_num, duration);
+
+    exit(0);
+  default: /* Parent */
+    if (ret == -1) { /* Something went wrong */
+      Log(LOG_WARNING, "WARN ( %s/core/BMP ): Unable to fork BMP table dump writer: %s\n", config.name, strerror(errno));
+    }
+
+    break;
+  }
 }
 
 #if defined WITH_RABBITMQ

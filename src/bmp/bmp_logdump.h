@@ -62,18 +62,19 @@ struct bmp_log_peer_down {
 
 struct bmp_dump_se {
   struct bmp_data bdata;
+  int se_type;
   union {
     struct bmp_log_stats stats;
     struct bmp_log_init init;
     struct bmp_log_term term;
     struct bmp_log_peer_up peer_up;
     struct bmp_log_peer_down peer_down;
-  } se_type;
+  } se;
 };
 
 struct bmp_dump_se_ll_elem {
   struct bmp_dump_se rec; 
-  struct bmp_dump_se *next;
+  struct bmp_dump_se_ll_elem *next;
 };
 
 struct bmp_dump_se_ll {
@@ -99,7 +100,10 @@ EXT int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_te
 EXT int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
 EXT int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
 
-EXT void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *);
+EXT void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int);
+EXT void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
+
+EXT void bmp_handle_dump_event();
 
 /* global variables */
 EXT struct bgp_peer_log *bmp_peers_log;

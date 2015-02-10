@@ -348,7 +348,7 @@ void skinny_bmp_daemon()
 
       if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
         while (bmp_log_tstamp.tv_sec > dump_refresh_deadline) {
-          // XXX: bmp_handle_dump_event();
+          bmp_handle_dump_event();
           dump_refresh_deadline += config.bmp_dump_refresh_time;
         }
       }
@@ -585,7 +585,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   }
 
   if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-    /* XXX: append to ll */
+    bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_INIT);
   }
 
   while (*len) {
@@ -603,19 +603,22 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       return;
     }
 
-    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
-      char event_type[] = "log";
+    {
       struct bmp_log_init blinit;
 
       blinit.type = bih->type;
       blinit.len = bmp_len;
       blinit.val = bmp_init_info;
 
-      bmp_log_msg(peer, &bdata, &blinit, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
-    }
+      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+        char event_type[] = "log";
 
-    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-      /* XXX: append to ll */
+        bmp_log_msg(peer, &bdata, &blinit, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
+      }
+
+      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+        bmp_dump_se_ll_append(peer, &bdata, &blinit, BMP_LOG_TYPE_INIT);
+      }
     }
   }
 }
@@ -637,7 +640,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   }
 
   if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-    /* XXX: append to ll */
+    bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_TERM);
   }
 
   while (*len) {
@@ -657,8 +660,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
 
     if (bth->type == BMP_TERM_INFO_REASON && bmp_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
 
-    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
-      char event_type[] = "log";
+    {
       struct bmp_log_term blterm;
 
       blterm.type = bth->type;
@@ -666,11 +668,15 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       blterm.val = bmp_term_info;
       blterm.reas_type = reason_type;
 
-      bmp_log_msg(peer, &bdata, &blterm, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
-    }
+      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+        char event_type[] = "log";
 
-    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-      /* XXX: append to ll */
+        bmp_log_msg(peer, &bdata, &blterm, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
+      }
+
+      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+        bmp_dump_se_ll_append(peer, &bdata, &blterm, BMP_LOG_TYPE_TERM);
+      }
     }
   }
 }
@@ -705,19 +711,22 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
   /* If no timestamp in BMP then let's generate one */
   if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
-    char event_type[] = "log";
+  {
     struct bmp_log_peer_up blpu;
 
     bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
     bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
     bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
 
-    bmp_log_msg(peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
-  }
+    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+      char event_type[] = "log";
 
-  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-    /* XXX: append to ll */
+      bmp_log_msg(peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
+    }
+
+    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      bmp_dump_se_ll_append(peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
+    }
   }
 }
 
@@ -751,18 +760,21 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
   /* If no timestamp in BMP then let's generate one */
   if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
-    char event_type[] = "log";
+  {
     struct bmp_log_peer_down blpd;
 
     bmp_peer_down_hdr_get_reason(bpdh, &blpd.reason);
     if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) bmp_peer_down_hdr_get_loc_code(bmp_packet, len, &blpd.loc_code);
 
-    bmp_log_msg(peer, &bdata, &blpd, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_DOWN);
-  }
+    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+      char event_type[] = "log";
 
-  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-    /* XXX: append to ll */
+      bmp_log_msg(peer, &bdata, &blpd, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_DOWN);
+    }
+
+    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      bmp_dump_se_ll_append(peer, &bdata, &blpd, BMP_LOG_TYPE_PEER_DOWN);
+    }
   }
 
   // XXX: withdraw routes from peer
@@ -883,19 +895,22 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
 
     if (cnt_data32 && !cnt_data64) cnt_data64 = cnt_data32; 
 
-    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
-      char event_type[] = "log";
+    { 
       struct bmp_log_stats blstats;
 
       blstats.cnt_type = cnt_type;
       blstats.cnt_data = cnt_data64;
       blstats.got_data = got_data;
 
-      bmp_log_msg(peer, &bdata, &blstats, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_STATS);
-    }
+      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+        char event_type[] = "log";
 
-    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
-      /* XXX: append to ll */
+        bmp_log_msg(peer, &bdata, &blstats, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_STATS);
+      }
+
+      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+        bmp_dump_se_ll_append(peer, &bdata, &blstats, BMP_LOG_TYPE_STATS);
+      }
     }
   }
 }
