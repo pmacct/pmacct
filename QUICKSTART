@@ -17,10 +17,11 @@ XI.	Quickstart guide to setup a sFlow agent/probe
 XII.	Quickstart guide to setup the BGP daemon
 XIII.	Quickstart guide to setup a NetFlow/sFlow replicator
 XIV.	Quickstart guide to setup the IS-IS daemon
-XV.	Running the print plugin to write to flat-files
-XVI.	Quickstart guide to setup GeoIP lookups
-XVII.	Using pmacct as traffic/event logger
-XVIII.	Notes on how to troubleshoot
+XV.     Quickstart guide to setup the BMP daemon
+XVI.	Running the print plugin to write to flat-files
+XVII.	Quickstart guide to setup GeoIP lookups
+XVIII.	Using pmacct as traffic/event logger
+XIX.	Notes on how to troubleshoot
 
 
 I. Plugins included with pmacct distribution
@@ -1195,7 +1196,53 @@ router isis
 !
 
 
-XV. Running the print plugin to write to flat-files
+XV. Quickstart guide to setup the BMP daemon
+The BMP daemon thread is introduced in pmacct 1.5.1. The implementation is
+based on the draft-ietf-grow-bmp-07 IETF document. To quote the document:
+"BMP is intended to provide a more convenient interface for obtaining route
+views for research purpose than the screen-scraping approach in common use
+today. The design goals are to keep BMP simple, useful, easily implemented,
+and minimally service-affecting.". The BMP daemon currently supports BMP
+events and stats only, ie. initiation, termination, peer up, peer down and
+stats reports messages. Route Monitoring is future (upcoming) work but routes
+can be currently sourced via the BGP daemon thread (best path only or ADD-PATH),
+making the two daemons complementary. The daemon enables to write BMP messages
+to files or AMQP queues, real-time (msglog) or at regular time intervals (dump).
+
+Following a simple example on how to configure nfacctd to enable the BMP daemon
+to a) log, in real-time, BGP stats and events received via BMP to a text-file
+(bmp_daemon_msglog_file) and b) dump the same (ie. BGP stats and events received
+via BMP) to a text-file and at regular time intervals (bmp_dump_refresh_time,
+bmp_dump_file):
+
+bmp_daemon: true
+!
+bmp_daemon_msglog_file: /path/to/bmp-$peer_src_ip.log
+!
+bmp_dump_file: /path/to/bmp-$peer_src_ip-%H%M.dump
+bmp_dump_refresh_time: 60
+
+Following is an example how a Cisco router running IOS should be configured
+in order to export BMP data to a collector:
+
+router bgp 64512
+ bmp server 1
+  address X.X.X.X port-number 1790
+  initial-delay 60
+  failure-retry-delay 60
+  flapping-delay 60
+  stats-reporting-period 60
+  activate
+ exit-bmp-server-mode
+ !
+ neighbor Y.Y.Y.Y remote-as 64513
+ neighbor Y.Y.Y.Y bmp-activate all
+ neighbor Z.Z.Z.Z remote-as 64514
+ neighbor Z.Z.Z.Z bmp-activate all
+
+Any equivalent examples using IOS-XR or JunOS are much welcome.
+ 
+XVI. Running the print plugin to write to flat-files
 Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
@@ -1240,7 +1287,7 @@ print_history_roundoff: m
 print_output_file_append: true 
 
 
-XVI. Quickstart guide to setup GeoIP lookups
+XVII. Quickstart guide to setup GeoIP lookups
 From pmacct 0.14.2 it is possible to perform GeoIP country lookups against a
 Maxmind library database - and as a result of that two new traffic aggregation
 primitives have been added to the set: src_host_country and dst_host_country. 
@@ -1265,7 +1312,7 @@ counties, metro areas, zip codes, etc.) are not yet supported: should you be
 interested into any of these, please get in touch.  
 
 
-XVII. Using pmacct as traffic/event logger
+XVIII. Using pmacct as traffic/event logger
 pmacct was originally conceived as a traffic aggregator. From pmacct 0.14.3 
 it is now possible to use pmacct as a traffic/event logger, such development
 being fostered particularly by the use of NetFlow/IPFIX as generic transport,
@@ -1358,7 +1405,7 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XVIII.  Notes on how to troubleshoot
+XIX.  Notes on how to troubleshoot
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
