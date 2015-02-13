@@ -1683,7 +1683,8 @@ DESC:	 	enables IS-IS messages logging: as this can get easily verbose, it is in
 KEY:		[ geoip_ipv4_file | geoip_ipv6_file ]
 DESC:		If pmacct is compiled with --enable-geoip, this defines full pathname to the Maxmind GeoIP
 		Country v1 ( http://dev.maxmind.com/geoip/legacy/install/country/) IPv4/IPv6 database file
-		to use. 
+		to use. pmacct, leveraging the Maxmind API, will detect if the file is updated and reload
+		it. 
 
 KEY:		uacctd_group
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined. (default: 1)

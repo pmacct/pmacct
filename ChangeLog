@@ -1,6 +1,81 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.1
 pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 
+1.5.1 -- XX-02-2015
+  + BMP daemon: BMP, BGP Monitoring Protocol, can be used to monitor BGP
+    sessions. The current implementation is base on the draft-ietf-grow-bmp-07
+    IETF draft. The daemon currently supports BMP events and stats only, ie.
+    initiation, termination, peer up, peer down and stats reports messages.
+    Route Monitoring is future (upcoming) work but routes can be currently
+    sourced via the BGP daemon thread (best path only or ADD-PATH), making
+    the two daemons complementary. The daemon enables to write BMP messages
+    to files or AMQP queues, real-time (msglog) or at regular time intervals
+    (dump) and is a separate thread in the NetFlow (nfacctd) or sFlow (sfacctd)
+    collectors.
+  + tmp_net_own_field directive is introduced to record both individual source
+    and destination IP addresses and their IP prefix (nets) as part of the same
+    aggregation method. While this should become default behaviour, a knob for
+    backward-compatibility is made available for all 1.5 until the next major
+    release.
+  + Introduced nfacctd_stitching and equivalents (ie. sfacctd_stitching):
+    when set to true, given an aggregation method, two new non-key fields are
+    added to the aggregate upon purging data to the backend: timestamp_min is
+    the timestamp of the first element contributing to a certain aggregate
+    and timestamp_max is the timestamp of the last element. In case the export
+    protocol provides time references, ie. NetFlow/IPFIX, these are used; if not
+    the current time (hence time of arrival to the collector) is used instead.
+  + Introduced amqp_routing_key_rr feature to perform round-robin load-
+    balancing over a set of routing keys. This is in addition to existing,
+    and more involved, functionality of tag-based load-balancing.
+  + Introduced amqp_multi_values feature: this is same feature in concept as
+    sql_multi_values (see docs). The value is the amount of elements to pack
+    in each JSON array. 
+  + Introduced amqp_vhost and companion (ie. bgp_daemon_msglog_amqp_vhost)
+    configuration directives to define the AMQP/RabbitMQ server virtual host.
+  + BGP daemon: bgp_daemon_id now allows to define the BGP Router-ID disjoint
+    from the bgp_daemon_ip definition. Thanks to Bela Toros for his patch. 
+  + tee plugin: introduced tee_ipprec feature to color replicated packets,
+    both in transparent and non-transparent modes. Useful, especially when
+    in transparent mode and replicating to hosts in different subnets, to
+    verify which packets are coming from the replicator.
+  + tee plugin: plugin-kernel send buffer size is now configurable via a new
+    config directive tee_pipe_size. Improved logging of send() failures.
+  + nfacctd: introduced support for IPFIX sampling/renormalization using
+    element IDs: #302 (selectorId), #305 (samplingPacketInterval) and #306
+    (samplingPacketSpace). Many thanks to Rene Stoutjesdijk for his support.
+  + nfacctd: added also support for VLAN ID for NetFlow v9/IPFIX via element
+    type #243 (it was already supported via elements #58 and #59). Support was
+    also added for 802.1p/CoS via element #244.
+  + nfacctd: added native support for NetFlow v9/IPFIX IE #252 and #253 as
+    part of existing primitives in_iface and out_iface (additional check).
+  + pre_tag_map: introduced 'cvlan primitive. In NetFlow v9 and IPFIX this is
+    compared against IE #245. The primitive also supports map indexing.
+  + Introduced pre_tag_label_filter to filter on the 'label' primitive in a
+    similar way how the existing pre_tag_filter feature works against the
+    'tag' primitive. Null label values (ie. unlabelled data) can be matched
+    using the 'null' keyword. Negations are allowed by pre-pending a minus
+    sign to the label value.
+  + IMT plugin: introduced '-i' command-line option to pmacct client tool: it
+    shows last time (in seconds) statistis were cleared via 'pmacct -e'.
+  + print, MongoDB & AMQP plugins: sql_startup_delay feature ported to these
+    plugins.
+  ! sql_num_hosts: the feature has been improved to support IPv6 addresses.
+    Pre-requisite is definition of INET6_ATON() function in the RDBMS, which
+    is the case for MySQL >= 5.6.3. In SQLite such function has to be defined
+    manually.
+  ! nfacctd: improved NF_evaluate_flow_type() euristics to reckon NetFlow/
+    IPFIX event (NAT, Firewall, etc.) vs traffic (flows) records.
+  ! fix, GeoIP: spit log notification (warning) in case GeoIP_open() returns
+    null pointer.
+  ! fix, IMT plugin: pmacct client -M and -N queries were failing to report
+    results on exact matches. Affected: 1.5.0. Thanks to Xavier Vitard for
+    reporting the issue. 
+  ! fix, pkt_handlers.c: missing else in NF_src_host_handler() was causing
+    IPv6 prefix being copied instead of IPv6 address against NetFlow v9 recs
+    containing both info.
+  ! fix, uacctd: informational log message now shows the correct group the
+    daemon is bound to. Thanks to Marco Marzetti for reporting the issue.
+
 1.5.0 -- 28-08-2014
   + Introduced bgp_daemon_msglog_file config directive to enable streamed
     logging of BGP messages/events. Each log entry features a time reference,
