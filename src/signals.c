@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -58,12 +58,12 @@ void handle_falling_child()
     if (failed_plugins[j]) { 
       list = search_plugin_by_pid(failed_plugins[j]);
       if (list) {
-        Log(LOG_INFO, "INFO: connection lost to '%s-%s'; closing connection.\n", list->name, list->type.string);
+        Log(LOG_WARNING, "WARN: connection lost to '%s-%s'; closing connection.\n", list->name, list->type.string);
         close(list->pipe[1]);
         delete_pipe_channel(list->pipe[1]);
         ret = delete_plugin_by_id(list->id);
         if (!ret) {
-          Log(LOG_INFO, "INFO: no more plugins active. Shutting down.\n");
+          Log(LOG_WARNING, "WARN: no more plugins active. Shutting down.\n");
 	  if (config.pidfile) remove_pid_file(config.pidfile);
           exit(1);
         }
@@ -76,12 +76,12 @@ void handle_falling_child()
   j = waitpid(-1, 0, WNOHANG);
   list = search_plugin_by_pid(j);
   if (list) {
-    Log(LOG_INFO, "INFO: connection lost to '%s-%s'; closing connection.\n", list->name, list->type.string);
+    Log(LOG_WARNING, "WARN: connection lost to '%s-%s'; closing connection.\n", list->name, list->type.string);
     close(list->pipe[1]);
     delete_pipe_channel(list->pipe[1]);
     ret = delete_plugin_by_id(list->id);
     if (!ret) {
-      Log(LOG_INFO, "INFO: no more plugins active. Shutting down.\n");
+      Log(LOG_WARNING, "WARN: no more plugins active. Shutting down.\n");
       if (config.pidfile) remove_pid_file(config.pidfile);
       exit(1);
     }

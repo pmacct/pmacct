@@ -75,6 +75,9 @@ pmacct is Copyright (C) 2003-2015 by Paolo Lucente
     containing both info.
   ! fix, uacctd: informational log message now shows the correct group the
     daemon is bound to. Thanks to Marco Marzetti for reporting the issue.
+  ! fix, nfv9_template.c: missing byte conversion while decoding templates
+    was causing SEGV under certain conditions. Thanks to Sergio Bellini for
+    reporting the issue.
 
 1.5.0 -- 28-08-2014
   + Introduced bgp_daemon_msglog_file config directive to enable streamed
