@@ -1,7 +1,9 @@
-pmacct (Promiscuous mode IP Accounting package) v1.5.1
+pmacct (Promiscuous mode IP Accounting package) v1.5.2
 pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 
-1.5.1 -- XX-02-2015
+1.5.2 -- XX-XX-XXXX
+
+1.5.1 -- 21-02-2015
   + BMP daemon: BMP, BGP Monitoring Protocol, can be used to monitor BGP
     sessions. The current implementation is base on the draft-ietf-grow-bmp-07
     IETF draft. The daemon currently supports BMP events and stats only, ie.
