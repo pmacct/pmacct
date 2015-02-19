@@ -345,8 +345,9 @@
 #define CUSTOM_PRIMITIVE_TYPE_MAC	5
 #define CUSTOM_PRIMITIVE_TYPE_RAW	6
 
-#define FUNC_TYPE_BGP	1
-#define FUNC_TYPE_BMP	2
+#define FUNC_TYPE_BGP			1
+#define FUNC_TYPE_BMP			2
+#define FUNC_TYPE_SFLOW_COUNTER		3
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

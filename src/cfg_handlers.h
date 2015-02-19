@@ -128,6 +128,8 @@ EXT int cfg_key_pmacctd_flow_lifetime(char *, char *, char *);
 EXT int cfg_key_pmacctd_flow_tcp_lifetime(char *, char *, char *);
 EXT int cfg_key_pmacctd_ext_sampling_rate(char *, char *, char *);
 EXT int cfg_key_sfacctd_renormalize(char *, char *, char *);
+EXT int cfg_key_sfacctd_counter_output(char *, char *, char *);
+EXT int cfg_key_sfacctd_counter_file(char *, char *, char *);
 EXT int cfg_key_pcap_savefile(char *, char *, char *);
 EXT int cfg_key_maps_refresh(char *, char *, char *);
 EXT int cfg_key_maps_index(char *, char *, char *);

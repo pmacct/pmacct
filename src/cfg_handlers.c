@@ -3741,6 +3741,42 @@ int cfg_key_sfacctd_renormalize(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sfacctd_counter_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
+    value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN ( %s ): sfacctd_counter_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
+  else {
+    Log(LOG_WARNING, "WARN ( %s ): Invalid sfacctd_counter_output value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_output = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_output'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

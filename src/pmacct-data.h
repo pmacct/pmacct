@@ -495,6 +495,8 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_mcast_groups", cfg_key_nfacctd_mcast_groups},
   {"sfacctd_stitching", cfg_key_nfacctd_stitching},
   {"sfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
+  {"sfacctd_counter_output", cfg_key_sfacctd_counter_output},
+  {"sfacctd_counter_file", cfg_key_sfacctd_counter_file},
   {"classifiers", cfg_key_classifiers},
   {"classifier_tentatives", cfg_key_classifier_tentatives},
   {"classifier_table_num", cfg_key_classifier_table_num},

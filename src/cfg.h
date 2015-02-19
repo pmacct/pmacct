@@ -163,6 +163,8 @@ struct configuration {
   u_int32_t nfacctd_net;
   u_int64_t nfacctd_pipe_size;
   int sfacctd_renormalize;
+  int sfacctd_counter_output;
+  char *sfacctd_counter_file;
   int nfacctd_disable_checks;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;

@@ -20,8 +20,8 @@
 */
 
 /* 
-    sflow v2/v4/v5 routines are based on sFlow toolkit 3.8 which is 
-    Copyright (C) InMon Corporation 2001 ALL RIGHTS RESERVED
+    sflow v2/v4/v5 routines are based on sFlow toolkit 3.8 and later which
+    is Copyright (C) InMon Corporation 2001 ALL RIGHTS RESERVED
 */
 
 /* defines */
@@ -864,6 +864,24 @@ int main(int argc,char **argv, char **envp)
     allowed = TRUE;
   }
 
+  if (config.sfacctd_counter_file) {
+    sf_cnt_log = malloc(MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+    if (!sf_cnt_log) {
+      Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() sFlow counters log structure. Exiting.\n", config.name);
+      exit(1);
+    }
+    memset(sf_cnt_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+    bgp_peer_log_seq_init(&sf_cnt_log_seq);
+
+    if (!config.sfacctd_counter_output) {
+#ifdef WITH_JANSSON
+      config.sfacctd_counter_output = PRINT_OUTPUT_JSON;
+#else
+      Log(LOG_WARNING, "WARN ( %s/core ): sfacctd_counter_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+#endif
+    }
+  }
+
   /* Main loop */
   for (;;) {
     // memset(&spp, 0, sizeof(spp));
@@ -993,6 +1011,8 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   pptrsv->v4.f_status = sfv245_check_status(spp, agent);
   set_vector_f_status(pptrsv);
 
+  if (config.sfacctd_counter_file) sfv245_check_counter_log_init(&pptrsv->v4); 
+
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
     set_vector_sample_type(pptrsv, 0);
@@ -1027,6 +1047,8 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   samplesInPacket = getData32(spp);
   pptrsv->v4.f_status = sfv245_check_status(spp, agent);
   set_vector_f_status(pptrsv);
+
+  if (config.sfacctd_counter_file) sfv245_check_counter_log_init(&pptrsv->v4); 
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
@@ -2248,7 +2270,23 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
     }
     else Log(LOG_WARNING, "WARN ( %s/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n", config.name);
 
-    skipBytes(sample, length);
+    switch (tag) {
+    case SFLCOUNTERS_GENERIC:
+      // readCounters_generic(sample);
+      skipBytes(sample, length);
+      break;
+    case SFLCOUNTERS_ETHERNET:
+      // readCounters_ethernet(sample);
+      skipBytes(sample, length);
+      break;
+    case SFLCOUNTERS_VLAN:
+      // readCounters_vlan(sample);
+      skipBytes(sample, length);
+      break;
+    default:
+      skipBytes(sample, length);
+      break;
+    }
   }
 
   if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
@@ -2822,6 +2860,78 @@ char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
   }
 
   return (char *) entry;
+}
+
+void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
+{
+  struct xflow_status_entry *entry = NULL;
+
+  if (!pptrs) return;
+
+  entry = (struct xflow_status_entry *) pptrs->f_status;
+
+  if (entry && !entry->sf_cnt_log) {
+    // XXX
+  }
+}
+
+void readCounters_generic(SFSample *sample)
+{
+/*
+  // the first part of the generic counters block is really just more info about the interface.
+  sample->ifCounters.ifIndex = sf_log_next32(sample, "ifIndex");
+  sample->ifCounters.ifType = sf_log_next32(sample, "networkType");
+  sample->ifCounters.ifSpeed = sf_log_next64(sample, "ifSpeed");
+  sample->ifCounters.ifDirection = sf_log_next32(sample, "ifDirection");
+  sample->ifCounters.ifStatus = sf_log_next32(sample, "ifStatus");
+  // the generic counters always come first 
+  sample->ifCounters.ifInOctets = sf_log_next64(sample, "ifInOctets");
+  sample->ifCounters.ifInUcastPkts = sf_log_next32(sample, "ifInUcastPkts");
+  sample->ifCounters.ifInMulticastPkts = sf_log_next32(sample, "ifInMulticastPkts");
+  sample->ifCounters.ifInBroadcastPkts = sf_log_next32(sample, "ifInBroadcastPkts");
+  sample->ifCounters.ifInDiscards = sf_log_next32(sample, "ifInDiscards");
+  sample->ifCounters.ifInErrors = sf_log_next32(sample, "ifInErrors");
+  sample->ifCounters.ifInUnknownProtos = sf_log_next32(sample, "ifInUnknownProtos");
+  sample->ifCounters.ifOutOctets = sf_log_next64(sample, "ifOutOctets");
+  sample->ifCounters.ifOutUcastPkts = sf_log_next32(sample, "ifOutUcastPkts");
+  sample->ifCounters.ifOutMulticastPkts = sf_log_next32(sample, "ifOutMulticastPkts");
+  sample->ifCounters.ifOutBroadcastPkts = sf_log_next32(sample, "ifOutBroadcastPkts");
+  sample->ifCounters.ifOutDiscards = sf_log_next32(sample, "ifOutDiscards");
+  sample->ifCounters.ifOutErrors = sf_log_next32(sample, "ifOutErrors");
+  sample->ifCounters.ifPromiscuousMode = sf_log_next32(sample, "ifPromiscuousMode");
+*/
+}
+
+void readCounters_ethernet(SFSample *sample)
+{
+/*
+  sf_log_next32(sample, "dot3StatsAlignmentErrors");
+  sf_log_next32(sample, "dot3StatsFCSErrors");
+  sf_log_next32(sample, "dot3StatsSingleCollisionFrames");
+  sf_log_next32(sample, "dot3StatsMultipleCollisionFrames");
+  sf_log_next32(sample, "dot3StatsSQETestErrors");
+  sf_log_next32(sample, "dot3StatsDeferredTransmissions");
+  sf_log_next32(sample, "dot3StatsLateCollisions");
+  sf_log_next32(sample, "dot3StatsExcessiveCollisions");
+  sf_log_next32(sample, "dot3StatsInternalMacTransmitErrors");
+  sf_log_next32(sample, "dot3StatsCarrierSenseErrors");
+  sf_log_next32(sample, "dot3StatsFrameTooLongs");
+  sf_log_next32(sample, "dot3StatsInternalMacReceiveErrors");
+  sf_log_next32(sample, "dot3StatsSymbolErrors");
+*/
+}
+
+void readCounters_vlan(SFSample *sample)
+{
+/*
+  sample->in_vlan = getData32(sample);
+  sf_log(sample,"in_vlan %u\n", sample->in_vlan);
+  sf_log_next64(sample, "octets");
+  sf_log_next32(sample, "ucastPkts");
+  sf_log_next32(sample, "multicastPkts");
+  sf_log_next32(sample, "broadcastPkts");
+  sf_log_next32(sample, "discards");
+*/
 }
 
 /* Dummy objects here - ugly to see but well portable */
