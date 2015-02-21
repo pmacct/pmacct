@@ -77,7 +77,7 @@ struct xflow_status_entry
   struct xflow_status_entry_counters counters;
   struct xflow_status_entry_sampling *sampling;
   struct xflow_status_entry_class *class;
-  struct bgp_peer_log *sf_cnt_log;
+  void *sf_cnt;			/* struct (ab)used for sFlow counters logging */
   struct xflow_status_entry *next;
 };
 

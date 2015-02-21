@@ -2175,7 +2175,7 @@ void write_and_free_json(FILE *f, void *obj)
 
   tmpbuf = json_dumps(json_obj, 0);
   json_decref(json_obj);
-  
+
   if (tmpbuf) {
     fprintf(f, "%s\n", tmpbuf);
     fflush(f);

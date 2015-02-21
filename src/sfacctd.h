@@ -28,7 +28,6 @@
 #define DEFAULT_SFACCTD_PORT 6343 
 #define SFLOW_MIN_MSG_SIZE 200 
 #define SFLOW_MAX_MSG_SIZE 65536 /* inflated ? */
-#define MAX_SF_CNT_LOG_ENTRIES 1024
 
 enum INMPacket_information_type {
   INMPACKETTYPE_HEADER  = 1,      /* Packet headers are sampled */

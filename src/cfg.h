@@ -165,6 +165,7 @@ struct configuration {
   int sfacctd_renormalize;
   int sfacctd_counter_output;
   char *sfacctd_counter_file;
+  int sfacctd_counter_max_nodes;
   int nfacctd_disable_checks;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;

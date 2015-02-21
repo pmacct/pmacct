@@ -32,6 +32,7 @@
 #include "sflow.h"
 #include "sfacctd.h"
 #include "sfv5_module.h"
+#include "sfacctd_logdump.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -871,6 +872,7 @@ int main(int argc,char **argv, char **envp)
       exit(1);
     }
     memset(sf_cnt_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+    config.sfacctd_counter_max_nodes = MAX_SF_CNT_LOG_ENTRIES;
     bgp_peer_log_seq_init(&sf_cnt_log_seq);
 
     if (!config.sfacctd_counter_output) {
@@ -924,6 +926,11 @@ int main(int argc,char **argv, char **envp)
 
       reload_map = FALSE;
       gettimeofday(&reload_map_tstamp, NULL);
+    }
+
+    if (config.sfacctd_counter_file) {
+      gettimeofday(&sf_cnt_log_tstamp, NULL);
+      compose_timestamp(sf_cnt_log_tstamp_str, SRVBUFLEN, &sf_cnt_log_tstamp, TRUE);
     }
 
     if (data_plugins) {
@@ -2865,13 +2872,29 @@ char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
 void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
 {
   struct xflow_status_entry *entry = NULL;
+  struct bgp_peer *peer;
 
   if (!pptrs) return;
 
   entry = (struct xflow_status_entry *) pptrs->f_status;
 
-  if (entry && !entry->sf_cnt_log) {
-    // XXX
+  if (entry) {
+    if (!entry->sf_cnt) {
+      entry->sf_cnt = malloc(sizeof(struct bgp_peer));
+      if (!entry->sf_cnt) {
+        Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() xflow_status_entry sFlow counters log structure. Exiting.\n", config.name);
+        exit(1);
+      }
+      memset(entry->sf_cnt, 0, sizeof(struct bgp_peer));
+    }
+
+    peer = (struct bgp_peer *) entry->sf_cnt;
+    
+    if (!peer->log) { 
+      memcpy(&peer->addr, &entry->agent_addr, sizeof(struct host_addr));
+      addr_to_str(peer->addr_str, &peer->addr);
+      bgp_peer_log_init(peer, config.sfacctd_counter_output, FUNC_TYPE_SFLOW_COUNTER);
+    }
   }
 }
 

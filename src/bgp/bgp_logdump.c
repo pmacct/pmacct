@@ -26,6 +26,7 @@
 #include "pmacct.h"
 #include "bgp.h"
 #include "../bmp/bmp.h"
+#include "../sfacctd_logdump.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -184,6 +185,17 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     lts = bmp_log_tstamp_str;
     ls = &bmp_log_seq;
     bpl = &bmp_peers_log;
+  }
+  else if (type == FUNC_TYPE_SFLOW_COUNTER) {
+    file = config.sfacctd_counter_file;
+    amqp_routing_key = NULL; /* AMQP not supported */
+    amqp_routing_key_rr = 0; /* AMQP not supported */
+    max_peers = config.sfacctd_counter_max_nodes;
+
+    pa_str = peer_ip_src;
+    lts = sf_cnt_log_tstamp_str;
+    ls = &sf_cnt_log_seq;
+    bpl = &sf_cnt_log;
   }
   else return ret;
 
