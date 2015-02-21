@@ -49,7 +49,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"src_mac", PT_map_src_mac_handler},
   {"dst_mac", PT_map_dst_mac_handler},
   {"vlan", PT_map_vlan_id_handler},
-  {"post_cvlan", PT_map_post_cvlan_id_handler},
+  {"cvlan", PT_map_cvlan_id_handler},
   {"set_tag", PT_map_id_handler},
   {"set_tag2", PT_map_id2_handler},
   {"set_label", PT_map_label_handler},
@@ -76,7 +76,7 @@ const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_SRC_MAC, PT_map_index_entries_src_mac_handler},
   {PRETAG_DST_MAC, PT_map_index_entries_dst_mac_handler},
   {PRETAG_VLAN_ID, PT_map_index_entries_vlan_id_handler},
-  {PRETAG_CVLAN_ID, PT_map_index_entries_post_cvlan_id_handler},
+  {PRETAG_CVLAN_ID, PT_map_index_entries_cvlan_id_handler},
   {0, NULL}
 };
 
@@ -95,7 +95,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_SRC_MAC, PT_map_index_fdata_src_mac_handler},
   {PRETAG_DST_MAC, PT_map_index_fdata_dst_mac_handler},
   {PRETAG_VLAN_ID, PT_map_index_fdata_vlan_id_handler},
-  {PRETAG_CVLAN_ID, PT_map_index_fdata_post_cvlan_id_handler},
+  {PRETAG_CVLAN_ID, PT_map_index_fdata_cvlan_id_handler},
   {0, NULL}
 };
 

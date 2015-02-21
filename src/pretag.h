@@ -166,7 +166,7 @@ struct id_entry {
   pt_etheraddr_t src_mac;
   pt_etheraddr_t dst_mac;
   pt_uint16_t vlan_id;
-  pt_uint16_t post_cvlan_id;
+  pt_uint16_t cvlan_id;
   s_uint8_t set_tos;
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */

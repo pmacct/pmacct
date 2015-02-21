@@ -1076,27 +1076,27 @@ int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
-int PT_map_post_cvlan_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int PT_map_cvlan_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int tmp, x = 0;
 
-  e->post_cvlan_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->cvlan_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = atoi(value);
   if (tmp < 0 || tmp > 4096) {
-    Log(LOG_ERR, "ERROR ( %s ): 'post_cvlan' need to be in the following range: 0 > value > 4096. ", filename);
+    Log(LOG_ERR, "ERROR ( %s ): 'cvlan' need to be in the following range: 0 > value > 4096. ", filename);
     return TRUE;
   }
-  e->post_cvlan_id.n = tmp;
+  e->cvlan_id.n = tmp;
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_CVLAN_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'post_cvlan' clauses part of the same statement. ", filename);
+      Log(LOG_ERR, "ERROR ( %s ): Multiple 'cvlan' clauses part of the same statement. ", filename);
       return TRUE;
     }
   }
 
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_post_cvlan_id_handler;
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_cvlan_id_handler;
   /* else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_vlan_id_handler; */
   if (e->func[x]) e->func_type[x] = PRETAG_CVLAN_ID;
 
@@ -2018,22 +2018,22 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
 }
 
-int pretag_post_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t tmp16 = 0, post_cvlan_id = 0;
+  u_int16_t tmp16 = 0, cvlan_id = 0;
 
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_POST_DOT1QCVLANID].len) {
-      memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_POST_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_POST_DOT1QCVLANID].len, 2));
+    if (tpl->tpl[NF9_DOT1QCVLANID].len) {
+      memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_DOT1QCVLANID].len, 2));
     }
-    post_cvlan_id = ntohs(tmp16);
-    if (entry->post_cvlan_id.n == post_cvlan_id) return (FALSE | entry->post_cvlan_id.neg);
-    else return (TRUE ^ entry->post_cvlan_id.neg);
+    cvlan_id = ntohs(tmp16);
+    if (entry->cvlan_id.n == cvlan_id) return (FALSE | entry->cvlan_id.neg);
+    else return (TRUE ^ entry->cvlan_id.neg);
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
@@ -2821,13 +2821,13 @@ int PT_map_index_entries_vlan_id_handler(struct id_entry *e, void *src)
   return FALSE;
 }
 
-int PT_map_index_entries_post_cvlan_id_handler(struct id_entry *e, void *src)
+int PT_map_index_entries_cvlan_id_handler(struct id_entry *e, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
   if (!e || !src_e) return TRUE;
 
-  memcpy(&e->post_cvlan_id, &src_e->post_cvlan_id, sizeof(pt_uint16_t));
+  memcpy(&e->cvlan_id, &src_e->cvlan_id, sizeof(pt_uint16_t));
 
   return FALSE;
 }
@@ -3394,7 +3394,7 @@ int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, void *src)
   return FALSE;
 }
 
-int PT_map_index_fdata_post_cvlan_id_handler(struct id_entry *e, void *src)
+int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -3405,9 +3405,9 @@ int PT_map_index_fdata_post_cvlan_id_handler(struct id_entry *e, void *src)
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_POST_DOT1QCVLANID].len) {
-        memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_POST_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_POST_DOT1QCVLANID].len, 2));
-	e->post_cvlan_id.n = ntohs(tmp16);
+      if (tpl->tpl[NF9_DOT1QCVLANID].len) {
+        memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_DOT1QCVLANID].len, 2));
+	e->cvlan_id.n = ntohs(tmp16);
       }
     }
   }

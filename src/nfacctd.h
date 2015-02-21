@@ -538,6 +538,7 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_DOT1QVLANID			243
 #define NF9_DOT1QPRIORITY		244
+#define NF9_DOT1QCVLANID		245
 /* ... */
 #define NF9_PSEUDOWIREID		249
 /* ... */

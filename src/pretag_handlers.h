@@ -56,7 +56,7 @@ EXT int PT_map_mpls_pw_id_handler(char *, struct id_entry *, char *, struct plug
 EXT int PT_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_dst_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_vlan_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int PT_map_post_cvlan_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_cvlan_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_set_tos_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_entry_label_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_jeq_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -79,7 +79,7 @@ EXT int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *, void *
 EXT int PT_map_index_entries_src_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_dst_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_entries_vlan_id_handler(struct id_entry *, void *); 
-EXT int PT_map_index_entries_post_cvlan_id_handler(struct id_entry *, void *); 
+EXT int PT_map_index_entries_cvlan_id_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_ip_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_input_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_output_handler(struct id_entry *, void *); 
@@ -94,7 +94,7 @@ EXT int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *, void *);
 EXT int PT_map_index_fdata_src_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_dst_mac_handler(struct id_entry *, void *); 
 EXT int PT_map_index_fdata_vlan_id_handler(struct id_entry *, void *);
-EXT int PT_map_index_fdata_post_cvlan_id_handler(struct id_entry *, void *);
+EXT int PT_map_index_fdata_cvlan_id_handler(struct id_entry *, void *);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -146,7 +146,7 @@ EXT int pretag_mpls_pw_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
-EXT int pretag_post_cvlan_id_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_cvlan_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_set_tos_handler(struct packet_ptrs *, void *, void *);
 
 EXT int SF_pretag_input_handler(struct packet_ptrs *, void *, void *);

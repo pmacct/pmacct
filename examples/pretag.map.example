@@ -11,7 +11,7 @@
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg,
 ! sampling_rate, sample_type, direction, src_mac, dst_mac, mpls_pw_id, vlan,
-! post_cvlan; mandatory keys for each rule: ip.
+! cvlan; mandatory keys for each rule: ip.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
@@ -144,8 +144,8 @@
 !			IE #58 and, if not existing, against IE #242, in sFlow
 !			against in/out VLAN ID fields part of the Extended Switch
 !			object.
-! 'post_cvlan'          MATCH: In NetFlow v9 and IPFIX this is compared against
-!                       IE #255.
+! 'cvlan'		MATCH: In NetFlow v9 and IPFIX this is compared against
+!                       IE #245.
 ! 'label'		SET: Mark the rule with label's value. Labels don't need
 !			to be unique: when jumping, the first matching label wins.
 !			Label value 'next' is reserved for internal use and
