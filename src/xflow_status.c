@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -112,7 +112,7 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno)
       else
 	strcpy(collector_ip_address, null_ip_address);
 
-      Log(LOG_WARNING, "WARN: expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
+      Log(LOG_INFO, "INFO: expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
 		      entry->seqno+entry->inc, seqno, collector_ip_address, config.nfacctd_port, agent_ip_address, entry->aux1);
       if (seqno > entry->seqno+entry->inc) {
         // entry->counters.missed += (seqno-entry->seqno);

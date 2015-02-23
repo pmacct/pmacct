@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -102,8 +102,8 @@ int parse_configuration_file(char *filename)
     }
     else {
       while (!feof(file)) {
-        if (rows == SRVBUFLEN) {
-	  Log(LOG_ERR, "ERROR ( %s ): maximum number of %d lines reached.\n", filename, SRVBUFLEN);
+        if (rows == LARGEBUFLEN) {
+	  Log(LOG_ERR, "ERROR ( %s ): maximum number of %d lines reached.\n", filename, LARGEBUFLEN);
 	  break;
         }
 	memset(localbuf, 0, sizeof(localbuf));
@@ -129,7 +129,7 @@ int parse_configuration_file(char *filename)
   }
 
   if (rows_cmdline) {
-    for (idx = 0; idx < rows_cmdline && (rows+idx) < SRVBUFLEN; idx++) {
+    for (idx = 0; idx < rows_cmdline && (rows+idx) < LARGEBUFLEN; idx++) {
       cfg[rows+idx] = cfg_cmdline[idx];
     }
     rows += idx;

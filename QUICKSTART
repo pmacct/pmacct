@@ -1446,10 +1446,15 @@ file>".
 d) Buffering is often an element to tune. While buffering internal to pmacct, 
 plugin_buffer_size and plugin_buffer_size, return warning messages in case of
 data loss, buffering between pmacct and the kernel is more tricky (often it is
-outside control of the application), ie. nfacctd_pipe_size and equivalents. Two
-commands useful to check this kind of buffering on Linux systems are: 1) "cat
-/proc/net/udp" ensuring that "drops" value is not increasing and 2) "netstat
--s" ensuring, under the section UDP, that errors are not increasing (since this
-command returns system-wide counters, counter-check is: stop the pmacct daemon
-running and, granted the counter was increasing, verify it does not increase
-anymore).
+outside control of the application) and can be inferred by symptoms like seq
+checks failing (for protocols like NetFlow v9/IPFIX supporting this feature).
+Buffering between pmacct and the kernal can be setup via the nfacctd_pipe_size
+config directive and equivalents. Two commands useful to check this kind of
+buffering on Linux systems are: 1) "cat /proc/net/udp" ensuring that "drops"
+value is not increasing and 2) "netstat -s" ensuring, under the section UDP,
+that errors are not increasing (since this command returns system-wide counters,
+counter-check is: stop the pmacct daemon running and, granted the counter was
+increasing, verify it does not increase anymore). As suggested in CONFIG-KEYS
+description for nfacctd_pipe_size config directive, any lift in the buffering
+must be supported by the kernel adjusting /proc/sys/net/core/rmem_max and,
+optionally, /proc/sys/net/core/rmem_default. 
