@@ -39,11 +39,14 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
   char log_rk[SRVBUFLEN];
   struct bgp_peer *peer = ri->peer;
   struct bgp_attr *attr = ri->attr;
-  int ret = 0, amqp_ret = 0;
+  int ret = 0, amqp_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
+  if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
+  else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
+  
 #ifdef WITH_RABBITMQ
-  if (config.nfacctd_bgp_msglog_amqp_routing_key ||
-      config.bgp_table_dump_amqp_routing_key)
+  if ((config.nfacctd_bgp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+      (config.bgp_table_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
@@ -57,7 +60,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
     char *aspath;
 
     /* no need for seq and timestamp for "dump" event_type */
-    if (strcmp(event_type, "dump")) {
+    if (etype == BGP_LOGDUMP_ET_LOG) {
       kv = json_pack("{sI}", "seq", log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
@@ -136,12 +139,13 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       json_decref(kv);
     }
 
-    if (config.nfacctd_bgp_msglog_file || config.bgp_table_dump_file)
+    if ((config.nfacctd_bgp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+	(config.bgp_table_dump_file && etype == BGP_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
 
 #ifdef WITH_RABBITMQ
-    if (config.nfacctd_bgp_msglog_amqp_routing_key ||
-	config.bgp_table_dump_amqp_routing_key) {
+    if ((config.nfacctd_bgp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+	(config.bgp_table_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }

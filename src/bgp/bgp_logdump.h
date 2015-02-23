@@ -23,6 +23,10 @@
 #define _BGP_LOGDUMP_H_
 
 /* defines */
+#define BGP_LOGDUMP_ET_NONE	0
+#define BGP_LOGDUMP_ET_LOG	1
+#define BGP_LOGDUMP_ET_DUMP	2
+
 struct bgp_peer_log {
   FILE *fd;
   int refcnt;
