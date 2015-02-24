@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -38,7 +38,11 @@ typedef struct tee_receiver *(*tee_balance_algorithm) (void *, struct pkt_msg *)
 
 /* structures */
 struct tee_receiver {
+#if defined ENABLE_IPV6
+  struct sockaddr_storage dest;
+#else
   struct sockaddr dest;
+#endif
   socklen_t dest_len;
   int fd;
 };

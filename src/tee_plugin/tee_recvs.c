@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -79,7 +79,7 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
       if (recv_idx < config.tee_max_receivers) {
 	target = &table->pools[table->num].receivers[recv_idx];
 	target->dest_len = sizeof(target->dest);
-	if (!Tee_parse_hostport(token, (struct sockaddr *) &target->dest, &target->dest_len)) recv_idx++;
+	if (!Tee_parse_hostport(token, &target->dest, &target->dest_len)) recv_idx++;
 	else Log(LOG_WARNING, "WARN ( %s/%s ): Invalid receiver %s in map '%s'.\n",
 		config.name, config.type, token, filename);
       }
