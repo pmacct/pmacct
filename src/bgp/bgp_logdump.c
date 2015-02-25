@@ -427,6 +427,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   int ret = 0, amqp_ret = 0;
 
   /* pointers to BGP or BMP vars */
+  struct timeval *lt;
   char *amqp_routing_key, *file, *pa_str, *lts;
   int amqp_routing_key_rr;
 
@@ -438,6 +439,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     file = config.bgp_table_dump_file;
 
     pa_str = peer_ip_src;
+    lt = &log_tstamp;
     lts = log_tstamp_str; 
   }
   else if (type == FUNC_TYPE_BMP) {
@@ -446,9 +448,13 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     file = config.bmp_dump_file;
 
     pa_str = bmp_router;
+    lt = &bmp_log_tstamp;
     lts = bmp_log_tstamp_str;
   }
   else return ret;
+
+  gettimeofday(lt, NULL);
+  compose_timestamp(lts, SRVBUFLEN, lt, TRUE);
 
 #ifdef WITH_RABBITMQ
   if (amqp_routing_key)
@@ -493,12 +499,13 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   return (ret | amqp_ret);
 }
 
-int bgp_peer_dump_close(struct bgp_peer *peer, int output, int type)
+int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int output, int type)
 {
   char event_type[] = "dump_close", peer_src_ip[] = "peer_src_ip", bmp_router[] = "bmp_router";
   int ret = 0, amqp_ret = 0;
 
   /* pointers to BGP or BMP vars */
+  struct timeval *lt;
   char *amqp_routing_key, *file, *pa_str, *lts;
 
   if (!peer || !peer->log) return;
@@ -508,6 +515,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, int output, int type)
     file = config.bgp_table_dump_file;
 
     pa_str = peer_src_ip;
+    lt = &log_tstamp;
     lts = log_tstamp_str;
   }
   else if (type == FUNC_TYPE_BMP) {
@@ -515,9 +523,13 @@ int bgp_peer_dump_close(struct bgp_peer *peer, int output, int type)
     file = config.bmp_dump_file;
 
     pa_str = bmp_router;
+    lt = &bmp_log_tstamp;
     lts = bmp_log_tstamp_str;
   }
   else return ret;
+
+  gettimeofday(lt, NULL);
+  compose_timestamp(lts, SRVBUFLEN, lt, TRUE);
 
 #ifdef WITH_RABBITMQ
   if (amqp_routing_key)
@@ -541,6 +553,16 @@ int bgp_peer_dump_close(struct bgp_peer *peer, int output, int type)
     kv = json_pack("{ss}", "event_type", event_type);
     json_object_update_missing(obj, kv);
     json_decref(kv);
+
+    if (bds) {
+      kv = json_pack("{sI}", "entries", bds->entries);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      kv = json_pack("{sI}", "tables", bds->tables);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
 
     if (file)
       write_and_free_json(peer->log->fd, obj);
@@ -566,10 +588,12 @@ void bgp_handle_dump_event()
   struct bgp_table *table;
   struct bgp_node *node;
   struct bgp_peer_log peer_log;
+  struct bgp_dump_stats bds;
   afi_t afi;
   safi_t safi;
   pid_t dumper_pid;
   time_t start;
+  u_int64_t dump_elems;
 
   /* pre-flight check */
   if ((!config.bgp_table_dump_file && !config.bgp_table_dump_amqp_routing_key) ||
@@ -585,6 +609,7 @@ void bgp_handle_dump_event()
     memset(last_filename, 0, sizeof(last_filename));
     memset(current_filename, 0, sizeof(current_filename));
     memset(&peer_log, 0, sizeof(struct bgp_peer_log));
+    memset(&bds, 0, sizeof(struct bgp_dump_stats));
 
 #ifdef WITH_RABBITMQ
     if (config.bgp_table_dump_amqp_routing_key) {
@@ -636,6 +661,7 @@ void bgp_handle_dump_event()
 #endif
 
 	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+	dump_elems = 0;
 
 	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
@@ -651,6 +677,7 @@ void bgp_handle_dump_event()
 	        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		  if (ri->peer == peer) {
 	            bgp_peer_log_msg(node, ri, safi, event_type, config.bgp_table_dump_output);
+	            dump_elems++;
 		  }
 		}
 	      }
@@ -661,9 +688,12 @@ void bgp_handle_dump_event()
 	}
 
         saved_peer = peer;
-        strlcpy(last_filename, current_filename, SRVBUFLEN);
-        bgp_peer_dump_close(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
 	tables_num++;
+
+        strlcpy(last_filename, current_filename, SRVBUFLEN);
+	bds.entries = dump_elems;
+	bds.tables = tables_num;
+        bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
       }
     }
 
