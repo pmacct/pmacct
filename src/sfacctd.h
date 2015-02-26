@@ -69,6 +69,9 @@ typedef struct _SFSample {
   u_int32_t ds_class;
   u_int32_t ds_index;
 
+  /* generic interface counter sample */
+  SFLIf_counters ifCounters;
+
   /* sample stream info */
   u_int32_t sysUpTime;		/* XXX: suffers cleanup */
   u_int32_t sequenceNo;		/* XXX: suffers cleanup */
@@ -260,6 +263,7 @@ EXT int SF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *
 
 EXT u_int32_t getData32(SFSample *);
 EXT u_int32_t getData32_nobswap(SFSample *);
+EXT u_int64_t getData64(SFSample *);
 EXT u_int32_t getAddress(SFSample *, SFLAddress *);
 EXT void skipBytes(SFSample *, int);
 EXT int lengthCheck(SFSample *, u_char *, int);
@@ -298,9 +302,10 @@ EXT void readFlowSample_header(SFSample *);
 EXT void readFlowSample_ethernet(SFSample *);
 EXT void readFlowSample_IPv4(SFSample *);
 EXT void readFlowSample_IPv6(SFSample *);
-EXT void readCounters_generic(SFSample *);
-EXT void readCounters_ethernet(SFSample *);
-EXT void readCounters_vlan(SFSample *);
+
+EXT int readCounters_generic(struct bgp_peer *, SFSample *, char *, int);
+EXT int readCounters_ethernet(struct bgp_peer *, SFSample *, char *, int);
+EXT int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int);
 
 EXT char *sfv245_check_status(SFSample *spp, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);

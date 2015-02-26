@@ -1208,6 +1208,20 @@ DESC:		automatically renormalizes byte/packet counters value basing on informati
 		expecially at high rates - because of various losses. Such estimated rate is then used for
 		renormalization purposes. (default: false) 
 
+KEY:            sfacctd_counter_file
+DESC:           Enables streamed logging of sFlow counters. Each log entry features a time reference, sFlow
+		agent IP address event type and a sequence number (to order events when time reference is not
+		granular enough). Currently it is not possible to filter in/out specific counter types (ie.
+		generic, ethernet, vlan, etc.). The list of supported filename variables follows:
+
+                $peer_src_ip    sFlow agent IP address.
+
+KEY:            sfacctd_counter_output
+VALUES:         [ json ]
+DESC:           Defines output format for the streamed logging of sFlow counters. Only JSON format is currently
+		supported and requires compiling against Jansson library (--enable-jansson when configuring for
+		compiling). (default: json)
+
 KEY:		classifiers [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		full path to a spool directory containing the packet classification patterns (expected as .pat
 		or .so files; files with different extensions and subdirectories will be just ignored). This

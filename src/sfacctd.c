@@ -30,6 +30,8 @@
 /* includes */
 #include "pmacct.h"
 #include "sflow.h"
+#include "bgp/bgp_packet.h"
+#include "bgp/bgp.h"
 #include "sfacctd.h"
 #include "sfv5_module.h"
 #include "sfacctd_logdump.h"
@@ -40,9 +42,10 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
-#include "bgp/bgp_packet.h"
-#include "bgp/bgp.h"
 #include "crc32.c"
+#ifdef WITH_JANSSON
+#include <jansson.h>
+#endif
 
 /* variables to be exported away */
 int debug;
@@ -1482,6 +1485,14 @@ u_int32_t getData32_nobswap(SFSample *sample)
   return *(sample->datap)++;
 }
 
+u_int64_t getData64(SFSample *sample)
+{
+  u_int64_t tmpLo, tmpHi;
+  tmpHi = getData32(sample);
+  tmpLo = getData32(sample);
+  return (tmpHi << 32) + tmpLo;
+}
+
 void skipBytes(SFSample *sample, int skip)
 {
   int quads = (skip + 3) / 4;
@@ -2241,8 +2252,15 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
 void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
 {
   struct sfv5_modules_db_field *db_field = NULL;
+  struct xflow_status_entry *xse = NULL;
+  struct bgp_peer *peer = NULL;
   u_int32_t sampleLength, num_elements, idx, drain;
   u_char *sampleStart;
+
+  if (config.sfacctd_counter_file) {
+    if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
+    if (xse) peer = (struct bgp_peer *) xse->sf_cnt; 
+  }
 
   sampleLength = getData32(sample);
   sampleStart = (u_char *)sample->datap;
@@ -2279,16 +2297,16 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
 
     switch (tag) {
     case SFLCOUNTERS_GENERIC:
-      // readCounters_generic(sample);
-      skipBytes(sample, length);
+      if (config.sfacctd_counter_file) readCounters_generic(peer, sample, "log", config.sfacctd_counter_output);
+      else skipBytes(sample, length);
       break;
     case SFLCOUNTERS_ETHERNET:
-      // readCounters_ethernet(sample);
-      skipBytes(sample, length);
+      if (config.sfacctd_counter_file) readCounters_ethernet(peer, sample, "log", config.sfacctd_counter_output);
+      else skipBytes(sample, length);
       break;
     case SFLCOUNTERS_VLAN:
-      // readCounters_vlan(sample);
-      skipBytes(sample, length);
+      if (config.sfacctd_counter_file) readCounters_vlan(peer, sample, "log", config.sfacctd_counter_output);
+      else skipBytes(sample, length);
       break;
     default:
       skipBytes(sample, length);
@@ -2898,63 +2916,358 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
   }
 }
 
-void readCounters_generic(SFSample *sample)
+int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_type, int output)
 {
-/*
-  // the first part of the generic counters block is really just more info about the interface.
-  sample->ifCounters.ifIndex = sf_log_next32(sample, "ifIndex");
-  sample->ifCounters.ifType = sf_log_next32(sample, "networkType");
-  sample->ifCounters.ifSpeed = sf_log_next64(sample, "ifSpeed");
-  sample->ifCounters.ifDirection = sf_log_next32(sample, "ifDirection");
-  sample->ifCounters.ifStatus = sf_log_next32(sample, "ifStatus");
+  char msg_type[] = "sflow_cnt_generic";
+  int ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  char ip_address[INET6_ADDRSTRLEN];
+
+  /* parse sFlow first and foremost */
+  sample->ifCounters.ifIndex = getData32(sample);
+  sample->ifCounters.ifType = getData32(sample);
+  sample->ifCounters.ifSpeed = getData64(sample);
+  sample->ifCounters.ifDirection = getData32(sample);
+  sample->ifCounters.ifStatus = getData32(sample);
   // the generic counters always come first 
-  sample->ifCounters.ifInOctets = sf_log_next64(sample, "ifInOctets");
-  sample->ifCounters.ifInUcastPkts = sf_log_next32(sample, "ifInUcastPkts");
-  sample->ifCounters.ifInMulticastPkts = sf_log_next32(sample, "ifInMulticastPkts");
-  sample->ifCounters.ifInBroadcastPkts = sf_log_next32(sample, "ifInBroadcastPkts");
-  sample->ifCounters.ifInDiscards = sf_log_next32(sample, "ifInDiscards");
-  sample->ifCounters.ifInErrors = sf_log_next32(sample, "ifInErrors");
-  sample->ifCounters.ifInUnknownProtos = sf_log_next32(sample, "ifInUnknownProtos");
-  sample->ifCounters.ifOutOctets = sf_log_next64(sample, "ifOutOctets");
-  sample->ifCounters.ifOutUcastPkts = sf_log_next32(sample, "ifOutUcastPkts");
-  sample->ifCounters.ifOutMulticastPkts = sf_log_next32(sample, "ifOutMulticastPkts");
-  sample->ifCounters.ifOutBroadcastPkts = sf_log_next32(sample, "ifOutBroadcastPkts");
-  sample->ifCounters.ifOutDiscards = sf_log_next32(sample, "ifOutDiscards");
-  sample->ifCounters.ifOutErrors = sf_log_next32(sample, "ifOutErrors");
-  sample->ifCounters.ifPromiscuousMode = sf_log_next32(sample, "ifPromiscuousMode");
-*/
+  sample->ifCounters.ifInOctets = getData64(sample);
+  sample->ifCounters.ifInUcastPkts = getData32(sample);
+  sample->ifCounters.ifInMulticastPkts = getData32(sample);
+  sample->ifCounters.ifInBroadcastPkts = getData32(sample);
+  sample->ifCounters.ifInDiscards = getData32(sample);
+  sample->ifCounters.ifInErrors = getData32(sample);
+  sample->ifCounters.ifInUnknownProtos = getData32(sample);
+  sample->ifCounters.ifOutOctets = getData64(sample);
+  sample->ifCounters.ifOutUcastPkts = getData32(sample);
+  sample->ifCounters.ifOutMulticastPkts = getData32(sample);
+  sample->ifCounters.ifOutBroadcastPkts = getData32(sample);
+  sample->ifCounters.ifOutDiscards = getData32(sample);
+  sample->ifCounters.ifOutErrors = getData32(sample);
+  sample->ifCounters.ifPromiscuousMode = getData32(sample);
+
+  if (!peer || !sample) return ret;
+
+  if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
+  else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = json_object(), *kv;
+
+    /* no need for seq and timestamp for "dump" event_type */
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      kv = json_pack("{sI}", "seq", sf_cnt_log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment(&sf_cnt_log_seq);
+
+      kv = json_pack("{ss}", "timestamp", sf_cnt_log_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    kv = json_pack("{ss}", "sf_cnt_type", msg_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, &peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifIndex", sample->ifCounters.ifIndex);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifType", sample->ifCounters.ifType);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifSpeed", sample->ifCounters.ifSpeed);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifDirection", sample->ifCounters.ifDirection);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifStatus", sample->ifCounters.ifStatus);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInOctets", sample->ifCounters.ifInOctets);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInUcastPkts", sample->ifCounters.ifInUcastPkts);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInMulticastPkts", sample->ifCounters.ifInMulticastPkts);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInBroadcastPkts", sample->ifCounters.ifInBroadcastPkts);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInDiscards", sample->ifCounters.ifInDiscards);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInErrors", sample->ifCounters.ifInErrors);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifInUnknownProtos", sample->ifCounters.ifInUnknownProtos);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifOutOctets", sample->ifCounters.ifOutOctets);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifOutUcastPkts", sample->ifCounters.ifOutUcastPkts);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifOutMulticastPkts", sample->ifCounters.ifOutMulticastPkts);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifOutBroadcastPkts", sample->ifCounters.ifOutBroadcastPkts);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifOutDiscards", sample->ifCounters.ifOutDiscards);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifOutErrors", sample->ifCounters.ifOutErrors);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ifPromiscuousMode", sample->ifCounters.ifPromiscuousMode);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (config.sfacctd_counter_file && etype == BGP_LOGDUMP_ET_LOG) {
+      write_and_free_json(peer->log->fd, obj);
+    }
+#endif
+  }
+
+  return ret;
 }
 
-void readCounters_ethernet(SFSample *sample)
+int readCounters_ethernet(struct bgp_peer *peer, SFSample *sample, char *event_type, int output)
 {
-/*
-  sf_log_next32(sample, "dot3StatsAlignmentErrors");
-  sf_log_next32(sample, "dot3StatsFCSErrors");
-  sf_log_next32(sample, "dot3StatsSingleCollisionFrames");
-  sf_log_next32(sample, "dot3StatsMultipleCollisionFrames");
-  sf_log_next32(sample, "dot3StatsSQETestErrors");
-  sf_log_next32(sample, "dot3StatsDeferredTransmissions");
-  sf_log_next32(sample, "dot3StatsLateCollisions");
-  sf_log_next32(sample, "dot3StatsExcessiveCollisions");
-  sf_log_next32(sample, "dot3StatsInternalMacTransmitErrors");
-  sf_log_next32(sample, "dot3StatsCarrierSenseErrors");
-  sf_log_next32(sample, "dot3StatsFrameTooLongs");
-  sf_log_next32(sample, "dot3StatsInternalMacReceiveErrors");
-  sf_log_next32(sample, "dot3StatsSymbolErrors");
-*/
+  char msg_type[] = "sflow_cnt_ethernet";
+  int ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  char ip_address[INET6_ADDRSTRLEN];
+
+  u_int32_t m32_1, m32_2, m32_3, m32_4, m32_5;
+  u_int32_t m32_6, m32_7, m32_8, m32_9, m32_10;
+  u_int32_t m32_11, m32_12, m32_13;
+
+  /* parse sFlow first and foremost */
+  m32_1 = getData32(sample); /* dot3StatsAlignmentErrors */
+  m32_2 = getData32(sample); /* dot3StatsFCSErrors */
+  m32_3 = getData32(sample); /* dot3StatsSingleCollisionFrames */
+  m32_4 = getData32(sample); /* dot3StatsMultipleCollisionFrames */
+  m32_5 = getData32(sample); /* dot3StatsSQETestErrors */
+  m32_6 = getData32(sample); /* dot3StatsDeferredTransmissions */
+  m32_7 = getData32(sample); /* dot3StatsLateCollisions */
+  m32_8 = getData32(sample); /* dot3StatsExcessiveCollisions */
+  m32_9 = getData32(sample); /* dot3StatsInternalMacTransmitErrors */
+  m32_10 = getData32(sample); /* dot3StatsCarrierSenseErrors */
+  m32_11 = getData32(sample); /* dot3StatsFrameTooLongs */
+  m32_12 = getData32(sample); /* dot3StatsInternalMacReceiveErrors */
+  m32_13 = getData32(sample); /* dot3StatsSymbolErrors */
+
+  if (!peer || !sample) return ret;
+
+  if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
+  else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = json_object(), *kv;
+
+    /* no need for seq and timestamp for "dump" event_type */
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      kv = json_pack("{sI}", "seq", sf_cnt_log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment(&sf_cnt_log_seq);
+
+      kv = json_pack("{ss}", "timestamp", sf_cnt_log_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    kv = json_pack("{ss}", "sf_cnt_type", msg_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, &peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsAlignmentErrors", m32_1);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsFCSErrors", m32_2);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsSingleCollisionFrames", m32_3);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsMultipleCollisionFrames", m32_4);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsSQETestErrors", m32_5);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsDeferredTransmissions", m32_6);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsLateCollisions", m32_7);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsExcessiveCollisions", m32_8);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsInternalMacTransmitErrors", m32_9);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsCarrierSenseErrors", m32_10);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsFrameTooLongs", m32_11);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsInternalMacReceiveErrors", m32_12);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dot3StatsSymbolErrors", m32_13);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (config.sfacctd_counter_file && etype == BGP_LOGDUMP_ET_LOG) {
+      write_and_free_json(peer->log->fd, obj);
+    }
+#endif
+  }
+
+  return ret;
 }
 
-void readCounters_vlan(SFSample *sample)
+int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type, int output)
 {
-/*
+  char msg_type[] = "sflow_cnt_vlan";
+  int ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  char ip_address[INET6_ADDRSTRLEN];
+
+  u_int64_t m64_1;
+  u_int32_t m32_1, m32_2, m32_3, m32_4;
+
+  /* parse sFlow first and foremost */
   sample->in_vlan = getData32(sample);
-  sf_log(sample,"in_vlan %u\n", sample->in_vlan);
-  sf_log_next64(sample, "octets");
-  sf_log_next32(sample, "ucastPkts");
-  sf_log_next32(sample, "multicastPkts");
-  sf_log_next32(sample, "broadcastPkts");
-  sf_log_next32(sample, "discards");
-*/
+  m64_1 = getData64(sample); /* octets */
+  m32_1 = getData32(sample); /* ucastPkts */
+  m32_2 = getData32(sample); /* multicastPkts */
+  m32_3 = getData32(sample); /* broadcastPkts */
+  m32_4 = getData32(sample); /* discards */
+
+  if (!peer || !sample) return ret;
+
+  if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
+  else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = json_object(), *kv;
+
+    /* no need for seq and timestamp for "dump" event_type */
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      kv = json_pack("{sI}", "seq", sf_cnt_log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment(&sf_cnt_log_seq);
+
+      kv = json_pack("{ss}", "timestamp", sf_cnt_log_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+
+    kv = json_pack("{ss}", "sf_cnt_type", msg_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    addr_to_str(ip_address, &peer->addr);
+    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "octets", m64_1);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "ucastPkts", m32_1);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "multicastPkts", m32_2);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "broadcastPkts", m32_3);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "discards", m32_3);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "vlan", sample->in_vlan);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    if (config.sfacctd_counter_file && etype == BGP_LOGDUMP_ET_LOG) {
+      write_and_free_json(peer->log->fd, obj);
+    }
+#endif
+  }
+
+  return ret;
 }
 
 /* Dummy objects here - ugly to see but well portable */

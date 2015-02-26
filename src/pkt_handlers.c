@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -24,6 +24,8 @@
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
+#include "bgp/bgp_packet.h"
+#include "bgp/bgp.h"
 #include "nfacctd.h"
 #include "sflow.h"
 #include "sfacctd.h"

@@ -22,6 +22,8 @@
 #define __PRETAG_HANDLERS_C
 
 #include "pmacct.h"
+#include "bgp/bgp_packet.h"
+#include "bgp/bgp.h"
 #include "nfacctd.h"
 #include "sflow.h"
 #include "sfacctd.h"
