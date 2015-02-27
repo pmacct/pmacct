@@ -36,10 +36,16 @@
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, char *event_type, int output, int log_type)
 {
-  int ret = 0, amqp_ret = 0;
+  int ret = 0, amqp_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+
+  if (!peer || !bdata || !event_type) return ret;
+
+  if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
+  else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
 
 #ifdef WITH_RABBITMQ
-  if (config.nfacctd_bmp_msglog_amqp_routing_key || config.bmp_dump_amqp_routing_key)
+  if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+      (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
@@ -53,7 +59,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
     json_decref(kv);
 
     /* no need for seq for "dump" event_type */
-    if (strcmp(event_type, "dump")) {
+    if (etype == BGP_LOGDUMP_ET_LOG) {
       kv = json_pack("{sI}", "seq", bmp_log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
@@ -89,11 +95,13 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
       break;
     }
 
-    if (config.nfacctd_bmp_msglog_file || config.bmp_dump_file)
+    if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+	(config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
 
 #ifdef WITH_RABBITMQ
-    if (config.nfacctd_bmp_msglog_amqp_routing_key || config.bmp_dump_amqp_routing_key) {
+    if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+	(config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }

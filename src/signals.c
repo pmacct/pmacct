@@ -163,6 +163,8 @@ void reload()
   }
 
   if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;
+  if (config.nfacctd_bmp_msglog_file) reload_log_bmp_thread = TRUE;
+  if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
 
   signal(SIGHUP, reload);
 }

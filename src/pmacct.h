@@ -319,6 +319,7 @@ EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 EXT int reload_map, reload_map_exec_plugins;
 EXT int reload_map_bgp_thread, reload_log_bgp_thread, reload_log_bmp_thread;
+EXT int reload_log_sf_cnt;
 EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;

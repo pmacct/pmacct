@@ -1216,6 +1216,8 @@ DESC:           Enables streamed logging of sFlow counters. Each log entry featu
 
                 $peer_src_ip    sFlow agent IP address.
 
+		Files can be re-opened by sending a SIGHUP to the daemon core process.
+
 KEY:            sfacctd_counter_output
 VALUES:         [ json ]
 DESC:           Defines output format for the streamed logging of sFlow counters. Only JSON format is currently
@@ -1432,6 +1434,8 @@ DESC:		Enables streamed logging of BGP/BMP messages/events. Each log entry featu
 		information. The list of supported filename variables follows:
 
                 $peer_src_ip    BGP/BMP peer IP address.
+
+		Files can be re-opened by sending a SIGHUP to the daemon core process.
 
 KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output ]
 VALUES:         [ json ]

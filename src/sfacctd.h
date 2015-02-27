@@ -303,9 +303,10 @@ EXT void readFlowSample_ethernet(SFSample *);
 EXT void readFlowSample_IPv4(SFSample *);
 EXT void readFlowSample_IPv6(SFSample *);
 
-EXT int readCounters_generic(struct bgp_peer *, SFSample *, char *, int);
-EXT int readCounters_ethernet(struct bgp_peer *, SFSample *, char *, int);
-EXT int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int);
+EXT int sf_cnt_log_msg(struct bgp_peer *, SFSample *, u_int32_t, char *, int, u_int32_t);
+EXT int readCounters_generic(struct bgp_peer *, SFSample *, char *, int, void *);
+EXT int readCounters_ethernet(struct bgp_peer *, SFSample *, char *, int, void *);
+EXT int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int, void *);
 
 EXT char *sfv245_check_status(SFSample *spp, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
