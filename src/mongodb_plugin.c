@@ -597,9 +597,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       }
   
       if (config.what_to_count & COUNT_IP_PROTO) {
-        if (!config.num_protos) bson_append_string(bson_elem, "ip_proto", _protocols[data->proto].name);
+        if (!config.num_protos && (data->proto < protocols_number))
+	  bson_append_string(bson_elem, "ip_proto", _protocols[data->proto].name);
         else {
-          sprintf(misc_str, "%u", _protocols[data->proto].number);
+          sprintf(misc_str, "%u", data->proto);
           bson_append_string(bson_elem, "ip_proto", misc_str);
         }
       }

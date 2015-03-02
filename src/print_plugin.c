@@ -599,8 +599,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%-3u        ", queue[j]->tcp_flags);
   
         if (config.what_to_count & COUNT_IP_PROTO) {
-          if (!config.num_protos) fprintf(f, "%-10s  ", _protocols[data->proto].name);
-          else  fprintf(f, "%-10d  ", _protocols[data->proto].number);
+          if (!config.num_protos && (data->proto < protocols_number))
+	    fprintf(f, "%-10s  ", _protocols[data->proto].name);
+          else
+	    fprintf(f, "%-10d  ", data->proto);
         }
   
         if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%-3u    ", data->tos);
@@ -885,8 +887,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%s%u", write_sep(sep, &count), queue[j]->tcp_flags);
   
         if (config.what_to_count & COUNT_IP_PROTO) {
-          if (!config.num_protos) fprintf(f, "%s%s", write_sep(sep, &count), _protocols[data->proto].name);
-          else fprintf(f, "%s%d", write_sep(sep, &count), _protocols[data->proto].number);
+          if (!config.num_protos && (data->proto < protocols_number))
+	    fprintf(f, "%s%s", write_sep(sep, &count), _protocols[data->proto].name);
+          else
+	    fprintf(f, "%s%d", write_sep(sep, &count), data->proto);
         }
   
         if (config.what_to_count & COUNT_IP_TOS) fprintf(f, "%s%u", write_sep(sep, &count), data->tos);

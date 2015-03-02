@@ -2003,8 +2003,10 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_IP_PROTO) {
-    if (!config.num_protos) kv = json_pack("{ss}", "ip_proto", _protocols[pbase->proto].name);
-    else kv = json_pack("{sI}", "ip_proto", _protocols[pbase->proto].number);
+    if (!config.num_protos && (pbase->proto < protocols_number))
+      kv = json_pack("{ss}", "ip_proto", _protocols[pbase->proto].name);
+    else
+      kv = json_pack("{sI}", "ip_proto", pbase->proto);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
