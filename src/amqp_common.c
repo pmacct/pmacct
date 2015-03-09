@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -171,8 +171,14 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
+#if AMQP_VERSION_MAJOR <= 0 && AMQP_VERSION_MINOR <= 5 && AMQP_VERSION_PATCH <= 2
   amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
                         amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, amqp_empty_table);
+#else
+  amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
+                        amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, 0, 0, amqp_empty_table);
+#endif
+
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
     p_amqp_close(amqp_host, TRUE);
