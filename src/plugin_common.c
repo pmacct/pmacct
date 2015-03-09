@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -682,11 +682,7 @@ void P_cache_flush(struct chained_cache *queue[], int index)
 
 struct chained_cache *P_cache_attach_new_node(struct chained_cache *elem)
 {
-  u_int16_t vlen = 0;
-
-  if (elem->pvlen) vlen = elem->pvlen->tot_len;
-
-  if ((sa.ptr+sizeof(struct chained_cache)+vlen) <= (sa.base+sa.size)) {
+  if ((sa.ptr+sizeof(struct chained_cache)) <= (sa.base+sa.size)) {
     sa.ptr += sizeof(struct chained_cache);
     elem->next = (struct chained_cache *) sa.ptr;
     return (struct chained_cache *) sa.ptr;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -2618,11 +2618,11 @@ int print_hex(const u_char *a, u_char *buf, int len)
 
   if (buf[b-1] == '-') {
     buf[b-1] = '\0';
-    return (b-1);
+    return b;
   }
   else {
     buf[b] = '\0';
-    return b;
+    return (b+1);
   }
 }
 
