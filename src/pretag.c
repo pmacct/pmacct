@@ -725,7 +725,7 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
 
   if (dst->val) {
     Log(LOG_ERR, "ERROR ( %s/%s ): pretag_copy_label failed: dst->val not null\n", config.name, config.type);
-    return;
+    return ERR;
   }
   else {
     if (src->len) {
@@ -788,13 +788,13 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       if (pptrs->label.len) {
 	char default_sep[] = ",";
 
-        if (pretag_realloc_label(&pptrs->label, label_local.len + pptrs->label.len + 1 /* sep */ + 1 /* null */)) return;
+        if (pretag_realloc_label(&pptrs->label, label_local.len + pptrs->label.len + 1 /* sep */ + 1 /* null */)) return TRUE;
 	strncat(pptrs->label.val, default_sep, 1);
         strncat(pptrs->label.val, label_local.val, label_local.len);
         pptrs->label.val[pptrs->label.len] = '\0';
       }
       else {
-	if (pretag_malloc_label(&pptrs->label, label_local.len + 1 /* null */)) return;
+	if (pretag_malloc_label(&pptrs->label, label_local.len + 1 /* null */)) return TRUE;
 	strncpy(pptrs->label.val, label_local.val, label_local.len);
 	pptrs->label.val[pptrs->label.len] = '\0';
       }

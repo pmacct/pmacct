@@ -19,7 +19,7 @@
  */
 
 #include "common.h"
-#ifndef HAVE_STRLCAT
+#ifndef HAVE_STRLCPY
 
 RCSID("$Id$");
 

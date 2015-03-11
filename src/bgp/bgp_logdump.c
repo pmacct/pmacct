@@ -203,7 +203,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   }
   else return ret;
 
-  if (!(*bpl) || !peer || peer->log) return;
+  if (!(*bpl) || !peer || peer->log) return ret;
 
   if (file)
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, file, peer); 
@@ -314,7 +314,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   }
   else return ret;
 
-  if (!peer || peer->log) return;
+  if (!peer || peer->log) return ret;
 
 #ifdef WITH_RABBITMQ
   if (amqp_routing_key)
@@ -431,7 +431,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   char *amqp_routing_key, *file, *pa_str, *lts;
   int amqp_routing_key_rr;
 
-  if (!peer || !peer->log) return;
+  if (!peer || !peer->log) return ret;
 
   if (type == FUNC_TYPE_BGP) {
     amqp_routing_key = config.bgp_table_dump_amqp_routing_key;
@@ -508,7 +508,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   struct timeval *lt;
   char *amqp_routing_key, *file, *pa_str, *lts;
 
-  if (!peer || !peer->log) return;
+  if (!peer || !peer->log) return ret;
 
   if (type == FUNC_TYPE_BGP) {
     amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 

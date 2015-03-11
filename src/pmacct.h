@@ -325,7 +325,9 @@ EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;
 #undef EXT
 
+#ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
+#endif
 
 /* global variables */
 pcap_t *glob_pcapt;
