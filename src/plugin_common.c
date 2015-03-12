@@ -559,7 +559,12 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
     }
 
     memcpy(cache_ptr, &container[j], dbc_size); 
-    if (container[j].pvlen) container[j].pvlen = NULL;
+
+    container[j].pbgp = NULL;
+    container[j].pmpls = NULL;
+    container[j].pnat = NULL;
+    container[j].pcust = NULL;
+    container[j].pvlen = NULL;
 
     cache_ptr->valid = PRINT_CACHE_INUSE;
     cache_ptr->next = NULL;
@@ -642,7 +647,12 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
        in cache. As we copy elements out of the cache we mark entries as free */
     for (j = 0; j < pqq_ptr; j++) {
       memcpy(&pqq_container[j], pending_queries_queue[j], dbc_size);
-      if (pending_queries_queue[j]->pvlen) pending_queries_queue[j]->pvlen = NULL;
+
+      pending_queries_queue[j]->pbgp = NULL;
+      pending_queries_queue[j]->pmpls = NULL;
+      pending_queries_queue[j]->pnat = NULL;
+      pending_queries_queue[j]->pcust = NULL;
+      pending_queries_queue[j]->pvlen = NULL;
 
       pending_queries_queue[j]->valid = PRINT_CACHE_FREE;
       pending_queries_queue[j] = &pqq_container[j];
