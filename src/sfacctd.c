@@ -1024,11 +1024,11 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 		                struct plugin_requests *req, struct sockaddr *agent)
 {
   u_int32_t samplesInPacket, idx;
-  u_int32_t sampleType;
+  u_int32_t sampleType, sysUpTime, sequenceNo;
 
   spp->agentSubId = 0; /* not supported */
-  spp->sequenceNo = getData32(spp);
-  spp->sysUpTime = getData32(spp);
+  sequenceNo = spp->sequenceNo = getData32(spp);
+  sysUpTime = spp->sysUpTime = getData32(spp);
   samplesInPacket = getData32(spp);
   
   pptrsv->v4.f_status = sfv245_check_status(spp, agent);
@@ -1038,6 +1038,9 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
+    spp->sequenceNo = sequenceNo;
+    spp->sysUpTime = sysUpTime;
+
     set_vector_sample_type(pptrsv, 0);
 SFv2v4_read_sampleType:
     sampleType = getData32(spp);
@@ -1062,11 +1065,11 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 		struct plugin_requests *req, struct sockaddr *agent)
 {
   u_int32_t samplesInPacket, idx;
-  u_int32_t sampleType;
+  u_int32_t sampleType, agentSubId, sequenceNo, sysUpTime;
 
-  spp->agentSubId = getData32(spp);
-  spp->sequenceNo = getData32(spp);
-  spp->sysUpTime = getData32(spp);
+  agentSubId = spp->agentSubId = getData32(spp);
+  sequenceNo = spp->sequenceNo = getData32(spp);
+  sysUpTime = spp->sysUpTime = getData32(spp);
   samplesInPacket = getData32(spp);
   pptrsv->v4.f_status = sfv245_check_status(spp, agent);
   set_vector_f_status(pptrsv);
@@ -1075,6 +1078,10 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
+    spp->agentSubId = agentSubId;
+    spp->sequenceNo = sequenceNo;
+    spp->sysUpTime = sysUpTime;
+
     set_vector_sample_type(pptrsv, 0);
     sfv5_modules_db_init();
 
@@ -2277,7 +2284,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
 
   sampleLength = getData32(sample);
   sampleStart = (u_char *)sample->datap;
-  drain = getData32(sample); /* samplesGenerated */
+  sample->cntSequenceNo = getData32(sample);
 
   if (expanded) {
     sample->ds_class = getData32(sample);
@@ -2947,6 +2954,18 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
     json_decref(kv);
 
     kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "source_id_index", sample->ds_index);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "sflow_seq", sample->sequenceNo);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "sflow_cnt_seq", sample->cntSequenceNo);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 

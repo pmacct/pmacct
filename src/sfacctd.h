@@ -73,8 +73,9 @@ typedef struct _SFSample {
   SFLIf_counters ifCounters;
 
   /* sample stream info */
-  u_int32_t sysUpTime;		/* XXX: suffers cleanup */
-  u_int32_t sequenceNo;		/* XXX: suffers cleanup */
+  u_int32_t sysUpTime;
+  u_int32_t sequenceNo;
+  u_int32_t cntSequenceNo;
   u_int32_t sampledPacketSize;
   u_int32_t samplesGenerated;
   u_int32_t meanSkipCount;
