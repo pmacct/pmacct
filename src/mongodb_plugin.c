@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -406,7 +406,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
       if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
-      if (config.what_to_count & COUNT_SRC_MAC) {
+      if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
         etheraddr_string(data->eth_shost, src_mac);
         bson_append_string(bson_elem, "mac_src", src_mac);
       }
@@ -422,7 +422,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         bson_append_string(bson_elem, "etype", misc_str);
       }
   #endif
-      if (config.what_to_count & COUNT_SRC_AS) bson_append_int(bson_elem, "as_src", data->src_as);
+      if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) bson_append_int(bson_elem, "as_src", data->src_as);
       if (config.what_to_count & COUNT_DST_AS) bson_append_int(bson_elem, "as_dst", data->dst_as);
   
       if (config.what_to_count & COUNT_STD_COMM) {
@@ -527,23 +527,23 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       }
   
       if (!config.tmp_net_own_field) {
-        if (config.what_to_count & COUNT_SRC_HOST) {
+        if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
           bson_append_string(bson_elem, "ip_src", src_host);
         }
 
-        if (config.what_to_count & COUNT_SRC_NET) {
+        if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
           addr_to_str(src_host, &data->src_net);
           bson_append_string(bson_elem, "ip_src", src_host);
         }
       }
       else {
-        if (config.what_to_count & COUNT_SRC_HOST) {
+        if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
           bson_append_string(bson_elem, "ip_src", src_host);
         }
 
-        if (config.what_to_count & COUNT_SRC_NET) {
+        if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
           addr_to_str(src_host, &data->src_net);
           bson_append_string(bson_elem, "net_src", src_host);
         }
@@ -574,7 +574,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   
       if (config.what_to_count & COUNT_SRC_NMASK) bson_append_int(bson_elem, "mask_src", data->src_nmask);
       if (config.what_to_count & COUNT_DST_NMASK) bson_append_int(bson_elem, "mask_dst", data->dst_nmask);
-      if (config.what_to_count & COUNT_SRC_PORT) bson_append_int(bson_elem, "port_src", data->src_port);
+      if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) bson_append_int(bson_elem, "port_src", data->src_port);
       if (config.what_to_count & COUNT_DST_PORT) bson_append_int(bson_elem, "port_dst", data->dst_port);
 
   #if defined (WITH_GEOIP)

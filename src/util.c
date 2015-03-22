@@ -1711,7 +1711,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
 #if defined (HAVE_L2)
-  if (wtc & COUNT_SRC_MAC) {
+  if (wtc & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
     etheraddr_string(pbase->eth_shost, src_mac);
     kv = json_pack("{ss}", "mac_src", src_mac);
     json_object_update_missing(obj, kv);
@@ -1745,7 +1745,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 #endif
 
-  if (wtc & COUNT_SRC_AS) {
+  if (wtc & (COUNT_SRC_AS|COUNT_SUM_AS)) {
     kv = json_pack("{sI}", "as_src", pbase->src_as);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -1920,14 +1920,14 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
-  if (wtc & COUNT_SRC_HOST) {
+  if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
     addr_to_str(src_host, &pbase->src_ip);
     kv = json_pack("{ss}", "ip_src", src_host);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
-  if (wtc & COUNT_SRC_NET) {
+  if (wtc & (COUNT_SRC_NET|COUNT_SUM_NET)) {
     addr_to_str(src_host, &pbase->src_net);
     if (!config.tmp_net_own_field) kv = json_pack("{ss}", "ip_src", src_host);
     else kv = json_pack("{ss}", "net_src", src_host);
@@ -1962,7 +1962,7 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
-  if (wtc & COUNT_SRC_PORT) {
+  if (wtc & (COUNT_SRC_PORT|COUNT_SUM_PORT)) {
     kv = json_pack("{sI}", "port_src", pbase->src_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);

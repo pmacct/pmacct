@@ -43,26 +43,26 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 src_host_country, dst_host_country, pkt_len_distrib, nat_event,
 		 post_nat_src_host, post_nat_dst_host, post_nat_src_port, post_nat_dst_port,
 		 fw_event, timestamp_start, timestamp_end ]
-FOREWORDS:	individual IP packets are uniquely identified by their header fields values (a
+FOREWORDS:	individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
 		from and going to. Aggregates are instead used for the sole purpose of IP
-		accounting and hence can be identified by a custom and stripped down set of
-		primitives.
-		The procedure to create an aggregate starting from IP packets or flow is: (a)
+		accounting and hence can be identified by an arbitrary set of primitives.
+		The process to create an aggregate starting from IP packets or flows is: (a)
 		select only the primitives of interest (generic aggregation), (b) optionally
 		cast certain primitive values into broader logical entities, ie. IP addresses
 		into network prefixes or Autonomous System Numbers (spatial aggregation) and
-		(c) sum bytes/flows/packets counters whenever a new constituent IP packet or
-		flow is captured (temporal aggregation).
+		(c) sum aggregate bytes/flows/packets counters when a new tributary IP packet
+		or flow is captured (temporal aggregation).
 DESC:		aggregate captured traffic data by selecting the specified set of primitives.
-		sum_<primitive> are compound primitives which join together both inbound and
-		outbound traffic into a single aggregate. The 'none' primitive allows to make
-		an unique aggregate which accounts for the grand total of traffic flowing
-		through a specific interface. 'tag', 'tag2' and 'label' enable generation of
-		tags when tagging engines (pre_tag_map, post_tag) are in use. 'class' enables
-		L7 traffic classes when Packet/Flow Classification engine (classifiers) is in
-		use. (default: src_host).
+		sum_<primitive> are compound primitives which sum ingress/egress traffic in a
+		single aggregate; current limit of sum primitives: each sum primitive is mutual
+		exclusive with any other, sum and non-sum, primitive. The 'none' primitive
+		allows to make an unique aggregate which  accounts for the grand total of
+		traffic flowing through a specific interface. 'tag', 'tag2' and 'label' enable
+		generation of tags when tagging engines (pre_tag_map, post_tag) are in use.
+		'class' enables L7 traffic classes when Packet/Flow Classification engine
+		(classifiers) is in use. (default: src_host).
 NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
 		  any default SQL table schema shipped. Always check out documentation related
 		  to the RDBMS in use (ie. 'sql/README.mysql') which will point you to extra

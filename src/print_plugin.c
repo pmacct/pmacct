@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -387,7 +387,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10llu  ", data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
-        if (config.what_to_count & COUNT_SRC_MAC) {
+        if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
           etheraddr_string(data->eth_shost, src_mac);
   	if (strlen(src_mac))
             fprintf(f, "%-17s  ", src_mac);
@@ -405,7 +405,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & COUNT_COS) fprintf(f, "%-2u  ", data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%-5x  ", data->etype); 
   #endif
-        if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "%-10u  ", data->src_as); 
+        if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "%-10u  ", data->src_as); 
         if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%-10u  ", data->dst_as); 
   
         if (config.what_to_count & COUNT_STD_COMM) { 
@@ -532,7 +532,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%-18s  ", empty_rd);
         }
   
-        if (config.what_to_count & COUNT_SRC_HOST) {
+        if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
   #if defined ENABLE_IPV6
   	if (strlen(src_host))
@@ -547,7 +547,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   #endif
         }
 
-        if (config.what_to_count & COUNT_SRC_NET) {
+        if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
           addr_to_str(src_host, &data->src_net);
   #if defined ENABLE_IPV6
         if (strlen(src_host))
@@ -594,7 +594,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
         if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%-3u       ", data->src_nmask);
         if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%-3u       ", data->dst_nmask);
-        if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%-5u     ", data->src_port);
+        if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) fprintf(f, "%-5u     ", data->src_port);
         if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "%-5u     ", data->dst_port);
         if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%-3u        ", queue[j]->tcp_flags);
   
@@ -744,7 +744,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_label(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
-        if (config.what_to_count & COUNT_SRC_MAC) {
+        if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
           etheraddr_string(data->eth_shost, src_mac);
           fprintf(f, "%s%s", write_sep(sep, &count), src_mac);
         }
@@ -756,7 +756,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & COUNT_COS) fprintf(f, "%s%u", write_sep(sep, &count), data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%s%x", write_sep(sep, &count), data->etype); 
   #endif
-        if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "%s%u", write_sep(sep, &count), data->src_as); 
+        if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "%s%u", write_sep(sep, &count), data->src_as); 
         if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%s%u", write_sep(sep, &count), data->dst_as); 
   
         if (config.what_to_count & COUNT_STD_COMM) {
@@ -862,11 +862,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%s%s", write_sep(sep, &count), rd_str);
         }
   
-        if (config.what_to_count & COUNT_SRC_HOST) {
+        if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
           fprintf(f, "%s%s", write_sep(sep, &count), src_host);
         }
-        if (config.what_to_count & COUNT_SRC_NET) {
+        if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
           addr_to_str(src_host, &data->src_net);
           fprintf(f, "%s%s", write_sep(sep, &count), src_host);
         }
@@ -882,7 +882,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   
         if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%s%u", write_sep(sep, &count), data->src_nmask);
         if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%s%u", write_sep(sep, &count), data->dst_nmask);
-        if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%s%u", write_sep(sep, &count), data->src_port);
+        if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) fprintf(f, "%s%u", write_sep(sep, &count), data->src_port);
         if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "%s%u", write_sep(sep, &count), data->dst_port);
         if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%s%u", write_sep(sep, &count), queue[j]->tcp_flags);
   
@@ -1033,13 +1033,13 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_TAG2) fprintf(f, "TAG2        ");
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS             ");
 #if defined HAVE_L2
-  if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "SRC_MAC            ");
+  if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "SRC_MAC            ");
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC            ");
   if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN   ");
   if (config.what_to_count & COUNT_COS) fprintf(f, "COS ");
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "ETYPE  ");
 #endif
-  if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "SRC_AS      ");
+  if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "SRC_AS      ");
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS      ");
   if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "COMMS                    ");
   if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "SRC_COMMS                ");
@@ -1059,28 +1059,30 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (!config.tmp_net_own_field) {
 #if defined ENABLE_IPV6
     if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP                                         ");
+    if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) fprintf(f, "SRC_IP                                         ");
     if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP                                         ");
 #else
     if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "SRC_IP           ");
+    if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) fprintf(f, "SRC_IP           ");
     if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "DST_IP           ");
 #endif
   } 
   else {
 #if defined ENABLE_IPV6
-    if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP                                         ");
-    if (config.what_to_count & COUNT_SRC_NET) fprintf(f, "SRC_NET                                        ");
+    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "SRC_IP                                         ");
+    if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "SRC_NET                                        ");
     if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP                                         ");
     if (config.what_to_count & COUNT_DST_NET) fprintf(f, "DST_NET                                        ");
 #else
-    if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "SRC_IP           ");
-    if (config.what_to_count & COUNT_SRC_NET) fprintf(f, "SRC_NET          ");
+    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "SRC_IP           ");
+    if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "SRC_NET          ");
     if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP           ");
     if (config.what_to_count & COUNT_DST_NET) fprintf(f, "DST_NET          ");
 #endif
   }
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK  ");
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK  ");
-  if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "SRC_PORT  ");
+  if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) fprintf(f, "SRC_PORT  ");
   if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "DST_PORT  ");
   if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "TCP_FLAGS  ");
   if (config.what_to_count & COUNT_IP_PROTO) fprintf(f, "PROTOCOL    ");
@@ -1146,13 +1148,13 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_LABEL) fprintf(f, "%sLABEL", write_sep(sep, &count));
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "%sCLASS", write_sep(sep, &count));
 #if defined HAVE_L2
-  if (config.what_to_count & COUNT_SRC_MAC) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
+  if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "%sDST_MAC", write_sep(sep, &count));
   if (config.what_to_count & COUNT_VLAN) fprintf(f, "%sVLAN", write_sep(sep, &count));
   if (config.what_to_count & COUNT_COS) fprintf(f, "%sCOS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%sETYPE", write_sep(sep, &count));
 #endif
-  if (config.what_to_count & COUNT_SRC_AS) fprintf(f, "%sSRC_AS", write_sep(sep, &count));
+  if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "%sSRC_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%sDST_AS", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
@@ -1171,17 +1173,18 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "%sMPLS_VPN_RD", write_sep(sep, &count));
   if (!config.tmp_net_own_field) {
     if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SRC_NET)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
+    if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
     if (config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET)) fprintf(f, "%sDST_IP", write_sep(sep, &count));
   }
   else {
-    if (config.what_to_count & COUNT_SRC_HOST) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
-    if (config.what_to_count & COUNT_SRC_NET) fprintf(f, "%sSRC_NET", write_sep(sep, &count));
+    if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
+    if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "%sSRC_NET", write_sep(sep, &count));
     if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "%sDST_IP", write_sep(sep, &count));
     if (config.what_to_count & COUNT_DST_NET) fprintf(f, "%sDST_NET", write_sep(sep, &count));
   }
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%sSRC_MASK", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "%sDST_MASK", write_sep(sep, &count));
-  if (config.what_to_count & COUNT_SRC_PORT) fprintf(f, "%sSRC_PORT", write_sep(sep, &count));
+  if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) fprintf(f, "%sSRC_PORT", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_PORT) fprintf(f, "%sDST_PORT", write_sep(sep, &count));
   if (config.what_to_count & COUNT_TCPFLAGS) fprintf(f, "%sTCP_FLAGS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_IP_PROTO) fprintf(f, "%sPROTOCOL", write_sep(sep, &count));
