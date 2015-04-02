@@ -185,9 +185,11 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
+  amqp_host->msg_props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
+  amqp_host->msg_props.content_type = amqp_cstring_bytes("application/json");
+
   if (amqp_host->persistent_msg) {
-    amqp_host->msg_props._flags = (AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG);
-    amqp_host->msg_props.content_type = amqp_cstring_bytes("text/json");
+    amqp_host->msg_props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
     amqp_host->msg_props.delivery_mode = 2; /* persistent delivery */
   }
 
