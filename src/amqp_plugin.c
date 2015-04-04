@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -33,6 +33,8 @@
 #include "crc32.c"
 #ifdef WITH_JANSSON
 #include <jansson.h>
+#else
+#error "--enable-rabbitmq requires --enable-jansson"
 #endif
 
 /* Functions */

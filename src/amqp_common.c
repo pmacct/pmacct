@@ -181,6 +181,24 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
 
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    const char *err_msg;
+
+    switch (amqp_host->ret.reply_type) {
+    case AMQP_RESPONSE_NONE:
+      err_msg = "Missing RPC reply type";
+      break;
+    case AMQP_RESPONSE_LIBRARY_EXCEPTION:
+      err_msg = "Client library exception";
+      break;
+    case AMQP_RESPONSE_SERVER_EXCEPTION:
+      err_msg = "Server generated an exception";
+      break;
+    default:
+      err_msg = "Unknown";
+      break;
+    }
+
+    Log(LOG_ERR, "ERROR ( %s/%s ): Handshake with RabbitMQ failed: %s\n", config.name, config.type, err_msg);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
