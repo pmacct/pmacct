@@ -59,9 +59,10 @@ void sfl_agent_init(SFLAgent *agent,
   }
 
   if (config.pipe_size) {
-    int rc;
+    int rc, value;
 
-    rc = Setsocksize(agent->receiverSocket, SOL_SOCKET, SO_SNDBUF, &config.pipe_size, sizeof(config.pipe_size));
+    value = MIN(config.pipe_size, INT_MAX);
+    rc = Setsocksize(agent->receiverSocket, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value));
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for SOL_SNDBUF: %s\n", config.name, config.type, strerror(errno));
   }
 }

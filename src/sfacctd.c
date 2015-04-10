@@ -551,7 +551,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_pipe_size) {
     int l = sizeof(config.nfacctd_pipe_size);
-    u_int64_t saved = 0, obtained = 0;
+    int saved = 0, obtained = 0;
 
     getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
     Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, sizeof(config.nfacctd_pipe_size));
@@ -561,7 +561,7 @@ int main(int argc,char **argv, char **envp)
       Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
       getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
     }
-    Log(LOG_INFO, "INFO ( %s/core ): sfacctd_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_pipe_size);
+    Log(LOG_INFO, "INFO ( %s/core ): sfacctd_pipe_size: obtained=%d target=%d.\n", config.name, obtained, config.nfacctd_pipe_size);
   }
 
   /* Multicast: memberships handling */

@@ -1713,8 +1713,8 @@ int cfg_key_nfacctd_pipe_size(char *filename, char *name, char *value_ptr)
   char *endptr;
 
   value = strtoull(value_ptr, &endptr, 10);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN ( %s ): '[nf|sf|pm]acctd_pipe_size' has to be > 0.\n", filename);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN ( %s ): '[nf|sf|pm]acctd_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
     return ERR;
   }
 
@@ -1789,8 +1789,8 @@ int cfg_key_nfacctd_bgp_pipe_size(char *filename, char *name, char *value_ptr)
   char *endptr;
 
   value = strtoull(value_ptr, &endptr, 10);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN ( %s ): 'bgp_daemon_pipe_size' has to be > 0.\n", filename);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bgp_daemon_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
     return ERR;
   }
 
@@ -2918,8 +2918,8 @@ int cfg_key_nfacctd_bmp_pipe_size(char *filename, char *name, char *value_ptr)
   char *endptr;
 
   value = strtoull(value_ptr, &endptr, 10);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN ( %s ): 'bmp_daemon_pipe_size' has to be > 0.\n", filename);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN ( %s ): 'bmp_daemon_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
     return ERR;
   }
 
@@ -4381,8 +4381,8 @@ int cfg_key_tee_pipe_size(char *filename, char *name, char *value_ptr)
   char *endptr;
 
   value = strtoull(value_ptr, &endptr, 10);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN ( %s ): 'tee_pipe_size' has to be > 0.\n", filename);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN ( %s ): 'tee_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
     return ERR;
   }
 

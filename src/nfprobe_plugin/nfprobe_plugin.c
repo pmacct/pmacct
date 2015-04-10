@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -1149,9 +1149,10 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
   }
 
   if (config.pipe_size) {
-    int rc;
+    int rc, value;
 
-    rc = Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.pipe_size, sizeof(config.pipe_size));
+    value = MIN(config.pipe_size, INT_MAX); 
+    rc = Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value));
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for SOL_SNDBUF: %s\n", config.name, config.type, strerror(errno));
   }
 

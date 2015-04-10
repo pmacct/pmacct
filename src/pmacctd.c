@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -662,7 +662,7 @@ int main(int argc,char **argv, char **envp)
 #if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
     Setsocksize(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
     getsockopt(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): pmacctd_pipe_size: obtained=%u target=%u.\n", config.name, x, config.nfacctd_pipe_size);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): pmacctd_pipe_size: obtained=%d target=%d.\n", config.name, x, config.nfacctd_pipe_size);
 #endif
   }
 

@@ -465,7 +465,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
 
   if (config.tee_pipe_size) {
     int l = sizeof(config.tee_pipe_size);
-    u_int64_t saved = 0, obtained = 0;
+    int saved = 0, obtained = 0;
     
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &saved, &l);
     Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.tee_pipe_size, sizeof(config.tee_pipe_size));
@@ -475,7 +475,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
       Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &saved, l);
       getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
     }
-    Log(LOG_INFO, "INFO ( %s/%s ): tee_pipe_size: obtained=%u target=%u.\n", config.name, config.type, obtained, config.tee_pipe_size);
+    Log(LOG_INFO, "INFO ( %s/%s ): tee_pipe_size: obtained=%d target=%d.\n", config.name, config.type, obtained, config.tee_pipe_size);
   }
 
   if (connect(s, (struct sockaddr *)addr, len) == -1) {

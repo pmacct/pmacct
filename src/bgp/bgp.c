@@ -211,7 +211,7 @@ void skinny_bgp_daemon()
 
   if (config.nfacctd_bgp_pipe_size) {
     int l = sizeof(config.nfacctd_bgp_pipe_size);
-    u_int64_t saved = 0, obtained = 0;
+    int saved = 0, obtained = 0;
 
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
     Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
@@ -219,7 +219,7 @@ void skinny_bgp_daemon()
 
     Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-    Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_daemon_pipe_size: obtained=%u target=%u.\n", config.name, obtained, config.nfacctd_bgp_pipe_size);
+    Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, obtained, config.nfacctd_bgp_pipe_size);
   }
 
   rc = bind(config.bgp_sock, (struct sockaddr *) &server, slen);

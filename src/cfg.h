@@ -161,7 +161,7 @@ struct configuration {
   int nfacctd_stitching;
   u_int32_t nfacctd_as;
   u_int32_t nfacctd_net;
-  u_int64_t nfacctd_pipe_size;
+  int nfacctd_pipe_size;
   int sfacctd_renormalize;
   int sfacctd_counter_output;
   char *sfacctd_counter_file;
@@ -185,7 +185,7 @@ struct configuration {
   char *nfacctd_bgp_ip;
   char *nfacctd_bgp_id;
   int nfacctd_bgp_port;
-  u_int64_t nfacctd_bgp_pipe_size;
+  int nfacctd_bgp_pipe_size;
   int nfacctd_bgp_ipprec;
   char *nfacctd_bgp_allow_file;
   int nfacctd_bgp_max_peers;
@@ -233,7 +233,7 @@ struct configuration {
   int nfacctd_bmp;
   char *nfacctd_bmp_ip;
   int nfacctd_bmp_port;
-  u_int64_t nfacctd_bmp_pipe_size;
+  int nfacctd_bmp_pipe_size;
   int nfacctd_bmp_max_peers;
   char *nfacctd_bmp_allow_file;
   int nfacctd_bmp_ipprec;
@@ -354,7 +354,7 @@ struct configuration {
   int tee_max_receivers;
   int tee_max_receiver_pools;
   char *tee_receivers;
-  u_int64_t tee_pipe_size;
+  int tee_pipe_size;
   int uacctd_group;
   int uacctd_nl_size;
   char *tunnel0;
