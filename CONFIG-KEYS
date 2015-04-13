@@ -170,16 +170,14 @@ DESC:           Defines the size of the kernel socket used for BGP and BMP messa
 KEY:		plugin_pipe_size
 DESC:		Core process and each of the plugins are run into different processes. To exchange
 		data, they set up a communication channel structured as a circular queue (referred
-		as pipe). This directive sets the total size, in bytes, of such queue. Its default
-		size is set to 4MB. Whenever facing heavy traffic loads, this size can be adjusted
-		to store more data. In the following example the pipe between the Core process and
-		the plugin 'test' is set to 10MB, whereas the receiving socket of the Core process
-		is set to 2MB:
+		to as 'pipe'). This directive sets the total size, in bytes, of such queue. Its
+		default size is set to 4MB. Whenever facing heavy traffic loads, this size can be
+		adjusted to hold more data. In the following example, the queue between the Core
+		process and the plugin 'test' is set to 10MB:
 
 		...
 		plugins: memory[test]
 		plugin_pipe_size[test]: 10240000 
-		plugin_pipe_size[default]: 2048000
 		...
 
 		When enabling debug, log messages about obtained and target pipe sizes are printed.

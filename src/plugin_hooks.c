@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -39,7 +39,9 @@
    area */
 void load_plugins(struct plugin_requests *req)
 {
-  u_int64_t snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
+  u_int64_t buf_pipe_ratio_sz = 0;
+  int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
+
   int nfprobe_id = 0, min_sz = 0;
   struct plugins_list_entry *list = plugins_list;
   int l = sizeof(list->cfg.pipe_size), offset = 0;
@@ -97,7 +99,14 @@ void load_plugins(struct plugin_requests *req)
       while (list->cfg.buffer_size % 4 != 0) list->cfg.buffer_size--;
 #endif
 
-      target_buflen = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
+      buf_pipe_ratio_sz = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
+      if (buf_pipe_ratio_sz > INT_MAX) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): Current plugin_buffer_size elems per plugin_pipe_size: %d. Max: %d.\nExiting.\n",
+		list->name, list->type.string, (list->cfg.pipe_size/list->cfg.buffer_size), (INT_MAX/sizeof(char *)));
+        exit_all(1);
+      }
+      else target_buflen = buf_pipe_ratio_sz;
+
       if (target_buflen > socklen) {
 	Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &target_buflen, l);
 	Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &target_buflen, l);
@@ -119,8 +128,14 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.debug || (list->cfg.pipe_size > WARNING_PIPE_SIZE)) {
 	Log(LOG_INFO, "INFO ( %s/%s ): plugin_pipe_size=%llu bytes plugin_buffer_size=%llu bytes\n", 
 	    list->name, list->type.string, list->cfg.pipe_size, list->cfg.buffer_size);
-        Log(LOG_INFO, "INFO ( %s/%s ): ctrl channel: obtained=%llu bytes target=%llu bytes\n",
-	    list->name, list->type.string, snd_buflen, target_buflen);
+	if (target_buflen <= snd_buflen) 
+          Log(LOG_INFO, "INFO ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
+		list->name, list->type.string, snd_buflen, target_buflen);
+	else
+	  /* This should return an error and exit but we fallback to a
+	     warning in order to be backward compatible */
+          Log(LOG_WARNING, "WARN ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
+		list->name, list->type.string, snd_buflen, target_buflen);
       }
 
       list->cfg.name = list->name;
