@@ -72,6 +72,10 @@ void P_init_default_values()
   sa.num = config.print_cache_entries*AVERAGE_CHAIN_LEN;
   sa.size = sa.num*dbc_size;
 
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%u base cache memory=%u bytes\n", config.name, config.type,
+	config.print_cache_entries, ((config.print_cache_entries * dbc_size) + (2 * ((sa.num +
+	config.print_cache_entries) * sizeof(struct chained_cache *))) + sa.size));
+
   cache = (struct chained_cache *) Malloc(config.print_cache_entries*dbc_size);
   queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   pending_queries_queue = (struct chained_cache **) Malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -92,6 +92,10 @@ void sql_init_global_buffers()
   memset(set_event, 0, sizeof(set_event));
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
+
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%u base cache memory=%u bytes\n", config.name, config.type,
+        config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
+	(2 * (qq_size * sizeof(struct db_cache *)))));
 
   pipebuf = (unsigned char *) malloc(config.buffer_size);
   cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
