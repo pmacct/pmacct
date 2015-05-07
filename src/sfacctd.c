@@ -946,7 +946,7 @@ int main(int argc,char **argv, char **envp)
 
     if (config.sfacctd_counter_file) {
       gettimeofday(&sf_cnt_log_tstamp, NULL);
-      compose_timestamp(sf_cnt_log_tstamp_str, SRVBUFLEN, &sf_cnt_log_tstamp, TRUE);
+      compose_timestamp(sf_cnt_log_tstamp_str, SRVBUFLEN, &sf_cnt_log_tstamp, TRUE, config.sql_history_since_epoch);
     }
 
     if (data_plugins) {

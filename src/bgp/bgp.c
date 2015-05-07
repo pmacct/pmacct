@@ -361,7 +361,7 @@ void skinny_bgp_daemon()
     if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || 
 	config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
       gettimeofday(&log_tstamp, NULL);
-      compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE);
+      compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE, config.sql_history_since_epoch);
 
       if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
 	while (log_tstamp.tv_sec > dump_refresh_deadline) {

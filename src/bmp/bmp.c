@@ -344,7 +344,7 @@ void skinny_bmp_daemon()
     if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key ||
         config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
       gettimeofday(&bmp_log_tstamp, NULL);
-      compose_timestamp(bmp_log_tstamp_str, SRVBUFLEN, &bmp_log_tstamp, TRUE);
+      compose_timestamp(bmp_log_tstamp_str, SRVBUFLEN, &bmp_log_tstamp, TRUE, config.sql_history_since_epoch);
 
       if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
         while (bmp_log_tstamp.tv_sec > dump_refresh_deadline) {
@@ -802,7 +802,7 @@ void bmp_process_msg_route(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   /* If no timestamp in BMP then let's generate one */
   if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-  compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE);
+  compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
   addr_to_str(peer_ip, &bdata.peer_ip);
 
   // XXX: parse BGP UPDATE(s)

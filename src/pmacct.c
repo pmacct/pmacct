@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -52,7 +52,7 @@ char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
 			struct pkt_mpls_primitives *, char *, struct pkt_vlen_hdr_primitives *,
 			pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t, struct timeval *);
-void pmc_compose_timestamp(char *, int, struct timeval *, int);
+void pmc_compose_timestamp(char *, int, struct timeval *, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
 void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
 void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
@@ -62,7 +62,7 @@ void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *,
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
 char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
-int want_ipproto_num, tmp_net_own_field;
+int want_ipproto_num, tmp_net_own_field, want_tstamp_since_epoch;
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -100,6 +100,7 @@ void usage_client(char *prog)
   printf("  -p\t<file> \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -O\tSet output < formatted | csv | json | event_formatted | event_csv > (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
+  printf("  -I\tSet timestamps in 'since Epoch' format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
   printf("  -o\tPrint IP prefixes in a different field than IP addresses (temporary)\n");
   printf("  -V\tPrint version and exit\n");
@@ -710,6 +711,7 @@ int main(int argc,char **argv)
   have_wtc = FALSE;
   want_output = PRINT_OUTPUT_FORMATTED;
   is_event = FALSE;
+  want_tstamp_since_epoch = FALSE;
 
   PvhdrSz = sizeof(struct pkt_vlen_hdr_primitives);
   PmLabelTSz = sizeof(pm_label_t);
@@ -1015,6 +1017,9 @@ int main(int argc,char **argv)
       if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
       q.type |= WANT_STATUS; 
       want_status = TRUE;
+      break;
+    case 'I':
+      want_tstamp_since_epoch = TRUE;
       break;
     case 'l':
       q.type |= WANT_LOCK_OP;
@@ -2472,29 +2477,19 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
-	  char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-	  time_t time1;
-	  struct tm *time2;
+	  char tstamp_str[SRVBUFLEN];
 
-	  time1 = pnat->timestamp_start.tv_sec;
-	  time2 = localtime(&time1);
-	  strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-	  snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", buf2);
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), buf2);
+	  pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, want_tstamp_since_epoch);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_END)) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+          char tstamp_str[SRVBUFLEN];
 
-          time1 = pnat->timestamp_end.tv_sec;
-          time2 = localtime(&time1);
-          strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-          snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", buf2);
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), buf2);
+	  pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, want_tstamp_since_epoch);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
         }
 
         /* all custom primitives printed here */
@@ -3440,14 +3435,14 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
-    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE);
+    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, want_tstamp_since_epoch);
     kv = json_pack("{ss}", "timestamp_start", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_END) {
-    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE);
+    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, want_tstamp_since_epoch);
     kv = json_pack("{ss}", "timestamp_end", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -3508,18 +3503,24 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 }
 #endif
 
-void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec)
+void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch)
 {
   char tmpbuf[SRVBUFLEN];
   time_t time1;
   struct tm *time2;
 
-  time1 = tv->tv_sec;
-  time2 = localtime(&time1);
-  strftime(tmpbuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+  if (since_epoch) {
+    if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
+    else snprintf(buf, buflen, "%u.0", tv->tv_sec);
+  }
+  else {
+    time1 = tv->tv_sec;
+    time2 = localtime(&time1);
+    strftime(tmpbuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
 
-  if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
-  else snprintf(buf, buflen, "%s", tmpbuf);
+    if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
+    else snprintf(buf, buflen, "%s.0", tmpbuf);
+  }
 }
 
 void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_primitive_entry *cp_entry, int formatted)

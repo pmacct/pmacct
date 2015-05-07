@@ -66,7 +66,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
       bgp_peer_log_seq_increment(&bmp_log_seq);
     }
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.sql_history_since_epoch);
     kv = json_pack("{ss}", "timestamp", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
