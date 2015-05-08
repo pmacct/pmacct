@@ -671,16 +671,6 @@ DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w)
 		are mutually exclusive, that is: you can either reset the date to last Monday or reset the
 		date to the first day of the month. 
 
-KEY:            sql_history_since_epoch
-VALUES          [ true | false ]
-DESC:		enables the use of timestamps (stamp_inserted, stamp_updated) in the standard seconds since
-		the Epoch format. This directive requires changes to the default types for timestamp fields
-		in the SQL schema. (default: false)
-
-			MySQL:		DATETIME ==> INT(8) UNSIGNED
-			PostgreSQL:	timestamp without time zone ==> bigint
-			SQLite3:	DATETIME ==> INT(8)	
-
 KEY:		sql_recovery_logfile
 DESC:		enables recovery mode; recovery mechanism kicks in if the DB fails. It works by checking
 		for the successful result of each SQL query. By default it is disabled. By using this key
@@ -893,6 +883,16 @@ DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to 
 		when exporting via NetFlow v9 (nfprobe_version: 9), allows to fallback to first and last
 		swithed times in seconds (default: false).
 
+KEY:            timestamps_since_epoch
+VALUES          [ true | false ]
+DESC:           All timestamps (ie. timestamp_start, timestamp_end primitives; sql_history-related fields
+                stamp_inserted, stamp_updated; etc.) in the standard seconds since the Epoch format. In
+                case the output is to a RDBMS, setting this directive to true will require changes to the
+                default types for timestamp fields in the SQL schema. (default: false)
+
+                        MySQL:          DATETIME ==> INT(8) UNSIGNED
+                        PostgreSQL:     timestamp without time zone ==> bigint
+                        SQLite3:        DATETIME ==> INT(8)
 
 KEY:		mongo_insert_batch
 DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per

@@ -8,6 +8,17 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.5.2
+FROM:	<= 1.5.1
+TOPIC:	sql_history_since_epoch
+DESC:	The effect of configuration directive sql_history_since_epoch has been
+	ported to encompass any timestamp in pmacct, ie. timestamp_start and
+	timestamp_end primitives, nfacctd_stitching, sfacctd counters filename,
+	etc. The directive has hence been renamed timestamps_since_epoch. The
+	old name, sql_history_since_epoch, has been removed from documentation
+	but it is still going to be accepted in the configuration until the next
+	major release for the sake of backwards compatibility.
+
 TO:	>= 1.5.1
 FROM:	<= 1.5.0
 TOPIC:	Increased memory usage by plugin caches

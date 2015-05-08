@@ -626,32 +626,59 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-        bson_date_t bdate;
-  
-	bdate = 1000*pnat->timestamp_start.tv_sec;
-	if (pnat->timestamp_start.tv_usec) bdate += (pnat->timestamp_start.tv_usec/1000);
+	if (config.sql_history_since_epoch) {
+	  char tstamp_str[SRVBUFLEN];
 
-	bson_append_date(bson_elem, "timestamp_start", bdate);
+	  compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, config.sql_history_since_epoch);
+	  bson_append_string(bson_elem, "timestamp_start", tstamp_str);
+	}
+	else {
+          bson_date_t bdate;
+  
+	  bdate = 1000*pnat->timestamp_start.tv_sec;
+	  if (pnat->timestamp_start.tv_usec) bdate += (pnat->timestamp_start.tv_usec/1000);
+
+	  bson_append_date(bson_elem, "timestamp_start", bdate);
+	}
       }
       if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-        bson_date_t bdate;
+        if (config.sql_history_since_epoch) {
+          char tstamp_str[SRVBUFLEN];
 
-        bdate = 1000*pnat->timestamp_end.tv_sec;
-        if (pnat->timestamp_end.tv_usec) bdate += (pnat->timestamp_end.tv_usec/1000);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, config.sql_history_since_epoch);
+          bson_append_string(bson_elem, "timestamp_end", tstamp_str);
+        }
+        else {
+          bson_date_t bdate;
 
-        bson_append_date(bson_elem, "timestamp_end", bdate);
+          bdate = 1000*pnat->timestamp_end.tv_sec;
+          if (pnat->timestamp_end.tv_usec) bdate += (pnat->timestamp_end.tv_usec/1000);
+
+          bson_append_date(bson_elem, "timestamp_end", bdate);
+	}
       }
 
       if (config.nfacctd_stitching && queue[j]->stitch) {
-        bson_date_t bdate_min, bdate_max;
+        if (config.sql_history_since_epoch) {
+          char tstamp_str[SRVBUFLEN];
 
-        bdate_min = 1000*queue[j]->stitch->timestamp_min.tv_sec;
-        if (queue[j]->stitch->timestamp_min.tv_usec) bdate_min += (queue[j]->stitch->timestamp_min.tv_usec/1000);
-        bson_append_date(bson_elem, "timestamp_min", bdate_min);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_min, TRUE, config.sql_history_since_epoch);
+          bson_append_string(bson_elem, "timestamp_min", tstamp_str);
 
-        bdate_max = 1000*queue[j]->stitch->timestamp_max.tv_sec;
-        if (queue[j]->stitch->timestamp_max.tv_usec) bdate_max += (queue[j]->stitch->timestamp_max.tv_usec/1000);
-        bson_append_date(bson_elem, "timestamp_max", bdate_max);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_max, TRUE, config.sql_history_since_epoch);
+          bson_append_string(bson_elem, "timestamp_max", tstamp_str);
+        }
+	else {
+          bson_date_t bdate_min, bdate_max;
+
+          bdate_min = 1000*queue[j]->stitch->timestamp_min.tv_sec;
+          if (queue[j]->stitch->timestamp_min.tv_usec) bdate_min += (queue[j]->stitch->timestamp_min.tv_usec/1000);
+          bson_append_date(bson_elem, "timestamp_min", bdate_min);
+
+          bdate_max = 1000*queue[j]->stitch->timestamp_max.tv_sec;
+          if (queue[j]->stitch->timestamp_max.tv_usec) bdate_max += (queue[j]->stitch->timestamp_max.tv_usec/1000);
+          bson_append_date(bson_elem, "timestamp_max", bdate_max);
+	}
       }
   
       /* all custom primitives printed here */
