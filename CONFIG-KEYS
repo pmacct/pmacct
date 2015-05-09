@@ -996,10 +996,10 @@ DESC:		If set to true adds two new fields, timestamp_min and timestamp_max: give
 		method ('aggregate' config directive), timestamp_min is the timestamp of the first element
 		contributing to a certain aggregate, timestamp_max is the timestamp of the last element. In
 		case the export protocol provides time references, ie. NetFlow/IPFIX, these are used; if not
-		the current time (hence time of arrival to the collector) is used instead. The feature is
-		not compatible with pro-rating, ie. nfacctd_pro_rating. Also, the feature is supported on
-		all plugins except the 'memory' one (please get in touch if you have a use-case for it).
-		(default: false)
+		of if using NetFlow/IPFIX as export protocol and nfacctd_time_new is set to true the current
+		time (hence time of arrival to the collector) is used instead. The feature is not compatible
+		with pro-rating, ie. nfacctd_pro_rating. Also, the feature is supported on all plugins except
+		the 'memory' one (please get in touch if you have a use-case for it). (default: false)
 
 KEY:            nfacctd_account_options [GLOBAL, NO_PMACCTD]
 VALUES:         [ true | false ]
