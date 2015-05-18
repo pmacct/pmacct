@@ -2226,6 +2226,10 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
       pdata->pkt_len = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
 
     if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
@@ -2388,6 +2392,18 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
       pdata->pkt_len = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
+      pdata->pkt_len = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
 
     if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
@@ -2488,6 +2504,18 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
     }
     else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
+      pdata->pkt_len = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
+      pdata->pkt_len = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
       pdata->pkt_len = pm_ntohll(t64);
     }
 
