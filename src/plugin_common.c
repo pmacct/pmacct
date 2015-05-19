@@ -569,6 +569,7 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
     container[j].pnat = NULL;
     container[j].pcust = NULL;
     container[j].pvlen = NULL;
+    container[j].stitch = NULL;
 
     cache_ptr->valid = PRINT_CACHE_INUSE;
     cache_ptr->next = NULL;
@@ -657,6 +658,7 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
       pending_queries_queue[j]->pnat = NULL;
       pending_queries_queue[j]->pcust = NULL;
       pending_queries_queue[j]->pvlen = NULL;
+      pending_queries_queue[j]->stitch = NULL;
 
       pending_queries_queue[j]->valid = PRINT_CACHE_FREE;
       pending_queries_queue[j] = &pqq_container[j];
