@@ -118,6 +118,14 @@ void sql_init_global_buffers()
    check */ 
 void sql_init_default_values(struct extra_primitives *extras)
 {
+  if (config.proc_priority) {
+    int ret;
+
+    ret = setpriority(PRIO_PROCESS, 0, config.proc_priority);
+    if (ret) Log(LOG_WARNING, "WARN ( %s/%s ): proc_priority failed (errno: %d)\n", config.name, config.type, errno);
+    else Log(LOG_INFO, "INFO ( %s/%s ): proc_priority set to %d\n", config.name, config.type, getpriority(PRIO_PROCESS, 0));
+  }
+
   if ( (config.what_to_count & COUNT_CLASS ||
 	config.what_to_count & COUNT_TCPFLAGS ||
 	extras->off_pkt_bgp_primitives) &&

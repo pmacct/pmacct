@@ -309,6 +309,7 @@ static const struct _dictionary_line dictionary[] = {
   {"promisc", cfg_key_promisc},
   {"pcap_filter", cfg_key_pcap_filter},
   {"core_proc_name", cfg_key_proc_name},
+  {"proc_priority", cfg_key_proc_priority},
   {"pmacctd_as", cfg_key_nfacctd_as_new},
   {"uacctd_as", cfg_key_nfacctd_as_new},
   {"pmacctd_net", cfg_key_nfacctd_net},

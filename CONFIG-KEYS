@@ -958,6 +958,10 @@ KEY:		core_proc_name
 DESC:		defines the name of the core process. This is the equivalent to instantiate named plugins but
 		for the core process (default: "defaut")
 
+KEY:		proc_priority
+DESC:		redefines the process scheduling priority, equivalent to using the 'nice' tool. Each daemon
+		process, ie. core, plugins, etc., can define a different priority. (default: 0)
+
 KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, NO_PMACCTD]
 DESC:		full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
 		to send packets to the daemon. Current syntax does not implement network masks but individual

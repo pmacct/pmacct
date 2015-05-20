@@ -82,6 +82,7 @@ struct configuration {
   char *type;
   int type_id;
   char *proc_name;
+  int proc_priority;
   int sock;
   int bgp_sock;
   int acct_type; 

@@ -48,6 +48,14 @@ void P_init_default_values()
     config.logfile_fd = open_logfile(config.logfile, "a");
   }
 
+  if (config.proc_priority) {
+    int ret;
+
+    ret = setpriority(PRIO_PROCESS, 0, config.proc_priority);
+    if (ret) Log(LOG_WARNING, "WARN ( %s/%s ): proc_priority failed (errno: %d)\n", config.name, config.type, errno);
+    else Log(LOG_INFO, "INFO ( %s/%s ): proc_priority set to %d\n", config.name, config.type, getpriority(PRIO_PROCESS, 0));
+  }
+
   reload_map = FALSE;
 
   basetime_init = NULL;
