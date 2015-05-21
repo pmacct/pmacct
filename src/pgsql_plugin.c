@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -523,13 +523,13 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   /* don't reprocess free (SQL_CACHE_FREE) and already recovered (SQL_CACHE_ERROR) elements */
   if (p.fail) {
-    if (reprocess = REPROCESS_SPECIFIC) {
-      for (j = 0; j <= reprocess_idx; j++) {
+    if (reprocess == REPROCESS_SPECIFIC) {
+      for (j = 0; j < reprocess_idx; j++) {
         if (reprocess_queries_queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, reprocess_queries_queue[j], idata);
       }
     }
-    else if (reprocess = REPROCESS_BULK) {
-      for (j = 0; j <= bulk_reprocess_idx; j++) {
+    else if (reprocess == REPROCESS_BULK) {
+      for (j = 0; j < bulk_reprocess_idx; j++) {
         if (bulk_reprocess_queries_queue[j]->valid == SQL_CACHE_COMMITTED) sql_query(&bed, bulk_reprocess_queries_queue[j], idata);
       }
     }
