@@ -62,7 +62,7 @@ DESC:		aggregate captured traffic data by selecting the specified set of primiti
 		traffic flowing through a specific interface. 'tag', 'tag2' and 'label' enable
 		generation of tags when tagging engines (pre_tag_map, post_tag) are in use.
 		'class' enables L7 traffic classes when Packet/Flow Classification engine
-		(classifiers) is in use. (default: src_host).
+		(classifiers) is in use.
 NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
 		  any default SQL table schema shipped. Always check out documentation related
 		  to the RDBMS in use (ie. 'sql/README.mysql') which will point you to extra
@@ -85,6 +85,7 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  arrival time, NetFlow/IPFIX observation time and flow first switched time;
 		  timestamp_end currently only makes sense for logging flows via NetFlow and
 		  IPFIX. 
+DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL]
 DESC:		Expects full pathname to a file containing custom-defined primitives. Once
@@ -92,6 +93,7 @@ DESC:		Expects full pathname to a file containing custom-defined primitives. Onc
 		primitives can be used in 'aggregate' statements. The feature is currently
 		available only in nfacctd, for NetFlow v9/IPFIX, pmacctd and uacctd. Examples
 		are available in 'examples/primitives.lst'. 
+DEFAULT:	none
 
 KEY:		aggregate_filter [NO_GLOBAL]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
@@ -114,12 +116,14 @@ DESC:		Per-plugin filtering applied against the original packet or flow. Aggrega
 		L4 primitives (ie. src_port, dst_port) but b) an 'aggregate_filter' runs a filter
 		which requires dealing with L4 primitives. For further information, refer to the
 		'pmacctd_force_frag_handling' directive.
+DEFAULT:	none
 
 KEY:		pcap_filter (like tcpdump syntax) [GLOBAL, NO_NFACCTD]
 DESC:		this filter is global and applied to all incoming packets. It's passed to libpcap
 		and, indeed, expects libpcap/tcpdump filter syntax. Being global it doesn't offer 
 		a great flexibility but it's the fastest way to drop unwanted traffic. It applies
 		only to pmacctd.
+DEFAULT:	none
 
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD]
 DESC:		specifies the maximum number of bytes to capture for each packet. This directive has
@@ -134,6 +138,7 @@ DESC:		specifies the maximum number of bytes to capture for each packet. This di
 		the Netlink socket read buffer size. This should be reasonably large - at least 4KB,
 		which is the default value. For large uacctd_nl_size values snaplen could be further
 		increased.
+DEFAULT:	68 bytes; 128 bytes if compiled with --enable-ipv6
 
 KEY:		plugins (-P)
 VALUES:		[ memory | print | mysql | pgsql | sqlite3 | mongodb | nfprobe | sfprobe | tee ]
@@ -153,19 +158,21 @@ DESC:		plugins to be enabled. SQL plugins are available only if configured and c
 		be either global or bound to a specific named plugin. An anonymous plugin is declared
 		as 'plugins: mysql' whereas a named plugin is declared as 'plugins: mysql[name]'.
 		Then, directives can be bound to such named plugin as: 'directive[name]: value'.
-		(default: memory) 
+DEFAULT:	memory
 
 KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size | tee_pipe_size ]
 DESC:		Defines the size of the kernel socket to read (ie. daemons) and write (ie. tee plugin)
 		traffic data. On Linux systems, if this configuration directive is not specified default
 		socket size awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum
 		configurable socket size is defined in /proc/sys/net/core/[rw]mem_max instead.
+DEFAULT:	Operating System default 
 
 KEY:            [ bgp_daemon_pipe_size | bmp_daemon_pipe_size ]
 DESC:           Defines the size of the kernel socket used for BGP and BMP messaging. On Linux systems,
 		if this configuration directive is not specified default socket size awarded is defined
                 in /proc/sys/net/core/rmem_default ; the maximum configurable socket size (which can
                 be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
+DEFAULT:	Operating System default
 
 KEY:		plugin_pipe_size
 DESC:		Core process and each of the plugins are run into different processes. To exchange
@@ -185,7 +192,8 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		the Operating System has to be increased. On Linux systems default socket size awarded
 		is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable socket
 		size (which can be changed via sysctl) is defined in /proc/sys/net/core/[rw]mem_max
-		instead. (default: 4MB)
+		instead.
+DEFAULT:	4MB
 
 KEY:		plugin_buffer_size 
 DESC:		by defining the transfer buffer size, in bytes, this directive enables buffering of
@@ -196,8 +204,8 @@ DESC:		by defining the transfer buffer size, in bytes, this directive enables bu
 		ratio of 1:1000 among the two is considered good practice. The 'plugin_pipe_size'
 		circular queue is hence partitioned in plugin_buffer_size/plugin_pipe_size slots.
 		Once a buffer is filled, it is delivered to the plugin while the circular queue
-		moves to the next buffer element. (default: 0 [adjusted automatically to the size
-		of a single element to transfer]) 
+		moves to the next buffer element.
+DEFAULT:	set to the size of the smallest element to buffer 
 
 KEY:            plugin_pipe_backlog
 VALUES:         [0 <= value < 100]
@@ -205,29 +213,34 @@ DESC:           Expects the value to be a percentage. It creates a backlog of bu
 		before actually releasing them to the plugin. The strategy helps optimizing inter
 		process communications where plugins are quicker handling data than the Core process.
 		By default backlog is disabled; as with buffering in general, this feature should be
-		enabled with caution in lab and low-traffic environments. (default: 0)
+		enabled with caution in lab and low-traffic environments.
+DEFAULT:	0
 
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.). A mask less than "002" is
-		currently not accepted due to security reasons. (default: 077)
+		currently not accepted due to security reasons.
+DEFAULT:	077
 
 KEY:            files_uid
 DESC:           Defines the system user id (UID) for files opened for writing (log, pid, etc.); this
 		is indeed possible only when running the daemon as super-user; by default this is left
 		untouched. This is also applied to any intermediary directory structure which might be
 		created. 
+DEFAULT:	Operating System default (current user UID)
 
 KEY:            files_gid
 DESC:           Defines the system group id (GID) for files opened for writing (log, pid, etc.); this
 		is indeed possible only when running the daemon as super-user; by default this is left
 		untouched. This is also applied to any intermediary directory structure which might be
 		created. 
+DEFAULT:	Operating System default (current user GID)
 
 KEY:		interface (-i) [GLOBAL, NO_NFACCTD]
 DESC:		interface on which 'pmacctd' listens. If such directive isn't supplied, a libpcap
 		function is used to select a valid device. [ns]facctd can catch similar behaviour by
 		employing the [ns]facctd_ip directives; also, note that this directive is mutually
 		exclusive with 'pcap_savefile' (-I). 
+DEFAULT:	Picked by the Operating System
 
 KEY:		pcap_savefile (-I) [GLOBAL, NO_NFACCTD]
 DESC:		file in libpcap savefile format from which read data (this is in alternative to binding
@@ -236,38 +249,43 @@ DESC:		file in libpcap savefile format from which read data (this is in alternat
 		in place). The directive doesn't apply to [ns]facctd; to replay original NetFlow/sFlow
 		streams, a tool like TCPreplay can be used instead. The directive is mutually exclusive
 		with 'interface' (-i). 
+DEFAULT:	none
 
 KEY:		interface_wait (-w) [GLOBAL, NO_NFACCTD]
 VALUES:		[ true | false ]
 DESC:		if set to true, this option causes 'pmacctd' to wait for the listening device to become
 		available; it will try to open successfully the device each few seconds. Whenever set to
 		false, 'pmacctd' will exit as soon as any error (related to the listening interface) is
-		detected. (default: false) 
+		detected.
+DEFAULT:	false
 
 KEY:            savefile_wait (-W) [GLOBAL, NO_NFACCTD]
 VALUES:         [ true | false ]
 DESC:           if set to true, this option will cause 'pmacctd' to wait indefinitely for a signal (ie.
 		CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished with
 		the supplied libpcap savefile (pcap_savefile). It's particularly useful when inserting
-		fixed amounts of data into memory tables by keeping the daemon alive. (default: false)
+		fixed amounts of data into memory tables by keeping the daemon alive.
+DEFAULT:        false
 
 KEY:		promisc (-N) [GLOBAL, NO_NFACCTD]
 VALUES:		[ true | false ]
 DESC:		if set to true, puts the listening interface in promiscuous mode. It's mostly useful when
 		running 'pmacctd' in a box which is not a router, for example, when listening for traffic
-		on a mirroring port. (default: true) 
+		on a mirroring port.
+DEFAULT:        true
 
 KEY:		imt_path (-p)
 DESC:		specifies the full pathname where the memory plugin has to listen for client queries.
 		When multiple memory plugins are active, each one has to use its own file to communicate
 		with the client tool. Note that placing these files into a carefully protected directory
 		(rather than /tmp) is the proper way to control who can access the memory backend.
-		(default: /tmp/collect.pipe)
+DEFAULT:	/tmp/collect.pipe
 
 KEY:		imt_buckets (-b)
 DESC:		defines the number of buckets of the memory table which is organized as a chained hash
 		table. A prime number is highly recommended. Read INTERNALS 'Memory table plugin' chapter
 		for further details. 
+DEFAULT:	32771
 
 KEY:		imt_mem_pools_number (-m)
 DESC:		defines the number of memory pools the memory table is able to allocate; the size of each
@@ -275,36 +293,42 @@ DESC:		defines the number of memory pools the memory table is able to allocate; 
 		memory plugin to allocate new memory chunks as they are needed, potentially allowing the
 		memory structure to grow undefinitely. A value > 0 instructs the plugin to not try to 
 		allocate more than the specified number of memory pools, thus placing an upper boundary
-		to the table size. (default: 16) 
+		to the table size.
+DEFAULT:	16
 
 KEY:		imt_mem_pools_size (-s)
 DESC:		defines the size of each memory pool. For further details read INTERNALS 'Memory table
 		plugin'. The number of memory pools is defined by the 'imt_mem_pools_number' directive.
-		(default: 8192).
+DEFAULT:	8192
 
 KEY:		syslog (-S)
 VALUES:		[ auth | mail | daemon | kern | user | local[0-7] ]
-DESC:		enables syslog logging, using the specified facility. (default: none, console logging)
+DESC:		enables syslog logging, using the specified facility.
+DEFAULT:	none (console logging)
 
 KEY:		logfile 
-DESC:           enables logging to a file (bypassing syslog); expected value is a pathname (default: none,
-		console logging)
+DESC:           enables logging to a file (bypassing syslog); expected value is a pathname
+DEFAULT:	none (console logging)
 
 KEY:		[ amqp_host | bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
 		  bmp_daemon_msglog_amqp_host ]
-DESC:		defines the AMQP/RabbitMQ server IP (default: localhost).
+DESC:		defines the AMQP/RabbitMQ server IP
+DEFAULT:	localhost
 
 KEY:            [ amqp_vhost | bgp_daemon_msglog_amqp_vhost | bgp_table_dump_amqp_vhost | bmp_dump_amqp_vhost |
 		  bmp_daemon_msglog_amqp_vhost ]
-DESC:           defines the AMQP/RabbitMQ server virtual host (default: "/").
+DESC:           defines the AMQP/RabbitMQ server virtual host
+DEFAULT:	"/"
 
 KEY:		[ amqp_user | bgp_daemon_msglog_amqp_user | bgp_table_dump_amqp_user | bmp_dump_amqp_user |
 		  bmp_daemon_msglog_amqp_user ]
-DESC:		defines the username to use when connecting to the AMQP/RabbitMQ server (default: guest).
+DESC:		defines the username to use when connecting to the AMQP/RabbitMQ server
+DEFAULT:	guest
 
 KEY:		[ amqp_passwd | bgp_daemon_msglog_amqp_passwd | bgp_table_dump_amqp_passwd |
 		  bmp_dump_amqp_passwd | bmp_daemon_msglog_amqp_passwd ]
-DESC:		defines the password to use when connecting to the server (default: guest).
+DESC:		defines the password to use when connecting to the server
+DEFAULT: 	guest
 
 KEY:		[ amqp_routing_key | bgp_daemon_msglog_amqp_routing_key | bgp_table_dump_amqp_routing_key |
 		  bmp_daemon_msglog_amqp_routing_key | bmp_dump_amqp_routing_key ]
@@ -325,7 +349,7 @@ DESC:		Name of the AMQP routing key to attach to published data. Dynamic names a
 
 		$peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
-		(default: amqp_routing_key: acct)
+DEFAULT:	none; amqp_routing_key: acct
 
 KEY:            [ amqp_routing_key_rr | bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_rr |
 		  bmp_daemon_msglog_amqp_routing_key_rr | bmp_dump_amqp_routing_key_rr ]
@@ -335,17 +359,20 @@ DESC:           Performs round-robin load-balancing over a set of routing keys. 
 		plugin will round robin as follows: message #1 -> blabla_0, message #2 -> blabla_1,
 		message #3 -> blabla_2, message #4 -> blabla_0 and so forth. By default the feature is
 		disabled, meaning all messages are sent to the routing key specified by amqp_routing_key
-		(or the default one, if no amqp_routing_key is specified). (default: 0)
+		(or the default one, if no amqp_routing_key is specified).
+DEFAULT:	0
 
 KEY:            [ amqp_exchange | bgp_daemon_msglog_amqp_exchange | bgp_table_dump_amqp_exchange |
 		  bmp_daemon_msglog_amqp_exchange | bmp_dump_amqp_exchange ]
-DESC:           Name of the AMQP exchange to publish data (default: pmacct).
+DESC:           Name of the AMQP exchange to publish data
+DEFAULT:	pmacct
 
 KEY:            [ amqp_exchange_type | bgp_daemon_msglog_amqp_exchange_type | 
 		  bgp_table_dump_amqp_exchange_type | bmp_daemon_msglog_amqp_exchange_type |
 		  bmp_dump_amqp_exchange_type ]
 DESC:           Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
-                supported (default: direct).
+                supported
+DEFAULT:	direct
 
 KEY:            [ amqp_persistent_msg | bgp_daemon_msglog_amqp_persistent_msg  |
 		  bgp_table_dump_amqp_persistent_msg | bmp_daemon_msglog_amqp_persistent_msg |
@@ -357,12 +384,14 @@ DESC:           Marks messages as persistent so that a queue content does not ge
                 still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
                 Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
                 not really written to the disk. The persistence guarantees aren't strong, but it is more
-                than enough for our simple task queue." (default: false).
+                than enough for our simple task queue."
+DEFAULT:	false
 
 KEY:		[ amqp_frame_max | bgp_daemon_msglog_amqp_frame_max | bgp_table_dump_frame_max |
 		  bmp_daemon_msglog_amqp_frame_max | bmp_dump_frame_max ]
 DESC:		Defines the maximum size, in bytes, of an AMQP frame on the wire to request of the broker
-		for the connection. 4096 is the minimum size, 2^31-1 is the maximum (default: 131072).
+		for the connection. 4096 is the minimum size, 2^31-1 is the maximum.
+DEFAULT:	131072
 
 KEY:            [ amqp_heartbeat_interval | bgp_daemon_msglog_amqp_heartbeat_interval |
 		  bgp_table_dump_heartbeat_interval | bmp_daemon_msglog_amqp_heartbeat_interval |
@@ -370,17 +399,20 @@ KEY:            [ amqp_heartbeat_interval | bgp_daemon_msglog_amqp_heartbeat_int
 DESC:           Defines the heartbeat interval in order to detect general failures of the RabbitMQ server.
                 The value is expected in seconds. By default the heartbeat mechanism is disabled with a
 		value of zero. According to RabbitMQ C API, detection takes place only upon publishing a
-		JSON message, ie. not at login or if idle (default: 0).
+		JSON message, ie. not at login or if idle.
+DEFAULT:	0
 
 KEY:		[ bgp_daemon_msglog_amqp_retry | bmp_daemon_msglog_amqp_retry ]
 DESC:		Defines the interval of time, in seconds, after which a connection to the RabbitMQ server
-		should be retried after a failure is detected. (default: 60).
+		should be retried after a failure is detected.
+DEFAULT:	60
 
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		writes PID of Core process to the specified file. PIDs of the active plugins are written
 		aswell by employing the following syntax: 'path/to/pidfile-<plugin_type>-<plugin_name>'.
 		This gets particularly useful to recognize which process is which on architectures where
-		pmacct does not support the setproctitle() function. (default: none)
+		pmacct does not support the setproctitle() function.
+DEFAULT:	none
 
 KEY:		networks_file (-n)
 DESC:		full pathname to a file containing a list of networks - and optionally ASN information,
@@ -391,16 +423,19 @@ DESC:		full pathname to a file containing a list of networks - and optionally AS
 		information with custom/self-defined one. IP prefix labels rewrite the resolved
 		source and/or destination IP prefix into the supplied label; labels can be up to 15
 		characters long.
+DEFAULT:	none
 
 KEY:		networks_file_filter
 VALUES          [ true | false ]
 DESC:           Makes networks_file work as a filter in addition to its basic resolver functionality:
-		networks and hosts not belonging to defined networks are zeroed out. (default: false)
+		networks and hosts not belonging to defined networks are zeroed out.
+DEFAULT:        false
 
 KEY:            networks_mask
 DESC:           specifies the network mask - in bits - to apply to IP address values in L3 header. The
 		mask is applied sistematically and before evaluating the 'networks_file' content (if
 		any is specified).
+DEFAULT:	none
 
 KEY:		networks_cache_entries
 DESC:		Networks Lookup Table (which is the memory structure where the 'networks_file' data is
@@ -410,17 +445,19 @@ DESC:		Networks Lookup Table (which is the memory structure where the 'networks_
 		most common scenarios, however when facing with large-scale network definitions, it is 
 		quite adviceable to tune this parameter to improve performances. A prime number is highly
 		recommended.
+DEFAULT:	IPv4: 99991; IPv6: 32771	
 
 KEY:		ports_file
 DESC:		full pathname to a file containing a list of (known/interesting/meaningful) ports (one
 		for each line, read more about the file syntax into examples/ tree). The directive allows
 		to rewrite as zero port numbers not matching any port defined in the list. Indeed, this
 		makes sense only if aggregating on either 'src_port' or 'dst_port' primitives.
+DEFAULT:	none
 
 KEY:		sql_db
 DESC:		defines the SQL database to use. Remember that when using the SQLite3 plugin, this
-		directive refers to the full path to the database file (default: 'pmacct', SQLite 3.x
-		default: '/tmp/pmacct.db'). 
+		directive refers to the full path to the database file
+DEFAULT:	'pmacct'; SQLite 3.x: '/tmp/pmacct.db' 
 
 KEY:            [ sql_table | print_output_file | mongo_table ]
 DESC:           In SQL and mongodb plugins this defines the table to use; in print plugin it defines the
@@ -499,12 +536,14 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 
 		Common notes:
 		The maximum number of variables it may contain is 32.
+DEFAULT:	see notes
 
 KEY:		print_output_file_append
 VALUES:         [ true | false ]
 DESC:		If set to true, print plugin will append to existing files instead of overwriting. If
 		appending, and in case of an output format requiring a title, ie. csv, formatted, etc.,
-		intuitively the title is not re-printed (default: false)
+		intuitively the title is not re-printed.
+DEFAULT:	false
 
 KEY:            print_latest_file
 DESC:		It defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
@@ -531,6 +570,7 @@ DESC:		It defines the full pathname to pointer(s) to latest file(s). Dynamic nam
 		to 1) manually delete latest pointer(s) or 2) move existing print_output_file files to
 		the new targer location. Finally, if upgrading from pmacct releases before 1.5.0rc1, it
 		is recommended to delete existing symlinks. 
+DEFAULT:	none
 
 KEY:		sql_table_schema
 DESC:		full pathname to a file containing a SQL table schema. It allows to create the SQL table
@@ -550,6 +590,7 @@ DESC:		full pathname to a file containing a SQL table schema. It allows to creat
 
 		This setup, along with this directive, are mostly useful when the dynamic tables are not
 		closed in a 'ring' fashion (e.g., the days of the week) but 'open' (e.g., current date).  
+DEFAULT:	none
 
 KEY:		sql_table_version (-v)
 VALUES		[ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 ]
@@ -562,7 +603,8 @@ DESC:		defines the version of the SQL table. SQL table versioning was introduced
 		'sql/' sub-tree the SQL table profiles which are supported by the pmacct version you are
 		currently using. It is always adviced to explicitely define a sql_table_version in
 		order to predict which primitive will be written to which column. All versioning rules
-		are captured in sql/README.[mysql|sqlite3|pgsql] documents. (default: 1)
+		are captured in sql/README.[mysql|sqlite3|pgsql] documents.
+DEFAULT:	1	
 
 KEY:		sql_table_type 
 VALUES		[ original | bgp ]
@@ -578,7 +620,7 @@ DESC:		BGP-related primitives are divided in legacy and non-legacy. Legacy are s
 		field will be written in the "agent_id" column whereas; b) if "sql_table_type: bgp" and
 		"sql_table_version: 9" instead, then the "tag" field will be written in the "tag" column.
 		All versioning rules are captured in sql/README.[mysql|sqlite3|pgsql] documents.
-		(default: original).
+DEFAULT:	original
 
 KEY:		sql_data
 VALUES:		[ typed | unified ]
@@ -590,22 +632,24 @@ DESC:		this switch makes sense only when using PostgreSQL plugin and supplied de
 		rigid structure. Since v6 unified mode is being discontinued leading to simplification.
 		The supplied 'typed' schema can still be customized, ie. to write IP addresses in CHAR
 		fields because making use of IP prefix labels, transparently to pmacct - making this
-		configuration switch deprecated. (default: 'typed').
+		configuration switch deprecated.
+DEFAULT:	typed
 
 KEY:	 	[ sql_host | mongo_host ]
-DESC:		defines the backend server IP/hostname (default: localhost).
+DESC:		defines the backend server IP/hostname
+DEFAULT:	localhost
 
 KEY:		[ sql_user | mongo_user ]
 DESC:		defines the username to use when connecting to the server. In MongoDB, if both
 		mongo_user and mongo_passwd directives are omitted, authentication is disabled;
 		if only one of the two is specified, the other is set to its default value.
-		(default: pmacct).
+DEFAULT:	pmacct
 
 KEY:		[ sql_passwd | mongo_passwd ]
 DESC:		defines the password to use when connecting to the server. In MongoDB, if both
                 mongo_user and mongo_passwd directives are omitted, authentication is disabled;
 		if only one of the two is specified, the other is set to its default value.
-		(default: arealsmartpwd).
+DEFAULT:	'arealsmartpwd'
 
 KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time ] (-r)
 DESC:		time interval, in seconds, between consecutive executions of the plugin cache scanner. The
@@ -618,6 +662,7 @@ DESC:		time interval, in seconds, between consecutive executions of the plugin c
 		mongo_refresh_time[y]: 300
 
 		As doing otherwise can originate unexpected behaviours.
+DEFAULT:	60
 
 KEY:		[ sql_startup_delay | print_startup_delay | mongo_startup_delay | amqp_startup_delay ]
 DESC:		defines the time, in seconds, the first cache scan event has to be delayed. This delay
@@ -627,7 +672,8 @@ DESC:		defines the time, in seconds, the first cache scan event has to be delaye
 		a RDBMS, to keep original flow start time (nfacctd_time_new: false) while enabling the
 		sql_dont_try_update feature (for RDBMS efficiency purposes); in such a context,
 		sql_startup_delay value should be greater (better >= 2x the value) of the NetFlow active
-		flow timeout. (default: 0)
+		flow timeout.
+DEFAULT:	0
 
 KEY:		sql_optimize_clauses
 VALUES:		[ true | false ]
@@ -636,7 +682,8 @@ DESC:		enables the optimization of the statements sent to the RDBMS essentially 
 		by a free mix-and-match of the available primitives. Either case, you will need to build
 		the custom SQL table schema and indexes. As a rule of thumb when NOT using this directive
 		always remember to specify which default SQL table version you intend to stick to by using
-		the 'sql_table_version' directive. (default: false)
+		the 'sql_table_version' directive.
+DEFAULT:	false
 
 KEY:		[ sql_history | print_history | mongo_history | amqp_history ]
 VALUES:		#[s|m|h|d|w|M]
@@ -651,12 +698,13 @@ DESC:		enables historical accounting by placing accounted data into configurable
 		the backend instead. The final effect is close to time slots in a RRD file. Examples of
 		valid values are: '300' or '5m' - five minutes, '3600' or '1h' - one hour, '14400' or '4h'
 		- four hours, '86400' or '1d' - one day, '1w' - one week, '1M' - one month).
+DEFAULT:	none
 
 KEY:            [ sql_history_offset | print_history_offset | mongo_history_offset | amqp_history_offset ]
 DESC:		Sets an offset to timeslots basetime. If history is set to 30 mins (by default creating
 		10:00, 10:30, 11:00, etc. time-bins), with an offset of 900 seconds (so 15 mins) it will
 		create 10:15, 10:45, 11:15, etc. time-bins. It expects a positive value, in seconds.
-		(default: 0)
+DEFAULT:	0
 
 KEY:		[ sql_history_roundoff | print_history_roundoff | mongo_history_roundoff |
 		  amqp_history_roundoff ]
@@ -670,6 +718,7 @@ DESC:		enables alignment of minutes (m), hours (h), days of month (d), weeks (w)
 		slot will start at 6:40pm, and then every 5 minutes (6:45pm ... 7:00pm, etc.). 'w' and 'd'
 		are mutually exclusive, that is: you can either reset the date to last Monday or reset the
 		date to the first day of the month. 
+DEFAULT:	none
 
 KEY:		sql_recovery_logfile
 DESC:		enables recovery mode; recovery mechanism kicks in if the DB fails. It works by checking
@@ -685,6 +734,7 @@ DESC:		enables recovery mode; recovery mechanism kicks in if the DB fails. It wo
 		useless to have a logfile, thus this feature is not supported. However, note that the
 		'sql_recovery_backup_host' directive allows to specify an alternate SQLite 3.x database
 		file. 
+DEFAULT:	none
 
 KEY:            sql_recovery_backup_host
 DESC:           enables recovery mode; recovery mechanism kicks in if DB fails. It works by checking for
@@ -693,6 +743,7 @@ DESC:           enables recovery mode; recovery mechanism kicks in if DB fails. 
 		details about this topic. SQLite 3.x note: the plugin uses this directive to specify
 		a the full path to an alternate database file (e.g., because you have multiple file
 		system on a box) to use in the case the primary backend fails.
+DEFAULT:	none
 
 KEY:            [ sql_max_writers | print_max_writers | mongo_max_writers | amqp_max_writers ]
 DESC:           sets the maximum number of concurrent writer processes the plugin is allowed to start.
@@ -701,7 +752,8 @@ DESC:           sets the maximum number of concurrent writer processes the plugi
 		queue up; the Nth process will go for a recovery mechanism, if configured (like:
 		sql_recovery_logfile, sql_recovery_backup_host for SQL plugins), writers beyond Nth
 		will stop managing data (so, data will be lost at this stage) and an error message is
-		printed out. (default: 10)
+		printed out.
+DEFAULT:	10
 
 KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries ]
 DESC:		All plugins have a memory cache in order to store data until next purging event (see
@@ -709,10 +761,12 @@ DESC:		All plugins have a memory cache in order to store data until next purging
 		and packets counters. This directive sets the number of cache buckets. Default value
 		is suitable for most common scenarios, however when facing large-scale networks, it
 		is higly recommended to tune this parameter to improve performances. Use a prime
-		number of buckets. (default: sql_cache_entries: 32771, print_cache_entries: 16411)
+		number of buckets.
 NOTES:		print, AMQP and MongoDB plugins share the same cache structure: as said, this setting
 		defines the amount of buckets. The default value (16411) allows for some 150K entries
 		to fit the cache structure (or roughlt ten times the supplied value).
+DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries:
+		16411
 
 KEY:		sql_dont_try_update
 VALUES:         [ true | false ]
@@ -721,22 +775,25 @@ DESC:		by default pmacct uses an UPDATE-then-INSERT mechanism to write data to t
 		is useful for gaining performances by avoiding UPDATE queries. Using this directive puts
 		some timing constraints, specifically sql_history == sql_refresh_time, otherwise it may
 		lead to duplicate entries and, potentially, loss of data. When used in nfacctd it also
-		requires nfacctd_time_new to be enabled. (default: false)
+		requires nfacctd_time_new to be enabled.
+DEFAULT:	false
 
 KEY:            sql_use_copy
 VALUES:         [ true | false ]
 DESC:		instructs the plugin to build non-UPDATE SQL queries using COPY (in place of INSERT). While
 		providing same functionalities of INSERT, COPY is also more efficient. To have effect, this
 		directive requires 'sql_dont_try_update' to be set to true. It applies to PostgreSQL plugin
-		only. (default: false)
+		only.
 NOTES:		Error handling of the underlying PostgreSQL API is somewhat limited. During a COPY only
 		transmission errors are detected but not syntax/semantic ones, ie. related to the query
 		and/or the table schema. 
+DEFAULT:        false
 
 KEY:		sql_delimiter
 DESC:		If sql_use_copy is true, uses the supplied character as delimiter. This is thought in cases
 		where the default delimiter is part of any of the supplied strings to be inserted into the
-		database. (default: ',')
+		database.
+DEFAULT:	','
 
 KEY:		[ amqp_multi_values | sql_multi_values ]
 DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT statements. The value
@@ -745,7 +802,8 @@ DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT st
 		faster (many times faster in some cases) than using separate single-row INSERT statements.
 		It's adviceable to check the size of this pmacct buffer against the size of the corresponding
 		MySQL buffer (max_allowed_packet). In AMQP plugin, amqp_multi_values enables similar feature:
-		the value is intended as the amount of elements to pack in each JSON array. (default: 0) 
+		the value is intended as the amount of elements to pack in each JSON array.
+DEFAULT:        0
 
 KEY:		[ sql_trigger_exec | print_trigger_exec | mongo_trigger_exec ]
 DESC:		defines the executable to be launched at fixed time intervals to post-process aggregates;
@@ -756,6 +814,7 @@ DESC:		defines the executable to be launched at fixed time intervals to post-pro
 		and mongodb plugins a simpler implementation is made: triggers can be fired each time data
 		is written to the backend (ie. print_refresh_time) and no environment variables are passed
 		over to the executable.
+DEFAULT:	none
 
 KEY:		sql_trigger_time
 VALUES:		#[s|m|h|d|w|M]
@@ -764,6 +823,7 @@ DESC:		specifies time interval at which the executable specified by 'sql_trigger
 		in the 'sql_history' directive syntax (for example, valid values are '300' or '5m', '3600'
 		or '1h', '14400' or '4h', '86400' or '1d', '1w', '1M'; eg. if '3600' or '1h' is selected,
 		the executable will be fired each hour).
+DEFAULT:	none
 
 KEY:		[ sql_preprocess | print_preprocess | mongo_preprocess | amqp_preprocess ]
 DESC:		allows to process aggregates (via a comma-separated list of conditionals and checks) while
@@ -870,29 +930,33 @@ DESC:		allows to process aggregates (via a comma-separated list of conditionals 
 		DESC: action. If previously evaluated checks have marked the aggregate as invalid, a positive
 		      'recover' value makes the packet to be handled through the recovery mechanism (if enabled).  
 		      SQL plugins only.
+DEFAULT:	none
 
 KEY:		[ sql_preprocess_type | print_preprocess_type | mongo_preprocess_type | amqp_preprocess_type ]
 VALUES:		[ any | all ]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
-		are valid if they just match one of the checks (any) or all of them (all) (default: any).
+		are valid if they just match one of the checks (any) or all of them (all).
+DEFAULT:	any
 
 KEY:		timestamps_secs
 VALUES:		[ true | false ]
 DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to seconds, ie. prevents
 		timestamp_start_residual, timestamp_end_residual fields to be populated. In nfprobe plugin,
 		when exporting via NetFlow v9 (nfprobe_version: 9), allows to fallback to first and last
-		swithed times in seconds (default: false).
+		swithed times in seconds.
+DEFAULT:        false
 
 KEY:            timestamps_since_epoch
 VALUES          [ true | false ]
 DESC:           All timestamps (ie. timestamp_start, timestamp_end primitives; sql_history-related fields
                 stamp_inserted, stamp_updated; etc.) in the standard seconds since the Epoch format. In
                 case the output is to a RDBMS, setting this directive to true will require changes to the
-                default types for timestamp fields in the SQL schema. (default: false)
+                default types for timestamp fields in the SQL schema.
 
-                        MySQL:          DATETIME ==> INT(8) UNSIGNED
-                        PostgreSQL:     timestamp without time zone ==> bigint
-                        SQLite3:        DATETIME ==> INT(8)
+		MySQL:          DATETIME ==> INT(8) UNSIGNED
+                PostgreSQL:     timestamp without time zone ==> bigint
+                SQLite3:        DATETIME ==> INT(8)
+DEFAULT:        false
 
 KEY:		mongo_insert_batch
 DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per
@@ -1670,7 +1734,7 @@ DESC:           Defines output format for the dump of BGP/BMP tables. Only JSON 
 
 KEY:		bgp_table_dump_refresh_time | bmp_dump_refresh_time ] [GLOBAL]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP/BMP
-		tables to files. 
+		tables to files (default: 0). 
 
 KEY:		isis_daemon
 VALUES:		[ true | false ]
