@@ -98,7 +98,7 @@ void skinny_bgp_daemon()
   bgp_attr_init();
 
   /* socket creation for BGP server: IPv4 only */
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+#if (defined ENABLE_IPV6)
   if (!config.nfacctd_bgp_ip) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -180,7 +180,7 @@ void skinny_bgp_daemon()
 
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bgp_sock < 0) {
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+#if (defined ENABLE_IPV6)
     /* retry with IPv4 */
     if (!config.nfacctd_bgp_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;

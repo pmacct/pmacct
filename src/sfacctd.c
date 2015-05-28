@@ -502,7 +502,7 @@ int main(int argc,char **argv, char **envp)
   /* If no IP address is supplied, let's set our default
      behaviour: IPv4 address, INADDR_ANY, port 2100 */
   if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_SFACCTD_PORT;
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+#if (defined ENABLE_IPV6)
   if (!config.nfacctd_ip) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -533,7 +533,7 @@ int main(int argc,char **argv, char **envp)
   /* socket creation */
   config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
   if (config.sock < 0) {
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+#if (defined ENABLE_IPV6)
     /* retry with IPv4 */
     if (!config.nfacctd_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;

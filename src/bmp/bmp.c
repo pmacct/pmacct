@@ -95,7 +95,7 @@ void skinny_bmp_daemon()
   clen = sizeof(client);
 
   /* socket creation for BMP server: IPv4 only */
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+#if (defined ENABLE_IPV6)
   if (!config.nfacctd_bmp_ip) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -180,7 +180,7 @@ void skinny_bmp_daemon()
 
   config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bmp_sock < 0) {
-#if (defined ENABLE_IPV6 && defined V4_MAPPED)
+#if (defined ENABLE_IPV6)
     /* retry with IPv4 */
     if (!config.nfacctd_bmp_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
