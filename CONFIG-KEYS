@@ -162,25 +162,45 @@ DEFAULT:	memory
 
 KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size | tee_pipe_size ]
 DESC:		Defines the size of the kernel socket to read (ie. daemons) and write (ie. tee plugin)
-		traffic data. On Linux systems, if this configuration directive is not specified default
-		socket size awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum
-		configurable socket size is defined in /proc/sys/net/core/[rw]mem_max instead.
+		traffic data. The socket is highlighted below with "XXXX": 
+
+                                         XXXX 
+                [network] ----> [kernel] ----> [core process] ----> [plugin] ----> [backend]
+					       [__________pmacct___________]
+
+		On Linux systems, if this configuration directive is not specified default socket size
+		awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable
+		socket size is defined in /proc/sys/net/core/[rw]mem_max instead. Still on Linux, the
+		"drops" field of /proc/net/udp can be checked to ensure its value  is not increasing.
 DEFAULT:	Operating System default 
 
 KEY:            [ bgp_daemon_pipe_size | bmp_daemon_pipe_size ]
-DESC:           Defines the size of the kernel socket used for BGP and BMP messaging. On Linux systems,
-		if this configuration directive is not specified default socket size awarded is defined
-                in /proc/sys/net/core/rmem_default ; the maximum configurable socket size (which can
-                be changed via sysctl) is defined in /proc/sys/net/core/rmem_max instead.
+DESC:           Defines the size of the kernel socket used for BGP and BMP messaging. The socket is
+		highlighted below with "XXXX":
+
+                                         XXXX
+                [network] ----> [kernel] ----> [core process] ----> [plugin] ----> [backend]
+                                               [__________pmacct___________]
+
+		On Linux systems, if this configuration directive is not specified default socket size
+		awarded is defined in /proc/sys/net/core/rmem_default ; the maximum configurable socket
+		size (which can be changed via sysctl) is defined in /proc/sys/net/core/rmem_max
+		instead.
 DEFAULT:	Operating System default
 
 KEY:		plugin_pipe_size
 DESC:		Core process and each of the plugins are run into different processes. To exchange
 		data, they set up a communication channel structured as a circular queue (referred
-		to as 'pipe'). This directive sets the total size, in bytes, of such queue. Its
-		default size is set to 4MB. Whenever facing heavy traffic loads, this size can be
-		adjusted to hold more data. In the following example, the queue between the Core
-		process and the plugin 'test' is set to 10MB:
+		to as 'pipe') highlighted below with "XXXX":
+
+							      XXXX
+		[network] ----> [kernel] ----> [core process] ----> [plugin] ----> [backend]
+					       [__________pmacct___________]
+
+		This directive sets the total size, in bytes, of such queue. Its default size is set
+		to 4MB. Whenever facing heavy traffic loads, this size can be adjusted to hold more
+		data. In the following example, the queue between the Core process and the plugin
+		'test' is set to 10MB:
 
 		...
 		plugins: memory[test]
@@ -193,6 +213,9 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable socket
 		size (which can be changed via sysctl) is defined in /proc/sys/net/core/[rw]mem_max
 		instead.
+
+		In case of data loss messages containing the "We are missing data" string will be
+		logged - indicating the plugin affected and current settings.
 DEFAULT:	4MB
 
 KEY:		plugin_buffer_size 

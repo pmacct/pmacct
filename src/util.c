@@ -2206,7 +2206,7 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
       p_amqp_set_routing_key(alog, dyn_amqp_routing_key);
     }
 
-    ret = p_amqp_publish(alog, tmpbuf);
+    ret = p_amqp_publish_string(alog, tmpbuf);
     free(tmpbuf);
 
     if (alog->rk_rr.max) p_amqp_set_routing_key(alog, orig_amqp_routing_key);

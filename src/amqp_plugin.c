@@ -383,7 +383,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
       }
 
-      ret = p_amqp_publish(&amqpp_amqp_host, json_str);
+      ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
       free(json_str);
       json_str = NULL;
 
@@ -405,7 +405,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
     if (json_str) {
       /* no handling of dyn routing keys here: not compatible */
-      ret = p_amqp_publish(&amqpp_amqp_host, json_str);
+      ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
       free(json_str);
       json_str = NULL;
 

@@ -86,7 +86,7 @@ EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
 EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 
 EXT int p_amqp_connect(struct p_amqp_host *);
-EXT int p_amqp_publish(struct p_amqp_host *, char *);
+EXT int p_amqp_publish_string(struct p_amqp_host *, char *);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
 

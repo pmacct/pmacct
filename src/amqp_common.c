@@ -215,7 +215,7 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
   return SUCCESS;
 }
 
-int p_amqp_publish(struct p_amqp_host *amqp_host, char *json_str)
+int p_amqp_publish_string(struct p_amqp_host *amqp_host, char *json_str)
 {
   if (p_amqp_is_alive(amqp_host) == ERR) {
     p_amqp_close(amqp_host, TRUE);
