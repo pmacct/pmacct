@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -44,6 +44,7 @@ struct p_amqp_host {
   char *host;
   char *vhost;
   int persistent_msg;
+  u_int8_t content_type;
   u_int32_t frame_max;
   u_int32_t heartbeat_interval;
 
@@ -77,6 +78,8 @@ EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
 EXT void p_amqp_set_frame_max(struct p_amqp_host *, u_int32_t);
 EXT void p_amqp_set_heartbeat_interval(struct p_amqp_host *, u_int32_t);
 EXT void p_amqp_set_last_fail(struct p_amqp_host *, time_t);
+EXT void p_amqp_set_content_type_json(struct p_amqp_host *);
+EXT void p_amqp_set_content_type_binary(struct p_amqp_host *);
 
 EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
 EXT char *p_amqp_get_routing_key(struct p_amqp_host *);
@@ -87,6 +90,7 @@ EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 
 EXT int p_amqp_connect(struct p_amqp_host *);
 EXT int p_amqp_publish_string(struct p_amqp_host *, char *);
+EXT int p_amqp_publish_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
 

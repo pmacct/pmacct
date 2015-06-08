@@ -295,6 +295,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   p_amqp_set_vhost(&amqpp_amqp_host, config.amqp_vhost);
   p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
   p_amqp_set_frame_max(&amqpp_amqp_host, config.amqp_frame_max);
+  p_amqp_set_content_type_json(&amqpp_amqp_host);
 
   p_amqp_init_routing_key_rr(&amqpp_amqp_host);
   p_amqp_set_routing_key_rr(&amqpp_amqp_host, config.amqp_routing_key_rr);
