@@ -384,6 +384,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (num > 0) {
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received seq=%u num_entries=%u\n", config.name, config.type, seq, ((struct ch_buf_hdr *)pipebuf)->num);
+
 	while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 
 	  // XXX: to be optimized: remove empty_* vars

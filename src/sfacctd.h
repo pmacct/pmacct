@@ -320,4 +320,8 @@ EXT struct bgp_peer_log *sf_cnt_log;
 EXT u_int64_t sf_cnt_log_seq;
 EXT struct timeval sf_cnt_log_tstamp;
 EXT char sf_cnt_log_tstamp_str[SRVBUFLEN];
+
+EXT struct host_addr debug_a;
+EXT u_char debug_agent_addr[50];
+EXT u_int16_t debug_agent_port;
 #undef EXT

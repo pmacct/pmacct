@@ -1042,6 +1042,13 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   pptrsv->v4.f_status = sfv245_check_status(spp, agent);
   set_vector_f_status(pptrsv);
 
+  if (config.debug) {
+    sa_to_addr((struct sockaddr *)pptrsv->v4.f_agent, &debug_a, &debug_agent_port);
+    addr_to_str(debug_agent_addr, &debug_a);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n",
+    config.name, debug_agent_addr, debug_agent_port, spp->datagramVersion, sequenceNo);
+  }
+
   if (config.sfacctd_counter_file) sfv245_check_counter_log_init(&pptrsv->v4); 
 
   for (idx = 0; idx < samplesInPacket; idx++) {
@@ -1081,6 +1088,13 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   samplesInPacket = getData32(spp);
   pptrsv->v4.f_status = sfv245_check_status(spp, agent);
   set_vector_f_status(pptrsv);
+
+  if (config.debug) {
+    sa_to_addr((struct sockaddr *)pptrsv->v4.f_agent, &debug_a, &debug_agent_port);
+    addr_to_str(debug_agent_addr, &debug_a);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n",
+    config.name, debug_agent_addr, debug_agent_port, spp->datagramVersion, sequenceNo);
+  }
 
   if (config.sfacctd_counter_file) sfv245_check_counter_log_init(&pptrsv->v4); 
 

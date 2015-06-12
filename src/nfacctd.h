@@ -775,6 +775,10 @@ EXT char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_
 
 EXT struct template_cache tpl_cache;
 EXT struct v8_handler_entry v8_handlers[15];
+
+EXT struct host_addr debug_a;
+EXT u_char debug_agent_addr[50];
+EXT u_int16_t debug_agent_port;
 #undef EXT
 
 #if (!defined __NFV9_TEMPLATE_C)
