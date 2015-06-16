@@ -4522,6 +4522,7 @@ int cfg_key_geoip_ipv4_file(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.geoip_ipv4_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'geoip_ipv4_file'. Globalized.\n", filename);
 
   return changes;
 }
@@ -4533,6 +4534,7 @@ int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.geoip_ipv6_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'geoip_ipv6_file'. Globalized.\n", filename);
 
   return changes;
 }
