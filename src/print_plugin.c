@@ -273,7 +273,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_data dummy_data, elem_dummy_data;
   pid_t writer_pid = getpid();
 
-  if (!index) return;
+  if (!index) {
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: 0/0, ET: 0) ***\n", config.name, config.type, writer_pid);
+    return;
+  }
 
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {

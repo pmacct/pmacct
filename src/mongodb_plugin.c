@@ -256,7 +256,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   const bson **bson_batch;
   bson *bson_elem;
 
-  if (!index) return;
+  if (!index) {
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: 0/0, ET: 0) ***\n", config.name, config.type, writer_pid);
+    return;
+  }
 
   if (config.sql_host)
     db_status = mongo_connect(&db_conn, config.sql_host, 27017 /* default port */);

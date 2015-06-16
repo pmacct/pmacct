@@ -386,7 +386,11 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
 
-  if (!index) return;
+  if (!index) {
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: 0/0, ET: 0) ***\n", config.name, config.type, writer_pid);
+    return;
+  }
 
   bed.lf = &lf;
   memset(&lf, 0, sizeof(struct logfile));
