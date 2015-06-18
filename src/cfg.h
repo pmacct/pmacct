@@ -90,6 +90,7 @@ struct configuration {
   u_int64_t pipe_size;
   u_int64_t buffer_size;
   int pipe_backlog;
+  int pipe_amqp;
   int files_umask;
   int files_uid;
   int files_gid;
@@ -364,22 +365,6 @@ struct configuration {
   u_int16_t pkt_len_distrib_bins_lookup[ETHER_JUMBO_MTU+1];
   int use_ip_next_hop;
   int tmp_net_own_field;
-};
-
-struct plugin_type_entry {
-  int id;
-  char string[10];
-  void (*func)(int, struct configuration *, void *);
-};
-
-struct plugins_list_entry {
-  int id;
-  pid_t pid;
-  char name[SRVBUFLEN];
-  struct configuration cfg;
-  int pipe[2];
-  struct plugin_type_entry type;
-  struct plugins_list_entry *next;
 };
 
 /* prototypes */ 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -18,6 +18,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+
+#ifdef WITH_RABBITMQ 
+#include "amqp_common.h"
+#endif
 
 #define DEFAULT_CHBUFLEN 4096
 #define DEFAULT_PIPE_SIZE 65535
@@ -61,6 +65,25 @@ struct aggregate_filter {
   struct bpf_program **table;
 };
 
+struct plugin_type_entry {
+  int id;
+  char string[10];
+  void (*func)(int, struct configuration *, void *);
+};
+
+struct plugins_list_entry {
+  int id;
+  pid_t pid;
+  char name[SRVBUFLEN];
+  struct configuration cfg;
+  int pipe[2];
+  struct plugin_type_entry type;
+  struct plugins_list_entry *next;
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host amqp_host;
+#endif
+};
+
 struct channels_list_entry {
   pm_cfgreg_t aggregation;
   pm_cfgreg_t aggregation_2;
@@ -88,6 +111,9 @@ struct channels_list_entry {
   struct sampling s;
   struct plugins_list_entry *plugin;			/* backpointer to the plugin the actual channel belongs to */
   struct extra_primitives extras;			/* offset for non-standard aggregation primitives structures */
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host amqp_host;
+#endif
 };
 
 #if (defined __PLUGIN_HOOKS_C)
@@ -121,6 +147,7 @@ EXT int pkt_extras_clean(void *, int);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
+EXT char *compose_plugin_amqp_routing_key(char *, char *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

@@ -40,7 +40,7 @@
 void load_plugins(struct plugin_requests *req)
 {
   u_int64_t buf_pipe_ratio_sz = 0;
-  int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
+  int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0, ret;
 
   int nfprobe_id = 0, min_sz = 0;
   struct plugins_list_entry *list = plugins_list;
@@ -234,6 +234,29 @@ void load_plugins(struct plugin_requests *req)
 
       /* some residual check */
       if (chptr && list->cfg.a_filter) req->bpf_filter = TRUE;
+
+      /* amqp handling if required so */
+#ifdef WITH_RABBITMQ
+      if (list->cfg.pipe_amqp) {
+	char *amqp_rk = compose_plugin_amqp_routing_key(list->cfg.name, list->type.string);
+
+	p_amqp_init_host(&list->amqp_host);
+	p_amqp_set_user(&list->amqp_host, rabbitmq_user);
+	p_amqp_set_passwd(&list->amqp_host, rabbitmq_pwd);
+
+	p_amqp_set_exchange(&list->amqp_host, default_amqp_exchange);
+	p_amqp_set_routing_key(&list->amqp_host, amqp_rk);
+	p_amqp_set_exchange_type(&list->amqp_host, default_amqp_exchange_type);
+	p_amqp_set_host(&list->amqp_host, default_amqp_host);
+	p_amqp_set_vhost(&list->amqp_host, default_amqp_vhost);
+	// p_amqp_set_frame_max(&list->amqp_host, XXX);
+	p_amqp_set_content_type_binary(&list->amqp_host);
+
+	ret = p_amqp_connect(&list->amqp_host);
+
+	// XXX
+      }
+#endif
     }
     list = list->next;
   }
@@ -802,4 +825,23 @@ int pkt_extras_clean(void *pextras, int len)
   memset(pextras, 0, PdataSz+PextrasSz);
 
   return PdataSz+PextrasSz;
+}
+
+char *compose_plugin_amqp_routing_key(char *name, char *type)
+{
+  char *rk = NULL, sep[] = "-";
+  int len = 0;
+
+  if (!name || !type) return;
+
+  len = strlen(name) + strlen(type) + 2;
+
+  rk = malloc(len);
+  memset(rk, 0, len);
+
+  strncpy(rk, name, len);
+  strncat(rk, sep, (len-strlen(rk)));
+  strncat(rk, type, (len-strlen(rk)));
+
+  return rk;
 }

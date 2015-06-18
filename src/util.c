@@ -26,9 +26,7 @@
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
-#if defined WITH_RABBITMQ
-#include "amqp_common.h"
-#endif
+#include "plugin_hooks.h"
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif

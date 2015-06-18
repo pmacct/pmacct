@@ -318,6 +318,7 @@ static const struct _dictionary_line dictionary[] = {
   {"plugins", NULL},
   {"plugin_pipe_size", cfg_key_plugin_pipe_size},
   {"plugin_pipe_backlog", cfg_key_plugin_pipe_backlog},
+  {"plugin_pipe_amqp", cfg_key_plugin_pipe_amqp},
   {"plugin_buffer_size", cfg_key_plugin_buffer_size},
   {"interface", cfg_key_interface},
   {"interface_wait", cfg_key_interface_wait},

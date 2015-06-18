@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "plugin_hooks.h"
 
 /* extern */
 extern struct plugins_list_entry *plugin_list;
