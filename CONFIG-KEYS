@@ -225,14 +225,13 @@ DEFAULT:	4MB
 
 KEY:		plugin_buffer_size 
 DESC:		By defining the transfer buffer size, in bytes, this directive enables buffering of
-		data transfers between core process and active plugins. It is disabled by default,
-		ie. size of a buffer coincides to the size of a single element to be transferred,
-		giving best feelings while testing out the package with small traffic loads. The
-		value has to be minor/equal to the size defined by 'plugin_pipe_size' and keeping a
-		ratio of 1:1000 among the two is considered good practice. The 'plugin_pipe_size'
-		circular queue is hence partitioned in plugin_buffer_size/plugin_pipe_size slots.
-		Once a buffer is filled, it is delivered to the plugin while the circular queue
-		moves to the next buffer element.
+		data transfers between core process and active plugins. Setting a larger value may
+		improve throughput (ie. amount of CPU cycles required to transfer data); setting a
+		smaller value may improve latency, especially in scenarios with little data influx.
+		It is disabled by default. The value has to be minor/equal to the size defined by
+		'plugin_pipe_size' and keeping a ratio of 1:1000 among the two is considered good
+		practice. The circular queue set by plugin_pipe_size is hence partitioned in chunks
+		of  plugin_buffer_size: once a buffer is filled, it is delivered to the plugin.
 DEFAULT:	Set to the size of the smallest element to buffer 
 
 KEY:            plugin_pipe_backlog

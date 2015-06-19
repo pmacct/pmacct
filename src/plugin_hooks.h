@@ -147,7 +147,10 @@ EXT int pkt_extras_clean(void *, int);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
+#if defined WITH_RABBITMQ
 EXT char *compose_plugin_amqp_routing_key(char *, char *);
+EXT void plugin_hooks_init_amqp_host();
+#endif
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

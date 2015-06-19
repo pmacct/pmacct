@@ -240,6 +240,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.pipe_amqp) {
 	char *amqp_rk = compose_plugin_amqp_routing_key(list->cfg.name, list->type.string);
 
+	// XXX: todo: give possibility to configure nuances: host, user, password, etc. 
 	p_amqp_init_host(&list->amqp_host);
 	p_amqp_set_user(&list->amqp_host, rabbitmq_user);
 	p_amqp_set_passwd(&list->amqp_host, rabbitmq_pwd);
@@ -249,12 +250,10 @@ void load_plugins(struct plugin_requests *req)
 	p_amqp_set_exchange_type(&list->amqp_host, default_amqp_exchange_type);
 	p_amqp_set_host(&list->amqp_host, default_amqp_host);
 	p_amqp_set_vhost(&list->amqp_host, default_amqp_vhost);
-	// p_amqp_set_frame_max(&list->amqp_host, XXX);
+	p_amqp_set_frame_max(&list->amqp_host, list->cfg.buffer_size);
 	p_amqp_set_content_type_binary(&list->amqp_host);
 
 	ret = p_amqp_connect(&list->amqp_host);
-
-	// XXX
       }
 #endif
     }
@@ -305,7 +304,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
   pm_id_t saved_tag = 0, saved_tag2 = 0;
   pt_label_t saved_label;
 
-  int num, fixed_size, already_reprocessed = 0;
+  int num, ret, fixed_size, already_reprocessed = 0;
   u_int32_t savedptr;
   char *bptr;
   int index, got_tags = FALSE;
@@ -406,7 +405,7 @@ reprocess:
 		channels_list[index].hdr.seq, channels_list[index].hdr.num);
 	}
 
-	if (channels_list[index].status->wakeup) {
+	if (channels_list[index].status->wakeup && !channels_list[index].plugin->cfg.pipe_amqp) {
 	  channels_list[index].status->backlog++;
 	  
 	  if (channels_list[index].status->backlog > ((channels_list[index].plugin->cfg.pipe_size/channels_list[index].plugin->cfg.buffer_size)*channels_list[index].plugin->cfg.pipe_backlog)/100) {
@@ -418,6 +417,24 @@ reprocess:
 	    channels_list[index].status->backlog = 0;
 	  }
 	}
+
+#ifdef WITH_RABBITMQ
+	/* sending the buffer to the AMQP broker */
+	if (channels_list[index].plugin->cfg.pipe_amqp) {
+	  ret = p_amqp_publish_binary(&channels_list[index].plugin->amqp_host, channels_list[index].rg.ptr, channels_list[index].bufsize);
+
+	  if (ret) {
+	    time_t last_fail = p_amqp_get_last_fail(&channels_list[index].plugin->amqp_host);
+
+	    // XXX: use existing time reference?
+	    if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < time(NULL))) {
+	      plugin_hooks_init_amqp_host();
+	      p_amqp_connect(&channels_list[index].plugin->amqp_host);
+	    }
+	  }
+	}
+#endif
+
 	channels_list[index].rg.ptr += channels_list[index].bufsize;
 
 	if ((channels_list[index].rg.ptr+channels_list[index].bufsize) > channels_list[index].rg.end)
@@ -845,3 +862,10 @@ char *compose_plugin_amqp_routing_key(char *name, char *type)
 
   return rk;
 }
+
+#if defined WITH_RABBITMQ
+void plugin_hooks_init_amqp_host()
+{
+  // XXX
+}
+#endif

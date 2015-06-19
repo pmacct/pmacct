@@ -239,18 +239,22 @@ int p_amqp_publish_string(struct p_amqp_host *amqp_host, char *json_str)
     return ERR;
   }
 
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
-			config.type, amqp_host->exchange, amqp_host->routing_key,
-			amqp_host->msg_props.delivery_mode, json_str);
-
   amqp_host->status = amqp_basic_publish(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
 					 amqp_cstring_bytes(amqp_host->routing_key), 0, 0, &amqp_host->msg_props,
 					 amqp_cstring_bytes(json_str));
 
   if (amqp_host->status) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_publish_string()\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_publish_string() [E=%s RK=%s DM=%u]\n",
+				config.name, config.type, amqp_host->exchange,
+				amqp_host->routing_key, amqp_host->msg_props.delivery_mode);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
+  }
+  else {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing to RabbitMQ: p_amqp_publish_string() [E=%s RK=%s DM=%u]: %s\n",
+				config.name, config.type, amqp_host->exchange,
+				amqp_host->routing_key, amqp_host->msg_props.delivery_mode,
+				json_str);
   }
 
   return SUCCESS;
@@ -265,12 +269,6 @@ int p_amqp_publish_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
     return ERR;
   }
 
-/*
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing [E=%s RK=%s DM=%u]: %s\n", config.name,
-                        config.type, amqp_host->exchange, amqp_host->routing_key,
-                        amqp_host->msg_props.delivery_mode, json_str);
-*/
-
   memset(&pdata, 0, sizeof(pdata));
   pdata.len = data_len;
   pdata.bytes = data;
@@ -280,9 +278,16 @@ int p_amqp_publish_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
                                          pdata);
 
   if (amqp_host->status) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_publish_binary()\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_publish_binary() [E=%s RK=%s DM=%u]\n",
+				config.name, config.type, amqp_host->exchange,
+				amqp_host->routing_key, amqp_host->msg_props.delivery_mode);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
+  }
+  else {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): publishing to RabbitMQ: p_amqp_publish_binary() [E=%s RK=%s DM=%u]\n",
+				config.name, config.type, amqp_host->exchange,
+				amqp_host->routing_key, amqp_host->msg_props.delivery_mode);
   }
 
   return SUCCESS;
