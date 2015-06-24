@@ -153,12 +153,12 @@ void skinny_bgp_daemon()
     if (config.nfacctd_bgp_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ
       bgp_daemon_msglog_init_amqp_host();
-      p_amqp_connect(&bgp_daemon_msglog_amqp_host);
+      p_amqp_connect_to_publish(&bgp_daemon_msglog_amqp_host);
 
       if (!config.nfacctd_bgp_msglog_amqp_retry)
 	config.nfacctd_bgp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect() not possible due to missing --enable-rabbitmq\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
     }
   }
@@ -376,7 +376,7 @@ void skinny_bgp_daemon()
 
 	if (last_fail && (last_fail + config.nfacctd_bgp_msglog_amqp_retry < log_tstamp.tv_sec)) {
           bgp_daemon_msglog_init_amqp_host();
-          p_amqp_connect(&bgp_daemon_msglog_amqp_host);
+          p_amqp_connect_to_publish(&bgp_daemon_msglog_amqp_host);
 	}
       }
 #endif

@@ -64,6 +64,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int cLen, num, sd, sd2;
   char *dataptr;
 
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host pipe_amqp_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);

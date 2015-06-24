@@ -152,13 +152,20 @@ void p_amqp_unset_last_fail(struct p_amqp_host *amqp_host)
   if (amqp_host) amqp_host->last_fail = FALSE;
 }
 
-int p_amqp_connect(struct p_amqp_host *amqp_host)
+int p_amqp_get_sockfd(struct p_amqp_host *amqp_host)
+{
+  if (amqp_host) return amqp_get_sockfd(amqp_host->conn);
+
+  return 0;
+}
+
+int p_amqp_connect_to_publish(struct p_amqp_host *amqp_host)
 {
   amqp_host->conn = amqp_new_connection();
 
   amqp_host->socket = amqp_tcp_socket_new(amqp_host->conn);
   if (!amqp_host->socket) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect(): no socket\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_publish(): no socket\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
@@ -166,14 +173,14 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
   amqp_host->status = amqp_socket_open(amqp_host->socket, amqp_host->host, 5672 /* default port */);
 
   if (amqp_host->status != AMQP_STATUS_OK) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect(): unable to open socket\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_publish(): unable to open socket\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
 
   amqp_host->ret = amqp_login(amqp_host->conn, amqp_host->vhost, 0, amqp_host->frame_max, amqp_host->heartbeat_interval, AMQP_SASL_METHOD_PLAIN, amqp_host->user, amqp_host->passwd);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect(): login\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_publish(): login\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
@@ -182,7 +189,7 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
 
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect(): unable to open channel\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_publish(): unable to open channel\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
@@ -230,6 +237,66 @@ int p_amqp_connect(struct p_amqp_host *amqp_host)
 
   p_amqp_unset_last_fail(amqp_host);
   return SUCCESS;
+}
+
+int p_amqp_connect_to_consume(struct p_amqp_host *amqp_host)
+{
+  amqp_host->conn = amqp_new_connection();
+
+  amqp_host->socket = amqp_tcp_socket_new(amqp_host->conn);
+  if (!amqp_host->socket) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): no socket\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  amqp_host->status = amqp_socket_open(amqp_host->socket, amqp_host->host, 5672 /* default port */);
+
+  if (amqp_host->status != AMQP_STATUS_OK) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): unable to open socket\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  amqp_host->ret = amqp_login(amqp_host->conn, amqp_host->vhost, 0, amqp_host->frame_max, amqp_host->heartbeat_interval, AMQP_SASL_METHOD_PLAIN, amqp_host->user, amqp_host->passwd);
+  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): login\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  amqp_channel_open(amqp_host->conn, 1);
+  amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
+  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): unable to open channel\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  amqp_queue_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->routing_key), 0, 0, 0, 1, amqp_empty_table);
+  amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
+  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): queue declare\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+ 
+  amqp_queue_bind(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->routing_key), amqp_cstring_bytes(amqp_host->exchange),
+			amqp_cstring_bytes(amqp_host->routing_key), amqp_empty_table);
+  amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
+  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): queue bind\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  amqp_basic_consume(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->routing_key), amqp_empty_bytes, 0, 1, 0, amqp_empty_table);
+  amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
+  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): basic consume\n", config.name, config.type);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
 }
 
 int p_amqp_publish_string(struct p_amqp_host *amqp_host, char *json_str)
@@ -289,6 +356,70 @@ int p_amqp_publish_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
 				config.name, config.type, amqp_host->exchange,
 				amqp_host->routing_key, amqp_host->msg_props.delivery_mode);
   }
+
+  return SUCCESS;
+}
+
+int p_amqp_consume_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t data_len)
+{
+  amqp_envelope_t envelope;
+  amqp_frame_t frame;
+  size_t size;
+
+  if (p_amqp_is_alive(amqp_host) == ERR) {
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  amqp_maybe_release_buffers(amqp_host->conn);
+
+  amqp_host->ret = amqp_consume_message(amqp_host->conn, &envelope, NULL, 0);
+  if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary() [E=%s RK=%s]\n",
+				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+  else {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): receive from RabbitMQ: p_amqp_consume_binary() [E=%s RK=%s]\n",
+				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+  }
+
+  if (amqp_simple_wait_frame(amqp_host->conn, &frame) != AMQP_STATUS_OK) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): wait frame [E=%s RK=%s]\n",
+				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+    p_amqp_close(amqp_host, TRUE);
+    return ERR;
+  }
+
+  if (frame.frame_type == AMQP_FRAME_METHOD) {
+    amqp_message_t message;
+
+    switch (frame.payload.method.id) {
+    case AMQP_BASIC_RETURN_METHOD:
+      amqp_host->ret = amqp_read_message(amqp_host->conn, frame.channel, &message, 0);
+      if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): read message [E=%s RK=%s]\n",
+				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+        p_amqp_close(amqp_host, TRUE);
+        return ERR;
+      }
+
+      if (data && data_len) memcpy(data, message.body.bytes, MIN(message.body.len, data_len));
+
+      amqp_destroy_message(&message);
+
+      break;
+    case AMQP_BASIC_ACK_METHOD:
+    case AMQP_CHANNEL_CLOSE_METHOD:
+    default:
+      // XXX
+
+      break;
+    }
+  } 
+
+  amqp_destroy_envelope(&envelope);
 
   return SUCCESS;
 }

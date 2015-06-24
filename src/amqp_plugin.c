@@ -311,7 +311,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
 
-  ret = p_amqp_connect(&amqpp_amqp_host);
+  ret = p_amqp_connect_to_publish(&amqpp_amqp_host);
   if (ret) return;
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)

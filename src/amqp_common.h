@@ -84,13 +84,16 @@ EXT void p_amqp_set_content_type_binary(struct p_amqp_host *);
 EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
 EXT char *p_amqp_get_routing_key(struct p_amqp_host *);
 EXT int p_amqp_get_routing_key_rr(struct p_amqp_host *);
+EXT int p_amqp_get_sockfd(struct p_amqp_host *);
 
 EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
 EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 
-EXT int p_amqp_connect(struct p_amqp_host *);
+EXT int p_amqp_connect_to_publish(struct p_amqp_host *);
+EXT int p_amqp_connect_to_consume(struct p_amqp_host *);
 EXT int p_amqp_publish_string(struct p_amqp_host *, char *);
 EXT int p_amqp_publish_binary(struct p_amqp_host *, void *, u_int32_t);
+EXT int p_amqp_consume_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
 

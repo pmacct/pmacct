@@ -253,7 +253,7 @@ void load_plugins(struct plugin_requests *req)
 	p_amqp_set_frame_max(&list->amqp_host, list->cfg.buffer_size);
 	p_amqp_set_content_type_binary(&list->amqp_host);
 
-	ret = p_amqp_connect(&list->amqp_host);
+	ret = p_amqp_connect_to_publish(&list->amqp_host);
       }
 #endif
     }
@@ -429,7 +429,7 @@ reprocess:
 	    // XXX: use existing time reference?
 	    if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < time(NULL))) {
 	      plugin_hooks_init_amqp_host();
-	      p_amqp_connect(&channels_list[index].plugin->amqp_host);
+	      p_amqp_connect_to_publish(&channels_list[index].plugin->amqp_host);
 	    }
 	  }
 	}

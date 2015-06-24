@@ -827,8 +827,8 @@ The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynam
 presents itself as part of the same Autonomous System - to ensure an iBGP relationship
 is established all the times. Also, the BGP daemon acts as a passive BGP neighbor and
 hence will never try to re-establish a fallen peering session.  
-For debugging purposes related to the BGP feed(s), the bgp_daemon_msglog configuration
-directive can be enabled in order to log UPDATE and WITHDRAW BGP events.
+For debugging purposes related to the BGP feed(s), bgp_daemon_msglog_* configuration
+directives can be enabled in order to log BGP messaging.
 
 XIIa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.

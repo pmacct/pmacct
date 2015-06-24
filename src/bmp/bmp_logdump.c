@@ -467,7 +467,7 @@ void bmp_handle_dump_event()
 #ifdef WITH_RABBITMQ
     if (config.bmp_dump_amqp_routing_key) {
       bmp_dump_init_amqp_host();
-      ret = p_amqp_connect(&bmp_dump_amqp_host);
+      ret = p_amqp_connect_to_publish(&bmp_dump_amqp_host);
       if (ret) exit(ret);
     }
 #endif

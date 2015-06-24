@@ -614,7 +614,7 @@ void bgp_handle_dump_event()
 #ifdef WITH_RABBITMQ
     if (config.bgp_table_dump_amqp_routing_key) {
       bgp_table_dump_init_amqp_host();
-      ret = p_amqp_connect(&bgp_table_dump_amqp_host);
+      ret = p_amqp_connect_to_publish(&bgp_table_dump_amqp_host);
       if (ret) exit(ret);
     }
 #endif

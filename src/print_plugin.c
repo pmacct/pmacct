@@ -56,6 +56,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host pipe_amqp_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -105,6 +109,28 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&idata, 0, sizeof(idata));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
+
+#ifdef WITH_RABBITMQ
+  if (config.pipe_amqp) {
+    // XXX: remove and prevent duplicate AMQP setup effort
+    char *amqp_rk = compose_plugin_amqp_routing_key(config.name, config.type);
+
+    p_amqp_init_host(&pipe_amqp_host);
+    p_amqp_set_user(&pipe_amqp_host, rabbitmq_user);
+    p_amqp_set_passwd(&pipe_amqp_host, rabbitmq_pwd);
+
+    p_amqp_set_exchange(&pipe_amqp_host, default_amqp_exchange);
+    p_amqp_set_routing_key(&pipe_amqp_host, amqp_rk);
+    p_amqp_set_exchange_type(&pipe_amqp_host, default_amqp_exchange_type);
+    p_amqp_set_host(&pipe_amqp_host, default_amqp_host);
+    p_amqp_set_vhost(&pipe_amqp_host, default_amqp_vhost);
+    p_amqp_set_frame_max(&pipe_amqp_host, config.buffer_size);
+    p_amqp_set_content_type_binary(&pipe_amqp_host);
+
+    ret = p_amqp_connect_to_consume(&pipe_amqp_host);
+    pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
+  }
+#endif
 
   pfd.fd = pipe_fd;
   pfd.events = POLLIN;
@@ -176,40 +202,45 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
-      read_data:
-      if (!pollagain) {
-        seq++;
-        seq %= MAX_SEQNUM;
-        if (seq == 0) rg_err_count = FALSE;
-      }
-      else {
-        if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
-	  exit_plugin(1); /* we exit silently; something happened at the write end */
-      }
-
-      if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
-
-      if (((struct ch_buf_hdr *)rg->ptr)->seq != seq) {
+      if (!config.pipe_amqp) {
+        read_data:
         if (!pollagain) {
-          pollagain = TRUE;
-          goto poll_again;
+          seq++;
+          seq %= MAX_SEQNUM;
+          if (seq == 0) rg_err_count = FALSE;
         }
         else {
-          rg_err_count++;
-          if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
-            Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
-            Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%u'.\n", config.pipe_size);
-            Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%u'.\n", config.buffer_size);
-            Log(LOG_ERR, "- increase system maximum socket size.\n\n");
-          }
-          seq = ((struct ch_buf_hdr *)rg->ptr)->seq;
+          if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
+	    exit_plugin(1); /* we exit silently; something happened at the write end */
         }
-      }
 
-      pollagain = FALSE;
-      memcpy(pipebuf, rg->ptr, bufsz);
-      rg->ptr += bufsz;
+        if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
+
+        if (((struct ch_buf_hdr *)rg->ptr)->seq != seq) {
+          if (!pollagain) {
+            pollagain = TRUE;
+            goto poll_again;
+          }
+          else {
+            rg_err_count++;
+            if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
+              Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
+              Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
+              Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%u'.\n", config.pipe_size);
+              Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%u'.\n", config.buffer_size);
+              Log(LOG_ERR, "- increase system maximum socket size.\n\n");
+            }
+            seq = ((struct ch_buf_hdr *)rg->ptr)->seq;
+          }
+        }
+
+        pollagain = FALSE;
+        memcpy(pipebuf, rg->ptr, bufsz);
+        rg->ptr += bufsz;
+      }
+#ifdef WITH_RABBITMQ
+      else p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
+#endif
 
       /* lazy refresh time handling */ 
       if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
