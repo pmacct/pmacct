@@ -110,8 +110,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
 
-#ifdef WITH_RABBITMQ
   if (config.pipe_amqp) {
+#ifdef WITH_RABBITMQ
     // XXX: remove and prevent duplicate AMQP setup effort
     char *amqp_rk = compose_plugin_amqp_routing_key(config.name, config.type);
 
@@ -129,12 +129,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     ret = p_amqp_connect_to_consume(&pipe_amqp_host);
     pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
-  }
+
+    // XXX: we sure we want to remain blocking?
 #endif
+  }
+  else setnonblocking(pipe_fd);
 
   pfd.fd = pipe_fd;
   pfd.events = POLLIN;
-  setnonblocking(pipe_fd);
 
   idata.now = time(NULL);
 
@@ -245,14 +247,20 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	if (ret) {
 	  time_t last_fail = p_amqp_get_last_fail(&pipe_amqp_host);
 
-	  // XXX: insert new fd in poll() pool
 	  if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < idata.now)) {
 	    plugin_init_amqp_host();
 	    p_amqp_connect_to_consume(&pipe_amqp_host);
+	    pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
+
+	    pfd.fd = pipe_fd;
+	    pfd.events = POLLIN;
           }
 
 	  goto poll_again; // XXX
         }
+	else {
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	}
       }
 #endif
 

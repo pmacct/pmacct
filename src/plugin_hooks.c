@@ -429,8 +429,8 @@ reprocess:
 	  }
 	}
 	/* sending the buffer to the AMQP broker */
-	else {
 #ifdef WITH_RABBITMQ
+	else {
 	  ret = p_amqp_publish_binary(&channels_list[index].plugin->amqp_host, channels_list[index].rg.ptr, channels_list[index].bufsize);
 
 	  if (ret) {

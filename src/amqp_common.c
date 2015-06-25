@@ -397,6 +397,7 @@ int p_amqp_consume_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
 
     switch (frame.payload.method.id) {
     case AMQP_BASIC_RETURN_METHOD:
+    case AMQP_BASIC_DELIVER_METHOD:
       amqp_host->ret = amqp_read_message(amqp_host->conn, frame.channel, &message, 0);
       if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): read message [E=%s RK=%s]\n",
@@ -413,7 +414,9 @@ int p_amqp_consume_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
     case AMQP_BASIC_ACK_METHOD:
     case AMQP_CHANNEL_CLOSE_METHOD:
     default:
-      // XXX
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_amqp_consume_binary(): frame payload method '%x' [E=%s RK=%s]\n",
+				config.name, config.type, frame.payload.method.id, amqp_host->exchange,
+				amqp_host->routing_key);
 
       break;
     }
