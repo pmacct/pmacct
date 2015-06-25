@@ -150,6 +150,7 @@ EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 #if defined WITH_RABBITMQ
 EXT char *compose_plugin_amqp_routing_key(char *, char *);
 EXT void plugin_hooks_init_amqp_host();
+EXT void plugin_init_amqp_host();
 #endif
 #undef EXT
 

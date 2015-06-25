@@ -33,13 +33,12 @@
 /* load_plugins() starts plugin processes; creates pipes
    and handles them inserting in channels_list structure */
 
-/* when not using map_shared, 'pipe_size' is the size of
-   the pipe created with socketpair(); when map_shared is
-   enabled, it refers to the size of the shared memory
-   area */
+/* no AMQP: when not using map_shared, 'pipe_size' is the size of the pipe
+   created with socketpair(); when map_shared is enabled, it refers to the
+   size of the shared memory area */
 void load_plugins(struct plugin_requests *req)
 {
-  u_int64_t buf_pipe_ratio_sz = 0;
+  u_int64_t buf_pipe_ratio_sz = 0, pipe_idx = 0;
   int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0, ret;
 
   int nfprobe_id = 0, min_sz = 0;
@@ -81,61 +80,67 @@ void load_plugins(struct plugin_requests *req)
 	}
       }
 
-      /* creating communication channel */
-      socketpair(AF_UNIX, SOCK_DGRAM, 0, list->pipe);
-
       /* some validations */
       if (list->cfg.pipe_size < min_sz) list->cfg.pipe_size = min_sz;
       if (list->cfg.buffer_size < min_sz) list->cfg.buffer_size = min_sz;
       if (list->cfg.buffer_size > list->cfg.pipe_size) list->cfg.buffer_size = list->cfg.pipe_size;
-
-      /* checking SO_RCVBUF and SO_SNDBUF values; if different we take the smaller one */
-      getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
-      getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
-      socklen = (rcv_buflen < snd_buflen) ? rcv_buflen : snd_buflen;
 
       /*  if required let's align plugin_buffer_size to  4 bytes boundary */
 #if NEED_ALIGN
       while (list->cfg.buffer_size % 4 != 0) list->cfg.buffer_size--;
 #endif
 
-      buf_pipe_ratio_sz = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
-      if (buf_pipe_ratio_sz > INT_MAX) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): Current plugin_buffer_size elems per plugin_pipe_size: %d. Max: %d.\nExiting.\n",
+      if (!list->cfg.pipe_amqp) {
+        /* creating communication channel */
+        socketpair(AF_UNIX, SOCK_DGRAM, 0, list->pipe);
+
+        /* checking SO_RCVBUF and SO_SNDBUF values; if different we take the smaller one */
+        getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
+        getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
+        socklen = (rcv_buflen < snd_buflen) ? rcv_buflen : snd_buflen;
+
+        buf_pipe_ratio_sz = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
+        if (buf_pipe_ratio_sz > INT_MAX) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Current plugin_buffer_size elems per plugin_pipe_size: %d. Max: %d.\nExiting.\n",
 		list->name, list->type.string, (list->cfg.pipe_size/list->cfg.buffer_size), (INT_MAX/sizeof(char *)));
-        exit_all(1);
-      }
-      else target_buflen = buf_pipe_ratio_sz;
+          exit_all(1);
+        }
+        else target_buflen = buf_pipe_ratio_sz;
 
-      if (target_buflen > socklen) {
-	Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &target_buflen, l);
-	Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &target_buflen, l);
-      }
-
-      getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
-      getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
-      if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
-
-      if (snd_buflen < socklen) {
-	Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &socklen, l);
-	Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &socklen, l);
+        if (target_buflen > socklen) {
+	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &target_buflen, l);
+	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &target_buflen, l);
+        }
 
         getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
         getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
         if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
-      }
 
-      if (list->cfg.debug || (list->cfg.pipe_size > WARNING_PIPE_SIZE)) {
-	Log(LOG_INFO, "INFO ( %s/%s ): plugin_pipe_size=%llu bytes plugin_buffer_size=%llu bytes\n", 
-	    list->name, list->type.string, list->cfg.pipe_size, list->cfg.buffer_size);
-	if (target_buflen <= snd_buflen) 
-          Log(LOG_INFO, "INFO ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
+        if (snd_buflen < socklen) {
+	  Setsocksize(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &socklen, l);
+	  Setsocksize(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &socklen, l);
+
+          getsockopt(list->pipe[0], SOL_SOCKET, SO_RCVBUF, &rcv_buflen, &l);
+          getsockopt(list->pipe[1], SOL_SOCKET, SO_SNDBUF, &snd_buflen, &l);
+          if (rcv_buflen < snd_buflen) snd_buflen = rcv_buflen;
+        }
+
+        if (list->cfg.debug || (list->cfg.pipe_size > WARNING_PIPE_SIZE)) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): plugin_pipe_size=%llu bytes plugin_buffer_size=%llu bytes\n", 
+		list->name, list->type.string, list->cfg.pipe_size, list->cfg.buffer_size);
+	  if (target_buflen <= snd_buflen) 
+            Log(LOG_INFO, "INFO ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
 		list->name, list->type.string, snd_buflen, target_buflen);
-	else
-	  /* This should return an error and exit but we fallback to a
-	     warning in order to be backward compatible */
-          Log(LOG_WARNING, "WARN ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
+	  else
+	    /* This should return an error and exit but we fallback to a
+	       warning in order to be backward compatible */
+            Log(LOG_WARNING, "WARN ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
 		list->name, list->type.string, snd_buflen, target_buflen);
+        }
+      }
+      else {
+	pipe_idx++;
+        list->pipe[0] = list->pipe[1] = pipe_idx;
       }
 
       list->cfg.name = list->name;
@@ -218,17 +223,19 @@ void load_plugins(struct plugin_requests *req)
 #endif
 
 #if defined HAVE_MALLOPT
-  mallopt(M_CHECK_ACTION, 0);
+        mallopt(M_CHECK_ACTION, 0);
 #endif
 
 	close(config.sock);
 	close(config.bgp_sock);
-	close(list->pipe[1]);
+	if (!list->cfg.pipe_amqp) close(list->pipe[1]);
 	(*list->type.func)(list->pipe[0], &list->cfg, chptr);
 	exit(0);
       default: /* Parent */
-	close(list->pipe[0]);
-	setnonblocking(list->pipe[1]);
+	if (!list->cfg.pipe_amqp) {
+	  close(list->pipe[0]);
+	  setnonblocking(list->pipe[1]);
+	}
 	break;
       }
 
@@ -405,22 +412,25 @@ reprocess:
 		channels_list[index].hdr.seq, channels_list[index].hdr.num);
 	}
 
-	if (channels_list[index].status->wakeup && !channels_list[index].plugin->cfg.pipe_amqp) {
-	  channels_list[index].status->backlog++;
+	if (!channels_list[index].plugin->cfg.pipe_amqp) {
+	  if (channels_list[index].status->wakeup) {
+	    channels_list[index].status->backlog++;
 	  
-	  if (channels_list[index].status->backlog > ((channels_list[index].plugin->cfg.pipe_size/channels_list[index].plugin->cfg.buffer_size)*channels_list[index].plugin->cfg.pipe_backlog)/100) {
-	    channels_list[index].status->wakeup = channels_list[index].request;
-            if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz) {
-	      struct plugins_list_entry *list = channels_list[index].plugin;
-	      Log(LOG_WARNING, "WARN ( %s/%s ): Failed during write: %s\n", list->name, list->type.string, strerror(errno));
+	    if (channels_list[index].status->backlog >
+		((channels_list[index].plugin->cfg.pipe_size/channels_list[index].plugin->cfg.buffer_size)
+		*channels_list[index].plugin->cfg.pipe_backlog)/100) {
+	      channels_list[index].status->wakeup = channels_list[index].request;
+              if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz) {
+	        struct plugins_list_entry *list = channels_list[index].plugin;
+	        Log(LOG_WARNING, "WARN ( %s/%s ): Failed during write: %s\n", list->name, list->type.string, strerror(errno));
+	      }
+	      channels_list[index].status->backlog = 0;
 	    }
-	    channels_list[index].status->backlog = 0;
 	  }
 	}
-
-#ifdef WITH_RABBITMQ
 	/* sending the buffer to the AMQP broker */
-	if (channels_list[index].plugin->cfg.pipe_amqp) {
+	else {
+#ifdef WITH_RABBITMQ
 	  ret = p_amqp_publish_binary(&channels_list[index].plugin->amqp_host, channels_list[index].rg.ptr, channels_list[index].bufsize);
 
 	  if (ret) {
@@ -509,6 +519,7 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->bufptr = chptr->buf;
       chptr->bufend = cfg->buffer_size-sizeof(struct ch_buf_hdr);
 
+      // XXX: no need to map_shared() if using AMQP
       /* +PKT_MSG_SIZE has been introduced as a margin as a
          countermeasure against the reception of malicious NetFlow v9
 	 templates */
@@ -724,6 +735,7 @@ void fill_pipe_buffer()
     ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = channels_list[index].hdr.seq;
     ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
 
+    // XXX: tackle AMQP case
     if (channels_list[index].status->wakeup) {
       channels_list[index].status->wakeup = channels_list[index].request;
       if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz)
@@ -865,6 +877,11 @@ char *compose_plugin_amqp_routing_key(char *name, char *type)
 
 #if defined WITH_RABBITMQ
 void plugin_hooks_init_amqp_host()
+{
+  // XXX
+}
+
+void plugin_init_amqp_host()
 {
   // XXX
 }

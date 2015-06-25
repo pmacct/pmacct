@@ -202,8 +202,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
+      read_data:
       if (!config.pipe_amqp) {
-        read_data:
         if (!pollagain) {
           seq++;
           seq %= MAX_SEQNUM;
@@ -239,7 +239,21 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         rg->ptr += bufsz;
       }
 #ifdef WITH_RABBITMQ
-      else p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
+      else {
+        ret = p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
+
+	if (ret) {
+	  time_t last_fail = p_amqp_get_last_fail(&pipe_amqp_host);
+
+	  // XXX: insert new fd in poll() pool
+	  if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < idata.now)) {
+	    plugin_init_amqp_host();
+	    p_amqp_connect_to_consume(&pipe_amqp_host);
+          }
+
+	  goto poll_again; // XXX
+        }
+      }
 #endif
 
       /* lazy refresh time handling */ 
@@ -275,7 +289,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           data = (struct pkt_data *) dataptr;
 	}
       }
-      goto read_data;
+      if (!config.pipe_amqp) goto read_data;
     }
   }
 }
