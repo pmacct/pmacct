@@ -128,9 +128,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     p_amqp_set_content_type_binary(&pipe_amqp_host);
 
     ret = p_amqp_connect_to_consume(&pipe_amqp_host);
-    pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
-
-    // XXX: we sure we want to remain blocking?
+    if (!ret) pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
+    else pipe_fd = ERR;
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -177,7 +176,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_again:
     status->wakeup = TRUE;
     calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
-    ret = poll(&pfd, 1, timeout);
+    
+    ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
 
     if (ret <= 0) {
       if (getppid() == 1) {
@@ -202,6 +202,21 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     switch (ret) {
     case 0: /* timeout */
       P_cache_handle_flush_event(&pt);
+
+      if (config.pipe_amqp && pfd.fd == ERR) {
+        time_t last_fail = p_amqp_get_last_fail(&pipe_amqp_host);
+
+        if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < idata.now)) {
+          plugin_init_amqp_host();
+          ret = p_amqp_connect_to_consume(&pipe_amqp_host);
+          if (!ret) pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
+          else pipe_fd = ERR;
+
+          pfd.fd = pipe_fd;
+          pfd.events = POLLIN;
+        }
+      }
+
       break;
     default: /* we received data */
       read_data:
@@ -242,23 +257,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 #ifdef WITH_RABBITMQ
       else {
-        ret = p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
-
-	if (ret) {
-	  time_t last_fail = p_amqp_get_last_fail(&pipe_amqp_host);
-
-	  if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < idata.now)) {
-	    plugin_init_amqp_host();
-	    p_amqp_connect_to_consume(&pipe_amqp_host);
-	    pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
-
-	    pfd.fd = pipe_fd;
-	    pfd.events = POLLIN;
-          }
-
-	  goto poll_again; // XXX
-        }
+	if (pfd.revents == POLLNVAL) {
+	  pfd.fd = ERR;
+	  memset(pipebuf, 0, config.buffer_size);
+	}
 	else {
+          ret = p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
 	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
 	}
       }
@@ -297,6 +301,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           data = (struct pkt_data *) dataptr;
 	}
       }
+
       if (!config.pipe_amqp) goto read_data;
     }
   }

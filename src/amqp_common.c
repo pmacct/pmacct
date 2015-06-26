@@ -235,6 +235,8 @@ int p_amqp_connect_to_publish(struct p_amqp_host *amqp_host)
     amqp_host->msg_props.delivery_mode = 2; /* persistent delivery */
   }
 
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection successful to RabbitMQ: p_amqp_connect_to_publish()\n", config.name, config.type);
+
   p_amqp_unset_last_fail(amqp_host);
   return SUCCESS;
 }
@@ -297,6 +299,11 @@ int p_amqp_connect_to_consume(struct p_amqp_host *amqp_host)
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
+ 
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection successful to RabbitMQ: p_amqp_connect_to_consume()\n", config.name, config.type);
+
+  p_amqp_unset_last_fail(amqp_host);
+  return SUCCESS;
 }
 
 int p_amqp_publish_string(struct p_amqp_host *amqp_host, char *json_str)
