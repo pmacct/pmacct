@@ -275,15 +275,42 @@ int p_amqp_connect_to_consume(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
-  amqp_queue_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->routing_key), 0, 0, 0, 1, amqp_empty_table);
+#if AMQP_VERSION_MAJOR <= 0 && AMQP_VERSION_MINOR <= 5 && AMQP_VERSION_PATCH <= 2
+  amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
+			 amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, amqp_empty_table);
+#else
+  amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
+			 amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, 0, 0, amqp_empty_table);
+#endif
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): queue declare\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): amqp_exchange_declare()\n", config.name, config.type);
     p_amqp_close(amqp_host, TRUE);
     return ERR;
   }
+
+  {
+    amqp_queue_declare_ok_t *ret_qd;
+
+    ret_qd = amqp_queue_declare(amqp_host->conn, 1, amqp_empty_bytes, 0, 0, 1, 1, amqp_empty_table);
+    amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
+
+    if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): queue declare\n", config.name, config.type);
+      p_amqp_close(amqp_host, TRUE);
+      return ERR;
+    }
+    else {
+      amqp_host->queue = amqp_bytes_malloc_dup(ret_qd->queue);
+      if (!amqp_host->queue.bytes) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): amqp_bytes_malloc_dup()\n", config.name, config.type);
+        p_amqp_close(amqp_host, TRUE);
+        return ERR;
+      }
+    }
+  }
  
-  amqp_queue_bind(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->routing_key), amqp_cstring_bytes(amqp_host->exchange),
+  amqp_queue_bind(amqp_host->conn, 1, amqp_host->queue, amqp_cstring_bytes(amqp_host->exchange),
 			amqp_cstring_bytes(amqp_host->routing_key), amqp_empty_table);
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
@@ -292,7 +319,7 @@ int p_amqp_connect_to_consume(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
-  amqp_basic_consume(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->routing_key), amqp_empty_bytes, 0, 1, 0, amqp_empty_table);
+  amqp_basic_consume(amqp_host->conn, 1, amqp_host->queue, amqp_empty_bytes, 0, 1, 0, amqp_empty_table);
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): basic consume\n", config.name, config.type);

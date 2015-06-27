@@ -51,6 +51,7 @@ struct p_amqp_host {
   amqp_connection_state_t conn;
   amqp_socket_t *socket;
   amqp_rpc_reply_t ret;
+  amqp_bytes_t queue;
   struct amqp_basic_properties_t_ msg_props;
   int status;
   time_t last_fail;
