@@ -409,54 +409,55 @@ int p_amqp_consume_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
 
   amqp_host->ret = amqp_consume_message(amqp_host->conn, &envelope, NULL, 0);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary() [E=%s RK=%s]\n",
-				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
-    p_amqp_close(amqp_host, TRUE);
-    return ERR;
-  }
-  else {
-    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): receive from RabbitMQ: p_amqp_consume_binary() [E=%s RK=%s]\n",
-				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
-  }
-
-  if (amqp_simple_wait_frame(amqp_host->conn, &frame) != AMQP_STATUS_OK) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): wait frame [E=%s RK=%s]\n",
-				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
-    p_amqp_close(amqp_host, TRUE);
-    return ERR;
-  }
-
-  if (frame.frame_type == AMQP_FRAME_METHOD) {
-    amqp_message_t message;
-
-    switch (frame.payload.method.id) {
-    case AMQP_BASIC_RETURN_METHOD:
-    case AMQP_BASIC_DELIVER_METHOD:
-      amqp_host->ret = amqp_read_message(amqp_host->conn, frame.channel, &message, 0);
-      if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): read message [E=%s RK=%s]\n",
+    if (amqp_host->ret.reply_type == AMQP_RESPONSE_LIBRARY_EXCEPTION && amqp_host->ret.library_error == AMQP_STATUS_UNEXPECTED_STATE) { 
+      if (amqp_simple_wait_frame(amqp_host->conn, &frame) != AMQP_STATUS_OK) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): wait frame [E=%s RK=%s]\n",
 				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
         p_amqp_close(amqp_host, TRUE);
         return ERR;
       }
 
-      if (data && data_len) memcpy(data, message.body.bytes, MIN(message.body.len, data_len));
+      if (frame.frame_type == AMQP_FRAME_METHOD) {
+        amqp_message_t message;
 
-      amqp_destroy_message(&message);
-
-      break;
-    case AMQP_BASIC_ACK_METHOD:
-    case AMQP_CHANNEL_CLOSE_METHOD:
-    default:
-      Log(LOG_WARNING, "WARN ( %s/%s ): p_amqp_consume_binary(): frame payload method '%x' [E=%s RK=%s]\n",
+        Log(LOG_DEBUG , "DEBUG ( %s/%s ): p_amqp_consume_binary(): frame payload method '%x' [E=%s RK=%s]\n",
 				config.name, config.type, frame.payload.method.id, amqp_host->exchange,
 				amqp_host->routing_key);
 
-      break;
-    }
-  } 
+	switch (frame.payload.method.id) {
+	case AMQP_BASIC_RETURN_METHOD:
+	  amqp_host->ret = amqp_read_message(amqp_host->conn, frame.channel, &message, 0);
+          if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): read mandatory message [E=%s RK=%s]\n",
+				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+            p_amqp_close(amqp_host, TRUE);
+            return ERR;
+          }
 
-  amqp_destroy_envelope(&envelope);
+          amqp_destroy_message(&message);
+
+          break;
+        case AMQP_BASIC_ACK_METHOD:
+        case AMQP_CHANNEL_CLOSE_METHOD:
+	case AMQP_CONNECTION_CLOSE_METHOD:
+        default:
+          break;
+	}
+      }
+    }
+  }
+  else {
+    if (data && data_len) {
+      // XXX: brief check over content type and/or properties?
+
+      memcpy(data, envelope.message.body.bytes, MIN(envelope.message.body.len, data_len));
+    }
+
+    amqp_destroy_envelope(&envelope);
+
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): receive from RabbitMQ: p_amqp_consume_binary() [E=%s RK=%s]\n",
+                        config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+  }
 
   return SUCCESS;
 }

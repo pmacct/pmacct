@@ -257,9 +257,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 #ifdef WITH_RABBITMQ
       else {
-	if (pfd.revents == POLLNVAL) {
+	if (pfd.revents != POLLIN) {
 	  pfd.fd = ERR;
+	  pfd.events = POLLIN;
 	  memset(pipebuf, 0, config.buffer_size);
+
+          Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: poll() [E=%s RK=%s]\n",
+		config.name, config.type, pipe_amqp_host.exchange, pipe_amqp_host.routing_key);
+	  p_amqp_close(&pipe_amqp_host, TRUE);
 	}
 	else {
           ret = p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
