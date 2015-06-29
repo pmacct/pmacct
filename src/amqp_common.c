@@ -31,8 +31,9 @@ void p_amqp_init_host(struct p_amqp_host *amqp_host)
 {
   if (amqp_host) {
     memset(amqp_host, 0, sizeof(struct p_amqp_host));
-    amqp_host->frame_max = AMQP_DEFAULT_FRAME_SIZE;
-    amqp_host->heartbeat_interval = AMQP_DEFAULT_HEARTBEAT;
+    p_amqp_set_frame_max(amqp_host, AMQP_DEFAULT_FRAME_SIZE);
+    p_amqp_set_heartbeat_interval(amqp_host, AMQP_DEFAULT_HEARTBEAT);
+    p_amqp_set_retry_interval(amqp_host, AMQP_DEFAULT_RETRY);
   }
 }
 
@@ -107,7 +108,7 @@ void p_amqp_set_frame_max(struct p_amqp_host *amqp_host, u_int32_t opt)
   }
 }
 
-void p_amqp_set_heartbeat_interval(struct p_amqp_host *amqp_host, u_int32_t opt)
+void p_amqp_set_heartbeat_interval(struct p_amqp_host *amqp_host, int opt)
 {
   if (amqp_host) {
     amqp_host->heartbeat_interval = opt;
@@ -152,11 +153,25 @@ void p_amqp_unset_last_fail(struct p_amqp_host *amqp_host)
   if (amqp_host) amqp_host->last_fail = FALSE;
 }
 
+void p_amqp_set_retry_interval(struct p_amqp_host *amqp_host, int interval)
+{
+  if (amqp_host) amqp_host->retry_interval = interval;
+}
+
+int p_amqp_get_retry_interval(struct p_amqp_host *amqp_host)
+{
+  if (amqp_host) return amqp_host->retry_interval;
+
+  return ERR;
+}
+
 int p_amqp_get_sockfd(struct p_amqp_host *amqp_host)
 {
-  if (amqp_host) return amqp_get_sockfd(amqp_host->conn);
+  if (amqp_host) {
+    if (!p_amqp_get_last_fail(amqp_host)) return amqp_get_sockfd(amqp_host->conn);
+  }
 
-  return 0;
+  return ERR;
 }
 
 int p_amqp_connect_to_publish(struct p_amqp_host *amqp_host)

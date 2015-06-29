@@ -245,22 +245,8 @@ void load_plugins(struct plugin_requests *req)
       /* amqp handling if required so */
 #ifdef WITH_RABBITMQ
       if (list->cfg.pipe_amqp) {
-	char *amqp_rk = compose_plugin_amqp_routing_key(list->cfg.name, list->type.string);
-
-	// XXX: todo: give possibility to configure nuances: host, user, password, etc. 
-	p_amqp_init_host(&list->amqp_host);
-	p_amqp_set_user(&list->amqp_host, rabbitmq_user);
-	p_amqp_set_passwd(&list->amqp_host, rabbitmq_pwd);
-
-	p_amqp_set_exchange(&list->amqp_host, default_amqp_exchange);
-	p_amqp_set_routing_key(&list->amqp_host, amqp_rk);
-	p_amqp_set_exchange_type(&list->amqp_host, default_amqp_exchange_type);
-	p_amqp_set_host(&list->amqp_host, default_amqp_host);
-	p_amqp_set_vhost(&list->amqp_host, default_amqp_vhost);
-	p_amqp_set_frame_max(&list->amqp_host, list->cfg.buffer_size);
-	p_amqp_set_content_type_binary(&list->amqp_host);
-
-	ret = p_amqp_connect_to_publish(&list->amqp_host);
+        plugin_pipe_amqp_init_host(&chptr->amqp_host, list);
+	p_amqp_connect_to_publish(&chptr->amqp_host);
       }
 #endif
     }
@@ -431,15 +417,17 @@ reprocess:
 	/* sending the buffer to the AMQP broker */
 #ifdef WITH_RABBITMQ
 	else {
-	  ret = p_amqp_publish_binary(&channels_list[index].plugin->amqp_host, channels_list[index].rg.ptr, channels_list[index].bufsize);
+	  struct channels_list_entry *chptr = &channels_list[index];
+
+	  ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
 
 	  if (ret) {
-	    time_t last_fail = p_amqp_get_last_fail(&channels_list[index].plugin->amqp_host);
+	    time_t last_fail = p_amqp_get_last_fail(&chptr->amqp_host);
 
 	    // XXX: use existing time reference?
-	    if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < time(NULL))) {
-	      plugin_hooks_init_amqp_host();
-	      p_amqp_connect_to_publish(&channels_list[index].plugin->amqp_host);
+	    if (last_fail && ((last_fail + p_amqp_get_retry_interval(&chptr->amqp_host)) < time(NULL))) {
+	      plugin_pipe_amqp_init_host(&chptr->amqp_host, chptr->plugin);
+	      p_amqp_connect_to_publish(&chptr->amqp_host);
 	    }
 	  }
 	}
@@ -875,14 +863,26 @@ char *compose_plugin_amqp_routing_key(char *name, char *type)
   return rk;
 }
 
-#if defined WITH_RABBITMQ
-void plugin_hooks_init_amqp_host()
+#ifdef WITH_RABBITMQ
+void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_list_entry *list)
 {
-  // XXX
-}
+  int ret;
 
-void plugin_init_amqp_host()
-{
-  // XXX
+  if (amqp_host) {
+    char *amqp_rk = compose_plugin_amqp_routing_key(list->cfg.name, list->cfg.type);
+
+    // XXX: todo: give possibility to configure nuances: host, user, password, etc. 
+    p_amqp_init_host(amqp_host);
+    p_amqp_set_user(amqp_host, rabbitmq_user);
+    p_amqp_set_passwd(amqp_host, rabbitmq_pwd);
+
+    p_amqp_set_exchange(amqp_host, default_amqp_exchange);
+    p_amqp_set_routing_key(amqp_host, amqp_rk);
+    p_amqp_set_exchange_type(amqp_host, default_amqp_exchange_type);
+    p_amqp_set_host(amqp_host, default_amqp_host);
+    p_amqp_set_vhost(amqp_host, default_amqp_vhost);
+    p_amqp_set_frame_max(amqp_host, list->cfg.buffer_size);
+    p_amqp_set_content_type_binary(amqp_host);
+  }
 }
 #endif

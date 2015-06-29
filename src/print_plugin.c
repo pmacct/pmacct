@@ -43,6 +43,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int timeout, ret, num, is_event;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   struct networks_file_data nfd;
@@ -57,7 +58,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *dataptr;
 
 #ifdef WITH_RABBITMQ
-  struct p_amqp_host pipe_amqp_host;
+  struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
 #endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -112,24 +113,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (config.pipe_amqp) {
 #ifdef WITH_RABBITMQ
-    // XXX: remove and prevent duplicate AMQP setup effort
-    char *amqp_rk = compose_plugin_amqp_routing_key(config.name, config.type);
-
-    p_amqp_init_host(&pipe_amqp_host);
-    p_amqp_set_user(&pipe_amqp_host, rabbitmq_user);
-    p_amqp_set_passwd(&pipe_amqp_host, rabbitmq_pwd);
-
-    p_amqp_set_exchange(&pipe_amqp_host, default_amqp_exchange);
-    p_amqp_set_routing_key(&pipe_amqp_host, amqp_rk);
-    p_amqp_set_exchange_type(&pipe_amqp_host, default_amqp_exchange_type);
-    p_amqp_set_host(&pipe_amqp_host, default_amqp_host);
-    p_amqp_set_vhost(&pipe_amqp_host, default_amqp_vhost);
-    p_amqp_set_frame_max(&pipe_amqp_host, config.buffer_size);
-    p_amqp_set_content_type_binary(&pipe_amqp_host);
-
-    ret = p_amqp_connect_to_consume(&pipe_amqp_host);
-    if (!ret) pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
-    else pipe_fd = ERR;
+    plugin_pipe_amqp_init_host(amqp_host, plugin_data);
+    p_amqp_connect_to_consume(amqp_host);
+    pipe_fd = p_amqp_get_sockfd(amqp_host);
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -204,13 +190,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       P_cache_handle_flush_event(&pt);
 
       if (config.pipe_amqp && pfd.fd == ERR) {
-        time_t last_fail = p_amqp_get_last_fail(&pipe_amqp_host);
+        time_t last_fail = p_amqp_get_last_fail(amqp_host);
 
-        if (last_fail && ((last_fail + AMQP_DEFAULT_RETRY) < idata.now)) {
-          plugin_init_amqp_host();
-          ret = p_amqp_connect_to_consume(&pipe_amqp_host);
-          if (!ret) pipe_fd = p_amqp_get_sockfd(&pipe_amqp_host);
-          else pipe_fd = ERR;
+        if (last_fail && ((last_fail + p_amqp_get_retry_interval(amqp_host)) < idata.now)) {
+	  plugin_pipe_amqp_init_host(amqp_host, plugin_data);
+	  p_amqp_connect_to_consume(amqp_host);
+	  pipe_fd = p_amqp_get_sockfd(amqp_host);
 
           pfd.fd = pipe_fd;
           pfd.events = POLLIN;
@@ -263,11 +248,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  memset(pipebuf, 0, config.buffer_size);
 
           Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: poll() [E=%s RK=%s]\n",
-		config.name, config.type, pipe_amqp_host.exchange, pipe_amqp_host.routing_key);
-	  p_amqp_close(&pipe_amqp_host, TRUE);
+		config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+	  p_amqp_close(amqp_host, TRUE);
 	}
 	else {
-          ret = p_amqp_consume_binary(&pipe_amqp_host, pipebuf, config.buffer_size);
+          ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
 	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
 	}
       }

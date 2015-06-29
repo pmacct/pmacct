@@ -463,7 +463,8 @@ KEY:            amqp_heartbeat_interval
 DESC:           Defines the heartbeat interval in order to detect general failures of the RabbitMQ server.
                 The value is expected in seconds. By default the heartbeat mechanism is disabled with a
 		value of zero. According to RabbitMQ C API, detection takes place only upon publishing a
-		JSON message, ie. not at login or if idle.
+		JSON message, ie. not at login or if idle. The maximum value supported is INT_MAX (or
+		2147483647).
 DEFAULT:	0
 
 KEY:		[ bgp_daemon_msglog_amqp_heartbeat_interval | bgp_table_dump_heartbeat_interval |
