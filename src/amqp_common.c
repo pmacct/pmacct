@@ -516,3 +516,44 @@ void p_amqp_handle_routing_key_dyn_rr(char *new, int newlen, char *old, struct p
   rk_rr->next++;
   rk_rr->next %= rk_rr->max; 
 }
+
+struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *amqp_host, int *flag)
+{
+  struct p_amqp_sleeper *pas;
+  int size = sizeof(struct p_amqp_sleeper);
+
+  if (!amqp_host || !flag) return;
+
+  pas = malloc(size);
+
+  if (pas) {
+    memset(pas, 0, size); 
+    pas->interval = p_amqp_get_retry_interval(amqp_host);
+    pas->do_reconnect = flag;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): p_amqp_sleeper_define(): malloc() failed\n", config.name, config.type);
+    return NULL;
+  }
+  
+  return pas;
+}
+
+void p_amqp_sleeper_free(struct p_amqp_sleeper **pas)
+{
+  if (!pas || !(*pas)) return;
+
+  free((*pas));
+  (*pas) = NULL;
+}
+
+void p_amqp_sleeper_func(struct p_amqp_sleeper *pas)
+{
+  if (!pas || !pas->interval || !pas->do_reconnect) return;
+
+  sleep(pas->interval);
+  
+  (*pas->do_reconnect) = TRUE;
+
+  p_amqp_sleeper_free(&pas);
+}

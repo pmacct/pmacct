@@ -418,18 +418,39 @@ reprocess:
 #ifdef WITH_RABBITMQ
 	else {
 	  struct channels_list_entry *chptr = &channels_list[index];
+	  struct plugins_list_entry *list = chptr->plugin;
+
+#if defined ENABLE_THREADS
+          if (chptr->amqp_host_reconnect) {
+            Log(LOG_DEBUG, "DEBUG ( %s/%s ): Reconnect timer to RabbitMQ: expired\n",
+                  list->name, list->type.string);
+
+            plugin_pipe_amqp_init_host(&chptr->amqp_host, chptr->plugin);
+            p_amqp_connect_to_publish(&chptr->amqp_host);
+
+            deallocate_thread_pool((thread_pool_t **) &chptr->amqp_host_sleep);
+            chptr->amqp_host_reconnect = FALSE;
+          }
+#endif
 
 	  ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
 
+#if defined ENABLE_THREADS
 	  if (ret) {
-	    time_t last_fail = p_amqp_get_last_fail(&chptr->amqp_host);
+	    if (!chptr->amqp_host_sleep) {
+	      struct p_amqp_sleeper *pas;
 
-	    // XXX: use existing time reference?
-	    if (last_fail && ((last_fail + p_amqp_get_retry_interval(&chptr->amqp_host)) < time(NULL))) {
-	      plugin_pipe_amqp_init_host(&chptr->amqp_host, chptr->plugin);
-	      p_amqp_connect_to_publish(&chptr->amqp_host);
+	      chptr->amqp_host_sleep = allocate_thread_pool(1);
+	      assert(chptr->amqp_host_sleep);
+
+	      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Reconnect timer to RabbitMQ: set to (a minimum of) %d secs\n",
+		list->name, list->type.string, p_amqp_get_retry_interval(&chptr->amqp_host));
+
+	      pas = p_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect);
+	      send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, p_amqp_sleeper_func, pas);
 	    }
 	  }
+#endif
 	}
 #endif
 

@@ -59,6 +59,11 @@ struct p_amqp_host {
   int retry_interval;
 };
 
+struct p_amqp_sleeper {
+  int interval;
+  int *do_reconnect;
+};
+
 /* prototypes */
 #if (!defined __AMQP_COMMON_C)
 #define EXT extern
@@ -101,6 +106,10 @@ EXT int p_amqp_publish_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT int p_amqp_consume_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
+
+EXT struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *, int *);
+EXT void p_amqp_sleeper_free(struct p_amqp_sleeper **);
+EXT void p_amqp_sleeper_func(struct p_amqp_sleeper *);
 
 EXT void p_amqp_handle_routing_key_dyn_rr(char *, int, char *, struct p_amqp_rk_rr *);
 

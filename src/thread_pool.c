@@ -1,6 +1,6 @@
 /*
-    Thread pool implementation for pmacct
-    Copyright (C) 2006 Francois Deppierraz
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -19,29 +19,16 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/*
+    Original thread pool implementation for pmacct is:
+    Copyright (C) 2006 Francois Deppierraz
+*/
+
 #define __THREAD_POOL_C
 
 /* includes */
 #include "pmacct.h"
 #include "thread_pool.h"
-
-#if THREAD_DEBUG
-  int debug_pthread_mutex_lock(pthread_mutex_t *mutex) {
-    printf("Locking mutex 0x%x\n", (unsigned int) mutex);
-    fflush(stdout);
-    return pthread_mutex_lock(mutex);
-  }
-
-  int debug_pthread_mutex_unlock(pthread_mutex_t *mutex) {
-    printf("Unlocking mutex 0x%x\n", (unsigned int) mutex);
-    fflush(stdout);
-    return pthread_mutex_unlock(mutex);
-  }
-
-  #define pthread_mutex_lock    debug_pthread_mutex_lock
-  #define pthread_mutex_unlock  debug_pthread_mutex_unlock
-#endif
-
 
 thread_pool_t *allocate_thread_pool(int count)
 {
@@ -108,7 +95,7 @@ thread_pool_t *allocate_thread_pool(int count)
   return pool;
 }
 
-void desallocate_thread_pool(thread_pool_t *pool)
+void deallocate_thread_pool(thread_pool_t **pool)
 {
   thread_pool_item_t *worker;
 
@@ -132,15 +119,14 @@ void desallocate_thread_pool(thread_pool_t *pool)
     worker = worker->next;
     free(worker);
   }
-  free(pool);
+
+  free((*pool));
+  (*pool) = NULL;
 }
 
 void *thread_runner(void *arg)
 {
   thread_pool_item_t *self = (thread_pool_item_t *) arg;
-#if DEBUG_TIMING
-  struct mytimer t1;
-#endif
 
   pthread_mutex_lock(self->mutex);
   self->go = 0;
@@ -154,21 +140,7 @@ void *thread_runner(void *arg)
     while (!self->go)
       pthread_cond_wait(self->cond, self->mutex);
 
-#if DEBUG
-    fprintf(stderr, "[R] Thread 0x%x is working\n", self);
-#endif
-
-#if DEBUG_TIMING
-    start_timer(&t1);
-#endif
     (*self->function)(self->data);
-#if DEBUG_TIMING
-    stop_timer(&t1, "function:0x%x", self);
-#endif
-
-#if DEBUG
-    fprintf(stderr, "[R] Thread 0x%x has finished\n", self);
-#endif
 
     self->usage++;
     self->go = 0;
@@ -184,16 +156,9 @@ void *thread_runner(void *arg)
   pthread_exit(NULL);
 }
 
-void send_to_pool(thread_pool_t *pool, void *function, struct packet_ptrs *data)
+void send_to_pool(thread_pool_t *pool, void *function, void *data)
 {
   thread_pool_item_t *worker;
-#if DEBUG_TIMING
-  struct mytimer t0;
-#endif
-
-#if DEBUG_TIMING
-  start_timer(&t0);
-#endif
 
   pthread_mutex_lock(pool->mutex);
   while (pool->free_list == NULL)
@@ -213,8 +178,4 @@ void send_to_pool(thread_pool_t *pool, void *function, struct packet_ptrs *data)
 
   pthread_cond_signal(worker->cond);
   pthread_mutex_unlock(worker->mutex);
-
-#if DEBUG_TIMING
-  stop_timer(&t0, "send_to_pool:");
-#endif
 }

@@ -1,6 +1,6 @@
 /*
-    Thread pool implementation for pmacct
-    Copyright (C) 2006 Francois Deppierraz
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -19,6 +19,11 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/*
+    Original thread pool implementation for pmacct is:
+    Copyright (C) 2006 Francois Deppierraz
+*/
+
 #ifndef _THREAD_POOL_H_
 #define _THREAD_POOL_H_
 
@@ -26,8 +31,6 @@
 #include <assert.h> /* for assert() */
 #include <sys/errno.h> /* for EBUSY */
 
-#define DEBUG        0
-#define THREAD_DEBUG 0
 #define DEFAULT_TH_NUM 10
 
 typedef struct thread_pool_item {
@@ -63,9 +66,9 @@ typedef struct thread_pool {
 #else
 #define EXT
 #endif
-EXT thread_pool_t *allocate_thread_pool(int count);
-EXT void desallocate_thread_pool(thread_pool_t *pool);
-EXT void send_to_pool(thread_pool_t *pool, void *function, struct packet_ptrs *data);
+EXT thread_pool_t *allocate_thread_pool(int);
+EXT void deallocate_thread_pool(thread_pool_t **);
+EXT void send_to_pool(thread_pool_t *, void *, void *);
 EXT void *thread_runner(void *);
 #undef EXT
 

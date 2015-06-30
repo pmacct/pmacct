@@ -110,6 +110,8 @@ struct channels_list_entry {
   struct extra_primitives extras;			/* offset for non-standard aggregation primitives structures */
 #ifdef WITH_RABBITMQ
   struct p_amqp_host amqp_host;
+  int amqp_host_reconnect;				/* flag need to reconnect to RabbitMQ server */ 
+  void *amqp_host_sleep;				/* pointer to the sleep thread (in case of reconnection) */
 #endif
 };
 
@@ -146,6 +148,7 @@ EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 #if defined WITH_RABBITMQ
 EXT char *compose_plugin_amqp_routing_key(char *, char *);
+EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
 #endif
 #undef EXT
 
@@ -178,13 +181,5 @@ EXT void mongodb_plugin(int, struct configuration *, void *);
 
 #ifdef WITH_RABBITMQ
 EXT void amqp_plugin(int, struct configuration *, void *);
-#endif
-
-EXT void stats_plugin(int, struct configuration *, void *);
-
-EXT char *extract_token(char **, int);
-
-#ifdef WITH_RABBITMQ
-EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
 #endif
 #undef EXT
