@@ -735,21 +735,28 @@ void init_random_seed()
 
 void fill_pipe_buffer()
 {
+  struct channels_list_entry *chptr;
   int index;
 
   for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
-    channels_list[index].hdr.seq++;
-    channels_list[index].hdr.seq %= MAX_SEQNUM;
+    chptr = &channels_list[index];
 
-    ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = channels_list[index].hdr.seq;
-    ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
+    chptr->hdr.seq++;
+    chptr->hdr.seq %= MAX_SEQNUM;
 
-    // XXX: tackle AMQP case
-    if (channels_list[index].status->wakeup) {
-      channels_list[index].status->wakeup = channels_list[index].request;
-      if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz)
-	Log(LOG_WARNING, "WARN: Failed during write: %s\n", strerror(errno));
+    ((struct ch_buf_hdr *)chptr->rg.ptr)->seq = chptr->hdr.seq;
+    ((struct ch_buf_hdr *)chptr->rg.ptr)->num = chptr->hdr.num;
+
+    if (!chptr->plugin->cfg.pipe_amqp) {
+      if (chptr->status->wakeup) {
+        chptr->status->wakeup = chptr->request;
+        if (write(chptr->pipe, &chptr->rg.ptr, CharPtrSz) != CharPtrSz)
+	  Log(LOG_WARNING, "WARN: Failed during write: %s\n", strerror(errno));
+      }
     }
+#ifdef WITH_RABBITMQ
+    else p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
+#endif
   }
 }
 
@@ -892,17 +899,26 @@ void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_li
   if (amqp_host) {
     char *amqp_rk = compose_plugin_amqp_routing_key(list->cfg.name, list->cfg.type);
 
-    // XXX: todo: give possibility to configure nuances: host, user, password, etc. 
     p_amqp_init_host(amqp_host);
-    p_amqp_set_user(amqp_host, rabbitmq_user);
-    p_amqp_set_passwd(amqp_host, rabbitmq_pwd);
 
-    p_amqp_set_exchange(amqp_host, default_amqp_exchange);
-    p_amqp_set_routing_key(amqp_host, amqp_rk);
-    p_amqp_set_exchange_type(amqp_host, default_amqp_exchange_type);
-    p_amqp_set_host(amqp_host, default_amqp_host);
-    p_amqp_set_vhost(amqp_host, default_amqp_vhost);
+    if (!config.pipe_amqp_user) config.pipe_amqp_user = rabbitmq_user;
+    if (!config.pipe_amqp_passwd) config.pipe_amqp_passwd = rabbitmq_pwd;
+    if (!config.pipe_amqp_exchange) config.pipe_amqp_exchange = default_amqp_exchange;
+    if (!config.pipe_amqp_host) config.pipe_amqp_host = default_amqp_host;
+    if (!config.pipe_amqp_vhost) config.pipe_amqp_vhost = default_amqp_vhost;
+    if (!config.pipe_amqp_routing_key) config.pipe_amqp_routing_key = amqp_rk;
+    if (!config.pipe_amqp_retry) config.pipe_amqp_retry = AMQP_DEFAULT_RETRY;
+
+    p_amqp_set_user(amqp_host, config.pipe_amqp_user);
+    p_amqp_set_passwd(amqp_host, config.pipe_amqp_passwd);
+    p_amqp_set_exchange(amqp_host, config.pipe_amqp_exchange);
+    p_amqp_set_host(amqp_host, config.pipe_amqp_host);
+    p_amqp_set_vhost(amqp_host, config.pipe_amqp_vhost);
+    p_amqp_set_routing_key(amqp_host, config.pipe_amqp_routing_key);
+    p_amqp_set_retry_interval(amqp_host, config.pipe_amqp_retry);
+
     p_amqp_set_frame_max(amqp_host, list->cfg.buffer_size);
+    p_amqp_set_exchange_type(amqp_host, default_amqp_exchange_type);
     p_amqp_set_content_type_binary(amqp_host);
   }
 }

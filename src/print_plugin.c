@@ -189,6 +189,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     case 0: /* timeout */
       P_cache_handle_flush_event(&pt);
 
+#ifdef WITH_RABBITMQ
       if (config.pipe_amqp && pfd.fd == ERR) {
         time_t last_fail = p_amqp_get_last_fail(amqp_host);
 
@@ -201,6 +202,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           pfd.events = POLLIN;
         }
       }
+#endif
 
       break;
     default: /* we received data */

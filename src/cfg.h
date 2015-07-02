@@ -91,6 +91,13 @@ struct configuration {
   u_int64_t buffer_size;
   int pipe_backlog;
   int pipe_amqp;
+  char *pipe_amqp_host;
+  char *pipe_amqp_vhost;
+  char *pipe_amqp_user;
+  char *pipe_amqp_passwd;
+  char *pipe_amqp_exchange;
+  char *pipe_amqp_routing_key;
+  int pipe_amqp_retry;
   int files_umask;
   int files_uid;
   int files_gid;
