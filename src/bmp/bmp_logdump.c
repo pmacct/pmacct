@@ -587,6 +587,7 @@ void bmp_daemon_msglog_init_amqp_host()
   if (!config.nfacctd_bmp_msglog_amqp_exchange_type) config.nfacctd_bmp_msglog_amqp_exchange_type = default_amqp_exchange_type;
   if (!config.nfacctd_bmp_msglog_amqp_host) config.nfacctd_bmp_msglog_amqp_host = default_amqp_host;
   if (!config.nfacctd_bmp_msglog_amqp_vhost) config.nfacctd_bmp_msglog_amqp_vhost = default_amqp_vhost;
+  if (!config.nfacctd_bmp_msglog_amqp_retry) config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 
   p_amqp_set_user(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_user);
   p_amqp_set_passwd(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_passwd);
@@ -598,6 +599,7 @@ void bmp_daemon_msglog_init_amqp_host()
   p_amqp_set_frame_max(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_frame_max);
   p_amqp_set_content_type_json(&bmp_daemon_msglog_amqp_host);
   p_amqp_set_heartbeat_interval(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_heartbeat_interval);
+  p_amqp_set_retry_interval(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_retry);
 }
 #else
 void bmp_daemon_msglog_init_amqp_host()

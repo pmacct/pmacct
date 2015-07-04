@@ -357,7 +357,7 @@ void skinny_bmp_daemon()
       if (config.nfacctd_bmp_msglog_amqp_routing_key) {
         time_t last_fail = p_amqp_get_last_fail(&bmp_daemon_msglog_amqp_host);
 
-        if (last_fail && (last_fail + config.nfacctd_bmp_msglog_amqp_retry < log_tstamp.tv_sec)) {
+        if (last_fail && ((last_fail + p_amqp_get_retry_interval(&bmp_daemon_msglog_amqp_host)) < log_tstamp.tv_sec)) {
           bmp_daemon_msglog_init_amqp_host();
           p_amqp_connect_to_publish(&bmp_daemon_msglog_amqp_host);
         }

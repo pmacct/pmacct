@@ -415,6 +415,10 @@ int p_amqp_consume_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
   amqp_frame_t frame;
   size_t size;
 
+  if (!amqp_host || !data || !data_len) ERR; 
+
+  memset(data, 0, data_len);
+
   if (p_amqp_is_alive(amqp_host) == ERR) {
     p_amqp_close(amqp_host, TRUE);
     return ERR;
@@ -424,6 +428,14 @@ int p_amqp_consume_binary(struct p_amqp_host *amqp_host, void *data, u_int32_t d
 
   amqp_host->ret = amqp_consume_message(amqp_host->conn, &envelope, NULL, 0);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
+    if (amqp_host->ret.reply_type == AMQP_RESPONSE_SERVER_EXCEPTION ||
+       (amqp_host->ret.reply_type == AMQP_RESPONSE_LIBRARY_EXCEPTION && (amqp_host->ret.library_error & AMQP_STATUS_SOCKET_ERROR))) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): socket error [E=%s RK=%s]\n",
+				config.name, config.type, amqp_host->exchange, amqp_host->routing_key);
+      p_amqp_close(amqp_host, TRUE);
+      return ERR;
+    }
+
     if (amqp_host->ret.reply_type == AMQP_RESPONSE_LIBRARY_EXCEPTION && amqp_host->ret.library_error == AMQP_STATUS_UNEXPECTED_STATE) { 
       if (amqp_simple_wait_frame(amqp_host->conn, &frame) != AMQP_STATUS_OK) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_consume_binary(): wait frame [E=%s RK=%s]\n",
@@ -493,7 +505,7 @@ void p_amqp_close(struct p_amqp_host *amqp_host, int set_fail)
 
 int p_amqp_is_alive(struct p_amqp_host *amqp_host)
 {
-  if (amqp_host->status == AMQP_STATUS_OK && amqp_host->conn && amqp_get_socket(amqp_host->conn)) return SUCCESS;
+  if (amqp_host->status == AMQP_STATUS_OK && amqp_host->conn && (amqp_get_sockfd(amqp_host->conn) >= 0)) return SUCCESS;
   else return ERR;
 }
 

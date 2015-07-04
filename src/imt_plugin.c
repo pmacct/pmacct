@@ -58,6 +58,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct networks_file_data nfd;
   struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
+  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
 
   fd_set read_descs, bkp_read_descs; /* select() stuff */
   int select_fd, lock = FALSE;
@@ -65,7 +66,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *dataptr;
 
 #ifdef WITH_RABBITMQ
-  struct p_amqp_host pipe_amqp_host;
+  struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
 #endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -102,7 +103,15 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  setnonblocking(pipe_fd);
+  if (config.pipe_amqp) {
+#ifdef WITH_RABBITMQ
+    plugin_pipe_amqp_init_host(amqp_host, plugin_data);
+    p_amqp_connect_to_consume(amqp_host);
+    pipe_fd = p_amqp_get_sockfd(amqp_host);
+#endif
+  }
+  else setnonblocking(pipe_fd);
+
   memset(pipebuf, 0, config.buffer_size);
   no_more_space = FALSE;
 
@@ -191,11 +200,16 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* preparing for synchronous I/O multiplexing */
   select_fd = 0;
+
   FD_ZERO(&read_descs);
   FD_SET(sd, &read_descs);
+
   if (sd > select_fd) select_fd = sd;
-  FD_SET(pipe_fd, &read_descs);
-  if (pipe_fd > select_fd) select_fd = pipe_fd;
+  if (pipe_fd != ERR) {
+    FD_SET(pipe_fd, &read_descs);
+    if (pipe_fd > select_fd) select_fd = pipe_fd;
+  }
+
   select_fd++;
   memcpy(&bkp_read_descs, &read_descs, sizeof(read_descs));
 
@@ -204,11 +218,33 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* plugin main loop */
   for(;;) {
     select_again:
+    // XXX: tackle timeout in AMQP case 
     select_timeout.tv_sec = DEFAULT_IMT_PLUGIN_SELECT_TIMEOUT;
     select_timeout.tv_usec = 0;
 
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
     num = select(select_fd, &read_descs, NULL, NULL, &select_timeout);
+
+    gettimeofday(&cycle_stamp, NULL);
+
+#ifdef WITH_RABBITMQ
+    if (config.pipe_amqp && pipe_fd == ERR) {
+      time_t last_fail = p_amqp_get_last_fail(amqp_host);
+
+      if (last_fail && ((last_fail + p_amqp_get_retry_interval(amqp_host)) < cycle_stamp.tv_sec)) {
+        plugin_pipe_amqp_init_host(amqp_host, plugin_data);
+        p_amqp_connect_to_consume(amqp_host);
+        pipe_fd = p_amqp_get_sockfd(amqp_host);
+
+        if (pipe_fd != ERR) {
+          FD_SET(pipe_fd, &bkp_read_descs);
+          if (pipe_fd > select_fd) select_fd = pipe_fd;
+          select_fd++;
+        }
+      }
+    }
+#endif
+
     if (num <= 0) {
       if (getppid() == 1) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
@@ -217,8 +253,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       goto select_again;  
     }
-
-    gettimeofday(&cycle_stamp, NULL);
 
     /* doing server tasks */
     if (FD_ISSET(sd, &read_descs)) {
@@ -358,32 +392,49 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     if (FD_ISSET(pipe_fd, &read_descs)) {
-      if (!pollagain) {
-        seq++;
-        seq %= MAX_SEQNUM;
-      }
+      if (!config.pipe_amqp) {
+        if (!pollagain) {
+          seq++;
+          seq %= MAX_SEQNUM;
+        }
 
-      pollagain = FALSE;
-      if ((num = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-        exit_plugin(1); /* we exit silently; something happened at the write end */
+        pollagain = FALSE;
+        if ((num = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
+          exit_plugin(1); /* we exit silently; something happened at the write end */
 
-      if (num < 0) {
-        pollagain = TRUE;
-        goto select_again;
-      }
+        if (num < 0) {
+          pollagain = TRUE;
+          goto select_again;
+        }
 
-      memcpy(pipebuf, rgptr, config.buffer_size);
-      if (((struct ch_buf_hdr *)pipebuf)->seq != seq) {
-        rg_err_count++;
-        if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
-          Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
-          Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%d'.\n", config.pipe_size);
-          Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%d'.\n", config.buffer_size);
-          Log(LOG_ERR, "- increase system maximum socket size.\n\n");
-          seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+        memcpy(pipebuf, rgptr, config.buffer_size);
+        if (((struct ch_buf_hdr *)pipebuf)->seq != seq) {
+          rg_err_count++;
+          if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
+            Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
+            Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%d'.\n", config.pipe_size);
+            Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%d'.\n", config.buffer_size);
+            Log(LOG_ERR, "- increase system maximum socket size.\n\n");
+            seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	  }
 	}
       }
+#ifdef WITH_RABBITMQ
+      else {
+        ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
+        if (!ret) {
+          seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	  num = TRUE;
+	}
+	else {
+          if (pipe_fd != ERR) {
+            FD_CLR(pipe_fd, &bkp_read_descs);
+	    pipe_fd = ERR;
+          }
+	}
+      }
+#endif
 
       if (num > 0) {
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
