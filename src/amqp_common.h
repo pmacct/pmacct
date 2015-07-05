@@ -25,6 +25,7 @@
 
 /* defines */
 #define AMQP_DEFAULT_RETRY	60
+#define AMQP_LONGLONG_RETRY	INT_MAX
 #define PM_AMQP_MIN_FRAME_SIZE	4096
 
 /* structures */

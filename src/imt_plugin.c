@@ -49,7 +49,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = 0;
   u_int32_t seq = 0;
   int rg_err_count = 0;
-  int ret;
+  int amqp_timeout = INT_MAX, ret;
   struct pkt_bgp_primitives *pbgp, empty_pbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
   struct pkt_mpls_primitives *pmpls, empty_pmpls;
@@ -108,6 +108,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     plugin_pipe_amqp_init_host(amqp_host, plugin_data);
     p_amqp_connect_to_consume(amqp_host);
     pipe_fd = p_amqp_get_sockfd(amqp_host);
+#else
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -218,8 +221,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* plugin main loop */
   for(;;) {
     select_again:
-    // XXX: tackle timeout in AMQP case 
-    select_timeout.tv_sec = DEFAULT_IMT_PLUGIN_SELECT_TIMEOUT;
+    select_timeout.tv_sec = MIN(DEFAULT_IMT_PLUGIN_SELECT_TIMEOUT, amqp_timeout);
     select_timeout.tv_usec = 0;
 
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
@@ -229,9 +231,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_RABBITMQ
     if (config.pipe_amqp && pipe_fd == ERR) {
-      time_t last_fail = p_amqp_get_last_fail(amqp_host);
-
-      if (last_fail && ((last_fail + p_amqp_get_retry_interval(amqp_host)) < cycle_stamp.tv_sec)) {
+      if (select_timeout.tv_sec == amqp_timeout) {
         plugin_pipe_amqp_init_host(amqp_host, plugin_data);
         p_amqp_connect_to_consume(amqp_host);
         pipe_fd = p_amqp_get_sockfd(amqp_host);
@@ -240,7 +240,13 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           FD_SET(pipe_fd, &bkp_read_descs);
           if (pipe_fd > select_fd) select_fd = pipe_fd;
           select_fd++;
+	  amqp_timeout = AMQP_LONGLONG_RETRY;
         }
+	else amqp_timeout = p_amqp_get_retry_interval(amqp_host);
+      }
+      else {
+        amqp_timeout = ((p_amqp_get_last_fail(amqp_host) + p_amqp_get_retry_interval(amqp_host)) - cycle_stamp.tv_sec);
+        assert(amqp_timeout >= 0);
       }
     }
 #endif
@@ -425,6 +431,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
         if (!ret) {
           seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	  amqp_timeout = AMQP_LONGLONG_RETRY;
 	  num = TRUE;
 	}
 	else {
@@ -432,6 +439,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             FD_CLR(pipe_fd, &bkp_read_descs);
 	    pipe_fd = ERR;
           }
+	  amqp_timeout = p_amqp_get_retry_interval(amqp_host);
 	}
       }
 #endif

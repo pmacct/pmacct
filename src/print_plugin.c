@@ -40,7 +40,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pollfd pfd;
   struct insert_data idata;
   time_t t;
-  int timeout, ret, num, is_event;
+  int timeout, refresh_timeout, amqp_timeout, ret, num, is_event;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -78,7 +78,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (config.print_output & PRINT_OUTPUT_EVENT)
     is_event = TRUE;
 
-  timeout = config.sql_refresh_time*1000;
+  refresh_timeout = config.sql_refresh_time*1000;
+  amqp_timeout = INT_MAX;
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -116,6 +117,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     plugin_pipe_amqp_init_host(amqp_host, plugin_data);
     p_amqp_connect_to_consume(amqp_host);
     pipe_fd = p_amqp_get_sockfd(amqp_host);
+
+    if (pipe_fd == ERR) amqp_timeout = (p_amqp_get_retry_interval(amqp_host) * 1000);
+    else amqp_timeout = AMQP_LONGLONG_RETRY;
+#else
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -161,8 +168,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
-    calc_refresh_timeout(refresh_deadline, idata.now, &timeout);
+    calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
     
+    timeout = MIN(refresh_timeout, amqp_timeout);
     ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
 
     if (ret <= 0) {
@@ -185,25 +193,29 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
     }
 
-    switch (ret) {
-    case 0: /* timeout */
-      P_cache_handle_flush_event(&pt);
-
 #ifdef WITH_RABBITMQ
-      if (config.pipe_amqp && pfd.fd == ERR) {
-        time_t last_fail = p_amqp_get_last_fail(amqp_host);
+    if (config.pipe_amqp && pfd.fd == ERR) {
+      if (timeout == amqp_timeout) {
+        plugin_pipe_amqp_init_host(amqp_host, plugin_data);
+        p_amqp_connect_to_consume(amqp_host);
+        pipe_fd = p_amqp_get_sockfd(amqp_host);
 
-        if (last_fail && ((last_fail + p_amqp_get_retry_interval(amqp_host)) < idata.now)) {
-	  plugin_pipe_amqp_init_host(amqp_host, plugin_data);
-	  p_amqp_connect_to_consume(amqp_host);
-	  pipe_fd = p_amqp_get_sockfd(amqp_host);
+	if (pipe_fd == ERR) amqp_timeout = (p_amqp_get_retry_interval(amqp_host) * 1000);
+	else amqp_timeout = AMQP_LONGLONG_RETRY;
 
-          pfd.fd = pipe_fd;
-          pfd.events = POLLIN;
-        }
+        pfd.fd = pipe_fd;
+        pfd.events = POLLIN;
       }
+      else {
+	amqp_timeout = (((p_amqp_get_last_fail(amqp_host) + p_amqp_get_retry_interval(amqp_host)) - idata.now) * 1000);
+	assert(amqp_timeout >= 0);
+      }
+    }
 #endif
 
+    switch (ret) {
+    case 0: /* timeout */
+      if (timeout == refresh_timeout) P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
@@ -245,10 +257,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_RABBITMQ
       else {
         ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
-	if (!ret) seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	if (!ret) {
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	  amqp_timeout = AMQP_LONGLONG_RETRY;
+	}
 	else {
 	  pfd.fd = ERR;
 	  pfd.events = POLLIN;
+	  amqp_timeout = (p_amqp_get_retry_interval(amqp_host) * 1000);
 	}
       }
 #endif
