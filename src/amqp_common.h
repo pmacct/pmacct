@@ -61,7 +61,8 @@ struct p_amqp_host {
 };
 
 struct p_amqp_sleeper {
-  int interval;
+  struct p_amqp_host *amqp_host;
+  void *plugin;
   int *do_reconnect;
 };
 
@@ -108,7 +109,7 @@ EXT int p_amqp_consume_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
 
-EXT struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *, int *);
+EXT struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *, int *, void *);
 EXT void p_amqp_sleeper_free(struct p_amqp_sleeper **);
 EXT void p_amqp_sleeper_func(struct p_amqp_sleeper *);
 

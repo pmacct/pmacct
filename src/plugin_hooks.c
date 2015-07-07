@@ -241,14 +241,6 @@ void load_plugins(struct plugin_requests *req)
 
       /* some residual check */
       if (chptr && list->cfg.a_filter) req->bpf_filter = TRUE;
-
-      /* amqp handling if required so */
-#ifdef WITH_RABBITMQ
-      if (list->cfg.pipe_amqp) {
-        plugin_pipe_amqp_init_host(&chptr->amqp_host, list);
-	p_amqp_connect_to_publish(&chptr->amqp_host);
-      }
-#endif
     }
     list = list->next;
   }
@@ -289,6 +281,37 @@ void load_plugins(struct plugin_requests *req)
       list = list->next;
     }
   }
+
+  /* AMQP handling, if required */
+#ifdef WITH_RABBITMQ
+  {
+    int ret, index;
+
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+      chptr = &channels_list[index];
+      list = chptr->plugin;
+
+      if (list->cfg.pipe_amqp) {
+        plugin_pipe_amqp_init_host(&chptr->amqp_host, list);
+        ret = p_amqp_connect_to_publish(&chptr->amqp_host);
+
+#if defined ENABLE_THREADS
+        if (ret) {
+          if (!chptr->amqp_host_sleep) {
+            struct p_amqp_sleeper *pas;
+
+            chptr->amqp_host_sleep = allocate_thread_pool(1);
+            assert(chptr->amqp_host_sleep);
+
+            pas = p_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect, &chptr->plugin);
+            send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, p_amqp_sleeper_func, pas);
+          }
+        }
+#endif
+      }
+    }
+  }
+#endif
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
@@ -422,12 +445,6 @@ reprocess:
 
 #if defined ENABLE_THREADS
           if (chptr->amqp_host_reconnect) {
-            Log(LOG_DEBUG, "DEBUG ( %s/%s ): Reconnect timer to RabbitMQ: expired\n",
-                  list->name, list->type.string);
-
-            plugin_pipe_amqp_init_host(&chptr->amqp_host, chptr->plugin);
-            p_amqp_connect_to_publish(&chptr->amqp_host);
-
             deallocate_thread_pool((thread_pool_t **) &chptr->amqp_host_sleep);
             chptr->amqp_host_reconnect = FALSE;
           }
@@ -443,10 +460,7 @@ reprocess:
 	      chptr->amqp_host_sleep = allocate_thread_pool(1);
 	      assert(chptr->amqp_host_sleep);
 
-	      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Reconnect timer to RabbitMQ: set to (a minimum of) %d secs\n",
-		list->name, list->type.string, p_amqp_get_retry_interval(&chptr->amqp_host));
-
-	      pas = p_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect);
+	      pas = p_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect, &chptr->plugin);
 	      send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, p_amqp_sleeper_func, pas);
 	    }
 	  }

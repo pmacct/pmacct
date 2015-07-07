@@ -529,7 +529,7 @@ void p_amqp_handle_routing_key_dyn_rr(char *new, int newlen, char *old, struct p
   rk_rr->next %= rk_rr->max; 
 }
 
-struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *amqp_host, int *flag)
+struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *amqp_host, int *flag, void *plugin)
 {
   struct p_amqp_sleeper *pas;
   int size = sizeof(struct p_amqp_sleeper);
@@ -540,7 +540,8 @@ struct p_amqp_sleeper *p_amqp_sleeper_define(struct p_amqp_host *amqp_host, int 
 
   if (pas) {
     memset(pas, 0, size); 
-    pas->interval = p_amqp_get_retry_interval(amqp_host);
+    pas->amqp_host = amqp_host;
+    pas->plugin = plugin;
     pas->do_reconnect = flag;
   }
   else {
@@ -561,10 +562,18 @@ void p_amqp_sleeper_free(struct p_amqp_sleeper **pas)
 
 void p_amqp_sleeper_func(struct p_amqp_sleeper *pas)
 {
-  if (!pas || !pas->interval || !pas->do_reconnect) return;
+  int ret;
 
-  sleep(pas->interval);
-  
+  if (!pas || !pas->amqp_host || !pas->plugin || !pas->do_reconnect) return;
+
+sleep_again:
+  sleep(p_amqp_get_retry_interval(pas->amqp_host));
+
+  plugin_pipe_amqp_init_host(pas->amqp_host, pas->plugin);
+  ret = p_amqp_connect_to_publish(pas->amqp_host);
+
+  if (ret) goto sleep_again;
+
   (*pas->do_reconnect) = TRUE;
 
   p_amqp_sleeper_free(&pas);
