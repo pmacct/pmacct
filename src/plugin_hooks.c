@@ -294,20 +294,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.pipe_amqp) {
         plugin_pipe_amqp_init_host(&chptr->amqp_host, list);
         ret = p_amqp_connect_to_publish(&chptr->amqp_host);
-
-#if defined ENABLE_THREADS
-        if (ret) {
-          if (!chptr->amqp_host_sleep) {
-            struct p_amqp_sleeper *pas;
-
-            chptr->amqp_host_sleep = allocate_thread_pool(1);
-            assert(chptr->amqp_host_sleep);
-
-            pas = p_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect, &chptr->plugin);
-            send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, p_amqp_sleeper_func, pas);
-          }
-        }
-#endif
+        if (ret) plugin_pipe_amqp_sleeper_start(chptr);
       }
     }
   }
@@ -441,30 +428,10 @@ reprocess:
 #ifdef WITH_RABBITMQ
 	else {
 	  struct channels_list_entry *chptr = &channels_list[index];
-	  struct plugins_list_entry *list = chptr->plugin;
 
-#if defined ENABLE_THREADS
-          if (chptr->amqp_host_reconnect) {
-            deallocate_thread_pool((thread_pool_t **) &chptr->amqp_host_sleep);
-            chptr->amqp_host_reconnect = FALSE;
-          }
-#endif
-
+	  plugin_pipe_amqp_sleeper_stop(chptr);
 	  ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
-
-#if defined ENABLE_THREADS
-	  if (ret) {
-	    if (!chptr->amqp_host_sleep) {
-	      struct p_amqp_sleeper *pas;
-
-	      chptr->amqp_host_sleep = allocate_thread_pool(1);
-	      assert(chptr->amqp_host_sleep);
-
-	      pas = p_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect, &chptr->plugin);
-	      send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, p_amqp_sleeper_func, pas);
-	    }
-	  }
-#endif
+	  if (ret) plugin_pipe_amqp_sleeper_start(chptr);
 	}
 #endif
 
@@ -886,7 +853,8 @@ int pkt_extras_clean(void *pextras, int len)
   return PdataSz+PextrasSz;
 }
 
-char *compose_plugin_amqp_routing_key(char *name, char *type)
+#ifdef WITH_RABBITMQ
+char *plugin_pipe_amqp_compose_routing_key(char *name, char *type)
 {
   char *rk = NULL, sep[] = "-";
   int len = 0;
@@ -905,13 +873,12 @@ char *compose_plugin_amqp_routing_key(char *name, char *type)
   return rk;
 }
 
-#ifdef WITH_RABBITMQ
 void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_list_entry *list)
 {
   int ret;
 
   if (amqp_host) {
-    char *amqp_rk = compose_plugin_amqp_routing_key(list->cfg.name, list->cfg.type);
+    char *amqp_rk = plugin_pipe_amqp_compose_routing_key(list->cfg.name, list->cfg.type);
 
     p_amqp_init_host(amqp_host);
 
@@ -935,5 +902,80 @@ void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_li
     p_amqp_set_exchange_type(amqp_host, default_amqp_exchange_type);
     p_amqp_set_content_type_binary(amqp_host);
   }
+}
+
+struct plugin_pipe_amqp_sleeper *plugin_pipe_amqp_sleeper_define(struct p_amqp_host *amqp_host, int *flag, struct plugins_list_entry *plugin)
+{
+  struct plugin_pipe_amqp_sleeper *pas;
+  int size = sizeof(struct plugin_pipe_amqp_sleeper);
+
+  if (!amqp_host || !flag) return;
+
+  pas = malloc(size);
+
+  if (pas) {
+    memset(pas, 0, size);
+    pas->amqp_host = amqp_host;
+    pas->plugin = plugin;
+    pas->do_reconnect = flag;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): plugin_pipe_amqp_sleeper_define(): malloc() failed\n", config.name, config.type);
+    return NULL;
+  }
+
+  return pas;
+}
+
+void plugin_pipe_amqp_sleeper_free(struct plugin_pipe_amqp_sleeper **pas)
+{
+  if (!pas || !(*pas)) return;
+
+  free((*pas));
+  (*pas) = NULL;
+}
+
+void plugin_pipe_amqp_sleeper_publish_func(struct plugin_pipe_amqp_sleeper *pas)
+{
+  int ret;
+
+  if (!pas || !pas->amqp_host || !pas->plugin || !pas->do_reconnect) return;
+
+sleep_again:
+  sleep(p_amqp_get_retry_interval(pas->amqp_host));
+
+  plugin_pipe_amqp_init_host(pas->amqp_host, pas->plugin);
+  ret = p_amqp_connect_to_publish(pas->amqp_host);
+
+  if (ret) goto sleep_again;
+
+  (*pas->do_reconnect) = TRUE;
+
+  plugin_pipe_amqp_sleeper_free(&pas);
+}
+
+void plugin_pipe_amqp_sleeper_start(struct channels_list_entry *chptr)
+{
+#if defined ENABLE_THREADS
+  if (chptr && !chptr->amqp_host_sleep) {
+    struct plugin_pipe_amqp_sleeper *pas;
+
+    chptr->amqp_host_sleep = allocate_thread_pool(1);
+    assert(chptr->amqp_host_sleep);
+
+    pas = plugin_pipe_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect, chptr->plugin);
+    send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, plugin_pipe_amqp_sleeper_publish_func, pas);
+  }
+#endif
+}
+
+void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *chptr)
+{
+#if defined ENABLE_THREADS
+  if (chptr && chptr->amqp_host_reconnect) {
+    deallocate_thread_pool((thread_pool_t **) &chptr->amqp_host_sleep);
+    chptr->amqp_host_reconnect = FALSE;
+  }
+#endif
 }
 #endif
