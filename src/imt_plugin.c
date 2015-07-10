@@ -104,13 +104,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 
   if (config.pipe_amqp) {
+    plugin_pipe_amqp_compile_check();
 #ifdef WITH_RABBITMQ
-    plugin_pipe_amqp_init_host(amqp_host, plugin_data);
-    p_amqp_connect_to_consume(amqp_host);
-    pipe_fd = p_amqp_get_sockfd(amqp_host);
-#else
-    Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -232,9 +228,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_RABBITMQ
     if (config.pipe_amqp && pipe_fd == ERR) {
       if (select_timeout.tv_sec == amqp_timeout) {
-        plugin_pipe_amqp_init_host(amqp_host, plugin_data);
-        p_amqp_connect_to_consume(amqp_host);
-        pipe_fd = p_amqp_get_sockfd(amqp_host);
+        pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
 
         if (pipe_fd != ERR) {
           FD_SET(pipe_fd, &bkp_read_descs);

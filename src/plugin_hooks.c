@@ -978,4 +978,35 @@ void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *chptr)
   }
 #endif
 }
+
+int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct plugins_list_entry *plugin_data)
+{
+  plugin_pipe_amqp_init_host(amqp_host, plugin_data);
+  p_amqp_connect_to_consume(amqp_host);
+  return p_amqp_get_sockfd(amqp_host);
+}
+
+int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *amqp_host, int pipe_fd)
+{
+  if (pipe_fd == ERR) return (p_amqp_get_retry_interval(amqp_host) * 1000);
+  else return AMQP_LONGLONG_RETRY;
+}
+
+int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *amqp_host, time_t now)
+{
+  int amqp_timeout;
+
+  amqp_timeout = (((p_amqp_get_last_fail(amqp_host) + p_amqp_get_retry_interval(amqp_host)) - now) * 1000);
+  assert(amqp_timeout >= 0);
+
+  return amqp_timeout;
+}
 #endif
+
+void plugin_pipe_amqp_compile_check()
+{
+#ifndef WITH_RABBITMQ
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+#endif
+}

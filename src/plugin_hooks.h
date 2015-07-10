@@ -162,7 +162,11 @@ EXT void plugin_pipe_amqp_sleeper_free(struct plugin_pipe_amqp_sleeper **);
 EXT void plugin_pipe_amqp_sleeper_publish_func(struct plugin_pipe_amqp_sleeper *);
 EXT void plugin_pipe_amqp_sleeper_start(struct channels_list_entry *);
 EXT void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *);
+EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
+EXT int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *, int);
+EXT int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *, time_t);
 #endif
+EXT void plugin_pipe_amqp_compile_check();
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

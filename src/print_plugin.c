@@ -79,7 +79,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     is_event = TRUE;
 
   refresh_timeout = config.sql_refresh_time*1000;
-  amqp_timeout = INT_MAX;
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -113,22 +112,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   set_primptrs_funcs(&extras);
 
   if (config.pipe_amqp) {
+    plugin_pipe_amqp_compile_check();
 #ifdef WITH_RABBITMQ
-    plugin_pipe_amqp_init_host(amqp_host, plugin_data);
-    p_amqp_connect_to_consume(amqp_host);
-    pipe_fd = p_amqp_get_sockfd(amqp_host);
-
-    if (pipe_fd == ERR) amqp_timeout = (p_amqp_get_retry_interval(amqp_host) * 1000);
-    else amqp_timeout = AMQP_LONGLONG_RETRY;
-#else
-    Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
+    amqp_timeout = plugin_pipe_amqp_set_poll_timeout(amqp_host, pipe_fd);
 #endif
   }
   else setnonblocking(pipe_fd);
-
-  pfd.fd = pipe_fd;
-  pfd.events = POLLIN;
 
   idata.now = time(NULL);
 
@@ -170,7 +160,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     status->wakeup = TRUE;
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
     
-    timeout = MIN(refresh_timeout, amqp_timeout);
+    pfd.fd = pipe_fd;
+    pfd.events = POLLIN;
+    timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
     ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
 
     if (ret <= 0) {
@@ -194,22 +186,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
 #ifdef WITH_RABBITMQ
-    if (config.pipe_amqp && pfd.fd == ERR) {
+    if (config.pipe_amqp && pipe_fd == ERR) {
       if (timeout == amqp_timeout) {
-        plugin_pipe_amqp_init_host(amqp_host, plugin_data);
-        p_amqp_connect_to_consume(amqp_host);
-        pipe_fd = p_amqp_get_sockfd(amqp_host);
-
-	if (pipe_fd == ERR) amqp_timeout = (p_amqp_get_retry_interval(amqp_host) * 1000);
-	else amqp_timeout = AMQP_LONGLONG_RETRY;
-
-        pfd.fd = pipe_fd;
-        pfd.events = POLLIN;
+        pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
+        amqp_timeout = plugin_pipe_amqp_set_poll_timeout(amqp_host, pipe_fd);
       }
-      else {
-	amqp_timeout = (((p_amqp_get_last_fail(amqp_host) + p_amqp_get_retry_interval(amqp_host)) - idata.now) * 1000);
-	assert(amqp_timeout >= 0);
-      }
+      else amqp_timeout = plugin_pipe_amqp_calc_poll_timeout_diff(amqp_host, idata.now); 
     }
 #endif
 
@@ -257,15 +239,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_RABBITMQ
       else {
         ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
-	if (!ret) {
-	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-	  amqp_timeout = AMQP_LONGLONG_RETRY;
-	}
-	else {
-	  pfd.fd = ERR;
-	  pfd.events = POLLIN;
-	  amqp_timeout = (p_amqp_get_retry_interval(amqp_host) * 1000);
-	}
+	if (ret) pipe_fd = ERR;
+
+	seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	amqp_timeout = plugin_pipe_amqp_set_poll_timeout(amqp_host, pipe_fd);
       }
 #endif
 
