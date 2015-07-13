@@ -427,7 +427,7 @@ print_output[data_options]: event_csv
 !
 aggregate_primitives: /path/to/primitives.lst
 pre_tag_map: /path/to/pretag.map
-refresh_maps: true
+maps_refresh: true
 
 Below is the referenced pretag.map:
 

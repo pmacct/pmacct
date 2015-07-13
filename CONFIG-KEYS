@@ -337,46 +337,54 @@ KEY:		logfile
 DESC:           Enables logging to a file (bypassing syslog); expected value is a pathname
 DEFAULT:	none (console logging)
 
-KEY:		amqp_host
-DESC:           Defines the AMQP/RabbitMQ server IP
+KEY:		[ amqp_host | plugin_pipe_amqp_host ]
+DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to the broker used by an
+		AMQP plugin to purge data out; plugin_pipe_amqp_* directives refer to the broker used
+		by the core process to send data to plugins. 
 DEFAULT:        localhost
 
 KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
 		  bmp_daemon_msglog_amqp_host ] [GLOBAL]
-DESC:		See amqp_host
+DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker used by the BGP
+		thread to stream data out; bgp_table_dump_amqp_* directives refer to the broker used
+		by the BGP thread to dump data out at regular time intervals; bmp_dump_amqp_* directives
+		refer to the broker used by the BMP thread to stream data out; bmp_table_dump_amqp_*
+		directives refer to the broker used by the BMP thread to dump data out at regular time
+		intervals.
 DEFAULT:	See amqp_host	
 
-KEY:            amqp_vhost
-DESC:           Defines the AMQP/RabbitMQ server virtual host
+KEY:            [ amqp_vhost | plugin_pipe_amqp_vhost ]
+DESC:           Defines the AMQP/RabbitMQ server virtual host; see also amqp_host.
 DEFAULT:        "/"
 
 KEY:		[ bgp_daemon_msglog_amqp_vhost | bgp_table_dump_amqp_vhost | bmp_dump_amqp_vhost |
 		  bmp_daemon_msglog_amqp_vhost ] [GLOBAL]
-DESC:           See amqp_vhost
-DEFAULT:	See amqp_vhost
+DESC:           See amqp_vhost; see also bgp_daemon_msglog_amqp_host.
+DEFAULT:	See amqp_vhost 
 
-KEY:		amqp_user
-DESC:           Defines the username to use when connecting to the AMQP/RabbitMQ server
+KEY:		[ amqp_user | plugin_pipe_amqp_user ]
+DESC:           Defines the username to use when connecting to the AMQP/RabbitMQ server; see also
+		amqp_host.
 DEFAULT:        guest
 
 KEY:		[ bgp_daemon_msglog_amqp_user | bgp_table_dump_amqp_user | bmp_dump_amqp_user |
 		  bmp_daemon_msglog_amqp_user ] [GLOBAL]
-DESC:		See amqp_user
+DESC:		See amqp_user; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_user
 
-KEY:		amqp_passwd
-DESC:           Defines the password to use when connecting to the server
+KEY:		[ amqp_passwd | plugin_pipe_amqp_passwd ]
+DESC:           Defines the password to use when connecting to the server; see also amqp_host.
 DEFAULT:        guest
 
 KEY:		[ bgp_daemon_msglog_amqp_passwd | bgp_table_dump_amqp_passwd |
 		  bmp_dump_amqp_passwd | bmp_daemon_msglog_amqp_passwd ] [GLOBAL]
-DESC:		See amqp_passwd
+DESC:		See amqp_passwd; see also bgp_daemon_msglog_amqp_host.
 DEFAULT: 	See amqp_passwd
 
-KEY:		amqp_routing_key
-DESC:           Name of the AMQP routing key to attach to published data. Dynamic names are supported through
-                the use of variables, which are computed at the moment when data is purged to the backend.
-                The list of variables supported by amqp_routing_key:
+KEY:		[ amqp_routing_key | plugin_pipe_amqp_routing_key ]
+DESC:           Name of the AMQP routing key to attach to published data. Dynamic names are supported by
+		amqp_routing_key through the use of variables, which are computed at the moment when data
+		is purged to the backend. The list of variables supported by amqp_routing_key:
 
                 $peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
@@ -386,13 +394,15 @@ DESC:           Name of the AMQP routing key to attach to published data. Dynami
 
                 $post_tag2      Configured value of post_tag2.
 
-DEFAULT:	'acct'
+		See also amqp_host.
+
+DEFAULT:	amqp_routing_key: 'acct'; plugin_pipe_amqp_routing_key: '<plugin name>-<plugin type>'
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key | bgp_table_dump_amqp_routing_key |
 		  bmp_daemon_msglog_amqp_routing_key | bmp_dump_amqp_routing_key ] [GLOBAL]
-DESC:		See amqp_routing_key. Variables supported by bgp_daemon_msglog_amqp_routing_key,
-		bgp_table_dump_amqp_routing_key, bmp_daemon_msglog_amqp_routing_key,
-		bmp_dump_amqp_routing_key:
+DESC:		See amqp_routing_key; see also bgp_daemon_msglog_amqp_host. Variables supported by
+		bgp_daemon_msglog_amqp_routing_key, bgp_table_dump_amqp_routing_key,
+		bmp_daemon_msglog_amqp_routing_key, bmp_dump_amqp_routing_key:
 
 		$peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
@@ -405,31 +415,31 @@ DESC:           Performs round-robin load-balancing over a set of routing keys. 
                 plugin will round robin as follows: message #1 -> blabla_0, message #2 -> blabla_1,
                 message #3 -> blabla_2, message #4 -> blabla_0 and so forth. By default the feature is
                 disabled, meaning all messages are sent to the routing key specified by amqp_routing_key
-                (or the default one, if no amqp_routing_key is specified).
+                (or the default one, if no amqp_routing_key is specified); see also amqp_host.
 DEFAULT:        0
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_rr |
 		  bmp_daemon_msglog_amqp_routing_key_rr | bmp_dump_amqp_routing_key_rr ] [GLOBAL]
-DESC:		See amqp_routing_key_rr
+DESC:		See amqp_routing_key_rr; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_routing_key_rr
 
-KEY:            amqp_exchange
-DESC:           Name of the AMQP exchange to publish data
+KEY:            [ amqp_exchange | plugin_pipe_amqp_exchange ]
+DESC:           Name of the AMQP exchange to publish data; see also amqp_host.
 DEFAULT:	pmacct
 
 KEY:		[ bgp_daemon_msglog_amqp_exchange | bgp_table_dump_amqp_exchange |
 		  bmp_daemon_msglog_amqp_exchange | bmp_dump_amqp_exchange ] [GLOBAL]
 DESC:           See amqp_exchange
-DEFAULT:	See amqp_exchange
+DEFAULT:	See amqp_exchange; see also bgp_daemon_msglog_amqp_host.
 
 KEY:            amqp_exchange_type
 DESC:           Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
-                supported
+                supported; see also amqp_host.
 DEFAULT:	direct
 
 KEY:		[ bgp_daemon_msglog_amqp_exchange_type | bgp_table_dump_amqp_exchange_type |
 		  bmp_daemon_msglog_amqp_exchange_type | bmp_dump_amqp_exchange_type ] [GLOBAL]
-DESC:           See amqp_exchange_type
+DESC:           See amqp_exchange_type; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_exchange_type
 
 KEY:            amqp_persistent_msg
@@ -440,23 +450,23 @@ DESC:           Marks messages as persistent so that a queue content does not ge
                 still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
                 Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
                 not really written to the disk. The persistence guarantees aren't strong, but it is more
-                than enough for our simple task queue."
+                than enough for our simple task queue."; see also amqp_host.
 DEFAULT:        false
 
 KEY:		[ bgp_daemon_msglog_amqp_persistent_msg  | bgp_table_dump_amqp_persistent_msg |
 		  bmp_daemon_msglog_amqp_persistent_msg | bmp_dump_amqp_persistent_msg ] [GLOBAL]
-VALUES:         See amqp_persistent_msg
+VALUES:         See amqp_persistent_msg; see also bgp_daemon_msglog_amqp_host.
 DESC:		See amqp_persistent_msg
 DEFAULT:	See amqp_persistent_msg
 
 KEY:		amqp_frame_max
 DESC:		Defines the maximum size, in bytes, of an AMQP frame on the wire to request of the broker
-		for the connection. 4096 is the minimum size, 2^31-1 is the maximum.
+		for the connection. 4096 is the minimum size, 2^31-1 is the maximum; see also amqp_host.
 DEFAULT:	131072
 
 KEY:		[ bgp_daemon_msglog_amqp_frame_max | bgp_table_dump_frame_max |
 		  bmp_daemon_msglog_amqp_frame_max | bmp_dump_frame_max ] [GLOBAL]
-DESC:		See amqp_frame_max
+DESC:		See amqp_frame_max; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_frame_max
 
 KEY:            amqp_heartbeat_interval
@@ -464,18 +474,22 @@ DESC:           Defines the heartbeat interval in order to detect general failur
                 The value is expected in seconds. By default the heartbeat mechanism is disabled with a
 		value of zero. According to RabbitMQ C API, detection takes place only upon publishing a
 		JSON message, ie. not at login or if idle. The maximum value supported is INT_MAX (or
-		2147483647).
+		2147483647); see also amqp_host.
 DEFAULT:	0
 
 KEY:		[ bgp_daemon_msglog_amqp_heartbeat_interval | bgp_table_dump_heartbeat_interval |
 		  bmp_daemon_msglog_amqp_heartbeat_interval | bmp_dump_heartbeat_interval ] [GLOBAL]
-DESC:           See amqp_heartbeat_interval
+DESC:           See amqp_heartbeat_interval; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_heartbeat_interval
 
-KEY:		[ bgp_daemon_msglog_amqp_retry | bmp_daemon_msglog_amqp_retry ] [GLOBAL]
-DESC:		Defines the interval of time, in seconds, after which a connection to the RabbitMQ server
-		should be retried after a failure is detected.
+KEY:		plugin_pipe_amqp_retry
+DESC:           Defines the interval of time, in seconds, after which a connection to the RabbitMQ server
+                should be retried after a failure is detected; see also amqp_host.
 DEFAULT:	60
+
+KEY:		[ bgp_daemon_msglog_amqp_retry | bmp_daemon_msglog_amqp_retry ] [GLOBAL]
+DESC:		See plugin_pipe_amqp_retry; see also bgp_daemon_msglog_amqp_host.
+DEFAULT: 	See plugin_pipe_amqp_retry	
 
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		Writes PID of Core process to the specified file. PIDs of the active plugins are written

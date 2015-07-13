@@ -275,13 +275,6 @@ void sql_init_refresh_deadline(time_t *rd)
   *rd += (config.sql_refresh_time+config.sql_startup_delay); /* it's a deadline not a basetime */
 }
 
-void sql_init_pipe(struct pollfd *pollfd, int fd)
-{
-  pollfd->fd = fd;
-  pollfd->events = POLLIN;
-  setnonblocking(fd);
-}
-
 struct template_entry *sql_init_logfile_template(struct template_header *hdr)
 {
   struct template_entry *te;
