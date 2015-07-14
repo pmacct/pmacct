@@ -194,9 +194,9 @@ DESC:           Defines the size of the kernel socket used for BGP and BMP messa
 DEFAULT:	Operating System default
 
 KEY:		plugin_pipe_size
-DESC:		Core process and each of the plugins are run into different processes. To exchange
-		data, they set up a communication channel structured as a circular queue (referred
-		to as 'pipe') highlighted below with "XXXX":
+DESC:		Core Process and each of the plugin instances are run into different processes. To
+		exchange data, they set up a circular queue (home-grown implementation, referred to
+		as 'pipe') and highlighted below with "XXXX":
 
 							      XXXX
 		[network] ----> [kernel] ----> [core process] ----> [plugin] ----> [backend]
@@ -223,15 +223,32 @@ DESC:		Core process and each of the plugins are run into different processes. To
 		logged - indicating the plugin affected and current settings.
 DEFAULT:	4MB
 
+KEY:		plugin_pipe_amqp
+VALUES:         [ true | false ]
+DESC:		By defining this directive to 'true', a RabbitMQ broker is used for queueing and
+		data exchange between the Core Process and the plugins. This is in alternative to
+		the home-grown circular queue implementation (see plugin_pipe_size description).
+		This directive, along with all other plugin_pipe_amqp_* directives, can be set
+		globally or apply on a per plugin basis (ie. it is a valid scenario, if multiple
+		plugins are instantiated, that some make use of home-grown queueing, while others
+		use RabbitMQ based queueing). For a quick comparison: while relying on a RabbitMQ
+		broker for queueing introduces an external dependency (rabbitmq-c library, RabbitMQ
+		server, etc.), it reduces the amount of setting needed by the home-grown circular
+		queue implementation. See QUICKSTART for some examples.
+DEFAULT:	false
+
 KEY:		plugin_buffer_size 
 DESC:		By defining the transfer buffer size, in bytes, this directive enables buffering of
-		data transfers between core process and active plugins. Setting a larger value may
-		improve throughput (ie. amount of CPU cycles required to transfer data); setting a
-		smaller value may improve latency, especially in scenarios with little data influx.
-		It is disabled by default. The value has to be minor/equal to the size defined by
-		'plugin_pipe_size' and keeping a ratio of 1:1000 among the two is considered good
-		practice. The circular queue set by plugin_pipe_size is hence partitioned in chunks
-		of  plugin_buffer_size: once a buffer is filled, it is delivered to the plugin.
+		data transfers between core process and active plugins. Once a buffer is filled, it
+		is delivered to the plugin. Setting a larger value may improve throughput (ie. amount
+		of CPU cycles required to transfer data); setting a smaller value may improve latency,
+		especially in scenarios with little data influx. It is disabled by default. If used
+		with the home-grown circular queue implemetation, the value has to be minor/equal to
+		the size defined by 'plugin_pipe_size' and keeping a ratio of 1:1000 among the two is
+		considered good practice; the circular queue of plugin_pipe_size size is partitioned
+		in chunks of plugin_buffer_size; if used with the RabbitMQ broker based queueing (ie.
+		'plugin_pipe_amqp: true') this directive sets the frame_max allowed by the underlying
+		RabbitMQ session. 
 DEFAULT:	Set to the size of the smallest element to buffer 
 
 KEY:            plugin_pipe_backlog

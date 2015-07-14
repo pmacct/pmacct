@@ -115,8 +115,9 @@ grained multi-threading can often become a fertile source of bugs.
 V. Communications between core process and plugins
 A single running Core Process, which gathers packets or flows from the network, is able to
 feed aggregated data to multiple plugins; plugins are distinguished by their name. Names,
-for this purpose, need to be unique. Aggregates are then pushed to active plugins through 
-a shared circular queue. Each plugin has a private control channel with the Core Process.
+for this purpose, need to be unique. Data is pushed to active plugins via either a home-
+grown circular queue or a RabbitMQ broker. Rest of this chapter focuses only on the home-
+grown circular queue. Each plugin has a private control channel with the Core Process.
 Circular queues are encapsulated into a more complex channel structure which also includes:
 copy of the aggregation method, an OOB (Out-of-Band) signalling channel, buffers, one or
 more filters and a pointer to the next free queue element. The Core Process simply loops
@@ -139,7 +140,7 @@ few simple equations:
 
 dss = Default Segment Size
 dbs = Default Buffer Size = sizeof(struct pkt_data)
-as = Address Size = sizeof(char *) (it depends upon the hardware architecture)
+as = Address Size = sizeof(char *) (depends on hardware architecture)
 bs = 'plugin_buffer_size' value
 ss = 'plugin_pipe_size' value
 
@@ -161,11 +162,12 @@ ss = 'plugin_pipe_size' value
 	
 If 'plugin_buffer_size' is not defined, it is set to the minimum size possible in order
 to contain one element worth of data for the selected aggregation method. Also, from
-release 1.5.0rc2 a simple and reasonable default value for plugin_pipe_size is picked.
-It is aimed that the signalling queue is able to handle worst-case scenario and address
-the full circular buffer: should that not be possible due to OS restrictions, ie. on
-Linux systems /proc/sys/net/core/[rw]mem_max and /proc/sys/net/core/[rw]mem_default, a
-warning message is printed.
+release 1.5.0rc2, a simple and reasonable default value for plugin_pipe_size is picked.
+The signalling queue must be able to address the full circular buffer: should that not
+be possible due to OS restrictions, ie. on Linux systems /proc/sys/net/core/[rw]mem_max
+and /proc/sys/net/core/[rw]mem_default, a log message is printed (along the lines of
+"ctrl channel: obtained=<X> bytes target=<Y> bytes", where Y is what is needed in order
+to address the circular queue and X is what the underlying OS conceded).
 
 Few final remarks: a) buffer size of 10KB and pipe size of 10MB are well-tailored for most
 common environments; b) by enabling buffering, attaching the collector to a mute interface 
