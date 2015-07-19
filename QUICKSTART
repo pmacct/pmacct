@@ -714,11 +714,13 @@ nfprobe_version: 9
 ! networks_file: /path/to/networks.lst
 !...
 
-   This is a basic working configuration. Additional features include: 1) generate ASNs
-   by using a networks_file pointing to a valid Networks File (see examples/ directory)
-   and adding src_as, dst_as primitives to the 'aggregate' directive; alternatively, as
-   of release 0.12.0rc2, it's possible to generate ASNs from the pmacctd BGP thread. The
-   following fragment can be added to the configuration above:
+   This is a basic working configuration. Additional probe features include:
+
+   1) generate ASNs by using a networks_file pointing to a valid Networks File (see
+   examples/ directory) and adding src_as, dst_as primitives to the 'aggregate'
+   directive; alternatively, as of release 0.12.0rc2, it's possible to generate ASNs
+   from the pmacctd BGP thread. The following fragment can be added to the config
+   above:
 
 pmacctd_as: bgp
 bgp_daemon: true
@@ -747,24 +749,26 @@ router bgp Y
    file.
 
    2) encode flow classification information in NetFlow v9 like Cisco does with its
-   NBAR/NetFlow v9 tie-up. This can be done by introducing the 'class' primitive to
-   the afore mentioned 'aggregate' and add the extra configuration directives:
+   NBAR/NetFlow v9 integration. This can be done by introducing the 'class' primitive
+   to the afore mentioned 'aggregate' and add the extra configuration directives:
 
 aggregate: class, src_host, dst_host, src_port, dst_port, proto, tos
 classifiers: /path/to/classifiers/
 snaplen: 700
 
    Further information on this topic can be found in the section of this document about
-   stream classification; 3) add direction (ingress, egress) awareness to measured IP
-   traffic flows. Direction can be inferred either statically (in, out) or dinamically
-   (tag, tag2) via nfprobe_direction directive. Let's look at a dynamic example using
-   tag2; first, add the following lines to the daemon configuration:
+   stream classification.
+
+   3) add direction (ingress, egress) awareness to measured IP traffic flows. Direction
+   can be defined statically (in, out) or inferred dinamically (tag, tag2) via the use
+   of the nfprobe_direction directive. Let's look at a dynamic example using tag2;
+   first, add the following lines to the daemon configuration:
 
 nfprobe_direction[plugin_name]: tag2
 pre_tag_map: /path/to/pretag.map
 
    then edit the tag map as follows. A return value of '1' means ingress while '2' is
-   translated to egress. It is possible to employ L2 and/or L3 addresses to recognize
+   translated to egress. It is possible to define L2 and/or L3 addresses to recognize
    flow directions. The 'set_tag2' primitive (tag2) will be used to carry the return
    value:
 
@@ -775,26 +779,39 @@ set_tag2=1 filter='ether src XX:XX:XX:XX:XX:XX'
 set_tag2=2 filter='ether dst XX:XX:XX:XX:XX:XX'
 
    Indeed in such a case, the 'set_tag' primitive (tag) can be leveraged to other uses
-   (ie. filter sub-set of the traffic for flow export); 4) add interface (input, output)
-   awareness to measured IP traffic flowsi - in addition to direction awareness, as
-   just discussed. Interface can be inferred either statically (<1-4294967295>) or
-   dynamically (tag, tag2) via nfprobe_ifindex directive. Let's look at a dynamic
-   example using tag; first add the following lines to the daemon configuration:
+   (ie. filter sub-set of the traffic for flow export);
 
-nfprobe_ifindex[plugin_name]: tag
+   4) add interface (input, output) awareness to measured IP traffic flows. Interfaces
+   can be defined only in addition to direction. Interface can be either defined
+   statically (<1-4294967295>) or inferred dynamically (tag, tag2) with the use of the
+   nfprobe_ifindex directive. Let's look at a dynamic example using tag; first add the
+   following lines to the daemon config:
+
+nfprobe_direction[plugin_name]: tag
+nfprobe_ifindex[plugin_name]: tag2
 pre_tag_map: /path/to/pretag.map 
 
-   then edit the tag map as follows. It is possible to employ L2 and/or L3 addresses
-   to recognize flow directions. The 'set_tag' primitive (tag) will be used to carry
-   the return value:
+   then edit the tag map as follows:
 
-set_tag=100 filter='dst host XXX.XXX.XXX.XXX'
-set_tag=100 filter='src host XXX.XXX.XXX.XXX'
-set_tag=200 filter='dst host YYY.YYY.YYY.YYY'
-set_tag=200 filter='src host YYY.YYY.YYY.YYY'
+set_tag=1 filter='dst net XXX.XXX.XXX.XXX/WW' jeq=eval_ifindexes
+set_tag=2 filter='src net XXX.XXX.XXX.XXX/WW' jeq=eval_ifindexes
+set_tag=1 filter='dst net YYY.YYY.YYY.YYY/ZZ' jeq=eval_ifindexes
+set_tag=2 filter='src net YYY.YYY.YYY.YYY/ZZ' jeq=eval_ifindexes
+set_tag=1 filter='ether src YY:YY:YY:YY:YY:YY' jeq=eval_ifindexes
+set_tag=2 filter='ether dst YY:YY:YY:YY:YY:YY' jeq=eval_ifindexes
+set_tag=999 filter='net 0.0.0.0/0'
+!
+set_tag2=100 filter='dst host XXX.XXX.XXX.XXX' label=eval_ifindexes
+set_tag2=100 filter='src host XXX.XXX.XXX.XXX'
+set_tag2=200 filter='dst host YYY.YYY.YYY.YYY'
+set_tag2=200 filter='src host YYY.YYY.YYY.YYY'
+set_tag2=200 filter='ether src YY:YY:YY:YY:YY:YY'
+set_tag2=200 filter='ether dst YY:YY:YY:YY:YY:YY'
 
-set_tag=200 filter='ether src YY:YY:YY:YY:YY:YY'
-set_tag=200 filter='ether dst YY:YY:YY:YY:YY:YY'
+  The set_tag=999 works as a catch all for undefined L2/L3 addresses so
+  to prevent searching further in the map. In the example above direction
+  is set first then, if found, interfaces are set, using the jeq/label
+  pre_tag_map construct.
 
 c) build NetFlow collector configuration, using nfacctd:
 !
