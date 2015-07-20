@@ -2048,3 +2048,8 @@ DESC:		Writes IP prefixes, src_net and dst_net primitives, to a own/distinct fie
 		meant for pmacct 1.5 only in order to save, default setting, backward compatibility.
 		With the next major release this feature will become default behaviour.
 DEFAULT:        false
+
+KEY:		thread_stack
+DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
+		bytes. A value of 0, default, leaves the stack size to the Operating System default.
+DEFAULT:	0
