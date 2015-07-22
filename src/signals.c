@@ -93,7 +93,14 @@ void handle_falling_child()
 
 void ignore_falling_child()
 {
-  while (waitpid(-1, 0, WNOHANG) > 0) sql_writers.retired++;
+  pid_t cpid;
+  int status;
+
+  while ((cpid = waitpid(-1, &status, WNOHANG)) > 0) {
+    if (!WIFEXITED(status)) Log(LOG_WARNING, "WARN ( %s/%s ): Abnormal exit status detected for child PID %u\n", config.name, config.type, cpid);
+    sql_writers.retired++;
+  }
+
   signal(SIGCHLD, ignore_falling_child);
 }
 
@@ -128,7 +135,7 @@ void my_sigint_handler(int signum)
 
   wait(NULL);
 
-  Log(LOG_INFO, "OK: Exiting ...\n");
+  Log(LOG_INFO, "INFO ( %s/%s ): OK, Exiting ...\n", config.name, config.type);
 
   if (config.acct_type == ACCT_PM && !config.uacctd_group /* XXX */) {
     if (config.dev) {
