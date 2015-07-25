@@ -786,7 +786,7 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -815,7 +815,7 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
     return FALSE;
   } 
 
-  Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -844,7 +844,7 @@ int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *valu
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_local_pref' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'src_local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -873,7 +873,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -911,7 +911,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_comms' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'src_comms' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
 
   return TRUE;
 }
@@ -949,7 +949,7 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'comms' requires '[nf|sf]acctd_as_new: [ bgp | fallback ]' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'comms' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
 
   return TRUE;
 }

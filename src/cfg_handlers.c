@@ -2674,7 +2674,8 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   else if (!strncmp(value_ptr, "sflow", strlen("sflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
   else if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
-  else if (!strncmp(value_ptr, "fallback", strlen("fallback"))) {
+  else if (!strncmp(value_ptr, "fallback", strlen("fallback")) ||
+	   !strncmp(value_ptr, "longest", strlen("longest"))) {
     value = BGP_SRC_PRIMITIVES_KEEP;
     value |= BGP_SRC_PRIMITIVES_BGP;
   }
@@ -3985,8 +3986,9 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
     value = NF_AS_NEW;
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_AS_BGP;
-  else if (!strcmp(value_ptr, "fallback")) {
+  else if (!strcmp(value_ptr, "fallback") || !strcmp(value_ptr, "longest")) {
     value = NF_AS_FALLBACK;
+
     if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) { 
       value |= NF_AS_KEEP;
       value |= NF_AS_BGP;
@@ -4022,8 +4024,9 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     value = NF_NET_BGP;
   else if (!strcmp(value_ptr, "igp"))
     value = NF_NET_IGP;
-  else if (!strcmp(value_ptr, "fallback")) {
+  else if (!strcmp(value_ptr, "fallback") || !strcmp(value_ptr, "longest")) {
     value = NF_NET_FALLBACK;
+
     if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
       value |= NF_NET_KEEP;
       value |= NF_NET_BGP;

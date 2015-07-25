@@ -1191,26 +1191,26 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 DEFAULT:        false
 
 KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
-VALUES:		[ false | (true|file) | bgp | fallback ]
+VALUES:		[ false | (true|file) | bgp | longest ]
 DESC:		When 'false', it instructs nfacctd and sfacctd to populate 'src_as', 'dst_as', 'peer_src_as' and
 		'peer_dst_as' primitives from NetFlow and sFlow datagram respectively; when 'true' ('file' being
 		an alias of 'true') it instructs nfacctd and sfacctd to generate 'src_as' and 'dst_as' (only! ie.
 		no peer-AS) by looking up source and destination IP addresses against a networks_file. When 'bgp'
 		is specified, ASNs are looked up against the BGP RIB of the peer from which the NetFlow datagram
-		was received (see also bgp_agent_map directive). 'fallback' behaves in a longest-match-wins fashion:
-                in nfacctd and sfacctd lookup is done against a networks list (if networks_file is defined) sFlow/
-                NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is started) with the
-                following logics: networks_file < sFlow/NetFlow < IGP <= BGP.
+		was received (see also bgp_agent_map directive). 'longest' behaves in a longest-prefix match wins
+		fashion: in nfacctd and sfacctd lookup is done against a networks list (if networks_file is
+		defined) sFlow/NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is
+		started) with the following logics: networks_file < sFlow/NetFlow < IGP <= BGP.
 		In pmacctd and uacctd: 'false' (maintained for backward compatibility), 'true' and 'file' expect a
 		'networks_file' to be defined; 'bgp' just works as described previously for nfacctd and sfacctd;
-		'fallback' lookup is done against ia networks list, IGP and BGP only (networks_file < IGP <= BGP)
+		'longest' lookup is done against a networks list, IGP and BGP only (networks_file < IGP <= BGP)
 		since no export protocol lookup method is available.
 		Unless there is a specific goal do achieve, it is highly recommended that this definition, ie.
 		nfacctd_as_new, is kept in sync with its net equivalent, ie. nfacctd_net.
 DEFAULT:        false
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
-VALUES:         [ netflow | sflow | mask | file | igp | bgp | fallback ]
+VALUES:         [ netflow | sflow | mask | file | igp | bgp | longest ]
 DESC:		Determines the method for performing IP prefix aggregation - hence directly influencing 'src_net',
 		'dst_net', 'src_mask', 'dst_mask' and 'peer_dst_ip' primitives. 'netflow' and 'sflow' get values
 		from NetFlow and sFlow protocols respectively; these keywords are only valid in nfacctd, sfacctd.
@@ -1218,18 +1218,18 @@ DESC:		Determines the method for performing IP prefix aggregation - hence direct
 		source values from IGP/IS-IS daemon and BGP daemon respectively. For backward compatibility, the
 		default behaviour in pmacctd and uacctd is: 'mask' and 'file' are turned on if a networks_mask and
 		a networks_file are respectively specified by configuration. If they are both defined, the outcome
-		will be the intersection of their definitions. 'fallback' behaves in a longest-match-wins fashion:
-		in nfacctd and sfacctd lookup is done against a networks list (if networks_file is defined) sFlow/
-		NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is started) with the
-		following logics: networks_file < sFlow/NetFlow < IGP <= BGP; in pmacctd and uacctd lookup is done
-		against ia networks list, IGP and BGP only (networks_file < IGP <= BGP). Unless there is a specific
-		goal do achieve, it is highly recommended that this definition, ie. nfacctd_net, is kept in sync
-		with its ASN equivalent, ie. nfacctd_as_new.
+		will be the intersection of their definitions. 'longest' behaves in a longest-prefix match wins
+		fashion: in nfacctd and sfacctd lookup is done against a networks list (if networks_file is defined)
+		sFlow/NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is started) with
+		the following logics: networks_file < sFlow/NetFlow < IGP <= BGP; in pmacctd and uacctd lookup is
+		done against ia networks list, IGP and BGP only (networks_file < IGP <= BGP). Unless there is a
+		specific goal do achieve, it is highly recommended that this definition, ie. nfacctd_net, is kept
+		in sync with its ASN equivalent, ie. nfacctd_as_new.
 DEFAULT:	nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file'
 
 KEY:		use_ip_next_hop [GLOBAL]
 VALUES:		[ true | false ] 
-DESC:		When IP prefix aggregation (ie. nfacctd_net) is set to 'netflow', 'sflow' or 'fallback' (in
+DESC:		When IP prefix aggregation (ie. nfacctd_net) is set to 'netflow', 'sflow' or 'longest' (in
 		which case longest winning match is via 'netflow' or 'sflow') populate 'peer_dst_ip' field
 		from NetFlow/sFlow IP next hop field if BGP next-hop is not available.
 DEFAULT:        false
