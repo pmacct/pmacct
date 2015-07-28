@@ -337,6 +337,7 @@ static const struct _dictionary_line dictionary[] = {
   {"networks_mask", cfg_key_networks_mask},
   {"networks_file", cfg_key_networks_file},
   {"networks_file_filter", cfg_key_networks_file_filter},
+  {"networks_file_no_lpm", cfg_key_networks_file_no_lpm},
   {"networks_cache_entries", cfg_key_networks_cache_entries},
   {"ports_file", cfg_key_ports_file},
   {"timestamps_secs", cfg_key_timestamps_secs},

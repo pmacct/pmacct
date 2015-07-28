@@ -107,6 +107,7 @@ EXT int cfg_key_plugin_buffer_size(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);
 EXT int cfg_key_networks_file(char *, char *, char *);
 EXT int cfg_key_networks_file_filter(char *, char *, char *);
+EXT int cfg_key_networks_file_no_lpm(char *, char *, char *);
 EXT int cfg_key_networks_cache_entries(char *, char *, char *);
 EXT int cfg_key_ports_file(char *, char *, char *);
 EXT int cfg_key_print_cache_entries(char *, char *, char *);

@@ -1030,7 +1030,13 @@ void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, stru
     p->src_nmask = mask;
   }
   else {
-    if (mask > p->src_nmask) p->src_nmask = mask;
+    if (config.networks_file_no_lpm) {
+      if (mask) p->src_nmask = mask;
+    }
+    else {
+      if (mask > p->src_nmask) p->src_nmask = mask;
+    }
+
     if (config.networks_file_filter && !mask && !default_route_in_networks_table) {
       p->src_nmask = 0;
       nfd->zero_src_nmask = TRUE;
@@ -1066,7 +1072,13 @@ void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, stru
     p->dst_nmask = mask;
   }
   else {
-    if (mask > p->dst_nmask) p->dst_nmask = mask;
+    if (config.networks_file_no_lpm) {
+      if (mask) p->dst_nmask = mask;
+    }
+    else {
+      if (mask > p->dst_nmask) p->dst_nmask = mask;
+    }
+
     if (config.networks_file_filter && !mask && !default_route_in_networks_table) {
       p->dst_nmask = 0;
       nfd->zero_dst_nmask = TRUE;

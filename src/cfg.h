@@ -314,6 +314,7 @@ struct configuration {
   int networks_mask;
   char *networks_file;
   int networks_file_filter;
+  int networks_file_no_lpm;
   int networks_cache_entries;
   char *ports_file;
   char *a_filter;
