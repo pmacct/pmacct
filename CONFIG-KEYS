@@ -532,6 +532,31 @@ DESC:           Makes networks_file work as a filter in addition to its basic re
 		networks and hosts not belonging to defined networks are zeroed out.
 DEFAULT:        false
 
+KEY:		networks_file_no_lpm
+VALUES          [ true | false ]
+DESC:		Makes a matching IP prefix defined in a networks_file win always, even if it is not
+		the longest. It applies when the aggregation method includes src_net and/or dst_net
+		and nfacctd_net (or equivalents) and/or nfacctd_as_new (or equivalents) configuration
+		directives are set to 'longest' (or 'fallback'). For example we receive the following
+		PDU via NetFlow: 
+
+		SrcAddr: 10.0.8.29 (10.0.8.29)
+		DstAddr: 192.168.5.47 (192.168.5.47)
+		[ .. ]
+		SrcMask: 24 (prefix: 10.0.8.0/24)
+		DstMask: 27 (prefix: 192.168.5.32/27)
+
+		a BGP peering is available and BGP contains the following prefixes: 192.168.0.0/16 and
+		10.0.0.0/8. Such a scenario is typical when more specifics are not re-distributed in
+		BGP but are only available in the IGP. A networks_file contains the prefixes 10.0.8.0/24
+		and 192.168.5.0/24. 10.0.8.0/24 is the same as in NetFlow; but 192.168.5.0/24 (say,
+		representative of a range dedicated to a specific customer across several locations and
+		hence composed of several sub-prefies) would not be the longest match and hence the
+		prefix from NetFlow, 192.168.5.32/27, would be the outcome of the network aggregation
+		process; setting networks_file_no_lpm to true makes 192.168.5.0/24, coming from the
+		networks_file, win instead. 
+DEFAULT:        false
+
 KEY:            networks_mask
 DESC:           Specifies the network mask - in bits - to apply to IP address values in L3 header. The
 		mask is applied sistematically and before evaluating the 'networks_file' content (if
@@ -1204,7 +1229,9 @@ DESC:		When 'false', it instructs nfacctd and sfacctd to populate 'src_as', 'dst
 		In pmacctd and uacctd: 'false' (maintained for backward compatibility), 'true' and 'file' expect a
 		'networks_file' to be defined; 'bgp' just works as described previously for nfacctd and sfacctd;
 		'longest' lookup is done against a networks list, IGP and BGP only (networks_file < IGP <= BGP)
-		since no export protocol lookup method is available.
+		since no export protocol lookup method is available. Read nfacctd_net description for an example
+		of operation of the 'longest' method. 
+
 		Unless there is a specific goal do achieve, it is highly recommended that this definition, ie.
 		nfacctd_as_new, is kept in sync with its net equivalent, ie. nfacctd_net.
 DEFAULT:        false
@@ -1222,9 +1249,22 @@ DESC:		Determines the method for performing IP prefix aggregation - hence direct
 		fashion: in nfacctd and sfacctd lookup is done against a networks list (if networks_file is defined)
 		sFlow/NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is started) with
 		the following logics: networks_file < sFlow/NetFlow < IGP <= BGP; in pmacctd and uacctd lookup is
-		done against ia networks list, IGP and BGP only (networks_file < IGP <= BGP). Unless there is a
-		specific goal do achieve, it is highly recommended that this definition, ie. nfacctd_net, is kept
-		in sync with its ASN equivalent, ie. nfacctd_as_new.
+		done against ia networks list, IGP and BGP only (networks_file < IGP <= BGP). For example we receive
+		the following PDU via NetFlow:
+
+                SrcAddr: 10.0.8.29 (10.0.8.29)
+                DstAddr: 192.168.5.47 (192.168.5.47)
+                [ .. ]
+                SrcMask: 24 (prefix: 10.0.8.0/24)
+                DstMask: 27 (prefix: 192.168.5.32/27)
+
+                a BGP peering is available and BGP contains the following prefixes: 192.168.0.0/16 and 10.0.0.0/8.
+                A networks_file contains the prefixes 10.0.8.0/24 and 192.168.5.0/24. 'longest' would select as
+		outcome of the network aggregation process 10.0.8.0/24 for the src_net and src_mask respectively
+		and 192.168.5.32/27 for dst_net and dst_mask. 
+
+		Unless there is a specific goal to achieve, it is highly recommended that the definition of this
+		configuration directive is kept in sync with its ASN equivalent, ie. nfacctd_as_new.
 DEFAULT:	nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file'
 
 KEY:		use_ip_next_hop [GLOBAL]
