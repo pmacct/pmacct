@@ -4730,6 +4730,19 @@ int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
 #endif
 #endif
 
+#if defined WITH_GEOIPV2
+int cfg_key_geoipv2_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.geoipv2_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'geoipv2_file'. Globalized.\n", filename);
+
+  return changes;
+}
+#endif
+
 int cfg_key_pkt_len_distrib_bins(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

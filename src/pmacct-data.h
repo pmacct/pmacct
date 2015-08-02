@@ -658,6 +658,9 @@ static const struct _dictionary_line dictionary[] = {
   {"geoip_ipv6_file", cfg_key_geoip_ipv6_file},
 #endif
 #endif
+#if defined WITH_GEOIPV2
+  {"geoipv2_file", cfg_key_geoipv2_file},
+#endif
   {"uacctd_group", cfg_key_uacctd_group},
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"tunnel_0", cfg_key_tunnel_0},

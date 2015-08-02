@@ -41,6 +41,7 @@ EXT unsigned int sa_to_addr(struct sockaddr *, struct host_addr *, u_int16_t *);
 EXT int sa_addr_cmp(struct sockaddr *, struct host_addr *);
 EXT int sa_port_cmp(struct sockaddr *, u_int16_t);
 EXT int host_addr_mask_sa_cmp(struct host_addr *, struct host_mask *, struct sockaddr *);
+EXT unsigned int raw_to_sa(struct sockaddr *, char *, u_int8_t);
 EXT void *pm_htonl6(void *);
 EXT void *pm_ntohl6(void *);
 EXT u_int64_t pm_htonll(u_int64_t);

@@ -552,12 +552,24 @@ void evaluate_packet_handlers()
 
 #if defined (WITH_GEOIP)
     if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
-      channels_list[index].phandler[primitives] = src_host_country_handler;
+      channels_list[index].phandler[primitives] = src_host_country_geoip_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY) {
-      channels_list[index].phandler[primitives] = dst_host_country_handler;
+      channels_list[index].phandler[primitives] = dst_host_country_geoip_handler;
+      primitives++;
+    }
+#endif
+
+#if defined (WITH_GEOIPV2)
+    if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
+      channels_list[index].phandler[primitives] = src_host_country_geoipv2_handler;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY) {
+      channels_list[index].phandler[primitives] = dst_host_country_geoipv2_handler;
       primitives++;
     }
 #endif
@@ -4387,7 +4399,7 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
 }
 
 #if defined WITH_GEOIP
-void geoip_init()
+void pm_geoip_init()
 {
   if (config.geoip_ipv4_file && !config.geoip_ipv4) { 
     config.geoip_ipv4 = GeoIP_open(config.geoip_ipv4_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
@@ -4410,11 +4422,11 @@ void geoip_init()
 #endif
 }
 
-void src_host_country_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void src_host_country_geoip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  geoip_init();
+  pm_geoip_init();
   pdata->primitives.src_ip_country = 0;
 
   if (config.geoip_ipv4) {
@@ -4429,11 +4441,11 @@ void src_host_country_handler(struct channels_list_entry *chptr, struct packet_p
 #endif
 }
 
-void dst_host_country_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void dst_host_country_geoip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  geoip_init();
+  pm_geoip_init();
   pdata->primitives.dst_ip_country = 0;
 
   if (config.geoip_ipv4) {
@@ -4446,6 +4458,58 @@ void dst_host_country_handler(struct channels_list_entry *chptr, struct packet_p
       pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst);
   }
 #endif
+}
+#endif
+
+#if defined WITH_GEOIPV2
+void pm_geoipv2_init()
+{
+  int status;
+
+  memset(&config.geoipv2_db, 0, sizeof(config.geoipv2_db));
+
+  if (config.geoipv2_file) {
+    status = MMDB_open(config.geoipv2_file, MMDB_MODE_MMAP, &config.geoipv2_db);
+
+    if (status != MMDB_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): geoipv2_file database can't be loaded (%s).\n", config.name, config.type, MMDB_strerror(status));
+      log_notification_set(&log_notifications.geoip_ipv4_file_null);
+      memset(&config.geoipv2_db, 0, sizeof(config.geoipv2_db));
+    }
+  }
+}
+
+void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  MMDB_lookup_result_s result;
+  struct sockaddr_storage ss;
+  struct sockaddr *sa = (struct sockaddr *) &ss;
+  int mmdb_error;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr, AF_INET);
+  }
+#if defined ENABLE_IPV6
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, AF_INET6);
+  }
+#endif
+
+  if (config.geoipv2_db.filename) {
+    result = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
+
+    if (mmdb_error != MMDB_SUCCESS) Log(LOG_WARNING, "WARN ( %s/%s ): src_host_country_geoipv2_handler(): %s\n",
+					config.name, config.type, MMDB_strerror(mmdb_error));
+
+    if (result.found_entry) {
+      // XXX
+    }
+  }
+}
+
+void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  // XXX
 }
 #endif
 

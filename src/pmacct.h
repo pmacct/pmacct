@@ -73,6 +73,12 @@
 
 #if defined (WITH_GEOIP)
 #include <GeoIP.h>
+#if defined (WITH_GEOIPV2)
+#error "--enable-geoip and --enable-geoipv2 are mutually exclusive"
+#endif
+#endif
+#if defined (WITH_GEOIPV2)
+#include <maxminddb.h>
 #endif
 
 #include "pmacct-build.h"

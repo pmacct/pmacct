@@ -1134,6 +1134,106 @@ AC_ARG_ENABLE(geoip,
     ;;
   esac ],
 AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(whether to enable GeoIPv2 (libmaxminddb) support)
+AC_ARG_ENABLE(geoipv2,
+  [  --enable-geoipv2                 Enable GeoIPv2 (libmaxminddb) support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    USING_MMGEOIPV2="yes"
+
+    AC_ARG_WITH(geoipv2-libs,
+      [  --with-geoipv2-libs=DIR          Search for Maxmind libmaxminddb libs in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	LIBS="${LIBS} -L$withval"
+	MMGEOIPLIBV2=$withval
+	MMGEOIPLIBFOUNDV2=1
+      ]) 
+
+    if test x"$MMGEOIPLIBV2" != x""; then
+      AC_MSG_CHECKING(your own Maxmind libmaxminddb library)
+      if test -r $MMGEOIPLIBV2/libmaxminddb.a -o -r $MMGEOIPLIBV2/libmaxminddb.so; then
+        AC_MSG_RESULT(ok)
+      else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb library in $MMGEOIPLIBV2)
+      fi
+    fi
+
+    if test x"$MMGEOIPLIBFOUNDV2" = x""; then
+      AC_MSG_CHECKING([default locations for libmaxminddb])
+      if test -r /usr/lib/libmaxminddb.a -o -r /usr/lib/libmaxminddb.so; then
+	AC_MSG_RESULT([found in /usr/lib])
+	MMGEOIPLIBFOUNDV2=1
+      elif test -r /usr/lib64/libmaxminddb.a -o -r /usr/lib64/libmaxminddb.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        MMGEOIPLIBFOUNDV2=1
+      elif test -r /usr/local/lib/libmaxminddb.a -o -r /usr/local/lib/libmaxminddb.so; then
+	LIBS="${LIBS} -L/usr/local/lib"
+	AC_MSG_RESULT([found in /usr/local/lib])
+	MMGEOIPLIBFOUNDV2=1
+      else 
+        AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$MMGEOIPLIBFOUNDV2" = x""; then
+      AC_CHECK_LIB([libmaxminddb], [MMDB_open], [], [AC_MSG_ERROR([
+	ERROR: missing Maxmind libmaxminddb library. Refer to: http://www.maxmind.com/download/geoip/api/c/ 
+      ])])
+    else 
+      LIBS="${LIBS} -lmaxminddb"
+    fi 
+
+    AC_ARG_WITH(geoipv2-includes,
+      [  --with-geoipv2-includes=DIR      Search for Maxmind libmaxminddb includes in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	INCLUDES="${INCLUDES} -I$withval"
+	MMGEOIPINCLUDESV2=$withval
+	MMGEOIPINCLUDESFOUNDV2=1
+      ])
+
+    if test x"$MMGEOIPINCLUDESV2" != x""; then
+      AC_MSG_CHECKING(your own Maxmind libmaxminddb headers)
+      if test -r $MMGEOIPINCLUDESV2/maxminddb.h; then
+        AC_MSG_RESULT(ok)
+      else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Maximind libmaxminddb headers in $MMGEOIPINCLUDESV2)
+      fi
+    fi
+
+    if test x"$MMGEOIPINCLUDESFOUNDV2" = x""; then 
+      AC_MSG_CHECKING([default locations for maxminddb.h])
+      if test -r /usr/include/maxminddb.h; then
+	AC_MSG_RESULT([found in /usr/include])
+	MMGEOIPINCLUDESFOUNDV2=1;
+      elif test -r /usr/local/include/maxminddb.h; then
+	INCLUDES="${INCLUDES} -I/usr/local/include"
+	AC_MSG_RESULT([found in /usr/local/include])
+	MMGEOIPINCLUDESFOUNDV2=1;
+      fi
+      if test x"$MMGEOIPINCLUDESFOUNDV2" = x""; then
+	AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$MMGEOIPINCLUDESFOUNDV2" = x""; then
+      AC_CHECK_HEADER([maxminddb.h],,
+      [AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb headers)])      
+    fi
+
+    AC_DEFINE(WITH_GEOIPV2, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
 dnl finish: GeoIP handling
 
 dnl start: Jansson handling

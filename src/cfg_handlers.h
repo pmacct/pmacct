@@ -291,6 +291,7 @@ EXT int cfg_key_igp_daemon_map(char *, char *, char *);
 EXT int cfg_key_igp_daemon_map_msglog(char *, char *, char *);
 EXT int cfg_key_geoip_ipv4_file(char *, char *, char *);
 EXT int cfg_key_geoip_ipv6_file(char *, char *, char *);
+EXT int cfg_key_geoipv2_file(char *, char *, char *);
 EXT int cfg_key_uacctd_group(char *, char *, char *);
 EXT int cfg_key_uacctd_nl_size(char *, char *, char *);
 EXT int cfg_key_tunnel_0(char *, char *, char *);

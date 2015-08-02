@@ -297,6 +297,10 @@ struct configuration {
   GeoIP *geoip_ipv6;
 #endif
 #endif
+  char *geoipv2_file;
+#if defined WITH_GEOIPV2
+  MMDB_s geoipv2_db;
+#endif
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */
   char *pcap_savefile;
