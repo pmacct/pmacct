@@ -178,6 +178,9 @@ EXT void dst_host_country_geoip_handler(struct channels_list_entry *, struct pac
 #endif
 
 #if defined (WITH_GEOIPV2)
+EXT void pm_geoipv2_init();
+EXT void src_host_geoipv2_lookup_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void dst_host_geoipv2_lookup_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void src_host_country_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void dst_host_country_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 #endif

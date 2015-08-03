@@ -703,6 +703,12 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+#if defined WITH_GEOIPV2
+  if (config.geoipv2_file) {
+    req.bpf_filter = TRUE;
+  }
+#endif
+
   rc = bind(config.sock, (struct sockaddr *) &server, slen);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);

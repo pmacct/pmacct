@@ -563,14 +563,26 @@ void evaluate_packet_handlers()
 #endif
 
 #if defined (WITH_GEOIPV2)
-    if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
-      channels_list[index].phandler[primitives] = src_host_country_geoipv2_handler;
+    pm_geoipv2_init(); // XXX: maybe to be moved away 
+
+    if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY /* other GeoIP primitives here */) {
+      channels_list[index].phandler[primitives] = src_host_geoipv2_lookup_handler;
       primitives++;
+
+      if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
+        channels_list[index].phandler[primitives] = src_host_country_geoipv2_handler;
+        primitives++;
+      }
     }
 
-    if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY) {
-      channels_list[index].phandler[primitives] = dst_host_country_geoipv2_handler;
+    if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY /* other GeoIP primitives here */) {
+      channels_list[index].phandler[primitives] = dst_host_geoipv2_lookup_handler;
       primitives++;
+
+      if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY) {
+        channels_list[index].phandler[primitives] = dst_host_country_geoipv2_handler;
+        primitives++;
+      }
     }
 #endif
 
@@ -4476,15 +4488,17 @@ void pm_geoipv2_init()
       log_notification_set(&log_notifications.geoip_ipv4_file_null);
       memset(&config.geoipv2_db, 0, sizeof(config.geoipv2_db));
     }
+    else Log(LOG_INFO, "INFO ( %s/%s ): geoipv2_file database %s loaded\n", config.name, config.type, config.geoipv2_file);
   }
 }
 
-void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  MMDB_lookup_result_s result;
   struct sockaddr_storage ss;
   struct sockaddr *sa = (struct sockaddr *) &ss;
   int mmdb_error;
+
+  char xxx[INET6_ADDRSTRLEN];
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr, AF_INET);
@@ -4496,20 +4510,100 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
 #endif
 
   if (config.geoipv2_db.filename) {
-    result = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
+    pptrs->geoipv2_src = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
 
-    if (mmdb_error != MMDB_SUCCESS) Log(LOG_WARNING, "WARN ( %s/%s ): src_host_country_geoipv2_handler(): %s\n",
-					config.name, config.type, MMDB_strerror(mmdb_error));
+    if (mmdb_error != MMDB_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): src_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
+    }
+  }
+}
 
-    if (result.found_entry) {
-      // XXX
+void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct sockaddr_storage ss;
+  struct sockaddr *sa = (struct sockaddr *) &ss;
+  int mmdb_error;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr, AF_INET);
+  }
+#if defined ENABLE_IPV6
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, AF_INET6);
+  }
+#endif
+
+  if (config.geoipv2_db.filename) {
+    pptrs->geoipv2_dst = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
+
+    if (mmdb_error != MMDB_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): dst_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
+    }
+  }
+}
+
+void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  MMDB_entry_data_list_s *entry_data_list = NULL;
+  int status;
+
+  if (pptrs->geoipv2_src.found_entry) {
+    MMDB_entry_data_s entry_data;
+
+    status = MMDB_get_value(&pptrs->geoipv2_src.entry, &entry_data, "country", "geoname_id", NULL);
+
+    if (entry_data.offset) {
+      MMDB_entry_s entry = { .mmdb = &config.geoipv2_db, .offset = entry_data.offset };
+      status = MMDB_get_entry_data_list(&entry, &entry_data_list);
+    }
+
+    if (status != MMDB_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): src_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(status));
+    }
+
+    if (entry_data_list != NULL) {
+      if (entry_data_list->entry_data.has_data) {
+	if (entry_data_list->entry_data.type == MMDB_DATA_TYPE_UINT32) {
+	  pdata->primitives.src_ip_country = entry_data_list->entry_data.uint32;
+	}
+      }
+
+      MMDB_free_entry_data_list(entry_data_list);
     }
   }
 }
 
 void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  // XXX
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  MMDB_entry_data_list_s *entry_data_list = NULL;
+  int status;
+
+  if (pptrs->geoipv2_dst.found_entry) {
+    MMDB_entry_data_s entry_data;
+
+    status = MMDB_get_value(&pptrs->geoipv2_dst.entry, &entry_data, "country", "geoname_id", NULL);
+
+    if (entry_data.offset) {
+      MMDB_entry_s entry = { .mmdb = &config.geoipv2_db, .offset = entry_data.offset };
+      status = MMDB_get_entry_data_list(&entry, &entry_data_list);
+    }
+
+    if (status != MMDB_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): dst_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(status));
+    }
+
+    if (entry_data_list != NULL) {
+      if (entry_data_list->entry_data.has_data) {
+        if (entry_data_list->entry_data.type == MMDB_DATA_TYPE_UINT32) {
+          pdata->primitives.dst_ip_country = entry_data_list->entry_data.uint32;
+        }
+      }
+
+      MMDB_free_entry_data_list(entry_data_list);
+    }
+  }
 }
 #endif
 

@@ -373,6 +373,10 @@ struct packet_ptrs {
   u_int8_t renormalized; /* Is it renormalized yet ? */
   char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
   u_int16_t pkt_proto[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet protocols */
+#if defined (WITH_GEOIPV2)
+  MMDB_lookup_result_s geoipv2_src;
+  MMDB_lookup_result_s geoipv2_dst;
+#endif
 };
 
 struct host_addr {

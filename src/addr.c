@@ -331,6 +331,33 @@ unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int8_t v4v6)
 }
 
 /*
+ * sa_to_str() converts a supported family addres into a string
+ * 'str' length is not checked and assumed to be INET6_ADDRSTRLEN 
+ */
+unsigned int sa_to_str(char *str, const struct sockaddr *sa)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
+#if defined ENABLE_IPV6
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+#endif
+
+  if (sa->sa_family == AF_INET) {
+    inet_ntop(AF_INET, &sa4->sin_addr.s_addr, str, INET6_ADDRSTRLEN);
+    return sa->sa_family;
+  }
+#if defined ENABLE_IPV6
+  if (sa->sa_family == AF_INET6) {
+    inet_ntop(AF_INET6, &sa6->sin6_addr, str, INET6_ADDRSTRLEN);
+    return sa->sa_family;
+  }
+#endif
+
+  memset(str, 0, INET6_ADDRSTRLEN);
+
+  return 0;
+}
+
+/*
  * pm_htonl6(): same as htonl() for IPv6 addresses; no checks are done
  * on the length of the buffer.
  */

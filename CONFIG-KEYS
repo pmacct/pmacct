@@ -82,6 +82,14 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  lookups but can be alternatively based on other methods, for example maps
 		  (ie. bgp_peer_src_as_type). Internet traffic is by nature asymmetric hence
 		  reverse BGP lookups must be used with caution (ie. against own prefixes).
+		* Communities (ie. std_comm, ext_comm) and AS-PATHs (ie. as_path) are fixed
+		  size (96 and 128 chars respectively at time of writing). Directives like
+		  bgp_stdcomm_pattern and bgp_aspath_radius are aimed to keep length of these
+		  strings under control but sometimes this is not enough. While the longer
+		  term approach will be to define these primitives as varchar, the short-term
+		  approach is to re-define default size, ie. MAX_BGP_STD_COMMS MAX_BGP_ASPATH
+		  in network.h, to the desired size (blowing extra memory). This will require
+		  recompiling the binary.
 		* timestamp_start and timestamp_end should not be mixed with pmacct support
 		  for historical accounting, ie. breakdown of traffic in time-bins via the
 		  sql_history feature; the two primitives have the effect of letting pmacct
