@@ -812,6 +812,12 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+#if defined WITH_GEOIPV2
+  if (config.geoipv2_file) {
+    req.bpf_filter = TRUE;
+  }
+#endif
+
   if (config.nfacctd_flow_to_rd_map) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n", config.name);
     exit(1);

@@ -1246,7 +1246,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
     if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
 
-#if defined WITH_GEOIP
+#if defined (WITH_GEOIP) || (WITH_GEOIPV2)
     if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
     if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
 #endif
@@ -2115,7 +2115,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-#if defined WITH_GEOIP
+#if defined (WITH_GEOIP) || (WITH_GEOIPV2)
   if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));

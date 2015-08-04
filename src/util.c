@@ -1993,6 +1993,28 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 #endif
+#if defined (WITH_GEOIPV2)
+  if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
+    if (strlen(pbase->src_ip_country.str))
+      kv = json_pack("{ss}", "country_ip_src", pbase->src_ip_country.str);
+    else
+      kv = json_pack("{ss}", "country_ip_src", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
+    if (strlen(pbase->dst_ip_country.str))
+      kv = json_pack("{ss}", "country_ip_dst", pbase->dst_ip_country.str);
+    else
+      kv = json_pack("{ss}", "country_ip_dst", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+#endif
+
   if (wtc & COUNT_TCPFLAGS) {
     sprintf(misc_str, "%u", tcp_flags);
     kv = json_pack("{ss}", "tcp_flags", misc_str);

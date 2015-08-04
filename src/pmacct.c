@@ -87,7 +87,7 @@ void usage_client(char *prog)
   printf("  -n\t<bytes | packets | flows | all> \n\tSelect the counters to print (applies to -N)\n");
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth | label > \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t timestamp_start | timestamp_end | mpls_label_top | mpls_label_bottom | mpls_stack_depth | label | \n\t src_host_country | dst_host_country > \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -i\tShow time (in seconds) since statistics were last cleared (ie. pmacct -e)\n");
@@ -203,7 +203,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("TCP_FLAGS  ");
     printf("PROTOCOL    ");
     printf("TOS    ");
-#if defined (WITH_GEOIP)
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
     printf("SH_COUNTRY  ");
     printf("DH_COUNTRY  "); 
 #endif
@@ -318,7 +318,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL    ");
     if (what_to_count & COUNT_IP_TOS) printf("TOS    ");
 
-#ifdef WITH_GEOIP
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
     if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("SH_COUNTRY  ");
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY  "); 
 #endif
@@ -431,7 +431,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sTCP_FLAGS", write_sep(sep, &count));
     printf("%sPROTOCOL", write_sep(sep, &count));
     printf("%sTOS", write_sep(sep, &count));
-#if defined WITH_GEOIP
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
     printf("%sSH_COUNTRY", write_sep(sep, &count));
     printf("%sDH_COUNTRY", write_sep(sep, &count));
 #endif
@@ -525,7 +525,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_IP_PROTO) printf("%sPROTOCOL", write_sep(sep, &count));
     if (what_to_count & COUNT_IP_TOS) printf("%sTOS", write_sep(sep, &count));
 
-#if defined WITH_GEOIP
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
     if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("%sSH_COUNTRY", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("%sDH_COUNTRY", write_sep(sep, &count));
 #endif
@@ -800,7 +800,7 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_INT_IP_TOS;
 	  what_to_count |= COUNT_IP_TOS;
 	}
-#if defined WITH_GEOIP
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
         else if (!strcmp(count_token[count_index], "src_host_country")) {
           count_token_int[count_index] = COUNT_INT_SRC_HOST_COUNTRY;
           what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
@@ -1464,6 +1464,14 @@ int main(int argc,char **argv)
         }
         else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
           request.data.dst_ip_country = GeoIP_id_by_code(match_string_token);
+        }
+#endif
+#if defined WITH_GEOIPV2
+        else if (!strcmp(count_token[match_string_index], "src_host_country")) {
+          strlcpy(request.data.src_ip_country.str, match_string_token, PM_COUNTRY_T_STRLEN);
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
+          strlcpy(request.data.dst_ip_country.str, match_string_token, PM_COUNTRY_T_STRLEN);
         }
 #endif
 	else if (!strcmp(count_token[match_string_index], "sampling_rate")) {
@@ -2372,12 +2380,23 @@ int main(int argc,char **argv)
 #if defined WITH_GEOIP
         if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
+        }
+#endif
+#if defined WITH_GEOIPV2
+        if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", acc_elem->primitives.src_ip_country.str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), acc_elem->primitives.src_ip_country.str); 
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", acc_elem->primitives.dst_ip_country.str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), acc_elem->primitives.dst_ip_country.str);
         }
 #endif
 
@@ -3347,6 +3366,28 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_decref(kv);
   }
 #endif
+#if defined (WITH_GEOIPV2)
+  if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
+    if (strlen(pbase->src_ip_country.str))
+      kv = json_pack("{ss}", "country_ip_src", pbase->src_ip_country.str);
+    else
+      kv = json_pack("{ss}", "country_ip_src", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
+    if (strlen(pbase->dst_ip_country.str))
+      kv = json_pack("{ss}", "country_ip_dst", pbase->dst_ip_country.str);
+    else
+      kv = json_pack("{ss}", "country_ip_dst", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+#endif
+
   if (wtc & COUNT_TCPFLAGS) {
     sprintf(misc_str, "%u", tcp_flags);
     kv = json_pack("{ss}", "tcp_flags", misc_str);

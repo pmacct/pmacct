@@ -1349,27 +1349,50 @@ print_output_file_append: true
 
 XVIII. Quickstart guide to setup GeoIP lookups
 From pmacct 0.14.2 it is possible to perform GeoIP country lookups against a
-Maxmind library database - and as a result of that two new traffic aggregation
-primitives have been added to the set: src_host_country and dst_host_country. 
+Maxmind database v1 (--enable-geoip) and from 1.5.2 against a Maxmind database
+v2 (--enable-geoipv2). The two traffic aggregation primitives to leverage such
+feature are: src_host_country and dst_host_country.
 Pre-requisite for the feature to work are: a) a working installed Maxmind GeoIP
 library and headers and b) a Maxmind GeoIP country database (freely available).
 Two steps to quickly start with GeoIP lookups in pmacct:
  
-* to compile the pmacct package with support for GeoIP lookups, the code must
+GeoIP v1 (libGeoIP):
+* Have libGeoIP library and headers available to compile against; have a GeoIP
+  database also available: http://dev.maxmind.com/geoip/legacy/install/country/ 
+
+* To compile the pmacct package with support for GeoIP lookups, the code must
   be configured for compilation as follows: ./configure --enable-geoip [ ... ]
   The switches --with-geoip-libs and --with-geoip-includes can be of help if
   the library is installed in some non-standard location.
 
-* include as part of the pmacct configuration the following fragment:
+* Include as part of the pmacct configuration the following fragment:
 
   ...
   geoip_ipv4_file: /path/to/GeoIP/GeoIP.dat  
   aggregate: src_host_country, dst_host_country, ...
   ...
 
-Concluding note: more fine-grained GeoIP lookup primitives (ie. cities, states,
-counties, metro areas, zip codes, etc.) are not yet supported: should you be
-interested into any of these, please get in touch.  
+GeoIP v2 (libmaxminddb):
+* Have libmaxminddb library and headers available to compile against; have a
+  database also available: https://dev.maxmind.com/geoip/geoip2/geolite2/ .
+  Only the database binary format is supported.
+
+* To compile the pmacct package with support for GeoIP lookups, the code must
+  be configured for compilation as follows: ./configure --enable-geoipv2
+  [ ... ] The switches --with-geoipv2-libs and --with-geoipv2-includes can be
+  of help if the library is installed in some non-standard location.
+
+* Include as part of the pmacct configuration the following fragment:
+
+  ...
+  geoipv2_file: /path/to/GeoIP/GeoLite2-Country.mmdb
+  aggregate: src_host_country, dst_host_country, ...
+  ...
+
+Concluding notes: 1) The use of --enable-geoip is mutually exclusive with
+--enable-geoipv2; 2) more fine-grained GeoIP lookup primitives (ie. cities,
+states, counties, metro areas, zip codes, etc.) are not yet supported: should
+you be interested into any of these, please get in touch.  
 
 
 XIX. Using pmacct as traffic/event logger

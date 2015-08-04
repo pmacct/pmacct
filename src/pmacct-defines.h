@@ -41,6 +41,7 @@
 #define UINT64T_THRESHOLD 18446744073709551360ULL
 #define INT64T_THRESHOLD 9223372036854775807ULL
 #define PM_VARIABLE_LENGTH 65535
+#define PM_COUNTRY_T_STRLEN 4
 #ifndef UINT8_MAX
 #define UINT8_MAX (255U)
 #endif
@@ -351,8 +352,14 @@
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
-typedef u_int32_t pm_country_t;
 typedef u_int64_t pm_cfgreg_t;
+
+typedef struct {
+  union {
+    u_int32_t id;
+    char str[PM_COUNTRY_T_STRLEN];
+  };
+} pm_country_t;
 
 typedef struct {
   pm_cfgreg_t type;

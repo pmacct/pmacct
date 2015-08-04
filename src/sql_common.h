@@ -301,7 +301,7 @@ EXT void count_post_nat_src_ip_aton_handler(const struct db_cache *, struct inse
 EXT void count_post_nat_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void fake_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
-#if defined WITH_GEOIP
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
 EXT void count_src_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_dst_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 #endif

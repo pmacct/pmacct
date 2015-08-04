@@ -4551,7 +4551,7 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
   if (pptrs->geoipv2_src.found_entry) {
     MMDB_entry_data_s entry_data;
 
-    status = MMDB_get_value(&pptrs->geoipv2_src.entry, &entry_data, "country", "geoname_id", NULL);
+    status = MMDB_get_value(&pptrs->geoipv2_src.entry, &entry_data, "country", "iso_code", NULL);
 
     if (entry_data.offset) {
       MMDB_entry_s entry = { .mmdb = &config.geoipv2_db, .offset = entry_data.offset };
@@ -4564,8 +4564,11 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
 
     if (entry_data_list != NULL) {
       if (entry_data_list->entry_data.has_data) {
-	if (entry_data_list->entry_data.type == MMDB_DATA_TYPE_UINT32) {
-	  pdata->primitives.src_ip_country = entry_data_list->entry_data.uint32;
+	if (entry_data_list->entry_data.type == MMDB_DATA_TYPE_UTF8_STRING) {
+	  int size = (entry_data_list->entry_data.data_size < (PM_COUNTRY_T_STRLEN-1)) ? entry_data_list->entry_data.data_size : (PM_COUNTRY_T_STRLEN-1);
+
+	  memcpy(pdata->primitives.src_ip_country.str, entry_data_list->entry_data.utf8_string, size);
+	  pdata->primitives.src_ip_country.str[size] = '\0';
 	}
       }
 
@@ -4583,7 +4586,7 @@ void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
   if (pptrs->geoipv2_dst.found_entry) {
     MMDB_entry_data_s entry_data;
 
-    status = MMDB_get_value(&pptrs->geoipv2_dst.entry, &entry_data, "country", "geoname_id", NULL);
+    status = MMDB_get_value(&pptrs->geoipv2_dst.entry, &entry_data, "country", "iso_code", NULL);
 
     if (entry_data.offset) {
       MMDB_entry_s entry = { .mmdb = &config.geoipv2_db, .offset = entry_data.offset };
@@ -4596,8 +4599,11 @@ void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
 
     if (entry_data_list != NULL) {
       if (entry_data_list->entry_data.has_data) {
-        if (entry_data_list->entry_data.type == MMDB_DATA_TYPE_UINT32) {
-          pdata->primitives.dst_ip_country = entry_data_list->entry_data.uint32;
+        if (entry_data_list->entry_data.type == MMDB_DATA_TYPE_UTF8_STRING) {
+          int size = (entry_data_list->entry_data.data_size < (PM_COUNTRY_T_STRLEN-1)) ? entry_data_list->entry_data.data_size : (PM_COUNTRY_T_STRLEN-1);
+
+          memcpy(pdata->primitives.dst_ip_country.str, entry_data_list->entry_data.utf8_string, size);
+          pdata->primitives.dst_ip_country.str[size] = '\0';
         }
       }
 
