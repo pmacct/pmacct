@@ -4439,16 +4439,16 @@ void src_host_country_geoip_handler(struct channels_list_entry *chptr, struct pa
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   pm_geoip_init();
-  pdata->primitives.src_ip_country = 0;
+  pdata->primitives.src_ip_country.id = 0;
 
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
+      pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
   }
 #if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
     if (pptrs->l3_proto == ETHERTYPE_IPV6)
-      pdata->primitives.src_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src);
+      pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src);
   }
 #endif
 }
@@ -4458,16 +4458,16 @@ void dst_host_country_geoip_handler(struct channels_list_entry *chptr, struct pa
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   pm_geoip_init();
-  pdata->primitives.dst_ip_country = 0;
+  pdata->primitives.dst_ip_country.id = 0;
 
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
+      pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
   }
 #if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
     if (pptrs->l3_proto == ETHERTYPE_IPV6)
-      pdata->primitives.dst_ip_country = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst);
+      pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst);
   }
 #endif
 }

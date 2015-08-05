@@ -1974,8 +1974,8 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 
 #if defined (WITH_GEOIP)
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    if (pbase->src_ip_country > 0)
-      kv = json_pack("{ss}", "country_ip_src", GeoIP_code_by_id(pbase->src_ip_country));
+    if (pbase->src_ip_country.id > 0)
+      kv = json_pack("{ss}", "country_ip_src", GeoIP_code_by_id(pbase->src_ip_country.id));
     else
       kv = json_pack("{ss}", "country_ip_src", empty_string);
 
@@ -1984,8 +1984,8 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    if (pbase->dst_ip_country > 0)
-      kv = json_pack("{ss}", "country_ip_dst", GeoIP_code_by_id(pbase->dst_ip_country));
+    if (pbase->dst_ip_country.id > 0)
+      kv = json_pack("{ss}", "country_ip_dst", GeoIP_code_by_id(pbase->dst_ip_country.id));
     else
       kv = json_pack("{ss}", "country_ip_dst", empty_string);
 

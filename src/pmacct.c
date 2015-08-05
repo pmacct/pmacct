@@ -1460,10 +1460,10 @@ int main(int argc,char **argv)
 	}
 #if defined WITH_GEOIP
         else if (!strcmp(count_token[match_string_index], "src_host_country")) {
-          request.data.src_ip_country = GeoIP_id_by_code(match_string_token);
+          request.data.src_ip_country.id = GeoIP_id_by_code(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
-          request.data.dst_ip_country = GeoIP_id_by_code(match_string_token);
+          request.data.dst_ip_country.id = GeoIP_id_by_code(match_string_token);
         }
 #endif
 #if defined WITH_GEOIPV2
@@ -2379,13 +2379,13 @@ int main(int argc,char **argv)
 
 #if defined WITH_GEOIP
         if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.src_ip_country));
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.src_ip_country.id));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.src_ip_country.id));
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.dst_ip_country));
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.dst_ip_country.id));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.dst_ip_country.id));
         }
 #endif
 #if defined WITH_GEOIPV2
@@ -3347,8 +3347,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
 #if defined (WITH_GEOIP)
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    if (pbase->src_ip_country > 0)
-      kv = json_pack("{ss}", "country_ip_src", GeoIP_code_by_id(pbase->src_ip_country));
+    if (pbase->src_ip_country.id > 0)
+      kv = json_pack("{ss}", "country_ip_src", GeoIP_code_by_id(pbase->src_ip_country.id));
     else
       kv = json_pack("{ss}", "country_ip_src", empty_string);
 
@@ -3357,8 +3357,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    if (pbase->dst_ip_country > 0)
-      kv = json_pack("{ss}", "country_ip_dst", GeoIP_code_by_id(pbase->dst_ip_country));
+    if (pbase->dst_ip_country.id > 0)
+      kv = json_pack("{ss}", "country_ip_dst", GeoIP_code_by_id(pbase->dst_ip_country.id));
     else
       kv = json_pack("{ss}", "country_ip_dst", empty_string);
 
