@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-data.h"
 #include "plugin_hooks.h"
 
 /* extern */
@@ -173,6 +174,13 @@ void reload()
   if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;
   if (config.nfacctd_bmp_msglog_file) reload_log_bmp_thread = TRUE;
   if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
+
+#if defined WITH_GEOIPV2
+  if (config.type_id == PLUGIN_ID_CORE) {
+    pm_geoipv2_close();
+    pm_geoipv2_init();
+  }
+#endif
 
   signal(SIGHUP, reload);
 }

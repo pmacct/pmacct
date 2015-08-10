@@ -563,7 +563,7 @@ void evaluate_packet_handlers()
 #endif
 
 #if defined (WITH_GEOIPV2)
-    pm_geoipv2_init(); // XXX: maybe to be moved away 
+    pm_geoipv2_init();
 
     if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY /* other GeoIP primitives here */) {
       channels_list[index].phandler[primitives] = src_host_geoipv2_lookup_handler;
@@ -4492,13 +4492,18 @@ void pm_geoipv2_init()
   }
 }
 
+void pm_geoipv2_close()
+{
+  if (config.geoipv2_file) MMDB_close(&config.geoipv2_db);
+}
+
 void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct sockaddr_storage ss;
   struct sockaddr *sa = (struct sockaddr *) &ss;
   int mmdb_error;
 
-  char xxx[INET6_ADDRSTRLEN];
+  memset(&pptrs->geoipv2_src, 0, sizeof(pptrs->geoipv2_src));
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr, AF_INET);
@@ -4523,6 +4528,8 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   struct sockaddr_storage ss;
   struct sockaddr *sa = (struct sockaddr *) &ss;
   int mmdb_error;
+
+  memset(&pptrs->geoipv2_dst, 0, sizeof(pptrs->geoipv2_dst));
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr, AF_INET);
