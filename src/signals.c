@@ -175,13 +175,6 @@ void reload()
   if (config.nfacctd_bmp_msglog_file) reload_log_bmp_thread = TRUE;
   if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
 
-#if defined WITH_GEOIPV2
-  if (config.type_id == PLUGIN_ID_CORE) {
-    pm_geoipv2_close();
-    pm_geoipv2_init();
-  }
-#endif
-
   signal(SIGHUP, reload);
 }
 
@@ -208,11 +201,13 @@ void reload_maps()
   reload_map = FALSE;
   reload_map_bgp_thread = FALSE;
   reload_map_exec_plugins = FALSE;
+  reload_geoipv2_file = FALSE;
 
   if (config.maps_refresh) {
     reload_map = TRUE; 
     reload_map_bgp_thread = TRUE;
     reload_map_exec_plugins = TRUE;
+    reload_geoipv2_file = TRUE;
   }
   
   signal(SIGUSR2, reload_maps);

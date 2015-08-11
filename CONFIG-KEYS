@@ -2025,6 +2025,8 @@ DESC:           If pmacct is compiled with --enable-geoipv2, this defines full p
 		database v2 (libmaxminddb, ie. https://dev.maxmind.com/geoip/geoip2/geolite2/ ). Only the
 		binary database format is supported (ie. it is not possible to load distinct CSVs for IPv4
 		and IPv6 addresses). The use of --enable-geoip is mutually exclusive with --enable-geoipv2. 
+		Files can be reloaded at runtime by sending the daemon a SIGUSR signal (ie. "killall -USR2
+		nfacctd").
 
 KEY:		uacctd_group [GLOBAL, UACCTD_ONLY]
 DESC:		Sets the Linux Netlink ULOG multicast group to be joined.

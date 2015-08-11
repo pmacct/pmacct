@@ -324,7 +324,7 @@ EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 #define EXT
 #endif
 EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
-EXT int reload_map, reload_map_exec_plugins;
+EXT int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
 EXT int reload_map_bgp_thread, reload_log_bgp_thread, reload_log_bmp_thread;
 EXT int reload_log_sf_cnt;
 EXT int data_plugins, tee_plugins;

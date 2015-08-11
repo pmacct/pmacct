@@ -16,7 +16,8 @@ SIGUSR1:        returns various statistics via either console or syslog; the
 		daemons;
 SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes Core
 		Process-based maps to be reloaded (ie. Pre-Tagging, BGP source
-		peer ASN, NetFlow/sFlow agent to BGP peer, BGP MD5, etc.).
+		peer ASN, NetFlow/sFlow agent to BGP peer, BGP MD5, GeoIPv2,
+		etc.).
 SIGINT:		if starting pmacct in foreground the signal is propagated to
 		each running plugin, which is in turn gracefully terminated;
 		if starting pmacct in background, this signal is ignored by

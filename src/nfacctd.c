@@ -149,6 +149,7 @@ int main(int argc,char **argv, char **envp)
   /* a bunch of default definitions */ 
   have_num_memory_pools = FALSE;
   reload_map = FALSE;
+  reload_geoipv2_file = FALSE;
   sampling_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;

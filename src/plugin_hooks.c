@@ -314,6 +314,15 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 
   pretag_init_label(&saved_label);
 
+#if defined WITH_GEOIPV2
+  if (reload_geoipv2_file && config.geoipv2_file) {
+    pm_geoipv2_close();
+    pm_geoipv2_init();
+
+    reload_geoipv2_file = FALSE;
+  }
+#endif
+
   for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
     struct plugins_list_entry *p = channels_list[index].plugin;
 
