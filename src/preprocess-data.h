@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -41,5 +41,9 @@ static const struct _preprocess_dictionary_line sql_prep_dict[] = {
 
 static const struct _preprocess_dictionary_line print_prep_dict[] = {
   {"minp"},
+  {"minf"},
+  {"minb"},
+  {"minbpp"},
+  {"minppf"},
   {""}
 };
