@@ -504,6 +504,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
+  flow->protocol = p->proto;
   flow->octets[ndx] = data->pkt_len;
   flow->packets[ndx] = data->pkt_num; 
   flow->flows[ndx] = data->flo_num;
