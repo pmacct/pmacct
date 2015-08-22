@@ -1,7 +1,62 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.2
 pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 
-1.5.2 -- XX-XX-XXXX
+1.5.2 -- XX-08-2015
+  + Introduced infrastructure for sFlow counters and support specifically for
+    generic, ethernet and vlan counters. Counters are exported in JSON format
+    to files, specified via sfacctd_counter_file. The supplied filename can
+    contain as variable the sFlow agent IP address.
+  + tee plugin: added support for (non-)transparent IPv6 replication [further
+    QA required]
+  + plugin_common.c, sql_common.c: added log message to estimate base cache
+    memory usage.
+  ! fix, BMP daemon: improved preliminar checks in bmp_log_msg() and added
+    missing SIGHUP signal handling to reload bmp_daemon_msglog_file files.
+  ! fix, bgp_logdump.c: under certain configuration conditions call to both
+    write_and_free_json() and write_and_free_json_amqp() was leading to SEGV.
+    Thanks to Yuriy Lachin for reporting the issue.
+  ! fix, BGP daemon: improved BGP dump output: more accurate timestamping of
+    dump_init, dump_close events. dump_close now mentions amount of entries
+    and tables dumped. Thanks to Yuriy Lachin for brainstorming around this.
+  ! fix, cfg.c: raised amount of allowed config lines from 256 to 8K.
+  ! fix, print/AMQP/MongoDB plugins: SEGV observed when IPFIX vlen variables 
+    were stored in the pending_queries_queue structure (ie. as a result of a
+    time mismatch among the IPFIX exporter and the collector box).
+  ! fix, vlen primitives: when 'raw' semantics was selected, print_hex() was
+    returning wrong hex string length (one char short). As a consequence
+    occasionally some extra dirty chars were seen at the end of the converted
+    string.
+  ! fix, vlen primitives: memory leak verified in print/AMQP/MongoDB plugins.
+  ! fix, print, MongoDB & AMQP plugins: dirty values printed as part of the
+    'proto' under certain conditions. Thanks to Rene Stoutjesdijk for his
+    support resolving the issue.
+  ! fix, amqp_common.c: amqp_exchange_declare() call changed so to address
+    the change of rabbitmq-c API for support of auto_delete & internal for
+    exchange.declare. Backward compatibility with rabbitmq-c <= 0.5.2 is
+    also taken care of. Thanks to Brent Van Dussen for reporting the issue.
+  ! fix, compiling on recent FreeBSD: solved some errors catched by the -Wall
+    compiler flag. Thanks to Stephen Fulton for reporting the issue. Most of
+    the patch is courtesy by Mike Bowie.
+  ! fix, print/AMQP/MongoDB plugins: enforcing cleanup of malloc()ed structs
+    part of entries added to the pending queue, ie. because seen as future
+    entries due to a mismatch of the collector clock with the one of NetFlow/
+    IPFIX exporter(s). This may have lead to data inconsistencies.
+  ! fix, amqp_common.c: Content type was only specified for messages published
+    when the amqp_persistent_msg configuration option is specified. This info
+    should always be applied to describe the payload of the message. Patch is
+    courtesy by Will Dowling.
+  ! fix, amqp_plugin.c: generate an error on compile if --enable-rabbitmq is
+    specified without --enable-jansson. It's clear in the documentation that
+    both are required for AMQP support, but if built without jansson it will
+    silently not publish messages to AMQP. Patch is courtesy by Will Dowling.
+  ! fix, amqp_common.c: modified the content type to "application/json" in
+    line with RFC4627. Patch is courtesy by Will Dowling.
+  ! fix, setsockopt(): u_int64_t pipe_size vars changed to int, in line with
+    typical OS buffer limits (Linux, Solaris). Introduced check supplied pipe
+    size values are not bigger than INT_MAX. Many thanks to Markus Weber for
+    reporting the issue.
+  ! fix, nl.c: removed pretag_free_label() from pcap_cb() and ensuring init
+    of pptrs. Under certain conditions SEGVs could be noticed.
 
 1.5.1 -- 21-02-2015
   + BMP daemon: BMP, BGP Monitoring Protocol, can be used to monitor BGP
