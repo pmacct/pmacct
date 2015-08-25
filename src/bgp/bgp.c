@@ -70,7 +70,7 @@ void skinny_bgp_daemon()
 #endif
   afi_t afi;
   safi_t safi;
-  int clen = sizeof(client), yes=1;
+  int clen = sizeof(client), yes=1, no=0;
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
   time_t now, dump_refresh_deadline;
@@ -208,6 +208,11 @@ void skinny_bgp_daemon()
 
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BGP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, errno);
+
+#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+  rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, errno);
+#endif
 
   if (config.nfacctd_bgp_pipe_size) {
     int l = sizeof(config.nfacctd_bgp_pipe_size);

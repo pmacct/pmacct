@@ -56,7 +56,7 @@ void nfacctd_bmp_wrapper()
 
 void skinny_bmp_daemon()
 {
-  int slen, clen, ret, rc, peers_idx, allowed, yes=1;
+  int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   char bmp_packet[BMP_MAX_PACKET_SIZE], *bmp_packet_ptr;
   time_t now;
   afi_t afi;
@@ -208,6 +208,11 @@ void skinny_bmp_daemon()
 
   rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BMP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, errno);
+
+#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+  rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, errno);
+#endif
 
   if (config.nfacctd_bmp_pipe_size) {
     int l = sizeof(config.nfacctd_bmp_pipe_size);

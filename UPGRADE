@@ -10,6 +10,18 @@ been (and will be) very limited through the development process.
 
 TO:	>= 1.5.2
 FROM:	<= 1.5.1
+TOPIC:	--enable-ipv6 , IPv4-mapped IPv6 addresses & bindv6only
+DESC:	Explicit support for IPv4-mapped IPv6 addresses was removed and now the
+	bindv6only kind of behaviour is expected to be false (ie. both v4, via
+	v4-mapped v6 addresses, and v6 addresses can connect to the v6 socket).
+	On BSDs this is enforced in the code via a setsockopt() call; on Linux
+	/proc/sys/net/ipv6/bindv6only is meant to enable/disable the feature.
+	If binding to a "::" address (ie. no [sn]facctd_ip specified when pmacct
+	is compiled with --enable-ipv6) no packets from IPv4 senders are not
+	being received, then please check your bindv6only kernel setting. 
+
+TO:	>= 1.5.2
+FROM:	<= 1.5.1
 TOPIC:	sql_history_since_epoch
 DESC:	The effect of configuration directive sql_history_since_epoch has been
 	ported to encompass any timestamp in pmacct, ie. timestamp_start and
