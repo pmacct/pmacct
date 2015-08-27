@@ -2268,7 +2268,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
 
   if (config.sql_history_since_epoch) {
     if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
-    else snprintf(buf, buflen, "%u.0", tv->tv_sec);
+    else snprintf(buf, buflen, "%u", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
@@ -2276,7 +2276,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     strftime(tmpbuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
 
     if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
-    else snprintf(buf, buflen, "%s.0", tmpbuf);
+    else snprintf(buf, buflen, "%s", tmpbuf);
   }
 }
 
