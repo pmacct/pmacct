@@ -1849,10 +1849,7 @@ int cfg_key_plugin_pipe_amqp_routing_key(char *filename, char *name, char *value
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  if (!name) {
-    Log(LOG_ERR, "ERROR ( %s ): plugin_pipe_amqp_routing_key cannot be global. Not loaded.\n", filename);
-    changes++;
-  }
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pipe_amqp_routing_key = value_ptr;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
