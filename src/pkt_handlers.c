@@ -4518,7 +4518,7 @@ void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
     pptrs->geoipv2_src = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
 
     if (mmdb_error != MMDB_SUCCESS) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): src_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
+      Log(LOG_WARNING, "WARN ( %s/%s ): src_host_geoipv2_lookup_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
     }
   }
 }
@@ -4544,7 +4544,7 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
     pptrs->geoipv2_dst = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
 
     if (mmdb_error != MMDB_SUCCESS) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): dst_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
+      Log(LOG_WARNING, "WARN ( %s/%s ): dst_host_geoipv2_lookup_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
     }
   }
 }
@@ -4565,7 +4565,7 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
       status = MMDB_get_entry_data_list(&entry, &entry_data_list);
     }
 
-    if (status != MMDB_SUCCESS) {
+    if (status != MMDB_SUCCESS && status != MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
       Log(LOG_WARNING, "WARN ( %s/%s ): src_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(status));
     }
 
@@ -4600,7 +4600,7 @@ void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
       status = MMDB_get_entry_data_list(&entry, &entry_data_list);
     }
 
-    if (status != MMDB_SUCCESS) {
+    if (status != MMDB_SUCCESS && status != MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
       Log(LOG_WARNING, "WARN ( %s/%s ): dst_host_country_geoipv2_handler(): %s\n", config.name, config.type, MMDB_strerror(status));
     }
 
