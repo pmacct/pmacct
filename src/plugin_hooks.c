@@ -891,21 +891,21 @@ void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_li
 
     p_amqp_init_host(amqp_host);
 
-    if (!config.pipe_amqp_user) config.pipe_amqp_user = rabbitmq_user;
-    if (!config.pipe_amqp_passwd) config.pipe_amqp_passwd = rabbitmq_pwd;
-    if (!config.pipe_amqp_exchange) config.pipe_amqp_exchange = default_amqp_exchange;
-    if (!config.pipe_amqp_host) config.pipe_amqp_host = default_amqp_host;
-    if (!config.pipe_amqp_vhost) config.pipe_amqp_vhost = default_amqp_vhost;
-    if (!config.pipe_amqp_routing_key) config.pipe_amqp_routing_key = amqp_rk;
-    if (!config.pipe_amqp_retry) config.pipe_amqp_retry = AMQP_DEFAULT_RETRY;
+    if (!list->cfg.pipe_amqp_user) list->cfg.pipe_amqp_user = rabbitmq_user;
+    if (!list->cfg.pipe_amqp_passwd) list->cfg.pipe_amqp_passwd = rabbitmq_pwd;
+    if (!list->cfg.pipe_amqp_exchange) list->cfg.pipe_amqp_exchange = default_amqp_exchange;
+    if (!list->cfg.pipe_amqp_host) list->cfg.pipe_amqp_host = default_amqp_host;
+    if (!list->cfg.pipe_amqp_vhost) list->cfg.pipe_amqp_vhost = default_amqp_vhost;
+    if (!list->cfg.pipe_amqp_routing_key) list->cfg.pipe_amqp_routing_key = amqp_rk;
+    if (!list->cfg.pipe_amqp_retry) list->cfg.pipe_amqp_retry = AMQP_DEFAULT_RETRY;
 
-    p_amqp_set_user(amqp_host, config.pipe_amqp_user);
-    p_amqp_set_passwd(amqp_host, config.pipe_amqp_passwd);
-    p_amqp_set_exchange(amqp_host, config.pipe_amqp_exchange);
-    p_amqp_set_host(amqp_host, config.pipe_amqp_host);
-    p_amqp_set_vhost(amqp_host, config.pipe_amqp_vhost);
-    p_amqp_set_routing_key(amqp_host, config.pipe_amqp_routing_key);
-    p_amqp_set_retry_interval(amqp_host, config.pipe_amqp_retry);
+    p_amqp_set_user(amqp_host, list->cfg.pipe_amqp_user);
+    p_amqp_set_passwd(amqp_host, list->cfg.pipe_amqp_passwd);
+    p_amqp_set_exchange(amqp_host, list->cfg.pipe_amqp_exchange);
+    p_amqp_set_host(amqp_host, list->cfg.pipe_amqp_host);
+    p_amqp_set_vhost(amqp_host, list->cfg.pipe_amqp_vhost);
+    p_amqp_set_routing_key(amqp_host, list->cfg.pipe_amqp_routing_key);
+    p_amqp_set_retry_interval(amqp_host, list->cfg.pipe_amqp_retry);
 
     p_amqp_set_frame_max(amqp_host, list->cfg.buffer_size);
     p_amqp_set_exchange_type(amqp_host, default_amqp_exchange_type);
@@ -929,7 +929,7 @@ struct plugin_pipe_amqp_sleeper *plugin_pipe_amqp_sleeper_define(struct p_amqp_h
     pas->do_reconnect = flag;
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): plugin_pipe_amqp_sleeper_define(): malloc() failed\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): plugin_pipe_amqp_sleeper_define(): malloc() failed\n", plugin->cfg.name, plugin->cfg.type);
     return NULL;
   }
 
