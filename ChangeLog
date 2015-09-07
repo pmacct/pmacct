@@ -1,7 +1,7 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.2
 pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 
-1.5.2 -- XX-08-2015
+1.5.2 -- 07-09-2015
   + Introduced support for a RabbitMQ broker to be used for queueing and
     data exchange between Core Process and plugins. This is in alternative to
     the home-grown circular queue implementation. plugin_pipe_amqp directive,
