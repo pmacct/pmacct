@@ -1462,6 +1462,13 @@ DESC:		Automatically renormalizes byte/packet counters value basing on informati
 		renormalization purposes.
 DEFAULT:        false
 
+KEY:		pmacctd_nonroot [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		Allow to run pmacctd from a user with non root privileges. This can be desirable on systems
+		supporting a tool like setcap, ie. 'setcap "cap_net_raw,cap_net_admin=ep" /path/to/pmacctd',
+		to assign specific system capabilities to unprivileged users.
+DEFAULT:	false
+
 KEY:            sfacctd_counter_file [GLOBAL, SFACCTD_ONLY]
 DESC:           Enables streamed logging of sFlow counters. Each log entry features a time reference, sFlow
 		agent IP address event type and a sequence number (to order events when time reference is not

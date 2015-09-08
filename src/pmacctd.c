@@ -58,6 +58,7 @@ void usage_daemon(char *prog_name)
   printf("  -c  \tAggregation method, see full list of primitives with -a (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
   printf("  -N  \tDisable promiscuous mode\n");
+  printf("  -z  \tAllow to run with non root privileges (ie. setcap in use)\n");
   printf("  -n  \tPath to a file containing Network definitions\n");
   printf("  -o  \tPath to a file containing Port definitions\n");
   printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | mongodb | nfprobe | sfprobe ] \n\tActivate plugin\n"); 
@@ -176,6 +177,10 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'D':
       strlcpy(cfg_cmdline[rows], "daemonize: true", SRVBUFLEN);
+      rows++;
+      break;
+    case 'z':
+      strlcpy(cfg_cmdline[rows], "pmacctd_nonroot: true", SRVBUFLEN);
       rows++;
       break;
     case 'd':
@@ -332,7 +337,7 @@ int main(int argc,char **argv, char **envp)
   else config.snaplen = psize;
 
   if (!config.pcap_savefile) {
-    if (getuid() != 0) {
+    if (getuid() != 0 && !config.pmacctd_nonroot) {
       printf("%s (%s)\n\n", PMACCTD_USAGE_HEADER, PMACCT_BUILD);
       printf("ERROR ( %s/core ): You need superuser privileges to run this command.\nExiting ...\n\n", config.name);
       exit(1);

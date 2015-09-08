@@ -468,6 +468,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pmacctd_pipe_size", cfg_key_nfacctd_pipe_size},
   {"pmacctd_stitching", cfg_key_nfacctd_stitching},
   {"pmacctd_renormalize", cfg_key_sfacctd_renormalize},
+  {"pmacctd_nonroot", cfg_key_pmacctd_nonroot},
   {"uacctd_proc_name", cfg_key_proc_name},
   {"uacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"uacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},

@@ -81,6 +81,7 @@ struct configuration {
   char *name;
   char *type;
   int type_id;
+  int pmacctd_nonroot;
   char *proc_name;
   int proc_priority;
   int sock;
