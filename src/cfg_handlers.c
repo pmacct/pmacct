@@ -2105,6 +2105,7 @@ int cfg_key_networks_cache_entries(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
+  value = atoi(value_ptr);
   if (value <= 0) {
     Log(LOG_WARNING, "WARN ( %s ): 'networks_cache_entries' has to be > 0.\n", filename);
     return ERR;
