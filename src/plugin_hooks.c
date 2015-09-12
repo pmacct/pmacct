@@ -285,7 +285,7 @@ void load_plugins(struct plugin_requests *req)
   /* AMQP handling, if required */
 #ifdef WITH_RABBITMQ
   {
-    int ret, index;
+    int ret, index, index2;
 
     for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
       chptr = &channels_list[index];
@@ -295,6 +295,31 @@ void load_plugins(struct plugin_requests *req)
         plugin_pipe_amqp_init_host(&chptr->amqp_host, list);
         ret = p_amqp_connect_to_publish(&chptr->amqp_host);
         if (ret) plugin_pipe_amqp_sleeper_start(chptr);
+      }
+
+      /* reset core process pipe AMQP routing key */
+      if (list->type.id == PLUGIN_ID_CORE) list->cfg.pipe_amqp_routing_key = NULL;
+    }
+
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+      struct plugins_list_entry *list2 = plugins_list;
+      struct channels_list_entry *chptr2 = NULL;
+
+      chptr = &channels_list[index];
+      list = chptr->plugin;
+
+      for (index2 = index; channels_list[index2].aggregation || channels_list[index2].aggregation_2; index2++) {
+        chptr2 = &channels_list[index2];
+        list2 = chptr2->plugin;
+
+	if (index2 > index) {
+	  if (!strcmp(list->cfg.pipe_amqp_exchange, list2->cfg.pipe_amqp_exchange) &&
+	      !strcmp(list->cfg.pipe_amqp_routing_key, list2->cfg.pipe_amqp_routing_key)) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): Duplicated plugin_pipe_amqp_exchange, plugin_pipe_amqp_routing_key: %s, %s\nExiting.\n",
+		list->name, list->type.string, list->cfg.pipe_amqp_exchange, list->cfg.pipe_amqp_routing_key);
+	    exit(1);
+	  }
+        }
       }
     }
   }
