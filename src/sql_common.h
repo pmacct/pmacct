@@ -277,6 +277,9 @@ EXT void count_timestamp_start_residual_handler(const struct db_cache *, struct 
 EXT void count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_end_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_timestamp_arrival_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void PG_copy_count_timestamp_arrival_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_timestamp_arrival_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_min_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

@@ -1259,6 +1259,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_NAT_EVENT) what_to_count_2 |= COUNT_NAT_EVENT;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
+    if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) what_to_count_2 |= COUNT_TIMESTAMP_ARRIVAL;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
   }
 
@@ -2405,6 +2406,58 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_INT_TIMESTAMP_END;
       values[primitive].handler = where[primitive].handler = count_timestamp_end_residual_handler;
+      primitive++;
+    }
+  }
+
+  if (what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) {
+    int use_copy=0;
+
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "timestamp_arrival", SPACELEFT(insert_clause));
+    if (config.sql_history_since_epoch) {
+      strncat(where[primitive].string, "timestamp_arrival=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    }
+    else {
+      if (!strcmp(config.type, "mysql")) {
+        strncat(where[primitive].string, "timestamp_arrival=FROM_UNIXTIME(%u)", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
+      }
+      else if (!strcmp(config.type, "pgsql")) {
+        if (config.sql_use_copy) {
+          strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+          use_copy = TRUE;
+        }
+        else {
+          strncat(where[primitive].string, "timestamp_arrival=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+        }
+      }
+      else if (!strcmp(config.type, "sqlite3")) {
+        strncat(where[primitive].string, "timestamp_arrival=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+      }
+    }
+    if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_arrival_handler;
+    else values[primitive].handler = where[primitive].handler = PG_copy_count_timestamp_arrival_handler;
+    values[primitive].type = where[primitive].type = COUNT_INT_TIMESTAMP_ARRIVAL;
+    primitive++;
+
+    if (!config.timestamps_secs) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+
+      strncat(insert_clause, "timestamp_arrival_residual", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "timestamp_arrival_residual=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_INT_TIMESTAMP_ARRIVAL;
+      values[primitive].handler = where[primitive].handler = count_timestamp_arrival_residual_handler;
       primitive++;
     }
   }

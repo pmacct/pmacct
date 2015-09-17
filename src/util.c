@@ -2112,6 +2112,13 @@ char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
+  if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
+    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, config.sql_history_since_epoch);
+    kv = json_pack("{ss}", "timestamp_arrival", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   if (config.nfacctd_stitching && stitch) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_min, TRUE, config.sql_history_since_epoch);
     kv = json_pack("{ss}", "timestamp_min", tstamp_str);

@@ -638,15 +638,22 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_START) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler; // XXX: to be removed
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_start_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_timestamp_start_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_timestamp_start_handler; // XXX: to be removed
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_END) {
       if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_end_handler;
       else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_ARRIVAL) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_arrival_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_arrival_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_timestamp_arrival_handler;
       primitives++;
     }
 
@@ -1273,6 +1280,17 @@ void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_pt
   pnat->timestamp_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
   if (!chptr->plugin->cfg.timestamps_secs) {
     pnat->timestamp_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
+  }
+}
+
+void timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+
+  pnat->timestamp_arrival.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
+  if (!chptr->plugin->cfg.timestamps_secs) {
+    pnat->timestamp_arrival.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
   }
 }
 
@@ -3074,6 +3092,17 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_end.tv_usec = 0;
 }
 
+void NF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+
+  gettimeofday(&pnat->timestamp_arrival, NULL);
+  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_arrival.tv_usec = 0;
+}
+
 void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -4343,6 +4372,16 @@ void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
 
   gettimeofday(&pnat->timestamp_start, NULL);
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_start.tv_usec = 0;
+}
+
+void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  gettimeofday(&pnat->timestamp_arrival, NULL);
+  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_arrival.tv_usec = 0;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

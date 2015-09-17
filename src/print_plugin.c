@@ -742,6 +742,24 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%-30s ", buf2);
         }
 
+        if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) {
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
+
+          if (config.sql_history_since_epoch) {
+            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
+          }
+          else {
+            time1 = pnat->timestamp_arrival.tv_sec;
+            time2 = localtime(&time1);
+            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_arrival.tv_usec);
+          }
+
+          fprintf(f, "%-30s ", buf2);
+        }
+
         if (config.nfacctd_stitching && queue[j]->stitch) {
           char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
           time_t time1;
@@ -1025,6 +1043,24 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%s%s", write_sep(sep, &count), buf2);
         }
 
+        if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) {
+          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
+          time_t time1;
+          struct tm *time2;
+
+          if (config.sql_history_since_epoch) {
+            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
+          }
+          else {
+            time1 = pnat->timestamp_arrival.tv_sec;
+            time2 = localtime(&time1);
+            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_arrival.tv_usec);
+          }
+
+          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+        }
+
         if (config.nfacctd_stitching && queue[j]->stitch) {
           char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
           time_t time1;
@@ -1199,6 +1235,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "MPLS_STACK_DEPTH  ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
+  if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "TIMESTAMP_ARRIVAL              ");
   if (config.nfacctd_stitching) {
     fprintf(f, "TIMESTAMP_MIN                  ");
     fprintf(f, "TIMESTAMP_MAX                  "); 
@@ -1296,6 +1333,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
   if (config.nfacctd_stitching) {
     fprintf(f, "%sTIMESTAMP_MIN", write_sep(sep, &count));
     fprintf(f, "%sTIMESTAMP_MAX", write_sep(sep, &count));

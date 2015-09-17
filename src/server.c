@@ -528,6 +528,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w2 & COUNT_NAT_EVENT) d3->nat_event = s3->nat_event;
     if (w2 & COUNT_TIMESTAMP_START) memcpy(&d3->timestamp_start, &s3->timestamp_start, sizeof(struct timeval));
     if (w2 & COUNT_TIMESTAMP_END) memcpy(&d3->timestamp_end, &s3->timestamp_end, sizeof(struct timeval));
+    if (w2 & COUNT_TIMESTAMP_ARRIVAL) memcpy(&d3->timestamp_arrival, &s3->timestamp_arrival, sizeof(struct timeval));
   }
 
   if (extras->off_pkt_mpls_primitives && s4) {

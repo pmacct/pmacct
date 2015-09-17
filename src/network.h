@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -552,6 +552,7 @@ struct pkt_nat_primitives {
   u_int8_t nat_event;
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
+  struct timeval timestamp_arrival; /* XXX: clean-up: to be moved in a separate structure */
 };
 
 struct pkt_mpls_primitives {
