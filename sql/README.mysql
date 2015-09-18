@@ -137,6 +137,9 @@ Similarly, BGP tables:
   * timestamp_end => timestamp_end, timestamp_end_residual:
     - timestamp_end DATETIME NOT NULL, see README.timestamp)
     - timestamp_end_residual INT NOT NULL, see README.timestamp)
+  * timestamp_arrival => timestamp_arrival, timestamp_arrival_residual:
+    - timestamp_arrival DATETIME NOT NULL, see README.timestamp)
+    - timestamp_arrival_residual INT NOT NULL, see README.timestamp)
   * timestamp_min => timestamp_min, timestamp_min_residual:
     - timestamp_min DATETIME NOT NULL, see README.timestamp)
     - timestamp_min_residual INT NOT NULL, see README.timestamp)

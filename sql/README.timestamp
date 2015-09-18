@@ -1,11 +1,14 @@
 This document doesn't replace documentation relevant to the database software you are
 using, ie. README.mysql, README.pgsql or README.sqlite3.
 
-The 'timestamp_start', 'timestamp_end', 'timestamp_min' and 'timestamp_max' fields.
+The 'timestamp_start', 'timestamp_end', 'timestamp_arrival', 'timestamp_min' and
+'timestamp_max' fields.
 'timestamp_start' and 'timestamp_end' fields are being introduced to support logging
-of traffic and events via pmacct. 'timestamp_min' and 'timestamp_max' fields support
-stitching of flows (or samples if sfacctd or packets if pmacctd), for more info see
-nfacctd_stitching feature in CONFIG-KEYS. 
+of traffic and events via pmacct (mainly NetFlow/IPFIX feature). 'timestamp_arrival'
+records libpcap packet timestamp and sFlow/NetFlow/IPFIX packet arrival time at the
+collector; 'timestamp_min' and 'timestamp_max' fields support stitching of flows (or
+samples if sfacctd or packets if pmacctd), for more info see nfacctd_stitching feature
+in CONFIG-KEYS. 
 
 Timestamps resolution is up to the msec level and for this reason time residual fields 
 are optionally introduced ie. 'timestamp_start_residual', 'timestamp_end_residual':
@@ -29,6 +32,13 @@ n MySQL format) are to add all the described primitives to the SQL schema:
     - "timestamp_end_residual INT UNSIGNED NOT NULL,"
   - To add them to the primary key:
     - "PRIMARY KEY (..., timestamp_end, timestamp_end_residual, ...)"
+
+* timestamp_arrival and timestamp_arrival_residual fields:
+  - To declare the fields:
+    - "timestamp_arrival DATETIME NOT NULL,"
+    - "timestamp_arrival_residual INT UNSIGNED NOT NULL,"
+  - To add them to the primary key:
+    - "PRIMARY KEY (..., timestamp_arrival, timestamp_arrival_residual, ...)"
 
 This works similarly for 'timestamp_min', 'timestamp_min_residual', 'timestamp_max'
 and 'timestamp_max_residual'.

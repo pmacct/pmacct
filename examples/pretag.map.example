@@ -185,9 +185,9 @@ set_tag=15	ip=192.168.1.1  in=3 filter='src net 192.168.0.0/24'
 
 !
 ! The following rule applies to sFlow, for example, to prevent aggregation of samples
-! in conjunction with having 'timestamp_start' part of the aggregation method. In this
-! example "1" is the selected floor value and "++" instructs to increase the value at
-! every pre_tag_map iteration.
+! in conjunction with having 'timestamp_arrival' part of the aggregation method. In
+! this example "1" is the selected floor value and "++" instructs to increase the
+! value at every pre_tag_map iteration.
 !
 set_tag=1++	ip=0.0.0.0/0
 

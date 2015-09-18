@@ -47,7 +47,7 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 mpls_label_top, mpls_label_bottom, mpls_stack_depth, sampling_rate,
 		 src_host_country, dst_host_country, pkt_len_distrib, nat_event,
 		 post_nat_src_host, post_nat_dst_host, post_nat_src_port, post_nat_dst_port,
-		 fw_event, timestamp_start, timestamp_end ]
+		 fw_event, timestamp_start, timestamp_end, timestamp_arrival ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -90,14 +90,14 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  approach is to re-define default size, ie. MAX_BGP_STD_COMMS MAX_BGP_ASPATH
 		  in network.h, to the desired size (blowing extra memory). This will require
 		  recompiling the binary.
-		* timestamp_start and timestamp_end should not be mixed with pmacct support
-		  for historical accounting, ie. breakdown of traffic in time-bins via the
-		  sql_history feature; the two primitives have the effect of letting pmacct
-		  act as a logger up to the msec level (if reported by the capturing method).
-		  timestamp_start records the likes of libpcap packet timestamp, sFlow sample
-		  arrival time, NetFlow/IPFIX observation time and flow first switched time;
-		  timestamp_end currently only makes sense for logging flows via NetFlow and
-		  IPFIX. 
+		* timestamp_start, timestamp_end and timestamp_arrival should not be mixed
+		  with pmacct support for historical accounting, ie. breakdown of traffic in
+		  time-bins via the sql_history feature; these primitives have the effect of
+		  letting pmacct act as a logger up to the msec level (if reported by the
+		  capturing method). timestamp_start records NetFlow/IPFIX flow start time or
+		  observation; timestamp_end records NetFlow/IPFIX flow end time; finally,
+		  timestamp_arrival records libpcap packet timestamp and sFlow/NetFlow/IPFIX
+		  packet arrival time at the collector.
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
@@ -1074,18 +1074,18 @@ DEFAULT:	any
 
 KEY:		timestamps_secs
 VALUES:		[ true | false ]
-DESC:		Sets timestamp (timestamp_start, timestamp_end primitives) resolution to seconds, ie. prevents
-		timestamp_start_residual, timestamp_end_residual fields to be populated. In nfprobe plugin,
-		when exporting via NetFlow v9 (nfprobe_version: 9), allows to fallback to first and last
-		swithed times in seconds.
+DESC:		Sets timestamp (timestamp_start, timestamp_end, timestamp_arrival primitives) resolution to
+		seconds, ie. prevents residual time fields like timestamp_start_residual to be populated.
+		In nfprobe plugin, when exporting via NetFlow v9 (nfprobe_version: 9), allows to fallback
+		to first and last swithed times in seconds.
 DEFAULT:        false
 
 KEY:            timestamps_since_epoch
 VALUES          [ true | false ]
-DESC:           All timestamps (ie. timestamp_start, timestamp_end primitives; sql_history-related fields
-                stamp_inserted, stamp_updated; etc.) in the standard seconds since the Epoch format. In
-                case the output is to a RDBMS, setting this directive to true will require changes to the
-                default types for timestamp fields in the SQL schema.
+DESC:           All timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival primitives; sql_history-
+		related fields stamp_inserted, stamp_updated; etc.) in the standard seconds since the Epoch
+		format. In case the output is to a RDBMS, setting this directive to true will require changes
+		to the default types for timestamp fields in the SQL schema.
 
 		MySQL:          DATETIME ==> INT(8) UNSIGNED
                 PostgreSQL:     timestamp without time zone ==> bigint
