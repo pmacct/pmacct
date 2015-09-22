@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -20,7 +20,9 @@
 */
 
 /* includes */
+#include <stdlib.h>
 #include <sys/poll.h>
+#include <time.h>
 
 /* defines */
 #if (!defined MONGO_HAVE_STDINT)
@@ -43,6 +45,7 @@ EXT void MongoDB_cache_purge(struct chained_cache *[], int);
 EXT void MongoDB_create_indexes(mongo *, const char *);
 EXT int MongoDB_get_database(char *, int, char *);
 EXT void MongoDB_append_label(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
+EXT int MongoDB_oid_fuzz();
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

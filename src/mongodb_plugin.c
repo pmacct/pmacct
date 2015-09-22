@@ -135,6 +135,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   mongo_init(&db_conn);
   mongo_set_op_timeout(&db_conn, 1000);
+  bson_set_oid_fuzz(&MongoDB_oid_fuzz);
 
   /* plugin main loop */
   for(;;) {
@@ -300,9 +301,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
   }
 
   if (config.sql_host)
-    db_status = mongo_connect(&db_conn, config.sql_host, 27017 /* default port */);
+    db_status = mongo_client(&db_conn, config.sql_host, 27017 /* default port */);
   else
-    db_status = mongo_connect(&db_conn, "127.0.0.1", 27017 /* default port */);
+    db_status = mongo_client(&db_conn, "127.0.0.1", 27017 /* default port */);
 
   if (db_status != MONGO_OK) {
     switch (db_conn.err) {
@@ -800,10 +801,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       if (config.debug) bson_print(bson_elem);
   
       if (batch_idx == config.mongo_insert_batch) {
-        if (dyn_table) db_status = mongo_insert_batch(&db_conn, current_table, bson_batch, batch_idx, NULL, 0);
-        else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch, batch_idx, NULL, 0);
-        if (db_status != MONGO_OK)
-  	  Log(LOG_ERR, "ERROR ( %s/%s ): Unable to insert all elements in batch: try a smaller mongo_insert_batch value.\n", config.name, config.type);
+	if (dyn_table) db_status = mongo_insert_batch(&db_conn, current_table, bson_batch, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+	else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+	if (db_status != MONGO_OK) {
+   	  Log(LOG_ERR, "ERROR ( %s/%s ): Unable to insert all elements in batch: try a smaller mongo_insert_batch value.\n", config.name, config.type);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Server error: %s. (PID: %u, QN: %u/%u)\n", config.name, config.type, db_conn.lasterrstr, writer_pid, qn, saved_index);
+	}
   
         for (i = 0; i < batch_idx; i++) {
           bson_elem = (bson *) bson_batch[i];
@@ -818,10 +821,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
 
   /* last round on the lollipop */
   if (batch_idx) {
-    if (dyn_table) db_status = mongo_insert_batch(&db_conn, current_table, bson_batch, batch_idx, NULL, 0);
-    else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch, batch_idx, NULL, 0);
-    if (db_status != MONGO_OK) 
+    if (dyn_table) db_status = mongo_insert_batch(&db_conn, current_table, bson_batch, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+    else db_status = mongo_insert_batch(&db_conn, config.sql_table, bson_batch, batch_idx, NULL, MONGO_CONTINUE_ON_ERROR);
+    if (db_status != MONGO_OK) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to insert all elements in batch: try a smaller mongo_insert_batch value.\n", config.name, config.type);
+      Log(LOG_ERR, "ERROR ( %s/%s ): Server error: %s. (PID: %u, QN: %u/%u)\n", config.name, config.type, db_conn.lasterrstr, writer_pid, qn, saved_index);
+    }
 
     for (i = 0; i < batch_idx; i++) {
       bson_elem = (bson *) bson_batch[i];
@@ -903,4 +908,13 @@ void MongoDB_append_label(bson *bson_elem, char *name, struct pkt_vlen_hdr_primi
   vlen_prims_get(pvlen, wtc, &label_ptr);
   if (label_ptr) bson_append_string(bson_elem, name, label_ptr); 
   else bson_append_null(bson_elem, name);
+}
+
+int MongoDB_oid_fuzz()
+{
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  srand((int) now.tv_usec);
+
+  return rand();
 }
