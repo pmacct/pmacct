@@ -1977,6 +1977,7 @@ DESC:           Defines output format for the dump of BGP/BMP tables. Only JSON 
 DEFAULT:	json
 
 KEY:		bgp_table_dump_refresh_time | bmp_dump_refresh_time ] [GLOBAL]
+VALUES:		[ 60 .. 86400 ]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP/BMP
 		tables to files.
 DEFAULT:	0
