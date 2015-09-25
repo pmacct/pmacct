@@ -312,7 +312,7 @@ void load_plugins(struct plugin_requests *req)
         chptr2 = &channels_list[index2];
         list2 = chptr2->plugin;
 
-	if (index2 > index) {
+	if (index2 > index && list->cfg.pipe_amqp_exchange && list->cfg.pipe_amqp_routing_key) {
 	  if (!strcmp(list->cfg.pipe_amqp_exchange, list2->cfg.pipe_amqp_exchange) &&
 	      !strcmp(list->cfg.pipe_amqp_routing_key, list2->cfg.pipe_amqp_routing_key)) {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): Duplicated plugin_pipe_amqp_exchange, plugin_pipe_amqp_routing_key: %s, %s\nExiting.\n",
