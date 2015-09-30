@@ -3492,14 +3492,14 @@ echo "configure:3478: checking default locations for librdkafka" >&5
     fi
 
     if test x"$KAFKALIBFOUND" = x""; then
-      echo $ac_n "checking for rd_kafka_new in -llibrdkafka""... $ac_c" 1>&6
-echo "configure:3497: checking for rd_kafka_new in -llibrdkafka" >&5
-ac_lib_var=`echo librdkafka'_'rd_kafka_new | sed 'y%./+-%__p_%'`
+      echo $ac_n "checking for rd_kafka_new in -lrdkafka""... $ac_c" 1>&6
+echo "configure:3497: checking for rd_kafka_new in -lrdkafka" >&5
+ac_lib_var=`echo rdkafka'_'rd_kafka_new | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-llibrdkafka  $LIBS"
+LIBS="-lrdkafka  $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 3505 "configure"
 #include "confdefs.h"
@@ -3527,13 +3527,13 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-    ac_tr_lib=HAVE_LIB`echo librdkafka | sed -e 's/[^a-zA-Z0-9_]/_/g' \
+    ac_tr_lib=HAVE_LIB`echo rdkafka | sed -e 's/[^a-zA-Z0-9_]/_/g' \
     -e 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
   cat >> confdefs.h <<EOF
 #define $ac_tr_lib 1
 EOF
 
-  LIBS="-llibrdkafka $LIBS"
+  LIBS="-lrdkafka $LIBS"
 
 else
   echo "$ac_t""no" 1>&6
@@ -3566,7 +3566,7 @@ fi
     if test x"$KAFKAINCLUDES" != x""; then
       echo $ac_n "checking your own Kafka headers""... $ac_c" 1>&6
 echo "configure:3569: checking your own Kafka headers" >&5
-      if test -r $KAFKAINCLUDES/rdkafka/rdkafka.h; then
+      if test -r $KAFKAINCLUDES/librdkafka/rdkafka.h; then
         echo "$ac_t""ok" 1>&6
       else
 	echo "$ac_t""no" 1>&6
@@ -3575,8 +3575,8 @@ echo "configure:3569: checking your own Kafka headers" >&5
     fi
 
     if test x"$KAFKAINCLUDESFOUND" = x""; then 
-      echo $ac_n "checking default locations for rdkafka.h""... $ac_c" 1>&6
-echo "configure:3580: checking default locations for rdkafka.h" >&5
+      echo $ac_n "checking default locations for amqp.h""... $ac_c" 1>&6
+echo "configure:3580: checking default locations for amqp.h" >&5
       if test -r /usr/include/librdkafka/rdkafka.h; then
 	echo "$ac_t""found in /usr/include" 1>&6
 	KAFKAINCLUDESFOUND=1;
@@ -3591,16 +3591,16 @@ echo "configure:3580: checking default locations for rdkafka.h" >&5
     fi
 
     if test x"$KAFKAINCLUDESFOUND" = x""; then
-      ac_safe=`echo "rdkafka.h" | sed 'y%./+-%__p_%'`
-echo $ac_n "checking for rdkafka.h""... $ac_c" 1>&6
-echo "configure:3597: checking for rdkafka.h" >&5
+      ac_safe=`echo "librdkafka/rdkafka.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for librdkafka/rdkafka.h""... $ac_c" 1>&6
+echo "configure:3597: checking for librdkafka/rdkafka.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
 #line 3602 "configure"
 #include "confdefs.h"
-#include <rdkafka.h>
+#include <librdkafka/rdkafka.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:3607: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
