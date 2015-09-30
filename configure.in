@@ -937,7 +937,6 @@ AC_ARG_ENABLE(rabbitmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-dnl USING_SQL="yes"
     USING_RABBITMQ="yes"
 
     AC_ARG_WITH(rabbitmq-libs,
@@ -1033,6 +1032,110 @@ dnl USING_SQL="yes"
   esac ],
 AC_MSG_RESULT(no))
 dnl finish: RabbitMQ/AMQP handling
+
+
+dnl start: Kafka handling
+AC_MSG_CHECKING(whether to enable Kafka support)
+AC_ARG_ENABLE(kafka,
+  [  --enable-kafka                   Enable Kafka support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    USING_KAFKA="yes"
+
+    AC_ARG_WITH(kafka-libs,
+      [  --with-kafka-libs=DIR            Search for Kafka libs in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	LIBS="${LIBS} -L$withval"
+	KAFKALIB=$withval
+	KAFKALIBFOUND=1
+      ]) 
+
+    if test x"$KAFKALIB" != x""; then
+      AC_MSG_CHECKING(your own Kafka library)
+      if test -r $KAFKALIB/librdkafka.a -o -r $KAFKALIB/librdkafka.so; then
+        AC_MSG_RESULT(ok)
+      else
+        AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Kafka library in $KAFKALIB)
+      fi
+    fi
+
+    if test x"$KAFKALIBFOUND" = x""; then
+      AC_MSG_CHECKING([default locations for librdkafka])
+      if test -r /usr/lib/librdkafka.a -o -r /usr/lib/librdkafka.so; then
+	AC_MSG_RESULT([found in /usr/lib])
+	KAFKALIBFOUND=1
+      elif test -r /usr/lib64/librdkafka.a -o -r /usr/lib64/librdkafka.so; then
+        LIBS="${LIBS} -L/usr/lib64"
+        AC_MSG_RESULT([found in /usr/lib64])
+        KAFKALIBFOUND=1
+      elif test -r /usr/local/lib/librdkafka.a -o -r /usr/local/lib/librdkafka.so; then
+	LIBS="${LIBS} -L/usr/local/lib"
+	AC_MSG_RESULT([found in /usr/local/lib])
+	KAFKALIBFOUND=1
+      else 
+        AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$KAFKALIBFOUND" = x""; then
+      AC_CHECK_LIB([librdkafka], [rd_kafka_new], [], [AC_MSG_ERROR([
+        ERROR: missing Kafka library. Refer to: https://github.com/edenhill/librdkafka/
+      ])])
+    else 
+      LIBS="${LIBS} -lrdkafka"
+    fi 
+
+    AC_ARG_WITH(kafka-includes,
+      [  --with-kafka-includes=DIR        Search for Kafka includes in the specified directory],
+      [
+	AC_LINEARIZE_PATH($withval, withval=$absdir)
+	INCLUDES="${INCLUDES} -I$withval"
+	KAFKAINCLUDES=$withval
+	KAFKAINCLUDESFOUND=1
+      ])
+
+    if test x"$KAFKAINCLUDES" != x""; then
+      AC_MSG_CHECKING(your own Kafka headers)
+      if test -r $KAFKAINCLUDES/rdkafka/rdkafka.h; then
+        AC_MSG_RESULT(ok)
+      else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR(ERROR: missing Kafka headers in $KAFKAINCLUDES)
+      fi
+    fi
+
+    if test x"$KAFKAINCLUDESFOUND" = x""; then 
+      AC_MSG_CHECKING([default locations for rdkafka.h])
+      if test -r /usr/include/librdkafka/rdkafka.h; then
+	AC_MSG_RESULT([found in /usr/include])
+	KAFKAINCLUDESFOUND=1;
+      elif test -r /usr/local/include/librdkafka/rdkafka.h; then
+	INCLUDES="${INCLUDES} -I/usr/local/include"
+	AC_MSG_RESULT([found in /usr/local/include])
+	KAFKAINCLUDESFOUND=1;
+      fi
+      if test x"$KAFKAINCLUDESFOUND" = x""; then
+	AC_MSG_RESULT([not found])
+      fi
+    fi
+
+    if test x"$KAFKAINCLUDESFOUND" = x""; then
+      AC_CHECK_HEADER([rdkafka.h],,
+      [AC_MSG_ERROR(ERROR: missing Kafka headers)])      
+    fi
+
+    AC_DEFINE(WITH_KAFKA, 1)
+    PLUGINS="${PLUGINS} kafka_plugin.c"
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
+dnl finish: Kafka handling
 
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
