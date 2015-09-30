@@ -3575,8 +3575,8 @@ echo "configure:3569: checking your own Kafka headers" >&5
     fi
 
     if test x"$KAFKAINCLUDESFOUND" = x""; then 
-      echo $ac_n "checking default locations for amqp.h""... $ac_c" 1>&6
-echo "configure:3580: checking default locations for amqp.h" >&5
+      echo $ac_n "checking default locations for rdkafka.h""... $ac_c" 1>&6
+echo "configure:3580: checking default locations for rdkafka.h" >&5
       if test -r /usr/include/librdkafka/rdkafka.h; then
 	echo "$ac_t""found in /usr/include" 1>&6
 	KAFKAINCLUDESFOUND=1;
