@@ -31,6 +31,7 @@
 #define PLUGIN_ID_TEE		8
 #define PLUGIN_ID_MONGODB	9
 #define PLUGIN_ID_AMQP		10
+#define PLUGIN_ID_KAFKA		11
 #define PLUGIN_ID_UNKNOWN       -1
 
 /* vars */
@@ -691,6 +692,9 @@ static struct plugin_type_entry plugin_types_list[] = {
 #endif
 #ifdef WITH_RABBITMQ
   {PLUGIN_ID_AMQP,	"amqp",		amqp_plugin},
+#endif
+#ifdef WITH_KAFKA
+  {PLUGIN_ID_KAFKA,     "kafka",        kafka_plugin},
 #endif
   {PLUGIN_ID_TEE,	"tee",		tee_plugin},
   {PLUGIN_ID_UNKNOWN,	"",		NULL},

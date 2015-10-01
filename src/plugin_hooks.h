@@ -199,4 +199,8 @@ EXT void mongodb_plugin(int, struct configuration *, void *);
 #ifdef WITH_RABBITMQ
 EXT void amqp_plugin(int, struct configuration *, void *);
 #endif
+
+#ifdef WITH_KAFKA
+EXT void kafka_plugin(int, struct configuration *, void *);
+#endif
 #undef EXT
