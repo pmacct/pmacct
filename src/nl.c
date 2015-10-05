@@ -482,8 +482,6 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
     ret = 0; trial = 0;
 
     while (!ret && trial < MAX_GTP_TRIALS) {
-      off++; ptr++; trial++;
-
       pptrs->iph_ptr = ptr;
       pptrs->tlh_ptr = NULL; pptrs->payload_ptr = NULL;
       pptrs->l4_proto = 0; pptrs->tcp_flags = 0;
@@ -530,6 +528,9 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
         ret = FALSE;
 	break;
       }
+
+      /* next loop increment */
+      off++; ptr++; trial++;
     }
   }
   else {
