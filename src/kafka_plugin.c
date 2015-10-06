@@ -290,4 +290,192 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 void kafka_cache_purge(struct chained_cache *queue[], int index)
 {
+  struct pkt_primitives *data = NULL;
+  struct pkt_bgp_primitives *pbgp = NULL;
+  struct pkt_nat_primitives *pnat = NULL;
+  struct pkt_mpls_primitives *pmpls = NULL;
+  char *pcust = NULL;
+  struct pkt_vlen_hdr_primitives *pvlen = NULL;
+  struct pkt_bgp_primitives empty_pbgp;
+  struct pkt_nat_primitives empty_pnat;
+  struct pkt_mpls_primitives empty_pmpls;
+  char *empty_pcust = NULL;
+  char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
+  int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
+  int mv_num = 0, mv_num_save = 0;
+  time_t start, duration;
+  pid_t writer_pid = getpid();
+
+#ifdef WITH_JANSSON
+  json_t *array = json_array();
+#endif
+
+  /* setting some defaults */
+/*
+  if (!config.sql_host) config.sql_host = default_amqp_host;
+  if (!config.sql_db) config.sql_db = default_amqp_exchange;
+  if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.amqp_vhost) config.amqp_vhost = default_amqp_vhost;
+*/
+
+/*
+  if (!config.sql_table) config.sql_table = default_amqp_routing_key;
+  else {
+    if (strchr(config.sql_table, '$')) {
+      is_routing_key_dyn = TRUE;
+      orig_amqp_routing_key = config.sql_table;
+      config.sql_table = dyn_amqp_routing_key;
+    }
+  }
+  if (config.amqp_routing_key_rr) {
+    orig_amqp_routing_key = config.sql_table;
+    config.sql_table = dyn_amqp_routing_key;
+  }
+*/
+
+/*
+  p_amqp_set_exchange(&amqpp_amqp_host, config.sql_db);
+  p_amqp_set_routing_key(&amqpp_amqp_host, config.sql_table);
+  p_amqp_set_exchange_type(&amqpp_amqp_host, config.amqp_exchange_type);
+  p_amqp_set_host(&amqpp_amqp_host, config.sql_host);
+  p_amqp_set_vhost(&amqpp_amqp_host, config.amqp_vhost);
+  p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
+  p_amqp_set_frame_max(&amqpp_amqp_host, config.amqp_frame_max);
+  p_amqp_set_content_type_json(&amqpp_amqp_host);
+
+  p_amqp_init_routing_key_rr(&amqpp_amqp_host);
+  p_amqp_set_routing_key_rr(&amqpp_amqp_host, config.amqp_routing_key_rr);
+*/
+
+  empty_pcust = malloc(config.cpptrs.len);
+  if (!empty_pcust) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
+  memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
+  memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(empty_pcust, 0, config.cpptrs.len);
+
+/*
+  ret = p_amqp_connect_to_publish(&amqpp_amqp_host);
+  if (ret) return;
+*/
+
+  for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
+    stop = P_preprocess_funcs[j](queue, &index, j);
+
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
+  start = time(NULL);
+
+  for (j = 0; j < index; j++) {
+    char *json_str;
+
+    if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
+
+    data = &queue[j]->primitives;
+    if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
+    else pbgp = &empty_pbgp;
+
+    if (queue[j]->pnat) pnat = queue[j]->pnat;
+    else pnat = &empty_pnat;
+
+    if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
+    else pmpls = &empty_pmpls;
+
+    if (queue[j]->pcust) pcust = queue[j]->pcust;
+    else pcust = empty_pcust;
+
+    if (queue[j]->pvlen) pvlen = queue[j]->pvlen;
+    else pvlen = NULL;
+
+    if (queue[j]->valid == PRINT_CACHE_FREE) continue;
+
+    json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
+                         &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
+			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
+			 &queue[j]->basetime, queue[j]->stitch);
+
+#ifdef WITH_JANSSON
+    if (json_str && config.sql_multi_values) {
+      json_t *elem = NULL;
+      char *tmp_str = json_str;
+      int do_free = FALSE;
+
+      if (json_array_size(array) >= config.sql_multi_values) {
+	json_str = json_dumps(array, 0);
+	json_array_clear(array);
+        mv_num_save = mv_num;
+        mv_num = 0;
+      }
+      else do_free = TRUE;
+
+      elem = json_loads(tmp_str, 0, NULL);
+      json_array_append_new(array, elem);
+      mv_num++;
+
+      if (do_free) {
+        free(json_str);
+        json_str = NULL;
+      }
+    }
+#endif
+
+    if (json_str) {
+/*
+      if (is_routing_key_dyn) {
+	amqp_handle_routing_key_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
+	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
+      }
+
+      if (config.amqp_routing_key_rr) {
+        p_amqp_handle_routing_key_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &amqpp_amqp_host.rk_rr);
+	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
+      }
+
+      ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
+*/
+      free(json_str);
+      json_str = NULL;
+
+      if (!ret) {
+	if (!config.sql_multi_values) qn++;
+	else qn += mv_num_save;
+      }
+      else break;
+    }
+  }
+
+#ifdef WITH_JANSSON
+  if (config.sql_multi_values && json_array_size(array)) {
+    char *json_str;
+
+    json_str = json_dumps(array, 0);
+    json_array_clear(array);
+    json_decref(array);
+
+/*
+    if (json_str) {
+      // no handling of dyn routing keys here: not compatible
+      ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
+      free(json_str);
+      json_str = NULL;
+
+      if (!ret) qn += mv_num;
+    }
+*/
+  }
+#endif
+
+  // p_amqp_close(&amqpp_amqp_host, FALSE);
+
+  duration = time(NULL)-start;
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
+		config.name, config.type, writer_pid, qn, saved_index, duration);
+
+  if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
+
+  if (empty_pcust) free(empty_pcust);
 }
