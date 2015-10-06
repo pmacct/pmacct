@@ -1563,6 +1563,56 @@ int cfg_key_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_kafka_broker_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN ( %s ): 'kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_broker_port = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.kafka_broker_port = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_kafka_partition(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'kafka_partition' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_partition = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.kafka_partition = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_aggressive_classification(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

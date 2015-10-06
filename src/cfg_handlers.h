@@ -93,6 +93,8 @@ EXT int cfg_key_amqp_frame_max(char *, char *, char *);
 EXT int cfg_key_amqp_heartbeat_interval(char *, char *, char *);
 EXT int cfg_key_amqp_vhost(char *, char *, char *);
 EXT int cfg_key_amqp_routing_key_rr(char *, char *, char *);
+EXT int cfg_key_kafka_broker_port(char *, char *, char *);
+EXT int cfg_key_kafka_partition(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp(char *, char *, char *);

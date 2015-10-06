@@ -23,7 +23,20 @@
 #include <librdkafka/rdkafka.h>
 #include <sys/poll.h>
 
+/* defines */
+#define PM_KAFKA_ERRSTR_LEN	512
+
 /* structures */
+struct p_kafka_host {
+  rd_kafka_t *rk;
+  rd_kafka_conf_t *cfg;
+  char *broker_host;
+  int broker_port;
+  int partition;
+  rd_kafka_topic_t *topic;
+  rd_kafka_topic_conf_t *topic_cfg;
+  char errstr[PM_KAFKA_ERRSTR_LEN];
+};
 
 /* prototypes */
 #if (!defined __KAFKA_PLUGIN_C)
@@ -43,6 +56,12 @@ EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
 EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit;
 EXT time_t refresh_deadline;
-
 EXT struct timeval sbasetime;
+
+EXT struct p_kafka_host kafkap_kafka_host;
+
+static char default_kafka_broker_host[] = "127.0.0.1";
+static int default_kafka_broker_port = 9092;
+static int default_kafka_partition = RD_KAFKA_PARTITION_UA;
+static char default_kafka_topic[] = "pmacct";
 #undef EXT
