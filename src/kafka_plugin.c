@@ -75,13 +75,6 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   timeout = config.sql_refresh_time*1000;
 
-/*
-  XXX: no auth supported yet
-
-  if (!config.sql_user) config.sql_user = kafka_user;
-  if (!config.sql_passwd) config.sql_passwd = kafka_pwd;
-*/
-
   if ((config.sql_table && strchr(config.sql_table, '$')) && config.sql_multi_values) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'kafka_topic' is not compatible with 'kafka_multi_values'. Exiting.\n", config.name, config.type);
     exit_plugin(1);
@@ -92,13 +85,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-/*
-  XXX: init kafka structure
-
-  p_amqp_init_host(&amqpp_amqp_host);
-  p_amqp_set_user(&amqpp_amqp_host, config.sql_user);
-  p_amqp_set_passwd(&amqpp_amqp_host, config.sql_passwd);
-*/
+  p_kafka_init_host(&kafkap_kafka_host);
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -301,8 +288,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_mpls_primitives empty_pmpls;
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
-  int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
+  int i, j, stop, batch_idx, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;
   int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
   pid_t writer_pid = getpid();
@@ -312,41 +299,28 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 #endif
 
   /* setting some defaults */
-/*
-  if (!config.sql_host) config.sql_host = default_amqp_host;
-  if (!config.sql_db) config.sql_db = default_amqp_exchange;
-  if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
-  if (!config.amqp_vhost) config.amqp_vhost = default_amqp_vhost;
+/* 
+  XXX: if (!config.sql_host) config.sql_host = default_amqp_host;
 */
 
-/*
-  if (!config.sql_table) config.sql_table = default_amqp_routing_key;
+  if (!config.sql_table) config.sql_table = default_kafka_topic;
   else {
     if (strchr(config.sql_table, '$')) {
-      is_routing_key_dyn = TRUE;
-      orig_amqp_routing_key = config.sql_table;
-      config.sql_table = dyn_amqp_routing_key;
+      is_topic_dyn = TRUE;
+      orig_kafka_topic = config.sql_table;
+      config.sql_table = dyn_kafka_topic;
     }
   }
   if (config.amqp_routing_key_rr) {
-    orig_amqp_routing_key = config.sql_table;
-    config.sql_table = dyn_amqp_routing_key;
+    orig_kafka_topic = config.sql_table;
+    config.sql_table = dyn_kafka_topic;
   }
-*/
 
-/*
-  p_amqp_set_exchange(&amqpp_amqp_host, config.sql_db);
-  p_amqp_set_routing_key(&amqpp_amqp_host, config.sql_table);
-  p_amqp_set_exchange_type(&amqpp_amqp_host, config.amqp_exchange_type);
-  p_amqp_set_host(&amqpp_amqp_host, config.sql_host);
-  p_amqp_set_vhost(&amqpp_amqp_host, config.amqp_vhost);
-  p_amqp_set_persistent_msg(&amqpp_amqp_host, config.amqp_persistent_msg);
-  p_amqp_set_frame_max(&amqpp_amqp_host, config.amqp_frame_max);
-  p_amqp_set_content_type_json(&amqpp_amqp_host);
+  p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
+  p_kafka_set_host(&kafkap_kafka_host, config.sql_host);
 
-  p_amqp_init_routing_key_rr(&amqpp_amqp_host);
-  p_amqp_set_routing_key_rr(&amqpp_amqp_host, config.amqp_routing_key_rr);
-*/
+  p_kafka_init_topic_rr(&kafkap_kafka_host);
+  p_kafka_set_topic_rr(&kafkap_kafka_host, config.amqp_routing_key_rr);
 
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
@@ -478,4 +452,67 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 
   if (empty_pcust) free(empty_pcust);
+}
+
+/* XXX: below this line to be split into kafka_common.c */
+void p_kafka_init_host(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) {
+    memset(kafka_host, 0, sizeof(struct p_kafka_host));
+    p_kafka_set_retry_interval(kafka_host, PM_KAFKA_DEFAULT_RETRY);
+  }
+}
+
+void p_kafka_set_retry_interval(struct p_kafka_host *kafka_host, int interval)
+{
+  if (kafka_host) kafka_host->retry_interval = interval;
+}
+
+int p_kafka_get_retry_interval(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) return kafka_host->retry_interval;
+
+  return ERR;
+}
+
+void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
+{
+  // XXX
+  // if (kafka_host) kafka_host->topic = topic;
+}
+
+void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) kafka_host->topic = NULL;
+}
+
+char *p_kafka_get_topic(struct p_kafka_host *kafka_host)
+{
+  // XXX
+  // if (kafka_host) return kafka_host->topic;
+
+  return NULL;
+}
+
+void p_kafka_init_topic_rr(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) memset(&kafka_host->topic_rr, 0, sizeof(struct p_kafka_topic_rr));
+}
+
+void p_kafka_set_topic_rr(struct p_kafka_host *kafka_host, int topic_rr)
+{
+  if (kafka_host) kafka_host->topic_rr.max = topic_rr;
+}
+
+int p_kafka_get_topic_rr(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) return kafka_host->topic_rr.max;
+
+  return FALSE;
+}
+
+void p_kafka_set_host(struct p_kafka_host *kafka_host, char *host)
+{
+  // XXX: set broker
+  // if (kafka_host) kafka_host->host = host;
 }

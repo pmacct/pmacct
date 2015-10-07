@@ -25,17 +25,30 @@
 
 /* defines */
 #define PM_KAFKA_ERRSTR_LEN	512
+#define PM_KAFKA_DEFAULT_RETRY	60
+#define PM_KAFKA_LONGLONG_RETRY	INT_MAX
 
 /* structures */
+struct p_kafka_topic_rr {
+  int min; /* unused */
+  int max;
+  int next;
+};
+
 struct p_kafka_host {
-  rd_kafka_t *rk;
-  rd_kafka_conf_t *cfg;
   char *broker_host;
   int broker_port;
-  int partition;
+  char errstr[PM_KAFKA_ERRSTR_LEN];
+
+  rd_kafka_t *rk;
+  rd_kafka_conf_t *cfg;
   rd_kafka_topic_t *topic;
   rd_kafka_topic_conf_t *topic_cfg;
-  char errstr[PM_KAFKA_ERRSTR_LEN];
+  int partition;
+  struct p_kafka_topic_rr topic_rr;
+
+  time_t last_fail;
+  int retry_interval;
 };
 
 /* prototypes */
@@ -46,6 +59,22 @@ struct p_kafka_host {
 #endif
 EXT void kafka_plugin(int, struct configuration *, void *);
 EXT void kafka_cache_purge(struct chained_cache *[], int);
+
+/* XXX: below this line to be split into kafka_common.h - START */
+EXT void p_kafka_init_host(struct p_kafka_host *);
+EXT void p_kafka_init_topic_rr(struct p_kafka_host *);
+
+EXT void p_kafka_set_retry_interval(struct p_kafka_host *, int);
+EXT void p_kafka_set_host(struct p_kafka_host *, char *);
+EXT void p_kafka_set_topic(struct p_kafka_host *, char *);
+EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
+
+EXT int p_kafka_get_retry_interval(struct p_kafka_host *);
+EXT char *p_kafka_get_topic(struct p_kafka_host *);
+EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
+
+EXT void p_kafka_unset_topic(struct p_kafka_host *);
+/* XXX: below this line to be split into kafka_common.h - END */
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
