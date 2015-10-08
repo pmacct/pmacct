@@ -19,10 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifdef WITH_RABBITMQ 
-#include "amqp_common.h"
-#endif
-
 #define DEFAULT_CHBUFLEN 4096
 #define DEFAULT_PIPE_SIZE 65535
 #define DEFAULT_PLOAD_SIZE 256 
@@ -80,6 +76,10 @@ struct plugins_list_entry {
   struct plugin_type_entry type;
   struct plugins_list_entry *next;
 };
+
+#ifdef WITH_RABBITMQ 
+#include "amqp_common.h"
+#endif
 
 struct channels_list_entry {
   pm_cfgreg_t aggregation;

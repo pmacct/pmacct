@@ -85,8 +85,6 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  p_kafka_init_host(&kafkap_kafka_host);
-
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
     insert_func = P_sum_host_insert;
@@ -298,10 +296,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   json_t *array = json_array();
 #endif
 
+  p_kafka_init_host(&kafkap_kafka_host);
+
   /* setting some defaults */
-/* 
-  XXX: if (!config.sql_host) config.sql_host = default_amqp_host;
-*/
+  if (!config.sql_host) config.sql_host = default_kafka_broker_host;
+  if (!config.kafka_broker_port) config.kafka_broker_port = default_kafka_broker_port;
 
   if (!config.sql_table) config.sql_table = default_kafka_topic;
   else {
@@ -317,7 +316,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   }
 
   p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
-  p_kafka_set_host(&kafkap_kafka_host, config.sql_host);
+  p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
 
   p_kafka_init_topic_rr(&kafkap_kafka_host);
   p_kafka_set_topic_rr(&kafkap_kafka_host, config.amqp_routing_key_rr);
@@ -459,6 +458,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
     memset(kafka_host, 0, sizeof(struct p_kafka_host));
+    kafka_host->cfg = rd_kafka_conf_new();
     p_kafka_set_retry_interval(kafka_host, PM_KAFKA_DEFAULT_RETRY);
   }
 }
@@ -477,26 +477,30 @@ int p_kafka_get_retry_interval(struct p_kafka_host *kafka_host)
 
 void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
 {
-  // XXX
-  // if (kafka_host) kafka_host->topic = topic;
+  if (kafka_host && kafka_host->rk) {
+    kafka_host->topic_cfg = rd_kafka_topic_conf_new();
+    rd_kafka_topic_new(kafka_host->rk, topic, kafka_host->topic_cfg);
+  }
 }
 
 void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
 {
-  if (kafka_host) kafka_host->topic = NULL;
+  if (kafka_host && kafka_host->rk) {
+    rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
+    rd_kafka_topic_destroy(kafka_host->topic); 
+  }
 }
 
 char *p_kafka_get_topic(struct p_kafka_host *kafka_host)
 {
-  // XXX
-  // if (kafka_host) return kafka_host->topic;
+  if (kafka_host && kafka_host->topic) return rd_kafka_topic_name(kafka_host->topic);
 
   return NULL;
 }
 
 void p_kafka_init_topic_rr(struct p_kafka_host *kafka_host)
 {
-  if (kafka_host) memset(&kafka_host->topic_rr, 0, sizeof(struct p_kafka_topic_rr));
+  if (kafka_host) memset(&kafka_host->topic_rr, 0, sizeof(struct p_table_rr));
 }
 
 void p_kafka_set_topic_rr(struct p_kafka_host *kafka_host, int topic_rr)
@@ -511,8 +515,15 @@ int p_kafka_get_topic_rr(struct p_kafka_host *kafka_host)
   return FALSE;
 }
 
-void p_kafka_set_host(struct p_kafka_host *kafka_host, char *host)
+void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
 {
-  // XXX: set broker
-  // if (kafka_host) kafka_host->host = host;
+  if (kafka_host && kafka_host->rk) {
+    if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
+
+    if (rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker) == 0) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid 'kafka_broker_host' or 'kafka_broker_port' specified (%s). Exiting.\n",
+	  config.name, config.type, kafka_host->broker);
+      exit_plugin(1);
+    }
+  }
 }

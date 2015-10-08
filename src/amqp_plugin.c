@@ -404,12 +404,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
     if (json_str) {
       if (is_routing_key_dyn) {
-	amqp_handle_routing_key_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
+	P_handle_table_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
 	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
       }
 
       if (config.amqp_routing_key_rr) {
-        p_amqp_handle_routing_key_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &amqpp_amqp_host.rk_rr);
+        P_handle_table_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &amqpp_amqp_host.rk_rr);
 	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
       }
 
@@ -453,84 +453,4 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 
   if (empty_pcust) free(empty_pcust);
-}
-
-void amqp_handle_routing_key_dyn_strings(char *new, int newlen, char *old, struct chained_cache *elem)
-{
-  int oldlen, ptr_len;
-  char peer_src_ip_string[] = "$peer_src_ip", post_tag_string[] = "$post_tag";
-  char pre_tag_string[] = "$pre_tag";
-  char *ptr_start, *ptr_end;
-
-  oldlen = strlen(old);
-  if (oldlen <= newlen) strcpy(new, old);
-  else {
-    strncpy(new, old, newlen);
-    return;
-  }
-
-  if (!strchr(new, '$')) return;
-  ptr_start = strstr(new, peer_src_ip_string);
-  if (ptr_start) {
-    char ip_address[INET6_ADDRSTRLEN];
-    char buf[newlen];
-    int len;
-
-    if (!elem || !elem->pbgp) goto out_peer_src_ip; 
-
-    len = strlen(ptr_start);
-    ptr_end = ptr_start;
-    ptr_len = strlen(peer_src_ip_string);
-    ptr_end += ptr_len;
-    len -= ptr_len;
-
-    addr_to_str(ip_address, &elem->pbgp->peer_src_ip);
-    snprintf(buf, newlen, "%s", ip_address);
-    strncat(buf, ptr_end, len);
-
-    len = strlen(buf);
-    *ptr_start = '\0';
-    strncat(new, buf, len);
-  }
-  out_peer_src_ip:
-
-  if (!strchr(new, '$')) return;
-  ptr_start = strstr(new, post_tag_string);
-  if (ptr_start) {
-    char buf[newlen];
-    int len;
-
-    len = strlen(ptr_start);
-    ptr_end = ptr_start;
-    ptr_len = strlen(post_tag_string);
-    ptr_end += ptr_len;
-    len -= ptr_len;
-
-    snprintf(buf, newlen, "%u", config.post_tag);
-    strncat(buf, ptr_end, len);
-
-    len = strlen(buf);
-    *ptr_start = '\0';
-    strncat(new, buf, len);
-  }
-
-  if (!strchr(new, '$')) return;
-  ptr_start = strstr(new, pre_tag_string);
-  if (ptr_start) {
-    char buf[newlen];
-    int len;
-
-    len = strlen(ptr_start);
-    ptr_end = ptr_start;
-    ptr_len = strlen(pre_tag_string);
-    ptr_end += ptr_len;
-    len -= ptr_len;
-
-    snprintf(buf, newlen, "%u", elem->primitives.tag);
-    strncat(buf, ptr_end, len);
-
-    len = strlen(buf);
-    *ptr_start = '\0';
-    strncat(new, buf, len);
-  }
 }

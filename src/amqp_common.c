@@ -71,7 +71,7 @@ char *p_amqp_get_routing_key(struct p_amqp_host *amqp_host)
 
 void p_amqp_init_routing_key_rr(struct p_amqp_host *amqp_host)
 {
-  if (amqp_host) memset(&amqp_host->rk_rr, 0, sizeof(struct p_amqp_rk_rr));
+  if (amqp_host) memset(&amqp_host->rk_rr, 0, sizeof(struct p_table_rr));
 }
 
 void p_amqp_set_routing_key_rr(struct p_amqp_host *amqp_host, int rk_rr)
@@ -507,24 +507,4 @@ int p_amqp_is_alive(struct p_amqp_host *amqp_host)
 {
   if (amqp_host->status == AMQP_STATUS_OK && amqp_host->conn && (amqp_get_sockfd(amqp_host->conn) >= 0)) return SUCCESS;
   else return ERR;
-}
-
-void p_amqp_handle_routing_key_dyn_rr(char *new, int newlen, char *old, struct p_amqp_rk_rr *rk_rr)
-{
-  char index_str[SRVBUFLEN];
-  int oldlen;
-
-  oldlen = strlen(old);
-  if (oldlen <= newlen) strcpy(new, old);
-  else {
-    strncpy(new, old, newlen);
-    return;
-  }
-
-  memset(index_str, 0, SRVBUFLEN);
-  snprintf(index_str, SRVBUFLEN, "_%u", rk_rr->next);
-  strncat(new, index_str, (newlen-oldlen));
-
-  rk_rr->next++;
-  rk_rr->next %= rk_rr->max; 
 }

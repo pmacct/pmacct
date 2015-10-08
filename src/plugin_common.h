@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -28,6 +28,8 @@
 #include "sql_common.h"
 #undef __SQL_COMMON_EXPORT
 #endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
+
+#if (!defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON)
 
 /* defines */
 #define DEFAULT_PLUGIN_COMMON_REFRESH_TIME 60 
@@ -71,6 +73,18 @@ struct chained_cache {
   struct chained_cache *next;
 };
 
+#endif /* #if (!defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON) */
+
+#if (defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON || defined __PLUGIN_COMMON_EXPORT_TO_KAFKA_COMMON || defined __PLUGIN_COMMON_C )
+
+struct p_table_rr {
+  int min; /* unused */
+  int max;
+  int next;
+};
+
+#endif /* #if (defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON) */
+
 #if (!defined __PLUGIN_COMMON_EXPORT)
 
 #include "preprocess.h"
@@ -101,6 +115,8 @@ EXT void P_cache_handle_flush_event(struct ports_table *);
 EXT void P_exit_now(int);
 EXT int P_trigger_exec(char *);
 EXT void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
+EXT void P_handle_table_dyn_rr(char *, int, char *, struct p_table_rr *);
+EXT void P_handle_table_dyn_strings(char *, int, char *, struct chained_cache *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

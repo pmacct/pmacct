@@ -29,15 +29,16 @@
 #define PM_KAFKA_LONGLONG_RETRY	INT_MAX
 
 /* structures */
-struct p_kafka_topic_rr {
-  int min; /* unused */
-  int max;
-  int next;
-};
+/*
+#define __PLUGIN_COMMON_EXPORT
+#define __PLUGIN_COMMON_EXPORT_TO_KAFKA_COMMON
+#include "plugin_common.h"
+#undef  __PLUGIN_COMMON_EXPORT
+#undef  __PLUGIN_COMMON_EXPORT_TO_KAFKA_COMMON
+*/
 
 struct p_kafka_host {
-  char *broker_host;
-  int broker_port;
+  char broker[SRVBUFLEN];
   char errstr[PM_KAFKA_ERRSTR_LEN];
 
   rd_kafka_t *rk;
@@ -45,7 +46,7 @@ struct p_kafka_host {
   rd_kafka_topic_t *topic;
   rd_kafka_topic_conf_t *topic_cfg;
   int partition;
-  struct p_kafka_topic_rr topic_rr;
+  struct p_table_rr topic_rr;
 
   time_t last_fail;
   int retry_interval;
@@ -65,7 +66,7 @@ EXT void p_kafka_init_host(struct p_kafka_host *);
 EXT void p_kafka_init_topic_rr(struct p_kafka_host *);
 
 EXT void p_kafka_set_retry_interval(struct p_kafka_host *, int);
-EXT void p_kafka_set_host(struct p_kafka_host *, char *);
+EXT void p_kafka_set_broker(struct p_kafka_host *, char *, int);
 EXT void p_kafka_set_topic(struct p_kafka_host *, char *);
 EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
 

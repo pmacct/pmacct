@@ -912,3 +912,103 @@ void primptrs_set_all_from_chained_cache(struct primitives_ptrs *prim_ptrs, stru
     prim_ptrs->pvlen = entry->pvlen;
   }
 }
+
+void P_handle_table_dyn_rr(char *new, int newlen, char *old, struct p_table_rr *rk_rr)
+{
+  char index_str[SRVBUFLEN];
+  int oldlen;
+
+  oldlen = strlen(old);
+  if (oldlen <= newlen) strcpy(new, old);
+  else {
+    strncpy(new, old, newlen);
+    return;
+  }
+
+  memset(index_str, 0, SRVBUFLEN);
+  snprintf(index_str, SRVBUFLEN, "_%u", rk_rr->next);
+  strncat(new, index_str, (newlen-oldlen));
+
+  rk_rr->next++;
+  rk_rr->next %= rk_rr->max;
+}
+
+void P_handle_table_dyn_strings(char *new, int newlen, char *old, struct chained_cache *elem)
+{
+  int oldlen, ptr_len;
+  char peer_src_ip_string[] = "$peer_src_ip", post_tag_string[] = "$post_tag";
+  char pre_tag_string[] = "$pre_tag";
+  char *ptr_start, *ptr_end;
+
+  oldlen = strlen(old);
+  if (oldlen <= newlen) strcpy(new, old);
+  else {
+    strncpy(new, old, newlen);
+    return;
+  }
+
+  if (!strchr(new, '$')) return;
+  ptr_start = strstr(new, peer_src_ip_string);
+  if (ptr_start) {
+    char ip_address[INET6_ADDRSTRLEN];
+    char buf[newlen];
+    int len;
+
+    if (!elem || !elem->pbgp) goto out_peer_src_ip; 
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(peer_src_ip_string);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    addr_to_str(ip_address, &elem->pbgp->peer_src_ip);
+    snprintf(buf, newlen, "%s", ip_address);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+  out_peer_src_ip:
+
+  if (!strchr(new, '$')) return;
+  ptr_start = strstr(new, post_tag_string);
+  if (ptr_start) {
+    char buf[newlen];
+    int len;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(post_tag_string);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    snprintf(buf, newlen, "%u", config.post_tag);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  if (!strchr(new, '$')) return;
+  ptr_start = strstr(new, pre_tag_string);
+  if (ptr_start) {
+    char buf[newlen];
+    int len;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(pre_tag_string);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    snprintf(buf, newlen, "%u", elem->primitives.tag);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+}
