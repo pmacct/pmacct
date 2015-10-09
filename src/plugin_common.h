@@ -75,7 +75,7 @@ struct chained_cache {
 
 #endif /* #if (!defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON) */
 
-#if (defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON || defined __PLUGIN_COMMON_EXPORT_TO_KAFKA_COMMON || defined __PLUGIN_COMMON_C )
+#if (defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON || defined __KAFKA_PLUGIN_C || defined __PLUGIN_COMMON_C )
 
 struct p_table_rr {
   int min; /* unused */

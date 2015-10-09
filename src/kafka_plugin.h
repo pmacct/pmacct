@@ -29,14 +29,6 @@
 #define PM_KAFKA_LONGLONG_RETRY	INT_MAX
 
 /* structures */
-/*
-#define __PLUGIN_COMMON_EXPORT
-#define __PLUGIN_COMMON_EXPORT_TO_KAFKA_COMMON
-#include "plugin_common.h"
-#undef  __PLUGIN_COMMON_EXPORT
-#undef  __PLUGIN_COMMON_EXPORT_TO_KAFKA_COMMON
-*/
-
 struct p_kafka_host {
   char broker[SRVBUFLEN];
   char errstr[PM_KAFKA_ERRSTR_LEN];

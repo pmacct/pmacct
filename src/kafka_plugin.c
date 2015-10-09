@@ -333,7 +333,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   memset(empty_pcust, 0, config.cpptrs.len);
 
 /*
-  ret = p_amqp_connect_to_publish(&amqpp_amqp_host);
+  XXX: ret = p_amqp_connect_to_publish(&amqpp_amqp_host);
   if (ret) return;
 */
 
@@ -397,19 +397,18 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 #endif
 
     if (json_str) {
-/*
-      if (is_routing_key_dyn) {
-	amqp_handle_routing_key_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
-	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
+      if (is_topic_dyn) {
+	P_handle_table_dyn_strings(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, queue[j]);
+	p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
       }
 
       if (config.amqp_routing_key_rr) {
-        p_amqp_handle_routing_key_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &amqpp_amqp_host.rk_rr);
-	p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
+        P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &kafkap_kafka_host.topic_rr);
+	p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
       }
 
-      ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
-*/
+      // XXX: ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
+
       free(json_str);
       json_str = NULL;
 
@@ -429,20 +428,18 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
     json_array_clear(array);
     json_decref(array);
 
-/*
     if (json_str) {
-      // no handling of dyn routing keys here: not compatible
-      ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
+      /* no handling of dyn routing keys here: not compatible */
+      // XXX: ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
       free(json_str);
       json_str = NULL;
 
       if (!ret) qn += mv_num;
     }
-*/
   }
 #endif
 
-  // p_amqp_close(&amqpp_amqp_host, FALSE);
+  // XXX: p_amqp_close(&amqpp_amqp_host, FALSE);
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
