@@ -22,6 +22,9 @@
 /* includes */
 #include <amqp.h>
 #include <amqp_tcp_socket.h>
+#define	__PLUGIN_COMMON_EXPORT
+#include "plugin_common.h"
+#undef	__PLUGIN_COMMON_EXPORT
 
 /* defines */
 #define AMQP_DEFAULT_RETRY	60
@@ -29,12 +32,6 @@
 #define PM_AMQP_MIN_FRAME_SIZE	4096
 
 /* structures */
-#define	__PLUGIN_COMMON_EXPORT
-#define	__PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON
-#include "plugin_common.h"
-#undef	__PLUGIN_COMMON_EXPORT
-#undef	__PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON
-
 struct p_amqp_host {
   char *user;
   char *passwd;

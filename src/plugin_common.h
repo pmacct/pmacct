@@ -23,13 +23,12 @@
 #if (!defined __PLUGIN_COMMON_EXPORT)
 #include "net_aggr.h"
 #include "ports_aggr.h"
+
 /* including sql_common.h exporteable part as pre-requisite for preprocess.h inclusion later */
 #define __SQL_COMMON_EXPORT
 #include "sql_common.h"
 #undef __SQL_COMMON_EXPORT
 #endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
-
-#if (!defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON)
 
 /* defines */
 #define DEFAULT_PLUGIN_COMMON_REFRESH_TIME 60 
@@ -46,6 +45,8 @@
 #define PRINT_CACHE_ERROR	255
 
 /* structures */
+#ifndef STRUCT_SCRATCH_AREA
+#define STRUCT_SCRATCH_AREA
 struct scratch_area {
   unsigned char *base;
   unsigned char *ptr;
@@ -53,7 +54,10 @@ struct scratch_area {
   u_int64_t size;
   struct scratch_area *next;
 };
+#endif
 
+#ifndef STRUCT_CHAINED_CACHE
+#define STRUCT_CHAINED_CACHE
 struct chained_cache {
   struct pkt_primitives primitives;
   pm_counter_t bytes_counter;
@@ -72,18 +76,16 @@ struct chained_cache {
   struct pkt_stitching *stitch;
   struct chained_cache *next;
 };
+#endif
 
-#endif /* #if (!defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON) */
-
-#if (defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON || defined __KAFKA_PLUGIN_C || defined __PLUGIN_COMMON_C )
-
+#ifndef P_TABLE_RR
+#define P_TABLE_RR
 struct p_table_rr {
   int min; /* unused */
   int max;
   int next;
 };
-
-#endif /* #if (defined __PLUGIN_COMMON_EXPORT_TO_AMQP_COMMON) */
+#endif
 
 #if (!defined __PLUGIN_COMMON_EXPORT)
 
