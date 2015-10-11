@@ -81,6 +81,10 @@ struct plugins_list_entry {
 #include "amqp_common.h"
 #endif
 
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
+
 struct channels_list_entry {
   pm_cfgreg_t aggregation;
   pm_cfgreg_t aggregation_2;

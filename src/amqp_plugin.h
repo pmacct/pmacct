@@ -24,6 +24,8 @@
 #include <amqp_tcp_socket.h>
 #include <sys/poll.h>
 
+/* defines */
+
 /* structures */
 
 /* prototypes */

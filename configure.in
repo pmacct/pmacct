@@ -1128,7 +1128,7 @@ AC_ARG_ENABLE(kafka,
     fi
 
     AC_DEFINE(WITH_KAFKA, 1)
-    PLUGINS="${PLUGINS} kafka_plugin.c"
+    PLUGINS="${PLUGINS} kafka_common.c kafka_plugin.c"
     ;;
   no)
     AC_MSG_RESULT(no)

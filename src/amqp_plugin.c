@@ -27,9 +27,6 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "amqp_plugin.h"
-#include "ip_flow.h"
-#include "classifier.h"
-#include "crc32.c"
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #else

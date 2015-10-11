@@ -3631,7 +3631,7 @@ fi
 #define WITH_KAFKA 1
 EOF
 
-    PLUGINS="${PLUGINS} kafka_plugin.c"
+    PLUGINS="${PLUGINS} kafka_common.c kafka_plugin.c"
     ;;
   no)
     echo "$ac_t""no" 1>&6
