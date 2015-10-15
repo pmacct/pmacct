@@ -315,9 +315,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
     config.sql_table = dyn_kafka_topic;
   }
 
-  p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
-  p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
-
   p_kafka_init_topic_rr(&kafkap_kafka_host);
   p_kafka_set_topic_rr(&kafkap_kafka_host, config.amqp_routing_key_rr);
 
@@ -332,10 +329,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
 
-/*
-  XXX: ret = p_amqp_connect_to_publish(&amqpp_amqp_host);
-  if (ret) return;
-*/
+  p_kafka_connect_to_produce(&kafkap_kafka_host);
+  p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
+  p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
     stop = P_preprocess_funcs[j](queue, &index, j);

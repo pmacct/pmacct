@@ -31,8 +31,12 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
     memset(kafka_host, 0, sizeof(struct p_kafka_host));
-    kafka_host->cfg = rd_kafka_conf_new();
     p_kafka_set_retry_interval(kafka_host, PM_KAFKA_DEFAULT_RETRY);
+
+    kafka_host->cfg = rd_kafka_conf_new();
+    if (kafka_host->cfg) {
+      rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
+    }
   }
 }
 
@@ -50,17 +54,20 @@ int p_kafka_get_retry_interval(struct p_kafka_host *kafka_host)
 
 void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
 {
-  if (kafka_host && kafka_host->rk) {
+  if (kafka_host) {
     kafka_host->topic_cfg = rd_kafka_topic_conf_new();
-    rd_kafka_topic_new(kafka_host->rk, topic, kafka_host->topic_cfg);
+
+    if (kafka_host->rk && kafka_host->topic_cfg) {
+      kafka_host->topic = rd_kafka_topic_new(kafka_host->rk, topic, kafka_host->topic_cfg);
+    }
   }
 }
 
 void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
 {
-  if (kafka_host && kafka_host->rk) {
-    rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
-    rd_kafka_topic_destroy(kafka_host->topic); 
+  if (kafka_host) {
+    if (kafka_host->topic_cfg) rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
+    if (kafka_host->topic) rd_kafka_topic_destroy(kafka_host->topic); 
   }
 }
 
@@ -99,4 +106,36 @@ void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
       exit_plugin(1);
     }
   }
+}
+
+void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
+{
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): %u.%03u RDKAFKA-%i-%s: %s: %s\n", config.name, config.type, (int)tv.tv_sec,
+	(int)(tv.tv_usec / 1000), level, fac, rd_kafka_name(rk), buf);
+}
+
+void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_code, void *opaque, void *msg_opaque)
+{
+  if (error_code) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Kafka message delivery failed: %s\n", config.name, config.type, rd_kafka_err2str(error_code));
+  }
+  else {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes)\n", config.name, config.type, len);
+  }
+}
+
+void p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
+{
+  kafka_host->rk = rd_kafka_new(RD_KAFKA_PRODUCER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
+  if (!kafka_host->rk) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
+    exit_plugin(1);
+  }
+
+  rd_kafka_set_logger(kafka_host->rk, p_kafka_logger);
+  if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
 }

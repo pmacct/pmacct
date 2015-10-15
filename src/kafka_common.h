@@ -66,6 +66,10 @@ EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
 
 EXT void p_kafka_unset_topic(struct p_kafka_host *);
 
+EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
+EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
+EXT void p_kafka_connect_to_produce(struct p_kafka_host *);
+
 /* global vars */
 EXT struct p_kafka_host kafkap_kafka_host;
 
