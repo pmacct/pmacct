@@ -403,7 +403,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 	p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
       }
 
-      // XXX: ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
+      ret = p_kafka_produce_string(&kafkap_kafka_host, json_str);
 
       free(json_str);
       json_str = NULL;
@@ -426,7 +426,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
     if (json_str) {
       /* no handling of dyn routing keys here: not compatible */
-      // XXX: ret = p_amqp_publish_string(&amqpp_amqp_host, json_str);
+      ret = p_kafka_produce_string(&kafkap_kafka_host, json_str);
+
       free(json_str);
       json_str = NULL;
 
@@ -435,7 +436,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   }
 #endif
 
-  // XXX: p_amqp_close(&amqpp_amqp_host, FALSE);
+  p_kafka_close(&kafkap_kafka_host, FALSE);
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",

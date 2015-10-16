@@ -42,8 +42,7 @@ struct p_kafka_host {
   int partition;
   struct p_table_rr topic_rr;
 
-  time_t last_fail;
-  int retry_interval;
+  struct p_broker_timers btimers;
 };
 
 /* prototypes */
@@ -55,12 +54,10 @@ struct p_kafka_host {
 EXT void p_kafka_init_host(struct p_kafka_host *);
 EXT void p_kafka_init_topic_rr(struct p_kafka_host *);
 
-EXT void p_kafka_set_retry_interval(struct p_kafka_host *, int);
 EXT void p_kafka_set_broker(struct p_kafka_host *, char *, int);
 EXT void p_kafka_set_topic(struct p_kafka_host *, char *);
 EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
 
-EXT int p_kafka_get_retry_interval(struct p_kafka_host *);
 EXT char *p_kafka_get_topic(struct p_kafka_host *);
 EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
 
@@ -69,6 +66,8 @@ EXT void p_kafka_unset_topic(struct p_kafka_host *);
 EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
 EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
 EXT void p_kafka_connect_to_produce(struct p_kafka_host *);
+EXT int p_kafka_produce_string(struct p_kafka_host *, char *);
+EXT void p_kafka_close(struct p_kafka_host *, int);
 
 /* global vars */
 EXT struct p_kafka_host kafkap_kafka_host;

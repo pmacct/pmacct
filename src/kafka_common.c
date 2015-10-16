@@ -31,25 +31,13 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
     memset(kafka_host, 0, sizeof(struct p_kafka_host));
-    p_kafka_set_retry_interval(kafka_host, PM_KAFKA_DEFAULT_RETRY);
+    P_broker_timers_set_retry_interval(&kafka_host->btimers, PM_KAFKA_DEFAULT_RETRY);
 
     kafka_host->cfg = rd_kafka_conf_new();
     if (kafka_host->cfg) {
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
     }
   }
-}
-
-void p_kafka_set_retry_interval(struct p_kafka_host *kafka_host, int interval)
-{
-  if (kafka_host) kafka_host->retry_interval = interval;
-}
-
-int p_kafka_get_retry_interval(struct p_kafka_host *kafka_host)
-{
-  if (kafka_host) return kafka_host->retry_interval;
-
-  return ERR;
 }
 
 void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
@@ -130,12 +118,50 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
 
 void p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
 {
-  kafka_host->rk = rd_kafka_new(RD_KAFKA_PRODUCER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
-  if (!kafka_host->rk) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
-    exit_plugin(1);
+  if (kafka_host) {
+    kafka_host->rk = rd_kafka_new(RD_KAFKA_PRODUCER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
+    if (!kafka_host->rk) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
+      exit_plugin(1);
+    }
+
+    rd_kafka_set_logger(kafka_host->rk, p_kafka_logger);
+    if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
+  }
+}
+
+int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
+{
+  int ret = ERR;
+
+  if (kafka_host && kafka_host->rk && kafka_host->topic) {
+    ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
+			   json_str, strlen(json_str), NULL, 0, NULL);
+
+    if (ret == ERR) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
+	  rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
+    }
+
+    /* Poll to handle delivery reports */
+    rd_kafka_poll(kafka_host->rk, 0);
   }
 
-  rd_kafka_set_logger(kafka_host->rk, p_kafka_logger);
-  if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
+  return ret; 
+}
+
+void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
+{
+  if (kafka_host && kafka_host->rk && kafka_host->topic) { 
+    /* Wait for messages to be delivered */
+    while (rd_kafka_outq_len(kafka_host->rk) > 0) rd_kafka_poll(kafka_host->rk, 100);
+
+    if (set_fail) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_close()\n", config.name, config.type);
+      P_broker_timers_set_last_fail(&kafka_host->btimers, time(NULL));
+    }
+
+    rd_kafka_topic_destroy(kafka_host->topic);
+    rd_kafka_destroy(kafka_host->rk);
+  }
 }

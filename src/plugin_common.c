@@ -1012,3 +1012,32 @@ void P_handle_table_dyn_strings(char *new, int newlen, char *old, struct chained
     strncat(new, buf, len);
   }
 }
+
+void P_broker_timers_set_last_fail(struct p_broker_timers *btimers, time_t timestamp)
+{
+  if (btimers) btimers->last_fail = timestamp;
+}
+
+time_t P_broker_timers_get_last_fail(struct p_broker_timers *btimers)
+{
+  if (btimers) return btimers->last_fail;
+
+  return FALSE;
+}
+
+void P_broker_timers_unset_last_fail(struct p_broker_timers *btimers)
+{
+  if (btimers) btimers->last_fail = FALSE;
+}
+
+void P_broker_timers_set_retry_interval(struct p_broker_timers *btimers, int interval)
+{
+  if (btimers) btimers->retry_interval = interval;
+}
+
+int P_broker_timers_get_retry_interval(struct p_broker_timers *btimers)
+{
+  if (btimers) return btimers->retry_interval;
+
+  return ERR;
+}

@@ -87,6 +87,14 @@ struct p_table_rr {
 };
 #endif
 
+#ifndef P_BROKER_TIMERS
+#define P_BROKER_TIMERS
+struct p_broker_timers {
+  time_t last_fail;
+  int retry_interval;
+};
+#endif
+
 #if (!defined __PLUGIN_COMMON_EXPORT)
 
 #include "preprocess.h"
@@ -119,6 +127,12 @@ EXT int P_trigger_exec(char *);
 EXT void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
 EXT void P_handle_table_dyn_rr(char *, int, char *, struct p_table_rr *);
 EXT void P_handle_table_dyn_strings(char *, int, char *, struct chained_cache *);
+
+EXT void P_broker_timers_set_last_fail(struct p_broker_timers *, time_t);
+EXT void P_broker_timers_set_retry_interval(struct p_broker_timers *, int);
+EXT void P_broker_timers_unset_last_fail(struct p_broker_timers *);
+EXT time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
+EXT int P_broker_timers_get_retry_interval(struct p_broker_timers *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
