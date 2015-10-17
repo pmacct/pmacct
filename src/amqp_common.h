@@ -53,8 +53,7 @@ struct p_amqp_host {
   struct amqp_basic_properties_t_ msg_props;
   int status;
 
-  time_t last_fail;
-  int retry_interval;
+  struct p_broker_timers btimers;
 };
 
 /* prototypes */
@@ -78,19 +77,14 @@ EXT void p_amqp_set_vhost(struct p_amqp_host *, char *);
 EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
 EXT void p_amqp_set_frame_max(struct p_amqp_host *, u_int32_t);
 EXT void p_amqp_set_heartbeat_interval(struct p_amqp_host *, int);
-EXT void p_amqp_set_last_fail(struct p_amqp_host *, time_t);
-EXT void p_amqp_set_retry_interval(struct p_amqp_host *, int);
 EXT void p_amqp_set_content_type_json(struct p_amqp_host *);
 EXT void p_amqp_set_content_type_binary(struct p_amqp_host *);
 
-EXT time_t p_amqp_get_last_fail(struct p_amqp_host *);
-EXT int p_amqp_get_retry_interval(struct p_amqp_host *);
 EXT char *p_amqp_get_routing_key(struct p_amqp_host *);
 EXT int p_amqp_get_routing_key_rr(struct p_amqp_host *);
 EXT int p_amqp_get_sockfd(struct p_amqp_host *);
 
 EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
-EXT void p_amqp_unset_last_fail(struct p_amqp_host *);
 
 EXT int p_amqp_connect_to_publish(struct p_amqp_host *);
 EXT int p_amqp_connect_to_consume(struct p_amqp_host *);

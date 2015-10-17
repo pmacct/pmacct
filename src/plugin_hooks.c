@@ -930,7 +930,7 @@ void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_li
     p_amqp_set_host(amqp_host, list->cfg.pipe_amqp_host);
     p_amqp_set_vhost(amqp_host, list->cfg.pipe_amqp_vhost);
     p_amqp_set_routing_key(amqp_host, list->cfg.pipe_amqp_routing_key);
-    p_amqp_set_retry_interval(amqp_host, list->cfg.pipe_amqp_retry);
+    P_broker_timers_set_retry_interval(&amqp_host->btimers, list->cfg.pipe_amqp_retry);
 
     p_amqp_set_frame_max(amqp_host, list->cfg.buffer_size);
     p_amqp_set_exchange_type(amqp_host, default_amqp_exchange_type);
@@ -976,7 +976,7 @@ void plugin_pipe_amqp_sleeper_publish_func(struct plugin_pipe_amqp_sleeper *pas)
   if (!pas || !pas->amqp_host || !pas->plugin || !pas->do_reconnect) return;
 
 sleep_again:
-  sleep(p_amqp_get_retry_interval(pas->amqp_host));
+  sleep(P_broker_timers_get_retry_interval(&pas->amqp_host->btimers));
 
   plugin_pipe_amqp_init_host(pas->amqp_host, pas->plugin);
   ret = p_amqp_connect_to_publish(pas->amqp_host);
@@ -1022,7 +1022,7 @@ int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct pl
 
 int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *amqp_host, int pipe_fd)
 {
-  if (pipe_fd == ERR) return (p_amqp_get_retry_interval(amqp_host) * 1000);
+  if (pipe_fd == ERR) return (P_broker_timers_get_retry_interval(&amqp_host->btimers) * 1000);
   else return AMQP_LONGLONG_RETRY;
 }
 
@@ -1030,7 +1030,7 @@ int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *amqp_host, time_
 {
   int amqp_timeout;
 
-  amqp_timeout = (((p_amqp_get_last_fail(amqp_host) + p_amqp_get_retry_interval(amqp_host)) - now) * 1000);
+  amqp_timeout = (((P_broker_timers_get_last_fail(&amqp_host->btimers) + P_broker_timers_get_retry_interval(&amqp_host->btimers)) - now) * 1000);
   assert(amqp_timeout >= 0);
 
   return amqp_timeout;

@@ -236,10 +236,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           select_fd++;
 	  amqp_timeout = AMQP_LONGLONG_RETRY;
         }
-	else amqp_timeout = p_amqp_get_retry_interval(amqp_host);
+	else amqp_timeout = P_broker_timers_get_retry_interval(&amqp_host->btimers);
       }
       else {
-        amqp_timeout = ((p_amqp_get_last_fail(amqp_host) + p_amqp_get_retry_interval(amqp_host)) - cycle_stamp.tv_sec);
+        amqp_timeout = ((P_broker_timers_get_last_fail(&amqp_host->btimers) + P_broker_timers_get_retry_interval(&amqp_host->btimers)) - cycle_stamp.tv_sec);
         assert(amqp_timeout >= 0);
       }
     }
@@ -433,7 +433,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             FD_CLR(pipe_fd, &bkp_read_descs);
 	    pipe_fd = ERR;
           }
-	  amqp_timeout = p_amqp_get_retry_interval(amqp_host);
+	  amqp_timeout = P_broker_timers_get_retry_interval(&amqp_host->btimers);
 	}
       }
 #endif

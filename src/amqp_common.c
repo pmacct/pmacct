@@ -33,7 +33,7 @@ void p_amqp_init_host(struct p_amqp_host *amqp_host)
     memset(amqp_host, 0, sizeof(struct p_amqp_host));
     p_amqp_set_frame_max(amqp_host, AMQP_DEFAULT_FRAME_SIZE);
     p_amqp_set_heartbeat_interval(amqp_host, AMQP_DEFAULT_HEARTBEAT);
-    p_amqp_set_retry_interval(amqp_host, AMQP_DEFAULT_RETRY);
+    P_broker_timers_set_retry_interval(&amqp_host->btimers, AMQP_DEFAULT_RETRY);
   }
 }
 
@@ -136,39 +136,10 @@ void p_amqp_set_content_type_binary(struct p_amqp_host *amqp_host)
   } 
 }
 
-void p_amqp_set_last_fail(struct p_amqp_host *amqp_host, time_t timestamp)
-{
-  if (amqp_host) amqp_host->last_fail = timestamp;
-}
-
-time_t p_amqp_get_last_fail(struct p_amqp_host *amqp_host)
-{
-  if (amqp_host) return amqp_host->last_fail;
-
-  return FALSE;
-}
-
-void p_amqp_unset_last_fail(struct p_amqp_host *amqp_host)
-{
-  if (amqp_host) amqp_host->last_fail = FALSE;
-}
-
-void p_amqp_set_retry_interval(struct p_amqp_host *amqp_host, int interval)
-{
-  if (amqp_host) amqp_host->retry_interval = interval;
-}
-
-int p_amqp_get_retry_interval(struct p_amqp_host *amqp_host)
-{
-  if (amqp_host) return amqp_host->retry_interval;
-
-  return ERR;
-}
-
 int p_amqp_get_sockfd(struct p_amqp_host *amqp_host)
 {
   if (amqp_host) {
-    if (!p_amqp_get_last_fail(amqp_host)) return amqp_get_sockfd(amqp_host->conn);
+    if (!P_broker_timers_get_last_fail(&amqp_host->btimers)) return amqp_get_sockfd(amqp_host->conn);
   }
 
   return ERR;
@@ -252,7 +223,7 @@ int p_amqp_connect_to_publish(struct p_amqp_host *amqp_host)
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection successful to RabbitMQ: p_amqp_connect_to_publish()\n", config.name, config.type);
 
-  p_amqp_unset_last_fail(amqp_host);
+  P_broker_timers_unset_last_fail(&amqp_host->btimers);
   return SUCCESS;
 }
 
@@ -344,7 +315,7 @@ int p_amqp_connect_to_consume(struct p_amqp_host *amqp_host)
  
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Connection successful to RabbitMQ: p_amqp_connect_to_consume()\n", config.name, config.type);
 
-  p_amqp_unset_last_fail(amqp_host);
+  P_broker_timers_unset_last_fail(&amqp_host->btimers);
   return SUCCESS;
 }
 
@@ -496,7 +467,7 @@ void p_amqp_close(struct p_amqp_host *amqp_host, int set_fail)
 
     if (set_fail) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_close()\n", config.name, config.type);
-      p_amqp_set_last_fail(amqp_host, time(NULL));
+      P_broker_timers_set_last_fail(&amqp_host->btimers, time(NULL));
     }
     amqp_destroy_connection(amqp_host->conn);
     amqp_host->conn = NULL;

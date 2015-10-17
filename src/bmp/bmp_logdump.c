@@ -599,7 +599,7 @@ void bmp_daemon_msglog_init_amqp_host()
   p_amqp_set_frame_max(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_frame_max);
   p_amqp_set_content_type_json(&bmp_daemon_msglog_amqp_host);
   p_amqp_set_heartbeat_interval(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_heartbeat_interval);
-  p_amqp_set_retry_interval(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_retry);
+  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_amqp_host.btimers, config.nfacctd_bmp_msglog_amqp_retry);
 }
 #else
 void bmp_daemon_msglog_init_amqp_host()
