@@ -116,23 +116,26 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
   }
 }
 
-void p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
+int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
     kafka_host->rk = rd_kafka_new(RD_KAFKA_PRODUCER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
     if (!kafka_host->rk) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
-      exit_plugin(1);
+      p_kafka_close(kafka_host, TRUE);
+      return ERR;
     }
 
     rd_kafka_set_logger(kafka_host->rk, p_kafka_logger);
     if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
   }
+
+  return SUCCESS;
 }
 
 int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
 {
-  int ret = ERR;
+  int ret;
 
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
     ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
@@ -141,13 +144,15 @@ int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
 	  rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
+      p_kafka_close(kafka_host, TRUE);
+      return ERR;
     }
 
     /* Poll to handle delivery reports */
     rd_kafka_poll(kafka_host->rk, 0);
   }
 
-  return ret; 
+  return SUCCESS; 
 }
 
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
