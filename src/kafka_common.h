@@ -30,10 +30,14 @@
 #define PM_KAFKA_DEFAULT_RETRY	60
 #define PM_KAFKA_LONGLONG_RETRY	INT_MAX
 
+#define PM_KAFKA_CNT_TYPE_STR	1
+#define PM_KAFKA_CNT_TYPE_BIN	2
+
 /* structures */
 struct p_kafka_host {
   char broker[SRVBUFLEN];
   char errstr[PM_KAFKA_ERRSTR_LEN];
+  u_int8_t content_type;
 
   rd_kafka_t *rk;
   rd_kafka_conf_t *cfg;
@@ -57,9 +61,11 @@ EXT void p_kafka_init_topic_rr(struct p_kafka_host *);
 EXT void p_kafka_set_broker(struct p_kafka_host *, char *, int);
 EXT void p_kafka_set_topic(struct p_kafka_host *, char *);
 EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
+EXT void p_kafka_set_content_type(struct p_kafka_host *, int);
 
 EXT char *p_kafka_get_topic(struct p_kafka_host *);
 EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
+EXT int p_kafka_get_content_type(struct p_kafka_host *);
 
 EXT void p_kafka_unset_topic(struct p_kafka_host *);
 

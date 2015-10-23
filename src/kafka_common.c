@@ -36,6 +36,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
     kafka_host->cfg = rd_kafka_conf_new();
     if (kafka_host->cfg) {
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
+      rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
     }
   }
 }
@@ -96,6 +97,18 @@ void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
   }
 }
 
+void p_kafka_set_content_type(struct p_kafka_host *kafka_host, int content_type)
+{
+  if (kafka_host) kafka_host->content_type = content_type;
+}
+
+int p_kafka_get_content_type(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) return kafka_host->content_type;
+
+  return FALSE;
+}
+
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 {
   struct timeval tv;
@@ -108,11 +121,25 @@ void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char
 
 void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_code, void *opaque, void *msg_opaque)
 {
+  struct p_kafka_host *kafka_host = (struct p_kafka_host *) opaque; 
+
   if (error_code) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Kafka message delivery failed: %s\n", config.name, config.type, rd_kafka_err2str(error_code));
   }
   else {
-    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes)\n", config.name, config.type, len);
+    if (config.debug) {
+      if (p_kafka_get_content_type(kafka_host) == PM_KAFKA_CNT_TYPE_STR) {
+        char *payload_str = (char *) payload;
+	char saved = payload_str[len];
+
+	payload_str[len] = '\0';
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %s\n", config.name, config.type, len, payload);
+	payload_str[len] = saved;
+      }
+      else {
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes)\n", config.name, config.type, len);
+      }
+    }
   }
 }
 
