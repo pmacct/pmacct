@@ -71,12 +71,14 @@ EXT void p_kafka_unset_topic(struct p_kafka_host *);
 
 EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
 EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
+EXT void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
 EXT int p_kafka_produce_string(struct p_kafka_host *, char *);
 EXT void p_kafka_close(struct p_kafka_host *, int);
 
 /* global vars */
 EXT struct p_kafka_host kafkap_kafka_host;
+EXT int kafkap_ret_err_cb;
 
 static char default_kafka_broker_host[] = "127.0.0.1";
 static int default_kafka_broker_port = 9092;

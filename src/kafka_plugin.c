@@ -437,7 +437,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   }
 #endif
 
-  p_kafka_close(&kafkap_kafka_host, FALSE);
+  // XXX: if (!ret) p_kafka_close(&kafkap_kafka_host, FALSE);
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",

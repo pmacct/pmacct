@@ -35,6 +35,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
 
     kafka_host->cfg = rd_kafka_conf_new();
     if (kafka_host->cfg) {
+      rd_kafka_conf_set_error_cb(kafka_host->cfg, p_kafka_msg_error);
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
     }
@@ -143,6 +144,11 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
   }
 }
 
+void p_kafka_msg_error(rd_kafka_t *rk, int err, const char *reason, void *opaque)
+{
+  kafkap_ret_err_cb = ERR;
+}
+
 int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
@@ -164,36 +170,39 @@ int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
 {
   int ret;
 
+  kafkap_ret_err_cb = FALSE;
+
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
     ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
 			   json_str, strlen(json_str), NULL, 0, NULL);
 
-    if (ret == ERR) {
+    /* Poll to handle delivery reports; timeout_ms set to minimum possible blocking value */
+    rd_kafka_poll(kafka_host->rk, 1);
+    if (ret == ERR || kafkap_ret_err_cb == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
-	  rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
+          rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
       p_kafka_close(kafka_host, TRUE);
       return ERR;
     }
-
-    /* Poll to handle delivery reports */
-    rd_kafka_poll(kafka_host->rk, 0);
   }
+  else return ERR;
 
   return SUCCESS; 
 }
 
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
 {
-  if (kafka_host && kafka_host->rk && kafka_host->topic) { 
-    /* Wait for messages to be delivered */
-    while (rd_kafka_outq_len(kafka_host->rk) > 0) rd_kafka_poll(kafka_host->rk, 100);
-
+  if (kafka_host) { 
     if (set_fail) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_close()\n", config.name, config.type);
       P_broker_timers_set_last_fail(&kafka_host->btimers, time(NULL));
     }
+    else {
+      /* Wait for messages to be delivered */
+      if (kafka_host->rk) while (rd_kafka_outq_len(kafka_host->rk) > 0) rd_kafka_poll(kafka_host->rk, 100);
+    }
 
-    rd_kafka_topic_destroy(kafka_host->topic);
-    rd_kafka_destroy(kafka_host->rk);
+    if (kafka_host->topic) rd_kafka_topic_destroy(kafka_host->topic);
+    if (kafka_host->rk) rd_kafka_destroy(kafka_host->rk);
   }
 }
