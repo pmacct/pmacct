@@ -176,9 +176,7 @@ int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
     ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
 			   json_str, strlen(json_str), NULL, 0, NULL);
 
-    /* Poll to handle delivery reports; timeout_ms set to minimum possible blocking value */
-    rd_kafka_poll(kafka_host->rk, 1);
-    if (ret == ERR || kafkap_ret_err_cb == ERR) {
+    if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
       p_kafka_close(kafka_host, TRUE);
@@ -199,10 +197,34 @@ void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
     }
     else {
       /* Wait for messages to be delivered */
-      if (kafka_host->rk) while (rd_kafka_outq_len(kafka_host->rk) > 0) rd_kafka_poll(kafka_host->rk, 100);
+      if (kafka_host->rk) p_kafka_check_outq_len(kafka_host);
     }
 
     if (kafka_host->topic) rd_kafka_topic_destroy(kafka_host->topic);
     if (kafka_host->rk) rd_kafka_destroy(kafka_host->rk);
   }
+}
+
+int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
+{
+  int outq_len = 0, old_outq_len = 0;
+
+  if (kafka_host->rk) {
+    while ((outq_len = rd_kafka_outq_len(kafka_host->rk)) > 0) {
+      if (!old_outq_len) {
+	old_outq_len = outq_len;
+      }
+      else {
+        if (outq_len == old_outq_len) {
+          p_kafka_close(kafka_host, TRUE);
+	  return outq_len; 
+	}
+      }
+
+      sleep(1);
+    }
+  }
+  else return ERR;
+
+  return SUCCESS;
 }
