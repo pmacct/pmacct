@@ -11,18 +11,19 @@ V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
 VI.	Running the ULOG-based daemon (uacctd)
 VII.	Running the pmacct client (pmacct)
 VIII.	Running the RabbitMQ/AMQP plugin
-IX.	Internal buffering and queueing
-X.	Quickstart guide to packet/stream classifiers
-XI.	Quickstart guide to setup a NetFlow agent/probe 
-XII.	Quickstart guide to setup a sFlow agent/probe 
-XIII.	Quickstart guide to setup the BGP daemon
-XIV.	Quickstart guide to setup a NetFlow/sFlow replicator
-XV.	Quickstart guide to setup the IS-IS daemon
-XVI.    Quickstart guide to setup the BMP daemon
-XVII.	Running the print plugin to write to flat-files
-XVIII.	Quickstart guide to setup GeoIP lookups
-XIX.	Using pmacct as traffic/event logger
-XX.	Notes on how to troubleshoot
+IX.	Running the Kafka plugin
+X.	Internal buffering and queueing
+XI.	Quickstart guide to packet/stream classifiers
+XII.	Quickstart guide to setup a NetFlow agent/probe 
+XIII.	Quickstart guide to setup a sFlow agent/probe 
+XIV.	Quickstart guide to setup the BGP daemon
+XV.	Quickstart guide to setup a NetFlow/sFlow replicator
+XVI.	Quickstart guide to setup the IS-IS daemon
+XVII.	Quickstart guide to setup the BMP daemon
+XVIII.	Running the print plugin to write to flat-files
+XIX.	Quickstart guide to setup GeoIP lookups
+XX.	Using pmacct as traffic/event logger
+XXI.	Notes on how to troubleshoot
 
 
 I. Plugins included with pmacct distribution
@@ -44,6 +45,8 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
 	   for delivery to consumer applications or tools. Popular consumers
 	   are ElasticSearch, Cassandra and CouchDB.
+'kafka':   data is sent to a Kafka broker for delivery to consumer applications
+	   or tools.
 
 
 II. Configuring pmacct for compilation and installing
@@ -565,8 +568,8 @@ aggregate: src_host, dst_host, src_port, dst_port, proto, tos
 amqp_exchange: pmacct
 amqp_routing_key: acct
 amqp_refresh_time: 300
-sql_history: 5m
-sql_history_roundoff: m
+amqp_history: 5m
+amqp_history_roundoff: m
 ! ..
 
 pmacct will only declare a message exchange and provide a routing key, ie. it
@@ -583,7 +586,42 @@ Improvements to the basic Python script provided and/or examples in different
 languages are very welcome at this stage.
 
 
-IX. Internal buffering and queueing
+IX. Running the Kafka plugin
+Apache Kafka is publish-subscribe messaging rethought as a distributed commit log.
+Its qualities being: fast, scalable, durable and distributed by design. pmacct
+Kafka plugin is designed to send aggregated network traffic data, in JSON format,
+through a Kafka broker to 3rd party applications. Requirements to use the plugin
+are:
+
+* A working Kafka broker (and Zookeper server): http://kafka.apache.org/
+* Librdkafka: https://github.com/edenhill/librdkafka/
+* Libjansson to cook JSON objects: http://www.digip.org/jansson/
+
+Once these elements are installed, pmacct can be configured for compilation as
+follows (assumptions: Jansson, librdkafka and the Kafka broker are installed in
+their default paths under /usr/local):
+
+./configure --enable-kafka --enable-jansson
+
+Then "make; make install" as usual. Following a configuration snippet showing a
+basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
+on port 9092; look all configurable directives up in the CONFIG-KEYS document):
+
+! ..
+plugins: kafka
+!
+aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+kafka_topic: pmacct.acct
+kafka_refresh_time: 300
+kafka_history: 5m
+kafka_history_roundoff: m
+! ..
+
+A basic consumer script, providing output of consumed messages on the console, is
+provided as part of the standard Kafka distribution: bin/kafka-console-consumer.sh.
+
+
+X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
 queue implementation available since day one of pmacct (configured via plugin_pipe_size
 and documented in docs/INTERNALS) and 2) from release 1.5.2, use a RabbitMQ broker for
@@ -625,7 +663,7 @@ plugin_pipe_amqp_routing_key[blabla]: blabla-print
 plugin_pipe_amqp_retry[blabla]: 60
 
 
-X. Quickstart guide to packet classifiers
+XI. Quickstart guide to packet classifiers
 pmacct 0.10.0 sees the introduction of a packet classification feature. The approach
 is fully extensible: classification patterns are based over regular expressions (RE),
 must be placed into a common directory and have a .pat file extension. Patterns for
@@ -692,7 +730,7 @@ e) Ok, we are done! Fire the pmacct collector daemon:
    values; get the time to take a read about them in the CONFIG-KEYS document.
 
 
-XI. Quickstart guide to setup a NetFlow agent/probe
+XII. Quickstart guide to setup a NetFlow agent/probe
 pmacct 0.11.0 sees the introduction of traffic data export capabilities, through both
 NetFlow and sFlow protocols. While NetFlow v5 is fixed by nature, v9 adds flexibility
 by allowing to transport custom informations (for example, L7-classification tags to a
@@ -829,7 +867,7 @@ d) Ok, we are done ! Now fire both daemons:
    shell b> nfacctd -f /path/to/configuration/nfacctd-memory.conf
 
 
-XII. Quickstart guide to setup a sFlow agent/probe
+XIII. Quickstart guide to setup a sFlow agent/probe
 pmacct 0.11.0 sees the introduction of traffic data export capabilities via sFlow; such
 protocol is quite different from NetFlow: in short, it works by exporting portions of
 sampled packets rather than building uni-directional flows as it happens in NetFlow;
@@ -853,7 +891,7 @@ sfprobe_receiver: 1.2.3.4:6343
 !...
 
 
-XIII. Quickstart guide to setup the BGP daemon
+XIV. Quickstart guide to setup the BGP daemon
 The BGP daemon is run as a thread within the collector core process. The idea is
 to receive data-plane information, ie. via NetFlow, sFlow, etc., and control
 plane information, ie. full routing tables via BGP, from edge routers. Per-peer
@@ -890,7 +928,7 @@ hence will never try to re-establish a fallen peering session.
 For debugging purposes related to the BGP feed(s), bgp_daemon_msglog_* configuration
 directives can be enabled in order to log BGP messaging.
 
-XIIIa. Limiting AS-PATH and BGP community attributes length
+XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.
 Sometimes only a small portion of their content is relevant to the accounting task and
 hence a filtering layer was developed to take special care of these attributes. The
@@ -906,7 +944,7 @@ bgp_stdcomm_pattern: 12345:
 A detailed description of these configuration directives is, as usual, included in
 the CONFIG-KEYS document. 
 
-XIIIb. The source peer AS case 
+XIVb. The source peer AS case 
 The peer_src_as primitive adds useful insight in understanding where traffic enters
 the observed routing domain; but asymmetric routing impacts accuracy delivered by
 devices configured with either NetFlow or sFlow and the peer-as feature (as it only
@@ -942,7 +980,7 @@ NOTES:
   highlighed in this paragraph apply to these aswell. Check CONFIG-KEYS out for the
   src_[med|local_pref|as_path|std_comm|ext_comm]_[type|map] configuration directives.
 
-XIIIc. Tracking entities on the own IP address space
+XIVc. Tracking entities on the own IP address space
 It might happen that not all entities attached to the service provider network are
 running BGP but rather they get IP prefixes redistributed into iBGP (different
 routing protocols, statics, directly connected, etc.). These can be private IP
@@ -958,7 +996,7 @@ with a BGP standard community, this directive allows to map the community to a
 peer AS/origin AS couple as per the following example: XXXXX:YYYYY => Peer-AS=XXXXX,
 Origin-AS=YYYYY. 
 
-XIIId. Preparing the router to BGP peer 
+XIVd. Preparing the router to BGP peer 
 Once the collector is configured and started up the remaining step is to let routers
 to export traffic samples to the collector and BGP peer with it. Configuring the same
 source IP address across both NetFlow and BGP features allows the pmacct collector to
@@ -1007,7 +1045,7 @@ protocols bgp {
     }
 }
 
-XIIIe. A working configuration example writing to a MySQL database
+XIVe. A working configuration example writing to a MySQL database
 The following setup is a realistic example for collecting an external traffic
 matrix to the ASN level (ie. no IP prefixes collected) for a MPLS-enabled IP
 carrier network. Samples are aggregated in a way which is suitable to get an
@@ -1099,7 +1137,7 @@ Although table names are fixed in this example, ie. acct_bgp_5mins, it can be
 highly adviceable in real-life to run dynamic SQL tables, ie. table names that
 include time-related variables (see sql_table, sql_table_schema in CONFIG-KEYS). 
 
-XIIIf. Exporting routing tables and/or BGP messaging to files.
+XIVf. Exporting routing tables and/or BGP messaging to files.
 pmacct 1.5.0 introduces two new features: a) export/dump routing tables for
 all BGP peers at regular time intervals and b) log BGP messaging, real-time,
 with each of the BGP peers. Both features are useful for troubleshooting and
@@ -1128,7 +1166,7 @@ be rotated by an external tool/script) is configured as follows:
 
 bgp_daemon_msglog_file: /path/to/spool/bgp/bgp-$peer_src_ip.log
 
-XIIIg. BGP daemon implementation concluding notes
+XIVg. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
 address families and ADD-PATH (draft-ietf-idr-add-paths); both IPv4 and IPv6
 BGP sessions are supported. When storing data via SQL, BGP primitives can be
@@ -1141,7 +1179,7 @@ TCP MD5 signature for BGP messages is also supported. For a review of all knobs
 and features see the CONFIG-KEYS document. 
 
 
-XIV. Quickstart guide to setup a NetFlow/sFlow replicator
+XV. Quickstart guide to setup a NetFlow/sFlow replicator
 A 'tee' plugin which is meant, in basic terms, to replicate NetFlow/sFlow data
 to remote collectors. The plugin can also act transparently by preserving the
 original IP address of the datagrams. Setting up a replicator is very easy. All
@@ -1200,7 +1238,7 @@ and replicating data, two separate instances must be used (intuitively with the
 replicator instance feeding the collector one).
 
 
-XV. Quickstart guide to setup the IS-IS daemon
+XVI. Quickstart guide to setup the IS-IS daemon
 pmacct 0.14.0 integrates an IS-IS daemon into the IP accounting collectors part
 of the toolset. Such daemon is run as a thread within the collector core process.
 The idea is to receive data-plane information, ie. via NetFlow, sFlow, etc., and
@@ -1214,7 +1252,7 @@ be configured for compilation with threads, this line will do it:
 
 ./configure --enable-threads
 
-XVa. Preparing the collector for the L2 P2P IS-IS neighborship
+XVIa. Preparing the collector for the L2 P2P IS-IS neighborship
 It's assumed the collector sits on an Ethernet segment and has not direct link
 (L2) connectivity to an IS-IS speaker, hence the need to establish a GRE tunnel. 
 While extensive literature and OS specific examples exist on the topic, a brief
@@ -1234,7 +1272,7 @@ isis_daemon_iface: gre2
 isis_daemon_mtu: 1400
 ! isis_daemon_msglog: true
 
-XVb. Preparing the router for the L2 P2P IS-IS neighborship 
+XVIb. Preparing the router for the L2 P2P IS-IS neighborship 
 Once the collector is ready, the remaining step is to configure a remote router
 for the L2 P2P IS-IS neighborship. The following bit of configuration (based on
 Cisco IOS) will match the above fragment of configuration for the IS-IS daemon:
@@ -1256,7 +1294,7 @@ router isis
 !
 
 
-XVI. Quickstart guide to setup the BMP daemon
+XVII. Quickstart guide to setup the BMP daemon
 The BMP daemon thread is introduced in pmacct 1.5.1. The implementation is
 based on the draft-ietf-grow-bmp-07 IETF document. To quote the document:
 "BMP is intended to provide a more convenient interface for obtaining route
@@ -1302,7 +1340,7 @@ router bgp 64512
 
 Any equivalent examples using IOS-XR or JunOS are much welcome.
  
-XVII. Running the print plugin to write to flat-files
+XVIII. Running the print plugin to write to flat-files
 Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
@@ -1347,7 +1385,7 @@ print_history_roundoff: m
 print_output_file_append: true 
 
 
-XVIII. Quickstart guide to setup GeoIP lookups
+XIX. Quickstart guide to setup GeoIP lookups
 From pmacct 0.14.2 it is possible to perform GeoIP country lookups against a
 Maxmind database v1 (--enable-geoip) and from 1.5.2 against a Maxmind database
 v2 (--enable-geoipv2). The two traffic aggregation primitives to leverage such
@@ -1395,7 +1433,7 @@ states, counties, metro areas, zip codes, etc.) are not yet supported: should
 you be interested into any of these, please get in touch.  
 
 
-XIX. Using pmacct as traffic/event logger
+XX. Using pmacct as traffic/event logger
 pmacct was originally conceived as a traffic aggregator. From pmacct 0.14.3 
 it is now possible to use pmacct as a traffic/event logger, such development
 being fostered particularly by the use of NetFlow/IPFIX as generic transport,
@@ -1488,7 +1526,7 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XX.  Notes on how to troubleshoot
+XXI.  Notes on how to troubleshoot
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  

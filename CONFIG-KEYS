@@ -433,14 +433,16 @@ DESC:		See amqp_routing_key; see also bgp_daemon_msglog_amqp_host. Variables sup
 
 DEFAULT:	none
 
-KEY:            amqp_routing_key_rr
-DESC:           Performs round-robin load-balancing over a set of routing keys. The base name for the
-                routing key is defined by amqp_routing_key. amqp_routing_key_rr accepts a positive int
-                value. If amqp_routing_key is set to 'blabla' and amqp_routing_key_rr to 3 then the AMQP
-                plugin will round robin as follows: message #1 -> blabla_0, message #2 -> blabla_1,
-                message #3 -> blabla_2, message #4 -> blabla_0 and so forth. By default the feature is
-                disabled, meaning all messages are sent to the routing key specified by amqp_routing_key
-                (or the default one, if no amqp_routing_key is specified); see also amqp_host.
+KEY:            [ amqp_routing_key_rr | kafka_topic_rr ]
+DESC:           Performs round-robin load-balancing over a set of AMQP routing keys or Kafka topics.
+		The base name for the string is defined by amqp_routing_key or kafka_topic. This key
+		accepts a positive int value. If, for example, amqp_routing_key is set to 'blabla'
+		and amqp_routing_key_rr to 3 then the AMQP plugin will round robin as follows:
+		message #1 -> blabla_0, message #2 -> blabla_1, message #3 -> blabla_2, message #4
+		-> blabla_0 and so forth. This works in the same fashion for kafka_topic. By default
+		the feature is disabled, meaning all messages are sent to the base AMQP routing key
+		or Kafka topic (or the default one, if no amqp_routing_key or kafka_topic is being
+		specified).
 DEFAULT:        0
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_rr |
@@ -515,6 +517,33 @@ DEFAULT:	60
 KEY:		[ bgp_daemon_msglog_amqp_retry | bmp_daemon_msglog_amqp_retry ] [GLOBAL]
 DESC:		See plugin_pipe_amqp_retry; see also bgp_daemon_msglog_amqp_host.
 DEFAULT: 	See plugin_pipe_amqp_retry	
+
+KEY:		kafka_topic
+DESC:           Name of the Kafka topic to attach to published data. Dynamic names are supported by
+                kafka_topic through the use of variables, which are computed at the moment when data
+                is purged to the backend. The list of variables supported by amqp_routing_key:
+
+                $peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
+
+                $pre_tag        Value of the tag primitive of the record being processed.
+
+                $post_tag       Configured value of post_tag.
+
+                $post_tag2      Configured value of post_tag2.
+
+DEFAULT:        kafka_topic: 'pmacct.acct'
+
+KEY:            kafka_broker_host
+DESC:           Defines the Kafka broker IP address.
+DEFAULT:        127.0.0.1
+
+KEY:            kafka_broker_port
+DESC:           Defines the Kafka broker port.
+DEFAULT:        9092
+
+KEY:		kafka_partition
+DESC:		Defines the Kafka broker topic partition ID.
+DEFAULT:	RD_KAFKA_PARTITION_UA ((int32_t)-1)
 
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		Writes PID of Core process to the specified file. PIDs of the active plugins are written
@@ -785,7 +814,8 @@ DESC:		Defines the password to use when connecting to the server. In MongoDB, if
 		if only one of the two is specified, the other is set to its default value.
 DEFAULT:	'arealsmartpwd'
 
-KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time ] (-r)
+KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time |
+		  kafka_refresh_time ] (-r)
 DESC:		Time interval, in seconds, between consecutive executions of the plugin cache scanner. The
 		scanner purges data into the plugin backend. Note: internally all these config directives
 		write to the same variable; when using multiple plugins it is recommended to bind refresh
@@ -798,7 +828,8 @@ DESC:		Time interval, in seconds, between consecutive executions of the plugin c
 		As doing otherwise can originate unexpected behaviours.
 DEFAULT:	60
 
-KEY:		[ sql_startup_delay | print_startup_delay | mongo_startup_delay | amqp_startup_delay ]
+KEY:		[ sql_startup_delay | print_startup_delay | mongo_startup_delay | amqp_startup_delay |
+		  kafka_startup_delay ]
 DESC:		Defines the time, in seconds, the first cache scan event has to be delayed. This delay
 		is, in turn, propagated to the subsequent scans. It comes useful in two scenarios: a) so 
 		that multiple plugins can use the same refresh time (ie. sql_refresh_time) value, allowing
@@ -819,7 +850,7 @@ DESC:		Enables the optimization of the statements sent to the RDBMS essentially 
 		the 'sql_table_version' directive.
 DEFAULT:	false
 
-KEY:		[ sql_history | print_history | mongo_history | amqp_history ]
+KEY:		[ sql_history | print_history | mongo_history | amqp_history | kafka_history ]
 VALUES:		#[s|m|h|d|w|M]
 DESC:		Enables historical accounting by placing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
@@ -834,14 +865,15 @@ DESC:		Enables historical accounting by placing accounted data into configurable
 		- four hours, '86400' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
 
-KEY:            [ sql_history_offset | print_history_offset | mongo_history_offset | amqp_history_offset ]
+KEY:            [ sql_history_offset | print_history_offset | mongo_history_offset | amqp_history_offset |
+		  kafka_history_offset ]
 DESC:		Sets an offset to timeslots basetime. If history is set to 30 mins (by default creating
 		10:00, 10:30, 11:00, etc. time-bins), with an offset of 900 seconds (so 15 mins) it will
 		create 10:15, 10:45, 11:15, etc. time-bins. It expects a positive value, in seconds.
 DEFAULT:	0
 
 KEY:		[ sql_history_roundoff | print_history_roundoff | mongo_history_roundoff |
-		  amqp_history_roundoff ]
+		  amqp_history_roundoff | kafka_history_roundoff ]
 VALUES		[m,h,d,w,M]
 DESC:		Enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
 		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).
@@ -879,7 +911,8 @@ DESC:           Enables recovery mode; recovery mechanism kicks in if DB fails. 
 		system on a box) to use in the case the primary backend fails.
 DEFAULT:	none
 
-KEY:            [ sql_max_writers | print_max_writers | mongo_max_writers | amqp_max_writers ]
+KEY:            [ sql_max_writers | print_max_writers | mongo_max_writers | amqp_max_writers |
+		  kafka_max_writers ]
 DESC:           Sets the maximum number of concurrent writer processes the plugin is allowed to start.
 		This setting allows pmacct to degrade gracefully during major backend lock/outages/
 		unavailability. The value is split as follows: up to N-1 concurrent processes will
@@ -889,7 +922,8 @@ DESC:           Sets the maximum number of concurrent writer processes the plugi
 		printed out.
 DEFAULT:	10
 
-KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries ]
+KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries |
+		  kafka_cache_entries ]
 DESC:		All plugins have a memory cache in order to store data until next purging event (see
 		sql_refresh_time). In case of network traffic data caching allows to accumulate bytes
 		and packets counters. This directive sets the number of cache buckets. Default value
@@ -900,7 +934,7 @@ NOTES:		print, AMQP and MongoDB plugins share the same cache structure: as said,
 		defines the amount of buckets. The default value (16411) allows for some 150K entries
 		to fit the cache structure (or roughlt ten times the supplied value).
 DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries:
-		16411
+		16411; kafka_cache_entries: 16411
 
 KEY:		sql_dont_try_update
 VALUES:         [ true | false ]
@@ -929,7 +963,7 @@ DESC:		If sql_use_copy is true, uses the supplied character as delimiter. This i
 		database.
 DEFAULT:	','
 
-KEY:		[ amqp_multi_values | sql_multi_values ]
+KEY:		[ amqp_multi_values | sql_multi_values | kafka_multi_values ]
 DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT statements. The value
 		of the directive is intended to be the size (in bytes) of the multi-values buffer. The directive
 		applies only to MySQL and SQLite 3.x plugins. Inserting many rows at the same time is much
@@ -959,7 +993,7 @@ DESC:		Specifies time interval at which the executable specified by 'sql_trigger
 		the executable will be fired each hour).
 DEFAULT:	none
 
-KEY:		[ sql_preprocess | print_preprocess | mongo_preprocess | amqp_preprocess ]
+KEY:		[ sql_preprocess | print_preprocess | mongo_preprocess | amqp_preprocess | kafka_preprocess ]
 DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks) while
 		purging data to the backend thus resulting in a powerful selection tier; aggregates filtered
 		out may be just discarded or saved through the recovery mechanism (if enabled, if supported
@@ -1066,7 +1100,8 @@ DESC:		Allows to process aggregates (via a comma-separated list of conditionals 
 		      SQL plugins only.
 DEFAULT:	none
 
-KEY:		[ sql_preprocess_type | print_preprocess_type | mongo_preprocess_type | amqp_preprocess_type ]
+KEY:		[ sql_preprocess_type | print_preprocess_type | mongo_preprocess_type | amqp_preprocess_type |
+		  kafka_preprocess_type ]
 VALUES:		[ any | all ]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
 		are valid if they just match one of the checks (any) or all of them (all).
@@ -1134,7 +1169,7 @@ DESC:           Defines the print plugin output separator. Value is expected to 
 		natural choice)
 DEFAULT:	','
 
-KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos ]
+KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]
 DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
 		or left numerical. The default is to look protocol names up.

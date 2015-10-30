@@ -7,7 +7,7 @@ V.	Communications between core process and plugins
 VI.	Memory table plugin
 VII.	SQL issues and *SQL plugins
 VIII.	Recovery modes
-IX.	Common plugin structures (print, MongoDB, AMQP plugins) 
+IX.	Common plugin structures (print, MongoDB, AMQP, Kafka plugins) 
 X.	pmacctd flows counter implementation
 XI.	Classifier and connection tracking engines
 XII.	Jumps and flow diversions in Pre-Tagging infrastructure
@@ -379,7 +379,7 @@ A final statistics screen summarizes what has been successfully written into the
 help reprocess the logfile at a later stage if something goes wrong once again. 
 
 
-IX. Common plugin structures (print, MongoDB, AMQP plugins)
+IX. Common plugin structures (print, MongoDB, AMQP, Kafka plugins)
 XXX
 
 
