@@ -62,10 +62,12 @@ EXT void p_kafka_set_broker(struct p_kafka_host *, char *, int);
 EXT void p_kafka_set_topic(struct p_kafka_host *, char *);
 EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
 EXT void p_kafka_set_content_type(struct p_kafka_host *, int);
+EXT void p_kafka_set_partition(struct p_kafka_host *, int);
 
 EXT char *p_kafka_get_topic(struct p_kafka_host *);
 EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
 EXT int p_kafka_get_content_type(struct p_kafka_host *);
+EXT int p_kafka_get_partition(struct p_kafka_host *);
 
 EXT void p_kafka_unset_topic(struct p_kafka_host *);
 

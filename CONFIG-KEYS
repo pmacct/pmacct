@@ -542,8 +542,10 @@ DESC:           Defines the Kafka broker port.
 DEFAULT:        9092
 
 KEY:		kafka_partition
-DESC:		Defines the Kafka broker topic partition ID.
-DEFAULT:	RD_KAFKA_PARTITION_UA ((int32_t)-1)
+DESC:		Defines the Kafka broker topic partition ID. RD_KAFKA_PARTITION_UA or ((int32_t)-1)
+		is to define the configured or default partitioner (slower than sending to a fixed
+		partition). 
+DEFAULT:	0
 
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		Writes PID of Core process to the specified file. PIDs of the active plugins are written
