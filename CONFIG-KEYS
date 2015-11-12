@@ -74,9 +74,10 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  primitive-related documentation, if required.
 		* List of the aggregation primitives available to each specific pmacct daemon
 		  is available via -a command-line option, ie. "pmacctd -a". 
-		* sampling_rate: if counters renormalization is enabled this field will report
-		  a value of 1; otherwise it will report the rate pmacct would have applied if
-		  renormalize counters was enabled.  
+		* sampling_rate: if counters renormalization (ie. sfacctd_renormalize) is
+		  enabled this field will report a value of one (1); otherwise it will report
+		  the rate that is passed by the protocol or sampling_map. A value of zero (0)
+		  means 'unknown' and hence no rate is applied to original counter values.
 		* src_std_comm, src_ext_comm, src_as_path are based on reverse BGP lookups;
 		  peer_src_as, src_local_pref and src_med are by default based on reverse BGP
 		  lookups but can be alternatively based on other methods, for example maps
