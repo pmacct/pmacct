@@ -933,11 +933,12 @@ DESC:		All plugins have a memory cache in order to store data until next purging
 		is suitable for most common scenarios, however when facing large-scale networks, it
 		is higly recommended to tune this parameter to improve performances. Use a prime
 		number of buckets.
-NOTES:		print, AMQP and MongoDB plugins share the same cache structure: as said, this setting
-		defines the amount of buckets. The default value (16411) allows for some 150K entries
-		to fit the cache structure (or roughlt ten times the supplied value).
-DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries:
-		16411; kafka_cache_entries: 16411
+NOTES:		all non SQL plugins share the same cache structure: as said, this setting defines the
+		amount of cache bucket (ie. not the total among of entries). The default value (16411)
+		allows for some 150K entries to fit the cache structure (calculate ten times the
+		supplied value).
+DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries,
+		kafka_cache_entries: 16411
 
 KEY:		sql_dont_try_update
 VALUES:         [ true | false ]
