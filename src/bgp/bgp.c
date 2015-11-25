@@ -29,6 +29,9 @@
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
