@@ -217,6 +217,7 @@ EXT struct bgp_comm_range peer_src_as_ifrange;
 EXT struct bgp_comm_range peer_src_as_asrange; 
 EXT struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
-
+EXT int nfacctd_bgp_msglog_backend_methods;
+EXT int bgp_table_dump_backend_methods;
 #undef EXT
 #endif 

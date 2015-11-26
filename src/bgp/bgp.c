@@ -96,6 +96,8 @@ void skinny_bgp_daemon()
   memset(&client, 0, sizeof(client));
   memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
   memset(&allow, 0, sizeof(struct hosts_table));
+  nfacctd_bgp_msglog_backend_methods = 0;
+  bgp_table_dump_backend_methods = 0;
 
   if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
   bgp_attr_init();
@@ -139,9 +141,13 @@ void skinny_bgp_daemon()
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
-  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
-    if (config.nfacctd_bgp_msglog_file && config.nfacctd_bgp_msglog_amqp_routing_key) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_daemon_msglog_file and bgp_daemon_msglog_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
+  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
+    if (config.nfacctd_bgp_msglog_file) nfacctd_bgp_msglog_backend_methods++;
+    if (config.nfacctd_bgp_msglog_amqp_routing_key) nfacctd_bgp_msglog_backend_methods++;
+    if (config.nfacctd_bgp_msglog_kafka_topic) nfacctd_bgp_msglog_backend_methods++;
+
+    if (nfacctd_bgp_msglog_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_daemon_msglog_file, bgp_daemon_msglog_amqp_routing_key and bgp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
       exit_all(1);
     }
 
@@ -164,11 +170,25 @@ void skinny_bgp_daemon()
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
     }
+
+    if (config.nfacctd_bgp_msglog_kafka_topic) {
+#ifdef WITH_KAFKA
+      // XXX: Kafka
+#else
+      // XXX: Kafka
+#endif
+    }
   }
 
-  if (config.bgp_table_dump_file && config.bgp_table_dump_amqp_routing_key) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_table_dump_file and bgp_table_dump_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
-    exit_all(1);
+  {
+    if (config.bgp_table_dump_file) bgp_table_dump_backend_methods++;
+    if (config.bgp_table_dump_amqp_routing_key) bgp_table_dump_backend_methods++;
+    if (config.bgp_table_dump_kafka_topic) bgp_table_dump_backend_methods++;
+
+    if (bgp_table_dump_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_table_dump_file, bgp_table_dump_amqp_routing_key and bgp_table_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -285,23 +305,21 @@ void skinny_bgp_daemon()
     config.nfacctd_bgp_batch_interval = 0;
   }
 
-  if (!config.nfacctd_bgp_msglog_output && (config.nfacctd_bgp_msglog_file ||
-      config.nfacctd_bgp_msglog_amqp_routing_key))
+  if (!config.nfacctd_bgp_msglog_output && nfacctd_bgp_msglog_backend_methods)
 #ifdef WITH_JANSSON
     config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
-  if (!config.bgp_table_dump_output && (config.bgp_table_dump_file ||
-      config.bgp_table_dump_amqp_routing_key))
+  if (!config.bgp_table_dump_output && bgp_table_dump_backend_methods)
 #ifdef WITH_JANSSON
     config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
-  if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
+  if (bgp_table_dump_backend_methods) {
     char dump_roundoff[] = "m";
     time_t tmp_time;
 
@@ -321,6 +339,7 @@ void skinny_bgp_daemon()
     }
 
     bgp_table_dump_init_amqp_host();
+    // XXX: Kafka
   }
 
   for (;;) {
@@ -332,7 +351,7 @@ void skinny_bgp_daemon()
     select_fd++;
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
-    if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
+    if (bgp_table_dump_backend_methods) {
       int delta;
 
       calc_refresh_timeout_sec(dump_refresh_deadline, log_tstamp.tv_sec, &delta);
@@ -366,12 +385,11 @@ void skinny_bgp_daemon()
       }
     }
 
-    if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || 
-	config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
+    if (nfacctd_bgp_msglog_backend_methods || bgp_table_dump_backend_methods) {
       gettimeofday(&log_tstamp, NULL);
       compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE, config.sql_history_since_epoch);
 
-      if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key) {
+      if (bgp_table_dump_backend_methods) {
 	while (log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_handle_dump_event();
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
@@ -387,6 +405,10 @@ void skinny_bgp_daemon()
           p_amqp_connect_to_publish(&bgp_daemon_msglog_amqp_host);
 	}
       }
+#endif
+
+#ifdef WITH_KAFKA
+      // XXX: Kafka
 #endif
     }
 
@@ -476,7 +498,7 @@ void skinny_bgp_daemon()
       }
 #endif
 
-      if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+      if (nfacctd_bgp_msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
 
       /* Check: only one TCP connection is allowed per peer */
@@ -1487,7 +1509,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	  bgp_unlock_node (route);
 	  bgp_attr_unintern(attr_new);
 
-	  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+	  if (nfacctd_bgp_msglog_backend_methods)
 	    goto log_update;
 
 	  return 0;
@@ -1518,7 +1540,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 	  bgp_unlock_node (route);
 
-	  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key)
+	  if (nfacctd_bgp_msglog_backend_methods)
 	    goto log_update;
 
 	  return 0;
@@ -1556,7 +1578,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   /* route_node_get lock */
   bgp_unlock_node(route);
 
-  if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
+  if (nfacctd_bgp_msglog_backend_methods) {
     ri = new;
     goto log_update;
   }
@@ -1610,7 +1632,7 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
     }
   }
 
-  if (ri && config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
+  if (ri && nfacctd_bgp_msglog_backend_methods) {
     char event_type[] = "withdraw";
 
     bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
@@ -2019,32 +2041,37 @@ void bgp_peer_close(struct bgp_peer *peer, int type)
 
   /* pointers to BGP or BMP vars */
   char *msglog_file, *neighbors_file, *msglog_amqp_routing_key;
+  char *msglog_kafka_topic;
   char *dump_file = NULL, *dump_amqp_routing_key = NULL;
+  char *dump_kafka_topic = NULL;
   int msglog_output;
 
   if (type == FUNC_TYPE_BGP) {
     msglog_file = config.nfacctd_bgp_msglog_file;
     msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
+    msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
     msglog_output = config.nfacctd_bgp_msglog_output;
     neighbors_file = config.nfacctd_bgp_neighbors_file; 
   }
   else if (type == FUNC_TYPE_BMP) {
     msglog_file = config.nfacctd_bmp_msglog_file;
     msglog_amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
+    msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
     msglog_output = config.nfacctd_bmp_msglog_output;
     neighbors_file = config.nfacctd_bmp_neighbors_file;
     dump_file = config.bmp_dump_file;
     dump_amqp_routing_key = config.bmp_dump_amqp_routing_key;
+    dump_kafka_topic = config.bmp_dump_kafka_topic;
   }
   else return;
 
   bgp_peer_info_delete(peer);
 
-  if (msglog_file || msglog_amqp_routing_key)
+  if (msglog_file || msglog_amqp_routing_key || msglog_kafka_topic)
     bgp_peer_log_close(peer, msglog_output, type);
 
   /* BMP case only */
-  if (dump_file || dump_amqp_routing_key)
+  if (dump_file || dump_amqp_routing_key || dump_kafka_topic)
     bmp_dump_close_peer(peer);
 
   close(peer->fd);
@@ -2080,7 +2107,7 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
         for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
-	      if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key) {
+	      if (nfacctd_bgp_msglog_backend_methods) {
 		char event_type[] = "delete";
 
 		bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
