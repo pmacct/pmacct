@@ -916,7 +916,7 @@ med, etc., correctly populated while querying the memory table:
 bgp_daemon: true
 bgp_daemon_ip: X.X.X.X
 bgp_daemon_max_peers: 100
-nfacctd_as_new: bgp
+nfacctd_as: bgp
 [ ... ]
 plugins: memory
 aggregate: src_as, dst_as, local_pref, med, as_path, peer_dst_as 
@@ -1077,7 +1077,7 @@ bgp_daemon_ip: X.X.X.X
 bgp_daemon_max_peers: 100
 bgp_aspath_radius: 3
 bgp_follow_default: 1 
-nfacctd_as_new: bgp
+nfacctd_as: bgp
 bgp_peer_src_as_type: map
 bgp_peer_src_as_map: /path/to/peers.map
 
@@ -1250,7 +1250,7 @@ might be configured to get summarized in BGP while crossing cluster boundaries.
 Pre-requisite for the use of the IS-IS daemon is that the pmacct package has to
 be configured for compilation with threads, this line will do it:
 
-./configure --enable-threads
+shell> ./configure
 
 XVIa. Preparing the collector for the L2 P2P IS-IS neighborship
 It's assumed the collector sits on an Ethernet segment and has not direct link
@@ -1411,9 +1411,10 @@ GeoIP v1 (libGeoIP):
   ...
 
 GeoIP v2 (libmaxminddb):
-* Have libmaxminddb library and headers available to compile against; have a
-  database also available: https://dev.maxmind.com/geoip/geoip2/geolite2/ .
-  Only the database binary format is supported.
+* Have libmaxminddb library and headers to compile against, available at:
+  https://github.com/maxmind/libmaxminddb/releases ; have also a database
+  available: https://dev.maxmind.com/geoip/geoip2/geolite2/ . Only the
+  database binary format is supported.
 
 * To compile the pmacct package with support for GeoIP lookups, the code must
   be configured for compilation as follows: ./configure --enable-geoipv2

@@ -708,7 +708,7 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (have_bgp) return FALSE;
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'src_as' requires either 'networks_file' or 'nf|sfacctd_as: false' to be specified. ", filename);
 
   return TRUE;
 }
@@ -757,7 +757,7 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (have_bgp) return FALSE;
 
-  Log(LOG_ERR, "ERROR ( %s ): 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as_new: false' to be specified. ", filename);
+  Log(LOG_ERR, "ERROR ( %s ): 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as: false' to be specified. ", filename);
 
   return TRUE;
 }

@@ -576,7 +576,7 @@ KEY:		networks_file_no_lpm
 VALUES          [ true | false ]
 DESC:		Makes a matching IP prefix defined in a networks_file win always, even if it is not
 		the longest. It applies when the aggregation method includes src_net and/or dst_net
-		and nfacctd_net (or equivalents) and/or nfacctd_as_new (or equivalents) configuration
+		and nfacctd_net (or equivalents) and/or nfacctd_as (or equivalents) configuration
 		directives are set to 'longest' (or 'fallback'). For example we receive the following
 		PDU via NetFlow: 
 
@@ -1262,25 +1262,26 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 		order to split option data records from flow or event data ones.
 DEFAULT:        false
 
-KEY:		[ nfacctd_as_new | sfacctd_as_new | pmacctd_as | uacctd_as ] [GLOBAL]
-VALUES:		[ false | (true|file) | bgp | longest ]
-DESC:		When 'false', it instructs nfacctd and sfacctd to populate 'src_as', 'dst_as', 'peer_src_as' and
-		'peer_dst_as' primitives from NetFlow and sFlow datagram respectively; when 'true' ('file' being
-		an alias of 'true') it instructs nfacctd and sfacctd to generate 'src_as' and 'dst_as' (only! ie.
-		no peer-AS) by looking up source and destination IP addresses against a networks_file. When 'bgp'
-		is specified, ASNs are looked up against the BGP RIB of the peer from which the NetFlow datagram
-		was received (see also bgp_agent_map directive). 'longest' behaves in a longest-prefix match wins
-		fashion: in nfacctd and sfacctd lookup is done against a networks list (if networks_file is
-		defined) sFlow/NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is
-		started) with the following logics: networks_file < sFlow/NetFlow < IGP <= BGP.
-		In pmacctd and uacctd: 'false' (maintained for backward compatibility), 'true' and 'file' expect a
-		'networks_file' to be defined; 'bgp' just works as described previously for nfacctd and sfacctd;
-		'longest' lookup is done against a networks list, IGP and BGP only (networks_file < IGP <= BGP)
-		since no export protocol lookup method is available. Read nfacctd_net description for an example
-		of operation of the 'longest' method. 
+KEY:		[ nfacctd_as | sfacctd_as | pmacctd_as | uacctd_as ] [GLOBAL]
+VALUES:		[ netflow | sflow | file | bgp | longest ]
+DESC:		When set to 'netflow' or 'sflow' it instructs nfacctd and sfacctd to populate 'src_as',
+		'dst_as', 'peer_src_as' and 'peer_dst_as' primitives from information in NetFlow and sFlow
+		datagrams; when set to 'file', it instructs nfacctd and sfacctd to populate 'src_as',
+		'dst_as' and 'peer_dst_as' by looking up source and destination IP addresses against a
+		supplied networks_file. When 'bgp' is specified, source and destination IP addresses are
+		looked up against the BGP RIB of the peer from which the NetFlow (or sFlow) datagram was
+		received (see also bgp_agent_map directive for more complex mappings). 'longest' behaves
+		in a longest-prefix match wins fashion: in nfacctd and sfacctd lookup is done against a
+		networks_file (if specified), sFlow/NetFlow protocol and BGP (if the BGP thread is started)
+		with the following logics: networks_file < sFlow/NetFlow < <= BGP.
+		In pmacctd and uacctd: 'file' expects a 'networks_file' to be defined; 'bgp' just works
+		as described previously for nfacctd and sfacctd; 'longest' lookup is done against a
+		networks_file and BGP only (networks_file <= BGP) since no export protocol lookup method
+		is available. Read nfacctd_net description for an example of operation of the 'longest'
+		method. 
 
-		Unless there is a specific goal do achieve, it is highly recommended that this definition, ie.
-		nfacctd_as_new, is kept in sync with its net equivalent, ie. nfacctd_net.
+		Unless there is a specific goal do achieve, it is highly recommended that this definition,
+		ie. nfacctd_as, is kept in sync with its net equivalent, ie. nfacctd_net.
 DEFAULT:        false
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
@@ -1311,7 +1312,7 @@ DESC:		Determines the method for performing IP prefix aggregation - hence direct
 		and 192.168.5.32/27 for dst_net and dst_mask. 
 
 		Unless there is a specific goal to achieve, it is highly recommended that the definition of this
-		configuration directive is kept in sync with its ASN equivalent, ie. nfacctd_as_new.
+		configuration directive is kept in sync with its ASN equivalent, ie. nfacctd_as.
 DEFAULT:	nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file'
 
 KEY:		use_ip_next_hop [GLOBAL]
@@ -1633,9 +1634,9 @@ KEY:		[ nfacctd_peer_as | sfacctd_peer_as | nfprobe_peer_as | sfprobe_peer_as ]
 VALUES:         [ true | false ]
 DESC:		When applied to [ns]fprobe src_as and dst_as fields are valued with peer-AS rather than origin-AS
 		as part of the NetFlow/sFlow export. Requirements to enable this feature on the probes are: a) one
-		of the nfacctd_as_new/sfacctd_as_new/pmacctd_as/uacctd_as set to 'bgp' and b) a fully functional
-		BGP daemon (bgp_daemon). When applied to [ns]facctd instead it uses src_as and dst_as values of
-		the NetFlow/sFlow export to populate peer_src_as and peer_dst_as primitives.
+		of the nfacctd_as/sfacctd_as/pmacctd_as/uacctd_as set to 'bgp' and b) a fully functional BGP
+		daemon (bgp_daemon). When applied to [ns]facctd instead it uses src_as and dst_as values of the
+		NetFlow/sFlow export to populate peer_src_as and peer_dst_as primitives.
 DEFAULT:        false
 
 KEY:            [ nfprobe_ipprec | sfprobe_ipprec | tee_ipprec ]

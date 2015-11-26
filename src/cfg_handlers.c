@@ -4065,9 +4065,14 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   lower_string(value_ptr);
-  if (!strcmp(value_ptr, "false"))
-    value = NF_AS_KEEP;
-  else if (!strcmp(value_ptr, "true") || !strcmp(value_ptr, "file"))
+  if (!strcmp(value_ptr, "false") /* legacy */ || !strcmp(value_ptr, "netflow") || !strcmp(value_ptr, "sflow")) {
+    if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) value = NF_AS_KEEP;
+    else {
+      Log(LOG_ERR, "WARN ( %s ): Invalid AS aggregation value '%s'\n", filename, value_ptr);
+      return ERR;
+    }
+  }
+  else if (!strcmp(value_ptr, "true") /* legacy */ || !strcmp(value_ptr, "file"))
     value = NF_AS_NEW;
   else if (!strcmp(value_ptr, "bgp"))
     value = NF_AS_BGP;
@@ -4099,8 +4104,13 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   lower_string(value_ptr);
-  if (!strcmp(value_ptr, "sflow") || !strcmp(value_ptr, "netflow"))
-    value = NF_NET_KEEP;
+  if (!strcmp(value_ptr, "sflow") || !strcmp(value_ptr, "netflow")) {
+    if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) value = NF_NET_KEEP;
+    else {
+      Log(LOG_ERR, "WARN ( %s ): Invalid network aggregation value '%s'\n", filename, value_ptr);
+      return ERR;
+    }
+  }
   else if (!strcmp(value_ptr, "file"))
     value = NF_NET_NEW;
   else if (!strcmp(value_ptr, "mask"))
