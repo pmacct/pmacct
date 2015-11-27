@@ -81,6 +81,9 @@ EXT int p_kafka_check_outq_len(struct p_kafka_host *);
 
 /* global vars */
 EXT struct p_kafka_host kafkap_kafka_host;
+EXT struct p_kafka_host bgp_daemon_msglog_kafka_host;
+EXT struct p_kafka_host bgp_table_dump_kafka_host;
+
 EXT int kafkap_ret_err_cb;
 
 static char default_kafka_broker_host[] = "127.0.0.1";

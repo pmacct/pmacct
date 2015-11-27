@@ -56,8 +56,15 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
 void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
-    if (kafka_host->topic_cfg) rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
-    if (kafka_host->topic) rd_kafka_topic_destroy(kafka_host->topic); 
+    if (kafka_host->topic_cfg) {
+      rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
+      kafka_host->topic_cfg = NULL;
+    }
+
+    if (kafka_host->topic) {
+      rd_kafka_topic_destroy(kafka_host->topic); 
+      kafka_host->topic = NULL;
+    }
   }
 }
 
@@ -213,8 +220,15 @@ void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
       if (kafka_host->rk) p_kafka_check_outq_len(kafka_host);
     }
 
-    if (kafka_host->topic) rd_kafka_topic_destroy(kafka_host->topic);
-    if (kafka_host->rk) rd_kafka_destroy(kafka_host->rk);
+    if (kafka_host->topic) {
+      rd_kafka_topic_destroy(kafka_host->topic);
+      kafka_host->topic = NULL;
+    }
+
+    if (kafka_host->rk) {
+      rd_kafka_destroy(kafka_host->rk);
+      kafka_host->rk = NULL;
+    }
   }
 }
 

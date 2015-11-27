@@ -32,6 +32,7 @@ struct bgp_peer_log {
   int refcnt;
   char filename[SRVBUFLEN];
   void *amqp_host;
+  void *kafka_host;
 };
 
 struct bgp_dump_stats {

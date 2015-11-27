@@ -42,7 +42,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
   char log_rk[SRVBUFLEN];
   struct bgp_peer *peer = ri->peer;
   struct bgp_attr *attr = ri->attr;
-  int ret = 0, amqp_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
@@ -51,6 +51,14 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
   if ((config.nfacctd_bgp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
       (config.bgp_table_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+#endif
+
+#ifdef WITH_KAFKA
+  if ((config.nfacctd_bgp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+      (config.bgp_table_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+    p_kafka_unset_topic(peer->log->kafka_host);
+    p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+  }
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -153,28 +161,38 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
 #endif
+
+#ifdef WITH_KAFKA
+    if ((config.nfacctd_bgp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bgp_table_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+      // XXX: Kafka kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
+    }
+#endif
 #endif
   }
 
-  return (ret | amqp_ret);
+  return (ret | amqp_ret | kafka_ret);
 }
 
 int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 {
-  int peer_idx, have_it, ret = 0, amqp_ret = 0;
+  int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
   char log_filename[SRVBUFLEN], event_type[] = "log_init";
   char peer_ip_src[] = "peer_ip_src", bmp_router[] = "bmp_router";
 
   /* pointers to BGP or BMP vars */
   struct bgp_peer_log **bpl;
-  char *file, *amqp_routing_key, *lts, *pa_str;
-  int amqp_routing_key_rr, max_peers;
+  char *file, *amqp_routing_key, *kafka_topic, *lts, *pa_str;
+  int amqp_routing_key_rr, kafka_topic_rr, max_peers;
   u_int64_t *ls;
 
   if (type == FUNC_TYPE_BGP) {
     file = config.nfacctd_bgp_msglog_file;
     amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
     amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
+    kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
+    kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
     max_peers = config.nfacctd_bgp_max_peers;
     
     pa_str = peer_ip_src;
@@ -186,6 +204,8 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     file = config.nfacctd_bmp_msglog_file;
     amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
     amqp_routing_key_rr = config.nfacctd_bmp_msglog_amqp_routing_key_rr;
+    kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
+    kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
     max_peers = config.nfacctd_bmp_max_peers;
 
     pa_str = bmp_router;
@@ -197,6 +217,8 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     file = config.sfacctd_counter_file;
     amqp_routing_key = NULL; /* AMQP not supported */
     amqp_routing_key_rr = 0; /* AMQP not supported */
+    kafka_topic = NULL; /* Kafka not supported */
+    kafka_topic_rr = 0; /* Kafka not supported */
     max_peers = config.sfacctd_counter_max_nodes;
 
     pa_str = peer_ip_src;
@@ -215,6 +237,10 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, amqp_routing_key, peer); 
   }
 
+  if (kafka_topic) {
+    bgp_peer_log_dynname(log_filename, SRVBUFLEN, kafka_topic, peer); 
+  }
+
   for (peer_idx = 0, have_it = 0; peer_idx < max_peers; peer_idx++) {
     if (!(*bpl)[peer_idx].refcnt) {
       if (file)
@@ -223,6 +249,11 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 #ifdef WITH_RABBITMQ
       if (amqp_routing_key)
         (*bpl)[peer_idx].amqp_host = &bgp_daemon_msglog_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+      if (kafka_topic)
+        (*bpl)[peer_idx].kafka_host = &bgp_daemon_msglog_kafka_host;
 #endif
       
       strcpy((*bpl)[peer_idx].filename, log_filename);
@@ -246,6 +277,18 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     if (amqp_routing_key_rr && !p_amqp_get_routing_key_rr(peer->log->amqp_host)) {
       p_amqp_init_routing_key_rr(peer->log->amqp_host);
       p_amqp_set_routing_key_rr(peer->log->amqp_host, amqp_routing_key_rr);
+    }
+#endif
+
+#ifdef WITH_KAFKA
+    if (kafka_topic) {
+      p_kafka_unset_topic(peer->log->amqp_host);
+      p_kafka_set_topic(peer->log->amqp_host, peer->log->filename);
+    }
+
+    if (kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
+      p_kafka_init_topic_rr(peer->log->kafka_host);
+      p_kafka_set_topic_rr(peer->log->kafka_host, kafka_topic_rr);
     }
 #endif
 
@@ -281,27 +324,35 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
 #endif
+
+#ifdef WITH_KAFKA
+      if (kafka_topic) {
+        // XXX: Kafka kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+        p_kafka_unset_topic(peer->log->kafka_host);
+      }
+#endif
 #endif
     }
   }
 
-  return (ret | amqp_ret);
+  return (ret | amqp_ret | kafka_ret);
 }
 
 int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 {
   char event_type[] = "log_close", peer_ip_src[] = "peer_ip_src", bmp_router[] = "bmp_router";
   struct bgp_peer_log *log_ptr;
-  void *amqp_log_ptr;
-  int ret = 0, amqp_ret = 0;;
+  void *amqp_log_ptr, *kafka_log_ptr;
+  int ret = 0, amqp_ret = 0, kafka_ret = 0;
 
   /* pointers to BGP or BMP vars */
-  char *file, *amqp_routing_key, *lts, *pa_str;
+  char *file, *amqp_routing_key, *kafka_topic, *lts, *pa_str;
   u_int64_t *ls;
 
   if (type == FUNC_TYPE_BGP) {
     file = config.nfacctd_bgp_msglog_file;
     amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
+    kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
 
     pa_str = peer_ip_src;
     lts = log_tstamp_str;
@@ -310,6 +361,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   else if (type == FUNC_TYPE_BMP) {
     file = config.nfacctd_bmp_msglog_file;
     amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
+    kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
 
     pa_str = bmp_router;
     lts = bmp_log_tstamp_str;
@@ -324,8 +376,16 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
+#ifdef WITH_KAFKA
+  if (kafka_topic) {
+    p_kafka_unset_topic(peer->log->kafka_host);
+    p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+  }
+#endif
+
   log_ptr = peer->log;
   amqp_log_ptr = peer->log->amqp_host;
+  kafka_log_ptr = peer->log->kafka_host;
 
   assert(peer->log->refcnt);
   peer->log->refcnt--;
@@ -363,6 +423,13 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
 #endif
+
+#ifdef WITH_KAFKA
+    if (kafka_topic) {
+      // XXX: Kafka kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
+      p_kafka_unset_topic(kafka_log_ptr);
+    }
+#endif
 #endif
   }
 
@@ -373,7 +440,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     }
   }
 
-  return (ret | amqp_ret);
+  return (ret | amqp_ret | kafka_ret);
 }
 
 void bgp_peer_log_seq_init(u_int64_t *seq)
@@ -775,6 +842,50 @@ void bgp_table_dump_init_amqp_host()
 }
 #else
 void bgp_table_dump_init_amqp_host()
+{
+}
+#endif
+
+#if defined WITH_KAFKA
+void bgp_daemon_msglog_init_kafka_host()
+{
+  p_kafka_init_host(&bgp_daemon_msglog_kafka_host);
+  p_kafka_connect_to_produce(&bgp_daemon_msglog_kafka_host);
+
+  if (!config.nfacctd_bgp_msglog_kafka_broker_host) config.nfacctd_bgp_msglog_kafka_broker_host = default_kafka_broker_host;
+  if (!config.nfacctd_bgp_msglog_kafka_broker_port) config.nfacctd_bgp_msglog_kafka_broker_port = default_kafka_broker_port;
+  if (!config.nfacctd_bgp_msglog_kafka_topic) config.nfacctd_bgp_msglog_kafka_topic = default_kafka_topic;
+  if (!config.nfacctd_bgp_msglog_kafka_retry) config.nfacctd_bgp_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+
+  p_kafka_set_broker(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_broker_host, config.nfacctd_bgp_msglog_kafka_broker_port);
+  p_kafka_set_topic(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_topic);
+  p_kafka_set_partition(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_partition);
+  p_kafka_set_content_type(&bgp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  P_broker_timers_set_retry_interval(&bgp_daemon_msglog_kafka_host.btimers, config.nfacctd_bgp_msglog_kafka_retry);
+}
+#else
+void bgp_daemon_msglog_init_kafka_host()
+{
+}
+#endif
+
+#if defined WITH_KAFKA
+void bgp_table_dump_init_kafka_host()
+{
+  p_kafka_init_host(&bgp_table_dump_kafka_host);
+  p_kafka_connect_to_produce(&bgp_table_dump_kafka_host);
+
+  if (!config.bgp_table_dump_kafka_broker_host) config.bgp_table_dump_kafka_broker_host = default_kafka_broker_host;
+  if (!config.bgp_table_dump_kafka_broker_port) config.bgp_table_dump_kafka_broker_port = default_kafka_broker_port;
+  if (!config.bgp_table_dump_kafka_topic) config.bgp_table_dump_kafka_topic = default_kafka_topic;
+
+  p_kafka_set_broker(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_broker_host, config.bgp_table_dump_kafka_broker_port);
+  p_kafka_set_topic(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_topic);
+  p_kafka_set_partition(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_partition);
+  p_kafka_set_content_type(&bgp_table_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+}
+#else
+void bgp_table_dump_init_kafka_host()
 {
 }
 #endif

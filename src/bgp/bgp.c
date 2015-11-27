@@ -163,9 +163,6 @@ void skinny_bgp_daemon()
 #ifdef WITH_RABBITMQ
       bgp_daemon_msglog_init_amqp_host();
       p_amqp_connect_to_publish(&bgp_daemon_msglog_amqp_host);
-
-      if (!config.nfacctd_bgp_msglog_amqp_retry)
-	config.nfacctd_bgp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
@@ -173,9 +170,9 @@ void skinny_bgp_daemon()
 
     if (config.nfacctd_bgp_msglog_kafka_topic) {
 #ifdef WITH_KAFKA
-      // XXX: Kafka
+      bgp_daemon_msglog_init_kafka_host();
 #else
-      // XXX: Kafka
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): p_kafka_connect_to_produce() not possible due to missing --enable-kafka\n", config.name);
 #endif
     }
   }
@@ -339,7 +336,7 @@ void skinny_bgp_daemon()
     }
 
     bgp_table_dump_init_amqp_host();
-    // XXX: Kafka
+    bgp_table_dump_init_kafka_host();
   }
 
   for (;;) {
@@ -408,7 +405,12 @@ void skinny_bgp_daemon()
 #endif
 
 #ifdef WITH_KAFKA
-      // XXX: Kafka
+      if (config.nfacctd_bgp_msglog_kafka_topic) {
+        time_t last_fail = P_broker_timers_get_last_fail(&bgp_daemon_msglog_kafka_host.btimers);
+
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_kafka_host.btimers)) <= log_tstamp.tv_sec))
+          bgp_daemon_msglog_init_kafka_host();
+      }
 #endif
     }
 
