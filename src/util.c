@@ -2242,6 +2242,42 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
   return ret;
 }
 #endif
+
+#ifdef WITH_KAFKA
+/* XXX: impact of frequent p_kafka_unset_topic() / p_kafka_set_topic() to be verified */ 
+int write_and_free_json_kafka(void *kafka_log, void *obj)
+{
+  char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
+  struct p_kafka_host *alog = (struct p_kafka_host *) kafka_log;
+  int ret;
+
+  char *tmpbuf = NULL;
+  json_t *json_obj = (json_t *) obj;
+
+  tmpbuf = json_dumps(json_obj, 0);
+  json_decref(json_obj);
+
+  if (tmpbuf) {
+
+    if (alog->topic_rr.max) {
+      orig_kafka_topic = p_kafka_get_topic(alog);
+      P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &alog->topic_rr);
+      p_kafka_unset_topic(alog);
+      p_kafka_set_topic(alog, dyn_kafka_topic);
+    }
+
+    ret = p_kafka_produce_string(alog, tmpbuf);
+    free(tmpbuf);
+
+    if (alog->topic_rr.max) {
+      p_kafka_unset_topic(alog);
+      p_kafka_set_topic(alog, orig_kafka_topic);
+    }
+  }
+
+  return ret;
+}
+#endif
 #else
 char *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
@@ -2262,6 +2298,13 @@ void write_and_free_json(FILE *f, void *obj)
 int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_amqp(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+
+  return 0;
+}
+
+int write_and_free_json_kafka(void *kafka_log, void *obj)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_kafka(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 
   return 0;
 }

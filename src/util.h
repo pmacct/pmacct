@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -107,6 +107,7 @@ EXT char *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 EXT void compose_timestamp(char *, int, struct timeval *, int, int);
 EXT void write_and_free_json(FILE *, void *);
 EXT int write_and_free_json_amqp(void *, void *);
+EXT int write_and_free_json_kafka(void *, void *);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);
