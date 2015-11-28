@@ -55,10 +55,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
 
 #ifdef WITH_KAFKA
   if ((config.nfacctd_bgp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
-      (config.bgp_table_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
-    p_kafka_unset_topic(peer->log->kafka_host);
+      (config.bgp_table_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP))
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
-  }
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -281,10 +279,8 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
-    if (kafka_topic) {
-      p_kafka_unset_topic(peer->log->amqp_host);
+    if (kafka_topic)
       p_kafka_set_topic(peer->log->amqp_host, peer->log->filename);
-    }
 
     if (kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
       p_kafka_init_topic_rr(peer->log->kafka_host);
@@ -377,10 +373,8 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
-  if (kafka_topic) {
-    p_kafka_unset_topic(peer->log->kafka_host);
+  if (kafka_topic)
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
-  }
 #endif
 
   log_ptr = peer->log;
@@ -541,10 +535,8 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
-  if (kafka_topic) {
-    p_kafka_unset_topic(peer->log->kafka_host);
+  if (kafka_topic)
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
-  }
 
   if (kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
     p_kafka_init_topic_rr(peer->log->kafka_host);
@@ -632,10 +624,8 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 #endif
 
 #ifdef WITH_KAFKA
-  if (kafka_topic) {
-    p_kafka_unset_topic(peer->log->kafka_host);
+  if (kafka_topic)
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
-  }
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -729,8 +719,8 @@ void bgp_handle_dump_event()
 
 #ifdef WITH_KAFKA
     if (config.bgp_table_dump_kafka_topic) {
-      bgp_table_dump_init_kafka_host();
-      // XXX: Kafka if (ret) exit(ret);
+      ret = bgp_table_dump_init_kafka_host();
+      if (ret) exit(ret);
     }
 #endif
 
@@ -907,10 +897,12 @@ void bgp_table_dump_init_amqp_host()
 #endif
 
 #if defined WITH_KAFKA
-void bgp_daemon_msglog_init_kafka_host()
+int bgp_daemon_msglog_init_kafka_host()
 {
+  int ret;
+
   p_kafka_init_host(&bgp_daemon_msglog_kafka_host);
-  p_kafka_connect_to_produce(&bgp_daemon_msglog_kafka_host);
+  ret = p_kafka_connect_to_produce(&bgp_daemon_msglog_kafka_host);
 
   if (!config.nfacctd_bgp_msglog_kafka_broker_host) config.nfacctd_bgp_msglog_kafka_broker_host = default_kafka_broker_host;
   if (!config.nfacctd_bgp_msglog_kafka_broker_port) config.nfacctd_bgp_msglog_kafka_broker_port = default_kafka_broker_port;
@@ -922,18 +914,23 @@ void bgp_daemon_msglog_init_kafka_host()
   p_kafka_set_partition(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_partition);
   p_kafka_set_content_type(&bgp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   P_broker_timers_set_retry_interval(&bgp_daemon_msglog_kafka_host.btimers, config.nfacctd_bgp_msglog_kafka_retry);
+
+  return ret;
 }
 #else
-void bgp_daemon_msglog_init_kafka_host()
+int bgp_daemon_msglog_init_kafka_host()
 {
+  return ERR;
 }
 #endif
 
 #if defined WITH_KAFKA
-void bgp_table_dump_init_kafka_host()
+int bgp_table_dump_init_kafka_host()
 {
+  int ret;
+
   p_kafka_init_host(&bgp_table_dump_kafka_host);
-  p_kafka_connect_to_produce(&bgp_table_dump_kafka_host);
+  ret = p_kafka_connect_to_produce(&bgp_table_dump_kafka_host);
 
   if (!config.bgp_table_dump_kafka_broker_host) config.bgp_table_dump_kafka_broker_host = default_kafka_broker_host;
   if (!config.bgp_table_dump_kafka_broker_port) config.bgp_table_dump_kafka_broker_port = default_kafka_broker_port;
@@ -943,9 +940,12 @@ void bgp_table_dump_init_kafka_host()
   p_kafka_set_topic(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_topic);
   p_kafka_set_partition(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_partition);
   p_kafka_set_content_type(&bgp_table_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+
+  return ret;
 }
 #else
-void bgp_table_dump_init_kafka_host()
+int bgp_table_dump_init_kafka_host()
 {
+  return ERR;
 }
 #endif

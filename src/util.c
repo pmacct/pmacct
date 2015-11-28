@@ -2244,7 +2244,7 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
 #endif
 
 #ifdef WITH_KAFKA
-/* XXX: impact of frequent p_kafka_unset_topic() / p_kafka_set_topic() to be verified */ 
+/* XXX: impact of frequent p_kafka_set_topic() to be verified */ 
 int write_and_free_json_kafka(void *kafka_log, void *obj)
 {
   char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
@@ -2262,17 +2262,13 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
     if (alog->topic_rr.max) {
       orig_kafka_topic = p_kafka_get_topic(alog);
       P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &alog->topic_rr);
-      p_kafka_unset_topic(alog);
       p_kafka_set_topic(alog, dyn_kafka_topic);
     }
 
     ret = p_kafka_produce_string(alog, tmpbuf);
     free(tmpbuf);
 
-    if (alog->topic_rr.max) {
-      p_kafka_unset_topic(alog);
-      p_kafka_set_topic(alog, orig_kafka_topic);
-    }
+    if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);
   }
 
   return ret;

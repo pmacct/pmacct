@@ -57,6 +57,8 @@ EXT int bgp_peer_dump_close(struct bgp_peer *, struct bgp_dump_stats *, int, int
 EXT void bgp_handle_dump_event();
 EXT void bgp_daemon_msglog_init_amqp_host();
 EXT void bgp_table_dump_init_amqp_host();
+EXT int bgp_daemon_msglog_init_kafka_host();
+EXT int bgp_table_dump_init_kafka_host();
 
 /* global variables */
 EXT struct bgp_peer_log *peers_log;

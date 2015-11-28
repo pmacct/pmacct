@@ -42,28 +42,25 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
   }
 }
 
+void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host && kafka_host->topic) {
+    rd_kafka_topic_destroy(kafka_host->topic);
+    kafka_host->topic = NULL;
+  }
+}
+
 void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
 {
   if (kafka_host) {
     kafka_host->topic_cfg = rd_kafka_topic_conf_new();
 
+    /* destroy current allocation before making a new one */
+    if (kafka_host->topic) p_kafka_unset_topic(kafka_host);
+
     if (kafka_host->rk && kafka_host->topic_cfg) {
       kafka_host->topic = rd_kafka_topic_new(kafka_host->rk, topic, kafka_host->topic_cfg);
-    }
-  }
-}
-
-void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
-{
-  if (kafka_host) {
-    if (kafka_host->topic_cfg) {
-      rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
-      kafka_host->topic_cfg = NULL;
-    }
-
-    if (kafka_host->topic) {
-      rd_kafka_topic_destroy(kafka_host->topic); 
-      kafka_host->topic = NULL;
+      kafka_host->topic_cfg = NULL; /* rd_kafka_topic_new() destroys conf as per rdkafka.h */
     }
   }
 }
