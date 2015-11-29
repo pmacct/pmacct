@@ -1256,12 +1256,10 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  if (config.sfacctd_renormalize) {
-    pdata->primitives.sampling_rate = 1; /* already renormalized */
-    return;
-  }
-
   pdata->primitives.sampling_rate = config.ext_sampling_rate ? config.ext_sampling_rate : 1;
+
+  if (config.sfacctd_renormalize)
+    pdata->primitives.sampling_rate = 1; /* already renormalized */
 }
 
 void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2858,11 +2856,6 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   u_int8_t t8 = 0;
   u_int64_t t64 = 0;
 
-  if (config.sfacctd_renormalize) {
-    pdata->primitives.sampling_rate = 1; /* already renormalized */
-    return;
-  }
-
   pdata->primitives.sampling_rate = 0; /* 0 = unknown */
 
   if (config.sampling_map) {
@@ -2932,8 +2925,15 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 
         pdata->primitives.sampling_rate = sample_pool;
       }
+      /* case of no SAMPLER_ID, ALU & IPFIX */
       else {
-	if (entry) sentry = search_smp_id_status_table(entry->sampling, 0, FALSE);
+        if (entry) {
+          sentry = search_smp_id_status_table(entry->sampling, 0, TRUE);
+          if (!sentry && pptrs->f_status_g) {
+            entry = (struct xflow_status_entry *) pptrs->f_status_g;
+            sentry = search_smp_id_status_table(entry->sampling, 0, FALSE);
+          }
+        }
         if (sentry) pdata->primitives.sampling_rate = sentry->sample_pool;
       }
       break;
@@ -2947,6 +2947,9 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       break;
     }
   }
+
+  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate)
+    pdata->primitives.sampling_rate = 1; /* already renormalized */
 }
 
 void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -4338,11 +4341,6 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (config.sfacctd_renormalize) {
-    pdata->primitives.sampling_rate = 1; /* already renormalized */
-    return;
-  }
-
   pdata->primitives.sampling_rate = 0;
 
   if (config.sampling_map) {
@@ -4359,9 +4357,12 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     }
   }
 
-  if (pdata->primitives.sampling_rate == 0) {
+  if (pdata->primitives.sampling_rate == 0) { /* 0 = still unknown */
     pdata->primitives.sampling_rate = sample->meanSkipCount;
   }
+
+  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) 
+    pdata->primitives.sampling_rate = 1; /* already renormalized */
 }
 
 void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
