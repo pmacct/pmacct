@@ -207,4 +207,6 @@ EXT struct hash *bmp_comhash;
 EXT struct hash *bmp_ecomhash;
 EXT struct bgp_table *bmp_rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
+EXT int nfacctd_bmp_msglog_backend_methods;
+EXT int bmp_dump_backend_methods;
 #undef EXT

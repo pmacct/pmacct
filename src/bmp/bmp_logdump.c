@@ -30,6 +30,9 @@
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
@@ -633,5 +636,33 @@ void bmp_dump_init_amqp_host()
 #else
 void bmp_dump_init_amqp_host()
 {
+}
+#endif
+
+#if defined WITH_KAFKA
+int bmp_daemon_msglog_init_kafka_host()
+{
+  int ret;
+
+  return ret;
+}
+#else
+int bmp_daemon_msglog_init_kafka_host()
+{
+  return ERR;
+}
+#endif
+
+#if defined WITH_KAFKA
+int bmp_dump_init_kafka_host()
+{
+  int ret;
+
+  return ret;
+}
+#else
+int bmp_dump_init_kafka_host()
+{
+  return ERR;
 }
 #endif

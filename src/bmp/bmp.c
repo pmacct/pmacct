@@ -30,6 +30,9 @@
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
@@ -133,17 +136,29 @@ void skinny_bmp_daemon()
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
 
-  if (config.nfacctd_bmp_msglog_file && config.nfacctd_bmp_msglog_amqp_routing_key) {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_daemon_msglog_file and bmp_daemon_msglog_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
-    exit_all(1);
+  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key || config.nfacctd_bmp_msglog_kafka_topic) {
+    if (config.nfacctd_bmp_msglog_file) nfacctd_bmp_msglog_backend_methods++;
+    if (config.nfacctd_bmp_msglog_amqp_routing_key) nfacctd_bmp_msglog_backend_methods++;
+    if (config.nfacctd_bmp_msglog_kafka_topic) nfacctd_bmp_msglog_backend_methods++;
+
+    if (nfacctd_bmp_msglog_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_daemon_msglog_file, bmp_daemon_msglog_amqp_routing_key and bmp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
   }
 
-  if (config.bmp_dump_file && config.bmp_dump_amqp_routing_key) {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_dump_file and bmp_dump_amqp_routing_key are mutually exclusive. Terminating thread.\n", config.name);
-    exit_all(1);
+  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key || config.bmp_dump_kafka_topic) {
+    if (config.bmp_dump_file) bmp_dump_backend_methods++;
+    if (config.bmp_dump_amqp_routing_key) bmp_dump_backend_methods++;
+    if (config.bmp_dump_kafka_topic) bmp_dump_backend_methods++;
+
+    if (bmp_dump_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_dump_file, bmp_dump_amqp_routing_key and bmp_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
   }
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) { 
+  if (nfacctd_bmp_msglog_backend_methods) {
     bmp_peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
     if (!bmp_peers_log) {
       Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name);
@@ -161,6 +176,14 @@ void skinny_bmp_daemon()
         config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
       Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
+#endif
+    }
+
+    if (config.nfacctd_bmp_msglog_kafka_topic) {
+#ifdef WITH_KAFKA
+      bmp_daemon_msglog_init_kafka_host();
+#else
+      Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_kafka_connect_to_produce() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
     }
   }
@@ -276,23 +299,21 @@ void skinny_bmp_daemon()
     config.nfacctd_bmp_batch_interval = 0;
   }
 
-  if (!config.nfacctd_bmp_msglog_output && (config.nfacctd_bmp_msglog_file ||
-      config.nfacctd_bmp_msglog_amqp_routing_key))
+  if (!config.nfacctd_bmp_msglog_output && nfacctd_bmp_msglog_backend_methods)
 #ifdef WITH_JANSSON
     config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
-  if (!config.bmp_dump_output && (config.bmp_dump_file ||
-      config.bmp_dump_amqp_routing_key))
+  if (!config.bmp_dump_output && bmp_dump_backend_methods)
 #ifdef WITH_JANSSON
     config.bmp_dump_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
 
-  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+  if (bmp_dump_backend_methods) {
     char dump_roundoff[] = "m";
     time_t tmp_time;
 
@@ -312,6 +333,7 @@ void skinny_bmp_daemon()
     }
 
     bmp_dump_init_amqp_host();
+    bmp_dump_init_kafka_host();
   }
 
   for (;;) {
@@ -323,7 +345,7 @@ void skinny_bmp_daemon()
     select_fd++;
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
-    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    if (bmp_dump_backend_methods) {
       int delta;
 
       calc_refresh_timeout_sec(dump_refresh_deadline, bmp_log_tstamp.tv_sec, &delta);
@@ -346,12 +368,11 @@ void skinny_bmp_daemon()
       }
     }
 
-    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key ||
-        config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    if (nfacctd_bmp_msglog_backend_methods || bmp_dump_backend_methods) {
       gettimeofday(&bmp_log_tstamp, NULL);
       compose_timestamp(bmp_log_tstamp_str, SRVBUFLEN, &bmp_log_tstamp, TRUE, config.sql_history_since_epoch);
 
-      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      if (bmp_dump_backend_methods) {
         while (bmp_log_tstamp.tv_sec > dump_refresh_deadline) {
           bmp_handle_dump_event();
           dump_refresh_deadline += config.bmp_dump_refresh_time;
@@ -366,6 +387,15 @@ void skinny_bmp_daemon()
           bmp_daemon_msglog_init_amqp_host();
           p_amqp_connect_to_publish(&bmp_daemon_msglog_amqp_host);
         }
+      }
+#endif
+
+#ifdef WITH_KAFKA
+      if (config.nfacctd_bmp_msglog_kafka_topic) {
+        time_t last_fail = P_broker_timers_get_last_fail(&bmp_daemon_msglog_kafka_host.btimers);
+
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_kafka_host.btimers)) <= log_tstamp.tv_sec))
+          bmp_daemon_msglog_init_kafka_host();
       }
 #endif
     }
@@ -457,10 +487,10 @@ void skinny_bmp_daemon()
       addr_to_str(peer->addr_str, &peer->addr);
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
 
-      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key)
+      if (nfacctd_bmp_msglog_backend_methods)
         bgp_peer_log_init(peer, config.nfacctd_bmp_msglog_output, FUNC_TYPE_BMP);
 
-      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key)
+      if (bmp_dump_backend_methods)
 	bmp_dump_init_peer(peer);
 
       /* Check: only one TCP connection is allowed per peer */
@@ -583,15 +613,14 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+  if (nfacctd_bmp_msglog_backend_methods) {
     char event_type[] = "log";
 
     bmp_log_msg(peer, &bdata, NULL, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
   }
 
-  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+  if (bmp_dump_backend_methods)
     bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_INIT);
-  }
 
   while (*len) {
     if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
@@ -615,15 +644,14 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       blinit.len = bmp_len;
       blinit.val = bmp_init_info;
 
-      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+      if (nfacctd_bmp_msglog_backend_methods) {
         char event_type[] = "log";
 
         bmp_log_msg(peer, &bdata, &blinit, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
       }
 
-      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      if (bmp_dump_backend_methods)
         bmp_dump_se_ll_append(peer, &bdata, &blinit, BMP_LOG_TYPE_INIT);
-      }
     }
   }
 }
@@ -638,15 +666,14 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+  if (nfacctd_bmp_msglog_backend_methods) {
     char event_type[] = "log";
 
     bmp_log_msg(peer, &bdata, NULL, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
   }
 
-  if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+  if (bmp_dump_backend_methods)
     bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_TERM);
-  }
 
   while (*len) {
     if (!(bth = (struct bmp_term_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_term_hdr)))) {
@@ -673,15 +700,14 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       blterm.val = bmp_term_info;
       blterm.reas_type = reason_type;
 
-      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+      if (nfacctd_bmp_msglog_backend_methods) {
         char event_type[] = "log";
 
         bmp_log_msg(peer, &bdata, &blterm, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
       }
 
-      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      if (bmp_dump_backend_methods)
         bmp_dump_se_ll_append(peer, &bdata, &blterm, BMP_LOG_TYPE_TERM);
-      }
     }
   }
 }
@@ -723,15 +749,14 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
     bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
     bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
 
-    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+    if (nfacctd_bmp_msglog_backend_methods) {
       char event_type[] = "log";
 
       bmp_log_msg(peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
     }
 
-    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    if (bmp_dump_backend_methods)
       bmp_dump_se_ll_append(peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
-    }
   }
 }
 
@@ -771,15 +796,14 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
     bmp_peer_down_hdr_get_reason(bpdh, &blpd.reason);
     if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) bmp_peer_down_hdr_get_loc_code(bmp_packet, len, &blpd.loc_code);
 
-    if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+    if (nfacctd_bmp_msglog_backend_methods) {
       char event_type[] = "log";
 
       bmp_log_msg(peer, &bdata, &blpd, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_DOWN);
     }
 
-    if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+    if (bmp_dump_backend_methods)
       bmp_dump_se_ll_append(peer, &bdata, &blpd, BMP_LOG_TYPE_PEER_DOWN);
-    }
   }
 
   // XXX: withdraw routes from peer
@@ -907,15 +931,14 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
       blstats.cnt_data = cnt_data64;
       blstats.got_data = got_data;
 
-      if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key) {
+      if (nfacctd_bmp_msglog_backend_methods) {
         char event_type[] = "log";
 
         bmp_log_msg(peer, &bdata, &blstats, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_STATS);
       }
 
-      if (config.bmp_dump_file || config.bmp_dump_amqp_routing_key) {
+      if (bmp_dump_backend_methods)
         bmp_dump_se_ll_append(peer, &bdata, &blstats, BMP_LOG_TYPE_STATS);
-      }
     }
   }
 }

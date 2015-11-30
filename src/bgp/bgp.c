@@ -177,7 +177,7 @@ void skinny_bgp_daemon()
     }
   }
 
-  {
+  if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key || config.bgp_table_dump_kafka_topic) {
     if (config.bgp_table_dump_file) bgp_table_dump_backend_methods++;
     if (config.bgp_table_dump_amqp_routing_key) bgp_table_dump_backend_methods++;
     if (config.bgp_table_dump_kafka_topic) bgp_table_dump_backend_methods++;

@@ -104,6 +104,10 @@ EXT void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int
 EXT void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
 
 EXT void bmp_handle_dump_event();
+EXT void bmp_daemon_msglog_init_amqp_host();
+EXT void bmp_dump_init_amqp_host();
+EXT int bmp_daemon_msglog_init_kafka_host();
+EXT int bmp_dump_init_kafka_host();
 
 /* global variables */
 EXT struct bgp_peer_log *bmp_peers_log;
