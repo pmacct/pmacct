@@ -644,6 +644,20 @@ int bmp_daemon_msglog_init_kafka_host()
 {
   int ret;
 
+  p_kafka_init_host(&bmp_daemon_msglog_kafka_host);
+  ret = p_kafka_connect_to_produce(&bmp_daemon_msglog_kafka_host);
+
+  if (!config.nfacctd_bmp_msglog_kafka_broker_host) config.nfacctd_bmp_msglog_kafka_broker_host = default_kafka_broker_host;
+  if (!config.nfacctd_bmp_msglog_kafka_broker_port) config.nfacctd_bmp_msglog_kafka_broker_port = default_kafka_broker_port;
+  if (!config.nfacctd_bmp_msglog_kafka_topic) config.nfacctd_bmp_msglog_kafka_topic = default_kafka_topic;
+  if (!config.nfacctd_bmp_msglog_kafka_retry) config.nfacctd_bmp_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+
+  p_kafka_set_broker(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_broker_host, config.nfacctd_bmp_msglog_kafka_broker_port);
+  p_kafka_set_topic(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_topic);
+  p_kafka_set_partition(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_partition);
+  p_kafka_set_content_type(&bmp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_kafka_host.btimers, config.nfacctd_bmp_msglog_kafka_retry);
+
   return ret;
 }
 #else
@@ -657,6 +671,18 @@ int bmp_daemon_msglog_init_kafka_host()
 int bmp_dump_init_kafka_host()
 {
   int ret;
+
+  p_kafka_init_host(&bmp_dump_kafka_host);
+  ret = p_kafka_connect_to_produce(&bmp_dump_kafka_host);
+
+  if (!config.bmp_dump_kafka_broker_host) config.bmp_dump_kafka_broker_host = default_kafka_broker_host;
+  if (!config.bmp_dump_kafka_broker_port) config.bmp_dump_kafka_broker_port = default_kafka_broker_port;
+  if (!config.bmp_dump_kafka_topic) config.bmp_dump_kafka_topic = default_kafka_topic;
+
+  p_kafka_set_broker(&bmp_dump_kafka_host, config.bmp_dump_kafka_broker_host, config.bmp_dump_kafka_broker_port);
+  p_kafka_set_topic(&bmp_dump_kafka_host, config.bmp_dump_kafka_topic);
+  p_kafka_set_partition(&bmp_dump_kafka_host, config.bmp_dump_kafka_partition);
+  p_kafka_set_content_type(&bmp_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   return ret;
 }

@@ -277,8 +277,12 @@ struct configuration {
   u_int32_t nfacctd_bmp_msglog_amqp_frame_max;
   u_int32_t nfacctd_bmp_msglog_amqp_heartbeat_interval;
   int nfacctd_bmp_msglog_amqp_retry;
+  char *nfacctd_bmp_msglog_kafka_broker_host;
   char *nfacctd_bmp_msglog_kafka_topic;
   int nfacctd_bmp_msglog_kafka_topic_rr;
+  int nfacctd_bmp_msglog_kafka_partition;
+  int nfacctd_bmp_msglog_kafka_broker_port;
+  int nfacctd_bmp_msglog_kafka_retry;
   int bmp_table_peer_buckets;
   int bmp_table_per_peer_buckets;
   int bmp_table_attr_hash_buckets;
@@ -297,8 +301,11 @@ struct configuration {
   int bmp_dump_amqp_persistent_msg;
   u_int32_t bmp_dump_amqp_frame_max;
   u_int32_t bmp_dump_amqp_heartbeat_interval;
+  char *bmp_dump_kafka_broker_host;
   char *bmp_dump_kafka_topic;
   int bmp_dump_kafka_topic_rr;
+  int bmp_dump_kafka_partition;
+  int bmp_dump_kafka_broker_port;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;
