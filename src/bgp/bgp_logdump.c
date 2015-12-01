@@ -40,13 +40,18 @@
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type, int output)
 {
   char log_rk[SRVBUFLEN];
-  struct bgp_peer *peer = ri->peer;
-  struct bgp_attr *attr = ri->attr;
+  struct bgp_peer *peer;
+  struct bgp_attr *attr;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+
+  if (!ri || !ri->peer || !ri->peer->log || !event_type) return ERR;
+
+  peer = ri->peer;
+  attr = ri->attr;
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
-  
+
 #ifdef WITH_RABBITMQ
   if ((config.nfacctd_bgp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
       (config.bgp_table_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
@@ -89,18 +94,13 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    memset(prefix_str, 0, INET6_ADDRSTRLEN);
-    prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
-    kv = json_pack("{ss}", "ip_prefix", prefix_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-
-    memset(nexthop_str, 0, INET6_ADDRSTRLEN);
-    if (attr->mp_nexthop.family) addr_to_str(nexthop_str, &attr->mp_nexthop);
-    else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
-    kv = json_pack("{ss}", "bgp_nexthop", nexthop_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    if (route) {
+      memset(prefix_str, 0, INET6_ADDRSTRLEN);
+      prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
+      kv = json_pack("{ss}", "ip_prefix", prefix_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
 
     if (ri && ri->extra && ri->extra->path_id) {
       kv = json_pack("{sI}", "as_path_id", ri->extra->path_id);
@@ -108,35 +108,44 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       json_decref(kv);
     }
 
-    aspath = attr->aspath ? attr->aspath->str : empty;
-    kv = json_pack("{ss}", "as_path", aspath);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-
-    if (attr->community) {
-      kv = json_pack("{ss}", "comms", attr->community->str);
+    if (attr) {
+      memset(nexthop_str, 0, INET6_ADDRSTRLEN);
+      if (attr->mp_nexthop.family) addr_to_str(nexthop_str, &attr->mp_nexthop);
+      else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
+      kv = json_pack("{ss}", "bgp_nexthop", nexthop_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
-    }
 
-    if (attr->ecommunity) {
-      kv = json_pack("{ss}", "ecomms", attr->ecommunity->str);
+      aspath = attr->aspath ? attr->aspath->str : empty;
+      kv = json_pack("{ss}", "as_path", aspath);
       json_object_update_missing(obj, kv);
       json_decref(kv);
-    }
 
-    kv = json_pack("{sI}", "origin", attr->origin);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+      if (attr->community) {
+        kv = json_pack("{ss}", "comms", attr->community->str);
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+      }
 
-    kv = json_pack("{sI}", "local_pref", attr->local_pref);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+      if (attr->ecommunity) {
+        kv = json_pack("{ss}", "ecomms", attr->ecommunity->str);
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+      }
 
-    if (attr->med) {
-      kv = json_pack("{sI}", "med", attr->med);
+      kv = json_pack("{sI}", "origin", attr->origin);
       json_object_update_missing(obj, kv);
       json_decref(kv);
+
+      kv = json_pack("{sI}", "local_pref", attr->local_pref);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      if (attr->med) {
+        kv = json_pack("{sI}", "med", attr->med);
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+      }
     }
 
     if (safi == SAFI_MPLS_VPN) {
@@ -224,9 +233,9 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     ls = &sf_cnt_log_seq;
     bpl = &sf_cnt_log;
   }
-  else return ret;
+  else return ERR;
 
-  if (!(*bpl) || !peer || peer->log) return ret;
+  if (!(*bpl) || !peer || peer->log) return ERR;
 
   if (file)
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, file, peer); 
@@ -363,9 +372,9 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     lts = bmp_log_tstamp_str;
     ls = &bmp_log_seq;
   }
-  else return ret;
+  else return ERR;
 
-  if (!peer || peer->log) return ret;
+  if (!peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
   if (amqp_routing_key)
@@ -439,14 +448,16 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 void bgp_peer_log_seq_init(u_int64_t *seq)
 {
-  (*seq) = 0;
+  if (seq) (*seq) = 0;
 }
 
 void bgp_peer_log_seq_increment(u_int64_t *seq)
 {
   /* Jansson does not support unsigned 64 bit integers, let's wrap at 2^63-1 */
-  if ((*seq) == INT64T_THRESHOLD) (*seq) = 0;
-  else (*seq)++;
+  if (seq) {
+    if ((*seq) == INT64T_THRESHOLD) (*seq) = 0;
+    else (*seq)++;
+  }
 }
 
 void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
@@ -495,7 +506,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   char *amqp_routing_key, *kafka_topic, *file, *pa_str, *lts;
   int amqp_routing_key_rr, kafka_topic_rr;
 
-  if (!peer || !peer->log) return ret;
+  if (!peer || !peer->log) return ERR;
 
   if (type == FUNC_TYPE_BGP) {
     amqp_routing_key = config.bgp_table_dump_amqp_routing_key;
@@ -519,7 +530,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     lt = &bmp_log_tstamp;
     lts = bmp_log_tstamp_str;
   }
-  else return ret;
+  else return ERR;
 
   gettimeofday(lt, NULL);
   compose_timestamp(lts, SRVBUFLEN, lt, TRUE, config.sql_history_since_epoch);
@@ -593,7 +604,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   struct timeval *lt;
   char *amqp_routing_key, *kafka_topic, *file, *pa_str, *lts;
 
-  if (!peer || !peer->log) return ret;
+  if (!peer || !peer->log) return ERR;
 
   if (type == FUNC_TYPE_BGP) {
     amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 
@@ -613,7 +624,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     lt = &bmp_log_tstamp;
     lts = bmp_log_tstamp_str;
   }
-  else return ret;
+  else return ERR;
 
   gettimeofday(lt, NULL);
   compose_timestamp(lts, SRVBUFLEN, lt, TRUE, config.sql_history_since_epoch);

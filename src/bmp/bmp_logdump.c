@@ -39,9 +39,9 @@
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, char *event_type, int output, int log_type)
 {
-  int ret = 0, amqp_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
-  if (!peer || !bdata || !event_type) return ret;
+  if (!peer || !peer->log || !bdata || !event_type) return ERR;
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
@@ -50,6 +50,12 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
   if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
       (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+#endif
+
+#ifdef WITH_KAFKA
+  if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+      (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP))
+    p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -109,10 +115,18 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
 #endif
+
+#ifdef WITH_KAFKA
+    if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+      kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
+    }
+#endif
 #endif
   }
 
-  return ret;
+  return (ret | amqp_ret | kafka_ret);
 }
 
 int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
@@ -123,7 +137,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj, *kv;
 
-  if (!peer || !bdata || !blstats || !vobj) return ret;
+  if (!peer || !bdata || !blstats || !vobj) return ERR;
 
   kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
   json_object_update_missing(obj, kv);
@@ -174,7 +188,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 #ifdef WITH_JANSSON
   json_t *obj = (json_t *) vobj, *kv;
 
-  if (!peer || !vobj) return ret;
+  if (!peer || !vobj) return ERR;
 
   kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
   json_object_update_missing(obj, kv);
@@ -207,7 +221,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 #ifdef WITH_JANSSON
   json_t *obj = (json_t *) vobj, *kv;
 
-  if (!peer || !vobj) return ret;
+  if (!peer || !vobj) return ERR;
 
   kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
   json_object_update_missing(obj, kv);
@@ -252,7 +266,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj, *kv;
 
-  if (!peer || !bdata || !blpu || !vobj) return ret;
+  if (!peer || !bdata || !blpu || !vobj) return ERR;
 
   kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
   json_object_update_missing(obj, kv);
@@ -300,7 +314,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj, *kv;
 
-  if (!peer || !bdata || !blpd || !vobj) return ret;
+  if (!peer || !bdata || !blpd || !vobj) return ERR;
 
   kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
   json_object_update_missing(obj, kv);
@@ -454,7 +468,7 @@ void bmp_handle_dump_event()
   struct bgp_peer_log peer_log;      
 
   /* pre-flight check */
-  if ((!config.bmp_dump_file && !config.bmp_dump_amqp_routing_key) || !config.bmp_dump_refresh_time)
+  if (!bmp_dump_backend_methods || !config.bmp_dump_refresh_time)
     return;
 
   switch (ret = fork()) {
@@ -475,6 +489,13 @@ void bmp_handle_dump_event()
     }
 #endif
 
+#ifdef WITH_KAFKA
+    if (config.bmp_dump_kafka_topic) {
+      ret = bmp_dump_init_kafka_host();
+      if (ret) exit(ret);
+    }
+#endif
+
     dumper_pid = getpid();
     Log(LOG_INFO, "INFO ( %s/core/BMP ): *** Dumping BMP tables - START (PID: %u) ***\n", config.name, dumper_pid);
     start = time(NULL);
@@ -488,6 +509,7 @@ void bmp_handle_dump_event()
 
         if (config.bmp_dump_file) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_file, peer);
         if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
+        if (config.bmp_dump_kafka_topic) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
 
         strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bmp_log_tstamp.tv_sec);
 
@@ -503,13 +525,20 @@ void bmp_handle_dump_event()
           }
         }
 
-#ifdef WITH_RABBITMQ
         /*
-	  a bit pedantic maybe but should come at little cost and emulating
-	  bgp_table_dump_file behaviour will work
-	*/
+          a bit pedantic maybe but should come at little cost and emulating
+          bgp_table_dump_file behaviour will work
+        */
+#ifdef WITH_RABBITMQ
         if (config.bmp_dump_amqp_routing_key) {
           peer->log->amqp_host = &bgp_table_dump_amqp_host;
+          strcpy(peer->log->filename, current_filename);
+        }
+#endif
+
+#ifdef WITH_KAFKA
+        if (config.bmp_dump_kafka_topic) {
+          peer->log->kafka_host = &bgp_table_dump_kafka_host;
           strcpy(peer->log->filename, current_filename);
         }
 #endif
@@ -553,6 +582,11 @@ void bmp_handle_dump_event()
 #ifdef WITH_RABBITMQ
     if (config.bmp_dump_amqp_routing_key)
       p_amqp_close(&bmp_dump_amqp_host, FALSE);
+#endif
+
+#ifdef WITH_KAFKA
+    if (config.bmp_dump_kafka_topic)
+      p_kafka_close(&bmp_dump_kafka_host, FALSE);
 #endif
 
     duration = time(NULL)-start;

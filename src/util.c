@@ -2217,7 +2217,7 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
   char *orig_amqp_routing_key = NULL, dyn_amqp_routing_key[SRVBUFLEN];
   struct p_amqp_host *alog = (struct p_amqp_host *) amqp_log;
-  int ret;
+  int ret = ERR;
 
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
@@ -2249,7 +2249,7 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
 {
   char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
   struct p_kafka_host *alog = (struct p_kafka_host *) kafka_log;
-  int ret;
+  int ret = ERR;
 
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
