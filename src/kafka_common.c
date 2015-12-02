@@ -185,7 +185,7 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
 
 int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
 {
-  int ret;
+  int ret = SUCCESS;
 
   kafkap_ret_err_cb = FALSE;
 
@@ -197,12 +197,14 @@ int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
       p_kafka_close(kafka_host, TRUE);
-      return ERR;
+      ret = ERR;
     }
   }
   else return ERR;
 
-  return SUCCESS; 
+  rd_kafka_poll(kafka_host->rk, 0);
+
+  return ret; 
 }
 
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
@@ -240,11 +242,13 @@ int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
       }
       else {
         if (outq_len == old_outq_len) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len()\n", config.name, config.type);
           p_kafka_close(kafka_host, TRUE);
 	  return outq_len; 
 	}
       }
 
+      rd_kafka_poll(kafka_host->rk, 100);
       sleep(1);
     }
   }
