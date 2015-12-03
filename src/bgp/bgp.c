@@ -302,19 +302,21 @@ void skinny_bgp_daemon()
     config.nfacctd_bgp_batch_interval = 0;
   }
 
-  if (!config.nfacctd_bgp_msglog_output && nfacctd_bgp_msglog_backend_methods)
+  if (nfacctd_bgp_msglog_backend_methods) {
 #ifdef WITH_JANSSON
-    config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
+    if (!config.nfacctd_bgp_msglog_output) config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
+  }
 
-  if (!config.bgp_table_dump_output && bgp_table_dump_backend_methods)
+  if (bgp_table_dump_backend_methods) {
 #ifdef WITH_JANSSON
-    config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
+    if (!config.bgp_table_dump_output) config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
+  }
 
   if (bgp_table_dump_backend_methods) {
     char dump_roundoff[] = "m";
@@ -1593,9 +1595,9 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
 log_update:
   {
-    char event_type[] = "update";
+    char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
+    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_UPDATE);
   }
 
   return 0;
@@ -1635,9 +1637,9 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   }
 
   if (ri && nfacctd_bgp_msglog_backend_methods) {
-    char event_type[] = "withdraw";
+    char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
+    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_WITHDRAW);
   }
 
   /* Withdraw specified route from routing table. */
@@ -2110,9 +2112,9 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
 	      if (nfacctd_bgp_msglog_backend_methods) {
-		char event_type[] = "delete";
+		char event_type[] = "log";
 
-		bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
+		bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_DELETE);
 	      }
 
 	      ri_next = ri->next; /* let's save pointer to next before free up */

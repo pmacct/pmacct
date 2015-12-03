@@ -299,19 +299,21 @@ void skinny_bmp_daemon()
     config.nfacctd_bmp_batch_interval = 0;
   }
 
-  if (!config.nfacctd_bmp_msglog_output && nfacctd_bmp_msglog_backend_methods)
+  if (nfacctd_bmp_msglog_backend_methods) {
 #ifdef WITH_JANSSON
-    config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
+    if (!config.nfacctd_bmp_msglog_output) config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
+  }
 
-  if (!config.bmp_dump_output && bmp_dump_backend_methods)
+  if (bmp_dump_backend_methods) {
 #ifdef WITH_JANSSON
-    config.bmp_dump_output = PRINT_OUTPUT_JSON;
+    if (!config.bmp_dump_output) config.bmp_dump_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
+  }
 
   if (bmp_dump_backend_methods) {
     char dump_roundoff[] = "m";

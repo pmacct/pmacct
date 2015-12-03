@@ -683,7 +683,6 @@ int bmp_daemon_msglog_init_kafka_host()
 
   if (!config.nfacctd_bmp_msglog_kafka_broker_host) config.nfacctd_bmp_msglog_kafka_broker_host = default_kafka_broker_host;
   if (!config.nfacctd_bmp_msglog_kafka_broker_port) config.nfacctd_bmp_msglog_kafka_broker_port = default_kafka_broker_port;
-  if (!config.nfacctd_bmp_msglog_kafka_topic) config.nfacctd_bmp_msglog_kafka_topic = default_kafka_topic;
   if (!config.nfacctd_bmp_msglog_kafka_retry) config.nfacctd_bmp_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
 
   p_kafka_set_broker(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_broker_host, config.nfacctd_bmp_msglog_kafka_broker_port);
@@ -711,7 +710,6 @@ int bmp_dump_init_kafka_host()
 
   if (!config.bmp_dump_kafka_broker_host) config.bmp_dump_kafka_broker_host = default_kafka_broker_host;
   if (!config.bmp_dump_kafka_broker_port) config.bmp_dump_kafka_broker_port = default_kafka_broker_port;
-  if (!config.bmp_dump_kafka_topic) config.bmp_dump_kafka_topic = default_kafka_topic;
 
   p_kafka_set_broker(&bmp_dump_kafka_host, config.bmp_dump_kafka_broker_host, config.bmp_dump_kafka_broker_port);
   p_kafka_set_topic(&bmp_dump_kafka_host, config.bmp_dump_kafka_topic);

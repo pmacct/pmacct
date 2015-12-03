@@ -27,6 +27,13 @@
 #define BGP_LOGDUMP_ET_LOG	1
 #define BGP_LOGDUMP_ET_DUMP	2
 
+#define BGP_LOG_TYPE_MISC	0
+#define BGP_LOG_TYPE_UPDATE	1
+#define BGP_LOG_TYPE_WITHDRAW	2
+#define BGP_LOG_TYPE_DELETE	3
+#define BGP_LOG_TYPE_OPEN	4
+#define BGP_LOG_TYPE_CLOSE	5
+
 struct bgp_peer_log {
   FILE *fd;
   int refcnt;
@@ -51,7 +58,7 @@ EXT int bgp_peer_log_close(struct bgp_peer *, int, int);
 EXT void bgp_peer_log_seq_init(u_int64_t *);
 EXT void bgp_peer_log_seq_increment(u_int64_t *);
 EXT void bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
-EXT int bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int);
+EXT int bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, safi_t, char *, int, int);
 EXT int bgp_peer_dump_init(struct bgp_peer *, int, int);
 EXT int bgp_peer_dump_close(struct bgp_peer *, struct bgp_dump_stats *, int, int);
 EXT void bgp_handle_dump_event();

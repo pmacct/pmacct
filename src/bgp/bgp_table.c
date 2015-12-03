@@ -114,9 +114,9 @@ bgp_node_free_aggressive (struct bgp_node *node, safi_t safi)
   for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++) {
     for (ri = node->info[ri_idx]; ri; ri = next) {
       if (nfacctd_bgp_msglog_backend_methods) {
-        char event_type[] = "delete";
+        char event_type[] = "log";
 
-        bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output);
+        bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_DELETE);
       }
 
       next = ri->next;

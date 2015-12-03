@@ -37,7 +37,7 @@
 #include <jansson.h>
 #endif
 
-int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type, int output)
+int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type, int output, int log_type)
 {
   char log_rk[SRVBUFLEN];
   struct bgp_peer *peer;
@@ -81,6 +81,23 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       bgp_peer_log_seq_increment(&log_seq);
 
       kv = json_pack("{ss}", "timestamp", log_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+
+      switch (log_type) {
+      case BGP_LOG_TYPE_UPDATE:
+	kv = json_pack("{ss}", "log_type", "update");
+	break;
+      case BGP_LOG_TYPE_WITHDRAW:
+	kv = json_pack("{ss}", "log_type", "withdraw");
+	break;
+      case BGP_LOG_TYPE_DELETE:
+	kv = json_pack("{ss}", "log_type", "delete");
+	break;
+      default:
+	kv = json_pack("{sI}", "log_type", log_type);
+	break;
+      }
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
@@ -802,7 +819,7 @@ void bgp_handle_dump_event()
 	      for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		  if (ri->peer == peer) {
-	            bgp_peer_log_msg(node, ri, safi, event_type, config.bgp_table_dump_output);
+	            bgp_peer_log_msg(node, ri, safi, event_type, config.bgp_table_dump_output, BGP_LOG_TYPE_MISC);
 	            dump_elems++;
 		  }
 		}
@@ -917,7 +934,6 @@ int bgp_daemon_msglog_init_kafka_host()
 
   if (!config.nfacctd_bgp_msglog_kafka_broker_host) config.nfacctd_bgp_msglog_kafka_broker_host = default_kafka_broker_host;
   if (!config.nfacctd_bgp_msglog_kafka_broker_port) config.nfacctd_bgp_msglog_kafka_broker_port = default_kafka_broker_port;
-  if (!config.nfacctd_bgp_msglog_kafka_topic) config.nfacctd_bgp_msglog_kafka_topic = default_kafka_topic;
   if (!config.nfacctd_bgp_msglog_kafka_retry) config.nfacctd_bgp_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
 
   p_kafka_set_broker(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_broker_host, config.nfacctd_bgp_msglog_kafka_broker_port);
@@ -945,7 +961,6 @@ int bgp_table_dump_init_kafka_host()
 
   if (!config.bgp_table_dump_kafka_broker_host) config.bgp_table_dump_kafka_broker_host = default_kafka_broker_host;
   if (!config.bgp_table_dump_kafka_broker_port) config.bgp_table_dump_kafka_broker_port = default_kafka_broker_port;
-  if (!config.bgp_table_dump_kafka_topic) config.bgp_table_dump_kafka_topic = default_kafka_topic;
 
   p_kafka_set_broker(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_broker_host, config.bgp_table_dump_kafka_broker_port);
   p_kafka_set_topic(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_topic);
