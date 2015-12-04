@@ -159,7 +159,7 @@ EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 #if defined WITH_RABBITMQ
-EXT char *plugin_pipe_amqp_compose_routing_key(char *, char *);
+EXT char *plugin_pipe_amqp_compose_routing_key(struct plugins_list_entry *);
 EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
 EXT struct plugin_pipe_amqp_sleeper *plugin_pipe_amqp_sleeper_define(struct p_amqp_host *, int *, struct plugins_list_entry *);
 EXT void plugin_pipe_amqp_sleeper_free(struct plugin_pipe_amqp_sleeper **);
@@ -171,6 +171,7 @@ EXT int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *, int);
 EXT int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *, time_t);
 #endif
 EXT void plugin_pipe_amqp_compile_check();
+EXT void handle_plugin_pipe_dyn_strings(char *, int, char *, struct plugins_list_entry *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

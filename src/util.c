@@ -2840,3 +2840,32 @@ int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, o
 
   return ret;
 }
+
+void replace_string(char *str, int string_len, char *var, char *value)
+{
+  char *ptr_start, *ptr_end;
+  char buf[string_len];
+  int ptr_len, len;
+
+  if (!str || !var || !value) return;
+
+  if (!strchr(str, '$')) return;
+
+  if (string_len < ((strlen(str) + strlen(value)) - strlen(var))) return;
+
+  ptr_start = strstr(str, var);
+  if (ptr_start) {
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_len = strlen(var);
+    ptr_end += ptr_len;
+    len -= ptr_len;
+
+    snprintf(buf, string_len, "%s", value);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(str, buf, len);
+  }
+}

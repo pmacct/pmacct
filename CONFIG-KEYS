@@ -407,10 +407,10 @@ KEY:		[ bgp_daemon_msglog_amqp_passwd | bgp_table_dump_amqp_passwd |
 DESC:		See amqp_passwd; see also bgp_daemon_msglog_amqp_host.
 DEFAULT: 	See amqp_passwd
 
-KEY:		[ amqp_routing_key | plugin_pipe_amqp_routing_key ]
-DESC:           Name of the AMQP routing key to attach to published data. Dynamic names are supported by
-		amqp_routing_key through the use of variables, which are computed at the moment when data
-		is purged to the backend. The list of variables supported by amqp_routing_key:
+KEY:		amqp_routing_key
+DESC:           Name of the AMQP routing key to attach to published data. Dynamic names are supported
+		through the use of variables, which are computed at the moment when data is purged to
+		the backend. The list of variables supported is:
 
                 $peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
@@ -422,7 +422,7 @@ DESC:           Name of the AMQP routing key to attach to published data. Dynami
 
 		See also amqp_host.
 
-DEFAULT:	amqp_routing_key: 'acct'; plugin_pipe_amqp_routing_key: '<plugin name>-<plugin type>'
+DEFAULT:	'acct'
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key | bgp_table_dump_amqp_routing_key |
 		  bmp_daemon_msglog_amqp_routing_key | bmp_dump_amqp_routing_key ] [GLOBAL]
@@ -509,6 +509,20 @@ KEY:		[ bgp_daemon_msglog_amqp_heartbeat_interval | bgp_table_dump_heartbeat_int
 		  bmp_daemon_msglog_amqp_heartbeat_interval | bmp_dump_heartbeat_interval ] [GLOBAL]
 DESC:           See amqp_heartbeat_interval; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_heartbeat_interval
+
+KEY:            plugin_pipe_amqp_routing_key 
+DESC:           Name of the AMQP routing key to use to send data to a plugin. Currently each plugin
+		must bind to a different routing key in order to avoid duplications. Dynamic names
+		are supported through the use of variables, which are computed at startup. The list
+		of variables supported is:
+
+                $core_proc_name	Configured core_proc_name.
+
+                $plugin_name	Configured plugin name (ie. 'foo' if 'plugins: print[foo]') 
+
+                $plugin_type	Plugin type (ie. memory, print, amqp, etc.)
+
+DEFAULT:        '$core_proc_name-$plugin_name-$plugin_type'
 
 KEY:		plugin_pipe_amqp_retry
 DESC:           Defines the interval of time, in seconds, after which a connection to the RabbitMQ server

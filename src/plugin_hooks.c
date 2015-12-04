@@ -888,21 +888,16 @@ int pkt_extras_clean(void *pextras, int len)
 }
 
 #ifdef WITH_RABBITMQ
-char *plugin_pipe_amqp_compose_routing_key(char *name, char *type)
+char *plugin_pipe_amqp_compose_routing_key(struct plugins_list_entry *list)
 {
-  char *rk = NULL, sep[] = "-";
-  int len = 0;
+  char *rk = NULL, default_rk[] = "$core_proc_name-$plugin_name-$plugin_type";
 
-  if (!name || !type) return;
+  if (!list) return;
 
-  len = strlen(name) + strlen(type) + 2;
+  rk = malloc(SRVBUFLEN);
+  memset(rk, 0, SRVBUFLEN);
 
-  rk = malloc(len);
-  memset(rk, 0, len);
-
-  strncpy(rk, name, len);
-  strncat(rk, sep, (len-strlen(rk)));
-  strncat(rk, type, (len-strlen(rk)));
+  handle_plugin_pipe_dyn_strings(rk, SRVBUFLEN, default_rk, list);
 
   return rk;
 }
@@ -912,7 +907,7 @@ void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_li
   int ret;
 
   if (amqp_host) {
-    char *amqp_rk = plugin_pipe_amqp_compose_routing_key(list->cfg.name, list->cfg.type);
+    char *amqp_rk = plugin_pipe_amqp_compose_routing_key(list);
 
     p_amqp_init_host(amqp_host);
 
@@ -1043,4 +1038,23 @@ void plugin_pipe_amqp_compile_check()
     Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
     exit_plugin(1);
 #endif
+}
+
+void handle_plugin_pipe_dyn_strings(char *new, int newlen, char *old, struct plugins_list_entry *list)
+{
+  int oldlen, ptr_len;
+  char core_proc_name[] = "$core_proc_name", plugin_name[] = "$plugin_name";
+  char plugin_type[] = "$plugin_type";
+  char *ptr_start, *ptr_end;
+
+  oldlen = strlen(old);
+  if (oldlen <= newlen) strcpy(new, old);
+  else {
+    strncpy(new, old, newlen);
+    return;
+  }
+
+  replace_string(new, newlen, core_proc_name, config.proc_name);
+  replace_string(new, newlen, plugin_name, list->cfg.name);
+  replace_string(new, newlen, plugin_type, list->cfg.type);
 }

@@ -138,4 +138,6 @@ EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 EXT void vlen_prims_debug(struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, char *);
 EXT int vlen_prims_delete(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
+
+EXT void replace_string(char *, int, char *, char *);
 #undef EXT
