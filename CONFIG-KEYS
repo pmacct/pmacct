@@ -548,6 +548,35 @@ DESC:		Defines the Kafka broker topic partition ID. RD_KAFKA_PARTITION_UA or ((i
 		partition). 
 DEFAULT:	0
 
+KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |
+                  bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host ] [GLOBAL]
+DESC:           See kafka_broker_host
+DEFAULT:        See kafka_broker_host
+
+KEY:            [ bgp_daemon_msglog_kafka_broker_port | bgp_table_dump_kafka_broker_port |
+                  bmp_daemon_msglog_kafka_broker_port | bmp_dump_kafka_broker_port ] [GLOBAL]
+DESC:           See kafka_broker_port
+DEFAULT:        See kafka_broker_port
+
+KEY:            [ bgp_daemon_msglog_kafka_topic | bgp_table_dump_kafka_topic |
+                  bmp_daemon_msglog_kafka_topic | bmp_dump_kafka_topic ] [GLOBAL]
+DESC:           See kafka_topic
+DEFAULT:        none
+
+KEY:            [ bgp_daemon_msglog_kafka_topic_rr | bgp_table_dump_kafka_topic_rr |
+                  bmp_daemon_msglog_kafka_topic_rr | bmp_dump_kafka_topic_rr ] [GLOBAL]
+DESC:           See kafka_topic_rr
+DEFAULT:        See kafka_topic_rr
+
+KEY:            [ bgp_daemon_msglog_kafka_partition | bgp_table_dump_kafka_partition |
+                  bmp_daemon_msglog_kafka_partition | bmp_dump_kafka_partition ] [GLOBAL]
+DESC:           See kafka_partition
+DEFAULT:        See kafka_partition
+
+KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry ] [GLOBAL]
+DESC:           See plugin_pipe_kafka_retry
+DEFAULT:        See plugin_pipe_kafka_retry
+
 KEY:		pidfile (-F) [GLOBAL]
 DESC:		Writes PID of Core process to the specified file. PIDs of the active plugins are written
 		aswell by employing the following syntax: 'path/to/pidfile-<plugin_type>-<plugin_name>'.
