@@ -269,6 +269,17 @@ DESC:           Expects the value to be a percentage. It creates a backlog of bu
 		enabled with caution in lab and low-traffic environments.
 DEFAULT:	0
 
+KEY:		plugin_pipe_check_core_pid
+VALUES:		[ true | false ]
+DESC:		When enabled (default), validates the sender of data at the plugin side. The check
+		consists in verifying that the sender PID matches the PID of the plugin parent
+		process. This is useful when plugin_pipe_amqp or plugin_pipe_kafka are enabled and
+		hence a broker sits between the daemon Core Process and the Plugins. The feature is
+		not inteded to be a security one; instead its objective is to limit impact of such
+		things like mis-configurations, daemons started twice with the same configuration,
+		etc. 
+DEFAULT:	true
+
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.). A mask less than "002" is
 		currently not accepted due to security reasons.

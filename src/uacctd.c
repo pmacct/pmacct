@@ -400,11 +400,16 @@ int main(int argc,char **argv, char **envp)
         Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
         exit(1);
       }
+
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit(1);
       }
 
+      if (!list->cfg.pipe_check_core_pid) list->cfg.pipe_check_core_pid = TRUE;
+      else if (list->cfg.pipe_check_core_pid == FALSE_NONZERO) list->cfg.pipe_check_core_pid = FALSE;
+
+      /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_TEE) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugin not supported in 'uacctd'.\n", config.name);
         exit(1);

@@ -321,6 +321,7 @@ static const struct _dictionary_line dictionary[] = {
   {"plugins", NULL},
   {"plugin_pipe_size", cfg_key_plugin_pipe_size},
   {"plugin_pipe_backlog", cfg_key_plugin_pipe_backlog},
+  {"plugin_pipe_check_core_pid", cfg_key_plugin_pipe_check_core_pid},
   {"plugin_pipe_amqp", cfg_key_plugin_pipe_amqp},
   {"plugin_pipe_amqp_user", cfg_key_plugin_pipe_amqp_user},
   {"plugin_pipe_amqp_passwd", cfg_key_plugin_pipe_amqp_passwd},

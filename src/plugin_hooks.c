@@ -435,11 +435,12 @@ reprocess:
 	/* let's commit the buffer we just finished writing */
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = channels_list[index].hdr.seq;
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
+	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->core_pid = channels_list[index].core_pid;
 
         if (config.debug) {
 	  struct plugins_list_entry *list = channels_list[index].plugin;
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released seq=%u num_entries=%u\n", list->name, list->type.string,
-		channels_list[index].hdr.seq, channels_list[index].hdr.num);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released cpid=%u seq=%u num_entries=%u\n", list->name, list->type.string,
+		channels_list[index].core_pid, channels_list[index].hdr.seq, channels_list[index].hdr.num);
 	}
 
 	if (!channels_list[index].plugin->cfg.pipe_amqp) {
@@ -477,6 +478,7 @@ reprocess:
 	/* let's protect the buffer we are going to write */
         ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = -1;
         ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = 0;
+        ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->core_pid = 0;
 
         /* rewind pointer */
         channels_list[index].bufptr = channels_list[index].buf;
@@ -528,6 +530,7 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->agg_filter.table = cfg->bpfp_a_table;
       chptr->agg_filter.num = (int *) &cfg->bpfp_a_num; 
       chptr->bufsize = cfg->buffer_size;
+      chptr->core_pid = getpid();
       chptr->tag = cfg->post_tag;
       chptr->tag2 = cfg->post_tag2;
       if (cfg->sampling_rate && plugin_type != PLUGIN_ID_SFPROBE) { /* sfprobe cares for itself */
@@ -761,6 +764,7 @@ void fill_pipe_buffer()
 
     ((struct ch_buf_hdr *)chptr->rg.ptr)->seq = chptr->hdr.seq;
     ((struct ch_buf_hdr *)chptr->rg.ptr)->num = chptr->hdr.num;
+    ((struct ch_buf_hdr *)chptr->rg.ptr)->core_pid = chptr->core_pid;
 
     if (!chptr->plugin->cfg.pipe_amqp) {
       if (chptr->status->wakeup) {

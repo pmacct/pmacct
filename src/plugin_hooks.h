@@ -39,6 +39,7 @@ struct ring {
 };
 
 struct ch_buf_hdr {
+  pid_t core_pid;
   u_int32_t seq;
   u_int32_t num;
 };
@@ -103,6 +104,7 @@ struct channels_list_entry {
   int same_aggregate;
   pkt_handler phandler[N_PRIMITIVES];
   int pipe;
+  pid_t core_pid;
   pm_id_t tag;						/* post-tagging tag */
   pm_id_t tag2;						/* post-tagging tag2 */
   struct pretag_filter tag_filter; 			/* filter aggregates basing on their tag */

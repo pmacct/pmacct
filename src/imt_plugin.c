@@ -44,6 +44,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t request, sz;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
+  pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   struct extra_primitives extras;
   unsigned char *rgptr;
   int pollagain = 0;
@@ -441,8 +442,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (num > 0) {
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received seq=%u num_entries=%u\n", config.name, config.type, seq, ((struct ch_buf_hdr *)pipebuf)->num);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received cpid=%u seq=%u num_entries=%u\n",
+		config.name, config.type, core_pid, seq, ((struct ch_buf_hdr *)pipebuf)->num);
 
+	if (!config.pipe_check_core_pid || ((struct ch_buf_hdr *)pipebuf)->core_pid == core_pid) {
 	while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 
 	  // XXX: to be optimized: remove empty_* vars
@@ -490,6 +493,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
             data = (struct pkt_data *) dataptr;
 	  }
         }
+	}
       }
     } 
 

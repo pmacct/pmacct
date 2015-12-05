@@ -36,6 +36,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   char *dataptr, dest_addr[256], dest_serv[256];
   struct tee_receiver *target = NULL;
   struct plugin_requests req;
@@ -202,8 +203,10 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       rg->ptr += bufsz;
 
       msg = (struct pkt_msg *) (pipebuf+sizeof(struct ch_buf_hdr));
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received seq=%u num_entries=%u\n", config.name, config.type, seq, ((struct ch_buf_hdr *)pipebuf)->num);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received cpid=%u seq=%u num_entries=%u\n",
+                config.name, config.type, core_pid, seq, ((struct ch_buf_hdr *)pipebuf)->num);
 
+      if (!config.pipe_check_core_pid || ((struct ch_buf_hdr *)pipebuf)->core_pid == core_pid) {
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
 	  if (!evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->tag)) {
@@ -226,6 +229,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           dataptr += PmsgSz;
 	  msg = (struct pkt_msg *) dataptr;
 	}
+      }
       }
       goto read_data;
     }

@@ -577,6 +577,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
+  pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   unsigned char *rgptr;
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
@@ -696,8 +697,10 @@ read_data:
 
       hdr = (struct pkt_payload *) (pipebuf+ChBufHdrSz);
       pipebuf_ptr = (unsigned char *) pipebuf+ChBufHdrSz+PpayloadSz;
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received seq=%u num_entries=%u\n", config.name, config.type, seq, ((struct ch_buf_hdr *)pipebuf)->num); 
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received cpid=%u seq=%u num_entries=%u\n",
+                config.name, config.type, core_pid, seq, ((struct ch_buf_hdr *)pipebuf)->num);
 
+      if (!config.pipe_check_core_pid || ((struct ch_buf_hdr *)pipebuf)->core_pid == core_pid) {
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 	if (config.networks_file) {
 	  memset(&dummy.primitives, 0, sizeof(dummy.primitives));
@@ -738,6 +741,7 @@ read_data:
 	  hdr = (struct pkt_payload *) pipebuf_ptr;
 	  pipebuf_ptr += PpayloadSz;
 	}
+      }
       }
       goto read_data;
     }

@@ -41,6 +41,19 @@ int parse_truefalse(char *value_ptr)
   return value;
 }
 
+int parse_truefalse_nonzero(char *value_ptr)
+{
+  int value;
+
+  lower_string(value_ptr);
+
+  if (!strcmp("true", value_ptr)) value = TRUE;
+  else if (!strcmp("false", value_ptr)) value = FALSE_NONZERO;
+  else value = ERR;
+
+  return value;
+}
+
 int cfg_key_debug(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -1769,6 +1782,28 @@ int cfg_key_plugin_pipe_backlog(char *filename, char *name, char *value_ptr)
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.pipe_backlog = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_plugin_pipe_check_core_pid(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse_nonzero(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pipe_check_core_pid = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pipe_check_core_pid = value;
         changes++;
         break;
       }

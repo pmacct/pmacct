@@ -85,10 +85,19 @@
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
+#endif
+#ifndef FALSE
 #define FALSE 0
 #endif
+#ifndef FALSE_NONZERO
+#define FALSE_NONZERO 2
+#endif
+#ifndef ERR
 #define ERR -1
+#endif
+#ifndef SUCCESS
 #define SUCCESS 0
+#endif
 
 #define	E_NOTFOUND	2
 

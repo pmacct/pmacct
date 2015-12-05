@@ -395,6 +395,10 @@ int main(int argc,char **argv, char **envp)
         exit(1);
       }
 
+      if (!list->cfg.pipe_check_core_pid) list->cfg.pipe_check_core_pid = TRUE;
+      else if (list->cfg.pipe_check_core_pid == FALSE_NONZERO) list->cfg.pipe_check_core_pid = FALSE;
+
+      /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {
 	Log(LOG_ERR, "ERROR ( %s/core ): 'nfprobe' and 'sfprobe' plugins not supported in 'nfacctd'.\n", config.name);
 	exit(1);

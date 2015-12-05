@@ -27,6 +27,7 @@
 #endif
 
 EXT int parse_truefalse(char *);
+EXT int parse_truefalse_nonzero(char *);
 EXT int cfg_key_debug(char *, char *, char *);
 EXT int cfg_key_syslog(char *, char *, char *);
 EXT int cfg_key_logfile(char *, char *, char *);
@@ -97,6 +98,7 @@ EXT int cfg_key_kafka_broker_port(char *, char *, char *);
 EXT int cfg_key_kafka_partition(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);
+EXT int cfg_key_plugin_pipe_check_core_pid(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp_user(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp_passwd(char *, char *, char *);

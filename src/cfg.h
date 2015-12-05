@@ -91,6 +91,7 @@ struct configuration {
   u_int64_t pipe_size;
   u_int64_t buffer_size;
   int pipe_backlog;
+  int pipe_check_core_pid;
   int pipe_amqp;
   char *pipe_amqp_host;
   char *pipe_amqp_vhost;
