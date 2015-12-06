@@ -103,10 +103,9 @@ DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
 DESC:		Expects full pathname to a file containing custom-defined primitives. Once
-		properly defined in this file (see 'examples/primitives.lst' for full syntax),
-		primitives can be used in 'aggregate' statements. The feature is currently
-		available only in nfacctd, for NetFlow v9/IPFIX, pmacctd and uacctd. Examples
-		are available in 'examples/primitives.lst'. 
+		defined in this file, primitives can be used in 'aggregate' statements. The
+		feature is currently available only in nfacctd, for NetFlow v9/IPFIX, pmacctd
+		and uacctd. Examples are available in 'examples/primitives.lst.example'. 
 DEFAULT:	none
 
 KEY:		aggregate_filter [NO_GLOBAL]
