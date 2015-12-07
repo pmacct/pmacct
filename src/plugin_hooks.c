@@ -324,6 +324,54 @@ void load_plugins(struct plugin_requests *req)
     }
   }
 #endif
+
+  /* Kafka handling, if required */
+#ifdef WITH_KAFKA
+  {
+    int ret, index, index2;
+
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+      chptr = &channels_list[index];
+      list = chptr->plugin;
+
+      if (list->cfg.pipe_kafka) {
+/*
+	XXX:
+        plugin_pipe_kafka_init_host(&chptr->kafka_host, list);
+        ret = p_amqp_connect_to_publish(&chptr->amqp_host);
+        if (ret) plugin_pipe_amqp_sleeper_start(chptr);
+*/
+      }
+
+      /* reset core process pipe AMQP routing key */
+      if (list->type.id == PLUGIN_ID_CORE) list->cfg.pipe_kafka_topic = NULL;
+    }
+
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+      struct plugins_list_entry *list2 = plugins_list;
+      struct channels_list_entry *chptr2 = NULL;
+
+      chptr = &channels_list[index];
+      list = chptr->plugin;
+
+      for (index2 = index; channels_list[index2].aggregation || channels_list[index2].aggregation_2; index2++) {
+        chptr2 = &channels_list[index2];
+        list2 = chptr2->plugin;
+
+        if (index2 > index && list->cfg.pipe_kafka_broker_host && list->cfg.pipe_kafka_topic) {
+          if (!strcmp(list->cfg.pipe_kafka_broker_host, list2->cfg.pipe_kafka_broker_host) &&
+              list->cfg.pipe_kafka_broker_port == list2->cfg.pipe_kafka_broker_port &&
+              !strcmp(list->cfg.pipe_kafka_topic, list2->cfg.pipe_kafka_topic) /* && XXX: topic partition too? */ ) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): Duplicated plugin_pipe_kafka_broker_*, plugin_pipe_kafka_topic: %s, %s, %s\nExiting.\n",
+                list->name, list->type.string, list->cfg.pipe_kafka_broker_host, list->cfg.pipe_kafka_broker_port,
+		list->cfg.pipe_kafka_topic);
+            exit(1);
+          }
+        }
+      }
+    }
+  }
+#endif
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
