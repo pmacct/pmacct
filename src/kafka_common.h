@@ -75,7 +75,7 @@ EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
 EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
 EXT void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
-EXT int p_kafka_produce_string(struct p_kafka_host *, char *);
+EXT int p_kafka_produce_data(struct p_kafka_host *, void *, u_int32_t);
 EXT void p_kafka_close(struct p_kafka_host *, int);
 EXT int p_kafka_check_outq_len(struct p_kafka_host *);
 

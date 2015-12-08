@@ -2265,7 +2265,7 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
       p_kafka_set_topic(alog, dyn_kafka_topic);
     }
 
-    ret = p_kafka_produce_string(alog, tmpbuf);
+    ret = p_kafka_produce_data(alog, tmpbuf, strlen(tmpbuf));
     free(tmpbuf);
 
     if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);

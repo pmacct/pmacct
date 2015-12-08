@@ -401,6 +401,8 @@ int main(int argc,char **argv, char **envp)
   /* Enforcing policies over aggregation methods */
   list = plugins_list;
   while (list) {
+    if (!list->cfg.proc_name) list->cfg.proc_name = default_proc_name;
+
     if (list->type.id != PLUGIN_ID_CORE) {  
       /* applies to all plugins */
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
@@ -741,8 +743,7 @@ int main(int argc,char **argv, char **envp)
   load_plugins(&req);
   load_plugin_filters(1);
   evaluate_packet_handlers();
-  if (!config.proc_name) pm_setproctitle("%s [%s]", "Core Process", "default");
-  else pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
+  pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
   if (config.pidfile) write_pid_file(config.pidfile);
   load_networks(config.networks_file, &nt, &nc);
 

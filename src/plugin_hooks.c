@@ -334,16 +334,10 @@ void load_plugins(struct plugin_requests *req)
       chptr = &channels_list[index];
       list = chptr->plugin;
 
-      if (list->cfg.pipe_kafka) {
-/*
-	XXX:
-        plugin_pipe_kafka_init_host(&chptr->kafka_host, list);
-        ret = p_amqp_connect_to_publish(&chptr->amqp_host);
-        if (ret) plugin_pipe_amqp_sleeper_start(chptr);
-*/
-      }
+      /* XXX: no sleeper thread, trusting librdkafka */
+      if (list->cfg.pipe_kafka) ret = plugin_pipe_kafka_init_host(&chptr->kafka_host, list);
 
-      /* reset core process pipe AMQP routing key */
+      /* reset core process pipe Kafka topic */
       if (list->type.id == PLUGIN_ID_CORE) list->cfg.pipe_kafka_topic = NULL;
     }
 
@@ -491,7 +485,26 @@ reprocess:
 		channels_list[index].core_pid, channels_list[index].hdr.seq, channels_list[index].hdr.num);
 	}
 
-	if (!channels_list[index].plugin->cfg.pipe_amqp) {
+	/* sending the buffer to the AMQP broker */
+	if (channels_list[index].plugin->cfg.pipe_amqp) {
+#ifdef WITH_RABBITMQ
+          struct channels_list_entry *chptr = &channels_list[index];
+
+          plugin_pipe_amqp_sleeper_stop(chptr);
+          ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
+          if (ret) plugin_pipe_amqp_sleeper_start(chptr);
+#endif
+	}
+	/* sending the buffer to the Kafka broker */
+	else if (channels_list[index].plugin->cfg.pipe_kafka) {
+#ifdef WITH_KAFKA
+          struct channels_list_entry *chptr = &channels_list[index];
+
+	  /* XXX: no sleeper thread, trusting librdkafka */
+	  ret = p_kafka_produce_data(&chptr->kafka_host, chptr->rg.ptr, chptr->bufsize);
+#endif
+	}
+	else {
 	  if (channels_list[index].status->wakeup) {
 	    channels_list[index].status->backlog++;
 	  
@@ -507,16 +520,6 @@ reprocess:
 	    }
 	  }
 	}
-	/* sending the buffer to the AMQP broker */
-#ifdef WITH_RABBITMQ
-	else {
-	  struct channels_list_entry *chptr = &channels_list[index];
-
-	  plugin_pipe_amqp_sleeper_stop(chptr);
-	  ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
-	  if (ret) plugin_pipe_amqp_sleeper_start(chptr);
-	}
-#endif
 
 	channels_list[index].rg.ptr += channels_list[index].bufsize;
 
@@ -814,16 +817,23 @@ void fill_pipe_buffer()
     ((struct ch_buf_hdr *)chptr->rg.ptr)->num = chptr->hdr.num;
     ((struct ch_buf_hdr *)chptr->rg.ptr)->core_pid = chptr->core_pid;
 
-    if (!chptr->plugin->cfg.pipe_amqp) {
+    if (chptr->plugin->cfg.pipe_amqp) {
+#ifdef WITH_RABBITMQ
+      p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
+#endif
+    }
+    else if (chptr->plugin->cfg.pipe_kafka) {
+#ifdef WITH_KAFKA
+      p_kafka_produce_data(&chptr->kafka_host, chptr->rg.ptr, chptr->bufsize);
+#endif
+    }
+    else {
       if (chptr->status->wakeup) {
         chptr->status->wakeup = chptr->request;
         if (write(chptr->pipe, &chptr->rg.ptr, CharPtrSz) != CharPtrSz)
 	  Log(LOG_WARNING, "WARN: Failed during write: %s\n", strerror(errno));
       }
     }
-#ifdef WITH_RABBITMQ
-    else p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
-#endif
   }
 }
 
@@ -939,12 +949,32 @@ int pkt_extras_clean(void *pextras, int len)
   return PdataSz+PextrasSz;
 }
 
-#ifdef WITH_RABBITMQ
-char *plugin_pipe_amqp_compose_routing_key(struct plugins_list_entry *list)
+void handle_plugin_pipe_dyn_strings(char *new, int newlen, char *old, struct plugins_list_entry *list)
 {
-  char *rk = NULL, default_rk[] = "$core_proc_name-$plugin_name-$plugin_type";
+  int oldlen, ptr_len;
+  char core_proc_name[] = "$core_proc_name", plugin_name[] = "$plugin_name";
+  char plugin_type[] = "$plugin_type";
+  char *ptr_start, *ptr_end;
 
-  if (!list) return;
+  if (!new || !old || !list) return;
+
+  oldlen = strlen(old);
+  if (oldlen <= newlen) strcpy(new, old);
+  else {
+    strncpy(new, old, newlen);
+    return;
+  }
+
+  replace_string(new, newlen, core_proc_name, list->cfg.proc_name);
+  replace_string(new, newlen, plugin_name, list->cfg.name);
+  replace_string(new, newlen, plugin_type, list->cfg.type);
+}
+
+char *plugin_pipe_compose_default_string(struct plugins_list_entry *list, char *default_rk)
+{
+  char *rk = NULL;
+
+  if (!list || !default_rk) return;
 
   rk = malloc(SRVBUFLEN);
   memset(rk, 0, SRVBUFLEN);
@@ -954,12 +984,13 @@ char *plugin_pipe_amqp_compose_routing_key(struct plugins_list_entry *list)
   return rk;
 }
 
+#ifdef WITH_RABBITMQ
 void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_list_entry *list)
 {
   int ret;
 
   if (amqp_host) {
-    char *amqp_rk = plugin_pipe_amqp_compose_routing_key(list);
+    char *amqp_rk = plugin_pipe_compose_default_string(list, "$core_proc_name-$plugin_name-$plugin_type");
 
     p_amqp_init_host(amqp_host);
 
@@ -1087,26 +1118,42 @@ int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *amqp_host, time_
 void plugin_pipe_amqp_compile_check()
 {
 #ifndef WITH_RABBITMQ
-    Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
+  exit_plugin(1);
 #endif
 }
 
-void handle_plugin_pipe_dyn_strings(char *new, int newlen, char *old, struct plugins_list_entry *list)
+#if defined WITH_KAFKA
+int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_list_entry *list)
 {
-  int oldlen, ptr_len;
-  char core_proc_name[] = "$core_proc_name", plugin_name[] = "$plugin_name";
-  char plugin_type[] = "$plugin_type";
-  char *ptr_start, *ptr_end;
+  int ret = ERR;
 
-  oldlen = strlen(old);
-  if (oldlen <= newlen) strcpy(new, old);
-  else {
-    strncpy(new, old, newlen);
-    return;
+  if (kafka_host && list) {
+    char *topic = plugin_pipe_compose_default_string(list, "pmacct.$core_proc_name-$plugin_name-$plugin_type");
+
+    p_kafka_init_host(kafka_host);
+    ret = p_kafka_connect_to_produce(kafka_host);
+
+    if (!list->cfg.pipe_kafka_broker_host) list->cfg.pipe_kafka_broker_host = default_kafka_broker_host;
+    if (!list->cfg.pipe_kafka_broker_port) list->cfg.pipe_kafka_broker_port = default_kafka_broker_port;
+    if (!list->cfg.pipe_kafka_topic) list->cfg.pipe_kafka_topic = topic;
+    if (!list->cfg.pipe_kafka_retry) list->cfg.pipe_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+
+    p_kafka_set_broker(kafka_host, list->cfg.pipe_kafka_broker_host, list->cfg.pipe_kafka_broker_port);
+    p_kafka_set_topic(kafka_host, list->cfg.pipe_kafka_topic);
+    p_kafka_set_partition(kafka_host, list->cfg.pipe_kafka_partition);
+    p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+    P_broker_timers_set_retry_interval(&kafka_host->btimers, list->cfg.pipe_kafka_retry);
   }
 
-  replace_string(new, newlen, core_proc_name, config.proc_name);
-  replace_string(new, newlen, plugin_name, list->cfg.name);
-  replace_string(new, newlen, plugin_type, list->cfg.type);
+  return ret;
+}
+#endif 
+
+void plugin_pipe_kafka_compile_check()
+{
+#ifndef WITH_KAFKA
+  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_kafka' requires compiling with --enable-kafka. Exiting ..\n", config.name, config.type);
+  exit_plugin(1);
+#endif
 }

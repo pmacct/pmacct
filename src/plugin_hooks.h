@@ -119,6 +119,13 @@ struct channels_list_entry {
   int amqp_host_reconnect;				/* flag need to reconnect to RabbitMQ server */ 
   void *amqp_host_sleep;				/* pointer to the sleep thread (in case of reconnection) */
 #endif
+#ifdef WITH_KAFKA
+  struct p_kafka_host kafka_host;
+/* XXX Kafka:
+  int kafka_host_reconnect;				// flag need to reconnect to Kafka server
+  void *kafka_host_sleep;				// pointer to the sleep thread (in case of reconnection)
+*/
+#endif
 };
 
 #ifdef WITH_RABBITMQ
@@ -161,19 +168,24 @@ EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 #if defined WITH_RABBITMQ
-EXT char *plugin_pipe_amqp_compose_routing_key(struct plugins_list_entry *);
 EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
 EXT struct plugin_pipe_amqp_sleeper *plugin_pipe_amqp_sleeper_define(struct p_amqp_host *, int *, struct plugins_list_entry *);
 EXT void plugin_pipe_amqp_sleeper_free(struct plugin_pipe_amqp_sleeper **);
 EXT void plugin_pipe_amqp_sleeper_publish_func(struct plugin_pipe_amqp_sleeper *);
 EXT void plugin_pipe_amqp_sleeper_start(struct channels_list_entry *);
 EXT void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *);
+
 EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
 EXT int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *, int);
 EXT int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *, time_t);
 #endif
+#if defined WITH_KAFKA
+EXT int plugin_pipe_kafka_init_host(struct p_kafka_host *, struct plugins_list_entry *);
+#endif
 EXT void plugin_pipe_amqp_compile_check();
+EXT void plugin_pipe_kafka_compile_check();
 EXT void handle_plugin_pipe_dyn_strings(char *, int, char *, struct plugins_list_entry *);
+EXT char *plugin_pipe_compose_default_string(struct plugins_list_entry *, char *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

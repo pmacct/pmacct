@@ -133,8 +133,7 @@ void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char
 
   gettimeofday(&tv, NULL);
 
-  Log(LOG_DEBUG, "DEBUG ( %s/%s ): %u.%03u RDKAFKA-%i-%s: %s: %s\n", config.name, config.type, (int)tv.tv_sec,
-	(int)(tv.tv_usec / 1000), level, fac, rd_kafka_name(rk), buf);
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): RDKAFKA-%i-%s: %s: %s\n", config.name, config.type, level, fac, rd_kafka_name(rk), buf);
 }
 
 void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_code, void *opaque, void *msg_opaque)
@@ -183,7 +182,7 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
-int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
+int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len)
 {
   int ret = SUCCESS;
 
@@ -191,7 +190,7 @@ int p_kafka_produce_string(struct p_kafka_host *kafka_host, char *json_str)
 
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
     ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
-			   json_str, strlen(json_str), NULL, 0, NULL);
+			   data, data_len, NULL, 0, NULL);
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,

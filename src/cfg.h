@@ -434,4 +434,6 @@ EXT char *cfg[SRVBUFLEN], *cfg_cmdline[SRVBUFLEN];
 EXT struct custom_primitives custom_primitives_registry;
 EXT pm_cfgreg_t custom_primitives_type;
 EXT int rows;
+
+static char default_proc_name[] = "default";
 #undef EXT

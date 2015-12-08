@@ -409,7 +409,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 	p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
       }
 
-      ret = p_kafka_produce_string(&kafkap_kafka_host, json_str);
+      ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
 
       free(json_str);
       json_str = NULL;
@@ -432,7 +432,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
     if (json_str) {
       /* no handling of dyn routing keys here: not compatible */
-      ret = p_kafka_produce_string(&kafkap_kafka_host, json_str);
+      ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
 
       free(json_str);
       json_str = NULL;
