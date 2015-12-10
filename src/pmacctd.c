@@ -399,6 +399,8 @@ int main(int argc,char **argv, char **envp)
 
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
+      plugin_pipe_check(&list->cfg);
+
       if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
         Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
         exit(1);

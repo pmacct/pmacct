@@ -1097,31 +1097,7 @@ int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct pl
   p_amqp_connect_to_consume(amqp_host);
   return p_amqp_get_sockfd(amqp_host);
 }
-
-int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *amqp_host, int pipe_fd)
-{
-  if (pipe_fd == ERR) return (P_broker_timers_get_retry_interval(&amqp_host->btimers) * 1000);
-  else return AMQP_LONGLONG_RETRY;
-}
-
-int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *amqp_host, time_t now)
-{
-  int amqp_timeout;
-
-  amqp_timeout = (((P_broker_timers_get_last_fail(&amqp_host->btimers) + P_broker_timers_get_retry_interval(&amqp_host->btimers)) - now) * 1000);
-  assert(amqp_timeout >= 0);
-
-  return amqp_timeout;
-}
 #endif
-
-void plugin_pipe_amqp_compile_check()
-{
-#ifndef WITH_RABBITMQ
-  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
-  exit_plugin(1);
-#endif
-}
 
 #if defined WITH_KAFKA
 int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_list_entry *list)
@@ -1150,10 +1126,47 @@ int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_
 }
 #endif 
 
+int plugin_pipe_set_poll_timeout(struct p_broker_timers *btimers, int pipe_fd)
+{
+  if (pipe_fd == ERR) return (P_broker_timers_get_retry_interval(btimers) * 1000);
+  else return LONGLONG_RETRY;
+}
+
+int plugin_pipe_calc_poll_timeout_diff(struct p_broker_timers *btimers, time_t now)
+{
+  int timeout;
+
+  timeout = (((P_broker_timers_get_last_fail(btimers) + P_broker_timers_get_retry_interval(btimers)) - now) * 1000);
+  assert(timeout >= 0);
+
+  return timeout;
+}
+
+void plugin_pipe_amqp_compile_check()
+{
+#ifndef WITH_RABBITMQ
+  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
+  exit_plugin(1);
+#endif
+}
+
 void plugin_pipe_kafka_compile_check()
 {
 #ifndef WITH_KAFKA
   Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_kafka' requires compiling with --enable-kafka. Exiting ..\n", config.name, config.type);
   exit_plugin(1);
 #endif
+}
+
+void plugin_pipe_check(struct configuration *cfg)
+{
+  if (!cfg->pipe_amqp && !cfg->pipe_kafka) cfg->pipe_homegrown = TRUE;
+
+  if (cfg->pipe_amqp && cfg->pipe_kafka) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): 'plugin_pipe_amqp' and 'plugin_pipe_kafka' are mutual exclusive: disabling both.\n", cfg->name, cfg->type);
+
+    cfg->pipe_amqp = FALSE;
+    cfg->pipe_kafka = FALSE;
+    cfg->pipe_homegrown = TRUE;
+  }
 }

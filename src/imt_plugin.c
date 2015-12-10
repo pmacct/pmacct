@@ -235,7 +235,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           FD_SET(pipe_fd, &bkp_read_descs);
           if (pipe_fd > select_fd) select_fd = pipe_fd;
           select_fd++;
-	  amqp_timeout = AMQP_LONGLONG_RETRY;
+	  amqp_timeout = LONGLONG_RETRY;
         }
 	else amqp_timeout = P_broker_timers_get_retry_interval(&amqp_host->btimers);
       }
@@ -426,7 +426,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
         if (!ret) {
           seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-	  amqp_timeout = AMQP_LONGLONG_RETRY;
+	  amqp_timeout = LONGLONG_RETRY;
 	  num = TRUE;
 	}
 	else {

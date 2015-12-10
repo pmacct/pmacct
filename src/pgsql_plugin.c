@@ -93,7 +93,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     plugin_pipe_amqp_compile_check();
 #ifdef WITH_RABBITMQ
     pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
-    amqp_timeout = plugin_pipe_amqp_set_poll_timeout(amqp_host, pipe_fd);
+    amqp_timeout = plugin_pipe_set_poll_timeout(&amqp_host->btimers, pipe_fd);
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -151,9 +151,9 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (config.pipe_amqp && pipe_fd == ERR) {
       if (timeout == amqp_timeout) {
         pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
-        amqp_timeout = plugin_pipe_amqp_set_poll_timeout(amqp_host, pipe_fd);
+        amqp_timeout = plugin_pipe_set_poll_timeout(&amqp_host->btimers, pipe_fd);
       }
-      else amqp_timeout = plugin_pipe_amqp_calc_poll_timeout_diff(amqp_host, idata.now);
+      else amqp_timeout = plugin_pipe_calc_poll_timeout_diff(&amqp_host->btimers, idata.now);
     }
 #endif
 
@@ -207,7 +207,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         if (ret) pipe_fd = ERR;
 
         seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-        amqp_timeout = plugin_pipe_amqp_set_poll_timeout(amqp_host, pipe_fd);
+        amqp_timeout = plugin_pipe_set_poll_timeout(&amqp_host->btimers, pipe_fd);
       }
 #endif
 

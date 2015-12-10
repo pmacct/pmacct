@@ -88,6 +88,7 @@ struct configuration {
   int bgp_sock;
   int acct_type; 
   int data_type; 
+  int pipe_homegrown;
   u_int64_t pipe_size;
   u_int64_t buffer_size;
   int pipe_backlog;

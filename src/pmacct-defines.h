@@ -58,6 +58,8 @@
 #define INT_MAX (2147483647U)
 #endif
 
+#define LONGLONG_RETRY INT_MAX
+
 #if defined ENABLE_IPV6
 #define DEFAULT_SNAPLEN 128
 #else

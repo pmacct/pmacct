@@ -19,6 +19,10 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#define __PLUGIN_COMMON_EXPORT
+#include "plugin_common.h"
+#undef  __PLUGIN_COMMON_EXPORT
+
 #define DEFAULT_CHBUFLEN 4096
 #define DEFAULT_PIPE_SIZE 65535
 #define DEFAULT_PLOAD_SIZE 256 
@@ -174,16 +178,17 @@ EXT void plugin_pipe_amqp_sleeper_free(struct plugin_pipe_amqp_sleeper **);
 EXT void plugin_pipe_amqp_sleeper_publish_func(struct plugin_pipe_amqp_sleeper *);
 EXT void plugin_pipe_amqp_sleeper_start(struct channels_list_entry *);
 EXT void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *);
-
 EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
-EXT int plugin_pipe_amqp_set_poll_timeout(struct p_amqp_host *, int);
-EXT int plugin_pipe_amqp_calc_poll_timeout_diff(struct p_amqp_host *, time_t);
 #endif
 #if defined WITH_KAFKA
 EXT int plugin_pipe_kafka_init_host(struct p_kafka_host *, struct plugins_list_entry *);
 #endif
 EXT void plugin_pipe_amqp_compile_check();
 EXT void plugin_pipe_kafka_compile_check();
+EXT void plugin_pipe_check(struct configuration *);
+EXT int plugin_pipe_set_poll_timeout(struct p_broker_timers *, int);
+EXT int plugin_pipe_calc_poll_timeout_diff(struct p_broker_timers *, time_t);
+
 EXT void handle_plugin_pipe_dyn_strings(char *, int, char *, struct plugins_list_entry *);
 EXT char *plugin_pipe_compose_default_string(struct plugins_list_entry *, char *);
 #undef EXT
