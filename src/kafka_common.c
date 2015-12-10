@@ -178,6 +178,25 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
     rd_kafka_set_logger(kafka_host->rk, p_kafka_logger);
     if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
   }
+  else return ERR;
+
+  return SUCCESS;
+}
+
+int p_kafka_connect_to_consume(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) {
+    kafka_host->rk = rd_kafka_new(RD_KAFKA_CONSUMER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
+    if (!kafka_host->rk) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
+      p_kafka_close(kafka_host, TRUE);
+      return ERR;
+    }
+
+    rd_kafka_set_logger(kafka_host->rk, p_kafka_logger);
+    if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
+  }
+  else return ERR;
 
   return SUCCESS;
 }
@@ -196,7 +215,6 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t 
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
       p_kafka_close(kafka_host, TRUE);
-      ret = ERR;
     }
   }
   else return ERR;
@@ -206,9 +224,58 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t 
   return ret; 
 }
 
+int p_kafka_manage_consumer(struct p_kafka_host *kafka_host, int is_start)
+{
+  int ret = SUCCESS;
+
+  kafkap_ret_err_cb = FALSE;
+
+  if (kafka_host && kafka_host->rk && kafka_host->topic && !validate_truefalse(is_start)) {
+    if (is_start) {
+      ret = rd_kafka_consume_start(kafka_host->topic, kafka_host->partition, RD_KAFKA_OFFSET_END);
+      if (ret == ERR) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): Failed to start consuming topic %s partition %i: %s\n", config.name, config.type,
+          rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
+	p_kafka_close(kafka_host, TRUE);
+      }
+    }
+    else {
+      rd_kafka_consume_stop(kafka_host->topic, kafka_host->partition);
+      p_kafka_close(kafka_host, FALSE);
+    }
+  }
+  else return ERR;
+
+  return ret;
+}
+
+int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int timeout)
+{
+  rd_kafka_message_t *kafka_msg; 
+  int ret = SUCCESS;
+  
+  if (kafka_host && data && timeout) { 
+    kafka_msg = rd_kafka_consume(kafka_host->topic, kafka_host->partition, timeout);
+    if (!kafka_msg) ret = FALSE; /* timeout */
+    else ret = TRUE; /* got data */
+
+    (*data) = kafka_msg;
+  }
+  else return ERR;
+
+  return ret;
+}
+
+int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, u_int32_t payload_len)
+{
+  rd_kafka_message_t *kafka_msg = (rd_kafka_message_t *) data;
+
+  // XXX
+}
+
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
 {
-  if (kafka_host) { 
+  if (kafka_host && !validate_truefalse(set_fail)) { 
     if (set_fail) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_close()\n", config.name, config.type);
       P_broker_timers_set_last_fail(&kafka_host->btimers, time(NULL));

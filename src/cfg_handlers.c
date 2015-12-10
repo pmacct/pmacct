@@ -54,6 +54,12 @@ int parse_truefalse_nonzero(char *value_ptr)
   return value;
 }
 
+int validate_truefalse(int value)
+{
+  if (value == TRUE || value == FALSE) return SUCCESS;
+  else return ERR;
+}
+
 int cfg_key_debug(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

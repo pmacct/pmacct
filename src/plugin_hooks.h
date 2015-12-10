@@ -181,13 +181,14 @@ EXT void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *);
 EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
 #endif
 #if defined WITH_KAFKA
-EXT int plugin_pipe_kafka_init_host(struct p_kafka_host *, struct plugins_list_entry *);
+EXT int plugin_pipe_kafka_init_host(struct p_kafka_host *, struct plugins_list_entry *, int);
+EXT int plugin_pipe_kafka_connect_to_consume(struct p_kafka_host *, struct plugins_list_entry *);
 #endif
 EXT void plugin_pipe_amqp_compile_check();
 EXT void plugin_pipe_kafka_compile_check();
 EXT void plugin_pipe_check(struct configuration *);
-EXT int plugin_pipe_set_poll_timeout(struct p_broker_timers *, int);
-EXT int plugin_pipe_calc_poll_timeout_diff(struct p_broker_timers *, time_t);
+EXT int plugin_pipe_set_retry_timeout(struct p_broker_timers *, int);
+EXT int plugin_pipe_calc_retry_timeout_diff(struct p_broker_timers *, time_t);
 
 EXT void handle_plugin_pipe_dyn_strings(char *, int, char *, struct plugins_list_entry *);
 EXT char *plugin_pipe_compose_default_string(struct plugins_list_entry *, char *);

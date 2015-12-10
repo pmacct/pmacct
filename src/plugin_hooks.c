@@ -335,7 +335,7 @@ void load_plugins(struct plugin_requests *req)
       list = chptr->plugin;
 
       /* XXX: no sleeper thread, trusting librdkafka */
-      if (list->cfg.pipe_kafka) ret = plugin_pipe_kafka_init_host(&chptr->kafka_host, list);
+      if (list->cfg.pipe_kafka) ret = plugin_pipe_kafka_init_host(&chptr->kafka_host, list, TRUE);
 
       /* reset core process pipe Kafka topic */
       if (list->type.id == PLUGIN_ID_CORE) list->cfg.pipe_kafka_topic = NULL;
@@ -1100,15 +1100,17 @@ int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct pl
 #endif
 
 #if defined WITH_KAFKA
-int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_list_entry *list)
+int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_list_entry *list, int is_prod)
 {
-  int ret = ERR;
+  int ret = SUCCESS;
 
-  if (kafka_host && list) {
+  if (kafka_host && list && !validate_truefalse(is_prod)) {
     char *topic = plugin_pipe_compose_default_string(list, "pmacct.$core_proc_name-$plugin_name-$plugin_type");
 
     p_kafka_init_host(kafka_host);
-    ret = p_kafka_connect_to_produce(kafka_host);
+
+    if (is_prod) ret = p_kafka_connect_to_produce(kafka_host);
+    else ret = p_kafka_connect_to_consume(kafka_host);
 
     if (!list->cfg.pipe_kafka_broker_host) list->cfg.pipe_kafka_broker_host = default_kafka_broker_host;
     if (!list->cfg.pipe_kafka_broker_port) list->cfg.pipe_kafka_broker_port = default_kafka_broker_port;
@@ -1121,18 +1123,32 @@ int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_
     p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
     P_broker_timers_set_retry_interval(&kafka_host->btimers, list->cfg.pipe_kafka_retry);
   }
+  else return ERR;
+
+  return ret;
+}
+
+int plugin_pipe_kafka_connect_to_consume(struct p_kafka_host *kafka_host, struct plugins_list_entry *plugin_data)
+{
+  int ret = SUCCESS;
+
+  if (kafka_host && plugin_data) {
+    ret = plugin_pipe_kafka_init_host(kafka_host, plugin_data, FALSE);
+    if (!ret) ret = p_kafka_manage_consumer(kafka_host, TRUE);
+  }
+  else return ERR;
 
   return ret;
 }
 #endif 
 
-int plugin_pipe_set_poll_timeout(struct p_broker_timers *btimers, int pipe_fd)
+int plugin_pipe_set_retry_timeout(struct p_broker_timers *btimers, int pipe_fd)
 {
   if (pipe_fd == ERR) return (P_broker_timers_get_retry_interval(btimers) * 1000);
   else return LONGLONG_RETRY;
 }
 
-int plugin_pipe_calc_poll_timeout_diff(struct p_broker_timers *btimers, time_t now)
+int plugin_pipe_calc_retry_timeout_diff(struct p_broker_timers *btimers, time_t now)
 {
   int timeout;
 
