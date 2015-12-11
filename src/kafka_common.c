@@ -269,8 +269,24 @@ int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int tim
 int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, u_int32_t payload_len)
 {
   rd_kafka_message_t *kafka_msg = (rd_kafka_message_t *) data;
+  int ret = SUCCESS;
 
-  // XXX
+  if (kafka_host && data && payload && payload_len) {
+    if (kafka_msg->payload && kafka_msg->len) {
+      if (kafka_msg->len <= payload_len) {
+	memcpy(payload, kafka_msg->payload, kafka_msg->len);
+	ret = SUCCESS;
+      }
+      else {
+	memset(payload, 0, payload_len);
+	ret = ERR;
+      }
+    } 
+    else return ERR;
+  }
+  else return ERR;
+
+  return ret;
 }
 
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)

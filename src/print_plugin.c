@@ -180,10 +180,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
       ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
     }
+#ifdef WITH_KAFKA
     else if (config.pipe_kafka) {
       timeout = MIN(refresh_timeout, (kafka_timeout ? kafka_timeout : INT_MAX)); 
       ret = p_kafka_consume_poller(kafka_host, &kafka_msg, timeout);
     }
+#endif
 
     if (ret <= 0) {
       if (getppid() == 1) {
