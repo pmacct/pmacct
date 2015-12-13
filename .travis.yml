@@ -1,10 +1,30 @@
 language: C
+compiler: gcc
+sudo: required
 
-compiler:
-  - clang
-  - gcc
+install:
+  - git clone https://github.com/akheron/jansson
+  - cd jansson && autoreconf -i && ./configure && make && sudo make install && cd ..
+  - git clone https://github.com/alanxz/rabbitmq-c
+  - cd rabbitmq-c && autoreconf -i && ./configure && make && sudo make install && cd ..
+  - git clone https://github.com/edenhill/librdkafka
+  - cd librdkafka && ./configure && make && make install && cd ..
+  - wget https://github.com/maxmind/libmaxminddb/releases/download/1.1.2/libmaxminddb-1.1.2.tar.gz
+  - tar fxz libmaxminddb-1.1.2.tar.gz
+  - cd libmaxminddb-1.1.2 && ./configure && make && make install && cd ..
+
+script:
+  - ./configure --enable-ipv6 --enable-plabel --enable-mysql --enable-pgsql  --with-pgsql-includes=/usr/include/postgresql  --enable-sqlite3 --enable-rabbitmq --enable-kafka  --enable-geoipv2 --enable-jansson
+  - make
+  - sudo make install
 
 addons:
   apt:
     packages:
+      - autoconf
+      - libtool
       - libpcap-dev
+      - libpq-dev
+      - libsqlite3-dev
+      - libmysqlclient-dev
+      - mysql-client
