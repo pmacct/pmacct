@@ -3,3 +3,8 @@ language: C
 compiler:
   - clang
   - gcc
+
+addons:
+  apt:
+    packages:
+      - libpcap-dev
