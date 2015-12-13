@@ -3,6 +3,7 @@ compiler: gcc
 sudo: required
 
 install:
+  - sudo apt-get install libtool autoconf
   - git clone https://github.com/akheron/jansson
   - cd jansson && autoreconf -i && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/alanxz/rabbitmq-c
@@ -21,8 +22,6 @@ script:
 addons:
   apt:
     packages:
-      - autoconf
-      - libtool
       - libpcap-dev
       - libpq-dev
       - libsqlite3-dev
