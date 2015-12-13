@@ -1,4 +1,7 @@
-DOCUMENTATION:
+[![Build Status](https://travis-ci.org/pmacct/pmacct.svg?branch=master)](https://travis-ci.org/pmacct/pmacct)
+
+DOCUMENTATION
+=============
 
 - Online:
   * pmacct wiki: http://wiki.pmacct.net/
