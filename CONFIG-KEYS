@@ -245,6 +245,24 @@ DESC:		By defining this directive to 'true', a RabbitMQ broker is used for queue
 		queue implementation. See QUICKSTART for some examples.
 DEFAULT:	false
 
+KEY:            plugin_pipe_kafka
+VALUES:         [ true | false ]
+DESC:           By defining this directive to 'true', a Kafka broker is used for queueing and data
+		exchange between the Core Process and the plugins. This is in alternative to the
+		home-grown circular queue implementation (see plugin_pipe_size description). This
+		directive, along with all other plugin_pipe_kafka_* directives, can be set globally
+		or apply on a per plugin basis (ie. it is a valid scenario, if multiple plugins are
+		instantiated, that some make use of home-grown queueing, while others use Kafka
+		based queueing). For a quick comparison: using a Kafka broker gives the same
+		benefits as using a RabbitMQ broker (read plugin_pipe_amqp); plus, Kafka scales
+		more than RabbitMQ. See QUICKSTART for some examples.
+NOTES:		librdkafka does not currently expose the file descriptor(s) used internally so to
+		allow an external poll() or select() against it/them. This is being worked on as
+		part of librdkafka issue #429: https://github.com/edenhill/librdkafka/issues/429 .
+		As a result of that, the plugin_pipe_kafka feature is limited to 'print' plugin as
+		a proof of concept.
+DEFAULT:        false
+
 KEY:		plugin_buffer_size 
 DESC:		By defining the transfer buffer size, in bytes, this directive enables buffering of
 		data transfers between core process and active plugins. Once a buffer is filled, it
@@ -558,18 +576,39 @@ DESC:           Name of the Kafka topic to attach to published data. Dynamic nam
 
 DEFAULT:        kafka_topic: 'pmacct.acct'
 
-KEY:            kafka_broker_host
-DESC:           Defines the Kafka broker IP address.
+KEY:            plugin_pipe_kafka_topic
+DESC:           Name of the Kafka topic to use to send data to a plugin. Currently each plugin must
+		bind to a different routing key in order to avoid duplications. Dynamic names are
+		supported through the use of variables, which are computed at startup. The list of
+		variables supported is:
+
+                $core_proc_name Configured core_proc_name.
+
+                $plugin_name    Configured plugin name (ie. 'foo' if 'plugins: print[foo]')
+
+                $plugin_type    Plugin type (ie. memory, print, amqp, etc.)
+
+DEFAULT:        '$core_proc_name-$plugin_name-$plugin_type'
+
+KEY:            plugin_pipe_kafka_retry
+DESC:           Defines the interval of time, in seconds, after which a connection to the Kafka
+		broker should be retried after a failure is detected.
+DEFAULT:        60
+
+KEY:            [ kafka_broker_host | plugin_pipe_broker_host ]
+DESC:           Defines the Kafka broker IP address. kafka_* directives refer to the broker used by
+		a kafka plugin to purge data out; plugin_pipe_kafka_* directives refer to the broker
+		used by the core process to send data to plugins.
 DEFAULT:        127.0.0.1
 
-KEY:            kafka_broker_port
-DESC:           Defines the Kafka broker port.
+KEY:            [ kafka_broker_port | plugin_pipe_broker_port ]
+DESC:           Defines the Kafka broker port. See also kafka_broker_host.
 DEFAULT:        9092
 
-KEY:		kafka_partition
+KEY:		[ kafka_partition | plugin_pipe_kafka_partition ]
 DESC:		Defines the Kafka broker topic partition ID. RD_KAFKA_PARTITION_UA or ((int32_t)-1)
 		is to define the configured or default partitioner (slower than sending to a fixed
-		partition). 
+		partition). See also kafka_broker_host. 
 DEFAULT:	0
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |

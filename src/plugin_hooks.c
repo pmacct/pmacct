@@ -974,7 +974,7 @@ char *plugin_pipe_compose_default_string(struct plugins_list_entry *list, char *
 {
   char *rk = NULL;
 
-  if (!list || !default_rk) return;
+  if (!list || !default_rk) return rk;
 
   rk = malloc(SRVBUFLEN);
   memset(rk, 0, SRVBUFLEN);
@@ -1021,7 +1021,7 @@ struct plugin_pipe_amqp_sleeper *plugin_pipe_amqp_sleeper_define(struct p_amqp_h
   struct plugin_pipe_amqp_sleeper *pas;
   int size = sizeof(struct plugin_pipe_amqp_sleeper);
 
-  if (!amqp_host || !flag) return;
+  if (!amqp_host || !flag) return NULL;
 
   pas = malloc(size);
 
