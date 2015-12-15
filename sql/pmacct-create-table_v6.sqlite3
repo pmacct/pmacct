@@ -1,4 +1,4 @@
-DROP TABLE acct_v6; 
+DROP TABLE IF EXISTS acct_v6; 
 CREATE TABLE acct_v6 (
 	agent_id INT(8) NOT NULL DEFAULT 0,
 	class_id CHAR(16) NOT NULL DEFAULT ' ',

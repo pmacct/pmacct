@@ -4,7 +4,7 @@
 --
 
 -- Tables 
-DROP TABLE acct_uni_v3;
+DROP TABLE IF EXISTS acct_uni_v3;
 CREATE TABLE acct_uni_v3 (
         agent_id BIGINT NOT NULL DEFAULT 0,
         mac_src CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
@@ -23,7 +23,7 @@ CREATE TABLE acct_uni_v3 (
         CONSTRAINT acct_uni_v3_pk PRIMARY KEY (agent_id, mac_src, mac_dst, vlan, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
 
-DROP TABLE acct_v3;
+DROP TABLE IF EXISTS acct_v3;
 CREATE TABLE acct_v3 (
 	agent_id BIGINT NOT NULL DEFAULT 0,
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
@@ -42,7 +42,7 @@ CREATE TABLE acct_v3 (
         CONSTRAINT acct_v3_pk PRIMARY KEY (agent_id, mac_src, mac_dst, vlan, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
 
-DROP TABLE acct_as_v3;
+DROP TABLE IF EXISTS acct_as_v3;
 CREATE TABLE acct_as_v3 (
         agent_id BIGINT NOT NULL DEFAULT 0,
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
@@ -61,7 +61,7 @@ CREATE TABLE acct_as_v3 (
         CONSTRAINT acct_as_v3_pk PRIMARY KEY (agent_id, mac_src, mac_dst, vlan, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
 
-DROP TABLE proto;
+DROP TABLE IF EXISTS proto;
 CREATE TABLE proto (
 	num SMALLINT NOT NULL,
 	description CHAR(20),

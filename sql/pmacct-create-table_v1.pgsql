@@ -4,7 +4,7 @@
 --
 
 -- Tables 
-DROP TABLE acct_uni;
+DROP TABLE IF EXISTS acct_uni;
 CREATE TABLE acct_uni (
         mac_src CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
@@ -20,7 +20,7 @@ CREATE TABLE acct_uni (
         CONSTRAINT acct_uni_pk PRIMARY KEY (mac_src, mac_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, stamp_inserted)
 );
 
-DROP TABLE acct;
+DROP TABLE IF EXISTS acct;
 CREATE TABLE acct (
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
@@ -36,7 +36,7 @@ CREATE TABLE acct (
         CONSTRAINT acct_pk PRIMARY KEY (mac_src, mac_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, stamp_inserted)
 );
 
-DROP TABLE acct_as;
+DROP TABLE IF EXISTS acct_as;
 CREATE TABLE acct_as (
         mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
@@ -52,7 +52,7 @@ CREATE TABLE acct_as (
         CONSTRAINT acct_as_pk PRIMARY KEY (mac_src, mac_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, stamp_inserted)
 );
 
-DROP TABLE proto;
+DROP TABLE IF EXISTS proto;
 CREATE TABLE proto (
 	num SMALLINT NOT NULL,
 	description CHAR(20),
