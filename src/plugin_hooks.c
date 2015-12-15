@@ -491,7 +491,8 @@ reprocess:
           struct channels_list_entry *chptr = &channels_list[index];
 
           plugin_pipe_amqp_sleeper_stop(chptr);
-          ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
+	  if (!chptr->amqp_host_sleep) ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
+	  else ret = FALSE;
           if (ret) plugin_pipe_amqp_sleeper_start(chptr);
 #endif
 	}
@@ -1076,7 +1077,8 @@ void plugin_pipe_amqp_sleeper_start(struct channels_list_entry *chptr)
     assert(chptr->amqp_host_sleep);
 
     pas = plugin_pipe_amqp_sleeper_define(&chptr->amqp_host, &chptr->amqp_host_reconnect, chptr->plugin);
-    send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, plugin_pipe_amqp_sleeper_publish_func, pas);
+    if (pas) send_to_pool((thread_pool_t *) chptr->amqp_host_sleep, plugin_pipe_amqp_sleeper_publish_func, pas);
+    else Log(LOG_ERR, "ERROR ( %s/%s ): plugin_pipe_amqp_sleeper_start(): sleeper define failed\n", chptr->plugin->cfg.name, chptr->plugin->cfg.type);
   }
 #endif
 }
@@ -1086,6 +1088,7 @@ void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *chptr)
 #if defined ENABLE_THREADS
   if (chptr && chptr->amqp_host_reconnect) {
     deallocate_thread_pool((thread_pool_t **) &chptr->amqp_host_sleep);
+    chptr->amqp_host_sleep = NULL;
     chptr->amqp_host_reconnect = FALSE;
   }
 #endif
