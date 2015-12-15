@@ -4,7 +4,7 @@
 --
 
 -- Tables 
-DROP TABLE acct_v9;
+DROP TABLE IF EXISTS acct_v9;
 CREATE TABLE acct_v9 (
 	tag BIGINT NOT NULL DEFAULT 0,
 	class_id CHAR(16) NOT NULL DEFAULT ' ',
@@ -28,7 +28,7 @@ CREATE TABLE acct_v9 (
         CONSTRAINT acct_v9_pk PRIMARY KEY (tag, class_id, mac_src, mac_dst, vlan, as_src, as_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
 
-DROP TABLE proto;
+DROP TABLE IF EXISTS proto;
 CREATE TABLE proto (
 	num SMALLINT NOT NULL,
 	description CHAR(20),

@@ -4,7 +4,7 @@
 --
 
 -- Tables 
-DROP TABLE acct_bgp;
+DROP TABLE IF EXISTS acct_bgp;
 CREATE TABLE acct_bgp (
 	agent_id BIGINT NOT NULL DEFAULT 0,
         as_src BIGINT NOT NULL DEFAULT 0,
