@@ -1194,6 +1194,9 @@ DESC:		Allows to process aggregates (via a comma-separated list of conditionals 
 		DESC: action. If previously evaluated checks have marked the aggregate as invalid, a positive
 		      'recover' value makes the packet to be handled through the recovery mechanism (if enabled).  
 		      SQL plugins only.
+
+		For example, during a data purge, in order to filter in only aggregates counting 100KB or more
+		the following line can be used to instrument the print plugin: 'print_preprocess: minb=100000'. 
 DEFAULT:	none
 
 KEY:		[ sql_preprocess_type | print_preprocess_type | mongo_preprocess_type | amqp_preprocess_type |
