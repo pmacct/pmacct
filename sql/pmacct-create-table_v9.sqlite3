@@ -1,4 +1,4 @@
-DROP TABLE acct_v9; 
+DROP TABLE IF EXISTS acct_v9; 
 CREATE TABLE acct_v9 (
 	tag INT(8) NOT NULL DEFAULT 0,
 	class_id CHAR(16) NOT NULL DEFAULT ' ',
