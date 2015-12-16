@@ -437,13 +437,17 @@ bgp_node_delete (struct bgp_node *node)
 struct bgp_node *
 bgp_table_top (const struct bgp_table *const table)
 {
-  /* If there is no node in the routing table return NULL. */
-  if (table->top == NULL)
-    return NULL;
+  if (table) {
+    /* If there is no node in the routing table return NULL. */
+    if (table->top == NULL)
+      return NULL;
 
-  /* Lock the top node and return it. */
-  bgp_lock_node (table->top);
-  return table->top;
+    /* Lock the top node and return it. */
+    bgp_lock_node (table->top);
+    return table->top;
+  }
+  
+  return NULL;
 }
 
 /* Unlock current node and lock next node then return it. */
