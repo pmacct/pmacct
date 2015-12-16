@@ -670,6 +670,11 @@ poll_again:
       timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
       ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
     }
+    else {
+      /* Preps for Kafka support */
+      Log(LOG_ERR, "ERROR ( %s/%s ): plugin_pipe method not supported. Exiting ..\n", config.name, config.type);
+      exit_plugin(1);
+    }
 
     if (ret < 0) goto poll_again;
 

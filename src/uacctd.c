@@ -394,7 +394,10 @@ int main(int argc,char **argv, char **envp)
   /* Enforcing policies over aggregation methods */
   list = plugins_list;
   while (list) {
-    if (!list->cfg.proc_name) list->cfg.proc_name = default_proc_name;
+    if (!list->cfg.proc_name) {
+      list->cfg.proc_name = default_proc_name;
+      config.proc_name = default_proc_name;
+    }
 
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */

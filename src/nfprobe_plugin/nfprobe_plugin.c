@@ -1365,11 +1365,12 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct timezone tz;
   unsigned char *pipebuf;
   time_t now, refresh_deadline;
-  int ret, num;
+  int refresh_timeout, amqp_timeout, ret, num;
   char default_receiver[] = "127.0.0.1:2100";
   char default_engine[] = "0:0";
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
+  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -1391,6 +1392,10 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
+#endif
 
   /* XXX: glue */
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -1435,7 +1440,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   glob_flowtrack = &flowtrack;
 
   if (config.nfprobe_timeouts) handle_timeouts(&flowtrack, config.nfprobe_timeouts);
-  timeout = flowtrack.expiry_interval * 1000;
+  refresh_timeout = flowtrack.expiry_interval * 1000;
   print_timeouts(&flowtrack);
 
   if (!config.nfprobe_hoplimit) hoplimit = -1;
@@ -1500,9 +1505,14 @@ sort_version:
   pipebuf = (unsigned char *) Malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
 
-  pfd.fd = pipe_fd;
-  pfd.events = POLLIN;
-  setnonblocking(pipe_fd);
+  if (config.pipe_amqp) {
+    plugin_pipe_amqp_compile_check();
+#ifdef WITH_RABBITMQ
+    pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
+    amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
+#endif
+  }
+  else setnonblocking(pipe_fd);
 
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
@@ -1525,7 +1535,20 @@ sort_version:
   for(;;) {
 poll_again:
     status->wakeup = TRUE;
-    ret = poll(&pfd, 1, timeout);
+
+    pfd.fd = pipe_fd;
+    pfd.events = POLLIN;
+
+    if (config.pipe_homegrown || config.pipe_amqp) {
+      timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
+      ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
+    }
+    else {
+      /* Preps for Kafka support */
+      Log(LOG_ERR, "ERROR ( %s/%s ): plugin_pipe method not supported. Exiting ..\n", config.name, config.type);
+      exit_plugin(1);
+    }
+
     if (ret < 0) goto poll_again;
 
     /* Fatal error from per-packet functions */
@@ -1540,41 +1563,64 @@ poll_again:
       reload_map = FALSE;
     }
 
+    now = time(NULL);
+
+#ifdef WITH_RABBITMQ
+    if (config.pipe_amqp && pipe_fd == ERR) {
+      if (timeout == amqp_timeout) {
+        pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
+        amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
+      }
+      else amqp_timeout = plugin_pipe_calc_retry_timeout_diff(&amqp_host->btimers, now);
+    }
+#endif
+
     if (ret > 0) { /* we received data */
 read_data:
-      if (!pollagain) {
-        seq++;
-        seq %= MAX_SEQNUM;
-        if (seq == 0) rg_err_count = FALSE;
+      if (config.pipe_homegrown) {
+        if (!pollagain) {
+          seq++;
+          seq %= MAX_SEQNUM;
+          if (seq == 0) rg_err_count = FALSE;
+        }
+        else {
+          if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
+            exit_plugin(1); /* we exit silently; something happened at the write end */
+        }
+  
+        if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
+  
+        if (((struct ch_buf_hdr *)rg->ptr)->seq != seq) {
+  	  if (!pollagain) {
+  	    pollagain = TRUE;
+  	    goto handle_flow_expiration;
+  	  }
+  	  else {
+  	    rg_err_count++;
+  	    if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
+  	      Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
+  	      Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
+  	      Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%u'.\n", config.pipe_size);
+  	      Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%u'.\n", config.buffer_size);
+  	      Log(LOG_ERR, "- increase system maximum socket size.\n\n");
+  	    }
+  	    seq = ((struct ch_buf_hdr *)rg->ptr)->seq;
+  	  }
+        }
+  
+        pollagain = FALSE;
+        memcpy(pipebuf, rg->ptr, bufsz);
+        rg->ptr += bufsz;
       }
-      else {
-        if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-          exit_plugin(1); /* we exit silently; something happened at the write end */
+#ifdef WITH_RABBITMQ
+      else if (config.pipe_amqp) {
+        ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
+        if (ret) pipe_fd = ERR;
+
+        seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+        amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
       }
-
-      if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
-
-      if (((struct ch_buf_hdr *)rg->ptr)->seq != seq) {
-	if (!pollagain) {
-	  pollagain = TRUE;
-	  goto handle_flow_expiration;
-	}
-	else {
-	  rg_err_count++;
-	  if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
-	    Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
-	    Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%u'.\n", config.pipe_size);
-	    Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%u'.\n", config.buffer_size);
-	    Log(LOG_ERR, "- increase system maximum socket size.\n\n");
-	  }
-	  seq = ((struct ch_buf_hdr *)rg->ptr)->seq;
-	}
-      }
-
-      pollagain = FALSE;
-      memcpy(pipebuf, rg->ptr, bufsz);
-      rg->ptr += bufsz;
+#endif
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received cpid=%u seq=%u num_entries=%u\n",
@@ -1612,7 +1658,8 @@ read_data:
 	}
       }
       }
-      goto read_data;
+
+      if (config.pipe_homegrown) goto read_data;
     }
 
 handle_flow_expiration:
