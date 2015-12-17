@@ -60,7 +60,8 @@ void nfacctd_bmp_wrapper()
 void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
-  char bmp_packet[BMP_MAX_PACKET_SIZE], *bmp_packet_ptr;
+  char bmp_packet[BMP_BUFFER_SIZE], *bmp_packet_ptr;
+  u_int32_t pkt_offset=0, pkt_remaining_len=0;
   time_t now;
   afi_t afi;
   safi_t safi;
@@ -93,7 +94,7 @@ void skinny_bmp_daemon()
   reload_log_bmp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
-  memset(bmp_packet, 0, BMP_MAX_PACKET_SIZE);
+  memset(bmp_packet, 0, BMP_BUFFER_SIZE);
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
 
@@ -530,7 +531,8 @@ void skinny_bmp_daemon()
       goto select_again;
     }
 
-    peer->msglen = ret = recv(peer->fd, bmp_packet, BMP_MAX_PACKET_SIZE, 0);
+    ret = recv(peer->fd, &bmp_packet[pkt_offset], (BMP_BUFFER_SIZE - pkt_offset), 0);
+    peer->msglen = (ret + pkt_offset);
 
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
@@ -538,29 +540,39 @@ void skinny_bmp_daemon()
       bgp_peer_close(peer, FUNC_TYPE_BMP);
       goto select_again;
     }
-    else bmp_process_packet(bmp_packet, peer->msglen, peer);
+    else {
+      pkt_remaining_len = bmp_process_packet(bmp_packet, peer->msglen, peer);
+
+      /* handling offset for TCP segment reassemly */
+      if (pkt_remaining_len) pkt_offset = bmp_packet_adj_offset(bmp_packet, BMP_BUFFER_SIZE, peer->msglen, pkt_remaining_len, peer);
+      else pkt_offset = 0;
+    }
   }
 }
 
-void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
+u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
 {
   char *bmp_packet_ptr = bmp_packet;
   u_int32_t pkt_remaining_len, msg_len, msg_start_len;
 
   struct bmp_common_hdr *bch = NULL;
 
-  for (msg_start_len = pkt_remaining_len = len; pkt_remaining_len; msg_start_len = pkt_remaining_len) { 
-    if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &pkt_remaining_len, sizeof(struct bmp_common_hdr)))) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
-      return;
-    }
+  if (len < sizeof(struct bmp_common_hdr)) {
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
+    return FALSE;
+  }
+
+  for (msg_start_len = pkt_remaining_len = len; pkt_remaining_len; msg_start_len = pkt_remaining_len) {
+    if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &pkt_remaining_len, sizeof(struct bmp_common_hdr))))
+      return msg_start_len;
 
     if (bch->version != BMP_V3) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: BMP version != %u\n", config.name, peer->addr_str, BMP_V3);
-      return;
+      return FALSE;
     }
 
     bmp_common_hdr_get_len(bch, &msg_len);
+    if (pkt_remaining_len < msg_len) return msg_start_len;
 
     if (bch->type <= BMP_MSG_TYPE_MAX) {
       Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [common] type: %s (%u)\n",
@@ -581,14 +593,14 @@ void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
       bmp_process_msg_peer_up(&bmp_packet_ptr, &pkt_remaining_len, peer); 
       break;
     case BMP_MSG_INIT:
-      bmp_process_msg_init(&bmp_packet_ptr, &pkt_remaining_len, peer); 
+      bmp_process_msg_init(&bmp_packet_ptr, &pkt_remaining_len, msg_len, peer); 
       break;
     case BMP_MSG_TERM:
-      bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, peer); 
+      bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, msg_len, peer); 
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
-      return;
+      break;
     }
 
     if ((msg_start_len - pkt_remaining_len) < msg_len) {
@@ -596,17 +608,20 @@ void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
       bmp_jump_offset(&bmp_packet_ptr, &pkt_remaining_len, (msg_len - (msg_start_len - pkt_remaining_len)));
     }
   }
+
+  return FALSE;
 }
 
-void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bgp_peer *peer)
 {
   struct bmp_data bdata;
   struct bmp_init_hdr *bih;
-  u_int16_t bmp_len;
+  u_int16_t bmp_init_len;
   char *bmp_init_info;
 
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
+  bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
   if (nfacctd_bmp_msglog_backend_methods) {
     char event_type[] = "log";
@@ -617,16 +632,16 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   if (bmp_dump_backend_methods)
     bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_INIT);
 
-  while (*len) {
+  while (bmp_hdr_len) {
     if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [init] packet discarded: failed bmp_get_and_check_length() BMP init hdr\n",
 		config.name, peer->addr_str);
       return;
     }
 
-    bmp_init_hdr_get_len(bih, &bmp_len);
+    bmp_init_hdr_get_len(bih, &bmp_init_len);
 
-    if (!(bmp_init_info = bmp_get_and_check_length(bmp_packet, len, bmp_len))) {
+    if (!(bmp_init_info = bmp_get_and_check_length(bmp_packet, len, bmp_init_len))) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [init] packet discarded: failed bmp_get_and_check_length() BMP init info\n",
 		config.name, peer->addr_str);
       return;
@@ -636,7 +651,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       struct bmp_log_init blinit;
 
       blinit.type = bih->type;
-      blinit.len = bmp_len;
+      blinit.len = bmp_init_len;
       blinit.val = bmp_init_info;
 
       if (nfacctd_bmp_msglog_backend_methods) {
@@ -648,18 +663,21 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       if (bmp_dump_backend_methods)
         bmp_dump_se_ll_append(peer, &bdata, &blinit, BMP_LOG_TYPE_INIT);
     }
+
+    bmp_hdr_len -= (bmp_init_len + sizeof(struct bmp_init_hdr));
   }
 }
 
-void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bgp_peer *peer)
 {
   struct bmp_data bdata;
   struct bmp_term_hdr *bth;
-  u_int16_t bmp_len, reason_type = 0;
+  u_int16_t bmp_term_len, reason_type = 0;
   char *bmp_term_info;
 
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
+  bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
   if (nfacctd_bmp_msglog_backend_methods) {
     char event_type[] = "log";
@@ -670,28 +688,28 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
   if (bmp_dump_backend_methods)
     bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_TERM);
 
-  while (*len) {
+  while (bmp_hdr_len) {
     if (!(bth = (struct bmp_term_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_term_hdr)))) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [term] packet discarded: failed bmp_get_and_check_length() BMP term hdr\n",
 		config.name, peer->addr_str);
        return;
     }
 
-    bmp_term_hdr_get_len(bth, &bmp_len);
+    bmp_term_hdr_get_len(bth, &bmp_term_len);
 
-    if (!(bmp_term_info = bmp_get_and_check_length(bmp_packet, len, bmp_len))) {
+    if (!(bmp_term_info = bmp_get_and_check_length(bmp_packet, len, bmp_term_len))) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [term] packet discarded: failed bmp_get_and_check_length() BMP term info\n",
 		config.name, peer->addr_str);
       return;
     }
 
-    if (bth->type == BMP_TERM_INFO_REASON && bmp_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
+    if (bth->type == BMP_TERM_INFO_REASON && bmp_term_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
 
     {
       struct bmp_log_term blterm;
 
       blterm.type = bth->type;
-      blterm.len = bmp_len;
+      blterm.len = bmp_term_len;
       blterm.val = bmp_term_info;
       blterm.reas_type = reason_type;
 
@@ -704,6 +722,8 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bgp_peer *pe
       if (bmp_dump_backend_methods)
         bmp_dump_se_ll_append(peer, &bdata, &blterm, BMP_LOG_TYPE_TERM);
     }
+
+    bmp_hdr_len -= (bmp_term_len + sizeof(struct bmp_term_hdr));
   }
 }
 
@@ -1129,4 +1149,19 @@ void bmp_attr_init()
   attrhash_init(&bmp_attrhash);
   community_init(&bmp_comhash);
   ecommunity_init(&bmp_ecomhash);
+}
+
+u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t recv_len, u_int32_t remaining_len, struct bgp_peer *peer)
+{
+  char tmp_packet[BMP_BUFFER_SIZE];
+  
+  if (!bmp_packet || recv_len > buf_len || remaining_len >= buf_len || remaining_len > recv_len) {
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_packet_adj_offset()\n", config.name, peer->addr_str);
+    return FALSE;
+  }
+
+  memcpy(tmp_packet, &bmp_packet[recv_len - remaining_len], remaining_len);
+  memcpy(bmp_packet, tmp_packet, remaining_len);
+
+  return remaining_len;
 }

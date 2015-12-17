@@ -23,7 +23,7 @@
 
 /* defines */
 #define BMP_TCP_PORT		1790
-#define BMP_MAX_PACKET_SIZE	10000
+#define BMP_BUFFER_SIZE		100000
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
 
@@ -168,9 +168,9 @@ struct bmp_data {
 EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
 EXT void bmp_attr_init();
-EXT void bmp_process_packet(char *, u_int32_t, struct bgp_peer *);
-EXT void bmp_process_msg_init(char **, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_term(char **, u_int32_t *, struct bgp_peer *);
+EXT u_int32_t bmp_process_packet(char *, u_int32_t, struct bgp_peer *);
+EXT void bmp_process_msg_init(char **, u_int32_t *, u_int32_t, struct bgp_peer *);
+EXT void bmp_process_msg_term(char **, u_int32_t *, u_int32_t, struct bgp_peer *);
 EXT void bmp_process_msg_peer_up(char **, u_int32_t *, struct bgp_peer *);
 EXT void bmp_process_msg_peer_down(char **, u_int32_t *, struct bgp_peer *);
 EXT void bmp_process_msg_stats(char **, u_int32_t *, struct bgp_peer *);
@@ -199,6 +199,7 @@ EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
+EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, struct bgp_peer *);
 
 /* global variables */
 EXT struct bgp_peer *bmp_peers;
