@@ -23,7 +23,7 @@
 
 /* defines */
 #define BMP_TCP_PORT		1790
-#define BMP_MAX_PACKET_SIZE	4096
+#define BMP_MAX_PACKET_SIZE	10000
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
 
@@ -198,6 +198,7 @@ EXT void bmp_stats_cnt_get_data32(char **, u_int32_t *, u_int32_t *);
 EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
+EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 
 /* global variables */
 EXT struct bgp_peer *bmp_peers;

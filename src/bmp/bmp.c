@@ -545,63 +545,56 @@ void skinny_bmp_daemon()
 void bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
 {
   char *bmp_packet_ptr = bmp_packet;
-  u_int32_t remaining_len, bmp_len;
+  u_int32_t pkt_remaining_len, msg_len, msg_start_len;
 
   struct bmp_common_hdr *bch = NULL;
 
-  remaining_len = len;
-  if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &remaining_len, sizeof(struct bmp_common_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
-    return;
-  }
+  for (msg_start_len = pkt_remaining_len = len; pkt_remaining_len; msg_start_len = pkt_remaining_len) { 
+    if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &pkt_remaining_len, sizeof(struct bmp_common_hdr)))) {
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
+      return;
+    }
 
-  if (bch->version != BMP_V3) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: BMP version != %u\n", config.name, peer->addr_str, BMP_V3);
-    return;
-  } 
+    if (bch->version != BMP_V3) {
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: BMP version != %u\n", config.name, peer->addr_str, BMP_V3);
+      return;
+    }
 
-  bmp_common_hdr_get_len(bch, &bmp_len);
+    bmp_common_hdr_get_len(bch, &msg_len);
 
-/*
-  if (bmp_len != len) {
-    // Option 1: log only
-    Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] BMP common hdr len (%u) != recv() len (%u)\n",
-	config.name, peer->addr_str, bmp_len, len);
+    if (bch->type <= BMP_MSG_TYPE_MAX) {
+      Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [common] type: %s (%u)\n",
+	  config.name, peer->addr_str, bmp_msg_types[bch->type], bch->type);
+    }
 
-    // Option 2: log and return
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: BMP len (%u) != recv() len (%u)\n",
-	config.name, peer->addr_str, bmp_len, len);
-    return;
-  }
-*/
+    switch (bch->type) {
+    case BMP_MSG_ROUTE:
+      bmp_process_msg_route(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      break;
+    case BMP_MSG_STATS:
+      bmp_process_msg_stats(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      break;
+    case BMP_MSG_PEER_DOWN:
+      bmp_process_msg_peer_down(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      break;
+    case BMP_MSG_PEER_UP:
+      bmp_process_msg_peer_up(&bmp_packet_ptr, &pkt_remaining_len, peer); 
+      break;
+    case BMP_MSG_INIT:
+      bmp_process_msg_init(&bmp_packet_ptr, &pkt_remaining_len, peer); 
+      break;
+    case BMP_MSG_TERM:
+      bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, peer); 
+      break;
+    default:
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
+      return;
+    }
 
-  if (bch->type <= BMP_MSG_TYPE_MAX) {
-    Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [common] type: %s (%u)\n",
-	config.name, peer->addr_str, bmp_msg_types[bch->type], bch->type);
-  }
-
-  switch (bch->type) {
-  case BMP_MSG_ROUTE:
-    bmp_process_msg_route(&bmp_packet_ptr, &remaining_len, peer);
-    break;
-  case BMP_MSG_STATS:
-    bmp_process_msg_stats(&bmp_packet_ptr, &remaining_len, peer);
-    break;
-  case BMP_MSG_PEER_DOWN:
-    bmp_process_msg_peer_down(&bmp_packet_ptr, &remaining_len, peer);
-    break;
-  case BMP_MSG_PEER_UP:
-    bmp_process_msg_peer_up(&bmp_packet_ptr, &remaining_len, peer); 
-    break;
-  case BMP_MSG_INIT:
-    bmp_process_msg_init(&bmp_packet_ptr, &remaining_len, peer); 
-    break;
-  case BMP_MSG_TERM:
-    bmp_process_msg_term(&bmp_packet_ptr, &remaining_len, peer); 
-    break;
-  default:
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
-    return;
+    if ((msg_start_len - pkt_remaining_len) < msg_len) {
+      /* let's jump forward: we may have been unable to parse some (sub-)element */
+      bmp_jump_offset(&bmp_packet_ptr, &pkt_remaining_len, (msg_len - (msg_start_len - pkt_remaining_len)));
+    }
   }
 }
 
@@ -1109,13 +1102,25 @@ char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int
 {
   char *current_ptr = NULL;
   
-  if ((*pkt_size) >= len) {
-    current_ptr = (*bmp_packet_ptr);
-    (*pkt_size) -= len;
-    (*bmp_packet_ptr) += len;
+  if (bmp_packet_ptr && (*bmp_packet_ptr) && pkt_size) {
+    if ((*pkt_size) >= len) {
+      current_ptr = (*bmp_packet_ptr);
+      (*pkt_size) -= len;
+      (*bmp_packet_ptr) += len;
+    }
   }
 
   return current_ptr;
+}
+
+void bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
+{
+  if (bmp_packet_ptr && (*bmp_packet_ptr) && len) {
+    if (offset <= (*len)) {
+      (*bmp_packet_ptr) += offset;
+      (*len) -= offset;
+    }
+  }
 }
 
 void bmp_attr_init()
