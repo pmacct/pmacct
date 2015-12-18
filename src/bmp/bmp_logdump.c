@@ -516,7 +516,7 @@ void bmp_handle_dump_event()
         /*
 	  we close last_filename and open current_filename in case they differ;
 	  we are safe with this approach until $peer_src_ip is the only variable
-	  supported as part of bgp_table_dump_file configuration directive.
+	  supported as part of bmp_dump_file configuration directive.
 	*/
         if (config.bmp_dump_file) {
           if (strcmp(last_filename, current_filename)) {
@@ -527,18 +527,18 @@ void bmp_handle_dump_event()
 
         /*
           a bit pedantic maybe but should come at little cost and emulating
-          bgp_table_dump_file behaviour will work
+          bmp_dump_file behaviour will work
         */
 #ifdef WITH_RABBITMQ
         if (config.bmp_dump_amqp_routing_key) {
-          peer->log->amqp_host = &bgp_table_dump_amqp_host;
+          peer->log->amqp_host = &bmp_dump_amqp_host;
           strcpy(peer->log->filename, current_filename);
         }
 #endif
 
 #ifdef WITH_KAFKA
         if (config.bmp_dump_kafka_topic) {
-          peer->log->kafka_host = &bgp_table_dump_kafka_host;
+          peer->log->kafka_host = &bmp_dump_kafka_host;
           strcpy(peer->log->filename, current_filename);
         }
 #endif

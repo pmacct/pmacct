@@ -2227,7 +2227,6 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
   json_decref(json_obj);
 
   if (tmpbuf) {
-
     if (alog->rk_rr.max) {
       orig_amqp_routing_key = p_amqp_get_routing_key(alog);
       P_handle_table_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &alog->rk_rr);
@@ -2259,7 +2258,6 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
   json_decref(json_obj);
 
   if (tmpbuf) {
-
     if (alog->topic_rr.max) {
       orig_kafka_topic = p_kafka_get_topic(alog);
       P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &alog->topic_rr);

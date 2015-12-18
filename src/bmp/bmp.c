@@ -335,8 +335,8 @@ void skinny_bmp_daemon()
       Log(LOG_WARNING, "WARN ( %s/core/BMP ): Invalid 'bmp_dump_refresh_time'.\n", config.name);
     }
 
-    bmp_dump_init_amqp_host();
-    bmp_dump_init_kafka_host();
+    if (config.bmp_dump_amqp_routing_key) bmp_dump_init_amqp_host();
+    if (config.bmp_dump_kafka_topic) bmp_dump_init_kafka_host();
   }
 
   for (;;) {
@@ -543,7 +543,7 @@ void skinny_bmp_daemon()
     else {
       pkt_remaining_len = bmp_process_packet(bmp_packet, peer->msglen, peer);
 
-      /* handling offset for TCP segment reassemly */
+      /* handling offset for TCP segment reassembly */
       if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(bmp_packet, BMP_BUFFER_SIZE, peer->msglen, pkt_remaining_len, peer);
       else peer->buf.truncated_len = 0;
     }

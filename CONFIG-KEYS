@@ -401,8 +401,8 @@ KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_h
 		  bmp_daemon_msglog_amqp_host ] [GLOBAL]
 DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker used by the BGP
 		thread to stream data out; bgp_table_dump_amqp_* directives refer to the broker used
-		by the BGP thread to dump data out at regular time intervals; bmp_dump_amqp_* directives
-		refer to the broker used by the BMP thread to stream data out; bmp_table_dump_amqp_*
+		by the BGP thread to dump data out at regular time intervals; bmp_daemon_msglog_amqp_*
+		directives refer to the broker used by the BMP thread to stream data out; bmp_dump_amqp_*
 		directives refer to the broker used by the BMP thread to dump data out at regular time
 		intervals.
 DEFAULT:	See amqp_host	

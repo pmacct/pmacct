@@ -204,6 +204,12 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
   char log_filename[SRVBUFLEN], event_type[] = "log_init";
   char peer_ip_src[] = "peer_ip_src", bmp_router[] = "bmp_router";
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host *pah = NULL;
+#endif
+#ifdef WITH_KAFKA
+  struct p_kafka_host *pkh = NULL;
+#endif
 
   /* pointers to BGP or BMP vars */
   struct bgp_peer_log **bpl;
@@ -213,10 +219,16 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
   if (type == FUNC_TYPE_BGP) {
     file = config.nfacctd_bgp_msglog_file;
+#ifdef WITH_RABBITMQ
+    pah = &bgp_daemon_msglog_amqp_host;
     amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
     amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
+#endif
+#ifdef WITH_KAFKA
+    pkh = &bgp_daemon_msglog_kafka_host;
     kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
     kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
+#endif
     max_peers = config.nfacctd_bgp_max_peers;
     
     pa_str = peer_ip_src;
@@ -226,10 +238,16 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   }
   else if (type == FUNC_TYPE_BMP) {
     file = config.nfacctd_bmp_msglog_file;
+#ifdef WITH_RABBITMQ
+    pah = &bmp_daemon_msglog_amqp_host;
     amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
     amqp_routing_key_rr = config.nfacctd_bmp_msglog_amqp_routing_key_rr;
+#endif
+#ifdef WITH_KAFKA
+    pkh = &bmp_daemon_msglog_kafka_host;
     kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
     kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
+#endif
     max_peers = config.nfacctd_bmp_max_peers;
 
     pa_str = bmp_router;
@@ -272,12 +290,12 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
       if (amqp_routing_key)
-        (*bpl)[peer_idx].amqp_host = &bgp_daemon_msglog_amqp_host;
+        (*bpl)[peer_idx].amqp_host = pah;
 #endif
 
 #ifdef WITH_KAFKA
       if (kafka_topic)
-        (*bpl)[peer_idx].kafka_host = &bgp_daemon_msglog_kafka_host;
+        (*bpl)[peer_idx].kafka_host = pkh;
 #endif
       
       strcpy((*bpl)[peer_idx].filename, log_filename);
