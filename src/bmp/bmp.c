@@ -61,7 +61,7 @@ void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   char bmp_packet[BMP_BUFFER_SIZE], *bmp_packet_ptr;
-  u_int32_t pkt_offset=0, pkt_remaining_len=0;
+  u_int32_t pkt_remaining_len=0;
   time_t now;
   afi_t afi;
   safi_t safi;
@@ -531,8 +531,8 @@ void skinny_bmp_daemon()
       goto select_again;
     }
 
-    ret = recv(peer->fd, &bmp_packet[pkt_offset], (BMP_BUFFER_SIZE - pkt_offset), 0);
-    peer->msglen = (ret + pkt_offset);
+    ret = recv(peer->fd, &bmp_packet[peer->buf.truncated_len], (BMP_BUFFER_SIZE - peer->buf.truncated_len), 0);
+    peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
@@ -544,8 +544,8 @@ void skinny_bmp_daemon()
       pkt_remaining_len = bmp_process_packet(bmp_packet, peer->msglen, peer);
 
       /* handling offset for TCP segment reassemly */
-      if (pkt_remaining_len) pkt_offset = bmp_packet_adj_offset(bmp_packet, BMP_BUFFER_SIZE, peer->msglen, pkt_remaining_len, peer);
-      else pkt_offset = 0;
+      if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(bmp_packet, BMP_BUFFER_SIZE, peer->msglen, pkt_remaining_len, peer);
+      else peer->buf.truncated_len = 0;
     }
   }
 }

@@ -1779,16 +1779,16 @@ DEFAULT:	100000000
 
 KEY:		bgp_daemon [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Enables the skinny BGP daemon thread. Neighbors are not defined explicitely via a piece of
-		configuration (see bgp_daemon_max_peers directive); also, for security purposes, the daemon
-		doesn't implement outbound BGP UPDATE messages and acts passively (ie. it never establishes
+DESC:		Enables the BGP daemon thread. Neighbors are not defined explicitely but a maximum amount
+		of peers is specified (bgp_daemon_max_peers); also, for security purposes, the daemon does
+		not implement outbound BGP UPDATE messages and acts passively (ie. it never establishes
 		a connection to a remote peer but waits for incoming connections); upon receipt of a BGP
 		OPEN message, the local daemon presents itself as belonging to the same AS number and
 		supporting the same (or a subset of the) BGP capabilities as the remote peer; capabilities
-		currently supported are MP-BGP, 4-bytes ASNs, ADD-PATH). Per-peer RIBs are maintained basing
+		currently supported are MP-BGP, 4-bytes ASNs, ADD-PATH. Per-peer RIBs are maintained basing
 		on the IP address of the peer (and for clarity not its BGP Router-ID). In case of ADD-PATH
-		capability, the correct BGP info is linked to traffic data using BGP next-hop (or IP next-hop
-		if use_ip_next_hop is set to true) as selector among the paths available.
+		capability, the correct BGP info is linked to traffic data using BGP next-hop (or IP next-
+		hop if use_ip_next_hop is set to true) as selector among the paths available.
 DEFAULT:	false
 
 KEY:		bmp_daemon [GLOBAL]
@@ -1798,12 +1798,11 @@ DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can
 		The BMP daemon currently supports BMP events and stats only, ie. initiation, termination, 
 		peer up, peer down and stats reports messages. Route Monitoring is future (upcoming) work
 		but routes can be currently sourced via the BGP daemon thread (best path only or ADD-PATH),
-		making the two daemons complementary. The daemon enables to write BMP messages to files or
-		AMQP queues, real-time (msglog) or at regular time intervals (dump). For further referece
-		see examples in the QUICKSTART document and/or description for the following config keys in
-		this document: bmp_daemon_msglog_file, bmp_daemon_msglog_amqp_routing_key, bmp_dump_file,
-		bmp_dump_amqp_routing_key, bmp_dump_refresh_time). The daemon is a separate thread in the
-		NetFl$ow (nfacctd) or sFlow (sfacctd) collectors.
+		making the two daemons complementary. The daemon enables to write BMP messages to files,
+		AMQP and Kafka queues real-time (msglog) or at regular time intervals (dump). For further
+		referece see examples in the QUICKSTART document and/or description of the bmp_* config
+		keys in this document. The BMP daemon is a separate thread in the NetFlow (nfacctd) and
+		sFlow (sfacctd) collectors.
 DEFAULT:        false
 
 KEY:		[ bgp_daemon_ip | bmp_daemon_ip ] [GLOBAL]

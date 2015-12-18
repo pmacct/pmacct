@@ -29,7 +29,7 @@
 #define __PLUGIN_COMMON_EXPORT
 #include "plugin_common.h"
 #undef __PLUGIN_COMMON_EXPORT
-#endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
+#endif /* #if (!defined __SQL_COMMON_EXPORT) */
 
 /* defines */
 #define DEFAULT_DB_REFRESH_TIME 60

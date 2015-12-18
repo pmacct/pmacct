@@ -86,8 +86,8 @@
 /* structures */
 struct bgp_peer_buf {
   char *base;
-  int len;
-  int truncated_len;
+  u_int32_t len;
+  u_int32_t truncated_len;
 };
 
 struct bgp_peer {
