@@ -337,8 +337,8 @@ void skinny_bgp_daemon()
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): Invalid 'bgp_table_dump_refresh_time'.\n", config.name);
     }
 
-    bgp_table_dump_init_amqp_host();
-    bgp_table_dump_init_kafka_host();
+    if (config.bgp_table_dump_amqp_routing_key) bgp_table_dump_init_amqp_host();
+    if (config.bgp_table_dump_kafka_topic) bgp_table_dump_init_kafka_host();
   }
 
   for (;;) {
