@@ -160,7 +160,7 @@ struct bmp_data {
 #include "bmp_logdump.h"
 
 /* prototypes */
-#if (!defined __BMP_C)
+#if !defined(__BMP_C) && !defined(__BMP_LOGDUMP_C)
 #define EXT extern
 #else
 #define EXT
