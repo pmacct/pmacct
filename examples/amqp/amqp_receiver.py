@@ -1,42 +1,101 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # If missing 'pika' read how to download it at: 
 # http://www.rabbitmq.com/tutorials/tutorial-one-python.html
 #
-# Binding to a queue like 'acct' is suitable to receive messages output by an
-# 'amqp' plugin in JSON format.
+# Binding to the routing key specified by amqp_routing_key (by default 'acct')
+# allows to receive messages published by an 'amqp' plugin, in JSON format.
+# Similarly for BGP daemon bgp_*_routing_key and BMP daemon bmp_*_routing_key.
 #
-# Binding to a queue '<plugin name>-<plugin type>' is suitable to receive a
-# copy of messages delivered to a specific plugin configured with 'pipe_amqp:
-# true'. Messages are in binary format, first quad bing the sequence number.
+# Binding to the routing key specified by plugin_pipe_amqp_routing_key (by
+# default 'core_proc_name-$plugin_name-$plugin_type') allows to receive a copy
+# of messages published by the Core Process to a specific plugin; the messages
+# are in binary format, first quad being the sequence number.
+#
+# Binding to the reserved exchange 'amq.rabbitmq.trace' and to routing keys
+# 'publish.pmacct' or 'deliver.<queue name>' allows to receive a copy of the
+# messages that published via a specific exchange or delivered to a specific
+# queue. RabbitMQ Firehose Tracer feature should be enabled first with the
+# following command:
+#
+# 'rabbitmqctl trace_on' enables RabbitMQ Firehose tracer
+# 'rabbitmqctl list_queues' lists declared queues
 
-import pika
+import sys, getopt, pika
 
-amqp_exchange = "pmacct"
-amqp_type = "direct"
-amqp_routing_key = "acct"
-# amqp_routing_key = "<plugin name>-<plugin type>"
-amqp_host = "localhost"
-amqp_queue = "acct_1"
+def usage(tool):
+    print ""
+    print "Usage: %s [Args]" % tool
+    print ""
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host=amqp_host))
-channel = connection.channel()
-
-channel.exchange_declare(exchange=amqp_exchange, type=amqp_type)
-
-channel.queue_declare(queue=amqp_queue)
-
-channel.queue_bind(exchange=amqp_exchange, routing_key=amqp_routing_key, queue=amqp_queue)
-
-print ' [*] Example inspired from: http://www.rabbitmq.com/getstarted.html'
-print ' [*] Waiting for messages on E =', amqp_exchange, ',', amqp_type, 'RK =', amqp_routing_key, 'Q =', amqp_queue, 'H =', amqp_host, '. Edit code to change any parameter. To exit press CTRL+C'
+    print "Mandatory Args:"
+    print "  -e, --exchange".ljust(25) + "Define the exchange to bind to"
+    print "  -k, --routing_key".ljust(25) + "Define the routing key to use"
+    print "  -q, --queue".ljust(25) + "Specify the queue to declare"
+    print ""
+    print "Optional Args:"
+    print "  -h, --help".ljust(25) + "Print this help"
+    print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
 
 def callback(ch, method, properties, body):
-    print " [x] Received %r" % (body,)
+        print " [x] Received %r" % (body,)
 
-channel.basic_consume(callback,
-                      queue=amqp_queue,
-                      no_ack=True)
+def main():
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:", ["help", "exchange=", "routing_key=", "queue=", "host="])
+	except getopt.GetoptError as err:
+		# print help information and exit:
+		print str(err) # will print something like "option -a not recognized"
+		usage()
+		sys.exit(2)
 
-channel.start_consuming()
+	amqp_exchange = None
+	amqp_routing_key = None
+	amqp_queue = None
+	amqp_host = "localhost"
+ 	
+	required_cl = 0
+
+	for o, a in opts:
+		if o in ("-h", "--help"):
+			usage()
+			sys.exit()
+		elif o in ("-e", "--exchange"):
+			required_cl += 1
+            		amqp_exchange = a
+		elif o in ("-k", "--routing_key"):
+			required_cl += 1
+            		amqp_routing_key = a
+		elif o in ("-q", "--queue"):
+			required_cl += 1
+            		amqp_queue = a
+		elif o in ("-H", "--host"):
+            		amqp_host = a
+		else:
+			assert False, "unhandled option"
+
+	amqp_type = "direct"
+ 	
+	if (required_cl < 3): 
+		print "ERROR: Missing required arguments"
+		usage(sys.argv[0])
+		sys.exit(1)
+
+	connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_host))
+	channel = connection.channel()
+
+	channel.exchange_declare(exchange=amqp_exchange, type=amqp_type)
+
+	channel.queue_declare(queue=amqp_queue)
+
+	channel.queue_bind(exchange=amqp_exchange, routing_key=amqp_routing_key, queue=amqp_queue)
+
+	print ' [*] Example inspired from: http://www.rabbitmq.com/getstarted.html'
+	print ' [*] Waiting for messages on E =', amqp_exchange, ',', amqp_type, 'RK =', amqp_routing_key, 'Q =', amqp_queue, 'H =', amqp_host, '. Edit code to change any parameter. To exit press CTRL+C'
+
+	channel.basic_consume(callback, queue=amqp_queue, no_ack=True)
+
+	channel.start_consuming()
+
+if __name__ == "__main__":
+    main()
