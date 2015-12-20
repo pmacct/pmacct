@@ -616,8 +616,13 @@ kafka_history: 5m
 kafka_history_roundoff: m
 ! ..
 
-A basic consumer script, providing output of consumed messages on the console, is
-provided as part of the standard Kafka distribution: bin/kafka-console-consumer.sh.
+A basic consumer script, in Python, is provided as sample to: declare a group_id
+and bind it to the topic and show consumed data on the screen. The script is located
+in the pmacct default distribution tarball in: examples/kafka/kafka_consumer.py and
+requires the python-kafka Python module installed. Should this not be available you
+can read on the following page how to get it installed:
+
+http://kafka-python.readthedocs.org/
 
 
 X. Internal buffering and queueing
