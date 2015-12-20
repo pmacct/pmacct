@@ -59,6 +59,7 @@ void nfacctd_bgp_wrapper()
 void skinny_bgp_daemon()
 {
   int slen, ret, rc, peers_idx, allowed;
+  int peers_idx_rr = 0;
   struct host_addr addr;
   struct bgp_header bhdr;
   struct bgp_peer *peer;
@@ -537,11 +538,15 @@ void skinny_bgp_daemon()
       goto select_again; 
     }
 
-    /* We have something coming in: let's lookup which peer is thatl
+    /* We have something coming in: let's lookup which peer is that
+	   To avoid starvation of the "later established" peers, we offset the start of the search in a round-robin
+	   style which still favours earlier established sessions (as most likely the last entries will be unused),
+	   but it will do the "job"
        XXX: to be optimized */
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-      if (peers[peers_idx].fd && FD_ISSET(peers[peers_idx].fd, &read_descs)) {
-	peer = &peers[peers_idx];
+      if (peers[(peers_idx+peers_idx_rr)%config.nfacctd_bgp_max_peers].fd && FD_ISSET(peers[(peers_idx+peers_idx_rr)%config.nfacctd_bgp_max_peers].fd, &read_descs)) {
+        peer = &peers[(peers_idx+peers_idx_rr)%config.nfacctd_bgp_max_peers];
+        peers_idx_rr = (peers_idx_rr+1)%config.nfacctd_bgp_max_peers;
 	break;
       }
     } 
