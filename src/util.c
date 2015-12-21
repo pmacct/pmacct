@@ -2649,7 +2649,7 @@ int mkdir_multilevel(const char *path, int trailing_filename, uid_t owner, gid_t
     if (*p == '/') {
       *p = '\0';
       if (len && access(opath, F_OK)) {
-        ret = mkdir(opath, S_IRWXU);
+        ret = mkdir(opath, (S_IRWXU|S_IRWXG|S_IRWXO));
         if (ret) return ret;
         if (chown(opath, owner, group) == -1) return ret;
       }
@@ -2661,7 +2661,7 @@ int mkdir_multilevel(const char *path, int trailing_filename, uid_t owner, gid_t
      by a traiing '/' and we do not expect the last part
      to be a filename, ie. trailing_filename set to 0 */
   if (!trailing_filename && access(opath, F_OK)) {
-    ret = mkdir(opath, S_IRWXU);
+    ret = mkdir(opath, (S_IRWXU|S_IRWXG|S_IRWXO));
     if (ret) return ret;
   }
 

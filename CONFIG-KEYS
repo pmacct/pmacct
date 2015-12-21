@@ -298,8 +298,8 @@ DESC:		When enabled (default), validates the sender of data at the plugin side. 
 DEFAULT:	true
 
 KEY:		files_umask 
-DESC:		Defines the mask for newly created files (log, pid, etc.). A mask less than "002" is
-		currently not accepted due to security reasons.
+DESC:		Defines the mask for newly created files (log, pid, etc.) and their related directory
+		structure. A mask less than "002" is not accepted due to security reasons.
 DEFAULT:	077
 
 KEY:            files_uid
