@@ -111,6 +111,13 @@ struct bgp_peer {
   void *bmp_se; /* struct bmp_dump_se_ll */
 };
 
+struct bgp_peer_batch {
+  int num;
+  int num_current;
+  time_t base_stamp;
+  int interval;
+};
+
 struct bgp_nlri {
   afi_t afi;
   safi_t safi;
@@ -194,6 +201,16 @@ EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
 EXT void write_neighbors_file(char *);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
+
+EXT void bgp_batch_init(struct bgp_peer_batch *, int, int);
+EXT void bgp_batch_reset(struct bgp_peer_batch *, time_t);
+EXT int bgp_batch_is_admitted(struct bgp_peer_batch *, time_t);
+EXT int bgp_batch_is_enabled(struct bgp_peer_batch *);
+EXT int bgp_batch_is_expired(struct bgp_peer_batch *, time_t);
+EXT int bgp_batch_is_not_empty(struct bgp_peer_batch *);
+EXT void bgp_batch_increase_counter(struct bgp_peer_batch *);
+EXT void bgp_batch_decrease_counter(struct bgp_peer_batch *);
+EXT void bgp_batch_rollback(struct bgp_peer_batch *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);

@@ -80,10 +80,7 @@ void skinny_bgp_daemon()
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
   struct timeval dump_refresh_timeout, *drt_ptr;
-
-  /* BGP peer batching vars */
-  int bgp_current_batch_elem = 0;
-  time_t bgp_current_batch_stamp_base = 0;
+  struct bgp_peer_batch bp_batch;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
@@ -301,6 +298,7 @@ void skinny_bgp_daemon()
     config.nfacctd_bgp_batch = 0;
     config.nfacctd_bgp_batch_interval = 0;
   }
+  else bgp_batch_init(&bp_batch, config.nfacctd_bgp_batch, config.nfacctd_bgp_batch_interval);
 
   if (nfacctd_bgp_msglog_backend_methods) {
 #ifdef WITH_JANSSON
@@ -431,19 +429,21 @@ void skinny_bgp_daemon()
         if (peers[peers_idx].fd == 0) {
           now = time(NULL);
 
-          if (bgp_current_batch_elem > 0 || now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval)) {
+	  /*
+	     Admitted if:
+	     *  batching feature is disabled or
+	     *  we have room in the current batch or
+	     *  we can start a new batch 
+	  */
+          if (bgp_batch_is_admitted(&bp_batch, now)) {
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
 
             log_notification_unset(&log_notifications.bgp_peers_throttling);
 
-            if (config.nfacctd_bgp_batch && peer) {
-              if (now > (bgp_current_batch_stamp_base + config.nfacctd_bgp_batch_interval)) {
-                bgp_current_batch_elem = config.nfacctd_bgp_batch;
-                bgp_current_batch_stamp_base = now;
-              }
-
-              if (bgp_current_batch_elem > 0) bgp_current_batch_elem--;
+            if (bgp_batch_is_enabled(&bp_batch) && peer) {
+              if (bgp_batch_is_expired(&bp_batch, now)) bgp_batch_reset(&bp_batch, now);
+              if (bgp_batch_is_not_empty(&bp_batch)) bgp_batch_decrease_counter(&bp_batch);
             }
 
             break;
@@ -486,6 +486,7 @@ void skinny_bgp_daemon()
 
       if (!allowed) {
 	bgp_peer_close(peer, FUNC_TYPE_BGP);
+	bgp_batch_rollback(&bp_batch);
 	goto select_again;
       }
 
@@ -521,6 +522,7 @@ void skinny_bgp_daemon()
 				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP);
+	    // bgp_batch_rollback(&bp_batch);
 	    goto select_again;
 	  }
         }
@@ -3074,4 +3076,79 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
   return (((peer->fd * config.bgp_table_per_peer_buckets) +
 	  ((local_path_id - 1) % config.bgp_table_per_peer_buckets)) %
 	  (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets));
+}
+
+void bgp_batch_init(struct bgp_peer_batch *bp_batch, int num, int interval)
+{
+  if (bp_batch) {
+    memset(bp_batch, 0, sizeof(struct bgp_peer_batch));
+
+    bp_batch->num = num;
+    bp_batch->interval = interval;
+  }
+}
+
+void bgp_batch_reset(struct bgp_peer_batch *bp_batch, time_t now)
+{
+  if (bp_batch) {
+    bp_batch->num_current = bp_batch->num;
+    bp_batch->base_stamp = now;
+  }
+}
+
+int bgp_batch_is_admitted(struct bgp_peer_batch *bp_batch, time_t now)
+{
+  if (bp_batch) {
+    /* bgp_batch_is_not_empty() maybe replaced by a linear
+       distribution of the peers over the time interval */
+    if (bgp_batch_is_not_empty(bp_batch) || bgp_batch_is_expired(bp_batch, now)) return TRUE;
+    else return FALSE;
+  }
+  else return ERR;
+}
+
+int bgp_batch_is_enabled(struct bgp_peer_batch *bp_batch)
+{
+  if (bp_batch) {
+    if (bp_batch->num) return TRUE;
+    else return FALSE;
+  }
+  else return ERR;
+}
+
+int bgp_batch_is_expired(struct bgp_peer_batch *bp_batch, time_t now)
+{
+  if (bp_batch) {
+    if (now > (bp_batch->base_stamp + bp_batch->interval)) return TRUE;
+    else return FALSE;
+  }
+  else return ERR;
+}
+
+int bgp_batch_is_not_empty(struct bgp_peer_batch *bp_batch)
+{
+  if (bp_batch) {
+    if (bp_batch->num_current) return TRUE;
+    else return FALSE;
+  }
+  else return ERR;
+}
+
+void bgp_batch_increase_counter(struct bgp_peer_batch *bp_batch)
+{
+  if (bp_batch) bp_batch->num_current++;
+}
+
+void bgp_batch_decrease_counter(struct bgp_peer_batch *bp_batch)
+{
+  if (bp_batch) bp_batch->num_current--;
+}
+
+void bgp_batch_rollback(struct bgp_peer_batch *bp_batch)
+{
+  if (bp_batch && bgp_batch_is_enabled(bp_batch)) {
+    bgp_batch_increase_counter(bp_batch);
+    if (bp_batch->num_current == bp_batch->num)
+      bgp_batch_init(bp_batch, config.nfacctd_bgp_batch, config.nfacctd_bgp_batch_interval); 
+  }
 }

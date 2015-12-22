@@ -1845,10 +1845,11 @@ DEFAULT:	0
 
 KEY:		[ bgp_daemon_batch | bmp_daemon_batch ] [GLOBAL]
 DESC:		To prevent all BGP/BMP peers to contend resources, this defines the number of BGP peers in
-		each batch. If a BGP/BMP peer in a batch is replenished (ie. connection drops, is reset, etc.)
-		no new room is made in the current batch (rationale being: be conservative, batch might have
-		been set too big, let's now potentially induce flapping).
-DEFAULT: 	0	
+		each batch. If a BGP/BMP peer is not allowed by an ACL (ie. bgp_daemon_allow_file), room is
+		recovered in the current batch; if a BGP/BMP peer in a batch is replenished (ie. connection
+		drops, is reset, etc.) no new room is made in the current batch (rationale being: be a bit
+		conservative, batch might have been set too big, let's try to limit flapping).
+DEFAULT: 	0
 
 KEY:            [ bgp_daemon_msglog_file | bmp_daemon_msglog_file ] [GLOBAL]
 DESC:		Enables streamed logging of BGP/BMP messages/events. Each log entry features a time reference,
