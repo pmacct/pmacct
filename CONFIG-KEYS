@@ -1377,7 +1377,7 @@ DESC:		When set to 'netflow' or 'sflow' it instructs nfacctd and sfacctd to popu
 
 		Unless there is a specific goal do achieve, it is highly recommended that this definition,
 		ie. nfacctd_as, is kept in sync with its net equivalent, ie. nfacctd_net.
-DEFAULT:        false
+DEFAULT:        none
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
 VALUES:         [ netflow | sflow | mask | file | igp | bgp | longest ]
