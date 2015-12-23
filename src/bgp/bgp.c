@@ -85,7 +85,7 @@ void skinny_bgp_daemon()
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
-  int select_fd, select_num;
+  int select_fd, bkp_select_fd, recalc_select_fd, select_num;
 
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
@@ -340,14 +340,24 @@ void skinny_bgp_daemon()
     if (config.bgp_table_dump_kafka_topic) bgp_table_dump_init_kafka_host();
   }
 
+  select_fd = bkp_select_fd = (config.bgp_sock + 1);
+  recalc_select_fd = FALSE;
+
   for (;;) {
     select_again:
 
-    select_fd = config.bgp_sock;
-    /* XXX: for() to be optimized. */
-    for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++)
-      if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
-    select_fd++;
+    if (recalc_select_fd) { 
+      select_fd = config.bgp_sock;
+
+      for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++)
+        if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
+      select_fd++;
+
+      bkp_select_fd = select_fd;
+      recalc_select_fd = FALSE;
+    }
+    else select_fd = bkp_select_fd;
+
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
     if (bgp_table_dump_backend_methods) {
@@ -440,6 +450,7 @@ void skinny_bgp_daemon()
           if (bgp_batch_is_admitted(&bp_batch, now)) {
             peer = &peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
+	    else recalc_select_fd = TRUE;
 
             log_notification_unset(&log_notifications.bgp_peers_throttling);
 
@@ -569,6 +580,7 @@ void skinny_bgp_daemon()
       Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", config.name, inet_ntoa(peer->id.address.ipv4), errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer, FUNC_TYPE_BGP);
+      recalc_select_fd = TRUE;
       goto select_again;
     }
     else {
@@ -646,6 +658,7 @@ void skinny_bgp_daemon()
 				config.name, inet_ntoa(peer->id.address.ipv4));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP);
+	    recalc_select_fd = TRUE;
 	    goto select_again;
           }
 
@@ -685,6 +698,7 @@ void skinny_bgp_daemon()
 							config.name, inet_ntoa(peer->id.address.ipv4));
 				    FD_CLR(peer->fd, &bkp_read_descs);
 				    bgp_peer_close(peer, FUNC_TYPE_BGP);
+				    recalc_select_fd = TRUE;
 				    goto select_again;
 				  } 
 
@@ -711,6 +725,7 @@ void skinny_bgp_daemon()
 							config.name, inet_ntoa(peer->id.address.ipv4), cap_type);
                                         FD_CLR(peer->fd, &bkp_read_descs);
                                         bgp_peer_close(peer, FUNC_TYPE_BGP);
+					recalc_select_fd = TRUE;
                                         goto select_again;
                                       }
 				     
@@ -748,6 +763,7 @@ void skinny_bgp_daemon()
 							config.name, inet_ntoa(peer->id.address.ipv4));
 					  FD_CLR(peer->fd, &bkp_read_descs);
 					  bgp_peer_close(peer, FUNC_TYPE_BGP);
+					  recalc_select_fd = TRUE;
 					  goto select_again;
 					}
 				      }
@@ -790,6 +806,7 @@ void skinny_bgp_daemon()
 						config.name, inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer, FUNC_TYPE_BGP);
+				  recalc_select_fd = TRUE;
 				  goto select_again;
 				}
 			  }
@@ -803,6 +820,7 @@ void skinny_bgp_daemon()
 						config.name, inet_ntoa(peer->id.address.ipv4));
 				  FD_CLR(peer->fd, &bkp_read_descs);
 				  bgp_peer_close(peer, FUNC_TYPE_BGP);
+				  recalc_select_fd = TRUE;
 				  goto select_again;
 				}
 			  }
@@ -821,6 +839,7 @@ void skinny_bgp_daemon()
 						config.name, inet_ntoa(peer->id.address.ipv4));
 				FD_CLR(peer->fd, &bkp_read_descs);
 				bgp_peer_close(peer, FUNC_TYPE_BGP);
+				recalc_select_fd = TRUE;
 				goto select_again;
 			  }
 
@@ -834,6 +853,7 @@ void skinny_bgp_daemon()
 					config.name, inet_ntoa(peer->id.address.ipv4));
 			  FD_CLR(peer->fd, &bkp_read_descs);
 			  bgp_peer_close(peer, FUNC_TYPE_BGP);
+			  recalc_select_fd = TRUE;
 			  goto select_again;
 		    }
 
@@ -847,6 +867,7 @@ void skinny_bgp_daemon()
 		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", config.name, inet_ntoa(peer->id.address.ipv4));
 		  FD_CLR(peer->fd, &bkp_read_descs);
 		  bgp_peer_close(peer, FUNC_TYPE_BGP);
+		  recalc_select_fd = TRUE;
 		  goto select_again;
 		  break;
 	  case BGP_KEEPALIVE:
@@ -870,6 +891,7 @@ void skinny_bgp_daemon()
 					config.name, inet_ntoa(peer->id.address.ipv4));
 			FD_CLR(peer->fd, &bkp_read_descs);
 			bgp_peer_close(peer, FUNC_TYPE_BGP);
+			recalc_select_fd = TRUE;
 			goto select_again;
 		  }
 
@@ -882,6 +904,7 @@ void skinny_bgp_daemon()
 				config.name, inet_ntoa(peer->id.address.ipv4));
 	      FD_CLR(peer->fd, &bkp_read_descs);
 	      bgp_peer_close(peer, FUNC_TYPE_BGP);
+	      recalc_select_fd = TRUE;
 	      goto select_again;
 	    }
 	  }
