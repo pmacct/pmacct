@@ -2904,7 +2904,7 @@ EOF
 else
   echo "$ac_t""no" 1>&6
 { echo "configure: error: 
-        ERROR: missing MongoDB library (0.8 version). Refer to: http://api.mongodb.org/c/ 
+        ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
       " 1>&2; exit 1; }
 fi
 

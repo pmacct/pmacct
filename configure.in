@@ -764,7 +764,7 @@ dnl USING_SQL="yes"
 
     if test x"$MONGODBLIBFOUND" = x""; then
       AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
-        ERROR: missing MongoDB library (0.8 version). Refer to: http://api.mongodb.org/c/ 
+        ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
       ])])
     else 
       LIBS="${LIBS} -lmongoc"
