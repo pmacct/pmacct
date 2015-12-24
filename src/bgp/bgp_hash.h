@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /*
@@ -28,7 +28,7 @@ Boston, MA 02111-1307, USA.
 #define _BGP_HASH_H_
 
 /* Default hash table size.  */ 
-#define HASHTABSIZE     1024
+#define HASHTABSIZE     65535
 
 struct hash_backet
 {

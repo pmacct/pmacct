@@ -2064,10 +2064,9 @@ DEFAULT:	1
 KEY:            bgp_table_attr_hash_buckets [GLOBAL]
 VALUE:          [ 1-1000000 ]
 DESC:		Sets the number of buckets of BGP attributes hashes (ie. AS-PATH, communities, etc.).
-		Default proved to work fine if BGP sessions are passing best-path only. In case of 
-		BGP ADD-PATHs it is instead recommended to raise this value; a value of 65535 proved
-		to work OK for 25 concurrent BGP ADD-PATHs sessions.
-DEFAULT:	1024
+		Default proved to work fine with BGP sessions passing best-path only and with up to
+		25 BGP sessions passing ADD-PATH.
+DEFAULT:	65535
 
 KEY:            bgp_table_per_peer_hash [GLOBAL]
 VALUE:          [ path_id ]
