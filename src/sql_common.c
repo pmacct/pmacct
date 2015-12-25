@@ -488,9 +488,12 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
           (*sqlfunc_cbr.connect)(&p, config.sql_host);
         else
           (*sqlfunc_cbr.connect)(&p, NULL);
-        (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
-        (*sqlfunc_cbr.close)(&bed);
       }
+
+      /* qq_ptr check inside purge function along with a Log() call */
+      (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
+
+      if (qq_ptr) (*sqlfunc_cbr.close)(&bed);
 
       if (config.sql_trigger_exec) {
         if (idata->now > idata->triggertime) sql_trigger_exec(config.sql_trigger_exec);
