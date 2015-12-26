@@ -33,6 +33,11 @@ KEY: 		debug (-d)
 VALUES:		[ true | false ]
 DESC:		Enables debug (default: false).
 
+KEY:            debug_internal_msg
+VALUES:         [ true | false ]
+DESC:           Extra flag to enable debug of internal messaging between Core process
+		and plugins. It has to be enabled on top of 'debug' (default: false).
+
 KEY:		daemonize (-D) [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		Daemonizes the process (default: false).

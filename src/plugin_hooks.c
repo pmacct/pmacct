@@ -479,7 +479,7 @@ reprocess:
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->core_pid = channels_list[index].core_pid;
 
-        if (config.debug) {
+        if (config.debug_internal_msg) {
 	  struct plugins_list_entry *list = channels_list[index].plugin;
 	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released cpid=%u seq=%u num_entries=%u\n", list->name, list->type.string,
 		channels_list[index].core_pid, channels_list[index].hdr.seq, channels_list[index].hdr.num);

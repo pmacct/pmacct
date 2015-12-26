@@ -375,6 +375,7 @@ struct configuration {
   char *sampling_map;
   char *syslog;
   int debug;
+  int debug_internal_msg;
   int snaplen;
   char *classifiers_path;
   int classifier_tentatives;

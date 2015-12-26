@@ -30,6 +30,7 @@ EXT int parse_truefalse(char *);
 EXT int parse_truefalse_nonzero(char *);
 EXT int validate_truefalse(int);
 EXT int cfg_key_debug(char *, char *, char *);
+EXT int cfg_key_debug_internal_msg(char *, char *, char *);
 EXT int cfg_key_syslog(char *, char *, char *);
 EXT int cfg_key_logfile(char *, char *, char *);
 EXT int cfg_key_pidfile(char *, char *, char *);
