@@ -139,7 +139,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   config.sql_refresh_time = DEFAULT_TEE_REFRESH_TIME;
   refresh_timeout = config.sql_refresh_time*1000;
 
-  pipebuf = (unsigned char *) Malloc(config.buffer_size);
+  pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
 
   if (config.pipe_amqp) {
     plugin_pipe_amqp_compile_check();

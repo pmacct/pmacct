@@ -1502,7 +1502,7 @@ sort_version:
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
 
-  pipebuf = (unsigned char *) Malloc(config.buffer_size);
+  pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
 
   if (config.pipe_amqp) {

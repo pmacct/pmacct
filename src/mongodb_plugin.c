@@ -69,7 +69,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   P_set_signals();
   P_init_default_values();
   P_config_checks();
-  pipebuf = (unsigned char *) Malloc(config.buffer_size);
+  pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
 
   if (!config.mongo_insert_batch)

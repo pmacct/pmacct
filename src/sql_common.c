@@ -93,7 +93,7 @@ void sql_init_global_buffers()
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%u base cache memory=%u bytes\n", config.name, config.type,
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%llu base cache memory=%llu bytes\n", config.name, config.type,
         config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
 	(2 * (qq_size * sizeof(struct db_cache *)))));
 
