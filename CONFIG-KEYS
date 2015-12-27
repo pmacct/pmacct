@@ -1256,12 +1256,14 @@ DEFAULT:	false
 KEY:		print_output
 VALUES:		[ formatted | csv | json | event_formatted | event_csv ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
-		comma-separated values format, suitable for injection into 3rd party tools. 'json' is to enable
-		JavaScript Object Notation format, also suitable for injection into 3rd party tools and having
-		the extra benefit over 'csv' format of not requiring an 'event' version of the output ('json'
-		not requiring a table title). 'event' versions of the output strip trailing bytes and packets
-		counters. 'json' format requires compiling the package against Jansson library (downloadable at
-		the following URL: http://www.digip.org/jansson/)
+		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions of
+		the output strips trailing bytes and packets counters. 'json' is to enable JavaScript Object
+		Notation format, also suitable for injection into 3rd party tools. Being a self-descriptive
+		format (hence not requiring a table title), JSON does not require a event-counterpart; on the
+		cons, JSON serialization introduces some lag due to the extensive string manipulation (as an
+		example: 10M lines may be written to disk in 30 secs as CSV and 150 secs as JSON). The 'json'
+		format requires compiling the package against Jansson library (downloadable at the following
+		URL: http://www.digip.org/jansson/)
 NOTES:		* Jansson library does not seem to have concept of unsigned integers. integers up to 32 bits
 		  are packed as 'I', ie. 64 bits signed integers, working around the issue. No work around is
 		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes). 
