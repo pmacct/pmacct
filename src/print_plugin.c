@@ -1169,17 +1169,14 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         else fprintf(f, "\n");
       }
       else if (f && config.print_output & PRINT_OUTPUT_JSON) {
-        char *json_str;
+        void *json_obj;
   
-        json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
+        json_obj = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
                            &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
   			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
 			 queue[j]->stitch);
   
-        if (json_str) {
-          fprintf(f, "%s\n", json_str);
-          free(json_str);
-        }
+        if (json_obj) write_and_free_json(f, json_obj);
       }
     }
   }

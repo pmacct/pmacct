@@ -99,15 +99,16 @@ EXT void evaluate_pkt_len_distrib(struct pkt_data *);
 EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
 
-EXT char *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
+EXT void *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 		      struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
 		      struct pkt_mpls_primitives *, char *, struct pkt_vlen_hdr_primitives *,
 		      pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t, struct timeval *,
 		      struct pkt_stitching *);
-EXT void compose_timestamp(char *, int, struct timeval *, int, int);
+EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
 EXT int write_and_free_json_amqp(void *, void *);
 EXT int write_and_free_json_kafka(void *, void *);
+EXT void compose_timestamp(char *, int, struct timeval *, int, int);
 
 EXT struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *);
 EXT void free_packet_ptrs(struct packet_ptrs *);

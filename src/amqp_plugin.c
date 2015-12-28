@@ -353,6 +353,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   start = time(NULL);
 
   for (j = 0; j < index; j++) {
+    void *json_obj;
     char *json_str;
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
@@ -375,10 +376,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
     if (queue[j]->valid == PRINT_CACHE_FREE) continue;
 
-    json_str = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
+    json_obj = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
                          &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
 			 queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
 			 &queue[j]->basetime, queue[j]->stitch);
+
+    json_str = compose_json_str(json_obj);
 
 #ifdef WITH_JANSSON
     if (json_str && config.sql_multi_values) {
