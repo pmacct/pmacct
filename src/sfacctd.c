@@ -969,9 +969,12 @@ int main(int argc,char **argv, char **envp)
         if (sf_cnt_log[nodes_idx].fd) {
           fclose(sf_cnt_log[nodes_idx].fd);
           sf_cnt_log[nodes_idx].fd = open_logfile(sf_cnt_log[nodes_idx].filename, "a");
+	  setlinebuf(sf_cnt_log[nodes_idx].fd);
         }
         else break;
       }
+
+      reload_log_sf_cnt = FALSE;
     }
 
     if (config.sfacctd_counter_file) {

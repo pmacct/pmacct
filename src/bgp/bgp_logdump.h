@@ -34,6 +34,8 @@
 #define BGP_LOG_TYPE_OPEN	4
 #define BGP_LOG_TYPE_CLOSE	5
 
+#define BGP_LOG_BUFSZ		(100 * LARGEBUFLEN)
+
 struct bgp_peer_log {
   FILE *fd;
   int refcnt;

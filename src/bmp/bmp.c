@@ -366,6 +366,7 @@ void skinny_bmp_daemon()
         if (bmp_peers_log[peers_idx].fd) {
           fclose(bmp_peers_log[peers_idx].fd);
           bmp_peers_log[peers_idx].fd = open_logfile(bmp_peers_log[peers_idx].filename, "a");
+	  setlinebuf(bmp_peers_log[peers_idx].fd);
         }
         else break;
       }

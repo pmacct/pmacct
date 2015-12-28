@@ -458,7 +458,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
 void bmp_handle_dump_event()
 {
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char event_type[] = "dump";
+  char event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
@@ -480,6 +480,7 @@ void bmp_handle_dump_event()
 
     memset(last_filename, 0, sizeof(last_filename));
     memset(current_filename, 0, sizeof(current_filename));
+    fd_buf = malloc(BGP_LOG_BUFSZ);
 
 #ifdef WITH_RABBITMQ
     if (config.bmp_dump_amqp_routing_key) {
@@ -522,6 +523,10 @@ void bmp_handle_dump_event()
           if (strcmp(last_filename, current_filename)) {
             if (saved_peer && saved_peer->log && strlen(last_filename)) fclose(saved_peer->log->fd);
             peer->log->fd = open_logfile(current_filename, "w");
+	    if (fd_buf) {
+	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
+	      memset(fd_buf, 0, BGP_LOG_BUFSZ);
+	    }
           }
         }
 

@@ -392,6 +392,7 @@ void skinny_bgp_daemon()
 	if (peers_log[peers_idx].fd) {
 	  fclose(peers_log[peers_idx].fd);
 	  peers_log[peers_idx].fd = open_logfile(peers_log[peers_idx].filename, "a");
+	  setlinebuf(peers_log[peers_idx].fd);
 	}
 	else break;
       }

@@ -387,6 +387,7 @@ FILE *open_logfile(char *filename, char *mode)
   ret = access(buf, F_OK);
 
   file = fopen(filename, mode); 
+
   if (file) {
     if (chown(filename, owner, group) == -1)
       printf("WARN: Unable to chown() logfile '%s': %s\n", filename, strerror(errno));
@@ -2203,12 +2204,14 @@ void write_and_free_json(FILE *f, void *obj)
 
   if (!f) return;
 
+  /* Waiting for jansson issue #256 on GitHub to be solved,
+     ie. introduction of trailing newline chars, in order to
+     switch to json_dumpf() */
   tmpbuf = json_dumps(json_obj, 0);
   json_decref(json_obj);
 
   if (tmpbuf) {
     fprintf(f, "%s\n", tmpbuf);
-    fflush(f);
     free(tmpbuf);
   }
 }

@@ -285,8 +285,10 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
   for (peer_idx = 0, have_it = 0; peer_idx < max_peers; peer_idx++) {
     if (!(*bpl)[peer_idx].refcnt) {
-      if (file)
+      if (file) {
 	(*bpl)[peer_idx].fd = open_logfile(log_filename, "a");
+	setlinebuf((*bpl)[peer_idx].fd);
+      }
 
 #ifdef WITH_RABBITMQ
       if (amqp_routing_key)
@@ -727,7 +729,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 void bgp_handle_dump_event()
 {
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char event_type[] = "dump";
+  char event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
   struct bgp_peer *peer, *saved_peer;
   struct bgp_table *table;
@@ -754,6 +756,7 @@ void bgp_handle_dump_event()
     memset(current_filename, 0, sizeof(current_filename));
     memset(&peer_log, 0, sizeof(struct bgp_peer_log));
     memset(&bds, 0, sizeof(struct bgp_dump_stats));
+    fd_buf = malloc(BGP_LOG_BUFSZ);
 
 #ifdef WITH_RABBITMQ
     if (config.bgp_table_dump_amqp_routing_key) {
@@ -800,6 +803,10 @@ void bgp_handle_dump_event()
 	  if (strcmp(last_filename, current_filename)) {
 	    if (saved_peer && saved_peer->log && strlen(last_filename)) fclose(saved_peer->log->fd);
 	    peer->log->fd = open_logfile(current_filename, "w");
+	    if (fd_buf) {
+	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
+	      memset(fd_buf, 0, BGP_LOG_BUFSZ); 
+	    }
 	  }
 	}
 
