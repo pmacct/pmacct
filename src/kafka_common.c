@@ -96,9 +96,8 @@ void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
     if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
 
     if (rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker) == 0) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid 'kafka_broker_host' or 'kafka_broker_port' specified (%s). Exiting.\n",
+      Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'kafka_broker_host' or 'kafka_broker_port' specified (%s).\n",
 	  config.name, config.type, kafka_host->broker);
-      exit_plugin(1);
     }
   }
 }
