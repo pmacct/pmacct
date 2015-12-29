@@ -59,7 +59,7 @@ void nfacctd_bgp_wrapper()
 void skinny_bgp_daemon()
 {
   int slen, ret, rc, peers_idx, allowed;
-  int peers_idx_rr = 0, max_peers_idx;
+  int peers_idx_rr = 0, max_peers_idx = 0;
   struct host_addr addr;
   struct bgp_header bhdr;
   struct bgp_peer *peer;
@@ -347,6 +347,7 @@ void skinny_bgp_daemon()
 
     if (recalc_fds) { 
       select_fd = config.bgp_sock;
+      max_peers_idx = -1; /* .. since valid indexes include 0 */
 
       for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
@@ -474,7 +475,7 @@ void skinny_bgp_daemon()
 	    }
             fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
             close(fd);
-            goto select_again;
+            goto read_data;
           }
         }
 	/* XXX: replenish sessions with expired keepalives */
@@ -488,7 +489,7 @@ void skinny_bgp_daemon()
 			config.name, config.nfacctd_bgp_max_peers);
 	fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
 	close(fd);
-	goto select_again;
+	goto read_data;
       }
       peer->fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
 
@@ -503,7 +504,7 @@ void skinny_bgp_daemon()
       if (!allowed) {
 	bgp_peer_close(peer, FUNC_TYPE_BGP);
 	bgp_batch_rollback(&bp_batch);
-	goto select_again;
+	goto read_data;
       }
 
       FD_SET(peer->fd, &bkp_read_descs);
@@ -539,21 +540,18 @@ void skinny_bgp_daemon()
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP);
 	    // bgp_batch_rollback(&bp_batch);
-	    goto select_again;
+	    goto read_data;
 	  }
         }
-	else {
-	  if (peers[peers_check_idx].fd) peers_num++;
-	}
+	else if (peers[peers_check_idx].fd) peers_num++;
       }
 
       Log(LOG_INFO, "INFO ( %s/core/BGP ): BGP peers usage: %u/%u\n", config.name, peers_num, config.nfacctd_bgp_max_peers);
 
-      if (config.nfacctd_bgp_neighbors_file)
-	write_neighbors_file(config.nfacctd_bgp_neighbors_file);
-
-      goto select_again; 
+      if (config.nfacctd_bgp_neighbors_file) write_neighbors_file(config.nfacctd_bgp_neighbors_file);
     }
+
+    read_data:
 
     /*
        We have something coming in: let's lookup which peer is that.
@@ -570,10 +568,7 @@ void skinny_bgp_daemon()
       }
     } 
 
-    if (!peer) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", config.name, select_num, select_fd);
-      goto select_again;
-    }
+    if (!peer) goto select_again;
 
     ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
     peer->msglen = (ret + peer->buf.truncated_len);
