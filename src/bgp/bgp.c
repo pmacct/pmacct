@@ -64,8 +64,8 @@ void skinny_bgp_daemon()
   struct bgp_header bhdr;
   struct bgp_peer *peer;
   struct bgp_open *bopen;
-  char bgp_packet[BGP_MAX_PACKET_SIZE], *bgp_packet_ptr;
-  char bgp_reply_pkt[BGP_MAX_PACKET_SIZE], *bgp_reply_pkt_ptr;
+  char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
+  char tmp_packet[BGP_BUFFER_SIZE], *bgp_packet_ptr;
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
@@ -92,7 +92,6 @@ void skinny_bgp_daemon()
   reload_log_bgp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
-  memset(bgp_packet, 0, BGP_MAX_PACKET_SIZE);
   memset(&allow, 0, sizeof(struct hosts_table));
   nfacctd_bgp_msglog_backend_methods = 0;
   bgp_table_dump_backend_methods = 0;
@@ -576,7 +575,8 @@ void skinny_bgp_daemon()
       goto select_again;
     }
 
-    peer->msglen = ret = recv(peer->fd, bgp_packet, BGP_MAX_PACKET_SIZE, 0);
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+    peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", config.name, inet_ntoa(peer->id.address.ipv4), errno);
@@ -597,63 +597,20 @@ void skinny_bgp_daemon()
 	peer->last_keepalive = now;
       } 
 
-      /* BGP payload reassembly if required */
-      if (peer->buf.truncated_len) {
-	if (peer->buf.truncated_len+peer->msglen > peer->buf.len) {
-	  char *newptr;
-
-	  peer->buf.len += peer->buf.truncated_len+peer->msglen;
-	  newptr = malloc(peer->buf.len);
-	  if (newptr) {
-	    memcpy(newptr, peer->buf.base, peer->buf.truncated_len);
-	    free(peer->buf.base);
-	    peer->buf.base = newptr;
-	  }
-          else {
-            Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (newptr). Exiting ..\n", config.name);
-            exit_all(1);
-          }
-	}
-	memcpy(peer->buf.base+peer->buf.truncated_len, bgp_packet, peer->msglen);
-	peer->msglen += peer->buf.truncated_len;
-	peer->buf.truncated_len = 0;
-
-	bgp_packet_ptr = peer->buf.base;
-      }
-      else {
-	if (peer->buf.len > BGP_MAX_PACKET_SIZE) { 
-	  peer->buf.base = realloc(peer->buf.base, BGP_MAX_PACKET_SIZE);
-	  memset(peer->buf.base, 0, BGP_MAX_PACKET_SIZE);
-	  peer->buf.len = BGP_MAX_PACKET_SIZE;
-	}
-	bgp_packet_ptr = bgp_packet;
-      } 
-
       memset(&bhdr, 0, sizeof(bhdr));
-      for ( ; peer->msglen > 0; peer->msglen -= ntohs(bhdr.bgpo_len), bgp_packet_ptr += ntohs(bhdr.bgpo_len)) { 
+      for (bgp_packet_ptr = peer->buf.base; peer->msglen > 0; peer->msglen -= ntohs(bhdr.bgpo_len), bgp_packet_ptr += ntohs(bhdr.bgpo_len)) { 
 	memcpy(&bhdr, bgp_packet_ptr, sizeof(bhdr));
 
-	/* BGP payload fragmentation check */
+	/* BGP buffer segmentation + reassembly */
 	if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < ntohs(bhdr.bgpo_len)) {
+          memcpy(tmp_packet, bgp_packet_ptr, peer->msglen);
+	  memcpy(peer->buf.base, tmp_packet, peer->msglen);
+
 	  peer->buf.truncated_len = peer->msglen;
-	  if (bgp_packet_ptr != peer->buf.base) {
-	    char *aux_buf;
 
-	    aux_buf = malloc(peer->buf.truncated_len);
-	    if (aux_buf) {
-	      memcpy(aux_buf, bgp_packet_ptr, peer->buf.truncated_len);
-	      memcpy(peer->buf.base, aux_buf, peer->buf.truncated_len);
-	      free(aux_buf);
-	    }
-	    else {
-              Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aux_buf). Exiting ..\n", config.name);
-	      exit_all(1);
-	    } 
-	  }
-
-	  // goto bgp_recv;
-	  goto select_again;
-	  }
+	  break;
+	}
+	else peer->buf.truncated_len = 0;
 
 	  if (!bgp_marker_check(&bhdr, BGP_MARKER_SIZE)) {
             Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (marker check failed).\n",
@@ -664,7 +621,7 @@ void skinny_bgp_daemon()
 	    goto select_again;
           }
 
-	  memset(bgp_reply_pkt, 0, BGP_MAX_PACKET_SIZE);
+	  memset(bgp_reply_pkt, 0, BGP_BUFFER_SIZE);
 
 	  switch (bhdr.bgpo_type) {
 	  case BGP_OPEN:
@@ -672,10 +629,10 @@ void skinny_bgp_daemon()
 
 		  if (peer->status < OpenSent) {
 		    peer->status = Active;
-		    bopen = (struct bgp_open *) bgp_packet;  
+		    bopen = (struct bgp_open *) bgp_packet_ptr;  
 
 		    if (bopen->bgpo_version == BGP_VERSION4) {
-			  char bgp_open_cap_reply[BGP_MAX_PACKET_SIZE-BGP_MIN_OPEN_MSG_SIZE];
+			  char bgp_open_cap_reply[BGP_BUFFER_SIZE-BGP_MIN_OPEN_MSG_SIZE];
 			  char *bgp_open_cap_reply_ptr = bgp_open_cap_reply, *bgp_open_cap_ptr;
 
 			  remote_as = ntohs(bopen->bgpo_myas);
@@ -688,7 +645,7 @@ void skinny_bgp_daemon()
 			    u_int8_t len, opt_type, opt_len, cap_type;
 			    char *ptr;
 
-			    ptr = bgp_packet + BGP_MIN_OPEN_MSG_SIZE;
+			    ptr = bgp_packet_ptr + BGP_MIN_OPEN_MSG_SIZE;
 			    memset(bgp_open_cap_reply, 0, sizeof(bgp_open_cap_reply));
 
 			    for (len = bopen->bgpo_optlen; len > 0; len -= opt_len, ptr += opt_len) {
@@ -2061,7 +2018,7 @@ int bgp_peer_init(struct bgp_peer *peer)
 
   memset(peer, 0, sizeof(struct bgp_peer));
   peer->status = Idle;
-  peer->buf.len = BGP_MAX_PACKET_SIZE;
+  peer->buf.len = BGP_BUFFER_SIZE;
   peer->buf.base = malloc(peer->buf.len);
   if (!peer->buf.base) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
 */
 
 /* 
@@ -33,7 +33,7 @@
 #define _BGP_PACKET_H_
 
 /* some handy things to know */
-#define BGP_MAX_PACKET_SIZE		4096
+#define BGP_BUFFER_SIZE			100000
 #define BGP_MARKER_SIZE			16	/* size of BGP marker */
 #define BGP_HEADER_SIZE			19	/* size of BGP header, including marker */
 #define BGP_MIN_OPEN_MSG_SIZE		29
