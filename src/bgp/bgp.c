@@ -85,7 +85,7 @@ void skinny_bgp_daemon()
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
-  int select_fd, bkp_select_fd, recalc_fds, select_num;
+  int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
 
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
@@ -441,8 +441,24 @@ void skinny_bgp_daemon()
     if (FD_ISSET(config.bgp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
 
+      fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
+      if (fd == ERR) goto read_data;
+
+#if defined ENABLE_IPV6
+      ipv4_mapped_to_ipv4(&client);
+#endif
+
+      /* If an ACL is defined, here we check against and enforce it */
+      if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
+      else allowed = TRUE;
+
+      if (!allowed) {
+        close(fd);
+        goto read_data;
+      }
+
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-        if (peers[peers_idx].fd == 0) {
+        if (!peers[peers_idx].fd) {
           now = time(NULL);
 
 	  /*
@@ -466,14 +482,12 @@ void skinny_bgp_daemon()
             break;
 	  }
           else { /* throttle */
-            int fd = 0;
-
             /* We briefly accept the new connection to be able to drop it */
 	    if (!log_notification_isset(log_notifications.bgp_peers_throttling)) {
               Log(LOG_INFO, "INFO ( %s/core/BGP ): throttling at BGP peer #%u\n", config.name, peers_idx);
 	      log_notification_set(&log_notifications.bgp_peers_throttling);
 	    }
-            fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
+
             close(fd);
             goto read_data;
           }
@@ -482,31 +496,15 @@ void skinny_bgp_daemon()
       }
 
       if (!peer) {
-	int fd;
-
 	/* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( %s/core/BGP ): Insufficient number of BGP peers has been configured by 'bgp_daemon_max_peers' (%d).\n",
 			config.name, config.nfacctd_bgp_max_peers);
-	fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
+
 	close(fd);
 	goto read_data;
       }
-      peer->fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
 
-#if defined ENABLE_IPV6
-      ipv4_mapped_to_ipv4(&client);
-#endif
-
-      /* If an ACL is defined, here we check against and enforce it */
-      if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
-      else allowed = TRUE;
-
-      if (!allowed) {
-	bgp_peer_close(peer, FUNC_TYPE_BGP);
-	bgp_batch_rollback(&bp_batch);
-	goto read_data;
-      }
-
+      peer->fd = fd;
       FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = ((struct sockaddr *)&client)->sa_family;
       if (peer->addr.family == AF_INET) {
