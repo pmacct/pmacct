@@ -539,7 +539,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     }
 
     if (!go_to_pending) { 
-      if (queue[j]->valid) {
+      if (queue[j]->valid == SQL_CACHE_COMMITTED) {
 	r = sql_query(&bed, queue[j], idata);
 
 	/* note down all elements in case of a reprocess due to COMMIT failure */
