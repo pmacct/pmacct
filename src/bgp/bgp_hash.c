@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -95,8 +95,10 @@ hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
   if (alloc_func)
     {
       newdata = (*alloc_func) (data);
-      if (newdata == NULL)
-	return NULL;
+      if (!newdata) {
+        Log(LOG_ERR, "ERROR ( %s/core/BGP ): alloc_func failed (hash_get). Exiting ..\n", config.name);
+        exit_all(1);
+      }
 
       backet = malloc(sizeof (struct hash_backet));
       if (!backet) {

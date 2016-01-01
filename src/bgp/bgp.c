@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -1882,6 +1882,8 @@ unsigned int attrhash_key_make(void *p)
   if (attr->ecommunity)
     key += ecommunity_hash_make(attr->ecommunity);
 
+  /* XXX: add mp_nexthop to key */
+
   return key;
 }
 
@@ -1970,8 +1972,7 @@ void bgp_attr_unintern(struct bgp_attr *attr)
   if (attr->refcnt == 0) {
 	ret = (struct bgp_attr *) hash_release (attrhash, attr);
 	// assert (ret != NULL);
-	// if (ret) free(attr);
-	if (!ret) Log(LOG_WARNING, "WARN ( %s/core/BGP ): bgp_attr_unintern() hash lookup failed.\n", config.name);
+	if (!ret) Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_attr_unintern() hash lookup failed.\n", config.name);
 	free(attr);
   }
 
@@ -1996,7 +1997,7 @@ void *bgp_attr_hash_alloc (void *p)
   }
   else {
     memset(attr, 0, sizeof (struct bgp_attr));
-    *attr = *val;
+    memcpy(attr, val, sizeof (struct bgp_attr));
     attr->refcnt = 0;
   }
 
