@@ -363,6 +363,7 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   return (final-base);
 }	
 
+/* XXX: consolidate logfile and print_output_file functions */ 
 FILE *open_logfile(char *filename, char *mode)
 {
   char timebuf[SRVBUFLEN], buf[LARGEBUFLEN];
@@ -398,6 +399,16 @@ FILE *open_logfile(char *filename, char *mode)
   }
 
   return file;
+}
+
+void link_latest_logfile(char *filename)
+{
+  // XXX
+}
+
+void close_logfile(FILE *f)
+{
+  fclose(f);
 }
 
 void close_print_output_file(FILE *f, char *table_schema, char *current_table, struct primitives_ptrs *prim_ptrs)

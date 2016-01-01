@@ -623,6 +623,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_table_per_peer_hash", cfg_key_nfacctd_bgp_table_per_peer_hash},
   {"bgp_table_dump_output", cfg_key_nfacctd_bgp_table_dump_output},
   {"bgp_table_dump_file", cfg_key_nfacctd_bgp_table_dump_file},
+  {"bgp_table_dump_latest_file", cfg_key_nfacctd_bgp_table_dump_latest_file},
   {"bgp_table_dump_refresh_time", cfg_key_nfacctd_bgp_table_dump_refresh_time},
   {"bgp_table_dump_amqp_host", cfg_key_nfacctd_bgp_table_dump_amqp_host},
   {"bgp_table_dump_amqp_vhost", cfg_key_nfacctd_bgp_table_dump_amqp_vhost},

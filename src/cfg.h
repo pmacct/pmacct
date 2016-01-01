@@ -243,6 +243,7 @@ struct configuration {
   int bgp_table_per_peer_hash;
   int bgp_table_dump_output;
   char *bgp_table_dump_file;
+  char *bgp_table_dump_latest_file;
   int bgp_table_dump_refresh_time;
   char *bgp_table_dump_amqp_host;
   char *bgp_table_dump_amqp_vhost;

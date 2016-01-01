@@ -729,7 +729,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 void bgp_handle_dump_event()
 {
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char event_type[] = "dump", *fd_buf = NULL;
+  char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
   struct bgp_peer *peer, *saved_peer;
   struct bgp_table *table;
@@ -801,7 +801,14 @@ void bgp_handle_dump_event()
         */
 	if (config.bgp_table_dump_file) {
 	  if (strcmp(last_filename, current_filename)) {
-	    if (saved_peer && saved_peer->log && strlen(last_filename)) fclose(saved_peer->log->fd);
+	    if (saved_peer && saved_peer->log && strlen(last_filename)) {
+	      close_logfile(saved_peer->log->fd);
+
+	      if (config.bgp_table_dump_latest_file) {
+		bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
+		link_latest_logfile(latest_filename);
+	      }
+	    }
 	    peer->log->fd = open_logfile(current_filename, "w");
 	    if (fd_buf) {
 	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
