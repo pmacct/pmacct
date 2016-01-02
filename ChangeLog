@@ -1,5 +1,7 @@
 pmacct (Promiscuous mode IP Accounting package) v1.5.3
-pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+
+1.5.3 -- XX-01-2016
 
 1.5.2 -- 07-09-2015
   + Introduced support for a RabbitMQ broker to be used for queueing and

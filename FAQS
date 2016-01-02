@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
 A: It is http://www.pmacct.net/ . There isn't any official mirror site. 
@@ -41,7 +41,7 @@ A: Yes, but in a specific way. In other tools flat-files are typically used to l
    By inception, pmacct always aimed to a single-stage approach instead, ie. offer data
    reduction tecniques and correlation tools to process network traffic data on the fly,
    so to immediately offer the desired view(s) of the traffic. pmacct writes to files in
-   text-format (either csv or formatted via its 'print' plugin, see QUICKSTART doc for
+   text-format (json, csv or formatted via its 'print' plugin, see QUICKSTART doc for
    further information) so to maximize potential integration with 3rd party applications
    while keeping low the effort of customization.
 
@@ -222,16 +222,7 @@ A: When IPv6 code is enabled, sfacctd and nfacctd will try to fire up an IPv6 so
    commandline, use the following: 'nfacctd [ ... options ... ] -L 192.168.0.14'.  
 
 
-Q15: 32 bit counters are not large enough to me, in fact i see them rolling over and
-     returning inconsistent results. What to do ?
-A: pmacct >= 0.9.2 optionally supports 64 bits counters via a '--enable-64bit' switch
-   while configuring the package for compilation. It will affect all counters: bytes,
-   packets and flows. Use such switch only when required as 32 bits counters allow to
-   save some memory. Usually, overflowing counters are recognizable by unexpected
-   fluctuations in the counters value - caused, as said, by one or multiple rollovers. 
- 
-
-Q16: SQL table versions, what they are -- why and when do i need them ? Also, can i
+Q15: SQL table versions, what they are -- why and when do i need them ? Also, can i
      customize SQL tables ?
 A: pmacct tarball gets with so called 'default' tables (IP and BGP); they are built
    by SQL scripts stored in the 'sql/' section of the tarball. Default tables enable
@@ -246,7 +237,7 @@ A: pmacct tarball gets with so called 'default' tables (IP and BGP); they are bu
    key. You will then be responsible for building the custom schema and indexes.
 
 
-Q17: What is the best way to kill a running instance of pmacct avoiding data loss ?
+Q16: What is the best way to kill a running instance of pmacct avoiding data loss ?
 A: Two ways. a) Simply kill a specific plugin that you don't need anymore: you will
    have to identify it and use the 'kill -INT <process number> command; b) kill the
    whole pmacct instance: you can either use the 'killall -INT <daemon name>' command
@@ -262,7 +253,7 @@ A: Two ways. a) Simply kill a specific plugin that you don't need anymore: you w
    the SO_REUSEADDR socket option. 
 
 
-Q18: I find interesting store network data in a SQL database. But i'm actually hitting
+Q17: I find interesting store network data in a SQL database. But i'm actually hitting
      poor performances. Do you have any tips to improve/optimize things ?
 A: Few hints are summed below in order to improve SQL database performances. They are
    not really tailored to a specific SQL engine but rather of general applicability.
@@ -298,7 +289,7 @@ A: Few hints are summed below in order to improve SQL database performances. The
      in case of unsecured shutdowns (remember power failure is a variable ...).
 
 
-Q19: I've configured the server hosting pmacct with my local timezone - which includes
+Q18: I've configured the server hosting pmacct with my local timezone - which includes
      DST (Daylight Saving Time). Is this allright?
 A: In general, it's good rule to run the backend part of any accounting system as UTC;
    pmacct uses the underlying system clock, expecially in the SQL plugins to calculate
@@ -306,7 +297,7 @@ A: In general, it's good rule to run the backend part of any accounting system a
    but not recommended. 
 
 
-Q20: I'm using the 'tee' plugin with transparent mode set to true and keep receiving
+Q19: I'm using the 'tee' plugin with transparent mode set to true and keep receiving
      "Can't bridge Address Families when in transparent mode. Exiting ..." messages,
      why?
 
@@ -320,7 +311,7 @@ A: It means you can't receive packets on an IPv4 address and transparently repli
    IP address (nfacctd_ip), if IPv4 is used.
 
 
-Q21: I've enabled IPv6 support in pmacct with --enable-ipv6. Even though the daemon
+Q20: I've enabled IPv6 support in pmacct with --enable-ipv6. Even though the daemon
      binds to the "::" address, i don't receive NetFlow/IPFIX/sFlow/BGP data sent via
      IPv4, why?
 
