@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -74,7 +74,7 @@ EXT void set_sampling_table(struct packet_ptrs_vector *, u_char *);
 EXT void set_shadow_status(struct packet_ptrs *);
 EXT void set_default_preferences(struct configuration *);
 EXT FILE *open_logfile(char *, char *);
-EXT void link_latest_logfile(char *);
+EXT void link_latest_logfile(char *, char *);
 EXT void close_logfile(FILE *);
 EXT FILE *open_print_output_file(char *, int *);
 EXT void handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *);

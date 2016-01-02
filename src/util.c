@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -401,14 +401,55 @@ FILE *open_logfile(char *filename, char *mode)
   return file;
 }
 
-void link_latest_logfile(char *filename)
+void link_latest_logfile(char *link_filename, char *filename_to_link)
 {
-  // XXX
+  int ret, rewrite_latest = FALSE;
+  char buf[SRVBUFLEN];
+  uid_t owner = -1;
+  gid_t group = -1;
+
+  if (!link_filename || !filename_to_link) return;
+
+  if (config.files_uid) owner = config.files_uid;
+  if (config.files_gid) group = config.files_gid;
+
+  /* create dir structure to get to file, if needed */
+  ret = mkdir_multilevel(link_filename, TRUE, owner, group);
+  if (ret) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): link_latest_logfile(): unable to open file '%s': mkdir_multilevel() failed.\n",
+	config.name, config.type, buf);
+    return;
+  }
+
+  /* if a file with same name exists let's investigate if filename_to_link is newer */
+  ret = access(link_filename, F_OK);
+
+  if (!ret) {
+    struct stat s1, s2;
+
+    memset(&s1, 0, sizeof(struct stat));
+    memset(&s2, 0, sizeof(struct stat));
+    readlink(link_filename, buf, LARGEBUFLEN);
+
+    /* filename_to_link is newer than buf or buf is un-existing */
+    stat(buf, &s1);
+    stat(filename_to_link, &s2);
+    if (s2.st_mtime >= s1.st_mtime) rewrite_latest = TRUE;
+  }
+  else rewrite_latest = TRUE;
+
+  if (rewrite_latest) {
+    unlink(link_filename);
+    symlink(filename_to_link, link_filename);
+
+    if (lchown(link_filename, owner, group) == -1)
+      Log(LOG_WARNING, "WARN ( %s/%s ): link_latest_logfile(): unable to chown() '%s'\n", config.name, config.type, link_filename);
+  }
 }
 
 void close_logfile(FILE *f)
 {
-  fclose(f);
+  if (f) fclose(f);
 }
 
 void close_print_output_file(FILE *f, char *table_schema, char *current_table, struct primitives_ptrs *prim_ptrs)
@@ -436,7 +477,8 @@ void close_print_output_file(FILE *f, char *table_schema, char *current_table, s
   /* create dir structure to get to file, if needed */
   ret = mkdir_multilevel(latest_fname, TRUE, owner, group);
   if (ret) {
-    Log(LOG_ERR, "ERROR: Unable to open print_latest_file '%s': mkdir_multilevel() failed.\n", buf);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to open print_latest_file '%s': mkdir_multilevel() failed.\n",
+	config.name, config.type, buf);
     return;
   }
 
@@ -452,16 +494,11 @@ void close_print_output_file(FILE *f, char *table_schema, char *current_table, s
   else rewrite_latest = TRUE;
 
   if (rewrite_latest) {
-    uid_t owner = -1;
-    gid_t group = -1;
-
     unlink(latest_fname);
     symlink(current_table, latest_fname);
 
-    if (config.files_uid) owner = config.files_uid;
-    if (config.files_gid) group = config.files_gid;
     if (lchown(latest_fname, owner, group) == -1)
-      printf("WARN: Unable to chown() print_latest_file '%s'\n", latest_fname);
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to chown() print_latest_file '%s'\n", config.name, config.type, latest_fname);
   }
 }
 
@@ -499,7 +536,7 @@ FILE *open_print_output_file(char *filename, int *append)
       Log(LOG_WARNING, "WARN: Unable to chown() print_ouput_file '%s': %s\n", buf, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ALERT, "ALERT: Unable to obtain lock for print_ouput_file '%s'.\n", buf);
+      Log(LOG_ERR, "ERROR: Unable to obtain lock for print_ouput_file '%s'.\n", buf);
       file = NULL;
     }
   }

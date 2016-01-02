@@ -809,7 +809,7 @@ DESC:		If set to true, print plugin will append to existing files instead of ove
 DEFAULT:	false
 
 KEY:            print_latest_file
-DESC:		It defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
+DESC:		Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
 		through the use of variables, which are computed at the moment when data is purged to the
 		backend: refer to print_output_file for a full listing of supported variables; time-based
 		variables are not allowed. Three examples follow:
@@ -826,13 +826,14 @@ DESC:		It defines the full pathname to pointer(s) to latest file(s). Dynamic nam
 		print_output_file: /path/to/$peer_src_ip/foo-%Y%m%d-%H%M.txt
 		print_latest_file: /path/to//spool/latest/blabla-$peer_src_ip
 
-		For correct working of the feature, responsibility is put on the user. A file is reckon
-		as latest if it's lexicographically greater than an existing one: this is generally fine
-		but requires dates to be in %Y%m%d format rather than %d%m%Y. Also, upon restart of the
-		daemon, if print_output_file is modified to a different location good practice would be
-		to 1) manually delete latest pointer(s) or 2) move existing print_output_file files to
-		the new targer location. Finally, if upgrading from pmacct releases before 1.5.0rc1, it
-		is recommended to delete existing symlinks. 
+NOTES:		Update of the latest pointer is done evaluating files name. For correct working of the
+		feature, responsibility is put on the user. A file is reckon as latest if it is
+		lexicographically greater than an existing one: this is generally fine but requires
+		dates to be in %Y%m%d format rather than %d%m%Y. Also, upon restart of the daemon, if
+		print_output_file is modified to a different location good practice would be to 1)
+		manually delete latest pointer(s) or 2) move existing print_output_file files to the
+		new targer location. Finally, if upgrading from pmacct releases before 1.5.0rc1, it is
+		recommended to delete existing symlinks.
 DEFAULT:	none
 
 KEY:		sql_table_schema
@@ -2122,6 +2123,14 @@ VALUES:		[ 60 .. 86400 ]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP/BMP
 		tables to files.
 DEFAULT:	0
+
+KEY:            bgp_table_dump_latest_file
+DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
+                through the use of variables, which are computed at the moment when data is purged to the
+                backend: refer to bgp_table_dump_file for a full listing of supported variables; time-
+		based variables are not allowed. Update of the latest pointer is done evaluating files
+		modification time. See print_latest_file for examples.
+DEFAULT:        none
 
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -806,7 +806,7 @@ void bgp_handle_dump_event()
 
 	      if (config.bgp_table_dump_latest_file) {
 		bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
-		link_latest_logfile(latest_filename);
+		link_latest_logfile(latest_filename, last_filename);
 	      }
 	    }
 	    peer->log->fd = open_logfile(current_filename, "w");
@@ -881,6 +881,11 @@ void bgp_handle_dump_event()
     if (config.bgp_table_dump_kafka_topic)
       p_kafka_close(&bgp_table_dump_kafka_host, FALSE);
 #endif
+
+    if (config.bgp_table_dump_latest_file && peer) {
+      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
+      link_latest_logfile(latest_filename, last_filename);
+    }
 
     duration = time(NULL)-start;
     Log(LOG_INFO, "INFO ( %s/core/BGP ): *** Dumping BGP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
