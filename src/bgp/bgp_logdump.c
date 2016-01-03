@@ -805,7 +805,7 @@ void bgp_handle_dump_event()
 	      close_logfile(saved_peer->log->fd);
 
 	      if (config.bgp_table_dump_latest_file) {
-		bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
+		bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, saved_peer);
 		link_latest_logfile(latest_filename, last_filename);
 	      }
 	    }

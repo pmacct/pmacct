@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -458,7 +458,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
 void bmp_handle_dump_event()
 {
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char event_type[] = "dump", *fd_buf = NULL;
+  char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
@@ -521,7 +521,14 @@ void bmp_handle_dump_event()
 	*/
         if (config.bmp_dump_file) {
           if (strcmp(last_filename, current_filename)) {
-            if (saved_peer && saved_peer->log && strlen(last_filename)) fclose(saved_peer->log->fd);
+	    if (saved_peer && saved_peer->log && strlen(last_filename)) {
+	      close_logfile(saved_peer->log->fd);
+
+	      if (config.bmp_dump_latest_file) {
+	        bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bmp_dump_latest_file, saved_peer);
+	        link_latest_logfile(latest_filename, last_filename);
+	      }
+	    }
             peer->log->fd = open_logfile(current_filename, "w");
 	    if (fd_buf) {
 	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
@@ -593,6 +600,11 @@ void bmp_handle_dump_event()
     if (config.bmp_dump_kafka_topic)
       p_kafka_close(&bmp_dump_kafka_host, FALSE);
 #endif
+
+    if (config.bmp_dump_latest_file && peer) {
+      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bmp_dump_latest_file, peer);
+      link_latest_logfile(latest_filename, last_filename);
+    }
 
     duration = time(NULL)-start;
     Log(LOG_INFO, "INFO ( %s/core/BMP ): *** Dumping BMP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",

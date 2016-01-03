@@ -298,6 +298,7 @@ struct configuration {
   int bmp_table_per_peer_hash;
   int bmp_dump_output;
   char *bmp_dump_file;
+  char *bmp_dump_latest_file;
   int bmp_dump_refresh_time;
   char *bmp_dump_amqp_host;
   char *bmp_dump_amqp_vhost;

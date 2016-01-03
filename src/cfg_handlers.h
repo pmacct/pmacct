@@ -299,6 +299,7 @@ EXT int cfg_key_nfacctd_bmp_table_attr_hash_buckets(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_table_per_peer_hash(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_dump_output(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_dump_file(char *, char *, char *);
+EXT int cfg_key_nfacctd_bmp_dump_latest_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_dump_refresh_time(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_dump_amqp_host(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_dump_amqp_vhost(char *, char *, char *);

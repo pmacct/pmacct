@@ -2118,13 +2118,13 @@ DESC:           Defines output format for the dump of BGP/BMP tables. Only JSON 
 		configuring for compiling).
 DEFAULT:	json
 
-KEY:		bgp_table_dump_refresh_time | bmp_dump_refresh_time ] [GLOBAL]
+KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time ] [GLOBAL]
 VALUES:		[ 60 .. 86400 ]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP/BMP
 		tables to files.
 DEFAULT:	0
 
-KEY:            bgp_table_dump_latest_file
+KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file ] [GLOBAL]
 DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
                 through the use of variables, which are computed at the moment when data is purged to the
                 backend: refer to bgp_table_dump_file for a full listing of supported variables; time-
