@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -60,7 +60,7 @@ void nfacctd_bmp_wrapper()
 void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
-  char bmp_packet[BMP_BUFFER_SIZE], *bmp_packet_ptr;
+  char *bmp_packet_ptr;
   u_int32_t pkt_remaining_len=0;
   time_t now;
   afi_t afi;
@@ -94,7 +94,6 @@ void skinny_bmp_daemon()
   reload_log_bmp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
-  memset(bmp_packet, 0, BMP_BUFFER_SIZE);
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
 
@@ -532,7 +531,7 @@ void skinny_bmp_daemon()
       goto select_again;
     }
 
-    ret = recv(peer->fd, &bmp_packet[peer->buf.truncated_len], (BMP_BUFFER_SIZE - peer->buf.truncated_len), 0);
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
@@ -542,10 +541,11 @@ void skinny_bmp_daemon()
       goto select_again;
     }
     else {
-      pkt_remaining_len = bmp_process_packet(bmp_packet, peer->msglen, peer);
+      pkt_remaining_len = bmp_process_packet(peer->buf.base, peer->msglen, peer);
 
       /* handling offset for TCP segment reassembly */
-      if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(bmp_packet, BMP_BUFFER_SIZE, peer->msglen, pkt_remaining_len, peer);
+      if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(peer->buf.base, peer->buf.len, peer->msglen,
+									     pkt_remaining_len, peer->addr_str);
       else peer->buf.truncated_len = 0;
     }
   }
@@ -1152,12 +1152,14 @@ void bmp_attr_init()
   ecommunity_init(&bmp_ecomhash);
 }
 
-u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t recv_len, u_int32_t remaining_len, struct bgp_peer *peer)
+u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t recv_len, u_int32_t remaining_len, char *addr_str)
 {
-  char tmp_packet[BMP_BUFFER_SIZE];
+  char tmp_packet[BGP_BUFFER_SIZE];
   
   if (!bmp_packet || recv_len > buf_len || remaining_len >= buf_len || remaining_len > recv_len) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_packet_adj_offset()\n", config.name, peer->addr_str);
+    if (addr_str)
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_packet_adj_offset()\n", config.name, addr_str);
+
     return FALSE;
   }
 

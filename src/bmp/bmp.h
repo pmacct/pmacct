@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -23,7 +23,6 @@
 
 /* defines */
 #define BMP_TCP_PORT		1790
-#define BMP_BUFFER_SIZE		100000
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
 
@@ -199,7 +198,7 @@ EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
-EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, struct bgp_peer *);
+EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
 
 /* global variables */
 EXT struct bgp_peer *bmp_peers;
