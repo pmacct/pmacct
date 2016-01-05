@@ -1682,6 +1682,8 @@ int bgp_rd2str(char *str, rd_t *rd)
     sprintf(str, "unknown");
     break; 
   }
+
+  return TRUE;
 }
 
 int bgp_str2rd(rd_t *output, char *value)

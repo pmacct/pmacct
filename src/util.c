@@ -615,7 +615,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     len -= strlen(psi_string);
 
     if (prim_ptrs && prim_ptrs->pbgp) addr_to_str(peer_src_ip, &prim_ptrs->pbgp->peer_src_ip);
-    else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(empty_peer_src_ip));
+    else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(peer_src_ip));
 
     escape_ip_uscores(peer_src_ip);
     snprintf(buf, newlen, "%s", peer_src_ip);
@@ -744,7 +744,7 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
     Log(LOG_ERR, "ERROR: malloc() failed (write_pid_file_plugin)\n");
     return;
   }
-  memset(fname, 0, sizeof(fname));
+  memset(fname, 0, len);
   strcpy(fname, filename);
   strcat(fname, minus);
   strcat(fname, type);
@@ -1313,13 +1313,16 @@ struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *pptrs)
   /* Pointers can be NULL */
   if (pptrs->iph_ptr)
     new_pptrs->iph_ptr += offset;
-  if (pptrs->tlh_ptr)
-    if(pptrs->tlh_ptr > pptrs->packet_ptr && pptrs->tlh_ptr < pptrs->packet_ptr+offset) // If it is not a dummy tlh_ptr
+  if (pptrs->tlh_ptr) {
+    if (pptrs->tlh_ptr > pptrs->packet_ptr && pptrs->tlh_ptr < pptrs->packet_ptr+offset) {
+      // If it is not a dummy tlh_ptr
       new_pptrs->tlh_ptr += offset;
+    }
     else {
       memset(dummy_tlhdr, 0, sizeof(dummy_tlhdr));
       new_pptrs->tlh_ptr = dummy_tlhdr;
     }
+  }
   if (pptrs->payload_ptr)
     new_pptrs->payload_ptr += offset;
 

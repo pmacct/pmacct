@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -378,6 +378,8 @@ l2_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
       if (!flow->direction[ndx]) flow->direction[ndx] = DIRECTION_OUT;
     }
   }
+
+  return (0);
 }
 
 static int
@@ -406,6 +408,8 @@ cust_to_flowrec(struct FLOW *flow, char *pcust, int ndx)
     if (flow->pcust[ndx]) free(flow->pcust[ndx]);
     flow->pcust[ndx] = NULL;
   }
+
+  return (0);
 }
 
 static int
@@ -420,6 +424,8 @@ vlen_to_flowrec(struct FLOW *flow, struct pkt_vlen_hdr_primitives *pvlen, int nd
 
     flow->pvlen[ndx] = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
   }
+
+  return (0);
 }
 
 /* Convert a IPv4 packet to a partial flow record (used for comparison) */
@@ -479,6 +485,8 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   l2_to_flowrec_update(flow, data, extras, ndx);
   cust_to_flowrec(flow, pcust, ndx);
   vlen_to_flowrec(flow, pvlen, ndx);
+
+  return (0);
 }
 
 #if defined ENABLE_IPV6

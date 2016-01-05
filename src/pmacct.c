@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -1960,8 +1960,8 @@ int main(int argc,char **argv)
       }
     }
 
-    if ((what_to_count & COUNT_SRC_HOST) && (what_to_count & COUNT_SRC_NET) ||
-        (what_to_count & COUNT_DST_HOST) && (what_to_count & COUNT_DST_NET)) {
+    if (((what_to_count & COUNT_SRC_HOST) && (what_to_count & COUNT_SRC_NET)) ||
+        ((what_to_count & COUNT_DST_HOST) && (what_to_count & COUNT_DST_NET))) {
       if (!tmp_net_own_field) {
         printf("ERROR: src_host, src_net and dst_host, dst_net are mutually exclusive: set -o.\n");
         exit(1);
@@ -2995,6 +2995,8 @@ int pmc_bgp_rd2str(char *str, rd_t *rd)
     sprintf(str, "unknown");
     break;
   }
+
+  return TRUE;
 }
 
 int pmc_bgp_str2rd(rd_t *output, char *value)

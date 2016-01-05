@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -2403,7 +2403,7 @@ int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char 
   int idx;
 
   if (table) {
-    for (idx = 0; idx < table->num && table->primitive[idx].name; idx++) {
+    for (idx = 0; idx < table->num && strlen(table->primitive[idx].name); idx++) {
       if (!strcmp(table->primitive[idx].name, value)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Duplicate custom aggregate primitive name specified: %s. ", config.name, config.type, value);
         return TRUE;
@@ -2903,6 +2903,8 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, void *src)
   else if (config.acct_type == ACCT_PM) {
     e->input.n = pptrs->ifindex_in;
   }
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_output_handler(struct id_entry *e, void *src)
@@ -2947,6 +2949,8 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, void *src)
   else if (config.acct_type == ACCT_PM) {
     e->output.n = pptrs->ifindex_out;
   }
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, void *src)
@@ -3266,6 +3270,8 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, void *src)
       break;
     }
   }
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, void *src)
@@ -3316,6 +3322,8 @@ int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, void *src)
       break;
     }
   }
+
+  return FALSE;
 }
 
 int PT_map_index_fdata_src_mac_handler(struct id_entry *e, void *src)

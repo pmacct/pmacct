@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -382,7 +382,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
   if (bkt.num) {
     if (!nt->table) {
-      memcpy(nt, &bkt, sizeof(nt));
+      memcpy(nt, &bkt, sizeof(struct networks_table));
       Log(LOG_WARNING, "WARN: Rolling back the old Networks Table.\n"); 
 
       /* we update the timestamp to avoid loops */ 
@@ -1353,6 +1353,8 @@ as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, 
     else return res6->as;
   }
 #endif
+
+  return 0;
 }
 
 as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, struct packet_ptrs *pptrs)
@@ -1379,6 +1381,8 @@ as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, 
     else return res6->as;
   }
 #endif
+
+  return 0;
 }
 
 #if defined ENABLE_IPV6
@@ -1727,7 +1731,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
   if (bkt.num6) {
     if (!nt->table6) {
-      memcpy(nt, &bkt, sizeof(nt));
+      memcpy(nt, &bkt, sizeof(struct networks_table));
       Log(LOG_WARNING, "WARN: Rolling back the old Networks Table.\n");
 
       /* we update the timestamp to avoid loops */

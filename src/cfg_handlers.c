@@ -3698,7 +3698,7 @@ int cfg_key_nfacctd_bmp_msglog_amqp_frame_max(char *filename, char *name, char *
   u_int32_t value, changes = 0;
   char *endptr;
       
-  value = value = strtoul(value_ptr, &endptr, 10);
+  value = strtoul(value_ptr, &endptr, 10);
   if (value <= 0) {
     Log(LOG_WARNING, "WARN ( %s ): 'bmp_daemon_msglog_amqp_frame_max' has to be > 0.\n", filename);
     return ERR;
@@ -3716,7 +3716,7 @@ int cfg_key_nfacctd_bmp_msglog_amqp_heartbeat_interval(char *filename, char *nam
   u_int32_t value, changes = 0;
   char *endptr;
 
-  value = value = strtoul(value_ptr, &endptr, 10);
+  value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_amqp_heartbeat_interval = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bmp_daemon_msglog_amqp_heartbeat_interval'. Globalized.\n", filename);
@@ -5206,7 +5206,7 @@ int cfg_key_nfacctd_bgp_msglog_amqp_frame_max(char *filename, char *name, char *
   u_int32_t value, changes = 0;
   char *endptr;
       
-  value = value = strtoul(value_ptr, &endptr, 10);
+  value = strtoul(value_ptr, &endptr, 10);
   if (value <= 0) {
     Log(LOG_WARNING, "WARN ( %s ): 'bgp_daemon_msglog_amqp_frame_max' has to be > 0.\n", filename);
     return ERR;
@@ -5224,7 +5224,7 @@ int cfg_key_nfacctd_bgp_msglog_amqp_heartbeat_interval(char *filename, char *nam
   u_int32_t value, changes = 0;
   char *endptr;
 
-  value = value = strtoul(value_ptr, &endptr, 10);
+  value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_heartbeat_interval = value;
   if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'bgp_daemon_msglog_amqp_heartbeat_interval'. Globalized.\n", filename);

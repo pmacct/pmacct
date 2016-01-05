@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -4677,6 +4677,8 @@ int evaluate_lm_method(struct packet_ptrs *pptrs, u_int8_t srcdst, u_int32_t bit
     else 
       return FALSE;
   }
+
+  return ERR;
 }
 
 char *lookup_tpl_ext_db(void *entry, u_int32_t pen, u_int16_t type)
