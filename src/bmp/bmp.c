@@ -752,7 +752,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
 
   if (!(bpuh = (struct bmp_peer_up_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_up_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer up hdr\n",
-	config.name), peer->addr_str;
+	config.name, peer->addr_str);
     return;
   }
 

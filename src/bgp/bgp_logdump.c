@@ -521,7 +521,7 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     len -= strlen(psi_string);
 
     if (peer->addr.family) addr_to_str(peer_src_ip, &peer->addr);
-    else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(empty_peer_src_ip));
+    else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(peer_src_ip));
 
     escape_ip_uscores(peer_src_ip);
     snprintf(buf, newlen, "%s", peer_src_ip);

@@ -1408,7 +1408,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	  safi = SAFI_UNICAST;
 	}
 	else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
-	  if (info->afi == AFI_IP && p.prefixlen > 120 || (info->afi == AFI_IP6 && p.prefixlen > 216)) return -1;
+	  if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return -1;
 
           psize = ((p.prefixlen+7)/8);
           if (psize > end) return -1;

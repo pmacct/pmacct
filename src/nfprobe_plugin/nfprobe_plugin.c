@@ -528,8 +528,6 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   vlen_to_flowrec(flow, pvlen, ndx);
 
   return (transport_to_flowrec(flow, data, extras, p->proto, ndx));
-
-  // return (0);
 }
 
 static int
@@ -553,6 +551,8 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   l2_to_flowrec_update(flow, data, extras, ndx);
   cust_to_flowrec(flow, pcust, ndx);
   vlen_to_flowrec(flow, pvlen, ndx);
+
+  return (0);
 }
 #endif 
 
