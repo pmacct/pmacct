@@ -60,6 +60,7 @@ void nfacctd_bmp_wrapper()
 void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
+  int peers_idx_rr = 0;
   char *bmp_packet_ptr;
   u_int32_t pkt_remaining_len=0;
   time_t now;
@@ -518,10 +519,17 @@ void skinny_bmp_daemon()
       goto select_again;
     }
 
-    /* We have something coming in: let's lookup which peer is that; XXX old: to be optimized */
+    /*
+       We have something coming in: let's lookup which peer is that.
+       FvD: To avoid starvation of the "later established" peers, we
+       offset the start of the search in a round-robin style.
+    */
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-      if (bmp_peers[peers_idx].fd && FD_ISSET(bmp_peers[peers_idx].fd, &read_descs)) {
-        peer = &bmp_peers[peers_idx];
+      int loc_idx = (peers_idx + peers_idx_rr) % config.nfacctd_bmp_max_peers;
+
+      if (peers[loc_idx].fd && FD_ISSET(peers[loc_idx].fd, &read_descs)) {
+        peer = &peers[loc_idx];
+        peers_idx_rr = (peers_idx_rr + 1) % config.nfacctd_bmp_max_peers;
         break;
       }
     }
