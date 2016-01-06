@@ -77,10 +77,7 @@ void skinny_bmp_daemon()
 #endif
   struct hosts_table allow;
   struct host_addr addr;
-
-  /* BMP peer batching vars */
-  int bmp_current_batch_elem = 0;
-  time_t bmp_current_batch_stamp_base = 0;
+  struct bgp_peer_batch bp_batch;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
@@ -299,6 +296,7 @@ void skinny_bmp_daemon()
     config.nfacctd_bmp_batch = 0;
     config.nfacctd_bmp_batch_interval = 0;
   }
+  else bgp_batch_init(&bp_batch, config.nfacctd_bmp_batch, config.nfacctd_bmp_batch_interval);
 
   if (nfacctd_bmp_msglog_backend_methods) {
 #ifdef WITH_JANSSON
@@ -430,54 +428,8 @@ void skinny_bmp_daemon()
     if (FD_ISSET(config.bmp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
 
-      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-        if (bmp_peers[peers_idx].fd == 0) {
-          now = time(NULL);
-
-          if (bmp_current_batch_elem > 0 || now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
-            peer = &bmp_peers[peers_idx];
-            if (bgp_peer_init(peer)) peer = NULL;
-	    else recalc_fds = TRUE;
-
-            log_notification_unset(&log_notifications.bmp_peers_throttling);
-
-            if (config.nfacctd_bmp_batch && peer) {
-              if (now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
-                bmp_current_batch_elem = config.nfacctd_bmp_batch;
-                bmp_current_batch_stamp_base = now;
-              }
-
-              if (bmp_current_batch_elem > 0) bmp_current_batch_elem--;
-            }
-
-            break;
-          }
-          else { /* throttle */
-            int fd = 0;
-
-            /* We briefly accept the new connection to be able to drop it */
-            if (!log_notification_isset(log_notifications.bmp_peers_throttling)) {
-              Log(LOG_INFO, "INFO ( %s/core/BMP ): throttling at BMP peer #%u\n", config.name, peers_idx);
-              log_notification_set(&log_notifications.bmp_peers_throttling);
-            }
-            fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
-            close(fd);
-            goto select_again;
-          }
-        }
-      }
-
-      if (!peer) {
-        int fd;
-
-        /* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/core/BMP ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
-                        config.name, config.nfacctd_bmp_max_peers);
-        fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
-        close(fd);
-        goto select_again;
-      }
-      peer->fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
+      fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
+      if (fd == ERR) goto read_data;
 
 #if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
@@ -488,11 +440,58 @@ void skinny_bmp_daemon()
       else allowed = TRUE;
 
       if (!allowed) {
-        bgp_peer_close(peer, FUNC_TYPE_BMP);
-        recalc_fds = TRUE;
-        goto select_again;
+	close(fd);
+	goto read_data;
       }
 
+      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+        if (!bmp_peers[peers_idx].fd) {
+          now = time(NULL);
+
+          /*
+             Admitted if:
+             *  batching feature is disabled or
+             *  we have room in the current batch or
+             *  we can start a new batch 
+          */
+          if (bgp_batch_is_admitted(&bp_batch, now)) {
+            peer = &bmp_peers[peers_idx];
+            if (bgp_peer_init(peer)) peer = NULL;
+            else recalc_fds = TRUE;
+
+            log_notification_unset(&log_notifications.bgp_peers_throttling);
+
+            if (bgp_batch_is_enabled(&bp_batch) && peer) {
+              if (bgp_batch_is_expired(&bp_batch, now)) bgp_batch_reset(&bp_batch, now);
+              if (bgp_batch_is_not_empty(&bp_batch)) bgp_batch_decrease_counter(&bp_batch);
+            }
+
+            break;
+          }
+          else { /* throttle */
+            /* We briefly accept the new connection to be able to drop it */
+            if (!log_notification_isset(log_notifications.bmp_peers_throttling)) {
+              Log(LOG_INFO, "INFO ( %s/core/BGP ): throttling at BMP peer #%u\n", config.name, peers_idx);
+              log_notification_set(&log_notifications.bmp_peers_throttling);
+            }
+
+            close(fd);
+            goto read_data;
+          }
+        }
+      }
+
+      if (!peer) {
+        int fd;
+
+        /* We briefly accept the new connection to be able to drop it */
+        Log(LOG_ERR, "ERROR ( %s/core/BMP ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
+                        config.name, config.nfacctd_bmp_max_peers);
+        close(fd);
+        goto read_data;
+      }
+
+      peer->fd = fd;
       FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = ((struct sockaddr *)&client)->sa_family;
       if (peer->addr.family == AF_INET) {
@@ -522,7 +521,7 @@ void skinny_bmp_daemon()
           FD_CLR(peer->fd, &bkp_read_descs);
           bgp_peer_close(peer, FUNC_TYPE_BMP);
 	  recalc_fds = TRUE;
-          goto select_again;
+          goto read_data;
         }
         else {
           if (bmp_peers[peers_check_idx].fd) peers_num++;
@@ -531,11 +530,10 @@ void skinny_bmp_daemon()
 
       Log(LOG_INFO, "INFO ( %s/core/BMP ): BMP peers usage: %u/%u\n", config.name, peers_num, config.nfacctd_bmp_max_peers);
 
-      if (config.nfacctd_bmp_neighbors_file)
-        write_neighbors_file(config.nfacctd_bmp_neighbors_file);
-
-      goto select_again;
+      if (config.nfacctd_bmp_neighbors_file) write_neighbors_file(config.nfacctd_bmp_neighbors_file);
     }
+
+    read_data:
 
     /*
        We have something coming in: let's lookup which peer is that.
@@ -552,10 +550,7 @@ void skinny_bmp_daemon()
       }
     }
 
-    if (!peer) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): message delivered to an unknown peer (FD bits: %d; FD max: %d)\n", config.name, select_num, select_fd);
-      goto select_again;
-    }
+    if (!peer) goto select_again;
 
     ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
     peer->msglen = (ret + peer->buf.truncated_len);
