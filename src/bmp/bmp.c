@@ -60,7 +60,7 @@ void nfacctd_bmp_wrapper()
 void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
-  int peers_idx_rr = 0;
+  int peers_idx_rr = 0, max_peers_idx = 0;
   char *bmp_packet_ptr;
   u_int32_t pkt_remaining_len=0;
   time_t now;
@@ -84,7 +84,7 @@ void skinny_bmp_daemon()
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
-  int select_fd, select_num;
+  int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
 
   /* logdump time management */
   time_t dump_refresh_deadline;
@@ -339,13 +339,28 @@ void skinny_bmp_daemon()
     if (config.bmp_dump_kafka_topic) bmp_dump_init_kafka_host();
   }
 
+  select_fd = bkp_select_fd = (config.bmp_sock + 1);
+  recalc_fds = FALSE;
+
   for (;;) {
     select_again:
 
-    select_fd = config.bmp_sock;
-    for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++)
-      if (select_fd < bmp_peers[peers_idx].fd) select_fd = bmp_peers[peers_idx].fd;
-    select_fd++;
+    if (recalc_fds) {
+      select_fd = config.bmp_sock;
+      max_peers_idx = -1; /* .. since valid indexes include 0 */
+
+      for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+        if (select_fd < bmp_peers[peers_idx].fd) select_fd = bmp_peers[peers_idx].fd;
+        if (bmp_peers[peers_idx].fd) max_peers_idx = peers_idx;
+      }
+      select_fd++;
+      max_peers_idx++;
+
+      bkp_select_fd = select_fd;
+      recalc_fds = FALSE;
+    }
+    else select_fd = bkp_select_fd;
+
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
     if (bmp_dump_backend_methods) {
@@ -422,6 +437,7 @@ void skinny_bmp_daemon()
           if (bmp_current_batch_elem > 0 || now > (bmp_current_batch_stamp_base + config.nfacctd_bmp_batch_interval)) {
             peer = &bmp_peers[peers_idx];
             if (bgp_peer_init(peer)) peer = NULL;
+	    else recalc_fds = TRUE;
 
             log_notification_unset(&log_notifications.bmp_peers_throttling);
 
@@ -473,6 +489,7 @@ void skinny_bmp_daemon()
 
       if (!allowed) {
         bgp_peer_close(peer, FUNC_TYPE_BMP);
+        recalc_fds = TRUE;
         goto select_again;
       }
 
@@ -504,6 +521,7 @@ void skinny_bmp_daemon()
                                 config.name, bmp_peers[peers_check_idx].addr_str);
           FD_CLR(peer->fd, &bkp_read_descs);
           bgp_peer_close(peer, FUNC_TYPE_BMP);
+	  recalc_fds = TRUE;
           goto select_again;
         }
         else {
@@ -524,12 +542,12 @@ void skinny_bmp_daemon()
        FvD: To avoid starvation of the "later established" peers, we
        offset the start of the search in a round-robin style.
     */
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-      int loc_idx = (peers_idx + peers_idx_rr) % config.nfacctd_bmp_max_peers;
+    for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+      int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
 
-      if (peers[loc_idx].fd && FD_ISSET(peers[loc_idx].fd, &read_descs)) {
-        peer = &peers[loc_idx];
-        peers_idx_rr = (peers_idx_rr + 1) % config.nfacctd_bmp_max_peers;
+      if (bmp_peers[loc_idx].fd && FD_ISSET(bmp_peers[loc_idx].fd, &read_descs)) {
+        peer = &bmp_peers[loc_idx];
+        peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
         break;
       }
     }
@@ -546,6 +564,7 @@ void skinny_bmp_daemon()
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer, FUNC_TYPE_BMP);
+      recalc_fds = TRUE;
       goto select_again;
     }
     else {
