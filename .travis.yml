@@ -13,7 +13,7 @@ install:
   - cd libmaxminddb-1.1.2 && ./configure && make && sudo make install && cd ..
 
 script:
-  - ./configure --enable-ipv6 --enable-plabel --enable-mysql --enable-pgsql  --with-pgsql-includes=/usr/include/postgresql  --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson
+  - ./configure --enable-ipv6 --enable-mysql --enable-pgsql  --with-pgsql-includes=/usr/include/postgresql  --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-ulog
   - make
   - sudo make install
 
