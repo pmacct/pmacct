@@ -2008,7 +2008,7 @@ echo "configure:2005: checking your own pcap libraries" >&5
     echo $ac_n "checking for PF_RING library""... $ac_c" 1>&6
 echo "configure:2010: checking for PF_RING library" >&5
     if test -r $PCAPLIB/libpfring.a -o -r $PCAPLIB/libpfring.so; then
-      LIBS="${LIBS} -lpcap -lpfring"
+      LIBS="${LIBS} -lpfring -lpcap"
       echo "$ac_t""yes" 1>&6
       PFRING_LIB_FOUND=1
     else
@@ -2030,7 +2030,7 @@ echo "configure:2026: checking default locations for libpcap" >&5
     echo $ac_n "checking for PF_RING library""... $ac_c" 1>&6
 echo "configure:2032: checking for PF_RING library" >&5
     if test -r /usr/local/lib/libpfring.a -o -r /usr/local/lib/libpfring.so; then
-      LIBS="${LIBS} -lpcap -lpfring"
+      LIBS="${LIBS} -lpfring -lpcap"
       echo "$ac_t""yes" 1>&6
       PFRING_LIB_FOUND=1
     else
