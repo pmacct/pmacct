@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -569,6 +569,13 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
       queries_queue[qq_ptr] = cache_ptr;
       qq_ptr++;
     }
+
+    if (cache_ptr->pbgp) free(cache_ptr->pbgp);
+    if (cache_ptr->pmpls) free(cache_ptr->pmpls);
+    if (cache_ptr->pnat) free(cache_ptr->pnat);
+    if (cache_ptr->pcust) free(cache_ptr->pcust);
+    if (cache_ptr->pvlen) free(cache_ptr->pvlen);
+    if (cache_ptr->stitch) free(cache_ptr->stitch);
 
     memcpy(cache_ptr, &container[j], dbc_size); 
 
