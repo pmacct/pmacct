@@ -72,6 +72,7 @@ dnl: shared object handling
 AC_MSG_CHECKING([whether to disable linking against shared objects])
 AC_ARG_ENABLE(so,
         [  --disable-so                     Disable linking against shared objects (default: no)],
+	[ 
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(no)
           AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
@@ -88,7 +89,8 @@ AC_ARG_ENABLE(so,
 		LDFLAGS="-static ${LDFLAGS}"
 	  fi
         fi
-        ,
+        ],
+	[
         AC_MSG_RESULT(no)
         AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
         AC_CHECK_LIB(dl, dlopen,
@@ -98,6 +100,7 @@ AC_ARG_ENABLE(so,
         if test x"$USING_DLOPEN" != x"yes"; then
                 AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
         fi
+	]
 )
 dnl finish: shared object handling
 
