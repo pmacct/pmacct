@@ -757,14 +757,14 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
-  file = fopen(fname,"w");
+  file = fopen(fname, "w");
   if (file) {
     if (chown(fname, owner, group) == -1)
       Log(LOG_WARNING, "WARN: Unable to chown() '%s': %s\n", fname, strerror(errno));
 
     if (file_lock(fileno(file))) {
       Log(LOG_ALERT, "ALERT: Unable to obtain lock of '%s'.\n", fname);
-      return;
+      goto exit_lane;
     }
     sprintf(pid, "%d\n", getpid());
     fwrite(pid, strlen(pid), 1, file);
@@ -774,8 +774,11 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
   }
   else {
     Log(LOG_ERR, "ERROR: Unable to open file '%s'\n", fname);
-    return;
+    goto exit_lane;
   }
+
+  exit_lane:
+  free(fname);
 }
 
 void remove_pid_file(char *filename)
@@ -1017,12 +1020,14 @@ int file_archive(const char *path, int rotations)
     ret = stat(new_path, &st);
     if (ret < 0) {
       rename(path, new_path);
+      free(new_path);
       return 0;
     }
   }
 
   /* we should never reach this point */
   Log(LOG_ALERT, "ALERT: No more recovery logfile ( %s ) rotations allowed. Data is getting lost.\n", path);  
+  free(new_path);
   return -1;
 }
 
