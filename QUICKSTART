@@ -1546,7 +1546,12 @@ inspection. Optionally, ie. if the issue can be easily reproduced, the daemon
 can be re-configured for compiling with the --debug flag so to produce extra
 info suitable for troubleshooting.
 
-b) If nfacctd or sfacctd is in use and the symptom is no output data, check: 1)
+b) In case of (suspected) memory leaks, the advice is to run the daemon under
+valgrind, ie. "valgrind --leak-check=yes <pmacct command-line>". A memory leak
+is confirmed if the amount of "definitely lost" bytes keeps increasing over
+time. 
+
+c) If nfacctd or sfacctd is in use and the symptom is no output data, check: 1)
 with tcpdump, ie. "tcpdump -i <interface> -n port <sfacctd/nfacctd listening
 port>", that packets are arriving. Optionally wireshark/tshark can be used,
 in conjunction with decoders (cflow for NetFlow/IPFIX and sflow for sFlow) to
@@ -1558,7 +1563,7 @@ using a config from a production system in lab, disable or double-check values
 for internal buffering: if set too high they will retain data internally to
 the daemon. 
 
-c) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
+d) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
 be produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
 port <sfacctd/nfacctd listening port>". The output file can be replayed in
 lab with tcpreplay. Before replaying, L2/L3 must be adjusted to reflect the
@@ -1570,7 +1575,7 @@ the output file from tcprewrite can be supplied to tcpreplay for the actual
 replay, ie.: "tcpreplay -i <output interface> -x <speed multiplicator> <input
 file>". 
 
-d) Buffering is often an element to tune. While buffering internal to pmacct, 
+e) Buffering is often an element to tune. While buffering internal to pmacct, 
 plugin_buffer_size and plugin_buffer_size, return warning messages in case of
 data loss, buffering between pmacct and the kernel is more tricky (often it is
 outside control of the application) and can be inferred by symptoms like seq

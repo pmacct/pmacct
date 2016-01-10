@@ -16,3 +16,12 @@ DOCUMENTATION
   * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents 
   * examples/: Sample pmacct and 3rd party tools configurations; sample maps
   * sql/: SQL schemas for various pmacct tables; IPv6 and 64bit counters hacks 
+
+#BUILDING#
+
+- Build GitHub code:
+  * git clone https://github.com/pmacct/pmacct.git
+  * cd pmacct
+  * ./configure *[check-out available configure knobs via ./configure --help]* 
+  * make
+  * make install *[with super-user permission]*
