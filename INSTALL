@@ -13,15 +13,12 @@ Read accepted options with "<name> -h" and run with "<name> [options]".
 
 (*) x.y.z is the release version.
 
-The rationale behind pmacct compilation is that by default all features
-are turned off (IPv6, MySQL, PostgreSQL, SQLite, multi-threading, 64bit
-counters) making the package dependant only on a working libpcap. So if
-you need any of these don't forget to turn them on manually.
+The rationale behind compiling pmacct is that by default all features are
+turned off (ie. IPv6, MySQL, PostgreSQL, SQLite, etc.) making the package
+dependant only on a working libpcap. If you need any of these don't forget
+to turn them on manually (full list of compiling options can be checked
+out via a "./configure --help".
 
-Some features will get turned on by default in future once they will
-pick up sufficient ground (ie. IPv6) or will be sufficiently tested to
-be considered stable (ie. multi-threading).
- 
 
 BASIC INSTALLATION:
 
