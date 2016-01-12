@@ -1,7 +1,7 @@
-pmacct (Promiscuous mode IP Accounting package) v1.5.3
+pmacct (Promiscuous mode IP Accounting package) v1.6.0
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
-1.5.3 -- XX-01-2016
+1.5.3 -- 14-01-2016
   + Introduced the Kafka plugin: Apache Kafka is publish-subscribe messaging
     rethought as a distributed commit log. Its qualities being: fast, scalable,
     durable and distributed by design. pmacct Kafka plugin is designed to
