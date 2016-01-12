@@ -2,6 +2,96 @@ pmacct (Promiscuous mode IP Accounting package) v1.5.3
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
 1.5.3 -- XX-01-2016
+  + Introduced the Kafka plugin: Apache Kafka is publish-subscribe messaging
+    rethought as a distributed commit log. Its qualities being: fast, scalable,
+    durable and distributed by design. pmacct Kafka plugin is designed to
+    send aggregated network traffic data, in JSON format, through a Kafka
+    broker to 3rd party applications.
+  + Introduced Kafka support to BGP and BMP daemons, in both their msglog
+    and dump flavors (ie. see [bgp|bmp]_daemon_msglog_kafka_broker_host and
+    [bgp_table|bmp]_dump_kafka_broker_host and companion config directives).
+  + Introduced support for a Kafka broker to be used for queueing and data
+    exchange between Core Process and plugins. plugin_pipe_kafka directive,
+    along with all other plugin_pipe_kafka_* directives, can be set globally
+    or apply on a per plugin basis - similarly to what was done for RabbitMQ
+    (ie. plugin_pipe_amqp). Support is currently restricted only to print
+    plugin.
+  + Added a new timestamp_arrival primitive to expose NetFlow/IPFIX records
+    observation time (ie. arrival at the collector), in addition to flows
+    start and end times (timestamp_start and timestamp_end respectively).
+  + plugin_pipe_amqp: feature extended to the plugins missing it: nfprobe,
+    sfprobe and tee.
+  + Introduced bgp_table_dump_latest_file: defines the full pathname to
+    pointer(s) to latest file(s). Update of the latest pointer is done
+    evaluating files modification time. Many thanks to Juan Camilo Cardona
+    ( @jccardonar ) for proposing the feature.
+  + Introduced pmacctd_nonroot config directive to allow to run pmacctd
+    from a user with non root privileges. This can be desirable on systems
+    supporting a tool like setcap, ie. 'setcap "cap_net_raw,cap_net_admin=ep"
+    /path/to/pmacctd', to assign specific system capabilities to unprivileged
+    users. Patch is courtesy by Laurent Oudot ( @loudot-tehtris ).
+  + Introduced plugin_pipe_check_core_pid: when enabled (default), validates
+    the sender of data at the plugin side. Useful when plugin_pipe_amqp or
+    plugin_pipe_kafka are enabled and hence a broker sits between the daemon
+    Core Process and the Plugins.
+  + A new debug_internal_msg config directive to specifically enable debug
+    of internal messaging between Core process and plugins.
+  ! bgp_table_dump_refresh_time, bmp_dump_refresh_time: max allowed value
+    raised to 86400 from 3600.
+  ! [n|s]facctd_as_new renamed [n|s]facctd_as; improved input checks to all
+    *_as (ie. nfacctd_as) and *_net (ie. nfacctd_net) config directives.
+  ! pkt_handlers.c: NF_sampling_rate_handler(), SF_sampling_rate_handler()
+    now perform a renormalization check at last (instead of at first) so to
+    report the case of unknown (0) sampling rate.
+  ! plugin_pipe_amqp_routing_key: default value changed to '$core_proc_name-
+    $plugin_name-$plugin_type'. Also, increased flexibility for customizing
+    the key with the use of variables (values computed at startup).
+  ! Improved amqp_receiver.py example with CL arguments and better exception
+    handling. Also removed file amqp_receiver_trace.py, example is now merged
+    in amqp_receiver.py.
+  ! fix, BGP daemon: several code optimizations and a few starving conditions
+    fixed. Thanks to Markus Weber ( @FvDxxx ) for his peer index round-robin
+    patch; thanks also to Job Snijders ( @job ) for his extensive support in
+    this area.
+  ! fix, BMP daemon: greatly improved message parsing and segment reassembly;
+    RabbitMQ broker support found broken; several code optimizations are also
+    included.
+  ! fix, bgp_table.c: bgp_table_top(), added input check to prevent crashes
+    in cases table contains no routes.
+  ! fix, networks_file: missing atoi() for networks_cache_entries. Patch is
+    courtesy by Markus Weber ( @FvDxxx ).
+  ! fix, plugin_pipe_amqp_routing_key: check introduced to prevent multiple
+    plugins to bind to the same RabbitMQ exchange, routing key combination.
+    Thanks to Jerred Horsman for reporting the issue.
+  ! fix, MongoDB plugin: added a custom oid fuzz generator to prevent
+    concurrent inserts to fail; switched from deprecated mongo_connect() to
+    mongo_client(); added MONGO_CONTINUE_ON_ERROR flag to mongo_insert_batch
+    along with more verbose error reporting. Patches are all courtesy by
+    Russell Heilling ( @xchewtoyx ).
+  ! fix, nl.c: increments made too early after introduction of MAX_GTP_TRIALS
+    Affected: pmacctd processing of GTP in releases 1.5.x. Patch is courtesy
+    by TANAKA Masayuki ( @tanakamasayuki ).
+  ! fix, pkt_handlers.c: improved case for no SAMPLER_ID, ALU & IPFIX in
+    NF_sampling_rate_handler() on par with NF_counters_renormalize_handler().
+  ! fix, SQL scripts: always use "DROP TABLE IF EXISTS" for both PostgreSQL
+    and SQLite. Pathes are courtesy by Vincent Bernat ( @vincentbernat ).
+  ! fix, plugin_hooks.c: if p_amqp_publish_binary() calls were done while a
+    sleeper thread was launched, a memory corruption was observed.
+  ! fix, util.c: mkdir() calls in mkdir_multilevel() now default to mode 777
+    instead of 700; this allows more play with files_umask (by default 077).
+    Thanks to Ruben Laban for reporting the issue.
+  ! fix, BMP daemon: solved a build issue under MacOS X. Path is courtesy by
+    Junpei YOSHINO ( @junpei-yoshino ).
+  ! fix, util.c: self-defined Malloc() can allocate more than 4GB of memory;
+    function is also now renamed pm_malloc().
+  ! fix, PostgreSQL plugin: upon purge, call sql_query() only if status of
+    the entry is SQL_CACHE_COMMITTED. Thanks to Harry Foster ( @harryfoster )
+    for his support resolving the issue.
+  ! fix, building system: link pfring before pcap to prevend failures when
+    linking. Patch is courtesy by @matthewsf . 
+  ! fix, plugin_common.c: memory leak discovered when pending queries queue
+    was involved (ie. cases where print_refresh_time > print_history). Thanks
+    to Edward Henigin for reporting the issue.
 
 1.5.2 -- 07-09-2015
   + Introduced support for a RabbitMQ broker to be used for queueing and
