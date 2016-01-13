@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -433,6 +433,7 @@ struct pkt_primitives {
   pm_class_t class;
   u_int32_t sampling_rate;
   u_int16_t pkt_len_distrib;
+  u_int32_t sequence_number;
 };
 
 struct pkt_data {

@@ -657,6 +657,13 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_SEQUENCE_NUMBER) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sequence_number_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sequence_number_handler;
+      else primitives--;
+      primitives++;
+    }
+
     /* if cpptrs.num > 0 one or multiple custom primitives are defined */
     if (channels_list[index].plugin->cfg.cpptrs.num) {
       if (config.acct_type == ACCT_PM) {
@@ -3106,6 +3113,28 @@ void NF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct pack
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_arrival.tv_usec = 0;
 }
 
+void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+    pdata->primitives.sequence_number = ntohl(((struct struct_header_ipfix *) pptrs->f_header)->flow_sequence); 
+    break;
+  case 9:
+    pdata->primitives.sequence_number = ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence);
+    break;
+  case 8:
+    pdata->primitives.sequence_number = ntohl(((struct struct_header_v8 *) pptrs->f_header)->flow_sequence);
+    break;
+  default:
+    pdata->primitives.sequence_number = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
+    break;
+  }
+}
+
 void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -4383,6 +4412,14 @@ void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct pack
 
   gettimeofday(&pnat->timestamp_arrival, NULL);
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_arrival.tv_usec = 0;
+}
+
+void SF_sequence_number_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.sequence_number = sample->sequenceNo;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

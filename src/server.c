@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -494,6 +494,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_TAG) d1->tag = s1->tag; 
   if (w & COUNT_TAG2) d1->tag2 = s1->tag2; 
   if (w & COUNT_CLASS) d1->class = s1->class; 
+  if (w2 & COUNT_SEQUENCE_NUMBER) memcpy(&d1->sequence_number, &s1->sequence_number, sizeof(d1->sequence_number));
 
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
   if (w2 & COUNT_SRC_HOST_COUNTRY) memcpy(&d1->src_ip_country, &s1->src_ip_country, sizeof(d1->src_ip_country)); 

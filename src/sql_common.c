@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -1263,6 +1263,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) what_to_count_2 |= COUNT_TIMESTAMP_ARRIVAL;
+    if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) what_to_count_2 |= COUNT_SEQUENCE_NUMBER;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
   }
 
@@ -2566,6 +2567,22 @@ int sql_evaluate_primitives(int primitive)
       values[primitive].handler = where[primitive].handler = count_timestamp_max_residual_handler;
       primitive++;
     }
+  }
+
+  if (what_to_count_2 & COUNT_SEQUENCE_NUMBER) {
+    int use_copy=0;
+
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "seqno", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "seqno=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].handler = where[primitive].handler = count_sequence_number_handler;
+    values[primitive].type = where[primitive].type = COUNT_INT_SEQUENCE_NUMBER;
+    primitive++;
   }
 
   /* all custom primitives printed here */

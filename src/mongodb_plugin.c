@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -760,6 +760,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
           bson_append_date(bson_elem, "timestamp_max", bdate_max);
 	}
       }
+
+      if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) bson_append_int(bson_elem, "seqno", data->sequence_number);
   
       /* all custom primitives printed here */
       {

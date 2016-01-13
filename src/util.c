@@ -2189,6 +2189,12 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
+  if (wtc_2 & COUNT_SEQUENCE_NUMBER) {
+    kv = json_pack("{sI}", "seqno", pbase->sequence_number);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   /* all custom primitives printed here */
   {
     int cp_idx;

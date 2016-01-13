@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -109,6 +109,7 @@ EXT void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -160,6 +161,7 @@ EXT void SF_sampling_rate_handler(struct channels_list_entry *, struct packet_pt
 EXT void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_as_path_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

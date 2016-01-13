@@ -100,6 +100,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"tag", 1, 1, 1, 1, "Numeric tag, ie. as result of pre_tag_map evaluation"},
   {"tag2", 1, 1, 1, 1, "Numeric tag, ie. as result of pre_tag_map evaluation"},
   {"label", 1, 1, 1, 1, "String label, ie. as result of pre_tag_map evaluation"},
+  {"seqno", 0, 0, 1, 1, "Export protocol (ie. NetFlow) sequence number"},
   {"TIME", 1, 1, 1, 1, ""}, 
   {"timestamp_start", 0, 0, 1, 0, "Flow start time or observation time at the exporter"},
   {"timestamp_end", 0, 0, 1, 0, "Flow end time"},

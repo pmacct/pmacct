@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -833,6 +833,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	  }
         }
 
+        if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "%-10u  ", data->sequence_number);
+
         /* all custom primitives printed here */
         {
           int cp_idx;
@@ -1133,6 +1135,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%s%s", write_sep(sep, &count), buf2);
 	  }
         }
+
+        if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "%s%u", write_sep(sep, &count), data->sequence_number);
   
         /* all custom primitives printed here */
         {
@@ -1283,6 +1287,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
     fprintf(f, "TIMESTAMP_MIN                  ");
     fprintf(f, "TIMESTAMP_MAX                  "); 
   }
+  if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "SEQNO       ");
 
   /* all custom primitives printed here */
   {
@@ -1381,6 +1386,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
     fprintf(f, "%sTIMESTAMP_MIN", write_sep(sep, &count));
     fprintf(f, "%sTIMESTAMP_MAX", write_sep(sep, &count));
   }
+  if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "%sSEQUENCE_NUMBER", write_sep(sep, &count));
 
   /* all custom primitives printed here */
   { 
