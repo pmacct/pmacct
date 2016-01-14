@@ -38,9 +38,7 @@
  *	@(#)bpf.c	7.5 (Berkeley) 7/15/91
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#if (!defined PCAP_NOBPF)
 
 #ifdef WIN32
 
@@ -559,3 +557,5 @@ bpf_validate(f, len)
 	}
 	return BPF_CLASS(f[len - 1].code) == BPF_RET;
 }
+
+#endif /* PCAP_NOBPF */
