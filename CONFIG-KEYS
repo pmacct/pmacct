@@ -104,6 +104,12 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  observation; timestamp_end records NetFlow/IPFIX flow end time; finally,
 		  timestamp_arrival records libpcap packet timestamp and sFlow/NetFlow/IPFIX
 		  packet arrival time at the collector.
+		* seqno reports about export protocol (NetFlow, sFlow, IPFIX) sequence number;
+		  due to its potential de-aggregation effect, two main use-cases are seen as
+		  use of this primitive: 1) if using a log type (de-)aggregation method, ie.
+		  for security, forensics, etc., in addition to existing primitives; 2) if
+		  using a reporting type aggregation method, it is recommended to split this
+		  primitive in a separate plugin instance instead for sequencing analysis.  
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
