@@ -57,6 +57,7 @@ void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_
 void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
 void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
+void pmc_lower_string(char *);
 
 /* vars */
 struct imt_custom_primitives pmc_custom_primitives_registry;
@@ -645,7 +646,7 @@ int main(int argc,char **argv)
   char *clibuf, *bufptr;
   unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
-  char path[128], file[128], password[9], rd_str[SRVBUFLEN];
+  char path[SRVBUFLEN], file[SRVBUFLEN], password[9], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
   int sd, buflen, unpacked, printed;
   int counter=0, ct_idx=0, ct_num=0, sep_len=0;
@@ -655,7 +656,7 @@ int main(int argc,char **argv)
 
   /* mrtg stuff */
   char match_string[LARGEBUFLEN], *match_string_token, *match_string_ptr;
-  char count[128], *count_token[N_PRIMITIVES], *count_ptr;
+  char count[SRVBUFLEN], *count_token[N_PRIMITIVES], *count_ptr;
   int count_index = 0, match_string_index = 0, index = 0;
   pm_cfgreg_t count_token_int[N_PRIMITIVES];
   
@@ -735,7 +736,9 @@ int main(int argc,char **argv)
       break;
     case 'c':
       strlcpy(count, optarg, sizeof(count));
+      pmc_lower_string(count);
       count_ptr = count;
+
       while ((*count_ptr != '\0') && (count_index <= N_PRIMITIVES-1)) {
         count_token[count_index] = pmc_extract_token(&count_ptr, ',');
 	if (!strcmp(count_token[count_index], "src_host")) {
@@ -1050,24 +1053,28 @@ int main(int argc,char **argv)
       want_counter = TRUE;
       break;
     case 'n':
-      if (!strcmp(optarg, "bytes")) which_counter = 0;
-      else if (!strcmp(optarg, "packets")) which_counter = 1;
-      else if (!strcmp(optarg, "flows")) which_counter = 3;
-      else if (!strcmp(optarg, "all")) which_counter = 2;
-      else printf("WARN: -n, ignoring unknown counter type: %s.\n", optarg);
+      strlcpy(tmpbuf, optarg, sizeof(tmpbuf));
+      pmc_lower_string(tmpbuf);
+      if (!strcmp(tmpbuf, "bytes")) which_counter = 0;
+      else if (!strcmp(tmpbuf, "packets")) which_counter = 1;
+      else if (!strcmp(tmpbuf, "flows")) which_counter = 3;
+      else if (!strcmp(tmpbuf, "all")) which_counter = 2;
+      else printf("WARN: -n, ignoring unknown counter type: %s.\n", tmpbuf);
       break;
     case 'T':
-      topN_howmany_ptr = strchr(optarg, ',');
+      strlcpy(tmpbuf, optarg, sizeof(tmpbuf));
+      pmc_lower_string(tmpbuf);
+      topN_howmany_ptr = strchr(tmpbuf, ',');
       if (topN_howmany_ptr) {
 	*topN_howmany_ptr = '\0';
 	topN_howmany_ptr++;
 	topN_howmany = strtoul(topN_howmany_ptr, &endptr, 10);
       }
 
-      if (!strcmp(optarg, "bytes")) topN_counter = 1;
-      else if (!strcmp(optarg, "packets")) topN_counter = 2;
-      else if (!strcmp(optarg, "flows")) topN_counter = 3;
-      else printf("WARN: -T, ignoring unknown counter type: %s.\n", optarg);
+      if (!strcmp(tmpbuf, "bytes")) topN_counter = 1;
+      else if (!strcmp(tmpbuf, "packets")) topN_counter = 2;
+      else if (!strcmp(tmpbuf, "flows")) topN_counter = 3;
+      else printf("WARN: -T, ignoring unknown counter type: %s.\n", tmpbuf);
       break;
     case 'S':
       sum_counters = TRUE;
@@ -1096,11 +1103,13 @@ int main(int argc,char **argv)
       want_reset = TRUE;
       break;
     case 'O':
-      if (!strcmp(optarg, "formatted"))
+      strlcpy(tmpbuf, optarg, sizeof(tmpbuf));
+      pmc_lower_string(tmpbuf);
+      if (!strcmp(tmpbuf, "formatted"))
         want_output = PRINT_OUTPUT_FORMATTED;
-      else if (!strcmp(optarg, "csv"))
+      else if (!strcmp(tmpbuf, "csv"))
         want_output = PRINT_OUTPUT_CSV;
-      else if (!strcmp(optarg, "json")) {
+      else if (!strcmp(tmpbuf, "json")) {
 #ifdef WITH_JANSSON
         want_output = PRINT_OUTPUT_JSON;
 #else
@@ -1108,15 +1117,15 @@ int main(int argc,char **argv)
         printf("WARN: -O set to json but will produce no output (missing --enable-jansson).\n");
 #endif
       }
-      else if (!strcmp(optarg, "event_formatted")) {
+      else if (!strcmp(tmpbuf, "event_formatted")) {
 	want_output = PRINT_OUTPUT_FORMATTED;
         want_output |= PRINT_OUTPUT_EVENT;
       }
-      else if (!strcmp(optarg, "event_csv")) {
+      else if (!strcmp(tmpbuf, "event_csv")) {
 	want_output = PRINT_OUTPUT_CSV;
         want_output |= PRINT_OUTPUT_EVENT;
       }
-      else printf("WARN: -O, ignoring unknown output value: '%s'.\n", optarg);
+      else printf("WARN: -O, ignoring unknown output value: '%s'.\n", tmpbuf);
       break;
     case 'E':
       strlcpy(sep, optarg, sizeof(sep));
@@ -3821,4 +3830,14 @@ void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc
   pmc_vlen_prims_get(pvlen, wtc, &label_ptr);
   if (!label_ptr) label_ptr = empty_string;
   printf("%s%s", sep, label_ptr);
+}
+
+void pmc_lower_string(char *string)
+{
+  int i = 0;
+
+  while (string[i] != '\0') {
+    string[i] = tolower(string[i]);
+    i++;
+  }
 }
