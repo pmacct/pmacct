@@ -418,6 +418,9 @@ int main(int argc,char **argv, char **envp)
       if (!list->cfg.pipe_check_core_pid) list->cfg.pipe_check_core_pid = TRUE;
       else if (list->cfg.pipe_check_core_pid == FALSE_NONZERO) list->cfg.pipe_check_core_pid = FALSE;
 
+      if (!list->cfg.tmp_net_own_field) list->cfg.tmp_net_own_field = TRUE;
+      else if (list->cfg.tmp_net_own_field == FALSE_NONZERO) list->cfg.tmp_net_own_field = FALSE;
+
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n", config.name);

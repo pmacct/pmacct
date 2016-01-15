@@ -102,7 +102,7 @@ void usage_client(char *prog)
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -I\tSet timestamps in 'since Epoch' format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
-  printf("  -o\tPrint IP prefixes in a different field than IP addresses (temporary)\n");
+  printf("  -o\tPrint IP prefixes in the same field as IP addresses (temporary, 1.5 compatible)\n");
   printf("  -V\tPrint version and exit\n");
   printf("\n");
   printf("  See QUICKSTART file in the distribution for examples\n");
@@ -710,7 +710,7 @@ int main(int argc,char **argv)
   which_counter = FALSE;
   topN_counter = FALSE;
   topN_howmany = FALSE;
-  tmp_net_own_field = FALSE;
+  tmp_net_own_field = TRUE;
   sum_counters = FALSE;
   num_counters = FALSE;
   fetch_from_file = FALSE;
@@ -1089,7 +1089,7 @@ int main(int argc,char **argv)
       want_all_fields = TRUE;
       break;
     case 'o':
-      tmp_net_own_field = TRUE;
+      tmp_net_own_field = FALSE;
       break;
     case 'r':
       q.type |= WANT_RESET;
@@ -1976,7 +1976,7 @@ int main(int argc,char **argv)
     if (((what_to_count & COUNT_SRC_HOST) && (what_to_count & COUNT_SRC_NET)) ||
         ((what_to_count & COUNT_DST_HOST) && (what_to_count & COUNT_DST_NET))) {
       if (!tmp_net_own_field) {
-        printf("ERROR: src_host, src_net and dst_host, dst_net are mutually exclusive: set -o.\n");
+        printf("ERROR: src_host, src_net and dst_host, dst_net are mutually exclusive\n");
         exit(1);
       }
     }

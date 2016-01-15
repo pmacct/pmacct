@@ -2265,9 +2265,9 @@ KEY:		tmp_net_own_field
 VALUES:         [ true | false ]
 DESC:		Writes IP prefixes, src_net and dst_net primitives, to a own/distinct field than the
 		one used for IP addresses, src_host and dst_host primitives. This config directive is
-		meant for pmacct 1.5 only in order to save, default setting, backward compatibility.
-		With the next major release this feature will become default behaviour.
-DEFAULT:        false
+		meant for pmacct 1.6 only in order to ease backward compatibility by setting the value
+		of this directive to false. In the next major release this directive will be removed.
+DEFAULT:        true
 
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in

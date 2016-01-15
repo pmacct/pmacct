@@ -8,6 +8,20 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:     >= 1.6.0
+FROM:   <= 1.5.3
+TOPIC:  src_net and dst_net primitives
+DESC:   Until 1.5.3 src_net and dst_net primitives value was written in the
+        same field as src_host and dst_host - hence making the two sets mutual
+        exclusive. This was found limiting by several users and, as a result of
+        that, a separate field was added for storing networks (see "Increased
+        memory usage by plugin caches" entry in this document). The use of such
+        separate field had to be explicitely enabled by setting tmp_net_own_field
+        configuration directive to true (by default set to false for backward
+	compatibility); in version 1.6.0, tmp_net_own_field default value has
+	now changed to true. tmp_net_own_field will be removed at the next
+	major release.
+
 TO:	>= 1.5.2
 FROM:	<= 1.5.1
 TOPIC:	--enable-ipv6 , IPv4-mapped IPv6 addresses & bindv6only

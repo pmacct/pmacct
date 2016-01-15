@@ -416,6 +416,9 @@ int main(int argc,char **argv, char **envp)
       if (!list->cfg.pipe_check_core_pid) list->cfg.pipe_check_core_pid = TRUE;
       else if (list->cfg.pipe_check_core_pid == FALSE_NONZERO) list->cfg.pipe_check_core_pid = FALSE;
 
+      if (!list->cfg.tmp_net_own_field) list->cfg.tmp_net_own_field = TRUE;
+      else if (list->cfg.tmp_net_own_field == FALSE_NONZERO) list->cfg.tmp_net_own_field = FALSE;
+
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_TEE) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugin not supported in 'uacctd'.\n", config.name);
