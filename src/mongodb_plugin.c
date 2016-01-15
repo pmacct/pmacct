@@ -762,6 +762,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       }
 
       if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) bson_append_int(bson_elem, "seqno", data->sequence_number);
+      if (config.what_to_count_2 & COUNT_VERSION) bson_append_int(bson_elem, "version", data->version);
   
       /* all custom primitives printed here */
       {

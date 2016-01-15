@@ -664,6 +664,13 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_VERSION) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_version_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_version_handler;
+      else primitives--;
+      primitives++;
+    }
+
     /* if cpptrs.num > 0 one or multiple custom primitives are defined */
     if (channels_list[index].plugin->cfg.cpptrs.num) {
       if (config.acct_type == ACCT_PM) {
@@ -3135,6 +3142,14 @@ void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
   }
 }
 
+void NF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+
+  pdata->primitives.version = hdr->version;
+}
+
 void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -4420,6 +4435,14 @@ void SF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.sequence_number = sample->sequenceNo;
+}
+
+void SF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.version = sample->datagramVersion;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
