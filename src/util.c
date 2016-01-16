@@ -932,6 +932,8 @@ void lower_string(char *string)
 {
   int i = 0;
 
+  if (!string) return;
+
   while (string[i] != '\0') {
     string[i] = tolower(string[i]);
     i++;

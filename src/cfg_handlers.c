@@ -968,6 +968,8 @@ int cfg_key_sql_data(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
+  lower_string(value_ptr);
+
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_data = value_ptr;
   else {
     for (; list; list = list->next) {
@@ -1681,6 +1683,8 @@ int cfg_key_sql_locking_style(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
+
+  lower_string(value_ptr);
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_locking_style = value_ptr;
   else {

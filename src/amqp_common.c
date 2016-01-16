@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -88,7 +88,10 @@ int p_amqp_get_routing_key_rr(struct p_amqp_host *amqp_host)
 
 void p_amqp_set_exchange_type(struct p_amqp_host *amqp_host, char *exchange_type)
 {
-  if (amqp_host) amqp_host->exchange_type = exchange_type;
+  if (amqp_host && exchange_type) {
+    lower_string(exchange_type);
+    amqp_host->exchange_type = exchange_type;
+  }
 }
 
 void p_amqp_set_host(struct p_amqp_host *amqp_host, char *host)

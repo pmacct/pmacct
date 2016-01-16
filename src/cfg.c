@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -325,7 +325,7 @@ void parse_core_process_name(char *filename, int rows, int ignore_names)
   int index = 0, found = 0;
   char key[SRVBUFLEN], name[SRVBUFLEN], *start, *end;
 
-  /* searching for 'plugins' key */
+  /* searching for 'core_proc_name' key */
   while (index < rows) {
     memset(key, 0, SRVBUFLEN);
     start = NULL; end = NULL;
@@ -395,6 +395,7 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
 	
       /* Having already plugins name and type, we'll filter out reserved symbols */
       trim_spaces(token);
+      lower_string(token);
       if (!strcmp(token, "core")) {
         Log(LOG_ERR, "ERROR ( %s ): plugins of type 'core' are not allowed. Exiting.\n", filename);
         exit(1);
