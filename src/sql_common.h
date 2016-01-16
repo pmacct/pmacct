@@ -285,7 +285,7 @@ EXT void PG_copy_count_timestamp_min_handler(const struct db_cache *, struct ins
 EXT void count_timestamp_min_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_sequence_number_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_export_proto_seqno_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_max_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_custom_primitives_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void fake_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

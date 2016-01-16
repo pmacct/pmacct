@@ -657,7 +657,7 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    if (channels_list[index].aggregation_2 & COUNT_SEQUENCE_NUMBER) {
+    if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_SEQNO) {
       if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sequence_number_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sequence_number_handler;
       else primitives--;
@@ -3121,16 +3121,16 @@ void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
 
   switch(hdr->version) {
   case 10:
-    pdata->primitives.sequence_number = ntohl(((struct struct_header_ipfix *) pptrs->f_header)->flow_sequence); 
+    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_ipfix *) pptrs->f_header)->flow_sequence); 
     break;
   case 9:
-    pdata->primitives.sequence_number = ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence);
+    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence);
     break;
   case 8:
-    pdata->primitives.sequence_number = ntohl(((struct struct_header_v8 *) pptrs->f_header)->flow_sequence);
+    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v8 *) pptrs->f_header)->flow_sequence);
     break;
   default:
-    pdata->primitives.sequence_number = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
+    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
     break;
   }
 }
@@ -4419,7 +4419,7 @@ void SF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  pdata->primitives.sequence_number = sample->sequenceNo;
+  pdata->primitives.export_proto_seqno = sample->sequenceNo;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
