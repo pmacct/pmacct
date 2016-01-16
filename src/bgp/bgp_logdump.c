@@ -257,10 +257,11 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   }
   else if (type == FUNC_TYPE_SFLOW_COUNTER) {
     file = config.sfacctd_counter_file;
-    amqp_routing_key = NULL; /* AMQP not supported */
-    amqp_routing_key_rr = 0; /* AMQP not supported */
+#ifdef WITH_RABBITMQ
+    pah = &sfacctd_counter_amqp_host;
+    amqp_routing_key = config.sfacctd_counter_amqp_routing_key;
+#endif
     kafka_topic = NULL; /* Kafka not supported */
-    kafka_topic_rr = 0; /* Kafka not supported */
     max_peers = config.sfacctd_counter_max_nodes;
 
     pa_str = peer_ip_src;

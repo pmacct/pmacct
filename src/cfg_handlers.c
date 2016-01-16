@@ -4262,6 +4262,146 @@ int cfg_key_sfacctd_counter_output(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sfacctd_counter_amqp_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_vhost = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_vhost'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_user(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_user = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_user'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_passwd(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_passwd = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_passwd'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_exchange(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_exchange = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_exchange'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_exchange_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_exchange_type = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_exchange_type'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_routing_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_routing_key = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_routing_key'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_persistent_msg = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_persistent_msg'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+      
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'sfacctd_counter_amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_frame_max = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_frame_max'. Globalized.\n", filename);
+  
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_heartbeat_interval = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_heartbeat_interval'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_retry(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_amqp_retry' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_retry = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_retry'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

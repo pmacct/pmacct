@@ -179,6 +179,7 @@ int main(int argc,char **argv, char **envp)
   xflow_status_table_entries = 0;
   xflow_tot_bad_datagrams = 0;
   errflag = 0;
+  sfacctd_counter_backend_methods = 0;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&server, 0, sizeof(server));
@@ -902,15 +903,24 @@ int main(int argc,char **argv, char **envp)
     allowed = TRUE;
   }
 
-  if (config.sfacctd_counter_file) {
-    sf_cnt_log = malloc(MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
-    if (!sf_cnt_log) {
-      Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() sFlow counters log structure. Exiting.\n", config.name);
-      exit(1);
+  if (config.sfacctd_counter_file || config.sfacctd_counter_amqp_routing_key) {
+    if (config.sfacctd_counter_file) sfacctd_counter_backend_methods++;
+    if (config.sfacctd_counter_amqp_routing_key) sfacctd_counter_backend_methods++;
+
+    if (sfacctd_counter_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/core ): sfacctd_counter_file and sfacctd_counter_amqp_routing_key are mutually exclusive. Exiting.\n", config.name);
+      exit_all(1);
     }
-    memset(sf_cnt_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
-    config.sfacctd_counter_max_nodes = MAX_SF_CNT_LOG_ENTRIES;
-    bgp_peer_log_seq_init(&sf_cnt_log_seq);
+    else {
+      sf_cnt_log = malloc(MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+      if (!sf_cnt_log) {
+        Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() sFlow counters log structure. Exiting.\n", config.name);
+        exit(1);
+      }
+      memset(sf_cnt_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+      config.sfacctd_counter_max_nodes = MAX_SF_CNT_LOG_ENTRIES;
+      bgp_peer_log_seq_init(&sf_cnt_log_seq);
+    }
 
     if (!config.sfacctd_counter_output) {
 #ifdef WITH_JANSSON
@@ -919,6 +929,18 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_WARNING, "WARN ( %s/core ): sfacctd_counter_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
 #endif
     }
+  }
+
+  if (config.sfacctd_counter_amqp_routing_key) {
+#ifdef WITH_RABBITMQ
+    sfacctd_counter_init_amqp_host();
+    p_amqp_connect_to_publish(&sfacctd_counter_amqp_host);
+
+    if (!config.sfacctd_counter_amqp_retry)
+    config.sfacctd_counter_amqp_retry = AMQP_DEFAULT_RETRY;
+#else
+    Log(LOG_WARNING, "WARN ( %s/core ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
+#endif
   }
 
   /* Main loop */
@@ -980,9 +1002,20 @@ int main(int argc,char **argv, char **envp)
       reload_log_sf_cnt = FALSE;
     }
 
-    if (config.sfacctd_counter_file) {
+    if (sfacctd_counter_backend_methods) {
       gettimeofday(&sf_cnt_log_tstamp, NULL);
       compose_timestamp(sf_cnt_log_tstamp_str, SRVBUFLEN, &sf_cnt_log_tstamp, TRUE, config.sql_history_since_epoch);
+
+#ifdef WITH_RABBITMQ
+      if (config.sfacctd_counter_amqp_routing_key) {
+        time_t last_fail = P_broker_timers_get_last_fail(&sfacctd_counter_amqp_host.btimers);
+
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&sfacctd_counter_amqp_host.btimers)) <= log_tstamp.tv_sec)) {
+          sfacctd_counter_init_amqp_host();
+          p_amqp_connect_to_publish(&sfacctd_counter_amqp_host);
+        }
+      }
+#endif
     }
 
     if (data_plugins) {
@@ -1077,7 +1110,7 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     config.name, debug_agent_addr, debug_agent_port, spp->datagramVersion, sequenceNo);
   }
 
-  if (config.sfacctd_counter_file) sfv245_check_counter_log_init(&pptrsv->v4); 
+  if (sfacctd_counter_backend_methods) sfv245_check_counter_log_init(&pptrsv->v4); 
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
@@ -1124,7 +1157,7 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     config.name, debug_agent_addr, debug_agent_port, spp->datagramVersion, sequenceNo);
   }
 
-  if (config.sfacctd_counter_file) sfv245_check_counter_log_init(&pptrsv->v4); 
+  if (sfacctd_counter_backend_methods) sfv245_check_counter_log_init(&pptrsv->v4); 
 
   for (idx = 0; idx < samplesInPacket; idx++) {
     InterSampleCleanup(spp);
@@ -2327,7 +2360,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
   u_int32_t sampleLength, num_elements, idx, drain;
   u_char *sampleStart;
 
-  if (config.sfacctd_counter_file) {
+  if (sfacctd_counter_backend_methods) {
     if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
     if (xse) peer = (struct bgp_peer *) xse->sf_cnt; 
   }
@@ -2365,7 +2398,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
     }
     else Log(LOG_WARNING, "WARN ( %s/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n", config.name);
 
-    if (config.sfacctd_counter_file) sf_cnt_log_msg(peer, sample, length, "log", config.sfacctd_counter_output, tag);
+    if (sfacctd_counter_backend_methods) sf_cnt_log_msg(peer, sample, length, "log", config.sfacctd_counter_output, tag);
     else skipBytes(sample, length);
   }
 
@@ -2971,7 +3004,7 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
 
 int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char *event_type, int output, u_int32_t tag)
 {
-  int ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  int ret = 0, amqp_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
   if (!peer || !sample || !event_type) {
     skipBytes(sample, len);
@@ -2980,6 +3013,11 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
+
+#ifdef WITH_RABBITMQ
+  if (config.sfacctd_counter_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG)
+    p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+#endif
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
@@ -3036,11 +3074,18 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
 
     if (config.sfacctd_counter_file && etype == BGP_LOGDUMP_ET_LOG)
       write_and_free_json(peer->log->fd, obj);
+
+#ifdef WITH_RABBITMQ
+    if (config.sfacctd_counter_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) {
+      amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+    }
+#endif
 #endif
   }
   else skipBytes(sample, len);
 
-  return ret;
+  return (ret | amqp_ret);
 }
 
 int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_type, int output, void *vobj)
@@ -3305,3 +3350,34 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
 void NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
 }
+
+#if defined WITH_RABBITMQ
+void sfacctd_counter_init_amqp_host()
+{
+  p_amqp_init_host(&sfacctd_counter_amqp_host);
+
+  if (!config.sfacctd_counter_amqp_user) config.sfacctd_counter_amqp_user = rabbitmq_user;
+  if (!config.sfacctd_counter_amqp_passwd) config.sfacctd_counter_amqp_passwd = rabbitmq_pwd;
+  if (!config.sfacctd_counter_amqp_exchange) config.sfacctd_counter_amqp_exchange = default_amqp_exchange;
+  if (!config.sfacctd_counter_amqp_exchange_type) config.sfacctd_counter_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.sfacctd_counter_amqp_host) config.sfacctd_counter_amqp_host = default_amqp_host;
+  if (!config.sfacctd_counter_amqp_vhost) config.sfacctd_counter_amqp_vhost = default_amqp_vhost;
+  if (!config.sfacctd_counter_amqp_retry) config.sfacctd_counter_amqp_retry = AMQP_DEFAULT_RETRY;
+
+  p_amqp_set_user(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_user);
+  p_amqp_set_passwd(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_passwd);
+  p_amqp_set_exchange(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_exchange);
+  p_amqp_set_exchange_type(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_exchange_type);
+  p_amqp_set_host(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_host);
+  p_amqp_set_vhost(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_vhost);
+  p_amqp_set_persistent_msg(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_persistent_msg);
+  p_amqp_set_frame_max(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_frame_max);
+  p_amqp_set_content_type_json(&sfacctd_counter_amqp_host);
+  p_amqp_set_heartbeat_interval(&sfacctd_counter_amqp_host, config.sfacctd_counter_amqp_heartbeat_interval);
+  P_broker_timers_set_retry_interval(&sfacctd_counter_amqp_host.btimers, config.sfacctd_counter_amqp_retry);
+}
+#else
+void sfacctd_counter_init_amqp_host()
+{
+}
+#endif
