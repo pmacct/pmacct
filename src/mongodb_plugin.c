@@ -894,11 +894,7 @@ void MongoDB_create_indexes(mongo *db_conn, const char *table)
 	    bson_append_int(idx_key, token, 1);
 	  }
 	  bson_finish(idx_key);
-#if MONGO_MAJOR <= 0 && MONGO_MINOR <= 7
-	  mongo_create_index(db_conn, table, idx_key, NULL, 0, NULL);
-#else
 	  mongo_create_index(db_conn, table, idx_key, NULL, 0, -1, NULL);
-#endif
 	  bson_destroy(idx_key);
         }
       }

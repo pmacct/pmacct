@@ -8,6 +8,17 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.6.0
+FROM:	<= 1.5.3
+TOPIC:	MongoDB C legagy driver releases <= 0.8
+DESC:	Support for MongoDB C legacy driver prior to 0.8 is dropped; in 0.8
+	release, the most current version of the legacy driver, there was an
+	impacting change of API; unfortunately in mongo.h the version was not
+	updated and it looks the legacy driver is not maintained anymore (so
+	no chance to have the nit fixed). The only way out seemed to default
+	to the 0.8 behaviour, as that is the one currently being downloaded
+	from GitHub by users. 
+
 TO:     >= 1.6.0
 FROM:   <= 1.5.3
 TOPIC:  src_net and dst_net primitives
