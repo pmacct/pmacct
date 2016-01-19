@@ -4402,6 +4402,79 @@ int cfg_key_sfacctd_counter_amqp_retry(char *filename, char *name, char *value_p
   return changes;
 }
 
+int cfg_key_sfacctd_counter_kafka_broker_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_broker_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_broker_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_broker_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_broker_port = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_broker_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_topic = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_topic'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_partition(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_kafka_partition' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_partition = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_partition'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_retry(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_kafka_retry' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_retry = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_retry'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

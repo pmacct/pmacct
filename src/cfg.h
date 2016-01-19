@@ -197,6 +197,11 @@ struct configuration {
   u_int32_t sfacctd_counter_amqp_frame_max;
   u_int32_t sfacctd_counter_amqp_heartbeat_interval;
   int sfacctd_counter_amqp_retry;
+  char *sfacctd_counter_kafka_broker_host;
+  char *sfacctd_counter_kafka_topic;
+  int sfacctd_counter_kafka_partition;
+  int sfacctd_counter_kafka_broker_port;
+  int sfacctd_counter_kafka_retry;
   int nfacctd_disable_checks;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;

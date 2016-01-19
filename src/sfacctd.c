@@ -903,12 +903,13 @@ int main(int argc,char **argv, char **envp)
     allowed = TRUE;
   }
 
-  if (config.sfacctd_counter_file || config.sfacctd_counter_amqp_routing_key) {
+  if (config.sfacctd_counter_file || config.sfacctd_counter_amqp_routing_key || config.sfacctd_counter_kafka_topic) {
     if (config.sfacctd_counter_file) sfacctd_counter_backend_methods++;
     if (config.sfacctd_counter_amqp_routing_key) sfacctd_counter_backend_methods++;
+    if (config.sfacctd_counter_kafka_topic) sfacctd_counter_backend_methods++;
 
     if (sfacctd_counter_backend_methods > 1) {
-      Log(LOG_ERR, "ERROR ( %s/core ): sfacctd_counter_file and sfacctd_counter_amqp_routing_key are mutually exclusive. Exiting.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core ): sfacctd_counter_file, sfacctd_counter_amqp_routing_key and sfacctd_counter_kafka_topic are mutually exclusive. Exiting.\n", config.name);
       exit_all(1);
     }
     else {
@@ -940,6 +941,14 @@ int main(int argc,char **argv, char **envp)
     config.sfacctd_counter_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
     Log(LOG_WARNING, "WARN ( %s/core ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
+#endif
+  }
+
+  if (config.sfacctd_counter_kafka_topic) {
+#ifdef WITH_KAFKA
+    sfacctd_counter_init_kafka_host();
+#else
+    Log(LOG_WARNING, "WARN ( %s/core ): p_kafka_connect_to_produce() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
   }
 
@@ -1014,6 +1023,15 @@ int main(int argc,char **argv, char **envp)
           sfacctd_counter_init_amqp_host();
           p_amqp_connect_to_publish(&sfacctd_counter_amqp_host);
         }
+      }
+#endif
+
+#ifdef WITH_KAFKA
+      if (config.sfacctd_counter_kafka_topic) {
+        time_t last_fail = P_broker_timers_get_last_fail(&sfacctd_counter_kafka_host.btimers);
+
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&sfacctd_counter_kafka_host.btimers)) <= log_tstamp.tv_sec))
+          sfacctd_counter_init_kafka_host();
       }
 #endif
     }
@@ -3004,7 +3022,7 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
 
 int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char *event_type, int output, u_int32_t tag)
 {
-  int ret = 0, amqp_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
   if (!peer || !sample || !event_type) {
     skipBytes(sample, len);
@@ -3017,6 +3035,11 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
 #ifdef WITH_RABBITMQ
   if (config.sfacctd_counter_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG)
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+#endif
+
+#ifdef WITH_KAFKA
+  if (config.sfacctd_counter_kafka_topic && etype == BGP_LOGDUMP_ET_LOG)
+    p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -3081,11 +3104,18 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
 #endif
+
+#ifdef WITH_KAFKA
+    if (config.sfacctd_counter_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) {
+      kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
+    }
+#endif
 #endif
   }
   else skipBytes(sample, len);
 
-  return (ret | amqp_ret);
+  return (ret | amqp_ret | kafka_ret);
 }
 
 int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_type, int output, void *vobj)
@@ -3379,5 +3409,32 @@ void sfacctd_counter_init_amqp_host()
 #else
 void sfacctd_counter_init_amqp_host()
 {
+}
+#endif
+
+#if defined WITH_KAFKA
+int sfacctd_counter_init_kafka_host()
+{
+  int ret;
+
+  p_kafka_init_host(&sfacctd_counter_kafka_host);
+  ret = p_kafka_connect_to_produce(&sfacctd_counter_kafka_host);
+
+  if (!config.sfacctd_counter_kafka_broker_host) config.sfacctd_counter_kafka_broker_host = default_kafka_broker_host;
+  if (!config.sfacctd_counter_kafka_broker_port) config.sfacctd_counter_kafka_broker_port = default_kafka_broker_port;
+  if (!config.sfacctd_counter_kafka_retry) config.sfacctd_counter_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+
+  p_kafka_set_broker(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_broker_host, config.sfacctd_counter_kafka_broker_port);
+  p_kafka_set_topic(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_topic);
+  p_kafka_set_partition(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_partition);
+  p_kafka_set_content_type(&sfacctd_counter_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  P_broker_timers_set_retry_interval(&sfacctd_counter_kafka_host.btimers, config.sfacctd_counter_kafka_retry);
+
+  return ret;
+}
+#else
+int sfacctd_counter_init_kafka_host()
+{
+  return ERR;
 }
 #endif

@@ -261,7 +261,10 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     pah = &sfacctd_counter_amqp_host;
     amqp_routing_key = config.sfacctd_counter_amqp_routing_key;
 #endif
-    kafka_topic = NULL; /* Kafka not supported */
+#ifdef WITH_KAFKA
+    pkh = &sfacctd_counter_kafka_host;
+    kafka_topic = config.sfacctd_counter_kafka_topic;
+#endif
     max_peers = config.sfacctd_counter_max_nodes;
 
     pa_str = peer_ip_src;

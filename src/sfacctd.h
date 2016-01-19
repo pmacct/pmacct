@@ -309,6 +309,7 @@ EXT int readCounters_generic(struct bgp_peer *, SFSample *, char *, int, void *)
 EXT int readCounters_ethernet(struct bgp_peer *, SFSample *, char *, int, void *);
 EXT int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int, void *);
 EXT void sfacctd_counter_init_amqp_host();
+EXT int sfacctd_counter_init_kafka_host();
 
 EXT char *sfv245_check_status(SFSample *spp, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
