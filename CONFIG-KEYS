@@ -118,7 +118,8 @@ KEY:		aggregate_primitives [GLOBAL, MAP]
 DESC:		Expects full pathname to a file containing custom-defined primitives. Once
 		defined in this file, primitives can be used in 'aggregate' statements. The
 		feature is currently available only in nfacctd, for NetFlow v9/IPFIX, pmacctd
-		and uacctd. Examples are available in 'examples/primitives.lst.example'. 
+		and uacctd. Examples are available in 'examples/primitives.lst.example'. This
+		map does not support reloading at runtime. 
 DEFAULT:	none
 
 KEY:		aggregate_filter [NO_GLOBAL]
