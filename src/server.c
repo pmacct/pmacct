@@ -495,6 +495,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_TAG2) d1->tag2 = s1->tag2; 
   if (w & COUNT_CLASS) d1->class = s1->class; 
   if (w2 & COUNT_EXPORT_PROTO_SEQNO) memcpy(&d1->export_proto_seqno, &s1->export_proto_seqno, sizeof(d1->export_proto_seqno));
+  if (w2 & COUNT_EXPORT_PROTO_VERSION) memcpy(&d1->export_proto_version, &s1->export_proto_version, sizeof(d1->export_proto_version));
 
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
   if (w2 & COUNT_SRC_HOST_COUNTRY) memcpy(&d1->src_ip_country, &s1->src_ip_country, sizeof(d1->src_ip_country)); 
