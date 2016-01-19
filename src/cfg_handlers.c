@@ -257,7 +257,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "mpls_label_bottom")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_BOTTOM, count_token);
     else if (!strcmp(count_token, "mpls_stack_depth")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_STACK_DEPTH, count_token);
     else if (!strcmp(count_token, "label")) cfg_set_aggregate(filename, value, COUNT_INT_LABEL, count_token);
-    else if (!strcmp(count_token, "seqno")) cfg_set_aggregate(filename, value, COUNT_INT_SEQUENCE_NUMBER, count_token);
+    else if (!strcmp(count_token, "export_proto_seqno")) cfg_set_aggregate(filename, value, COUNT_INT_EXPORT_PROTO_SEQNO, count_token);
     else {
       cpptrs.primitive[cpptrs.num].name = count_token;
       cpptrs.num++;
@@ -967,6 +967,8 @@ int cfg_key_sql_data(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
+
+  lower_string(value_ptr);
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_data = value_ptr;
   else {
@@ -1681,6 +1683,8 @@ int cfg_key_sql_locking_style(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
+
+  lower_string(value_ptr);
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_locking_style = value_ptr;
   else {
@@ -4258,6 +4262,219 @@ int cfg_key_sfacctd_counter_output(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sfacctd_counter_amqp_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_vhost = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_vhost'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_user(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_user = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_user'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_passwd(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_passwd = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_passwd'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_exchange(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_exchange = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_exchange'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_exchange_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_exchange_type = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_exchange_type'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_routing_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_routing_key = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_routing_key'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_persistent_msg = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_persistent_msg'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+      
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN ( %s ): 'sfacctd_counter_amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_frame_max = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_frame_max'. Globalized.\n", filename);
+  
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_heartbeat_interval = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_heartbeat_interval'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_amqp_retry(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_amqp_retry' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_amqp_retry = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_amqp_retry'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_broker_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_broker_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_broker_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_broker_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_broker_port = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_broker_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_topic = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_topic'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_partition(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_kafka_partition' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_partition = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_partition'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_sfacctd_counter_kafka_retry(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN ( %s ): 'sfacctd_counter_kafka_retry' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_retry = value;
+  if (name) Log(LOG_WARNING, "WARN ( %s ): plugin name not supported for key 'sfacctd_counter_kafka_retry'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -5792,7 +6009,7 @@ int cfg_key_tmp_net_own_field(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  value = parse_truefalse(value_ptr);
+  value = parse_truefalse_nonzero(value_ptr);
   if (value < 0) return ERR;
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.tmp_net_own_field = value;

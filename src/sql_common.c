@@ -1263,7 +1263,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) what_to_count_2 |= COUNT_TIMESTAMP_ARRIVAL;
-    if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) what_to_count_2 |= COUNT_SEQUENCE_NUMBER;
+    if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) what_to_count_2 |= COUNT_EXPORT_PROTO_SEQNO;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
   }
 
@@ -2569,7 +2569,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if (what_to_count_2 & COUNT_SEQUENCE_NUMBER) {
+  if (what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) {
     int use_copy=0;
 
     if (primitive) {
@@ -2577,11 +2577,11 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
-    strncat(insert_clause, "seqno", SPACELEFT(insert_clause));
-    strncat(where[primitive].string, "seqno=%u", SPACELEFT(where[primitive].string));
+    strncat(insert_clause, "export_proto_seqno", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "export_proto_seqno=%u", SPACELEFT(where[primitive].string));
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    values[primitive].handler = where[primitive].handler = count_sequence_number_handler;
-    values[primitive].type = where[primitive].type = COUNT_INT_SEQUENCE_NUMBER;
+    values[primitive].handler = where[primitive].handler = count_export_proto_seqno_handler;
+    values[primitive].type = where[primitive].type = COUNT_INT_EXPORT_PROTO_SEQNO;
     primitive++;
   }
 

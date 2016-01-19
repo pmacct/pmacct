@@ -433,7 +433,7 @@ struct pkt_primitives {
   pm_class_t class;
   u_int32_t sampling_rate;
   u_int16_t pkt_len_distrib;
-  u_int32_t sequence_number;
+  u_int32_t export_proto_seqno;
 };
 
 struct pkt_data {

@@ -8,6 +8,31 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.6.0
+FROM:	<= 1.5.3
+TOPIC:	MongoDB C legagy driver releases <= 0.8
+DESC:	Support for MongoDB C legacy driver prior to 0.8 is dropped; in 0.8
+	release, the most current version of the legacy driver, there was an
+	impacting change of API; unfortunately in mongo.h the version was not
+	updated and it looks the legacy driver is not maintained anymore (so
+	no chance to have the nit fixed). The only way out seemed to default
+	to the 0.8 behaviour, as that is the one currently being downloaded
+	from GitHub by users. 
+
+TO:     >= 1.6.0
+FROM:   <= 1.5.3
+TOPIC:  src_net and dst_net primitives
+DESC:   Until 1.5.3 src_net and dst_net primitives value was written in the
+        same field as src_host and dst_host - hence making the two sets mutual
+        exclusive. This was found limiting by several users and, as a result of
+        that, a separate field was added for storing networks (see "Increased
+        memory usage by plugin caches" entry in this document). The use of such
+        separate field had to be explicitely enabled by setting tmp_net_own_field
+        configuration directive to true (by default set to false for backward
+	compatibility); in version 1.6.0, tmp_net_own_field default value has
+	now changed to true. tmp_net_own_field will be removed at the next
+	major release.
+
 TO:	>= 1.5.2
 FROM:	<= 1.5.1
 TOPIC:	--enable-ipv6 , IPv4-mapped IPv6 addresses & bindv6only

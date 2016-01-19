@@ -833,7 +833,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	  }
         }
 
-        if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "%-10u  ", data->sequence_number);
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%-18u  ", data->export_proto_seqno);
 
         /* all custom primitives printed here */
         {
@@ -1136,7 +1136,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	  }
         }
 
-        if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "%s%u", write_sep(sep, &count), data->sequence_number);
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_seqno);
   
         /* all custom primitives printed here */
         {
@@ -1287,7 +1287,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
     fprintf(f, "TIMESTAMP_MIN                  ");
     fprintf(f, "TIMESTAMP_MAX                  "); 
   }
-  if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "SEQNO       ");
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "EXPORT_PROTO_SEQNO  ");
 
   /* all custom primitives printed here */
   {
@@ -1386,7 +1386,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
     fprintf(f, "%sTIMESTAMP_MIN", write_sep(sep, &count));
     fprintf(f, "%sTIMESTAMP_MAX", write_sep(sep, &count));
   }
-  if (config.what_to_count_2 & COUNT_SEQUENCE_NUMBER) fprintf(f, "%sSEQUENCE_NUMBER", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
 
   /* all custom primitives printed here */
   { 
