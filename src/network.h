@@ -434,6 +434,7 @@ struct pkt_primitives {
   u_int32_t sampling_rate;
   u_int16_t pkt_len_distrib;
   u_int32_t export_proto_seqno;
+  u_int16_t export_proto_version;
 };
 
 struct pkt_data {

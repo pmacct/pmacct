@@ -110,6 +110,7 @@ EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -162,6 +163,7 @@ EXT void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *,
 EXT void SF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_as_path_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
