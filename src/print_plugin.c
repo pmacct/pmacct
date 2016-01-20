@@ -834,7 +834,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         }
 
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%-18u  ", data->export_proto_seqno);
-        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%-18u  ", data->export_proto_version);
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%-20u  ", data->export_proto_version);
 
         /* all custom primitives printed here */
         {
@@ -1290,7 +1290,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
     fprintf(f, "TIMESTAMP_MAX                  "); 
   }
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "EXPORT_PROTO_SEQNO  ");
-  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "EXPORT_PROTO_VERSION ");
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "EXPORT_PROTO_VERSION  ");
 
   /* all custom primitives printed here */
   {

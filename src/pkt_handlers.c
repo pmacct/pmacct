@@ -4441,6 +4441,7 @@ void SF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
+
   pdata->primitives.export_proto_version = sample->datagramVersion;
 }
 

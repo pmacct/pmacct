@@ -2571,8 +2571,6 @@ int sql_evaluate_primitives(int primitive)
   }
 
   if (what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) {
-    int use_copy=0;
-
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
@@ -2587,8 +2585,6 @@ int sql_evaluate_primitives(int primitive)
   }
 
   if (what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) {
-    int use_copy=0;
-
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));

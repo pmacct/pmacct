@@ -3,7 +3,7 @@ you are using, ie. README.mysql, README.pgsql or README.sqlite3.
 
 export_proto fields.
 Such fields are being introduced to inform about different aspects (typically
-part of the hearders) of the export protocol (ie. NetFlow, sFlow, IPFIX).
+part of the headers) of the export protocol (ie. NetFlow, sFlow, IPFIX).
 Guidelines  below (typically in MySQL format) are to add such primitives to
 the SQL schema:
 
