@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -705,8 +705,6 @@ void SQLI_set_callbacks(struct sqlfunc_cb_registry *cbr)
 
 void SQLI_init_default_values(struct insert_data *idata)
 {
-  config.sql_recovery_logfile = FALSE; /* not supported */
-
   /* Linking database parameters */
   if (!config.sql_db) config.sql_db = sqlite3_db;
   if (!config.sql_table) {

@@ -377,7 +377,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_history_roundoff", cfg_key_sql_history_roundoff},
   {"sql_history_since_epoch", cfg_key_sql_history_since_epoch},
   {"sql_recovery_backup_host", cfg_key_sql_recovery_backup_host},
-  {"sql_recovery_logfile", cfg_key_sql_recovery_logfile},
   {"sql_delimiter", cfg_key_sql_delimiter},
   {"sql_max_writers", cfg_key_sql_max_writers},
   {"sql_trigger_exec", cfg_key_sql_trigger_exec},

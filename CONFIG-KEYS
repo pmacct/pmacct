@@ -1010,22 +1010,6 @@ DESC:		Enables alignment of minutes (m), hours (h), days of month (d), weeks (w)
 		date to the first day of the month. 
 DEFAULT:	none
 
-KEY:		sql_recovery_logfile
-DESC:		Enables recovery mode; recovery mechanism kicks in if the DB fails. It works by checking
-		for the successful result of each SQL query. By default it is disabled. By using this key
-		aggregates are recovered to the specified logfile. Data may be played later by either
-		'pmmyplay' or 'pmpgplay' tools. Each time pmacct package is updated it's good rule not
-		continue writing old files but start a new ones. Each plugin instance has to write to a
-		different logfile in order to avoid inconsistencies over data. And, finally, the maximum
-		size for a logfile is set to 2Gb: if the logfile reaches such size, it's automatically
-		rotated (in a way similar to logrotate: old file is renamed, appending a little sequential
-		integer to it, and a new file is started). See INTERNALS 'Recovery modes' section for
-		details about this topic. SQLite 3.x note: because the database is file-based it's quite
-		useless to have a logfile, thus this feature is not supported. However, note that the
-		'sql_recovery_backup_host' directive allows to specify an alternate SQLite 3.x database
-		file. 
-DEFAULT:	none
-
 KEY:            sql_recovery_backup_host
 DESC:           Enables recovery mode; recovery mechanism kicks in if DB fails. It works by checking for
 		the successful result of each SQL query. By default it is disabled. By using this key
@@ -1040,10 +1024,9 @@ KEY:            [ sql_max_writers | print_max_writers | mongo_max_writers | amqp
 DESC:           Sets the maximum number of concurrent writer processes the plugin is allowed to start.
 		This setting allows pmacct to degrade gracefully during major backend lock/outages/
 		unavailability. The value is split as follows: up to N-1 concurrent processes will
-		queue up; the Nth process will go for a recovery mechanism, if configured (like:
-		sql_recovery_logfile, sql_recovery_backup_host for SQL plugins), writers beyond Nth
-		will stop managing data (so, data will be lost at this stage) and an error message is
-		printed out.
+		queue up; the Nth process will go for the recovery mechanism, if configured (ie.
+		sql_recovery_backup_host for SQL plugins), writers beyond Nth will stop managing data
+		(so, data will be lost at this stage) and an error message is printed out.
 DEFAULT:	10
 
 KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries |

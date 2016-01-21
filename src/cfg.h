@@ -142,7 +142,6 @@ struct configuration {
   int sql_cache_entries;
   int sql_dont_try_update;
   char *sql_history_roundoff;
-  char *sql_recovery_logfile;
   int sql_max_writers;
   int sql_trigger_time;
   int sql_trigger_time_howmany; /* internal */

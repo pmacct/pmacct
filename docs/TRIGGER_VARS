@@ -36,12 +36,6 @@ DESC:		Packet sampling ratio (1 out of N). It is defined only if packet
 		sampling is actually enabled via a 'sampling_rate' configuration
 		directive (see CONFIG-KEYS for further details about the key). 
 
-VAR:		$SQL_RECOVERY_LOGFILE
-DESC:		Full pathname to the logfile used when recovery mode is enabled.
-		This is defined only if a 'sql_recovery_logfile' configuration
-		directive is defined (see CONFIG-KEYS for further details about
-		the key). Note: sql_recovery_logfile is being deprecated. 
-
 VAR:		$SQL_RECOVERY_BACKUP_HOST
 DESC:		SQL server hostname contacted if the primary server fails. This
 		is defined only if 'sql_recovery_backup_host' is activated (see

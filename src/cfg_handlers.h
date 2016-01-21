@@ -74,7 +74,6 @@ EXT int cfg_key_sql_history(char *, char *, char *);
 EXT int cfg_key_sql_history_offset(char *, char *, char *);
 EXT int cfg_key_sql_history_roundoff(char *, char *, char *);
 EXT int cfg_key_sql_history_since_epoch(char *, char *, char *);
-EXT int cfg_key_sql_recovery_logfile(char *, char *, char *);
 EXT int cfg_key_sql_recovery_backup_host(char *, char *, char *);
 EXT int cfg_key_sql_max_writers(char *, char *, char *);
 EXT int cfg_key_sql_trigger_exec(char *, char *, char *);

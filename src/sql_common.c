@@ -126,14 +126,6 @@ void sql_init_default_values(struct extra_primitives *extras)
     else Log(LOG_INFO, "INFO ( %s/%s ): proc_priority set to %d\n", config.name, config.type, getpriority(PRIO_PROCESS, 0));
   }
 
-  if ( (config.what_to_count & COUNT_CLASS ||
-	config.what_to_count & COUNT_TCPFLAGS ||
-	extras->off_pkt_bgp_primitives) &&
-       config.sql_recovery_logfile) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): sql_recovery_logfile is not compatible with: classifiers, BGP-related primitives and TCP flags. Try configuring a backup DB.\n", config.name, config.type);
-    exit_plugin(1);
-  }
-
   if (!config.sql_refresh_time) config.sql_refresh_time = DEFAULT_DB_REFRESH_TIME;
   if (!config.sql_table_version) config.sql_table_version = DEFAULT_SQL_TABLE_VERSION;
   if (!config.sql_cache_entries) config.sql_cache_entries = CACHE_ENTRIES;
@@ -392,8 +384,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
     /* If we are very near to our maximum writers threshold, let's resort to any configured
        recovery mechanism - SQL_CACHE_COMMITTED => SQL_CACHE_ERROR; otherwise, will proceed
        as usual */
-    if ((sql_writers.active == config.sql_max_writers-1) &&
-	(config.sql_backup_host || config.sql_recovery_logfile)) {
+    if ((sql_writers.active == config.sql_max_writers-1) && config.sql_backup_host) {
       for (j = 0; j < index; j++) {
 	if (queue[j]->valid == SQL_CACHE_COMMITTED) queue[j]->valid = SQL_CACHE_ERROR;
       }
@@ -1106,7 +1097,7 @@ void sql_exit_gracefully(int signum)
   idata.new_basetime = glob_new_basetime;
   idata.timeslot = glob_timeslot;
   idata.committed_basetime = glob_committed_basetime;
-  if (config.sql_backup_host || config.sql_recovery_logfile) idata.recover = TRUE;
+  if (config.sql_backup_host) idata.recover = TRUE;
   if (config.what_to_count & COUNT_CLASS) config.sql_aggressive_classification = FALSE;
   if (config.sql_locking_style) idata.locks = sql_select_locking_style(config.sql_locking_style);
 
@@ -3048,48 +3039,22 @@ int sql_query(struct BE_descs *bed, struct db_cache *elem, struct insert_data *i
   }
 
   if ( elem->valid == SQL_CACHE_ERROR || (bed->p->fail && !(elem->valid == SQL_CACHE_INUSE)) ) {
-
-  if (config.sql_backup_host) {
-    if (!bed->b->fail) {
-      if (!bed->b->connected) {
-        (*sqlfunc_cbr.connect)(bed->b, config.sql_backup_host);
-        if (config.sql_table_schema) {
-	  time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
-
-	  sql_create_table(bed->b, &stamp, NULL); // XXX: should not be null
-	}
-        (*sqlfunc_cbr.lock)(bed->b);
-      }
+    if (config.sql_backup_host) {
       if (!bed->b->fail) {
-        if ((*sqlfunc_cbr.op)(bed->b, elem, idata)) sql_db_fail(bed->b);
+        if (!bed->b->connected) {
+          (*sqlfunc_cbr.connect)(bed->b, config.sql_backup_host);
+          if (config.sql_table_schema) {
+	    time_t stamp = idata->new_basetime ? idata->new_basetime : idata->basetime;
+
+	    sql_create_table(bed->b, &stamp, NULL); // XXX: should not be null
+	  }
+          (*sqlfunc_cbr.lock)(bed->b);
+        }
+        if (!bed->b->fail) {
+          if ((*sqlfunc_cbr.op)(bed->b, elem, idata)) sql_db_fail(bed->b);
+        }
       }
     }
-  }
-  if (config.sql_recovery_logfile) {
-    int sz;
-
-    if (idata->mv.last_queue_elem) goto quit; 
-
-    if (!bed->lf->fail) {
-      if (!bed->lf->open) {
-	bed->lf->file = sql_file_open(config.sql_recovery_logfile, "a", idata);
-	if (bed->lf->file) bed->lf->open = TRUE;
-	else {
-	  bed->lf->open = FALSE;
-	  bed->lf->fail = TRUE;
-	}
-      }
-      if (!bed->lf->fail) {
-	sz = TPL_push(logbuf.ptr, elem);
-	logbuf.ptr += sz;
-	if ((logbuf.ptr+sz) > logbuf.end) { /* we test whether the next element will fit into the buffer */
-	  fwrite(logbuf.base, (logbuf.ptr-logbuf.base), 1, bed->lf->file);
-	  logbuf.ptr = logbuf.base;
-	}
-      }
-    }
-  }
-
   }
 
   quit:

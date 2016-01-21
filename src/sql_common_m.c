@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -195,14 +195,6 @@ Inline void SQL_SetENV()
     strncat(envbuf.ptr, "SAMPLING_RATE=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
     snprintf(tmpptr, envbuf.end-tmpptr, "%d", config.sampling_rate ? config.sampling_rate : config.ext_sampling_rate);
-    ptrs[count] = envbuf.ptr;
-    envbuf.ptr += strlen(envbuf.ptr)+1;
-    count++;
-  }
-
-  if (config.sql_recovery_logfile) {
-    strncat(envbuf.ptr, "SQL_RECOVERY_LOGFILE=", envbuf.end-envbuf.ptr);
-    strncat(envbuf.ptr, config.sql_recovery_logfile, envbuf.end-envbuf.ptr);
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -984,7 +984,7 @@ void PG_init_default_values(struct insert_data *idata)
   if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) idata->dyn_table = TRUE;
   glob_dyn_table = idata->dyn_table;
 
-  if (config.sql_backup_host || config.sql_recovery_logfile) idata->recover = TRUE;
+  if (config.sql_backup_host) idata->recover = TRUE;
   if (!config.sql_dont_try_update && config.sql_use_copy) config.sql_use_copy = FALSE; 
 
   if (config.sql_locking_style) idata->locks = sql_select_locking_style(config.sql_locking_style);

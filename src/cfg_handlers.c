@@ -1242,25 +1242,6 @@ int cfg_key_sql_history_roundoff(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_sql_recovery_logfile(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_recovery_logfile = value_ptr;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.sql_recovery_logfile = value_ptr;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_sql_history(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
