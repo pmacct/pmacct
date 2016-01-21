@@ -105,10 +105,6 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   idata.num_primitives = MY_compose_static_queries();
   glob_num_primitives = idata.num_primitives; 
 
-  /* handling logfile template stuff */
-  te = sql_init_logfile_template(&th); 
-  INIT_BUF(logbuf);
-
   /* setting up environment variables */
   SQL_SetENV();
 
@@ -425,7 +421,6 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
 void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *idata)
 {
   struct db_cache *LastElemCommitted = NULL;
-  struct logfile lf;
   time_t start;
   int j, stop, ret, go_to_pending, saved_index = index;
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
@@ -440,8 +435,6 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     return;
   }
 
-  bed.lf = &lf;
-  memset(&lf, 0, sizeof(struct logfile));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   memset(&dummy_data, 0, sizeof(dummy_data));
 
@@ -536,7 +529,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   /* rewinding stuff */
   if (idata->locks == PM_LOCK_EXCLUSIVE) (*sqlfunc_cbr.unlock)(&bed);
-  if ((lf.fail) || (b.fail)) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for MySQL daemon failed.\n", config.name, config.type);
+  if (b.fail) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for MySQL daemon failed.\n", config.name, config.type);
 
   /* If we have pending queries then start again */
   if (pqq_ptr) goto start;
@@ -666,16 +659,6 @@ void MY_Unlock(struct BE_descs *bed)
 {
   if (bed->p->connected) mysql_query(bed->p->desc, unlock_clause);
   if (bed->b->connected) mysql_query(bed->b->desc, unlock_clause);
-
-  if (bed->lf->open) {
-    if (logbuf.ptr != logbuf.base) {
-      fwrite(logbuf.base, (logbuf.ptr-logbuf.base), 1, bed->lf->file);
-      logbuf.ptr = logbuf.base;
-    }
-    file_unlock(fileno(bed->lf->file));
-    fclose(bed->lf->file);
-    bed->lf->open = FALSE;
-  }
 }
 
 void MY_DB_Connect(struct DBdesc *db, char *host)

@@ -267,16 +267,6 @@ void sql_init_refresh_deadline(time_t *rd)
   *rd += (config.sql_refresh_time+config.sql_startup_delay); /* it's a deadline not a basetime */
 }
 
-struct template_entry *sql_init_logfile_template(struct template_header *hdr)
-{
-  struct template_entry *te;
-
-  te = build_template(hdr);
-  set_template_funcs(hdr, te);
-
-  return te;
-}
-
 void sql_link_backend_descriptors(struct BE_descs *registry, struct DBdesc *p, struct DBdesc *b)
 {
   memset(registry, 0, sizeof(struct BE_descs));
@@ -3059,99 +3049,6 @@ int sql_query(struct BE_descs *bed, struct db_cache *elem, struct insert_data *i
 
   quit:
   return TRUE;
-}
-
-FILE *sql_file_open(const char *path, const char *mode, const struct insert_data *idata)
-{
-  struct stat st, st2;
-  struct logfile_header lh;
-  struct template_header tth;
-  FILE *f;
-  int ret;
-  uid_t owner = -1;
-  gid_t group = -1;
-
-  if (config.files_uid) owner = config.files_uid;
-  if (config.files_gid) group = config.files_gid;
-
-  file_open:
-  f = fopen(path, "a+");
-  if (f) {
-    ret = chown(path, owner, group);
-    if (file_lock(fileno(f))) {
-      Log(LOG_ALERT, "ALERT ( %s/%s ): Unable to obtain lock of '%s'.\n", config.name, config.type, path);
-      goto close;
-    }
-
-    fstat(fileno(f), &st);
-    if (!st.st_size) {
-      memset(&lh, 0, sizeof(struct logfile_header));
-      strlcpy(lh.sql_db, config.sql_db, DEF_HDR_FIELD_LEN);
-      if (!idata->dyn_table) strlcpy(lh.sql_table, config.sql_table, DEF_HDR_FIELD_LEN);
-      else {
-        struct tm *nowtm;
-
-        nowtm = localtime(&idata->new_basetime);
-        strftime(lh.sql_table, DEF_HDR_FIELD_LEN, config.sql_table, nowtm);
-      }
-      strlcpy(lh.sql_user, config.sql_user, DEF_HDR_FIELD_LEN);
-      if (config.sql_host) strlcpy(lh.sql_host, config.sql_host, DEF_HDR_FIELD_LEN);
-      else lh.sql_host[0] = '\0';
-      lh.sql_table_version = config.sql_table_version;
-      lh.sql_table_version = htons(lh.sql_table_version);
-      lh.sql_optimize_clauses = config.sql_optimize_clauses;
-      lh.sql_optimize_clauses = htons(lh.sql_optimize_clauses);
-      lh.sql_history = config.sql_history;
-      lh.sql_history = htons(lh.sql_history);
-      lh.what_to_count = htonl(config.what_to_count);
-      lh.magic = htonl(MAGIC);
-
-      fwrite(&lh, sizeof(lh), 1, f);
-      fwrite(&th, sizeof(th), 1, f);
-      fwrite(te, ntohs(th.num)*sizeof(struct template_entry), 1, f);
-    }
-    else {
-      rewind(f);
-      if ((ret = fread(&lh, sizeof(lh), 1, f)) != 1) {
-        Log(LOG_ALERT, "ALERT ( %s/%s ): Unable to read header: '%s'.\n", config.name, config.type, path);
-        goto close;
-      }
-      if (ntohl(lh.magic) != MAGIC) {
-        Log(LOG_ALERT, "ALERT ( %s/%s ): Invalid magic number: '%s'.\n", config.name, config.type, path);
-        goto close;
-      }
-      if ((ret = fread(&tth, sizeof(tth), 1, f)) != 1) {
-        Log(LOG_ALERT, "ALERT ( %s/%s ): Unable to read template: '%s'.\n", config.name, config.type, path);
-        goto close;
-      }
-      if ((tth.num != th.num) || (tth.sz != th.sz)) {
-        Log(LOG_ALERT, "ALERT ( %s/%s ): Invalid template in: '%s'.\n", config.name, config.type, path);
-        goto close;
-      }
-      if ((st.st_size+(idata->ten*sizeof(struct pkt_data))) >= MAX_LOGFILE_SIZE) {
-        Log(LOG_INFO, "INFO ( %s/%s ): No more space in '%s'.\n", config.name, config.type, path);
-
-        /* We reached the maximum logfile length; we test if any previous process
-           has already rotated the logfile. If not, we will rotate it. */
-        stat(path, &st2);
-        if (st2.st_size >= st.st_size) {
-          ret = file_archive(path, MAX_LOGFILE_ROTATIONS);
-          if (ret < 0) goto close;
-        }
-        file_unlock(fileno(f));
-        fclose(f);
-        goto file_open;
-      }
-      fseek(f, 0, SEEK_END);
-    }
-  }
-
-  return f;
-
-  close:
-  file_unlock(fileno(f));
-  fclose(f);
-  return NULL;
 }
 
 void sql_create_table(struct DBdesc *db, time_t *basetime, struct primitives_ptrs *prim_ptrs)

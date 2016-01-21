@@ -6,12 +6,10 @@ IV.	Processes Vs. threads
 V.	Communications between core process and plugins
 VI.	Memory table plugin
 VII.	SQL issues and *SQL plugins
-VIII.	Recovery modes
-IX.	Common plugin structures (print, MongoDB, AMQP, Kafka plugins) 
-X.	pmacctd flows counter implementation
-XI.	Classifier and connection tracking engines
-XII.	Jumps and flow diversions in Pre-Tagging infrastructure
-XIII.	BGP daemon thread dimensioning
+XIII.	pmacctd flows counter implementation
+IX.	Classifier and connection tracking engines
+X.	Jumps and flow diversions in Pre-Tagging infrastructure
+XI.	BGP daemon thread dimensioning
 
 
 I. Introduction
@@ -337,53 +335,7 @@ elements (refresh time and historical timeframe width) with a multiplicative fac
 transient cache aliasing phenomena and in fully exploiting cache benefits.
 
 
-VIII. Recovery modes
-Forewords: this chapter is left here for historical reasons; note that recovery modes support
-has been largely discontinued. Resiliency and high-availability is left to clustering of the
-RDBMS environment itself or multiple plugins, within the same collector, running in parallel
-and writing to different backends.
-
-The concept of recovery mechanism is available only in SQL plugins and is aimed to avoid data
-loss by taking a corrective action if the DB suffers an outage or simply becomes unresponsive.
-Actually, two mechanisms are supported: aggregates may be either (1) pulled into a structured
-logfile for later processing by a player program or (2) written to a backup DB. While the latter
-method is quite straightforward, let's spend few words about the logfile: things has been kept
-simple, so much care and responsibility for keeping aggregates meaningful is on users shoulders.
-A logfile is made of a (a) logfile header containing DB configuration parameters, a (b) template
-header which contains the description of record structure, followed by (c) records dumped by the
-plugin. When appending new aggregates to a logfile, if the file already exists, just two brief
-safety checks are made against actual parameters: (1) the magic number into the logfile header is
-checked to ensure we are not about to write to wrong files and (2) number of record fields and
-their total size are checked to be moderately sure we are not about to write logfile which template
-doesn't precisely reflect our records. If multiple SQL plugins are running, each one should have
-its own logfile, moreover, when upgrading from a previous version it's good rule to not continue
-writing to an old logfile. A final remark about logfiles: their maximum allowed size is 2Gb, this
-is because seems actually there is not a standard way to guarantee 'large files' to be read. Once
-the maximum size is reached, data will not start to get lost, the 'old' logfile is rotated and an
-INFO message is trapped instead: a small integer is added at the end of the filename (suppose the
-logfile is 'pmacct-recovery.dat', it is rotated as 'pmacct-recovery.dat.1', etc.) and a new logfile
-is started.
-The health of SQL server is checked everytime aggregates are purged into it. If the database becomes
-unresponsive a 'recovery' flag is raised. This flag remains valid, with no further checks, for the
-entire purging event. If transactions are being involved (e.g., PostgreSQL), an additional reprocess
-flag signals the need to not assume previous, already processed, elements have been successfully
-written to DB but recover them also. Player tools are available, 'pmmyplay' and 'pmpgplay'; they
-currently don't contain any advanced auto-process feature: both them extract needed informations
-(where to connect, which username to use, etc.) from the logfile header - though, some commandline
-parameters may be used to override them; players read each record basing over the template header
-ensuring that even in the case internal records structure has changed, they are still readable
-(that is, the template has backward compatibility effects but if new fields are added over the time,
-old players will not be able to handle them).
-While playing the entire logfile or even a part of it, database failures are detected and signalled.
-A final statistics screen summarizes what has been successfully written into the DB; this aims to
-help reprocess the logfile at a later stage if something goes wrong once again. 
-
-
-IX. Common plugin structures (print, MongoDB, AMQP, Kafka plugins)
-XXX
-
-
-IX. pmacctd flows counter implementation
+XIII. pmacctd flows counter implementation
 Let's take the definition of IP flows from RFC3954, titled 'Cisco Systems NetFlow Services Export
 Version 9': an IP flow is defined as a set of IP packets passing an observation point in the network
 during a certain time interval. All packets that belong to a particular flow have a set of common
@@ -403,7 +355,7 @@ structure (ie. pmacct -e, pmacct ... -r, etc.) or the beginning of a new timefra
 accounting is enabled (ie. print plugin, 'sql_history', etc.).
 
 
-X. Classifier and connection tracking engines
+IX. Classifier and connection tracking engines
 pmacct 0.10.0 sees the introduction of new packet/stream classification and connection tracking
 features in the pmacctd daemon. Firstly, let's give a look to the global picture; then how they
 work:
@@ -455,7 +407,7 @@ values under 200 bytes are often meaningless. 500-750 bytes should be enough eve
 protocols.
 
 
-XI. Jumps and flow diversions in Pre-Tagging infrastructure
+X. Jumps and flow diversions in Pre-Tagging infrastructure
 Pre-Tagging infrastructure allows to flexibly mark either packets or flows collected from the
 network. It's basically a chain of rules: the first matching rule wins (ie. tags collected data).
 This approach is effective to mantain a 1-to-1 relationship between data and tags; but this is
@@ -466,7 +418,7 @@ single sample is required to be assigned to both parties in order for the algori
 correctly. Relationships 1-to-1 are precisely the aim for jeq, stack and return keys. 
 
 
-XII. BGP daemon thread dimensioning
+XI. BGP daemon thread dimensioning
 Memory structure of the BGP daemon thread can be broken down in three modules: IP prefixes, BGP  
 information and BGP attributes. Up to version 0.12.3 the multi-RIB nature of the BGP daemon was
 achieved separating IP prefixes and BGP information on a per active BGP peer basis, while BGP

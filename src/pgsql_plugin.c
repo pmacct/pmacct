@@ -102,10 +102,6 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   idata.num_primitives = PG_compose_static_queries();
   glob_num_primitives = idata.num_primitives; 
 
-  /* handling logfile template stuff */
-  te = sql_init_logfile_template(&th);
-  INIT_BUF(logbuf);
-
   /* setting up environment variables */
   SQL_SetENV();
 
@@ -421,7 +417,6 @@ int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
 void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *idata)
 {
   PGresult *ret;
-  struct logfile lf;
   struct db_cache **reprocess_queries_queue, **bulk_reprocess_queries_queue;
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
   char orig_copy_clause[LONGSRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
@@ -437,8 +432,6 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     return;
   }
 
-  bed.lf = &lf;
-  memset(&lf, 0, sizeof(struct logfile));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   memset(&dummy_data, 0, sizeof(dummy_data));
 
@@ -593,10 +586,6 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     if (PQresultStatus(ret) != PGRES_COMMAND_OK) sql_db_fail(&b);
     PQclear(ret);
   }
-
-  /* rewinding stuff */
-  if (lf.file) PG_file_close(&lf);
-  if (lf.fail || b.fail) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for PgSQL operation failed.\n", config.name, config.type);
 
   /* If we have pending queries then start again */
   if (pqq_ptr) goto start;
@@ -830,16 +819,6 @@ void PG_Lock(struct DBdesc *db)
       PQclear(PGret);
     }
   }
-}
-
-void PG_file_close(struct logfile *lf)
-{
-  if (logbuf.ptr != logbuf.base) {
-    fwrite(logbuf.base, (logbuf.ptr-logbuf.base), 1, lf->file);
-    logbuf.ptr = logbuf.base;
-  }
-  file_unlock(fileno(lf->file));
-  fclose(lf->file);
 }
 
 void PG_DB_Connect(struct DBdesc *db, char *host)

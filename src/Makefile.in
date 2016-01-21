@@ -71,7 +71,7 @@ VERSION = @VERSION@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
 bin_PROGRAMS = pmacct @EXTRABIN@ 
-EXTRA_PROGRAMS = pmmyplay pmpgplay
+EXTRA_PROGRAMS = 
 pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@ @SERVER_LIBS@
 pmacctd_SOURCES = pmacctd.c signals.c util.c strlcpy.c plugin_hooks.c 	server.c acct.c memory.c ll.c cfg.c imt_plugin.c log.c pkt_handlers.c 	cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c ip_frag.c 	ports_aggr.c addr.c pretag.c pretag_handlers.c ip_flow.c setproctitle.c 	classifier.c regexp.c regsub.c conntrack.c xflow_status.c nl.c 	plugin_common.c preprocess.c
 
@@ -90,8 +90,6 @@ uacctd_SOURCES = uacctd.c signals.c util.c strlcpy.c plugin_hooks.c         serv
 uacctd_LDFLAGS = $(DEFS) 
 uacctd_LDADD = $(pmacctd_PLUGINS)
 pmacct_SOURCES = pmacct.c strlcpy.c addr.c
-pmmyplay_SOURCES = pmmyplay.c strlcpy.c sql_handlers.c log_templates.c addr.c 
-pmpgplay_SOURCES = pmpgplay.c strlcpy.c sql_handlers.c log_templates.c addr.c 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS) $(sbin_PROGRAMS)
@@ -101,16 +99,6 @@ DEFS = @DEFS@ -I. -I$(srcdir)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-pmmyplay_OBJECTS =  pmmyplay.o strlcpy.o sql_handlers.o log_templates.o \
-addr.o
-pmmyplay_LDADD = $(LDADD)
-pmmyplay_DEPENDENCIES = 
-pmmyplay_LDFLAGS = 
-pmpgplay_OBJECTS =  pmpgplay.o strlcpy.o sql_handlers.o log_templates.o \
-addr.o
-pmpgplay_LDADD = $(LDADD)
-pmpgplay_DEPENDENCIES = 
-pmpgplay_LDFLAGS = 
 pmacct_OBJECTS =  pmacct.o strlcpy.o addr.o
 pmacct_LDADD = $(LDADD)
 pmacct_DEPENDENCIES = 
@@ -157,17 +145,16 @@ GZIP_ENV = --best
 DEP_FILES =  .deps/acct.P .deps/addr.P .deps/bpf_filter.P .deps/cfg.P \
 .deps/cfg_handlers.P .deps/classifier.P .deps/conntrack.P \
 .deps/imt_plugin.P .deps/ip_flow.P .deps/ip_frag.P .deps/ll.P \
-.deps/log.P .deps/log_templates.P .deps/memory.P .deps/net_aggr.P \
-.deps/nfacctd.P .deps/nfv8_handlers.P .deps/nfv9_template.P .deps/nl.P \
+.deps/log.P .deps/memory.P .deps/net_aggr.P .deps/nfacctd.P \
+.deps/nfv8_handlers.P .deps/nfv9_template.P .deps/nl.P \
 .deps/pkt_handlers.P .deps/plugin_common.P .deps/plugin_hooks.P \
-.deps/pmacct.P .deps/pmacctd.P .deps/pmmyplay.P .deps/pmpgplay.P \
-.deps/ports_aggr.P .deps/preprocess.P .deps/pretag.P \
-.deps/pretag_handlers.P .deps/print_plugin.P .deps/regexp.P \
-.deps/regsub.P .deps/server.P .deps/setproctitle.P .deps/sfacctd.P \
-.deps/sfv5_module.P .deps/signals.P .deps/sql_handlers.P \
-.deps/strlcpy.P .deps/uacctd.P .deps/util.P .deps/xflow_status.P
-SOURCES = $(pmmyplay_SOURCES) $(pmpgplay_SOURCES) $(pmacct_SOURCES) $(pmacctd_SOURCES) $(nfacctd_SOURCES) $(sfacctd_SOURCES) $(uacctd_SOURCES)
-OBJECTS = $(pmmyplay_OBJECTS) $(pmpgplay_OBJECTS) $(pmacct_OBJECTS) $(pmacctd_OBJECTS) $(nfacctd_OBJECTS) $(sfacctd_OBJECTS) $(uacctd_OBJECTS)
+.deps/pmacct.P .deps/pmacctd.P .deps/ports_aggr.P .deps/preprocess.P \
+.deps/pretag.P .deps/pretag_handlers.P .deps/print_plugin.P \
+.deps/regexp.P .deps/regsub.P .deps/server.P .deps/setproctitle.P \
+.deps/sfacctd.P .deps/sfv5_module.P .deps/signals.P .deps/strlcpy.P \
+.deps/uacctd.P .deps/util.P .deps/xflow_status.P
+SOURCES = $(pmacct_SOURCES) $(pmacctd_SOURCES) $(nfacctd_SOURCES) $(sfacctd_SOURCES) $(uacctd_SOURCES)
+OBJECTS = $(pmacct_OBJECTS) $(pmacctd_OBJECTS) $(nfacctd_OBJECTS) $(sfacctd_OBJECTS) $(uacctd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -245,14 +232,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 maintainer-clean-compile:
-
-pmmyplay: $(pmmyplay_OBJECTS) $(pmmyplay_DEPENDENCIES)
-	@rm -f pmmyplay
-	$(LINK) $(pmmyplay_LDFLAGS) $(pmmyplay_OBJECTS) $(pmmyplay_LDADD) $(LIBS)
-
-pmpgplay: $(pmpgplay_OBJECTS) $(pmpgplay_DEPENDENCIES)
-	@rm -f pmpgplay
-	$(LINK) $(pmpgplay_LDFLAGS) $(pmpgplay_OBJECTS) $(pmpgplay_LDADD) $(LIBS)
 
 pmacct: $(pmacct_OBJECTS) $(pmacct_DEPENDENCIES)
 	@rm -f pmacct

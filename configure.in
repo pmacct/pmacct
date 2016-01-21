@@ -597,7 +597,6 @@ AC_ARG_ENABLE(mysql,
 
     AC_DEFINE(WITH_MYSQL, 1)
     PLUGINS="${PLUGINS} mysql_plugin.c"
-    EXTRABIN="${EXTRABIN} pmmyplay" 
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -710,7 +709,6 @@ AC_ARG_ENABLE(pgsql,
 
     AC_DEFINE(WITH_PGSQL, 1)
     PLUGINS="${PLUGINS} pgsql_plugin.c"
-    EXTRABIN="${EXTRABIN} pmpgplay" 
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1457,7 +1455,7 @@ else
 fi
 
 if test x"$USING_SQL" = x"yes"; then
-	PLUGINS="${PLUGINS} sql_common.c sql_handlers.c log_templates.c"
+	PLUGINS="${PLUGINS} sql_common.c sql_handlers.c"
 	LIBS="${LIBS} -lm -lz"
 fi
 

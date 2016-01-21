@@ -1,7 +1,7 @@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
 bin_PROGRAMS = pmacct @EXTRABIN@ 
-EXTRA_PROGRAMS = pmmyplay pmpgplay
+EXTRA_PROGRAMS =
 pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@ @SERVER_LIBS@
 pmacctd_SOURCES = pmacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
 	server.c acct.c memory.c ll.c cfg.c imt_plugin.c log.c pkt_handlers.c \
@@ -36,5 +36,3 @@ uacctd_SOURCES = uacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
 uacctd_LDFLAGS = $(DEFS) 
 uacctd_LDADD = $(pmacctd_PLUGINS)
 pmacct_SOURCES = pmacct.c strlcpy.c addr.c
-pmmyplay_SOURCES = pmmyplay.c strlcpy.c sql_handlers.c log_templates.c addr.c 
-pmpgplay_SOURCES = pmpgplay.c strlcpy.c sql_handlers.c log_templates.c addr.c 
