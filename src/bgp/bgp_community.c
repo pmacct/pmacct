@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -28,7 +28,6 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 
 #include "pmacct.h"
 #include "bgp.h"
-#include "bgp_community.h"
 
 /* Hash of community attribute. */
 // struct hash *comhash;
@@ -317,7 +316,7 @@ community_com2str  (struct community *com)
 
 /* Intern communities attribute.  */
 struct community *
-community_intern (struct community *com)
+community_intern (struct bgp_structs *inter_domain_routing_db, struct community *com)
 {
   struct community *find;
 
@@ -325,7 +324,7 @@ community_intern (struct community *com)
   assert (com->refcnt == 0);
 
   /* Lookup community hash. */
-  find = (struct community *) hash_get (comhash, com, hash_alloc_intern);
+  find = (struct community *) hash_get(inter_domain_routing_db->comhash, com, hash_alloc_intern);
 
   /* Arguemnt com is allocated temporary.  So when it is not used in
      hash, it should be freed.  */
@@ -344,7 +343,7 @@ community_intern (struct community *com)
 
 /* Free community attribute. */
 void
-community_unintern (struct community *com)
+community_unintern (struct bgp_structs *inter_domain_routing_db, struct community *com)
 {
   struct community *ret;
 
@@ -352,19 +351,18 @@ community_unintern (struct community *com)
     com->refcnt--;
 
   /* Pull off from hash.  */
-  if (com->refcnt == 0)
-    {
-      /* Community value com must exist in hash. */
-      ret = (struct community *) hash_release (comhash, com);
-      assert (ret != NULL);
+  if (com->refcnt == 0) {
+    /* Community value com must exist in hash. */
+    ret = (struct community *) hash_release(inter_domain_routing_db->comhash, com);
+    assert (ret != NULL);
 
-      community_free (com);
-    }
+    community_free (com);
+  }
 }
 
 /* Create new community attribute. */
 struct community *
-community_parse (u_int32_t *pnt, u_short length)
+community_parse (struct bgp_structs *inter_domain_routing_db, u_int32_t *pnt, u_short length)
 {
   struct community tmp;
   struct community *new;
@@ -379,7 +377,7 @@ community_parse (u_int32_t *pnt, u_short length)
 
   new = community_uniq_sort (&tmp);
 
-  return community_intern (new);
+  return community_intern (inter_domain_routing_db, new);
 }
 
 struct community *
@@ -649,20 +647,6 @@ community_str2com (const char *str)
   community_free (com);
 
   return com_sort;
-}
-
-/* Return communities hash entry count.  */
-unsigned long
-community_count ()
-{
-  return comhash->count;
-}
-
-/* Return communities hash.  */
-struct hash *
-community_hash (void)
-{
-  return comhash;
 }
 
 /* Initialize comminity related hash. */

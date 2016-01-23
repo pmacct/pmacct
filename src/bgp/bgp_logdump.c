@@ -735,6 +735,7 @@ void bgp_handle_dump_event()
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
+  struct bgp_structs *inter_domain_routing_db;
   struct bgp_peer *peer, *saved_peer;
   struct bgp_table *table;
   struct bgp_node *node;
@@ -840,11 +841,12 @@ void bgp_handle_dump_event()
 #endif
 
 	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+        inter_domain_routing_db = select_routing_db(FUNC_TYPE_BGP);
 	dump_elems = 0;
 
 	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-	    table = rib[afi][safi];
+	    table = inter_domain_routing_db->rib[afi][safi];
 	    node = bgp_table_top(table);
 
 	    while (node) {

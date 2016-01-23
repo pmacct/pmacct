@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -73,8 +73,7 @@ struct aspath
 #define EXT
 #endif
 EXT void aspath_init (struct hash **);
-EXT void aspath_finish (void);
-EXT struct aspath *aspath_parse (char *, size_t, int);
+EXT struct aspath *aspath_parse (struct bgp_structs *, char *, size_t, int);
 EXT struct aspath *aspath_dup (struct aspath *);
 EXT struct aspath *aspath_aggregate (struct aspath *, struct aspath *);
 EXT struct aspath *aspath_prepend (struct aspath *, struct aspath *);
@@ -84,18 +83,16 @@ EXT struct aspath *aspath_add_confed_seq (struct aspath *, as_t);
 EXT int aspath_cmp_left (const struct aspath *, const struct aspath *);
 EXT int aspath_cmp_left_confed (const struct aspath *, const struct aspath *);
 EXT struct aspath *aspath_delete_confed_seq (struct aspath *);
-EXT struct aspath *aspath_empty (void);
 EXT struct aspath *aspath_empty_get (void);
 EXT struct aspath *aspath_str2aspath (const char *);
 EXT void aspath_free (struct aspath *);
-EXT struct aspath *aspath_intern (struct aspath *);
-EXT void aspath_unintern (struct aspath *);
+EXT struct aspath *aspath_intern (struct bgp_structs *, struct aspath *);
+EXT void aspath_unintern (struct bgp_structs *, struct aspath *);
 EXT const char *aspath_print (struct aspath *);
 EXT unsigned int aspath_key_make (void *);
 EXT int aspath_loop_check (struct aspath *, as_t);
 EXT int aspath_private_as_check (struct aspath *);
 EXT int aspath_firstas_check (struct aspath *, as_t);
-EXT unsigned long aspath_count (void);
 EXT unsigned int aspath_count_hops (struct aspath *);
 EXT unsigned int aspath_count_confeds (struct aspath *);
 EXT unsigned int aspath_size (struct aspath *);

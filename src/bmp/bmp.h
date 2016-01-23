@@ -210,4 +210,5 @@ EXT struct bgp_table *bmp_rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bmp_msglog_backend_methods;
 EXT int bmp_dump_backend_methods;
+EXT struct bgp_structs bmp_routing_db;
 #undef EXT

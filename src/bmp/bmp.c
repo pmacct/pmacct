@@ -456,7 +456,7 @@ void skinny_bmp_daemon()
           */
           if (bgp_batch_is_admitted(&bp_batch, now)) {
             peer = &bmp_peers[peers_idx];
-            if (bgp_peer_init(peer)) peer = NULL;
+            if (bgp_peer_init(peer, FUNC_TYPE_BMP)) peer = NULL;
             else recalc_fds = TRUE;
 
             log_notification_unset(&log_notifications.bgp_peers_throttling);

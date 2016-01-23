@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -65,9 +65,8 @@ struct community
 EXT void community_init (struct hash **);
 EXT void community_free (struct community *);
 EXT struct community *community_uniq_sort (struct community *);
-EXT struct community *community_parse (u_int32_t *, u_short);
-EXT struct community *community_intern (struct community *);
-EXT void community_unintern (struct community *);
+EXT struct community *community_intern (struct bgp_structs *, struct community *);
+EXT void community_unintern (struct bgp_structs *, struct community *);
 EXT char *community_str (struct community *);
 EXT unsigned int community_hash_make (struct community *);
 EXT struct community *community_str2com (const char *);
@@ -75,11 +74,10 @@ EXT int community_match (const struct community *, const struct community *);
 EXT int community_cmp (const struct community *, const struct community *);
 EXT struct community *community_merge (struct community *, struct community *);
 EXT struct community *community_delete (struct community *, struct community *);
+EXT struct community *community_parse (struct bgp_structs *, u_int32_t *, u_short);
 EXT struct community *community_dup (struct community *);
 EXT int community_include (struct community *, u_int32_t);
 EXT void community_del_val (struct community *, u_int32_t *);
-EXT unsigned long community_count (void);
-EXT struct hash *community_hash (void);
 
 #undef EXT
 #endif

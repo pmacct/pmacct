@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -340,20 +340,19 @@ aspath_free (struct aspath *aspath)
 
 /* Unintern aspath from AS path bucket. */
 void
-aspath_unintern (struct aspath *aspath)
+aspath_unintern(struct bgp_structs *inter_domain_routing_db, struct aspath *aspath)
 {
   struct aspath *ret;
 
   if (aspath->refcnt)
     aspath->refcnt--;
 
-  if (aspath->refcnt == 0)
-    {
-      /* This aspath must exist in aspath hash table. */
-      ret = hash_release (ashash, aspath);
-      assert (ret != NULL);
-      aspath_free (aspath);
-    }
+  if (aspath->refcnt == 0) {
+    /* This aspath must exist in aspath hash table. */
+    ret = hash_release(inter_domain_routing_db->ashash, aspath);
+    assert (ret != NULL);
+    aspath_free (aspath);
+  }
 }
 
 /* Return the start or end delimiters for a particular Segment type */
@@ -637,7 +636,7 @@ aspath_str_update (struct aspath *as)
 
 /* Intern allocated AS path. */
 struct aspath *
-aspath_intern (struct aspath *aspath)
+aspath_intern (struct bgp_structs *inter_domain_routing_db, struct aspath *aspath)
 {
   struct aspath *find;
   
@@ -645,7 +644,7 @@ aspath_intern (struct aspath *aspath)
   assert (aspath->refcnt == 0);
 
   /* Check AS path hash. */
-  find = hash_get (ashash, aspath, hash_alloc_intern);
+  find = hash_get(inter_domain_routing_db->ashash, aspath, hash_alloc_intern);
 
   if (find != aspath)
     aspath_free (aspath);
@@ -771,7 +770,7 @@ assegments_parse(char *s, size_t length, int use32bit)
 
 /* AS path parse function. If there is same AS path in the the AS
    path hash then return it else make new AS path structure. */
-struct aspath *aspath_parse(char *s, size_t length, int use32bit)
+struct aspath *aspath_parse(struct bgp_structs *inter_domain_routing_db, char *s, size_t length, int use32bit)
 {
   struct aspath as;
   struct aspath *find;
@@ -788,7 +787,7 @@ struct aspath *aspath_parse(char *s, size_t length, int use32bit)
   as.segments = assegments_parse(s, length, use32bit);
   
   /* If already same aspath exist then return it. */
-  find = hash_get (ashash, &as, aspath_hash_alloc);
+  find = hash_get (inter_domain_routing_db->ashash, &as, aspath_hash_alloc);
   
   /* aspath_hash_alloc dupes segments too. that probably could be
    * optimised out.
@@ -1436,12 +1435,6 @@ aspath_segment_add (struct aspath *as, int type)
 }
 
 struct aspath *
-aspath_empty (void)
-{
-  return aspath_parse (NULL, 0, 1); /* 32Bit ;-) */
-}
-
-struct aspath *
 aspath_empty_get (void)
 {
   struct aspath *aspath;
@@ -1450,21 +1443,6 @@ aspath_empty_get (void)
   aspath->str = aspath_make_str_count (aspath);
   return aspath;
 }
-
-unsigned long
-aspath_count (void)
-{
-  return ashash->count;
-}     
-
-/* 
-   Theoretically, one as path can have:
-
-   One BGP packet size should be less than 4096.
-   One BGP attribute size should be less than 4096 - BGP header size.
-   One BGP aspath size should be less than 4096 - BGP header size -
-       BGP mandantry attribute size.
-*/
 
 /* AS path string lexical token enum. */
 enum as_token
@@ -1658,12 +1636,6 @@ aspath_init (struct hash **loc_ashash)
   (*loc_ashash) = hash_create_size (32767, aspath_key_make, aspath_cmp);
 }
 
-void
-aspath_finish (void)
-{
-  hash_free (ashash);
-}
-
 /* return and as path value */
 const char *
 aspath_print (struct aspath *as)

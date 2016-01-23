@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -29,8 +29,6 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "pmacct.h"
 #include "bgp_prefix.h"
 #include "bgp.h"
-#include "bgp_ecommunity.h"
-#include "bgp_aspath.h"
 
 /* Hash of community attribute. */
 // struct hash *ecomhash;
@@ -133,7 +131,7 @@ ecommunity_uniq_sort (struct ecommunity *ecom)
 
 /* Parse Extended Communites Attribute in BGP packet.  */
 struct ecommunity *
-ecommunity_parse (u_int8_t *pnt, u_short length)
+ecommunity_parse (struct bgp_structs *inter_domain_routing_db, u_int8_t *pnt, u_short length)
 {
   struct ecommunity tmp;
   struct ecommunity *new;
@@ -151,7 +149,7 @@ ecommunity_parse (u_int8_t *pnt, u_short length)
      Extended Communities value  */
   new = ecommunity_uniq_sort (&tmp);
 
-  return ecommunity_intern (new);
+  return ecommunity_intern (inter_domain_routing_db, new);
 }
 
 /* Duplicate the Extended Communities Attribute structure.  */
@@ -212,13 +210,13 @@ ecommunity_merge (struct ecommunity *ecom1, struct ecommunity *ecom2)
 
 /* Intern Extended Communities Attribute.  */
 struct ecommunity *
-ecommunity_intern (struct ecommunity *ecom)
+ecommunity_intern (struct bgp_structs *inter_domain_routing_db, struct ecommunity *ecom)
 {
   struct ecommunity *find;
 
   assert (ecom->refcnt == 0);
 
-  find = (struct ecommunity *) hash_get (ecomhash, ecom, hash_alloc_intern);
+  find = (struct ecommunity *) hash_get(inter_domain_routing_db->ecomhash, ecom, hash_alloc_intern);
 
   if (find != ecom)
     ecommunity_free (ecom);
@@ -233,7 +231,7 @@ ecommunity_intern (struct ecommunity *ecom)
 
 /* Unintern Extended Communities Attribute.  */
 void
-ecommunity_unintern (struct ecommunity *ecom)
+ecommunity_unintern (struct bgp_structs *inter_domain_routing_db, struct ecommunity *ecom)
 {
   struct ecommunity *ret;
 
@@ -241,14 +239,13 @@ ecommunity_unintern (struct ecommunity *ecom)
     ecom->refcnt--;
 
   /* Pull off from hash.  */
-  if (ecom->refcnt == 0)
-    {
-      /* Extended community must be in the hash.  */
-      ret = (struct ecommunity *) hash_release (ecomhash, ecom);
-      assert (ret != NULL);
+  if (ecom->refcnt == 0) {
+    /* Extended community must be in the hash.  */
+    ret = (struct ecommunity *) hash_release(inter_domain_routing_db->ecomhash, ecom);
+    assert (ret != NULL);
 
-      ecommunity_free (ecom);
-    }
+    ecommunity_free(ecom);
+  }
 }
 
 /* Utinity function to make hash key.  */

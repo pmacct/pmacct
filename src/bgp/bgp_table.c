@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -31,9 +31,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "bgp.h"
 
 static void bgp_node_delete (struct bgp_node *);
-static void bgp_node_free_aggressive (struct bgp_node *, safi_t);
-static void bgp_table_free (struct bgp_table *);
-
+
 struct bgp_table *
 bgp_table_init (afi_t afi, safi_t safi)
 {
@@ -97,84 +95,6 @@ bgp_node_free (struct bgp_node *node)
 {
   free (node->info);
   free (node);
-}
-
-/* Free route node aggressively: also attributes and info;
-   should be meant to be invoked only by bgp_table_free() */
-static void
-bgp_node_free_aggressive (struct bgp_node *node, safi_t safi)
-{
-  struct bgp_info *ri, *next;
-  u_int32_t ri_idx;
-
-  /* XXX: this should be moved further outside */
-  if (nfacctd_bgp_msglog_backend_methods)
-    gettimeofday(&log_tstamp, NULL);
-
-  for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++) {
-    for (ri = node->info[ri_idx]; ri; ri = next) {
-      if (nfacctd_bgp_msglog_backend_methods) {
-        char event_type[] = "log";
-
-        bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_DELETE);
-      }
-
-      next = ri->next;
-      bgp_info_free(ri);
-    }
-  }
-
-  free (node->info);
-  free (node);
-}
-
-/* Free route table. */
-static void
-bgp_table_free (struct bgp_table *rt)
-{
-  struct bgp_node *tmp_node;
-  struct bgp_node *node;
- 
-  if (rt == NULL)
-    return;
-
-  node = rt->top;
-
-  while (node)
-    {
-      if (node->l_left)
-	{
-	  node = node->l_left;
-	  continue;
-	}
-
-      if (node->l_right)
-	{
-	  node = node->l_right;
-	  continue;
-	}
-
-      tmp_node = node;
-      node = node->parent;
-
-      if (node != NULL)
-	{
-	  if (node->l_left == tmp_node)
-	    node->l_left = NULL;
-	  else
-	    node->l_right = NULL;
-
-	  bgp_node_free_aggressive (tmp_node, rt->safi);
-	}
-      else
-	{
-	  bgp_node_free_aggressive (tmp_node, rt->safi);
-	  break;
-	}
-    }
- 
-  free (rt);
-  return;
 }
 
 /* Utility mask array. */
