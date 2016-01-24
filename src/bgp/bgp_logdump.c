@@ -841,7 +841,7 @@ void bgp_handle_dump_event()
 #endif
 
 	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
-        inter_domain_routing_db = select_routing_db(FUNC_TYPE_BGP);
+        inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BGP);
 	dump_elems = 0;
 
 	for (afi = AFI_IP; afi < AFI_MAX; afi++) {

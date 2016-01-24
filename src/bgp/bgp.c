@@ -88,12 +88,14 @@ void skinny_bgp_daemon()
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
   memset(&allow, 0, sizeof(struct hosts_table));
-  memset(&bgp_routing_db, 0, sizeof(bgp_routing_db));
   nfacctd_bgp_msglog_backend_methods = 0;
   bgp_table_dump_backend_methods = 0;
 
+  bgp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP];
+  memset(bgp_routing_db, 0, sizeof(struct bgp_structs));
+
   if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
-  bgp_attr_init(&bgp_routing_db);
+  bgp_attr_init(bgp_routing_db);
 
   /* socket creation for BGP server: IPv4 only */
 #if (defined ENABLE_IPV6)
@@ -283,7 +285,7 @@ void skinny_bgp_daemon()
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      bgp_routing_db.rib[afi][safi] = bgp_table_init(afi, safi);
+      bgp_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
     }
   }
 
@@ -1074,11 +1076,11 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
   /* Everything is done.  We unintern temporary structures which
 	 interned in bgp_attr_parse(). */
   if (attr.aspath)
-    aspath_unintern(select_routing_db(peer->type), attr.aspath);
+    aspath_unintern(bgp_select_routing_db(peer->type), attr.aspath);
   if (attr.community)
-    community_unintern(select_routing_db(peer->type), attr.community);
+    community_unintern(bgp_select_routing_db(peer->type), attr.community);
   if (attr.ecommunity)
-    ecommunity_unintern(select_routing_db(peer->type), attr.ecommunity);
+    ecommunity_unintern(bgp_select_routing_db(peer->type), attr.ecommunity);
 
   return SUCCESS;
 }
@@ -1159,7 +1161,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
 
     /* AS_PATH and AS4_PATH info are now fully merged;
        hence we can free up temporary structures. */
-    aspath_unintern(select_routing_db(peer->type), as4_path);
+    aspath_unintern(bgp_select_routing_db(peer->type), as4_path);
   
     if (ret < 0) return ret;
   }
@@ -1171,14 +1173,14 @@ int bgp_attr_parse_aspath(struct bgp_peer *peer, u_int16_t len, struct bgp_attr 
 {
   u_int8_t cap_4as = peer->cap_4as ? 1 : 0;
 
-  attr->aspath = aspath_parse(select_routing_db(peer->type), ptr, len, cap_4as);
+  attr->aspath = aspath_parse(bgp_select_routing_db(peer->type), ptr, len, cap_4as);
 
   return SUCCESS;
 }
 
 int bgp_attr_parse_as4path(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag, struct aspath **aspath4)
 {
-  *aspath4 = aspath_parse(select_routing_db(peer->type), ptr, len, 1);
+  *aspath4 = aspath_parse(bgp_select_routing_db(peer->type), ptr, len, 1);
 
   return SUCCESS;
 }
@@ -1200,7 +1202,7 @@ int bgp_attr_parse_nexthop(struct bgp_peer *peer, u_int16_t len, struct bgp_attr
 int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->community = NULL;
-  else attr->community = (struct community *) community_parse(select_routing_db(peer->type), (u_int32_t *)ptr, len);
+  else attr->community = (struct community *) community_parse(bgp_select_routing_db(peer->type), (u_int32_t *)ptr, len);
 
   return SUCCESS;
 }
@@ -1208,7 +1210,7 @@ int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_at
 int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->ecommunity = NULL;
-  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(select_routing_db(peer->type), ptr, len);
+  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(bgp_select_routing_db(peer->type), ptr, len);
 
   return SUCCESS;
 }
@@ -1470,7 +1472,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
 		       rd_t *rd, path_id_t *path_id, char *label)
 {
-  struct bgp_structs *inter_domain_routing_db = select_routing_db(peer->type);
+  struct bgp_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL, *new = NULL;
   struct bgp_attr *attr_new = NULL;
@@ -1592,7 +1594,10 @@ log_update:
   {
     char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_UPDATE);
+    if (peer->type == FUNC_TYPE_BGP)
+      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_UPDATE);
+    else if (peer->type == FUNC_TYPE_BMP)
+      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bmp_msglog_output, BGP_LOG_TYPE_UPDATE);
   }
 
   return SUCCESS;
@@ -1601,7 +1606,7 @@ log_update:
 int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
 			 rd_t *rd, path_id_t *path_id, char *label)
 {
-  struct bgp_structs *inter_domain_routing_db = select_routing_db(peer->type);
+  struct bgp_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
   u_int32_t modulo = bgp_route_info_modulo(peer, path_id);
@@ -1635,7 +1640,10 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   if (ri && nfacctd_bgp_msglog_backend_methods) {
     char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_WITHDRAW);
+    if (peer->type == FUNC_TYPE_BGP) 
+      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_WITHDRAW);
+    else if (peer->type == FUNC_TYPE_BMP) 
+      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bmp_msglog_output, BGP_LOG_TYPE_WITHDRAW);
   }
 
   /* Withdraw specified route from routing table. */
@@ -2091,7 +2099,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type)
 
 void bgp_peer_info_delete(struct bgp_peer *peer)
 {
-  struct bgp_structs *inter_domain_routing_db = select_routing_db(peer->type);
+  struct bgp_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
   struct bgp_table *table;
   struct bgp_node *node;
   afi_t afi;
@@ -2114,7 +2122,10 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
 	      if (nfacctd_bgp_msglog_backend_methods) {
 		char event_type[] = "log";
 
-		bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_DELETE);
+		if (peer->type == FUNC_TYPE_BGP) 
+		  bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_DELETE);
+		else if (peer->type == FUNC_TYPE_BMP) 
+		  bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bmp_msglog_output, BGP_LOG_TYPE_DELETE);
 	      }
 
 	      ri_next = ri->next; /* let's save pointer to next before free up */
@@ -2141,8 +2152,8 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   // XXX if (as4path && !attr->aspath) return ERR;
 
   newpath = aspath_reconcile_as4(attr->aspath, as4path);
-  aspath_unintern(select_routing_db(peer->type), attr->aspath);
-  attr->aspath = aspath_intern(select_routing_db(peer->type), newpath);
+  aspath_unintern(bgp_select_routing_db(peer->type), attr->aspath);
+  attr->aspath = aspath_intern(bgp_select_routing_db(peer->type), newpath);
 
   return SUCCESS;
 }
@@ -2433,7 +2444,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
-	pptrs->bgp_src = (char *) bgp_node_match_ipv4(bgp_routing_db.rib[AFI_IP][safi],
+	pptrs->bgp_src = (char *) bgp_node_match_ipv4(bgp_routing_db->rib[AFI_IP][safi],
 						      &pref4, (struct bgp_peer *) pptrs->bgp_peer);
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
@@ -2460,7 +2471,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst) {
 	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-	pptrs->bgp_dst = (char *) bgp_node_match_ipv4(bgp_routing_db.rib[AFI_IP][safi],
+	pptrs->bgp_dst = (char *) bgp_node_match_ipv4(bgp_routing_db->rib[AFI_IP][safi],
 						      &pref4, (struct bgp_peer *) pptrs->bgp_peer);
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
@@ -2510,7 +2521,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       if (!pptrs->bgp_src) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-	pptrs->bgp_src = (char *) bgp_node_match_ipv6(bgp_routing_db.rib[AFI_IP6][safi],
+	pptrs->bgp_src = (char *) bgp_node_match_ipv6(bgp_routing_db->rib[AFI_IP6][safi],
 						      &pref6, (struct bgp_peer *) pptrs->bgp_peer);
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
@@ -2537,7 +2548,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-	pptrs->bgp_dst = (char *) bgp_node_match_ipv6(bgp_routing_db.rib[AFI_IP6][safi],
+	pptrs->bgp_dst = (char *) bgp_node_match_ipv6(bgp_routing_db->rib[AFI_IP6][safi],
 						      &pref6, (struct bgp_peer *) pptrs->bgp_peer);
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
@@ -2717,12 +2728,12 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     if (!result) {
       if (pptrs->l3_proto == ETHERTYPE_IP) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-        result = (char *) bgp_node_match_ipv4(bgp_routing_db.rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer);
+        result = (char *) bgp_node_match_ipv4(bgp_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer);
       }
 #if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-        result = (char *) bgp_node_match_ipv6(bgp_routing_db.rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer);
+        result = (char *) bgp_node_match_ipv6(bgp_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer);
       }
 #endif
     }
@@ -3155,10 +3166,10 @@ void bgp_batch_rollback(struct bgp_peer_batch *bp_batch)
   }
 }
 
-struct bgp_structs *select_routing_db(int peer_type)
+struct bgp_structs *bgp_select_routing_db(int peer_type)
 {
-  if (peer_type == FUNC_TYPE_BGP) return &bgp_routing_db;
-/*  else if (peer_type == FUNC_TYPE_BMP) return &bmp_routing_db; */
+  if (peer_type < FUNC_TYPE_MAX) 
+    return &inter_domain_routing_dbs[peer_type];
 
   return NULL;
 }

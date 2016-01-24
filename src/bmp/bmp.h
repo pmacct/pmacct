@@ -166,7 +166,6 @@ struct bmp_data {
 #endif
 EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
-EXT void bmp_attr_init();
 EXT u_int32_t bmp_process_packet(char *, u_int32_t, struct bgp_peer *);
 EXT void bmp_process_msg_init(char **, u_int32_t *, u_int32_t, struct bgp_peer *);
 EXT void bmp_process_msg_term(char **, u_int32_t *, u_int32_t, struct bgp_peer *);
@@ -202,13 +201,9 @@ EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, cha
 
 /* global variables */
 EXT struct bgp_peer *bmp_peers;
-EXT struct hash *bmp_attrhash;
-EXT struct hash *bmp_ashash;
-EXT struct hash *bmp_comhash;
-EXT struct hash *bmp_ecomhash;
-EXT struct bgp_table *bmp_rib[AFI_MAX][SAFI_MAX];
 EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bmp_msglog_backend_methods;
 EXT int bmp_dump_backend_methods;
-EXT struct bgp_structs bmp_routing_db;
+
+EXT struct bgp_structs *bmp_routing_db;
 #undef EXT

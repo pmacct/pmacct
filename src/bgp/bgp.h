@@ -210,7 +210,7 @@ EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
 EXT void write_neighbors_file(char *);
-EXT struct bgp_structs *select_routing_db(int);
+EXT struct bgp_structs *bgp_select_routing_db(int);
 
 EXT void bgp_srcdst_lookup(struct packet_ptrs *);
 EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
@@ -246,6 +246,7 @@ EXT struct bgp_comm_range peer_src_as_asrange;
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bgp_msglog_backend_methods;
 EXT int bgp_table_dump_backend_methods;
-EXT struct bgp_structs bgp_routing_db;
+
+EXT struct bgp_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 #undef EXT
 #endif 

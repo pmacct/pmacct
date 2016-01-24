@@ -95,6 +95,9 @@ void skinny_bmp_daemon()
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
 
+  bmp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BMP];
+  memset(bmp_routing_db, 0, sizeof(struct bgp_structs));
+
   /* socket creation for BMP server: IPv4 only */
 #if (defined ENABLE_IPV6)
   if (!config.nfacctd_bmp_ip) {
@@ -187,7 +190,7 @@ void skinny_bmp_daemon()
   }
 
   if (!config.bmp_table_attr_hash_buckets) config.bmp_table_attr_hash_buckets = HASHTABSIZE;
-  bmp_attr_init();
+  bgp_attr_init(bmp_routing_db);
 
   if (!config.bmp_table_peer_buckets) config.bmp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bmp_table_per_peer_buckets) config.bmp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
@@ -285,7 +288,7 @@ void skinny_bmp_daemon()
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      bmp_rib[afi][safi] = bgp_table_init(afi, safi);
+      bmp_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
     }
   }
 
@@ -1164,14 +1167,6 @@ void bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
       (*len) -= offset;
     }
   }
-}
-
-void bmp_attr_init()
-{
-  aspath_init(&bmp_ashash);
-  attrhash_init(&bmp_attrhash);
-  community_init(&bmp_comhash);
-  ecommunity_init(&bmp_ecomhash);
 }
 
 u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t recv_len, u_int32_t remaining_len, char *addr_str)
