@@ -15,7 +15,7 @@ DOCUMENTATION
   * INSTALL: basic installation guide
   * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents 
   * examples/: Sample pmacct and 3rd party tools configurations; sample maps
-  * sql/: SQL schemas for various pmacct tables; IPv6 and 64bit counters hacks 
+  * sql/: SQL documentation, default SQL schemas and customization tips
 
 #BUILDING#
 
