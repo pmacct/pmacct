@@ -522,14 +522,14 @@ void skinny_bgp_daemon()
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
 	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
-            Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Replenishing stale connection by peer.\n",
-				config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4));
+            Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Replenishing stale connection by peer.\n",
+				config.name, bgp_peer_print(&peers[peers_check_idx]));
             FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
             bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP);
 	  }
 	  else {
-	    Log(LOG_ERR, "ERROR ( %s/core/BGP ): [Id: %s] Refusing new connection from existing peer (residual holdtime: %u).\n",
-				config.name, inet_ntoa(peers[peers_check_idx].id.address.ipv4),
+	    Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
+				config.name, bgp_peer_print(&peers[peers_check_idx]),
 				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP);
@@ -568,7 +568,7 @@ void skinny_bgp_daemon()
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Existing BGP connection was reset (%d).\n", config.name, inet_ntoa(peer->id.address.ipv4), errno);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP connection reset by peer (%d).\n", config.name, bgp_peer_print(peer), errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer, FUNC_TYPE_BGP);
       recalc_fds = TRUE;
@@ -620,8 +620,8 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
     else peer->buf.truncated_len = 0;
 
     if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) < 0) {
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (marker check failed).\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (marker check failed).\n",
+		config.name, bgp_peer_print(peer));
       return ERR;
     }
 
@@ -631,10 +631,10 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       if (ret < 0) return ret;
       break;
     case BGP_NOTIFICATION:
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] BGP_NOTIFICATION received\n", config.name, inet_ntoa(peer->id.address.ipv4));
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP_NOTIFICATION received\n", config.name, bgp_peer_print(peer));
       return ERR;
     case BGP_KEEPALIVE:
-      Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP_KEEPALIVE received\n", config.name, inet_ntoa(peer->id.address.ipv4));
+      Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [%s] BGP_KEEPALIVE received\n", config.name, bgp_peer_print(peer));
       if (peer->status >= OpenSent) {
         if (peer->status < Established) peer->status = Established;
 
@@ -647,7 +647,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
           ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
           peer->last_keepalive = now;
 
-	  Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP_KEEPALIVE sent\n", config.name, inet_ntoa(peer->id.address.ipv4));
+	  Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [%s] BGP_KEEPALIVE sent\n", config.name, bgp_peer_print(peer));
 	}
       }
       /* If we didn't pass through a successful BGP OPEN exchange just yet
@@ -655,21 +655,20 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       break;
     case BGP_UPDATE:
       if (peer->status < Established) {
-	Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [Id: %s] BGP UPDATE received (no neighbor). Discarding.\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+	Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [%s] BGP UPDATE received (no neighbor). Discarding.\n",
+		config.name, bgp_peer_print(peer));
 	return ERR;
       }
 
       ret = bgp_parse_update_msg(peer, bgp_packet_ptr);
       if (ret < 0) {
-	Log(LOG_WARNING, "WARN ( %s/core/BGP ): [Id: %s] BGP UPDATE: malformed (%d).\n",
-		config.name, inet_ntoa(peer->id.address.ipv4), ret);
+	Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] BGP UPDATE: malformed (%d).\n", config.name, bgp_peer_print(peer), ret);
 	return ERR;
       }
       break;
     default:
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported message type).\n",
-	  config.name, inet_ntoa(peer->id.address.ipv4));
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (unsupported message type).\n",
+	  config.name, bgp_peer_print(peer));
       return ERR;
     }
   }
@@ -713,8 +712,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	  opt_len = (u_int8_t) ptr[1];
 
 	  if (opt_len > bopen->bgpo_optlen) {
-	    Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (option length).\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+	    Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (option length).\n",
+		config.name, bgp_peer_print(peer));
 	    return ERR;
 	  } 
 
@@ -737,8 +736,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	      u_int8_t cap_type = optcap_ptr[0];
 
 	      if (cap_len > optcap_len) {
-		Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (malformed capability: %x).\n",
-			config.name, inet_ntoa(peer->id.address.ipv4), cap_type);
+		Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (malformed capability: %x).\n",
+			config.name, bgp_peer_print(peer), cap_type);
 		return ERR;
    	      }
 				     
@@ -748,8 +747,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
 	  	memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
-	  	Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
-			config.name, cap_type, ntohs(cap_data.afi), cap_data.safi);
+	  	Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+			config.name, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi);
 		peer->cap_mp = TRUE;
 
 		if (online) {
@@ -766,8 +765,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
 		  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-		  Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: 4-bytes AS [%x] ASN [%u]\n",
-	    		config.name, cap_type, ntohl(cap_data.as4));
+		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: 4-bytes AS [%x] ASN [%u]\n",
+	    		config.name, bgp_peer_print(peer), cap_type, ntohl(cap_data.as4));
 		  memcpy(&as4_ptr, cap_ptr, 4);
 		  remote_as4 = ntohl(as4_ptr);
 		  peer->cap_4as = bgp_open_cap_ptr+4;
@@ -778,8 +777,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 		  }
 		}
 		else {
-		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (malformed AS4 option).\n",
-			config.name, inet_ntoa(peer->id.address.ipv4));
+		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (malformed AS4 option).\n",
+			config.name, bgp_peer_print(peer));
 		  return ERR;
 		}
 	      }
@@ -789,8 +788,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
 		memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-		Log(LOG_INFO, "INFO ( %s/core/BGP ): Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
-			config.name, cap_type, ntohs(cap_data.afi), cap_data.safi, cap_data.sndrcv);
+		Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+			config.name, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi, cap_data.sndrcv);
 
 		if (cap_data.sndrcv == 2 /* send */) {
 		  peer->cap_add_paths = TRUE; 
@@ -820,8 +819,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	/* It is not valid to use the transitional ASN in the BGP OPEN and
  	   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 	else {
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (invalid AS4 option).\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (invalid AS4 option).\n",
+		config.name, bgp_peer_print(peer));
 	  return ERR;
 	}
       }
@@ -831,14 +830,14 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
  	/* It is not valid to not use the transitional ASN in the BGP OPEN and
 	   present an ASN != remote_as in the 4AS capability */
 	else {
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (mismatching AS4 option).\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (mismatching AS4 option).\n",
+		config.name, bgp_peer_print(peer));
 	  return ERR;
 	}
       }
 
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
-		inet_ntoa(peer->id.address.ipv4), peer->as, peer->ht);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
+		bgp_peer_print(peer), peer->as, peer->ht);
 
       if (online) {
         bgp_reply_pkt_ptr = bgp_reply_pkt;
@@ -848,8 +847,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
         ret = bgp_write_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
         if (ret > 0) bgp_reply_pkt_ptr += ret;
         else {
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n",
+		config.name, bgp_peer_print(peer));
 	  return ERR;
         }
 
@@ -860,8 +859,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
       }
     }
     else {
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [Id: %s] Received malformed BGP packet (unsupported version).\n",
-		config.name, inet_ntoa(peer->id.address.ipv4));
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (unsupported version).\n",
+		config.name, bgp_peer_print(peer));
       return ERR;
     }
 
@@ -2095,6 +2094,21 @@ void bgp_peer_close(struct bgp_peer *peer, int type)
 
   if (neighbors_file)
     write_neighbors_file(neighbors_file);
+}
+
+char *bgp_peer_print(struct bgp_peer *peer)
+{
+  static __thread char buf[INET6_ADDRSTRLEN], dumb_buf[] = "0.0.0.0";
+  int ret = 0;
+
+  if (peer) {
+    if (peer->id.family) return inet_ntoa(peer->id.address.ipv4);
+    else ret = addr_to_str(buf, &peer->addr);
+  }
+
+  if (!ret) strcpy(buf, dumb_buf);
+
+  return buf;
 }
 
 void bgp_peer_info_delete(struct bgp_peer *peer)

@@ -519,7 +519,7 @@ void skinny_bmp_daemon()
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].addr))) {
-          Log(LOG_ERR, "ERROR ( %s/core/BMP ): [Id: %s] Refusing new connection from existing peer.\n",
+          Log(LOG_ERR, "ERROR ( %s/core/BMP ): [%s] Refusing new connection from existing peer.\n",
                                 config.name, bmp_peers[peers_check_idx].addr_str);
           FD_CLR(peer->fd, &bkp_read_descs);
           bgp_peer_close(peer, FUNC_TYPE_BMP);
@@ -559,7 +559,7 @@ void skinny_bmp_daemon()
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer, FUNC_TYPE_BMP);
       recalc_fds = TRUE;
@@ -584,7 +584,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
   struct bmp_common_hdr *bch = NULL;
 
   if (len < sizeof(struct bmp_common_hdr)) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
     return FALSE;
   }
 
@@ -593,7 +593,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
       return msg_start_len;
 
     if (bch->version != BMP_V3) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: BMP version != %u\n", config.name, peer->addr_str, BMP_V3);
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: BMP version != %u\n", config.name, peer->addr_str, BMP_V3);
       return FALSE;
     }
 
@@ -601,7 +601,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
     if (pkt_remaining_len < msg_len) return msg_start_len;
 
     if (bch->type <= BMP_MSG_TYPE_MAX) {
-      Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [Id: %s] [common] type: %s (%u)\n",
+      Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): [%s] [common] type: %s (%u)\n",
 	  config.name, peer->addr_str, bmp_msg_types[bch->type], bch->type);
     }
 
@@ -625,7 +625,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
       bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, msg_len, peer); 
       break;
     default:
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
       break;
     }
 
@@ -660,7 +660,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
 
   while (bmp_hdr_len) {
     if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [init] packet discarded: failed bmp_get_and_check_length() BMP init hdr\n",
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP init hdr\n",
 		config.name, peer->addr_str);
       return;
     }
@@ -668,7 +668,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
     bmp_init_hdr_get_len(bih, &bmp_init_len);
 
     if (!(bmp_init_info = bmp_get_and_check_length(bmp_packet, len, bmp_init_len))) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [init] packet discarded: failed bmp_get_and_check_length() BMP init info\n",
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP init info\n",
 		config.name, peer->addr_str);
       return;
     }
@@ -716,7 +716,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
 
   while (bmp_hdr_len) {
     if (!(bth = (struct bmp_term_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_term_hdr)))) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [term] packet discarded: failed bmp_get_and_check_length() BMP term hdr\n",
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP term hdr\n",
 		config.name, peer->addr_str);
        return;
     }
@@ -724,7 +724,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
     bmp_term_hdr_get_len(bth, &bmp_term_len);
 
     if (!(bmp_term_info = bmp_get_and_check_length(bmp_packet, len, bmp_term_len))) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [term] packet discarded: failed bmp_get_and_check_length() BMP term info\n",
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP term info\n",
 		config.name, peer->addr_str);
       return;
     }
@@ -762,13 +762,13 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
   memset(&bdata, 0, sizeof(bdata));
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
 	config.name, peer->addr_str);
     return;
   }
 
   if (!(bpuh = (struct bmp_peer_up_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_up_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer up hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer up hdr\n",
 	config.name, peer->addr_str);
     return;
   }
@@ -810,13 +810,13 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
   memset(&bdata, 0, sizeof(bdata));
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [peer down] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer down] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
         config.name, peer->addr_str);
     return;
   }
 
   if (!(bpdh = (struct bmp_peer_down_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_down_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [peer down] packet discarded: failed bmp_get_and_check_length() BMP peer down hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer down] packet discarded: failed bmp_get_and_check_length() BMP peer down hdr\n",
         config.name, peer->addr_str);
     return;
   }
@@ -857,7 +857,7 @@ void bmp_process_msg_route(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
         config.name, peer->addr_str);
     return;
   }
@@ -892,13 +892,13 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   memset(&bdata, 0, sizeof(bdata));
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [stats] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [stats] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
         config.name, peer->addr_str);
     return;
   }
 
   if (!(bsh = (struct bmp_stats_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_stats_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [stats] packet discarded: failed bmp_get_and_check_length() BMP stats hdr\n",
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [stats] packet discarded: failed bmp_get_and_check_length() BMP stats hdr\n",
         config.name, peer->addr_str);
     return;
   }
@@ -916,7 +916,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
 
   for (index = 0; index < count; index++) {
     if (!(bsch = (struct bmp_stats_cnt_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_stats_cnt_hdr)))) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] [stats] packet discarded: failed bmp_get_and_check_length() BMP stats cnt hdr #%u\n",
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [stats] packet discarded: failed bmp_get_and_check_length() BMP stats cnt hdr #%u\n",
           config.name, peer->addr_str, index);
       return;
     }
@@ -1175,7 +1175,7 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
   
   if (!bmp_packet || recv_len > buf_len || remaining_len >= buf_len || remaining_len > recv_len) {
     if (addr_str)
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [Id: %s] packet discarded: failed bmp_packet_adj_offset()\n", config.name, addr_str);
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: failed bmp_packet_adj_offset()\n", config.name, addr_str);
 
     return FALSE;
   }
