@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -32,6 +32,7 @@
 #include <sys/errno.h> /* for EBUSY */
 
 #define DEFAULT_TH_NUM 10
+#define MIN_TH_STACK_SIZE 8192000
 
 typedef struct thread_pool_item {
   int			id;

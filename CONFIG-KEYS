@@ -2271,5 +2271,7 @@ DEFAULT:        true
 
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
-		bytes. A value of 0, default, leaves the stack size to the Operating System default.
+		bytes. A value of 0, default, leaves the stack size to the system default or pmacct
+		minimum (8192000) if system default is too low. Some systems may throw an error if
+		the defined size is not a multiple of the system page size.
 DEFAULT:	0

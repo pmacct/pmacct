@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -36,6 +36,7 @@ thread_pool_t *allocate_thread_pool(int count)
   thread_pool_t *pool;
   thread_pool_item_t *worker;
   pthread_attr_t attr, *attr_ptr = NULL;
+  size_t default_stack_size;
 
   if (count <= 0) {
     Log(LOG_WARNING, "WARN ( %s/%s ): allocate_thread_pool() requires count > 0\n", config.name, config.type);
@@ -85,20 +86,45 @@ thread_pool_t *allocate_thread_pool(int count)
     worker->thread = malloc(sizeof(pthread_t));
     assert(worker->thread);
 
-    if (config.thread_stack) {
-      rc = pthread_attr_init(&attr);
-      if (rc) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_init(): %s\n", config.name, config.type, strerror(rc));
-        return NULL;
-      }
-      else {
-        rc = pthread_attr_setstacksize(&attr, config.thread_stack);
-        if (rc) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_setstacksize(): %s\n", config.name, config.type, strerror(rc));
-          return NULL;
-	}
-        else attr_ptr = &attr;
-      }
+    rc = pthread_attr_init(&attr);
+    if (rc) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_init(): %s\n", config.name, config.type, strerror(rc));
+      return NULL;
+    }
+
+    if (config.thread_stack && config.thread_stack < MIN_TH_STACK_SIZE) {
+      config.thread_stack = MIN_TH_STACK_SIZE;
+      Log(LOG_INFO, "INFO ( %s/%s ): thread_stack re-defined to minimum: %u\n", config.name, config.type, MIN_TH_STACK_SIZE);
+    }
+
+    /*
+       Thread stack handling:
+       * if thread_stack is defined, apply it;
+       * if thread_stack is found not good but system default is good (ie.
+	 equal or greater than MIN_TH_STACK_SIZE), apply system default;
+       * if system default is not good (ie. less than MIN_TH_STACK_SIZE),
+	 apply MIN_TH_STACK_SIZE;
+       * if nothing of the above works bail out.
+    */
+    pthread_attr_getstacksize(&attr, &default_stack_size); 
+    if (config.thread_stack) {                        
+      rc = pthread_attr_setstacksize(&attr, config.thread_stack);
+      if (rc && default_stack_size >= MIN_TH_STACK_SIZE) rc = pthread_attr_setstacksize(&attr, default_stack_size);
+    }
+
+    if (rc || default_stack_size < MIN_TH_STACK_SIZE) rc = pthread_attr_setstacksize(&attr, MIN_TH_STACK_SIZE);
+
+    if (!rc) {
+      size_t confd_stack_size;
+
+      attr_ptr = &attr;
+      pthread_attr_getstacksize(&attr, &confd_stack_size);
+      if (confd_stack_size != config.thread_stack && confd_stack_size != default_stack_size) 
+        Log(LOG_INFO, "INFO ( %s/%s ): pthread_attr_setstacksize(): %u\n", config.name, config.type, confd_stack_size);
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_setstacksize(): %s\n", config.name, config.type, strerror(rc));
+      return NULL;
     }
 
     rc = pthread_create(worker->thread, attr_ptr, thread_runner, worker);
