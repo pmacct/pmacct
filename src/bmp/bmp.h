@@ -159,7 +159,7 @@ struct bmp_data {
 #include "bmp_logdump.h"
 
 /* prototypes */
-#if !defined(__BMP_C) && !defined(__BMP_LOGDUMP_C)
+#if !defined(__BMP_C)
 #define EXT extern
 #else
 #define EXT
@@ -198,8 +198,14 @@ EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
+#undef EXT
 
 /* global variables */
+#if !defined(__BMP_C) && !defined(__BMP_LOGDUMP_C)
+#define EXT extern
+#else
+#define EXT
+#endif
 EXT struct bgp_peer *bmp_peers;
 EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bmp_msglog_backend_methods;

@@ -168,8 +168,14 @@ struct bgp_comm_range {
 #endif
 EXT void nfacctd_bgp_wrapper();
 EXT void skinny_bgp_daemon();
+#undef EXT
 
 /* global variables */
+#if (!defined __BGP_C) && (!defined __BGP_UTIL_C) && (!defined __BGP_LOOKUP_C) && (!defined __BGP_MSG_C) && (!defined __BGP_LOGDUMP_C)
+#define EXT extern
+#else
+#define EXT
+#endif
 EXT struct bgp_peer *peers;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
