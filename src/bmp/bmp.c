@@ -163,13 +163,13 @@ void skinny_bmp_daemon()
   }
 
   if (nfacctd_bmp_msglog_backend_methods) {
-    bmp_peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
-    if (!bmp_peers_log) {
+    bmp_misc_db->peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
+    if (!bmp_misc_db->peers_log) {
       Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name);
       exit_all(1);
     }
-    memset(bmp_peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
-    bgp_peer_log_seq_init(&bmp_log_seq);
+    memset(bmp_misc_db->peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
+    bgp_peer_log_seq_init(&bmp_misc_db->log_seq);
 
     if (config.nfacctd_bmp_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ
@@ -325,8 +325,8 @@ void skinny_bmp_daemon()
     time_t tmp_time;
 
     if (config.bmp_dump_refresh_time) {
-      gettimeofday(&bmp_log_tstamp, NULL);
-      dump_refresh_deadline = bmp_log_tstamp.tv_sec;
+      gettimeofday(&bmp_misc_db->log_tstamp, NULL);
+      dump_refresh_deadline = bmp_misc_db->log_tstamp.tv_sec;
       tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
       while ((tmp_time+config.bmp_dump_refresh_time) < dump_refresh_deadline) {
         tmp_time += config.bmp_dump_refresh_time;
@@ -370,7 +370,7 @@ void skinny_bmp_daemon()
     if (bmp_dump_backend_methods) {
       int delta;
 
-      calc_refresh_timeout_sec(dump_refresh_deadline, bmp_log_tstamp.tv_sec, &delta);
+      calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, &delta);
       dump_refresh_timeout.tv_sec = delta;
       dump_refresh_timeout.tv_usec = 0;
       drt_ptr = &dump_refresh_timeout;
@@ -382,21 +382,21 @@ void skinny_bmp_daemon()
 
     if (reload_log_bmp_thread) {
       for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-        if (bmp_peers_log[peers_idx].fd) {
-          fclose(bmp_peers_log[peers_idx].fd);
-          bmp_peers_log[peers_idx].fd = open_logfile(bmp_peers_log[peers_idx].filename, "a");
-	  setlinebuf(bmp_peers_log[peers_idx].fd);
+        if (bmp_misc_db->peers_log[peers_idx].fd) {
+          fclose(bmp_misc_db->peers_log[peers_idx].fd);
+          bmp_misc_db->peers_log[peers_idx].fd = open_logfile(bmp_misc_db->peers_log[peers_idx].filename, "a");
+	  setlinebuf(bmp_misc_db->peers_log[peers_idx].fd);
         }
         else break;
       }
     }
 
     if (nfacctd_bmp_msglog_backend_methods || bmp_dump_backend_methods) {
-      gettimeofday(&bmp_log_tstamp, NULL);
-      compose_timestamp(bmp_log_tstamp_str, SRVBUFLEN, &bmp_log_tstamp, TRUE, config.sql_history_since_epoch);
+      gettimeofday(&bmp_misc_db->log_tstamp, NULL);
+      compose_timestamp(bmp_misc_db->log_tstamp_str, SRVBUFLEN, &bmp_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
 
       if (bmp_dump_backend_methods) {
-        while (bmp_log_tstamp.tv_sec > dump_refresh_deadline) {
+        while (bmp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
           bmp_handle_dump_event();
           dump_refresh_deadline += config.bmp_dump_refresh_time;
         }
@@ -406,7 +406,7 @@ void skinny_bmp_daemon()
       if (config.nfacctd_bmp_msglog_amqp_routing_key) {
         time_t last_fail = P_broker_timers_get_last_fail(&bmp_daemon_msglog_amqp_host.btimers);
 
-        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_amqp_host.btimers)) <= log_tstamp.tv_sec)) {
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_amqp_host.btimers)) <= bmp_misc_db->log_tstamp.tv_sec)) {
           bmp_daemon_msglog_init_amqp_host();
           p_amqp_connect_to_publish(&bmp_daemon_msglog_amqp_host);
         }
@@ -417,7 +417,7 @@ void skinny_bmp_daemon()
       if (config.nfacctd_bmp_msglog_kafka_topic) {
         time_t last_fail = P_broker_timers_get_last_fail(&bmp_daemon_msglog_kafka_host.btimers);
 
-        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_kafka_host.btimers)) <= log_tstamp.tv_sec))
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_kafka_host.btimers)) <= bmp_misc_db->log_tstamp.tv_sec))
           bmp_daemon_msglog_init_kafka_host();
       }
 #endif
@@ -1204,10 +1204,10 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->dump_amqp_routing_key_rr = config.bmp_dump_amqp_routing_key_rr;
   bms->dump_kafka_topic = config.bmp_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bmp_dump_kafka_topic_rr;
-  bms->msglog_output = config.nfacctd_bmp_msglog_output;
+  bms->msglog_file = config.nfacctd_bmp_msglog_file;
   bms->msglog_amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bmp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
-  strcpy(bms->peer_str, "peer_src_ip");
+  strcpy(bms->peer_str, "bmp_router");
 }

@@ -39,9 +39,10 @@
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, char *event_type, int output, int log_type)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
-  if (!peer || !peer->log || !bdata || !event_type) return ERR;
+  if (!bms || !peer || !peer->log || !bdata || !event_type) return ERR;
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
@@ -69,10 +70,10 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
 
     /* no need for seq for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", bmp_log_seq);
+      kv = json_pack("{sI}", "seq", bms->log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
-      bgp_peer_log_seq_increment(&bmp_log_seq);
+      bgp_peer_log_seq_increment(&bms->log_seq);
     }
 
     compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.sql_history_since_epoch);
@@ -457,6 +458,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
 
 void bmp_handle_dump_event()
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
@@ -512,7 +514,7 @@ void bmp_handle_dump_event()
         if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
         if (config.bmp_dump_kafka_topic) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
 
-        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bmp_log_tstamp.tv_sec);
+        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->log_tstamp.tv_sec);
 
         /*
 	  we close last_filename and open current_filename in case they differ;

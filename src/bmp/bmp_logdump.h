@@ -108,11 +108,5 @@ EXT void bmp_daemon_msglog_init_amqp_host();
 EXT void bmp_dump_init_amqp_host();
 EXT int bmp_daemon_msglog_init_kafka_host();
 EXT int bmp_dump_init_kafka_host();
-
-/* global variables */
-EXT struct bgp_peer_log *bmp_peers_log;
-EXT u_int64_t bmp_log_seq;
-EXT struct timeval bmp_log_tstamp;
-EXT char bmp_log_tstamp_str[SRVBUFLEN];
 #undef EXT
 #endif

@@ -497,6 +497,8 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
   afi_t afi;
   safi_t safi;
 
+  if (!inter_domain_routing_db) return;
+
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
       table = inter_domain_routing_db->rib[afi][safi];
@@ -906,6 +908,14 @@ struct bgp_rt_structs *bgp_select_routing_db(int peer_type)
   return NULL;
 }
 
+struct bgp_misc_structs *bgp_select_misc_db(int peer_type)
+{
+  if (peer_type < FUNC_TYPE_MAX)
+    return &inter_domain_misc_dbs[peer_type];
+
+  return NULL;
+}
+
 void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 {
 #if defined WITH_RABBITMQ
@@ -921,7 +931,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->dump_amqp_routing_key_rr = config.bgp_table_dump_amqp_routing_key_rr;
   bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
-  bms->msglog_output = config.nfacctd_bgp_msglog_output;
+  bms->msglog_file = config.nfacctd_bgp_msglog_file;
   bms->msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;

@@ -89,7 +89,7 @@ struct bgp_rt_structs {
 
 struct bgp_misc_structs {
   struct bgp_peer_log *peers_log;
-  u_int64_t bmp_log_seq;
+  u_int64_t log_seq;
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
   char peer_str[SRVBUFLEN]; /* bmp_router vs peer_src_ip */
@@ -108,7 +108,7 @@ struct bgp_misc_structs {
   int dump_amqp_routing_key_rr;
   char *dump_kafka_topic;
   int dump_kafka_topic_rr;
-  int msglog_output;
+  char *msglog_file;
   char *msglog_amqp_routing_key;
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;

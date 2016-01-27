@@ -149,13 +149,13 @@ void skinny_bgp_daemon()
       exit_all(1);
     }
 
-    peers_log = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
-    if (!peers_log) {
+    bgp_misc_db->peers_log = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
+    if (!bgp_misc_db->peers_log) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to malloc() BGP peers log structure. Terminating thread.\n", config.name);
       exit_all(1);
     }
-    memset(peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
-    bgp_peer_log_seq_init(&log_seq);
+    memset(bgp_misc_db->peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
+    bgp_peer_log_seq_init(&bgp_misc_db->log_seq);
 
     if (config.nfacctd_bgp_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ
@@ -322,8 +322,8 @@ void skinny_bgp_daemon()
     time_t tmp_time;
 
     if (config.bgp_table_dump_refresh_time) {
-      gettimeofday(&log_tstamp, NULL);
-      dump_refresh_deadline = log_tstamp.tv_sec;
+      gettimeofday(&bgp_misc_db->log_tstamp, NULL);
+      dump_refresh_deadline = bgp_misc_db->log_tstamp.tv_sec;
       tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
       while ((tmp_time+config.bgp_table_dump_refresh_time) < dump_refresh_deadline) {
         tmp_time += config.bgp_table_dump_refresh_time;
@@ -367,7 +367,7 @@ void skinny_bgp_daemon()
     if (bgp_table_dump_backend_methods) {
       int delta;
 
-      calc_refresh_timeout_sec(dump_refresh_deadline, log_tstamp.tv_sec, &delta);
+      calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, &delta);
       dump_refresh_timeout.tv_sec = delta;
       dump_refresh_timeout.tv_usec = 0;
       drt_ptr = &dump_refresh_timeout;
@@ -391,21 +391,21 @@ void skinny_bgp_daemon()
 
     if (reload_log_bgp_thread) {
       for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-	if (peers_log[peers_idx].fd) {
-	  fclose(peers_log[peers_idx].fd);
-	  peers_log[peers_idx].fd = open_logfile(peers_log[peers_idx].filename, "a");
-	  setlinebuf(peers_log[peers_idx].fd);
+	if (bgp_misc_db->peers_log[peers_idx].fd) {
+	  fclose(bgp_misc_db->peers_log[peers_idx].fd);
+	  bgp_misc_db->peers_log[peers_idx].fd = open_logfile(bgp_misc_db->peers_log[peers_idx].filename, "a");
+	  setlinebuf(bgp_misc_db->peers_log[peers_idx].fd);
 	}
 	else break;
       }
     }
 
     if (nfacctd_bgp_msglog_backend_methods || bgp_table_dump_backend_methods) {
-      gettimeofday(&log_tstamp, NULL);
-      compose_timestamp(log_tstamp_str, SRVBUFLEN, &log_tstamp, TRUE, config.sql_history_since_epoch);
+      gettimeofday(&bgp_misc_db->log_tstamp, NULL);
+      compose_timestamp(bgp_misc_db->log_tstamp_str, SRVBUFLEN, &bgp_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
 
       if (bgp_table_dump_backend_methods) {
-	while (log_tstamp.tv_sec > dump_refresh_deadline) {
+	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_handle_dump_event();
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
 	}
@@ -415,7 +415,7 @@ void skinny_bgp_daemon()
       if (config.nfacctd_bgp_msglog_amqp_routing_key) { 
         time_t last_fail = P_broker_timers_get_last_fail(&bgp_daemon_msglog_amqp_host.btimers);
 
-	if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_amqp_host.btimers)) <= log_tstamp.tv_sec)) {
+	if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_amqp_host.btimers)) <= bgp_misc_db->log_tstamp.tv_sec)) {
           bgp_daemon_msglog_init_amqp_host();
           p_amqp_connect_to_publish(&bgp_daemon_msglog_amqp_host);
 	}
@@ -426,7 +426,7 @@ void skinny_bgp_daemon()
       if (config.nfacctd_bgp_msglog_kafka_topic) {
         time_t last_fail = P_broker_timers_get_last_fail(&bgp_daemon_msglog_kafka_host.btimers);
 
-        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_kafka_host.btimers)) <= log_tstamp.tv_sec))
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_kafka_host.btimers)) <= bgp_misc_db->log_tstamp.tv_sec))
           bgp_daemon_msglog_init_kafka_host();
       }
 #endif

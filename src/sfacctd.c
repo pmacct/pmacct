@@ -913,14 +913,18 @@ int main(int argc,char **argv, char **envp)
       exit_all(1);
     }
     else {
-      sf_cnt_log = malloc(MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
-      if (!sf_cnt_log) {
+      sf_cnt_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_SFLOW_COUNTER];
+      memset(sf_cnt_misc_db, 0, sizeof(struct bgp_misc_structs));
+      sf_cnt_link_misc_structs(sf_cnt_misc_db);
+
+      sf_cnt_misc_db->peers_log = malloc(MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+      if (!sf_cnt_misc_db->peers_log) {
         Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() sFlow counters log structure. Exiting.\n", config.name);
         exit(1);
       }
-      memset(sf_cnt_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
+      memset(sf_cnt_misc_db->peers_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
       config.sfacctd_counter_max_nodes = MAX_SF_CNT_LOG_ENTRIES;
-      bgp_peer_log_seq_init(&sf_cnt_log_seq);
+      bgp_peer_log_seq_init(&sf_cnt_misc_db->log_seq);
     }
 
     if (!config.sfacctd_counter_output) {
@@ -1000,10 +1004,10 @@ int main(int argc,char **argv, char **envp)
       int nodes_idx;
 
       for (nodes_idx = 0; nodes_idx < config.sfacctd_counter_max_nodes; nodes_idx++) {
-        if (sf_cnt_log[nodes_idx].fd) {
-          fclose(sf_cnt_log[nodes_idx].fd);
-          sf_cnt_log[nodes_idx].fd = open_logfile(sf_cnt_log[nodes_idx].filename, "a");
-	  setlinebuf(sf_cnt_log[nodes_idx].fd);
+        if (sf_cnt_misc_db->peers_log[nodes_idx].fd) {
+          fclose(sf_cnt_misc_db->peers_log[nodes_idx].fd);
+          sf_cnt_misc_db->peers_log[nodes_idx].fd = open_logfile(sf_cnt_misc_db->peers_log[nodes_idx].filename, "a");
+	  setlinebuf(sf_cnt_misc_db->peers_log[nodes_idx].fd);
         }
         else break;
       }
@@ -1012,14 +1016,14 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (sfacctd_counter_backend_methods) {
-      gettimeofday(&sf_cnt_log_tstamp, NULL);
-      compose_timestamp(sf_cnt_log_tstamp_str, SRVBUFLEN, &sf_cnt_log_tstamp, TRUE, config.sql_history_since_epoch);
+      gettimeofday(&sf_cnt_misc_db->log_tstamp, NULL);
+      compose_timestamp(sf_cnt_misc_db->log_tstamp_str, SRVBUFLEN, &sf_cnt_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
 
 #ifdef WITH_RABBITMQ
       if (config.sfacctd_counter_amqp_routing_key) {
         time_t last_fail = P_broker_timers_get_last_fail(&sfacctd_counter_amqp_host.btimers);
 
-        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&sfacctd_counter_amqp_host.btimers)) <= log_tstamp.tv_sec)) {
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&sfacctd_counter_amqp_host.btimers)) <= sf_cnt_misc_db->log_tstamp.tv_sec)) {
           sfacctd_counter_init_amqp_host();
           p_amqp_connect_to_publish(&sfacctd_counter_amqp_host);
         }
@@ -1030,7 +1034,7 @@ int main(int argc,char **argv, char **envp)
       if (config.sfacctd_counter_kafka_topic) {
         time_t last_fail = P_broker_timers_get_last_fail(&sfacctd_counter_kafka_host.btimers);
 
-        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&sfacctd_counter_kafka_host.btimers)) <= log_tstamp.tv_sec))
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&sfacctd_counter_kafka_host.btimers)) <= sf_cnt_misc_db->log_tstamp.tv_sec))
           sfacctd_counter_init_kafka_host();
       }
 #endif
@@ -3438,3 +3442,20 @@ int sfacctd_counter_init_kafka_host()
   return ERR;
 }
 #endif
+
+void sf_cnt_link_misc_structs(struct bgp_misc_structs *bms)
+{
+#if defined WITH_RABBITMQ
+  bms->msglog_amqp_host = &sfacctd_counter_amqp_host;
+#endif
+#if defined WITH_KAFKA
+  bms->msglog_kafka_host = &sfacctd_counter_kafka_host;
+#endif
+  bms->max_peers = config.sfacctd_counter_max_nodes;
+  bms->msglog_file = config.sfacctd_counter_file;
+  bms->msglog_amqp_routing_key = config.sfacctd_counter_amqp_routing_key;
+  bms->msglog_kafka_topic = config.sfacctd_counter_kafka_topic;
+  strcpy(bms->peer_str, "peer_src_ip");
+
+  /* dump not supported */
+}

@@ -907,6 +907,8 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   struct bgp_attr *attr_new = NULL;
   u_int32_t modulo = bgp_route_info_modulo(peer, path_id);
 
+  if (!inter_domain_routing_db) return ERR;
+
   route = bgp_node_get(inter_domain_routing_db->rib[afi][safi], p);
 
   /* Check previously received route. */
@@ -1039,6 +1041,8 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
   u_int32_t modulo = bgp_route_info_modulo(peer, path_id);
+
+  if (!inter_domain_routing_db) return ERR;
 
   /* Lookup node. */
   route = bgp_node_get(inter_domain_routing_db->rib[afi][safi], p);

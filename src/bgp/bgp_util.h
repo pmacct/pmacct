@@ -40,6 +40,7 @@ EXT void write_neighbors_file(char *);
 EXT struct bgp_rt_structs *bgp_select_routing_db(int);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 EXT void bgp_config_checks(struct configuration *);
+EXT struct bgp_misc_structs *bgp_select_misc_db(int);
 EXT void bgp_link_misc_structs(struct bgp_misc_structs *);
 
 EXT struct bgp_info_extra *bgp_info_extra_new();
