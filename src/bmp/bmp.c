@@ -96,7 +96,10 @@ void skinny_bmp_daemon()
   clen = sizeof(client);
 
   bmp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BMP];
-  memset(bmp_routing_db, 0, sizeof(struct bgp_structs));
+  memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
+  bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
+  memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
+  bmp_link_misc_structs(bmp_misc_db);
 
   /* socket creation for BMP server: IPv4 only */
 #if (defined ENABLE_IPV6)
@@ -1184,4 +1187,27 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
   memcpy(bmp_packet, tmp_packet, remaining_len);
 
   return remaining_len;
+}
+
+void bmp_link_misc_structs(struct bgp_misc_structs *bms)
+{
+#if defined WITH_RABBITMQ
+  bms->msglog_amqp_host = &bmp_daemon_msglog_amqp_host;
+#endif
+#if defined WITH_KAFKA
+  bms->msglog_kafka_host = &bmp_daemon_msglog_kafka_host;
+#endif
+  bms->max_peers = config.nfacctd_bmp_max_peers;
+  bms->neighbors_file = config.nfacctd_bmp_neighbors_file;
+  bms->dump_file = config.bmp_dump_file;
+  bms->dump_amqp_routing_key = config.bmp_dump_amqp_routing_key;
+  bms->dump_amqp_routing_key_rr = config.bmp_dump_amqp_routing_key_rr;
+  bms->dump_kafka_topic = config.bmp_dump_kafka_topic;
+  bms->dump_kafka_topic_rr = config.bmp_dump_kafka_topic_rr;
+  bms->msglog_output = config.nfacctd_bmp_msglog_output;
+  bms->msglog_amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
+  bms->msglog_amqp_routing_key_rr = config.nfacctd_bmp_msglog_amqp_routing_key_rr;
+  bms->msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
+  bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
+  strcpy(bms->peer_str, "peer_src_ip");
 }

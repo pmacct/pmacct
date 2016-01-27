@@ -316,7 +316,7 @@ community_com2str  (struct community *com)
 
 /* Intern communities attribute.  */
 struct community *
-community_intern (struct bgp_structs *inter_domain_routing_db, struct community *com)
+community_intern (struct bgp_rt_structs *inter_domain_routing_db, struct community *com)
 {
   struct community *find;
 
@@ -343,7 +343,7 @@ community_intern (struct bgp_structs *inter_domain_routing_db, struct community 
 
 /* Free community attribute. */
 void
-community_unintern (struct bgp_structs *inter_domain_routing_db, struct community *com)
+community_unintern (struct bgp_rt_structs *inter_domain_routing_db, struct community *com)
 {
   struct community *ret;
 
@@ -362,7 +362,7 @@ community_unintern (struct bgp_structs *inter_domain_routing_db, struct communit
 
 /* Create new community attribute. */
 struct community *
-community_parse (struct bgp_structs *inter_domain_routing_db, u_int32_t *pnt, u_short length)
+community_parse (struct bgp_rt_structs *inter_domain_routing_db, u_int32_t *pnt, u_short length)
 {
   struct community tmp;
   struct community *new;

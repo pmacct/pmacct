@@ -79,7 +79,7 @@
 #define MAX_BGP_COMM_PATTERNS 16
 
 /* structures */
-struct bgp_structs {
+struct bgp_rt_structs {
   struct hash *attrhash;
   struct hash *ashash;
   struct hash *comhash;
@@ -87,7 +87,35 @@ struct bgp_structs {
   struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 };
 
-/* all require definition of bgp_structs */
+struct bgp_misc_structs {
+  struct bgp_peer_log *peers_log;
+  u_int64_t bmp_log_seq;
+  struct timeval log_tstamp;
+  char log_tstamp_str[SRVBUFLEN];
+  char peer_str[SRVBUFLEN]; /* bmp_router vs peer_src_ip */
+
+#if defined WITH_RABBITMQ
+  struct p_amqp_host *msglog_amqp_host;
+#endif
+#if defined WITH_KAFKA
+  struct p_kafka_host *msglog_kafka_host;
+#endif
+  
+  int max_peers;
+  char *neighbors_file;
+  char *dump_file;
+  char *dump_amqp_routing_key;
+  int dump_amqp_routing_key_rr;
+  char *dump_kafka_topic;
+  int dump_kafka_topic_rr;
+  int msglog_output;
+  char *msglog_amqp_routing_key;
+  int msglog_amqp_routing_key_rr;
+  char *msglog_kafka_topic;
+  int msglog_kafka_topic_rr;
+};
+
+/* all require definition of bgp_rt_structs */
 #include "bgp_aspath.h"
 #include "bgp_community.h"
 #include "bgp_ecommunity.h"
@@ -186,6 +214,7 @@ EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bgp_msglog_backend_methods;
 EXT int bgp_table_dump_backend_methods;
 
-EXT struct bgp_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
+EXT struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
+EXT struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
 #undef EXT
 #endif 

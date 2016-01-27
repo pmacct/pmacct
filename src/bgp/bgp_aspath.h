@@ -73,7 +73,7 @@ struct aspath
 #define EXT
 #endif
 EXT void aspath_init (struct hash **);
-EXT struct aspath *aspath_parse (struct bgp_structs *, char *, size_t, int);
+EXT struct aspath *aspath_parse (struct bgp_rt_structs *, char *, size_t, int);
 EXT struct aspath *aspath_dup (struct aspath *);
 EXT struct aspath *aspath_aggregate (struct aspath *, struct aspath *);
 EXT struct aspath *aspath_prepend (struct aspath *, struct aspath *);
@@ -86,8 +86,8 @@ EXT struct aspath *aspath_delete_confed_seq (struct aspath *);
 EXT struct aspath *aspath_empty_get (void);
 EXT struct aspath *aspath_str2aspath (const char *);
 EXT void aspath_free (struct aspath *);
-EXT struct aspath *aspath_intern (struct bgp_structs *, struct aspath *);
-EXT void aspath_unintern (struct bgp_structs *, struct aspath *);
+EXT struct aspath *aspath_intern (struct bgp_rt_structs *, struct aspath *);
+EXT void aspath_unintern (struct bgp_rt_structs *, struct aspath *);
 EXT const char *aspath_print (struct aspath *);
 EXT unsigned int aspath_key_make (void *);
 EXT int aspath_loop_check (struct aspath *, as_t);

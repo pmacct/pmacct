@@ -735,7 +735,7 @@ void bgp_handle_dump_event()
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
-  struct bgp_structs *inter_domain_routing_db;
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_peer *peer, *saved_peer;
   struct bgp_table *table;
   struct bgp_node *node;

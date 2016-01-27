@@ -37,20 +37,21 @@ EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
 EXT void write_neighbors_file(char *);
-EXT struct bgp_structs *bgp_select_routing_db(int);
+EXT struct bgp_rt_structs *bgp_select_routing_db(int);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 EXT void bgp_config_checks(struct configuration *);
+EXT void bgp_link_misc_structs(struct bgp_misc_structs *);
 
 EXT struct bgp_info_extra *bgp_info_extra_new();
 EXT void bgp_info_extra_free(struct bgp_info_extra **);
 EXT struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *);
 EXT struct bgp_info *bgp_info_new();
 EXT void bgp_info_add(struct bgp_node *, struct bgp_info *, u_int32_t);
-EXT void bgp_info_delete(struct bgp_structs *, struct bgp_node *, struct bgp_info *, u_int32_t);
-EXT void bgp_info_free(struct bgp_structs *, struct bgp_info *);
-EXT void bgp_attr_init(struct bgp_structs *);
-EXT struct bgp_attr *bgp_attr_intern(struct bgp_structs *, struct bgp_attr *);
-EXT void bgp_attr_unintern (struct bgp_structs *, struct bgp_attr *);
+EXT void bgp_info_delete(struct bgp_rt_structs *, struct bgp_node *, struct bgp_info *, u_int32_t);
+EXT void bgp_info_free(struct bgp_rt_structs *, struct bgp_info *);
+EXT void bgp_attr_init(struct bgp_rt_structs *);
+EXT struct bgp_attr *bgp_attr_intern(struct bgp_rt_structs *, struct bgp_attr *);
+EXT void bgp_attr_unintern (struct bgp_rt_structs *, struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 

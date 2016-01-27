@@ -79,12 +79,12 @@ struct ecommunity_val
 EXT void ecommunity_init (struct hash **);
 EXT void ecommunity_free (struct ecommunity *);
 EXT struct ecommunity *ecommunity_new (void);
-EXT struct ecommunity *ecommunity_parse (struct bgp_structs *, u_int8_t *, u_short);
+EXT struct ecommunity *ecommunity_parse (struct bgp_rt_structs *, u_int8_t *, u_short);
 EXT struct ecommunity *ecommunity_dup (struct ecommunity *);
 EXT struct ecommunity *ecommunity_merge (struct ecommunity *, struct ecommunity *);
-EXT struct ecommunity *ecommunity_intern (struct bgp_structs *, struct ecommunity *);
+EXT struct ecommunity *ecommunity_intern (struct bgp_rt_structs *, struct ecommunity *);
 EXT int ecommunity_cmp (const void *, const void *);
-EXT void ecommunity_unintern (struct bgp_structs *, struct ecommunity *);
+EXT void ecommunity_unintern (struct bgp_rt_structs *, struct ecommunity *);
 EXT unsigned int ecommunity_hash_make (void *);
 EXT struct ecommunity *ecommunity_str2com (const char *, int, int);
 EXT char *ecommunity_ecom2str (struct ecommunity *, int);

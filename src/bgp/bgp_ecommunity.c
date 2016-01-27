@@ -131,7 +131,7 @@ ecommunity_uniq_sort (struct ecommunity *ecom)
 
 /* Parse Extended Communites Attribute in BGP packet.  */
 struct ecommunity *
-ecommunity_parse (struct bgp_structs *inter_domain_routing_db, u_int8_t *pnt, u_short length)
+ecommunity_parse (struct bgp_rt_structs *inter_domain_routing_db, u_int8_t *pnt, u_short length)
 {
   struct ecommunity tmp;
   struct ecommunity *new;
@@ -210,7 +210,7 @@ ecommunity_merge (struct ecommunity *ecom1, struct ecommunity *ecom2)
 
 /* Intern Extended Communities Attribute.  */
 struct ecommunity *
-ecommunity_intern (struct bgp_structs *inter_domain_routing_db, struct ecommunity *ecom)
+ecommunity_intern (struct bgp_rt_structs *inter_domain_routing_db, struct ecommunity *ecom)
 {
   struct ecommunity *find;
 
@@ -231,7 +231,7 @@ ecommunity_intern (struct bgp_structs *inter_domain_routing_db, struct ecommunit
 
 /* Unintern Extended Communities Attribute.  */
 void
-ecommunity_unintern (struct bgp_structs *inter_domain_routing_db, struct ecommunity *ecom)
+ecommunity_unintern (struct bgp_rt_structs *inter_domain_routing_db, struct ecommunity *ecom)
 {
   struct ecommunity *ret;
 

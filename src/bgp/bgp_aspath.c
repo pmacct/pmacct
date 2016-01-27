@@ -340,7 +340,7 @@ aspath_free (struct aspath *aspath)
 
 /* Unintern aspath from AS path bucket. */
 void
-aspath_unintern(struct bgp_structs *inter_domain_routing_db, struct aspath *aspath)
+aspath_unintern(struct bgp_rt_structs *inter_domain_routing_db, struct aspath *aspath)
 {
   struct aspath *ret;
 
@@ -636,7 +636,7 @@ aspath_str_update (struct aspath *as)
 
 /* Intern allocated AS path. */
 struct aspath *
-aspath_intern (struct bgp_structs *inter_domain_routing_db, struct aspath *aspath)
+aspath_intern (struct bgp_rt_structs *inter_domain_routing_db, struct aspath *aspath)
 {
   struct aspath *find;
   
@@ -770,7 +770,7 @@ assegments_parse(char *s, size_t length, int use32bit)
 
 /* AS path parse function. If there is same AS path in the the AS
    path hash then return it else make new AS path structure. */
-struct aspath *aspath_parse(struct bgp_structs *inter_domain_routing_db, char *s, size_t length, int use32bit)
+struct aspath *aspath_parse(struct bgp_rt_structs *inter_domain_routing_db, char *s, size_t length, int use32bit)
 {
   struct aspath as;
   struct aspath *find;

@@ -92,7 +92,10 @@ void skinny_bgp_daemon()
   bgp_table_dump_backend_methods = 0;
 
   bgp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP];
-  memset(bgp_routing_db, 0, sizeof(struct bgp_structs));
+  memset(bgp_routing_db, 0, sizeof(struct bgp_rt_structs));
+  bgp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BGP];
+  memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
+  bgp_link_misc_structs(bgp_misc_db);
 
   if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
   bgp_attr_init(bgp_routing_db);

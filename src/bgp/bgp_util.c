@@ -25,6 +25,12 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 
 /* BGP Address Famiy Identifier to UNIX Address Family converter. */
 int bgp_afi2family (int afi)
@@ -215,7 +221,7 @@ void bgp_info_add(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
   ri->peer->lock++;
 }
 
-void bgp_info_delete(struct bgp_structs *inter_domain_routing_db, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
+void bgp_info_delete(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
   if (ri->next)
     ri->next->prev = ri->prev;
@@ -230,7 +236,7 @@ void bgp_info_delete(struct bgp_structs *inter_domain_routing_db, struct bgp_nod
 }
 
 /* Free bgp route information. */
-void bgp_info_free(struct bgp_structs *inter_domain_routing_db, struct bgp_info *ri)
+void bgp_info_free(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_info *ri)
 {
   if (ri->attr)
     bgp_attr_unintern(inter_domain_routing_db, ri->attr);
@@ -242,7 +248,7 @@ void bgp_info_free(struct bgp_structs *inter_domain_routing_db, struct bgp_info 
 }
 
 /* Initialization of attributes */
-void bgp_attr_init(struct bgp_structs *inter_domain_routing_db)
+void bgp_attr_init(struct bgp_rt_structs *inter_domain_routing_db)
 {
   aspath_init(&inter_domain_routing_db->ashash);
   attrhash_init(&inter_domain_routing_db->attrhash);
@@ -313,7 +319,7 @@ void attrhash_init(struct hash **loc_attrhash)
 }
 
 /* Internet argument attribute. */
-struct bgp_attr *bgp_attr_intern(struct bgp_structs *inter_domain_routing_db, struct bgp_attr *attr)
+struct bgp_attr *bgp_attr_intern(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_attr *attr)
 {
   struct bgp_attr *find;
  
@@ -344,7 +350,7 @@ struct bgp_attr *bgp_attr_intern(struct bgp_structs *inter_domain_routing_db, st
 }
 
 /* Free bgp attribute and aspath. */
-void bgp_attr_unintern(struct bgp_structs *inter_domain_routing_db, struct bgp_attr *attr)
+void bgp_attr_unintern(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_attr *attr)
 {
   struct bgp_attr *ret;
   struct aspath *aspath;
@@ -485,7 +491,7 @@ char *bgp_peer_print(struct bgp_peer *peer)
 
 void bgp_peer_info_delete(struct bgp_peer *peer)
 {
-  struct bgp_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
+  struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
   struct bgp_table *table;
   struct bgp_node *node;
   afi_t afi;
@@ -892,10 +898,33 @@ void bgp_batch_rollback(struct bgp_peer_batch *bp_batch)
   }
 }
 
-struct bgp_structs *bgp_select_routing_db(int peer_type)
+struct bgp_rt_structs *bgp_select_routing_db(int peer_type)
 {
   if (peer_type < FUNC_TYPE_MAX) 
     return &inter_domain_routing_dbs[peer_type];
 
   return NULL;
+}
+
+void bgp_link_misc_structs(struct bgp_misc_structs *bms)
+{
+#if defined WITH_RABBITMQ
+  bms->msglog_amqp_host = &bgp_daemon_msglog_amqp_host;
+#endif
+#if defined WITH_KAFKA
+  bms->msglog_kafka_host = &bgp_daemon_msglog_kafka_host;
+#endif
+  bms->max_peers = config.nfacctd_bgp_max_peers;
+  bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 
+  bms->dump_file = config.bgp_table_dump_file; 
+  bms->dump_amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 
+  bms->dump_amqp_routing_key_rr = config.bgp_table_dump_amqp_routing_key_rr;
+  bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
+  bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
+  bms->msglog_output = config.nfacctd_bgp_msglog_output;
+  bms->msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
+  bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
+  bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
+  bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
+  strcpy(bms->peer_str, "peer_src_ip");
 }

@@ -198,6 +198,8 @@ EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
+
+EXT void bmp_link_misc_structs(struct bgp_misc_structs *);
 #undef EXT
 
 /* global variables */
@@ -211,5 +213,6 @@ EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bmp_msglog_backend_methods;
 EXT int bmp_dump_backend_methods;
 
-EXT struct bgp_structs *bmp_routing_db;
+EXT struct bgp_rt_structs *bmp_routing_db;
+EXT struct bgp_misc_structs *bmp_misc_db;
 #undef EXT
