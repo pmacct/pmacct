@@ -535,7 +535,7 @@ void skinny_bmp_daemon()
         }
       }
 
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): BMP peers usage: %u/%u\n", config.name, peers_num, config.nfacctd_bmp_max_peers);
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] BMP peers usage: %u/%u\n", config.name, peer->addr_str, peers_num, config.nfacctd_bmp_max_peers);
 
       if (config.nfacctd_bmp_neighbors_file) write_neighbors_file(config.nfacctd_bmp_neighbors_file);
     }
@@ -563,7 +563,7 @@ void skinny_bmp_daemon()
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] Existing BMP connection was reset (%d).\n", config.name, peer->addr_str, errno);
+      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] BMP connection reset by peer (%d).\n", config.name, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer, FUNC_TYPE_BMP);
       recalc_fds = TRUE;

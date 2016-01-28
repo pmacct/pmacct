@@ -544,7 +544,8 @@ void skinny_bgp_daemon()
 	else if (peers[peers_check_idx].fd) peers_num++;
       }
 
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): BGP peers usage: %u/%u\n", config.name, peers_num, config.nfacctd_bgp_max_peers);
+      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP peers usage: %u/%u\n", config.name,
+		bgp_peer_print(peer), peers_num, config.nfacctd_bgp_max_peers);
 
       if (config.nfacctd_bgp_neighbors_file) write_neighbors_file(config.nfacctd_bgp_neighbors_file);
     }
