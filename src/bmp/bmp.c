@@ -99,7 +99,6 @@ void skinny_bmp_daemon()
   memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
   bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
   memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
-  bmp_link_misc_structs(bmp_misc_db);
 
   /* socket creation for BMP server: IPv4 only */
 #if (defined ENABLE_IPV6)
@@ -345,6 +344,8 @@ void skinny_bmp_daemon()
 
   select_fd = bkp_select_fd = (config.bmp_sock + 1);
   recalc_fds = FALSE;
+
+  bmp_link_misc_structs(bmp_misc_db);
 
   for (;;) {
     select_again:

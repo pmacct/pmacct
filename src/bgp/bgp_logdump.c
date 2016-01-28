@@ -206,7 +206,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
   char log_filename[SRVBUFLEN], event_type[] = "log_init";
 
-  if (!bms || !peer || peer->log) return ERR;
+  if (!bms || !peer) return ERR;
 
   if (bms->msglog_file)
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_file, peer); 
