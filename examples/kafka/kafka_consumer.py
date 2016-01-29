@@ -34,7 +34,7 @@ def main():
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
-		usage()
+		usage(sys.argv[0])
 		sys.exit(2)
 
 	kafka_topic = None
@@ -45,7 +45,7 @@ def main():
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
-			usage()
+			usage(sys.argv[0])
 			sys.exit()
 		elif o in ("-t", "--topic"):
 			required_cl += 1
