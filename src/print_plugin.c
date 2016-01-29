@@ -162,10 +162,18 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if (!config.sql_table && config.print_output & PRINT_OUTPUT_CSV)
     P_write_stats_header_csv(stdout, is_event);
 
-  if (config.sql_table && (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')))
-    dyn_table = TRUE;
-  else
-    dyn_table = FALSE;
+  if (config.sql_table) {
+    if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$'))
+      dyn_table = TRUE;
+    else {
+      dyn_table = FALSE;
+    
+      if (config.print_latest_file && (strchr(config.print_latest_file, '%') || strchr(config.print_latest_file, '$'))) {
+        Log(LOG_WARNING, "WARN ( %s/%s ): Disabling print_latest_file due to non-dynamic print_output_file.\n", config.name, config.type); 
+        config.print_latest_file = NULL;
+      }
+    }
+  }
 
   /* plugin main loop */
   for(;;) {
