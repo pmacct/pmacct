@@ -375,7 +375,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.logfile)
   {
-    config.logfile_fd = open_logfile(config.logfile, "a");
+    config.logfile_fd = open_logfile(config.logfile, "a", FALSE);
     list = plugins_list;
     while (list) {
       list->cfg.logfile_fd = config.logfile_fd ;
@@ -1006,7 +1006,7 @@ int main(int argc,char **argv, char **envp)
       for (nodes_idx = 0; nodes_idx < config.sfacctd_counter_max_nodes; nodes_idx++) {
         if (sf_cnt_misc_db->peers_log[nodes_idx].fd) {
           fclose(sf_cnt_misc_db->peers_log[nodes_idx].fd);
-          sf_cnt_misc_db->peers_log[nodes_idx].fd = open_logfile(sf_cnt_misc_db->peers_log[nodes_idx].filename, "a");
+          sf_cnt_misc_db->peers_log[nodes_idx].fd = open_logfile(sf_cnt_misc_db->peers_log[nodes_idx].filename, "a", FALSE);
 	  setlinebuf(sf_cnt_misc_db->peers_log[nodes_idx].fd);
         }
         else break;

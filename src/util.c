@@ -363,38 +363,41 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   return (final-base);
 }	
 
-/* XXX: consolidate logfile and print_output_file functions */ 
-FILE *open_logfile(char *filename, char *mode)
+FILE *open_logfile(char *filename, char *mode, int lock)
 {
-  char timebuf[SRVBUFLEN], buf[LARGEBUFLEN];
   FILE *file = NULL;
   uid_t owner = -1;
   gid_t group = -1;
   int ret;
 
-  strlcpy(buf, filename, LARGEBUFLEN);
-
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
-  ret = mkdir_multilevel(buf, TRUE, owner, group);
+  ret = mkdir_multilevel(filename, TRUE, owner, group);
   if (ret) {
-    printf("ERROR: Unable to open_logfile() '%s': mkdir_multilevel() failed.\n", buf);
+    printf("ERROR ( %s/%s ): Unable to open file '%s': mkdir_multilevel() failed.\n", config.name, config.type, filename);
     file = NULL;
 
     return file;
   }
 
-  ret = access(buf, F_OK);
+  ret = access(filename, F_OK);
 
   file = fopen(filename, mode); 
 
   if (file) {
     if (chown(filename, owner, group) == -1)
-      printf("WARN: Unable to chown() logfile '%s': %s\n", filename, strerror(errno));
+      printf("WARN ( %s/%s ): Unable to open file '%s': chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+
+    if (lock) {
+      if (file_lock(fileno(file))) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Unable to open file '%s': file_lock() failed.\n", config.name, config.type, filename);
+        file = NULL;
+      }
+    }
   }
   else {
-    printf("WARN: Unable to fopen() logfile '%s': %s\n", filename, strerror(errno));
+    printf("WARN ( %s/%s ): Unable to open file '%s': fopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
     file = NULL;
   }
 
@@ -443,7 +446,7 @@ void link_latest_logfile(char *link_filename, char *filename_to_link)
     symlink(filename_to_link, link_filename);
 
     if (lchown(link_filename, owner, group) == -1)
-      Log(LOG_WARNING, "WARN ( %s/%s ): link_latest_logfile(): unable to chown() '%s'\n", config.name, config.type, link_filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): link_latest_logfile(): unable to chown() '%s'.\n", config.name, config.type, link_filename);
   }
 }
 
@@ -452,6 +455,7 @@ void close_logfile(FILE *f)
   if (f) fclose(f);
 }
 
+/* XXX: consolidate [ link_latest_logfile, close_logfile ] and close_print_output_file */ 
 void close_print_output_file(FILE *f, char *table_schema, char *current_table, struct primitives_ptrs *prim_ptrs)
 {
   char latest_fname[SRVBUFLEN], buf[LARGEBUFLEN];
@@ -500,52 +504,6 @@ void close_print_output_file(FILE *f, char *table_schema, char *current_table, s
     if (lchown(latest_fname, owner, group) == -1)
       Log(LOG_WARNING, "WARN ( %s/%s ): Unable to chown() print_latest_file '%s'\n", config.name, config.type, latest_fname);
   }
-}
-
-FILE *open_print_output_file(char *filename, int *append)
-{
-  char buf[LARGEBUFLEN];
-  FILE *file = NULL;
-  uid_t owner = -1;
-  gid_t group = -1;
-  int ret;
-
-  strlcpy(buf, filename, LARGEBUFLEN);
-
-  if (config.files_uid) owner = config.files_uid;
-  if (config.files_gid) group = config.files_gid;
-
-  ret = mkdir_multilevel(buf, TRUE, owner, group);
-  if (ret) {
-    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s': mkdir_multilevel() failed.\n", buf);
-    file = NULL;
-
-    return file;
-  }
-
-  ret = access(buf, F_OK);
-
-  if (config.print_output_file_append && !ret) {
-    file = fopen(buf, "a");
-    *append = TRUE;
-  }
-  else file = fopen(buf, "w");
-
-  if (file) {
-    if (chown(buf, owner, group) == -1)
-      Log(LOG_WARNING, "WARN: Unable to chown() print_ouput_file '%s': %s\n", buf, strerror(errno));
-
-    if (file_lock(fileno(file))) {
-      Log(LOG_ERR, "ERROR: Unable to obtain lock for print_ouput_file '%s'.\n", buf);
-      file = NULL;
-    }
-  }
-  else {
-    Log(LOG_ERR, "ERROR: Unable to open print_ouput_file '%s'\n", buf);
-    file = NULL;
-  }
-
-  return file;
 }
 
 /*

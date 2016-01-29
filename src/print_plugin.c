@@ -395,7 +395,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   if (config.sql_table) {
     time_t stamp = 0;
-    int append = FALSE;
 
     strlcpy(current_table, config.sql_table, SRVBUFLEN);
 
@@ -409,9 +408,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp);
     }
 
-    f = open_print_output_file(current_table, &append);
+    
+    if (config.print_output_file_append) f = open_logfile(current_table, "a", TRUE);
+    else f = open_logfile(current_table, "w", TRUE);
 
-    if (f && !append) { 
+    if (f && !config.print_output_file_append) { 
       if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", stamp, config.sql_refresh_time);
 
       if (config.print_output & PRINT_OUTPUT_FORMATTED)

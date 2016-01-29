@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -168,7 +168,7 @@ void reload()
 
   if (config.logfile) {
     fclose(config.logfile_fd);
-    config.logfile_fd = open_logfile(config.logfile, "a");
+    config.logfile_fd = open_logfile(config.logfile, "a", FALSE);
   }
 
   if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;

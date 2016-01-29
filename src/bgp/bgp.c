@@ -394,7 +394,7 @@ void skinny_bgp_daemon()
       for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
 	if (bgp_misc_db->peers_log[peers_idx].fd) {
 	  fclose(bgp_misc_db->peers_log[peers_idx].fd);
-	  bgp_misc_db->peers_log[peers_idx].fd = open_logfile(bgp_misc_db->peers_log[peers_idx].filename, "a");
+	  bgp_misc_db->peers_log[peers_idx].fd = open_logfile(bgp_misc_db->peers_log[peers_idx].filename, "a", FALSE);
 	  setlinebuf(bgp_misc_db->peers_log[peers_idx].fd);
 	}
 	else break;
