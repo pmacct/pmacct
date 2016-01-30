@@ -363,7 +363,7 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   return (final-base);
 }	
 
-FILE *open_logfile(char *filename, char *mode, int lock)
+FILE *open_output_file(char *filename, char *mode, int lock)
 {
   FILE *file = NULL;
   uid_t owner = -1;
@@ -375,7 +375,7 @@ FILE *open_logfile(char *filename, char *mode, int lock)
 
   ret = mkdir_multilevel(filename, TRUE, owner, group);
   if (ret) {
-    printf("ERROR ( %s/%s ): Unable to open file '%s': mkdir_multilevel() failed.\n", config.name, config.type, filename);
+    printf("ERROR ( %s/%s ): open_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, filename);
     file = NULL;
 
     return file;
@@ -387,24 +387,24 @@ FILE *open_logfile(char *filename, char *mode, int lock)
 
   if (file) {
     if (chown(filename, owner, group) == -1)
-      printf("WARN ( %s/%s ): Unable to open file '%s': chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+      printf("WARN ( %s/%s ): open_output_file(): chown() failed (%s) for '%s'.\n", config.name, config.type, strerror(errno), filename);
 
     if (lock) {
       if (file_lock(fileno(file))) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Unable to open file '%s': file_lock() failed.\n", config.name, config.type, filename);
+        Log(LOG_ERR, "ERROR ( %s/%s ): open_output_file(): file_lock() failed. for '%s'\n", config.name, config.type, filename);
         file = NULL;
       }
     }
   }
   else {
-    printf("WARN ( %s/%s ): Unable to open file '%s': fopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+    printf("WARN ( %s/%s ): open_output_file(): fopen() failed (%s) for '%s'.\n", config.name, config.type, strerror(errno), filename);
     file = NULL;
   }
 
   return file;
 }
 
-void link_latest_logfile(char *link_filename, char *filename_to_link)
+void link_latest_output_file(char *link_filename, char *filename_to_link)
 {
   int ret, rewrite_latest = FALSE;
   char buf[SRVBUFLEN];
@@ -419,8 +419,7 @@ void link_latest_logfile(char *link_filename, char *filename_to_link)
   /* create dir structure to get to file, if needed */
   ret = mkdir_multilevel(link_filename, TRUE, owner, group);
   if (ret) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): link_latest_logfile(): unable to open file '%s': mkdir_multilevel() failed.\n",
-	config.name, config.type, buf);
+    Log(LOG_ERR, "ERROR ( %s/%s ): link_latest_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, buf);
     return;
   }
 
@@ -446,64 +445,13 @@ void link_latest_logfile(char *link_filename, char *filename_to_link)
     symlink(filename_to_link, link_filename);
 
     if (lchown(link_filename, owner, group) == -1)
-      Log(LOG_WARNING, "WARN ( %s/%s ): link_latest_logfile(): unable to chown() '%s'.\n", config.name, config.type, link_filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): link_latest_output_file(): unable to chown() '%s'.\n", config.name, config.type, link_filename);
   }
 }
 
-void close_logfile(FILE *f)
+void close_output_file(FILE *f)
 {
   if (f) fclose(f);
-}
-
-/* XXX: consolidate [ link_latest_logfile, close_logfile ] and close_print_output_file */ 
-void close_print_output_file(FILE *f, char *table_schema, char *current_table, struct primitives_ptrs *prim_ptrs)
-{
-  char latest_fname[SRVBUFLEN], buf[LARGEBUFLEN];
-  int ret, rewrite_latest = FALSE;
-  u_int16_t offset;
-  uid_t owner = -1;
-  gid_t group = -1;
-
-  /* first-off let's close current file */
-  fclose(f);
-
-  /* get out if we miss a piece */
-  if (!table_schema || !current_table || !prim_ptrs) return;
-
-  if (config.files_uid) owner = config.files_uid;
-  if (config.files_gid) group = config.files_gid;
-
-  /* let's compose latest filename */
-  memset(buf, 0, LARGEBUFLEN);
-  strlcpy(latest_fname, table_schema, SRVBUFLEN);
-  handle_dynname_internal_strings_same(buf, LARGEBUFLEN, latest_fname, prim_ptrs);
-
-  /* create dir structure to get to file, if needed */
-  ret = mkdir_multilevel(latest_fname, TRUE, owner, group);
-  if (ret) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to open print_latest_file '%s': mkdir_multilevel() failed.\n",
-	config.name, config.type, buf);
-    return;
-  }
-
-  /* if a file with same name exists let's investigate if current_table is newer */
-  ret = access(latest_fname, F_OK);
-
-  if (!ret) {
-    readlink(latest_fname, buf, LARGEBUFLEN);
-
-    /* current_table is newer than buf or buf is un-existing */
-    if (strncmp(current_table, buf, SRVBUFLEN) > 0) rewrite_latest = TRUE;
-  }
-  else rewrite_latest = TRUE;
-
-  if (rewrite_latest) {
-    unlink(latest_fname);
-    symlink(current_table, latest_fname);
-
-    if (lchown(latest_fname, owner, group) == -1)
-      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to chown() print_latest_file '%s'\n", config.name, config.type, latest_fname);
-  }
 }
 
 /*

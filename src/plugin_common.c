@@ -45,7 +45,7 @@ void P_init_default_values()
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {
     if (config.logfile_fd) fclose(config.logfile_fd);
-    config.logfile_fd = open_logfile(config.logfile, "a", FALSE);
+    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
   }
 
   if (config.proc_priority) {

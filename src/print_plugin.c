@@ -417,8 +417,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
 
     
-    if (config.print_output_file_append) f = open_logfile(current_table, "a", TRUE);
-    else f = open_logfile(current_table, "w", TRUE);
+    if (config.print_output_file_append)
+      f = open_output_file(current_table, "a", TRUE);
+    else
+      f = open_output_file(current_table, "w", TRUE);
 
     if (f && !config.print_output_file_append) { 
       if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", stamp, config.sql_refresh_time);
@@ -1198,7 +1200,15 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
   if (f && config.print_markers) fprintf(f, "--END--\n");
 
-  if (f && config.sql_table) close_print_output_file(f, config.print_latest_file, current_table, &prim_ptrs);
+  if (f && config.sql_table) {
+    if (config.print_latest_file) {
+      memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
+      handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs);
+      link_latest_output_file(tmpbuf, current_table);
+    }
+
+    close_output_file(f);
+  }
 
   /* If we have pending queries then start again */
   if (pqq_ptr) goto start;

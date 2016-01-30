@@ -524,14 +524,14 @@ void bmp_handle_dump_event()
         if (config.bmp_dump_file) {
           if (strcmp(last_filename, current_filename)) {
 	    if (saved_peer && saved_peer->log && strlen(last_filename)) {
-	      close_logfile(saved_peer->log->fd);
+	      close_output_file(saved_peer->log->fd);
 
 	      if (config.bmp_dump_latest_file) {
 	        bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bmp_dump_latest_file, saved_peer);
-	        link_latest_logfile(latest_filename, last_filename);
+	        link_latest_output_file(latest_filename, last_filename);
 	      }
 	    }
-            peer->log->fd = open_logfile(current_filename, "w", TRUE);
+            peer->log->fd = open_output_file(current_filename, "w", TRUE);
 	    if (fd_buf) {
 	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
 	      memset(fd_buf, 0, BGP_LOG_BUFSZ);
@@ -605,7 +605,7 @@ void bmp_handle_dump_event()
 
     if (config.bmp_dump_latest_file && peer) {
       bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bmp_dump_latest_file, peer);
-      link_latest_logfile(latest_filename, last_filename);
+      link_latest_output_file(latest_filename, last_filename);
     }
 
     duration = time(NULL)-start;
