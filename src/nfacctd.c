@@ -897,7 +897,7 @@ int main(int argc,char **argv, char **envp)
   for(;;) {
     ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
 
-    if (ret < 1) continue; /* we don't have enough data to decode the version */ 
+    if (ret < 2) continue; /* we don't have enough data to decode the version */ 
 
     pptrs.v4.f_len = ret;
 
@@ -1227,13 +1227,17 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (version == 9) {
     HdrSz = NfHdrV9Sz; 
-    SourceId = ntohl(hdr_v9->source_id);
-    FlowSeq = ntohl(hdr_v9->flow_sequence);
+    if (len >= HdrSz) {
+      SourceId = ntohl(hdr_v9->source_id);
+      FlowSeq = ntohl(hdr_v9->flow_sequence);
+    }
   }
   else if (version == 10) {
     HdrSz = IpFixHdrSz; 
-    SourceId = ntohl(hdr_v10->source_id);
-    FlowSeq = ntohl(hdr_v10->flow_sequence);
+    if (len >= HdrSz) {
+      SourceId = ntohl(hdr_v10->source_id);
+      FlowSeq = ntohl(hdr_v10->flow_sequence);
+    }
   }
 
   if (config.debug) {
@@ -1275,6 +1279,14 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   }
 
   fid = ntohs(data_hdr->flow_id);
+  flowsetlen = ntohs(data_hdr->flow_len);
+  if (flowsetlen < NfDataHdrV9Sz) {
+    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet (flowsetlen < NfDataHdrV9Sz)",
+                        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+    xflow_tot_bad_datagrams++;
+    return;
+  }
+
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
     u_int16_t pens = 0;
@@ -1282,7 +1294,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     flowoff = 0;
     tpl_ptr += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
-    flowsetlen = ntohs(data_hdr->flow_len);
 
     while (flowoff < flowsetlen) {
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
@@ -1309,7 +1320,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     flowoff = 0;
     tpl_ptr += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
-    flowsetlen = ntohs(data_hdr->flow_len);
 
     while (flowoff < flowsetlen) {
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
@@ -1332,7 +1342,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     off += flowsetlen;
   }
   else if (fid >= 256) { /* data */
-    flowsetlen = ntohs(data_hdr->flow_len);
     if (off+flowsetlen > len) { 
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
 		      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
@@ -1351,7 +1360,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       Log(LOG_DEBUG, "DEBUG ( %s/core ): Discarded NetFlow v9/IPFIX packet (R: unknown template %u [%s:%u])\n",
 		config.name, fid, debug_agent_addr, SourceId);
-      pkt += flowsetlen-NfDataHdrV9Sz;
+      pkt += (flowsetlen-NfDataHdrV9Sz);
       off += flowsetlen;
     }
     else if (tpl->template_type == 1) { /* Options coming */
@@ -1487,7 +1496,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         FlowSeqInc++;
       }
 
-      pkt += flowsetlen-flowoff; /* handling padding */
+      /* last pre-flight check for the subsequent subtraction */
+      if (flowoff > flowsetlen) {
+        notify_malf_packet(LOG_INFO, "INFO: aborting malformed Options Data element (incomplete NetFlow v9/IPFIX packet)",
+                      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+        xflow_tot_bad_datagrams++;
+        return;
+      }
+      
+      pkt += (flowsetlen-flowoff); /* handling padding */
       off += flowsetlen;
     }
     else {
@@ -2045,13 +2062,19 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	FlowSeqInc++;
       }
 
-      pkt += flowsetlen-flowoff; /* handling padding */
+      /* last pre-flight check for the subsequent subtraction */
+      if (flowoff > flowsetlen) {
+        notify_malf_packet(LOG_INFO, "INFO: aborting malformed Data element (incomplete NetFlow v9/IPFIX packet)",
+                      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+        xflow_tot_bad_datagrams++;
+        return;
+      }
+
+      pkt += (flowsetlen-flowoff); /* handling padding */
       off += flowsetlen; 
     }
   }
   else { /* unsupported flowset */
-    data_hdr = (struct data_hdr_v9 *)pkt;
-    flowsetlen = ntohs(data_hdr->flow_len);
     if (off+flowsetlen > len) {
       Log(LOG_DEBUG, "DEBUG ( %s/core ): unable to read unsupported Flowset (ID: '%u').\n", config.name, fid);
       return;
