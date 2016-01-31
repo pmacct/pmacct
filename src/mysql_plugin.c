@@ -184,11 +184,10 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  else {
 	    rg_err_count++;
 	    if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): We are missing data.\n", config.name, config.type);
-              Log(LOG_ERR, "If you see this message once in a while, discard it. Otherwise some solutions follow:\n");
-              Log(LOG_ERR, "- increase shared memory size, 'plugin_pipe_size'; now: '%u'.\n", config.pipe_size);
-              Log(LOG_ERR, "- increase buffer size, 'plugin_buffer_size'; now: '%u'.\n", config.buffer_size);
-              Log(LOG_ERR, "- increase system maximum socket size.\n\n");
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+                        config.name, config.type, config.buffer_size, config.pipe_size);
+              Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
+                        config.name, config.type);
 	    }
             seq = ((struct ch_buf_hdr *)rg->ptr)->seq;
 	  }

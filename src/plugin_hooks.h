@@ -29,7 +29,7 @@
 #define WARNING_PIPE_SIZE 16384000 /* 16 Mb */
 #define MAX_FAILS 5 
 #define MAX_SEQNUM 65536 
-#define MAX_RG_COUNT_ERR 3
+#define MAX_RG_COUNT_ERR 3 
 
 struct channels_list_entry;
 typedef void (*pkt_handler) (struct channels_list_entry *, struct packet_ptrs *, char **);

@@ -285,11 +285,11 @@ DESC:		By defining the transfer buffer size, in bytes, this directive enables bu
 		of CPU cycles required to transfer data); setting a smaller value may improve latency,
 		especially in scenarios with little data influx. It is disabled by default. If used
 		with the home-grown circular queue implemetation, the value has to be minor/equal to
-		the size defined by 'plugin_pipe_size' and keeping a ratio of 1:1000 among the two is
-		considered good practice; the circular queue of plugin_pipe_size size is partitioned
-		in chunks of plugin_buffer_size; if used with the RabbitMQ broker based queueing (ie.
-		'plugin_pipe_amqp: true') this directive sets the frame_max allowed by the underlying
-		RabbitMQ session. 
+		the size defined by 'plugin_pipe_size' and keeping a ratio between 1:100 and 1:1000
+		among the two is considered good practice; the circular queue of plugin_pipe_size size
+		is partitioned in chunks of plugin_buffer_size; if used with the RabbitMQ broker based
+		queueing (ie. 'plugin_pipe_amqp: true') this directive sets the frame_max allowed by
+		the underlying RabbitMQ session. 
 DEFAULT:	Set to the size of the smallest element to buffer 
 
 KEY:            plugin_pipe_backlog
