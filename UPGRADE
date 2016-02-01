@@ -10,6 +10,14 @@ been (and will be) very limited through the development process.
 
 TO:	>= 1.6.0
 FROM:	<= 1.5.3
+TOPIC:	nfacctd_disable_checks and sfacctd_disable_checks
+DESC:	Default for this feature changed from false to true, ie. log warning
+	messages for failing basic checks against incoming NetFlow/sFlow
+	datagrams is disabled. For sequencing checks, the 'export_proto_seqno'
+	primitive is recommended instead.
+
+TO:	>= 1.6.0
+FROM:	<= 1.5.3
 TOPIC:	sql_recovery_logfile
 DESC:	Feature removed from pmacct along with pmmyplay and pmpgplay logfile
 	replay tools. 

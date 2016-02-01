@@ -393,6 +393,10 @@ int main(int argc,char **argv, char **envp)
       config.proc_name = default_proc_name;
     }
 
+    set_truefalse_nonzero(&list->cfg.nfacctd_disable_checks, &config.nfacctd_disable_checks, list->type.id); 
+    set_truefalse_nonzero(&list->cfg.pipe_check_core_pid, &config.pipe_check_core_pid, list->type.id); 
+    set_truefalse_nonzero(&list->cfg.tmp_net_own_field, &config.tmp_net_own_field, list->type.id); 
+
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
       plugin_pipe_check(&list->cfg);
@@ -401,12 +405,6 @@ int main(int argc,char **argv, char **envp)
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit(1);
       }
-
-      if (!list->cfg.pipe_check_core_pid) list->cfg.pipe_check_core_pid = TRUE;
-      else if (list->cfg.pipe_check_core_pid == FALSE_NONZERO) list->cfg.pipe_check_core_pid = FALSE;
-
-      if (!list->cfg.tmp_net_own_field) list->cfg.tmp_net_own_field = TRUE;
-      else if (list->cfg.tmp_net_own_field == FALSE_NONZERO) list->cfg.tmp_net_own_field = FALSE;
 
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {

@@ -4565,7 +4565,7 @@ int cfg_key_nfacctd_disable_checks(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  value = parse_truefalse(value_ptr);
+  value = parse_truefalse_nonzero(value_ptr);
   if (value < 0) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_checks = value;

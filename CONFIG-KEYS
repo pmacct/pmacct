@@ -1440,10 +1440,12 @@ DEFAULT:	none
 
 KEY:            [ nfacctd_disable_checks | sfacctd_disable_checks ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 VALUES:         [ true | false ]
-DESC:           Both nfacctd and sfacctd check health of incoming NetFlow/sFlow datagrams, ie. sequence
-		number checks, protocol version. You may want to disable such feature because of non-
-		standard implementations or multiple protocols (accidentally?) pointed to the same port.
-DEFAULT:        false
+DESC:           Both nfacctd and sfacctd can log warning messages for failing basic checks against incoming
+		NetFlow/sFlow datagrams, ie. sequence number checks, protocol version. You may want to disable 
+		such feature, default, because of buggy or non-standard implementations. Also, for sequencing
+		checks, the 'export_proto_seqno' primitive is recommended instead (see 'aggregate' description
+		and notes).
+DEFAULT:        true
 
 KEY:		pre_tag_map [MAP]
 DESC:		Full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering

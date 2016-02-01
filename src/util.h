@@ -97,6 +97,7 @@ EXT void load_pkt_len_distrib_bins();
 EXT void evaluate_pkt_len_distrib(struct pkt_data *);
 EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
+EXT void set_truefalse_nonzero(int *, int *, int);
 
 EXT void *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 		      struct pkt_bgp_primitives *, struct pkt_nat_primitives *,

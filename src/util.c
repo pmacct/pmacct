@@ -2839,3 +2839,17 @@ void replace_string(char *str, int string_len, char *var, char *value)
     strncat(str, buf, len);
   }
 }
+
+void set_truefalse_nonzero(int *value, int *config_value, int plugin_type)
+{
+  if (!value || !config_value) return;
+
+  if (!(*value)) {
+    (*value) = TRUE;
+    if (plugin_type == PLUGIN_ID_CORE) (*config_value) = TRUE;
+  }
+  else if ((*value) == FALSE_NONZERO) {
+    (*value) = FALSE;
+    if (plugin_type == PLUGIN_ID_CORE) (*config_value) = FALSE;
+  }
+}
