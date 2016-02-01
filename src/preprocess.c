@@ -641,7 +641,8 @@ int check_fsrc(struct db_cache *queue[], int *num, int seq)
     check_validity(ptr->cache_ptr, seq);
   }
 
-  if (config.debug) Log(LOG_DEBUG, "DEBUG: TOT/%u/%u SUBTOT/%u/%u\n", *num, total, fsrc_queue.num-1, subtotal);
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): TOT/%u/%u SUBTOT/%u/%u\n",
+			config.name, config.type, *num, total, fsrc_queue.num-1, subtotal);
 
   end:
   return FALSE;

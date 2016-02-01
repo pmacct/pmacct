@@ -487,7 +487,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (tee_plugins && data_plugins) {
-    Log(LOG_ERR, "ERROR: 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n");
+    Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n", config.name);
     exit(1);
   }
 
@@ -582,7 +582,7 @@ int main(int argc,char **argv, char **envp)
       memset(&multi_req4, 0, sizeof(multi_req4));
       multi_req4.imr_multiaddr.s_addr = mcast_groups[idx].address.ipv4.s_addr;
       if (setsockopt(config.sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&multi_req4, sizeof(multi_req4)) < 0) {
-        Log(LOG_ERR, "ERROR: IPv4 multicast address - ADD membership failed.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): IPv4 multicast address - ADD membership failed.\n", config.name);
         exit(1);
       }
     }
@@ -591,7 +591,7 @@ int main(int argc,char **argv, char **envp)
       memset(&multi_req6, 0, sizeof(multi_req6));
       ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6); 
       if (setsockopt(config.sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&multi_req6, sizeof(multi_req6)) < 0) {
-        Log(LOG_ERR, "ERROR: IPv6 multicast address - ADD membership failed.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): IPv6 multicast address - ADD membership failed.\n", config.name);
         exit(1);
       }
     }
@@ -649,7 +649,7 @@ int main(int argc,char **argv, char **envp)
         pptrs.v4.bpas_table = (u_char *) &bpas_table;
       }
       else {
-	Log(LOG_ERR, "ERROR: bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n");
+	Log(LOG_ERR, "ERROR ( %s/core ): bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n", config.name);
 	exit(1);
       }
     }
@@ -661,7 +661,7 @@ int main(int argc,char **argv, char **envp)
         pptrs.v4.blp_table = (u_char *) &blp_table;
       }
       else {
-	Log(LOG_ERR, "ERROR: bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n");
+	Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n", config.name);
 	exit(1);
       }
     }
@@ -673,7 +673,7 @@ int main(int argc,char **argv, char **envp)
         pptrs.v4.bmed_table = (u_char *) &bmed_table;
       }
       else {
-	Log(LOG_ERR, "ERROR: bgp_src_med_type set to 'map' but no map defined. Exiting.\n");
+	Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_med_type set to 'map' but no map defined. Exiting.\n", config.name);
 	exit(1);
       }
     }

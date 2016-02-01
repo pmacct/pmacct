@@ -724,7 +724,7 @@ int main(int argc,char **argv, char **envp)
 	cb_data.bpas_table = (u_char *) &bpas_table;
       }
       else {
-        Log(LOG_ERR, "ERROR: bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n", config.name);
         exit(1);
       }
     }
@@ -736,7 +736,7 @@ int main(int argc,char **argv, char **envp)
         cb_data.blp_table = (u_char *) &blp_table;
       }
       else {
-        Log(LOG_ERR, "ERROR: bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n", config.name);
         exit(1);
       }
     }
@@ -748,7 +748,7 @@ int main(int argc,char **argv, char **envp)
         cb_data.bmed_table = (u_char *) &bmed_table;
       }
       else {
-        Log(LOG_ERR, "ERROR: bgp_src_med_type set to 'map' but no map defined. Exiting.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_med_type set to 'map' but no map defined. Exiting.\n", config.name);
         exit(1);
       }
     }
@@ -903,7 +903,7 @@ unsigned int get_ifindex(char *device)
   if (sock < 0) {
     sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (sock < 0) {
-      Log(LOG_ERR, "ERROR: Unable to open socket for ifindex");
+      Log(LOG_ERR, "ERROR ( %s/core ): Unable to open socket for ifindex", config.name);
       return -1;
     }
   }
@@ -911,7 +911,7 @@ unsigned int get_ifindex(char *device)
   struct ifreq req;
   strcpy(req.ifr_name, device);
   if (ioctl(sock, SIOCGIFINDEX, &req)) {
-    Log(LOG_ERR, "ERROR: Interface %s not found\n", device);
+    Log(LOG_ERR, "ERROR ( %s/core ): Interface %s not found\n", config.name, device);
     return -1;
   }
 

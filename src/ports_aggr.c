@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -38,7 +38,7 @@ void load_ports(char *filename, struct ports_table *pt)
 
   if (filename) {
     if ((file = fopen(filename,"r")) == NULL) {
-      Log(LOG_ERR, "ERROR: Ports File '%s' not found\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
       goto handle_error;
     }
     else {
@@ -60,7 +60,7 @@ void load_ports(char *filename, struct ports_table *pt)
 	  if (!strlen(buf) || (buf[0] == '!')) continue;
 	  ret = atoi(buf); 
 	  if ((ret > 0) && (ret < PORTS_TABLE_ENTRIES)) pt->table[ret] = TRUE;
-	  else Log(LOG_WARNING, "WARN ( %s ): invalid port %d\n", filename, rows); 
+	  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid port specified.\n", config.name, config.type, filename, rows); 
 	}
       }
       fclose(file);
@@ -74,7 +74,7 @@ void load_ports(char *filename, struct ports_table *pt)
 
   handle_error:
   if (pt->timestamp) {
-    Log(LOG_WARNING, "WARN: Rolling back the old Ports Table.\n");
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Ports Table.\n", config.name, config.type, filename);
 
     /* we update the timestamp to avoid loops */
     stat(filename, &st);

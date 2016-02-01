@@ -53,7 +53,6 @@ EXT int Setsocksize(int, int, int, void *, int);
 EXT void *map_shared(void *, size_t, int, int, int, off_t);
 EXT void lower_string(char *);
 EXT void evaluate_sums(u_int64_t *, char *, char *);
-EXT int file_archive(const char *, int);
 EXT void stop_all_childs();
 EXT int file_lock(int);
 EXT int file_unlock(int);

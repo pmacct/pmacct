@@ -242,7 +242,7 @@ DESC:		Core Process and each of the plugin instances are run into different proc
 		size (which can be changed via sysctl) is defined in /proc/sys/net/core/[rw]mem_max
 		instead.
 
-		In case of data loss messages containing the "We are missing data" string will be
+		In case of data loss messages containing the "missing data detected" string will be
 		logged - indicating the plugin affected and current settings.
 DEFAULT:	4MB
 

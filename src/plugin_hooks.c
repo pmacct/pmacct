@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -832,7 +832,7 @@ void fill_pipe_buffer()
       if (chptr->status->wakeup) {
         chptr->status->wakeup = chptr->request;
         if (write(chptr->pipe, &chptr->rg.ptr, CharPtrSz) != CharPtrSz)
-	  Log(LOG_WARNING, "WARN: Failed during write: %s\n", strerror(errno));
+	  Log(LOG_WARNING, "WARN ( %s/%s ): Failed during write: %s\n", chptr->plugin->cfg.name, chptr->plugin->cfg.type, strerror(errno));
       }
     }
   }

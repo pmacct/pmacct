@@ -707,7 +707,7 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, device.link_type); 
     exit_all(1);
   }
-  else Log(LOG_INFO, "OK ( %s/core ): link type is: %d\n", config.name, device.link_type); 
+  else Log(LOG_INFO, "INFO ( %s/core ): link type is: %d\n", config.name, device.link_type); 
 
   if (device.link_type != DLT_EN10MB && device.link_type != DLT_IEEE802 && device.link_type != DLT_LINUX_SLL) {
     list = plugins_list;
@@ -730,10 +730,10 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (pcap_compile(device.dev_desc, &filter, config.clbuf, 0, netmask) < 0)
-    Log(LOG_WARNING, "WARN: %s\nWARN ( %s/core ): going on without a filter\n", config.name, pcap_geterr(device.dev_desc));
+    Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(device.dev_desc));
   else {
     if (pcap_setfilter(device.dev_desc, &filter) < 0)
-      Log(LOG_WARNING, "WARN: %s\nWARN ( %s/core ): going on without a filter\n", config.name, pcap_geterr(device.dev_desc));
+      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(device.dev_desc));
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
@@ -765,7 +765,7 @@ int main(int argc,char **argv, char **envp)
 	cb_data.bpas_table = (u_char *) &bpas_table;
       }
       else {
-        Log(LOG_ERR, "ERROR: bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n", config.name);
         exit(1);
       }
     }
@@ -777,7 +777,7 @@ int main(int argc,char **argv, char **envp)
         cb_data.blp_table = (u_char *) &blp_table;
       }
       else {
-        Log(LOG_ERR, "ERROR: bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n", config.name);
         exit(1);
       }
     }
@@ -789,7 +789,7 @@ int main(int argc,char **argv, char **envp)
         cb_data.bmed_table = (u_char *) &bmed_table;
       }
       else {
-        Log(LOG_ERR, "ERROR: bgp_src_med_type set to 'map' but no map defined. Exiting.\n");
+        Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_med_type set to 'map' but no map defined. Exiting.\n", config.name);
         exit(1);
       }
     }

@@ -161,7 +161,7 @@ char *copy_argv(register char **argv)
 
    buf = (char *)malloc(len);
    if (buf == NULL) {
-     Log(LOG_ERR, "ERROR: copy_argv: malloc()\n");
+     Log(LOG_ERR, "ERROR ( %s/%s ): copy_argv: malloc()\n", config.name, config.type);
      return NULL;
    }
 
@@ -185,7 +185,7 @@ void trim_spaces(char *buf)
 
   tmp_buf = (char *)malloc(len + 1);
   if (tmp_buf == NULL) {
-    Log(LOG_ERR, "ERROR: trim_spaces: malloc()\n");
+    Log(LOG_ERR, "ERROR: trim_spaces: malloc() failed.\n");
     return;
   }
    
@@ -219,7 +219,7 @@ void trim_all_spaces(char *buf)
 
   tmp_buf = (char *)malloc(len + 1);
   if (tmp_buf == NULL) {
-    Log(LOG_ERR, "ERROR: trim_all_spaces: malloc()\n");
+    Log(LOG_ERR, "ERROR: trim_all_spaces: malloc() failed.\n");
     return;
   }
 
@@ -247,9 +247,9 @@ void strip_quotes(char *buf)
 
   len = strlen(buf);
 
-  tmp_buf = (char *)malloc(len + 1);
+  tmp_buf = (char *) malloc(len + 1);
   if (tmp_buf == NULL) {
-    Log(LOG_ERR, "ERROR: strip_quotes: malloc()\n");
+    Log(LOG_ERR, "ERROR ( %s/%s ): strip_quotes: malloc() failed.\n", config.name, config.type);
     return;
   }
   ptr = buf;
@@ -335,7 +335,7 @@ time_t roundoff_time(time_t t, char *value)
 	rounded->tm_mday = 1;
 	rounded->tm_mon = 0;
       }
-      else Log(LOG_WARNING, "WARN: ignoring unknown round off value: %c\n", value[j]); 
+      else Log(LOG_WARNING, "WARN ( %s/%s ): ignoring unknown round off value: %c\n", config.name, config.type, value[j]); 
     }
   }
 
@@ -619,10 +619,10 @@ void write_pid_file(char *filename)
   file = fopen(filename,"w");
   if (file) {
     if (chown(filename, owner, group) == -1)
-      Log(LOG_WARNING, "WARN: Unable to chown() pidfile '%s': %s\n", filename, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unable to chown(): %s\n", config.name, config.type, filename, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ALERT, "ALERT: Unable to obtain lock for pidfile '%s'.\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unable to obtain lock.\n", config.name, config.type, filename);
       return;
     }
     sprintf(pid, "%d\n", getpid());
@@ -632,7 +632,7 @@ void write_pid_file(char *filename)
     fclose(file);
   }
   else {
-    Log(LOG_ERR, "ERROR: Unable to open pidfile '%s'\n", filename);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] fopen() failed.\n", config.name, config.type, filename);
     return;
   }
 }
@@ -647,7 +647,7 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
 
   fname = malloc(len);
   if (!fname) {
-    Log(LOG_ERR, "ERROR: malloc() failed (write_pid_file_plugin)\n");
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed.\n", config.name, config.type, filename);
     return;
   }
   memset(fname, 0, len);
@@ -666,10 +666,10 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
   file = fopen(fname, "w");
   if (file) {
     if (chown(fname, owner, group) == -1)
-      Log(LOG_WARNING, "WARN: Unable to chown() '%s': %s\n", fname, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unable to chown(): %s\n", config.name, config.type, fname, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ALERT, "ALERT: Unable to obtain lock of '%s'.\n", fname);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unable to obtain lock.\n", config.name, config.type, fname);
       goto exit_lane;
     }
     sprintf(pid, "%d\n", getpid());
@@ -679,7 +679,7 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
     fclose(file);
   }
   else {
-    Log(LOG_ERR, "ERROR: Unable to open file '%s'\n", fname);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] fopen() failed.\n", config.name, config.type, fname);
     goto exit_lane;
   }
 
@@ -734,7 +734,7 @@ int sanitize_buf_net(char *filename, char *buf, int rows)
 {
   if (!sanitize_buf(buf)) {
     if (!strchr(buf, '/')) {
-      Log(LOG_ERR, "ERROR ( %s ): Missing '/' separator at line %d. Ignoring.\n", filename, rows);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Missing '/' separator. Ignoring.\n", config.name, config.type, filename, rows);
       return TRUE;
     }
   }
@@ -763,7 +763,7 @@ int check_not_valid_char(char *filename, char *buf, int c)
   if (!buf) return FALSE;
   
   if (strchr(buf, c)) {
-    Log(LOG_ERR, "ERROR ( %s ): Invalid symbol '%c' detected. ", filename, c);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Invalid symbol '%c' detected. ", config.name, config.type, filename, c);
     return TRUE; 
   }
   else return FALSE;
@@ -911,34 +911,6 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
   if (flows) *wtc |= COUNT_FLOWS;
 }
 
-int file_archive(const char *path, int rotations)
-{
-  struct stat st;
-  char *new_path;
-  int j, ret, len = strlen(path)+11;
-  
-  new_path = malloc(len);
-  if (!new_path) {
-    Log(LOG_ERR, "ERROR: malloc() failed (file_archive)\n");
-    return -1;
-  }
-  memset(new_path, 0, len);
-  for (j = 1; j < rotations; j++) {
-    snprintf(new_path, len, "%s.%d", path, j); 
-    ret = stat(new_path, &st);
-    if (ret < 0) {
-      rename(path, new_path);
-      free(new_path);
-      return 0;
-    }
-  }
-
-  /* we should never reach this point */
-  Log(LOG_ALERT, "ALERT: No more recovery logfile ( %s ) rotations allowed. Data is getting lost.\n", path);  
-  free(new_path);
-  return -1;
-}
-
 void stop_all_childs()
 {
   my_sigint_handler(0); /* it does same thing */
@@ -962,14 +934,14 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
   memset(buf, 0, size);
   f = fopen(path, "r");
   if (!f) {
-    Log(LOG_ERR, "ERROR: %s does not exist.\n", path);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file does not exist.\n", config.name, config.type, path);
     return(0);
   }
   
   ret = fread(buf, size, 1, f);
 
   if (ret != 1 && !feof(f)) {
-    Log(LOG_ERR, "ERROR: Unable to read from SQL schema '%s': %s\n", path, strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unable to read from SQL schema: %s\n", config.name, config.type, path, strerror(errno));
     return(0);
   }
 
@@ -977,7 +949,7 @@ int read_SQLquery_from_file(char *path, char *buf, int size)
   
   ptr = strrchr(buf, ';');
   if (!ptr) {
-    Log(LOG_ERR, "ERROR: missing trailing ';' in SQL query read from %s.\n", path);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] missing trailing ';' in SQL query.\n", config.name, config.type, path);
     return(0); 
   } 
   else *ptr = '\0';
@@ -1307,7 +1279,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core ): allow file '%s' not found\n", config.name, filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
       exit(1);
     }
 
@@ -1318,7 +1290,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
       if (fgets(buf, SRVBUFLEN, file)) {
         if (!sanitize_buf(buf)) {
           if (str_to_addr(buf, &t->table[index])) index++;
-          else Log(LOG_WARNING, "WARN ( %s/core ): 'nfacctd_allow_file': Bad IP address '%s'. Ignored.\n", config.name, buf);
+          else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad IP address '%s'. Ignored.\n", config.name, config.type, filename, buf);
         }
       }
     }
@@ -1339,7 +1311,7 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): BGP MD5 file '%s' not found\n", config.name, filename);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] file not found.\n", config.name, filename);
       exit(1);
     }
 
@@ -1364,7 +1336,7 @@ void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
 	  }
 
           if (ret > 0 && len > 0) index++;
-          else Log(LOG_WARNING, "WARN ( %s/core/BGP ): 'bgp_daemon_md5_file': line '%s' ignored.\n", config.name, buf);
+          else Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] line '%s' ignored.\n", config.name, filename, buf);
         }
       }
     }
@@ -1483,8 +1455,8 @@ int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
     else range = value;
 
     if (range_ptr && range <= value) {
-      Log(LOG_ERR, "WARN ( %s/%s ): Range value is expected in format low-high. '%llu-%llu' not loaded in file '%s'.\n",
-			config.name, config.type, value, range, filename);
+      Log(LOG_ERR, "WARN ( %s/%s ): [%s] Range value is expected in format low-high. '%llu-%llu'.\n",
+			config.name, config.type, filename, value, range);
       changes++;
       break;
     }

@@ -72,11 +72,11 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   if (filename) {
     if ((file = fopen(filename,"r")) == NULL) {
       if (!(config.nfacctd_net & NF_NET_KEEP && config.nfacctd_as & NF_AS_KEEP)) {
-        Log(LOG_WARNING, "WARN: network file '%s' not found\n", filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
 	return;
       }
 
-      Log(LOG_ERR, "ERROR: network file '%s' not found\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
       goto handle_error;
     }
     else {
@@ -87,7 +87,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       }
       /* 2nd step: loading data into a temporary table */
       if (!freopen(filename, "r", file)) {
-        Log(LOG_ERR, "ERROR: freopen() failed: %s\n", strerror(errno));
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] freopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
         goto handle_error;
       }
 
@@ -100,13 +100,13 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
       nt->table = malloc(rows*sizeof(struct networks_table_entry)); 
       if (!nt->table) {
-	Log(LOG_ERR, "ERROR: malloc() failed while building Networks Table.\n");
+	Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Networks Table.\n", config.name, config.type, filename);
 	goto handle_error;
       }
 
       tmpt->table = malloc(rows*sizeof(struct networks_table_entry));
       if (!tmpt->table) {
-        Log(LOG_ERR, "ERROR: malloc() failed while building Temporary Networks Table.\n");
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Temporary Networks Table.\n", config.name, config.type, filename);
         goto handle_error;
       }
 
@@ -213,14 +213,14 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	    buflen = strlen(mask);
 	    for (j = 0; j < buflen; j++) {
 	      if (!isdigit(mask[j])) {
-		Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%s' at line: %u.\n", filename, mask, rows);
+		Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Invalid network mask '%s'.\n", config.name, config.type, filename, rows, mask);
 	        memset(&tmpt->table[eff_rows], 0, sizeof(struct networks_table_entry));
 		goto cycle_end;
 	      }
 	    }
 	    index = atoi(mask); 
 	    if (index > 32) {
-	      Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%d' at line: %u.\n", filename, index, rows);
+	      Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Invalid network mask '%d'.\n", config.name, config.type, filename, rows, index);
 	      memset(&tmpt->table[eff_rows], 0, sizeof(struct networks_table_entry));
 	      goto cycle_end;
 	    }
@@ -254,7 +254,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       /* 4a building hierarchies */
       mdt = malloc(tmpt->num*sizeof(struct networks_table_metadata));
       if (!mdt) {
-        Log(LOG_ERR, "ERROR: malloc() failed while building Metadata Networks Table.\n");
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Metadata Networks Table.\n", config.name, config.type, filename);
         goto handle_error;
       }
       memset(mdt, 0, tmpt->num*sizeof(struct networks_table_metadata));
@@ -335,11 +335,12 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	  net_bin.address.ipv4.s_addr = htonl(nt->table[index].net);
 	  addr_to_str(net_string, &net_bin);
 
-	  Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv4] nh: %s peer asn: %u asn: %u net: %s mask: %u\n", 
-	  	  filename, nh_string, nt->table[index].peer_as, nt->table[index].as, net_string, nt->table[index].masknum); 
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] v4 nh: %s peer asn: %u asn: %u net: %s mask: %u\n", 
+		config.name, config.type, filename, nh_string, nt->table[index].peer_as,
+		nt->table[index].as, net_string, nt->table[index].masknum); 
 	}
 	if (!nt->table[index].mask) {
-	  Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv4] contains a default route\n", filename);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] v4 contains a default route\n", config.name, config.type, filename);
 	  default_route_in_networks4_table = TRUE;
 	}
 	index++;
@@ -351,10 +352,11 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
         else nc->num = config.networks_cache_entries;
         nc->cache = (struct networks_cache_entry *) malloc(nc->num*sizeof(struct networks_cache_entry));
         if (!nc->cache) {
-          Log(LOG_ERR, "ERROR: malloc() failed while building Networks Cache.\n");
+          Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed while building Networks Cache.\n", config.name, config.type);
           goto handle_error;
         }
-	else Log(LOG_DEBUG, "DEBUG ( %s ): IPv4 Networks Cache successfully created: %u entries.\n", filename, nc->num);
+	else Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] IPv4 Networks Cache successfully created: %u entries.\n",
+			config.name, config.type, filename, nc->num);
       }
 
       /* 7th step: freeing resources */
@@ -383,7 +385,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   if (bkt.num) {
     if (!nt->table) {
       memcpy(nt, &bkt, sizeof(struct networks_table));
-      Log(LOG_WARNING, "WARN: Rolling back the old Networks Table.\n"); 
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Networks Table.\n", config.name, config.type, filename); 
 
       /* we update the timestamp to avoid loops */ 
       stat(filename, &st);
@@ -429,7 +431,7 @@ void merge(char *filename, struct networks_table_entry *table, int start, int mi
   v1 = malloc(v1_n*s);
   v2 = malloc(v2_n*s);
 
-  if ((!v1) || (!v2)) Log(LOG_ERR, "ERROR ( %s ): Memory sold out when allocating 'networks table'\n", filename); 
+  if ((!v1) || (!v2)) Log(LOG_ERR, "ERROR ( %s/%s ): [%s] memory sold out.\n", config.name, config.type, filename); 
 
   for (i=0; i<v1_n; i++) memcpy(&v1[i], &table[start+i], s);
   for (i=0; i<v2_n; i++) memcpy(&v2[i], &table[middle+i], s);
@@ -1421,11 +1423,11 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   if (filename) {
     if ((file = fopen(filename,"r")) == NULL) {
       if (!(config.nfacctd_net & NF_NET_KEEP && config.nfacctd_as & NF_AS_KEEP)) {
-        Log(LOG_WARNING, "WARN: network file '%s' not found\n", filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
         return;
       }
 
-      Log(LOG_ERR, "ERROR: network file '%s' not found\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
       exit_plugin(1);
     }
     else {
@@ -1436,7 +1438,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       }
       /* 2nd step: loading data into a temporary table */
       if (!freopen(filename, "r", file)) {
-        Log(LOG_ERR, "ERROR: freopen() failed: %s\n", strerror(errno));
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] freopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
         goto handle_error;
       }
 
@@ -1449,13 +1451,13 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       
       nt->table6 = malloc(rows*sizeof(struct networks6_table_entry));
       if (!nt->table6) {
-        Log(LOG_ERR, "ERROR: malloc() failed while building Networks Table.\n");
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Networks Table.\n", config.name, config.type, filename);
         goto handle_error;
       }
 
       tmpt->table6 = malloc(rows*sizeof(struct networks6_table_entry));
       if (!tmpt->table6) {
-        Log(LOG_ERR, "ERROR: malloc() failed while building Temporary Networks Table.\n");
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Temporary Networks Table.\n", config.name, config.type, filename);
         goto handle_error;
       }
 
@@ -1552,14 +1554,14 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
             buflen = strlen(mask);
             for (j = 0; j < buflen; j++) {
               if (!isdigit(mask[j])) {
-                Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%s' at line: %u.\n", filename, mask, rows);
+                Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Invalid network mask '%s'.\n", config.name, config.type, filename, rows, mask);
 	        memset(&tmpt->table6[eff_rows], 0, sizeof(struct networks6_table_entry));
                 goto cycle_end;
               }
             }
             index = atoi(mask);
             if (index > 128) {
-              Log(LOG_ERR, "ERROR ( %s ): Invalid network mask '%d' at line: %u.\n", filename, index, rows);
+              Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Invalid network mask '%d'.\n", config.name, config.type, filename, rows, index);
 	      memset(&tmpt->table6[eff_rows], 0, sizeof(struct networks6_table_entry));
               goto cycle_end;
             }
@@ -1599,7 +1601,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       /* 4a building hierarchies */
       mdt = malloc(tmpt->num6*sizeof(struct networks_table_metadata));
       if (!mdt) {
-        Log(LOG_ERR, "ERROR: malloc() failed while building Metadata Networks Table.\n");
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Metadata Networks Table.\n", config.name, config.type, filename);
         goto handle_error;
       }
       memset(mdt, 0, tmpt->num6*sizeof(struct networks_table_metadata));
@@ -1684,12 +1686,13 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
           addr_to_str(net_string, &net_bin);
           addr_to_str(nh_string, &nt->table6[index].nh);
 
-          Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] nh: %s peer_asn: %u asn: %u net: %s mask: %u\n", filename,
-	    nh_string, nt->table6[index].peer_as, nt->table6[index].as, net_string, nt->table6[index].masknum); 
+          Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] v6 nh: %s peer_asn: %u asn: %u net: %s mask: %u\n",
+		config.name, config.type, filename, nh_string, nt->table6[index].peer_as,
+		nt->table6[index].as, net_string, nt->table6[index].masknum); 
 	}
 	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
 	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])
-	  Log(LOG_DEBUG, "DEBUG ( %s ): [networks table IPv6] contains a default route\n", filename);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] v6 contains a default route\n", config.name, config.type, filename);
 	  default_route_in_networks6_table = TRUE;
         index++;
       }
@@ -1700,10 +1703,11 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         else nc->num6 = config.networks_cache_entries;
         nc->cache6 = (struct networks6_cache_entry *) malloc(nc->num6*sizeof(struct networks6_cache_entry));
         if (!nc->cache6) {
-          Log(LOG_ERR, "ERROR: malloc() failed while building Networks Cache.\n");
+          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed while building Networks Cache.\n", config.name, config.type, filename);
           goto handle_error;
         }
-	else Log(LOG_DEBUG, "DEBUG ( %s ): IPv6 Networks Cache successfully created: %u entries.\n", filename, nc->num6);
+	else Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] IPv6 Networks Cache successfully created: %u entries.\n",
+			config.name, config.type, filename, nc->num6);
       }
 
       /* 7th step: freeing resources */
@@ -1732,7 +1736,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   if (bkt.num6) {
     if (!nt->table6) {
       memcpy(nt, &bkt, sizeof(struct networks_table));
-      Log(LOG_WARNING, "WARN: Rolling back the old Networks Table.\n");
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Networks Table.\n", config.name, config.type, filename);
 
       /* we update the timestamp to avoid loops */
       stat(filename, &st);
@@ -1779,7 +1783,7 @@ void merge6(char *filename, struct networks6_table_entry *table, int start, int 
   v1 = malloc(v1_n*s);
   v2 = malloc(v2_n*s);
 
-  if ((!v1) || (!v2)) Log(LOG_ERR, "ERROR ( %s ): Memory sold out when allocating 'networks table'\n", filename);
+  if ((!v1) || (!v2)) Log(LOG_ERR, "ERROR ( %s/%s ): [%s] memory sold out.\n", config.name, config.type, filename);
 
   for (i=0; i<v1_n; i++) memcpy(&v1[i], &table[start+i], s);
   for (i=0; i<v2_n; i++) memcpy(&v2[i], &table[middle+i], s);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -78,7 +78,7 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
     else {
       error:
       if (xflow_status_table_error) {
-	Log(LOG_ERR, "ERROR: unable to allocate more entries into the xFlow status table.\n");
+	Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more entries into the xFlow status table.\n", config.name, config.type);
 	xflow_status_table_error = FALSE;
 	return NULL;
       }
@@ -112,8 +112,9 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno)
       else
 	strcpy(collector_ip_address, null_ip_address);
 
-      Log(LOG_INFO, "INFO: expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
-		      entry->seqno+entry->inc, seqno, collector_ip_address, config.nfacctd_port, agent_ip_address, entry->aux1);
+      Log(LOG_INFO, "INFO ( %s/%s ): expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
+		config.name, config.type, entry->seqno+entry->inc, seqno, collector_ip_address,
+		config.nfacctd_port, agent_ip_address, entry->aux1);
       if (seqno > entry->seqno+entry->inc) {
         // entry->counters.missed += (seqno-entry->seqno);
         entry->counters.jumps_f++;
@@ -157,13 +158,14 @@ void print_status_table(time_t now, int buckets)
       else
         strcpy(collector_ip_address, null_ip_address);
 
-      Log(LOG_NOTICE, "\n+++\n");
-      Log(LOG_NOTICE, "%s statistics collector=%s:%u agent=%s:%u (%u):\n",
-		      ftype, collector_ip_address, config.nfacctd_port, agent_ip_address, entry->aux1, now);
-      Log(LOG_NOTICE, "Good datagrams:	%u\n", entry->counters.good);
-      Log(LOG_NOTICE, "Forward jumps:	%u\n", entry->counters.jumps_f);
-      Log(LOG_NOTICE, "Backward jumps:	%u\n", entry->counters.jumps_b);
-      Log(LOG_NOTICE, "---\n");
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): %s statistics collector=%s:%u agent=%s:%u (%u):\n",
+		config.name, config.type, ftype, collector_ip_address, config.nfacctd_port,
+		agent_ip_address, entry->aux1, now);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): Good datagrams:  %u\n", config.name, config.type, entry->counters.good);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): Forward jumps:   %u\n", config.name, config.type, entry->counters.jumps_f);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): Backward jumps:  %u\n", config.name, config.type, entry->counters.jumps_b);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
 
       if (entry->next) {
 	entry = entry->next;
@@ -172,9 +174,9 @@ void print_status_table(time_t now, int buckets)
     } 
   }
 
-  Log(LOG_NOTICE, "+++\n");
-  Log(LOG_NOTICE, "Total bad %s datagrams: %u (%u)\n", ftype, xflow_tot_bad_datagrams, now);
-  Log(LOG_NOTICE, "---\n\n");
+  Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
+  Log(LOG_NOTICE, "NOTICE ( %s/%s ): Total bad %s datagrams: %u (%u)\n", config.name, config.type, ftype, xflow_tot_bad_datagrams, now);
+  Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
 }
 
 struct xflow_status_entry_sampling *
@@ -214,7 +216,7 @@ create_smp_entry_status_table(struct xflow_status_entry *entry)
     new = malloc(sizeof(struct xflow_status_entry_sampling));
     if (!new) {
       if (smp_entry_status_table_memerr) {
-	Log(LOG_ERR, "ERROR: unable to allocate more entries into the xflow renormalization table.\n");
+	Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more entries into the xflow renormalization table.\n", config.name, config.type);
 	smp_entry_status_table_memerr = FALSE;
       }
     }
@@ -260,7 +262,7 @@ create_class_entry_status_table(struct xflow_status_entry *entry)
     new = malloc(sizeof(struct xflow_status_entry_class));
     if (!new) {
       if (class_entry_status_table_memerr) {
-        Log(LOG_ERR, "ERROR: unable to allocate more entries into the xflow classification table.\n");
+        Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more entries into the xflow classification table.\n", config.name, config.type);
         class_entry_status_table_memerr = FALSE;
       }
     }
