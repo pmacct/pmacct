@@ -68,7 +68,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {
     fclose(config.logfile_fd);
-    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
+    config.logfile_fd = open_output_file(config.logfile, "a", FALSE, TRUE);
   }
 
   sql_set_signals();

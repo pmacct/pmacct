@@ -363,7 +363,7 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   return (final-base);
 }	
 
-FILE *open_output_file(char *filename, char *mode, int lock)
+FILE *open_output_file(char *filename, char *mode, int lock, int is_log)
 {
   FILE *file = NULL;
   uid_t owner = -1;
@@ -375,7 +375,8 @@ FILE *open_output_file(char *filename, char *mode, int lock)
 
   ret = mkdir_multilevel(filename, TRUE, owner, group);
   if (ret) {
-    printf("ERROR ( %s/%s ): open_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, filename);
+    if (is_log) printf("ERROR ( %s/%s ): open_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, filename);
+    else Log(LOG_ERR, "ERROR ( %s/%s ): open_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, filename);
     file = NULL;
 
     return file;
@@ -387,17 +388,24 @@ FILE *open_output_file(char *filename, char *mode, int lock)
 
   if (file) {
     if (chown(filename, owner, group) == -1)
-      printf("WARN ( %s/%s ): open_output_file(): chown() failed (%s) for '%s'.\n", config.name, config.type, strerror(errno), filename);
+      if (is_log) printf("WARN ( %s/%s ): open_output_file(): chown() failed (%s) for '%s'.\n",
+			 config.name, config.type, strerror(errno), filename);
+      else Log(LOG_WARNING, "WARN ( %s/%s ): open_output_file(): chown() failed (%s) for '%s'.\n",
+		config.name, config.type, strerror(errno), filename);
 
     if (lock) {
       if (file_lock(fileno(file))) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): open_output_file(): file_lock() failed. for '%s'\n", config.name, config.type, filename);
+        if (is_log) printf("ERROR ( %s/%s ): open_output_file(): file_lock() failed. for '%s'\n", config.name, config.type, filename);
+        else Log(LOG_ERR, "ERROR ( %s/%s ): open_output_file(): file_lock() failed. for '%s'\n", config.name, config.type, filename);
         file = NULL;
       }
     }
   }
   else {
-    printf("WARN ( %s/%s ): open_output_file(): fopen() failed (%s) for '%s'.\n", config.name, config.type, strerror(errno), filename);
+    if (is_log) printf("WARN ( %s/%s ): open_output_file(): fopen() failed (%s) for '%s'.\n",
+			config.name, config.type, strerror(errno), filename);
+    else Log(LOG_WARNING, "WARN ( %s/%s ): open_output_file(): fopen() failed (%s) for '%s'.\n",
+		config.name, config.type, strerror(errno), filename);
     file = NULL;
   }
 
@@ -2745,14 +2753,16 @@ void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
   char *ptr = (char *) hdr;
   int x = 0;
 
-  printf("VLEN ARRAY: num: %u tot_len: %u\n", hdr->num, hdr->tot_len);
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): vlen_prims_debug(): VLEN ARRAY: num: %u tot_len: %u\n",
+	config.name, config.type, hdr->num, hdr->tot_len);
   ptr += PvhdrSz;
 
   for (x = 0; x < hdr->num; x++) {
     label_ptr = (pm_label_t *) ptr;
     ptr += PmLabelTSz;
 
-    printf("LABEL #%u: type: %llx len: %u val: %s\n", x, label_ptr->type, label_ptr->len, ptr);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): vlen_prims_debug(): LABEL #%u: type: %llx len: %u val: %s\n",
+	config.name, config.type, x, label_ptr->type, label_ptr->len, ptr);
   }
 }
 

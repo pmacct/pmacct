@@ -86,7 +86,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {
     fclose(config.logfile_fd);
-    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
+    config.logfile_fd = open_output_file(config.logfile, "a", FALSE, TRUE);
   }
 
   if (extras.off_pkt_vlen_hdr_primitives) {
