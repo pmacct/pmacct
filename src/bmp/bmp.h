@@ -26,16 +26,18 @@
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
 
-/* definitions based on draft-ietf-grow-bmp-07 */
+/* definitions originally based on draft-ietf-grow-bmp-07 */
+/* definitions review #1 based on draft-ietf-grow-bmp-17 */
 
 /* BMP message types */
-#define BMP_MSG_ROUTE		0	
+#define BMP_MSG_ROUTE_MONITOR	0	
 #define	BMP_MSG_STATS		1
 #define BMP_MSG_PEER_DOWN	2
 #define BMP_MSG_PEER_UP		3
 #define	BMP_MSG_INIT		4
 #define BMP_MSG_TERM		5
-#define BMP_MSG_TYPE_MAX	5 /* set to the highest BMP_MSG_* value */
+#define BMP_MSG_ROUTE_MIRROR	6	
+#define BMP_MSG_TYPE_MAX	6 /* set to the highest BMP_MSG_* value */
 
 static const char *bmp_msg_types[] = {
   "Route Monitoring",
@@ -43,7 +45,8 @@ static const char *bmp_msg_types[] = {
   "Peer Down Notification",
   "Peer Up Notification",
   "Initiation Message",
-  "Termination Message"
+  "Termination Message",
+  "Route Mirroring"
 };
 
 struct bmp_common_hdr {
@@ -172,7 +175,8 @@ EXT void bmp_process_msg_term(char **, u_int32_t *, u_int32_t, struct bgp_peer *
 EXT void bmp_process_msg_peer_up(char **, u_int32_t *, struct bgp_peer *);
 EXT void bmp_process_msg_peer_down(char **, u_int32_t *, struct bgp_peer *);
 EXT void bmp_process_msg_stats(char **, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_route(char **, u_int32_t *, struct bgp_peer *);
+EXT void bmp_process_msg_route_monitor(char **, u_int32_t *, struct bgp_peer *);
+EXT void bmp_process_msg_route_mirror(char **, u_int32_t *, struct bgp_peer *);
 
 EXT void bmp_common_hdr_get_len(struct bmp_common_hdr *, u_int32_t *);
 EXT void bmp_init_hdr_get_len(struct bmp_init_hdr *, u_int16_t *);
@@ -198,8 +202,8 @@ EXT void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
-
 EXT void bmp_link_misc_structs(struct bgp_misc_structs *);
+EXT void bmp_compose_peer(struct bgp_peer *, struct bmp_data *);
 #undef EXT
 
 /* global variables */

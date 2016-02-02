@@ -610,8 +610,8 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
     }
 
     switch (bch->type) {
-    case BMP_MSG_ROUTE:
-      bmp_process_msg_route(&bmp_packet_ptr, &pkt_remaining_len, peer);
+    case BMP_MSG_ROUTE_MONITOR:
+      bmp_process_msg_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, peer);
       break;
     case BMP_MSG_STATS:
       bmp_process_msg_stats(&bmp_packet_ptr, &pkt_remaining_len, peer);
@@ -627,6 +627,9 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
       break;
     case BMP_MSG_TERM:
       bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, msg_len, peer); 
+      break;
+    case BMP_MSG_ROUTE_MIRROR:
+      bmp_process_msg_route_mirror(&bmp_packet_ptr, &pkt_remaining_len, peer);
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
@@ -854,15 +857,16 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
   // XXX: withdraw routes from peer
 }
 
-void bmp_process_msg_route(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bgp_peer *bmp_peer)
 {
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
+  struct bgp_peer peer; 
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
-        config.name, peer->addr_str);
+        config.name, bmp_peer->addr_str);
     return;
   }
 
@@ -879,7 +883,13 @@ void bmp_process_msg_route(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
   addr_to_str(peer_ip, &bdata.peer_ip);
 
+  bmp_compose_peer(&peer, &bdata);
   // XXX: parse BGP UPDATE(s)
+}
+
+void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+{
+  // XXX: support route mirroring
 }
 
 void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
@@ -1212,3 +1222,16 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
   strcpy(bms->peer_str, "bmp_router");
 }
+
+void bmp_compose_peer(struct bgp_peer *peer, struct bmp_data *bdata)
+{
+  if (!peer || !bdata) return;
+
+  memset(peer, 0, sizeof(struct bgp_peer));
+  
+  memcpy(&peer->addr, &bdata->peer_ip, sizeof(struct host_addr));
+  memcpy(&peer->id, &bdata->bgp_id, sizeof(struct host_addr));
+  peer->as = bdata->peer_asn;
+  peer->myas = bdata->peer_asn;
+  peer->status = Established;
+} 
