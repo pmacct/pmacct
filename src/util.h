@@ -72,7 +72,7 @@ EXT void reset_fallback_status(struct packet_ptrs *);
 EXT void set_sampling_table(struct packet_ptrs_vector *, u_char *);
 EXT void set_shadow_status(struct packet_ptrs *);
 EXT void set_default_preferences(struct configuration *);
-EXT FILE *open_output_file(char *, char *, int, int);
+EXT FILE *open_output_file(char *, char *, int);
 EXT void link_latest_output_file(char *, char *);
 EXT void close_output_file(FILE *);
 EXT void handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *);

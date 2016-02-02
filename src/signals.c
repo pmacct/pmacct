@@ -170,7 +170,7 @@ void reload()
 
   if (config.logfile) {
     fclose(config.logfile_fd);
-    config.logfile_fd = open_output_file(config.logfile, "a", FALSE, TRUE);
+    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
   }
 
   if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;

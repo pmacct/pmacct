@@ -222,7 +222,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   for (peer_idx = 0, have_it = 0; peer_idx < bms->max_peers; peer_idx++) {
     if (!bms->peers_log[peer_idx].refcnt) {
       if (bms->msglog_file) {
-	bms->peers_log[peer_idx].fd = open_output_file(log_filename, "a", FALSE, FALSE);
+	bms->peers_log[peer_idx].fd = open_output_file(log_filename, "a", FALSE);
 	setlinebuf(bms->peers_log[peer_idx].fd);
       }
 
@@ -673,7 +673,7 @@ void bgp_handle_dump_event()
 		link_latest_output_file(latest_filename, last_filename);
 	      }
 	    }
-	    peer->log->fd = open_output_file(current_filename, "w", TRUE, FALSE);
+	    peer->log->fd = open_output_file(current_filename, "w", TRUE);
 	    if (fd_buf) {
 	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
 	      memset(fd_buf, 0, BGP_LOG_BUFSZ); 

@@ -385,7 +385,7 @@ void skinny_bmp_daemon()
       for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
         if (bmp_misc_db->peers_log[peers_idx].fd) {
           fclose(bmp_misc_db->peers_log[peers_idx].fd);
-          bmp_misc_db->peers_log[peers_idx].fd = open_output_file(bmp_misc_db->peers_log[peers_idx].filename, "a", FALSE, FALSE);
+          bmp_misc_db->peers_log[peers_idx].fd = open_output_file(bmp_misc_db->peers_log[peers_idx].filename, "a", FALSE);
 	  setlinebuf(bmp_misc_db->peers_log[peers_idx].fd);
         }
         else break;

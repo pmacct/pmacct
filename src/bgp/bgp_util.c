@@ -731,10 +731,10 @@ void write_neighbors_file(char *filename)
   file = fopen(filename,"w");
   if (file) {
     if ((ret = chown(filename, owner, group)) == -1)
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): Unable to chown() '%s': %s\n", config.name, filename, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] Unable to chown() (%s).\n", config.name, filename, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to obtain lock for bgp_neighbors_file '%s'.\n", config.name, filename);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] Unable to obtain lock.\n", config.name, filename);
       return;
     }
     for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
@@ -762,7 +762,7 @@ void write_neighbors_file(char *filename)
     fclose(file);
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to open bgp_neighbors_file '%s'\n", config.name, filename);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] fopen() failed.\n", config.name, filename);
     return;
   }
 }

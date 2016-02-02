@@ -417,9 +417,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
     
     if (config.print_output_file_append)
-      f = open_output_file(current_table, "a", TRUE, FALSE);
+      f = open_output_file(current_table, "a", TRUE);
     else
-      f = open_output_file(current_table, "w", TRUE, FALSE);
+      f = open_output_file(current_table, "w", TRUE);
 
     if (f && !config.print_output_file_append) { 
       if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", stamp, config.sql_refresh_time);

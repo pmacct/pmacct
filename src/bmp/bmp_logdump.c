@@ -531,7 +531,7 @@ void bmp_handle_dump_event()
 	        link_latest_output_file(latest_filename, last_filename);
 	      }
 	    }
-            peer->log->fd = open_output_file(current_filename, "w", TRUE, FALSE);
+            peer->log->fd = open_output_file(current_filename, "w", TRUE);
 	    if (fd_buf) {
 	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
 	      memset(fd_buf, 0, BGP_LOG_BUFSZ);

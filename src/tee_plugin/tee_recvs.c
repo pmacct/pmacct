@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -37,14 +37,14 @@ int tee_recvs_map_id_handler(char *filename, struct id_entry *e, char *value, st
       pool_id = strtoull(value, &endptr, 10);
 
       if (!pool_id || pool_id > UINT32_MAX) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Invalid Pool ID specified. ", config.name, config.type);
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Invalid Pool ID specified.\n", config.name, config.type, filename);
         return TRUE;
       }
 
       /* Ensure no pool ID duplicates */
       for (pool_idx = 0; pool_idx < table->num; pool_idx++) {
 	if (pool_id == table->pools[table->num].id) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): Duplicate Pool ID specified: %u. ", config.name, config.type, pool_id);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Duplicate Pool ID specified: %u.\n", config.name, config.type, filename, pool_id);
 	  return TRUE;
 	}
       }
@@ -52,12 +52,12 @@ int tee_recvs_map_id_handler(char *filename, struct id_entry *e, char *value, st
       table->pools[table->num].id = pool_id;
     }
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Maximum amount of receivers pool reached: %u. ", config.name, config.type, config.tee_max_receiver_pools);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Maximum amount of receivers pool reached: %u.\n", config.name, config.type, filename, config.tee_max_receiver_pools);
       return TRUE;
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -80,24 +80,24 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
 	target = &table->pools[table->num].receivers[recv_idx];
 	target->dest_len = sizeof(target->dest);
 	if (!Tee_parse_hostport(token, &target->dest, &target->dest_len)) recv_idx++;
-	else Log(LOG_WARNING, "WARN ( %s/%s ): Invalid receiver %s in map '%s'.\n",
-		config.name, config.type, token, filename);
+	else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid receiver %s.\n",
+		config.name, config.type, filename, token);
       }
       else {
-	Log(LOG_WARNING, "WARN ( %s/%s ): Maximum amount of receivers pool reached %u in map '%s'.\n",
-		config.name, config.type, config.tee_max_receiver_pools, filename);
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Maximum amount of receivers pool reached %u.\n",
+		config.name, config.type, filename, config.tee_max_receiver_pools);
 	break;
       }
     }
 
     if (!recv_idx) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): No valid receivers. ", config.name, config.type);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] No valid receivers.\n", config.name, config.type, filename);
       return TRUE;
     }
     else table->pools[table->num].num = recv_idx;
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -111,7 +111,7 @@ int tee_recvs_map_tag_handler(char *filename, struct id_entry *e, char *value, s
 
   if (table && table->pools) ret = load_tags(filename, &table->pools[table->num].tag_filter, value);
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -139,11 +139,11 @@ int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *
     }
     else {
       table->pools[table->num].balance.func = NULL;
-      Log(LOG_WARNING, "WARN ( %s/%s ): Unknown balance algorithm '%s' in map '%s'. Ignoring.\n", config.name, config.type, value, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown balance algorithm '%s'. Ignoring.\n", config.name, config.type, filename, value);
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Receivers table not allocated. ", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 

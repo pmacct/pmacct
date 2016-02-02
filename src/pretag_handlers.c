@@ -48,7 +48,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
     str_to_addr(value, &a);
     if (a.family == AF_INET) j = a.address.ipv4.s_addr;
     else {
-      Log(LOG_ERR, "ERROR ( %s ): ID does not appear to be a valid IPv4 address. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] ID does not appear to be a valid IPv4 address.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -65,7 +65,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       e->flags = BTA_MAP_RCODE_ID_ID2;
     }
     else {
-      Log(LOG_ERR, "ERROR ( %s ): ID does not appear to be a valid IPv6 address. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] ID does not appear to be a valid IPv6 address.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -89,7 +89,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
 
     j = strtoull(value, &endptr, 10);
     if (j > UINT64_MAX) {
-      Log(LOG_ERR, "ERROR ( %s ): Invalid set_tag/id specified. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag/id specified.\n", config.name, config.type, filename);
       return TRUE;
     } 
   }
@@ -101,7 +101,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
     for (x = 0; e->set_func[x]; x++) {
       if (e->set_func_type[x] == PRETAG_SET_TAG) {
-        Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_tag' (id) clauses part of the same statement. ", filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'set_tag' (id) clauses part of the same statement.\n", config.name, config.type, filename);
         return TRUE;
       }
     }
@@ -126,7 +126,7 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 
   j = strtoull(value, &endptr, 10);
   if (j > UINT64_MAX) {
-    Log(LOG_ERR, "ERROR ( %s ): Invalid set_tag2/id2 specified. ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag2/id2 specified.\n", config.name, config.type, filename);
     return TRUE;
   }
   e->id2 = j;
@@ -135,7 +135,7 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
     for (x = 0; e->set_func[x]; x++) {
       if (e->set_func_type[x] == PRETAG_SET_TAG2) {
-        Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_tag2' (id2) clauses part of the same statement. ", filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'set_tag2' (id2) clauses part of the same statement.\n", config.name, config.type, filename);
         return TRUE;
       }
     }
@@ -164,14 +164,14 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
     e->label.val = NULL;
     e->label.len = 0;
 
-    Log(LOG_ERR, "ERROR ( %s ): Invaild set_label specified. ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invaild set_label specified.\n", config.name, config.type, filename);
     return TRUE;
   }
 
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
     for (x = 0; e->set_func[x]; x++) {
       if (e->set_func_type[x] == PRETAG_SET_LABEL) {
-        Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_label' clauses part of the same statement. ", filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'set_label' clauses part of the same statement.\n", config.name, config.type, filename);
         return TRUE;
       }
     }
@@ -186,7 +186,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
 int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   if (!str_to_addr_mask(value, &e->agent_ip.a, &e->agent_mask)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad IP address or prefix '%s'. ", filename, value);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad IP address or prefix '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
 
@@ -205,7 +205,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'in' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'in' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -214,7 +214,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   e->input.n = strtoul(value, &endptr, 10);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_IN_IFACE) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'input' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'input' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -238,7 +238,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'out' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'out' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -247,7 +247,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
   e->output.n = strtoul(value, &endptr, 10);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_OUT_IFACE) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'output' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'output' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -266,13 +266,13 @@ int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, stru
   e->nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->nexthop.a)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad nexthop address '%s'. ", filename, value);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad nexthop address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_NEXTHOP) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'nexthop' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'nexthop' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -290,13 +290,13 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
   e->bgp_nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->bgp_nexthop.a)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad BGP nexthop address '%s'. ", filename, value);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad BGP nexthop address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_BGP_NEXTHOP) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'bgp_nexthop' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'bgp_nexthop' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -323,7 +323,7 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
 
   if (have_bgp) return FALSE;
 
-  Log(LOG_ERR, "ERROR ( %s ): 'bgp_nexthop' is not supported when a 'networks_file' is specified or by the 'pmacctd' daemon. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'bgp_nexthop' is not supported when a 'networks_file' is specified or by the 'pmacctd' daemon.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -335,7 +335,7 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   e->bgp_nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->bgp_nexthop.a)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad BGP nexthop address '%s'. ", filename, value);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad BGP nexthop address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
 
@@ -391,7 +391,7 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'engine_type' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_type' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -399,14 +399,14 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
 
   j = atoi(value);
   if (j > 255) {
-    Log(LOG_ERR, "ERROR ( %s ): bad 'engine_type' value (range: 0 >= value > 256). ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_type' value (range: 0 >= value > 256).\n", config.name, config.type, filename);
     return TRUE;
   }
   e->engine_type.n = j; 
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_ENGINE_TYPE) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'engine_type' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'engine_type' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -425,7 +425,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'engine_id' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_id' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -433,14 +433,14 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
 
   j = atoi(value);
   if (j > 255) {
-    Log(LOG_ERR, "ERROR ( %s ): bad 'engine_id' value (range: 0 >= value > 256). ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_id' value (range: 0 >= value > 256).\n", config.name, config.type, filename);
     return TRUE;
   }
   e->engine_id.n = j;
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_ENGINE_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'engine_id' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'engine_id' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -460,7 +460,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
     if (strncmp(value, "ip", 2) && strncmp(value, "ip6", 3)) {
-      Log(LOG_ERR, "ERROR ( %s ): bgp_agent_map filter supports only 'ip' and 'ip6' keywords\n", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_agent_map filter supports only 'ip' and 'ip6' keywords\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -473,7 +473,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
 
   pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
   if (pcap_compile(device.dev_desc, &e->filter, value, 0, netmask) < 0) {
-    Log(LOG_ERR, "ERROR ( %s ): malformed filter: %s\n", filename, pcap_geterr(device.dev_desc));
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] malformed filter: %s\n", config.name, config.type, filename, pcap_geterr(device.dev_desc));
     return TRUE;
   }
 
@@ -481,7 +481,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_FILTER) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'filter' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'filter' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -501,7 +501,7 @@ int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'v8agg' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'v8agg' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -509,14 +509,14 @@ int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct
 
   tmp = atoi(value);
   if (tmp < 1 || tmp > 14) {
-    Log(LOG_ERR, "ERROR ( %s ): 'v8agg' need to be in the following range: 0 > value > 15. ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'v8agg' need to be in the following range: 0 > value > 15.\n", config.name, config.type, filename);
     return TRUE;
   }
   e->v8agg.n = tmp; 
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_NFV8_AGG) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'v8agg' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'v8agg' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -535,7 +535,7 @@ int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, str
   e->agent_id.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SF_AGENTID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'agent_id' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'agent_id' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -553,7 +553,7 @@ int PT_map_flowset_id_handler(char *filename, struct id_entry *e, char *value, s
   e->flowset_id.n = htons(atoi(value));
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_FLOWSET_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'flowset_id' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'flowset_id' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -571,7 +571,7 @@ int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value
   e->sampling_rate.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SAMPLING_RATE) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'sampling_rate' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'sampling_rate' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -596,7 +596,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
       case 0:
         tmp = atoi(token);
         if (tmp > 1048575) { // 2^20-1: 20 bit Enterprise value
-          Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
           return TRUE;
         }
         e->sample_type.n = tmp;
@@ -605,13 +605,13 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
       case 1:
         tmp = atoi(token);
         if (tmp > 4095) { // 2^12-1: 12 bit Format value
-          Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
           return TRUE;
         }
         e->sample_type.n |= tmp;
         break;
       default:
-        Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
         return TRUE;
       }
 
@@ -626,7 +626,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
     else if (!strncmp(value, "option", strlen("option")))
       e->sample_type.n = NF9_FTYPE_OPTION;
     else {
-      Log(LOG_WARNING, "WARN ( %s ): Invalid 'sample_type' value. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -634,7 +634,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SAMPLE_TYPE) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'sample_type' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'sample_type' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -654,7 +654,7 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
   e->direction.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_DIRECTION) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'direction' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'direction' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -677,7 +677,7 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
   e->src_as.n = tmp;
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SRC_AS) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_as' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_as' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -708,7 +708,7 @@ int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (have_bgp) return FALSE;
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_as' requires either 'networks_file' or 'nf|sfacctd_as: false' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_as' requires either 'networks_file' or 'nf|sfacctd_as: false' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -726,7 +726,7 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
   e->dst_as.n = tmp;
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_DST_AS) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'dst_as' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'dst_as' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -757,7 +757,7 @@ int PT_map_dst_as_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (have_bgp) return FALSE;
 
-  Log(LOG_ERR, "ERROR ( %s ): 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as: false' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'dst_as' requires either 'networks_file' or 'nf|sfacctd_as: false' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -775,7 +775,7 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
   e->peer_src_as.n = tmp;
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_PEER_SRC_AS) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'peer_src_as' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'peer_src_as' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -786,7 +786,7 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'peer_src_as' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'peer_src_as' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -804,7 +804,7 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
   e->peer_dst_as.n = tmp;
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_PEER_DST_AS) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'peer_dst_as' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'peer_dst_as' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -815,7 +815,7 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
     return FALSE;
   } 
 
-  Log(LOG_ERR, "ERROR ( %s ): 'peer_dst_as' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'peer_dst_as' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -833,7 +833,7 @@ int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *valu
   e->src_local_pref.n = tmp;
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SRC_LOCAL_PREF) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_local_pref' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_local_pref' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -844,7 +844,7 @@ int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *valu
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -862,7 +862,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   e->local_pref.n = tmp;
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_LOCAL_PREF) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'local_pref' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'local_pref' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -873,7 +873,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -890,7 +890,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
   while ( (token = extract_token(&value, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
     e->src_comms[idx] = malloc(MAX_BGP_STD_COMMS);
     if (!e->src_comms[idx]) {
-      Log(LOG_ERR, "ERROR ( %s ): malloc() failed (PT_map_src_comms_handler). Exiting ..\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_src_comms_handler). Exiting.\n", config.name, config.type, filename);
       exit_all(1);
     }
     strlcpy(e->src_comms[idx], token, MAX_BGP_STD_COMMS);
@@ -900,7 +900,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SRC_STD_COMM) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_comms' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_comms' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -911,7 +911,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'src_comms' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_comms' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -928,7 +928,7 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
   while ( (token = extract_token(&value, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
     e->comms[idx] = malloc(MAX_BGP_STD_COMMS);
     if (!e->comms[idx]) {
-      Log(LOG_ERR, "ERROR ( %s ): malloc() failed (PT_map_comms_handler). Exiting ..\n", filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_comms_handler). Exiting.\n", config.name, config.type, filename);
       exit_all(1);
     }
     strlcpy(e->comms[idx], token, MAX_BGP_STD_COMMS);
@@ -938,7 +938,7 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_STD_COMM) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'comms' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'comms' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -949,7 +949,7 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
     return FALSE;
   }
 
-  Log(LOG_ERR, "ERROR ( %s ): 'comms' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified. ", filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'comms' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -966,7 +966,7 @@ int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, 
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_MPLS_VPN_RD) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'mpls_vpn_rd' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'mpls_vpn_rd' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -989,7 +989,7 @@ int PT_map_mpls_pw_id_handler(char *filename, struct id_entry *e, char *value, s
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_MPLS_PW_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'mpls_pw_id' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'mpls_pw_id' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1008,13 +1008,13 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
   e->src_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (string_etheraddr(value, &e->src_mac.a)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad source MAC address '%s'. ", filename, value);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad source MAC address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SRC_MAC) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'src_mac' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_mac' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1033,13 +1033,13 @@ int PT_map_dst_mac_handler(char *filename, struct id_entry *e, char *value, stru
   e->dst_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (string_etheraddr(value, &e->dst_mac.a)) {
-    Log(LOG_ERR, "ERROR ( %s ): Bad destination MAC address '%s'. ", filename, value);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad destination MAC address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_DST_MAC) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'dst_mac' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'dst_mac' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1059,14 +1059,14 @@ int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, stru
 
   tmp = atoi(value);
   if (tmp < 0 || tmp > 4096) {
-    Log(LOG_ERR, "ERROR ( %s ): 'vlan' need to be in the following range: 0 > value > 4096. ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'vlan' need to be in the following range: 0 > value > 4096.\n", config.name, config.type, filename);
     return TRUE;
   }
   e->vlan_id.n = tmp;
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_VLAN_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'vlan' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'vlan' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1086,14 +1086,14 @@ int PT_map_cvlan_id_handler(char *filename, struct id_entry *e, char *value, str
 
   tmp = atoi(value);
   if (tmp < 0 || tmp > 4096) {
-    Log(LOG_ERR, "ERROR ( %s ): 'cvlan' need to be in the following range: 0 > value > 4096. ", filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'cvlan' need to be in the following range: 0 > value > 4096.\n", config.name, config.type, filename);
     return TRUE;
   }
   e->cvlan_id.n = tmp;
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_CVLAN_ID) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'cvlan' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'cvlan' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1115,7 +1115,7 @@ int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, stru
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'set_tos' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'set_tos' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -1124,7 +1124,7 @@ int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, stru
   e->set_tos.n = strtoul(value, &endptr, 10);
   for (x = 0; e->set_func[x]; x++) {
     if (e->set_func_type[x] == PRETAG_SET_TOS) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'set_tos' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'set_tos' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1147,7 +1147,7 @@ int BTA_map_lookup_bgp_port_handler(char *filename, struct id_entry *e, char *va
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_ERR, "ERROR ( %s ): bad 'bgp_port' value: '%s'. ", filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'bgp_port' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
@@ -1156,7 +1156,7 @@ int BTA_map_lookup_bgp_port_handler(char *filename, struct id_entry *e, char *va
   e->lookup_bgp_port.n = strtoul(value, &endptr, 10);
   for (x = 0; e->set_func[x]; x++) {
     if (e->set_func_type[x] == PRETAG_LOOKUP_BGP_PORT) {
-      Log(LOG_ERR, "ERROR ( %s ): Multiple 'bgp_port' clauses part of the same statement. ", filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'bgp_port' clauses part of the same statement.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
@@ -1180,7 +1180,7 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
 {
   e->jeq.label = malloc(MAX_LABEL_LEN);
   if (!e->jeq.label) {
-    Log(LOG_ERR, "ERROR ( %s ): malloc() failed (PT_map_jeq_handler). Exiting ..\n", filename);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_jeq_handler). Exiting.\n", config.name, config.type, filename);
     exit_all(1);
   }
   else strlcpy(e->jeq.label, value, MAX_LABEL_LEN);
@@ -1191,7 +1191,7 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
 int PT_map_return_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int res = parse_truefalse(value);
-  if (res < 0) Log(LOG_ERR, "ERROR ( %s ): Unknown RETURN value: '%s'. Ignoring.\n", filename, value);
+  if (res < 0) Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown RETURN value: '%s'. Ignoring.\n", config.name, config.type, filename, value);
   else e->ret = res;
 
   return FALSE;
@@ -1203,7 +1203,7 @@ int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct
 
   if (*value == '+' || !strncmp(value, "sum", 3)) e->stack.func = PT_stack_sum;
   else if (!strncmp(value, "or", 2)) e->stack.func = PT_stack_logical_or;
-  else Log(LOG_ERR, "ERROR ( %s ): Unknown STACK operator: '%c'. Ignoring.\n", filename, value);
+  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown STACK operator: '%c'. Ignoring.\n", config.name, config.type, filename, value);
 
   return FALSE;
 }
@@ -2405,7 +2405,8 @@ int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char 
   if (table) {
     for (idx = 0; idx < table->num && strlen(table->primitive[idx].name); idx++) {
       if (!strcmp(table->primitive[idx].name, value)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Duplicate custom aggregate primitive name specified: %s. ", config.name, config.type, value);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Duplicate custom aggregate primitive name specified: %s.\n",
+		config.name, config.type, filename, value);
         return TRUE;
       }
     }
@@ -2413,7 +2414,7 @@ int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char 
     strlcpy(table->primitive[table->num].name, value, MAX_CUSTOM_PRIMITIVE_NAMELEN);
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -2436,12 +2437,12 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
     if (pen) table->primitive[table->num].pen = strtoul(pen, &endptr, 10);
     table->primitive[table->num].field_type = atoi(type);
     if (!table->primitive[table->num].field_type) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid NetFlow v9/IPFIX field type '%s'. ", config.name, config.type, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid NetFlow v9/IPFIX field type '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -2464,7 +2465,8 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
     }
 
     if (!pd_ptr) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): exceeded %u 'packet_ptr' limit per rule. ", config.name, config.type, MAX_CUSTOM_PRIMITIVE_PD_PTRS);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] exceeded %u 'packet_ptr' limit per rule.\n",
+		config.name, config.type, filename, MAX_CUSTOM_PRIMITIVE_PD_PTRS);
       return TRUE;
     }
 
@@ -2530,7 +2532,7 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
       if (proto) goto proto_err; 
     }
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid packet pointer '%s'. ", config.name, config.type, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid packet pointer '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
 
@@ -2538,10 +2540,10 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
   }
   else {
     if (config.acct_type != ACCT_PM) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): packet_ptr is only supported in pmacctd. ", config.name, config.type);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] packet_ptr is only supported in pmacctd.\n", config.name, config.type, filename);
     }
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     }
 
     return TRUE;
@@ -2550,7 +2552,7 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
   return FALSE;
 
   proto_err:
-  Log(LOG_ERR, "ERROR ( %s/%s ): protocol type not supported for '%s'. ", config.name, config.type, layer);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] protocol type not supported for '%s'.\n", config.name, config.type, filename, layer);
   return TRUE;
 }
 
@@ -2562,7 +2564,7 @@ int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *
     table->primitive[table->num].len = atoi(value);
     if (table->primitive[table->num].len) {
       if (table->primitive[table->num].len == PM_VARIABLE_LENGTH) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid length '%s'.\n", config.name, config.type, filename, value);
         return TRUE;
       }
     }
@@ -2572,13 +2574,13 @@ int custom_primitives_map_len_handler(char *filename, struct id_entry *e, char *
       }
       else {
         table->primitive[table->num].len = 0; /* pedantic */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Invalid length '%s'. ", config.name, config.type, value);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid length '%s'.\n", config.name, config.type, filename, value);
         return TRUE;
       }
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -2610,7 +2612,7 @@ int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, 
     }
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): custom aggregate primitives registry not allocated. ", config.name, config.type);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 
@@ -2656,12 +2658,12 @@ void custom_primitives_map_validate(char *filename, struct plugin_requests *req)
     }
     else {
       if (!valid) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): Invalid entry #%d in map '%s': name=%s\n",
-	    config.name, config.type, table->num + 1, filename, table->primitive[table->num].name);
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Invalid entry: name=%s\n",
+	    config.name, config.type, filename, table->num + 1, table->primitive[table->num].name);
       }
       else if (table->num + 1 < MAX_CUSTOM_PRIMITIVES) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Maximum entries (%d) reached in aggregate_primitives\n",
-	    config.name, config.type, MAX_CUSTOM_PRIMITIVES);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Maximum entries (%d) reached in aggregate_primitives\n",
+	    config.name, config.type, filename, MAX_CUSTOM_PRIMITIVES);
       }
 
       memset(&table->primitive[table->num], 0, sizeof(struct custom_primitive_entry));

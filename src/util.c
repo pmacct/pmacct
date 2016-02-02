@@ -363,7 +363,7 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   return (final-base);
 }	
 
-FILE *open_output_file(char *filename, char *mode, int lock, int is_log)
+FILE *open_output_file(char *filename, char *mode, int lock)
 {
   FILE *file = NULL;
   uid_t owner = -1;
@@ -375,10 +375,7 @@ FILE *open_output_file(char *filename, char *mode, int lock, int is_log)
 
   ret = mkdir_multilevel(filename, TRUE, owner, group);
   if (ret) {
-    if (is_log) printf("ERROR ( %s/%s ): open_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, filename);
-    else Log(LOG_ERR, "ERROR ( %s/%s ): open_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, filename);
-    file = NULL;
-
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): mkdir_multilevel() failed.\n", config.name, config.type, filename);
     return file;
   }
 
@@ -388,24 +385,17 @@ FILE *open_output_file(char *filename, char *mode, int lock, int is_log)
 
   if (file) {
     if (chown(filename, owner, group) == -1)
-      if (is_log) printf("WARN ( %s/%s ): open_output_file(): chown() failed (%s) for '%s'.\n",
-			 config.name, config.type, strerror(errno), filename);
-      else Log(LOG_WARNING, "WARN ( %s/%s ): open_output_file(): chown() failed (%s) for '%s'.\n",
-		config.name, config.type, strerror(errno), filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
 
     if (lock) {
       if (file_lock(fileno(file))) {
-        if (is_log) printf("ERROR ( %s/%s ): open_output_file(): file_lock() failed. for '%s'\n", config.name, config.type, filename);
-        else Log(LOG_ERR, "ERROR ( %s/%s ): open_output_file(): file_lock() failed. for '%s'\n", config.name, config.type, filename);
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): file_lock() failed.\n", config.name, config.type, filename);
         file = NULL;
       }
     }
   }
   else {
-    if (is_log) printf("WARN ( %s/%s ): open_output_file(): fopen() failed (%s) for '%s'.\n",
-			config.name, config.type, strerror(errno), filename);
-    else Log(LOG_WARNING, "WARN ( %s/%s ): open_output_file(): fopen() failed (%s) for '%s'.\n",
-		config.name, config.type, strerror(errno), filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): fopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
     file = NULL;
   }
 
@@ -427,7 +417,7 @@ void link_latest_output_file(char *link_filename, char *filename_to_link)
   /* create dir structure to get to file, if needed */
   ret = mkdir_multilevel(link_filename, TRUE, owner, group);
   if (ret) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): link_latest_output_file(): mkdir_multilevel() failed for '%s'.\n", config.name, config.type, buf);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] link_latest_output_file(): mkdir_multilevel() failed.\n", config.name, config.type, buf);
     return;
   }
 
@@ -771,7 +761,7 @@ int check_not_valid_char(char *filename, char *buf, int c)
   if (!buf) return FALSE;
   
   if (strchr(buf, c)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Invalid symbol '%c' detected. ", config.name, config.type, filename, c);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Invalid symbol '%c' detected.\n", config.name, config.type, filename, c);
     return TRUE; 
   }
   else return FALSE;

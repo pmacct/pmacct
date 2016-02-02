@@ -90,7 +90,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
       goto handle_error;
     }
 
@@ -184,7 +184,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                 if (start == &buf[x]) continue;
                 buf[x] = '\0';
                 if (value || !key) {
-                  Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] malformed line. Ignored.\n", config.name, config.type, filename, tot_lines);
+                  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] malformed line. Ignored.\n", config.name, config.type, filename, tot_lines);
                   err = TRUE;
                   break;
                 }
@@ -208,9 +208,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n",
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n",
 						config.name, config.type, filename, tot_lines, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break;
                   }
                   key = NULL; value = NULL;
@@ -224,9 +224,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
 						config.name, config.type, filename, tot_lines, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break;
                   }
                   key = NULL; value = NULL;
@@ -240,9 +240,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
 						config.name, config.type, filename, tot_lines, filename, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break;
                   }
                   key = NULL; value = NULL;
@@ -256,9 +256,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
 						config.name, config.type, filename, tot_lines, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break;
                   }
                   key = NULL; value = NULL;
@@ -272,9 +272,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
 						config.name, config.type, filename, tot_lines, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break;
                   }
                   key = NULL; value = NULL;
@@ -288,10 +288,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n",
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n",
                                                 config.name, config.type, filename, tot_lines, key);
                     else {
-		      Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+		      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
 		      ignoring = TRUE;
 		    }
                   }
@@ -306,9 +306,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                     else err = E_NOTFOUND; /* key not found */
                   }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n",
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n",
                                                 config.name, config.type, filename, tot_lines, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
 		    ignoring = TRUE;
                     break;
                   }
@@ -334,9 +334,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		    }
 		  }
                   if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
 						config.name, config.type, filename, tot_lines, key);
-                    else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break; 
                   }
                   key = NULL; value = NULL;
@@ -347,7 +347,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
               /* verifying errors and required fields */
 	      if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len) 
-		   Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive.\n", 
+		   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
                 else if (!err && tmp.e[tmp.num].agent_ip.a.family) {
                   int j, z;
@@ -367,15 +367,15 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	        /* if any required field is missing and other errors have been signalled
 	           before we will trap an error message */
 	        else if (!err && !tmp.e[tmp.num].agent_ip.a.family)
-	          Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] required key missing. Required key is: 'ip'.\n",
+	          Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required key is: 'ip'. Line ignored.\n",
 			config.name, config.type, filename, tot_lines); 
 	      }
 	      else if (acct_type == ACCT_PM) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len)
-                   Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive.\n", 
+                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
 	        else if (tmp.e[tmp.num].agent_ip.a.family)
-		  Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] key 'ip' not applicable.\n",
+		  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] key 'ip' not applicable. Line ignored.\n",
 			config.name, config.type, filename, tot_lines);
 	        else if (!err) {
                   int j, z;
@@ -403,7 +403,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   tmp.num++;
                 }
                 else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-                  Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'.\n", 
+                  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
 	      }
               else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
@@ -425,7 +425,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   tmp.num++;
                 }
                 else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-                  Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'.\n",
+                  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
                         config.name, config.type, filename, tot_lines);
               }
               else if (acct_type == MAP_FLOW_TO_RD) {
@@ -454,7 +454,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   tmp.num++;
                 }
                 else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
-                  Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'.\n",
+                  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
 			config.name, config.type, filename, tot_lines);
               }
 	      else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, req); 
@@ -462,7 +462,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	      else if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_validate(filename, req); 
 	    }
           }
-          else Log(LOG_ERR, "ERROR ( %s/%s ): [%s:%u] malformed line. Ignored.\n",
+          else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] malformed line. Ignored.\n",
 			config.name, config.type, filename, tot_lines);
         }
       }
@@ -526,7 +526,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	  if (!label_solved) {
 	    ptr->jeq.ptr = NULL;
-	    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
 	  }
 	  free(ptr->jeq.label);
@@ -547,7 +547,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
           }
           if (!label_solved) {
             ptr->jeq.ptr = NULL;
-            Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
+            Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
           }
           free(ptr->jeq.label);
@@ -724,7 +724,7 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
   if (!src || !dst) return ERR;
 
   if (dst->val) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): pretag_copy_label failed: dst->val not null\n", config.name, config.type);
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_copy_label failed: dst->val not null\n", config.name, config.type);
     return ERR;
   }
   else {
@@ -929,7 +929,7 @@ int pretag_index_allocate(struct id_table *t)
       t->index[iterator].idx_t = malloc(idx_t_size);
 
       if (!t->index[iterator].idx_t) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] maps_index: unable to allocate index %x.\n", config.name,
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate index %x.\n", config.name,
 		config.type, t->filename, t->index[iterator].bitmap);
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
