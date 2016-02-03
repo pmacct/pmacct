@@ -116,7 +116,7 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
   if (!peer || !bgp_packet_ptr) return ERR;
 
-  if (peer->status < OpenSent) {
+  if (!online || (peer->status < OpenSent)) {
     peer->status = Active;
     bopen = (struct bgp_open *) bgp_packet_ptr;  
 
@@ -177,7 +177,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
 	  	memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
-	  	Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+		if (online)
+	  	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
 			config.name, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi);
 		peer->cap_mp = TRUE;
 
@@ -195,7 +196,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
 		  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: 4-bytes AS [%x] ASN [%u]\n",
+		  if (online)
+		    Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: 4-bytes AS [%x] ASN [%u]\n",
 	    		config.name, bgp_peer_print(peer), cap_type, ntohl(cap_data.as4));
 		  memcpy(&as4_ptr, cap_ptr, 4);
 		  remote_as4 = ntohl(as4_ptr);
@@ -218,7 +220,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 
 		memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
-		Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+		if (online)
+		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
 			config.name, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi, cap_data.sndrcv);
 
 		if (cap_data.sndrcv == 2 /* send */) {
@@ -266,7 +269,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	}
       }
 
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
+      if (online)
+        Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
 		bgp_peer_print(peer), peer->as, peer->ht);
 
       if (online) {
@@ -295,9 +299,11 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
     }
 
     peer->status = Established;
+
+    return (BGP_MIN_OPEN_MSG_SIZE + bopen->bgpo_optlen); 
   }
 
-  return SUCCESS;
+  return ERR;
 }
 
 /* Marker check. */

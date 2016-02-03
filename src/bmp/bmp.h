@@ -203,6 +203,7 @@ EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
 EXT void bmp_link_misc_structs(struct bgp_misc_structs *);
+EXT void bmp_eval_loc_rem_peers(struct bgp_peer *, struct bgp_peer *);
 EXT void bmp_compose_peer(struct bgp_peer *, struct bmp_data *);
 #undef EXT
 

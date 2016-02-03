@@ -760,7 +760,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   }
 }
 
-void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer *bmp_peer)
 {
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
@@ -770,13 +770,13 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
-	config.name, peer->addr_str);
+	config.name, bmp_peer->addr_str);
     return;
   }
 
   if (!(bpuh = (struct bmp_peer_up_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_up_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer up hdr\n",
-	config.name, peer->addr_str);
+	config.name, bmp_peer->addr_str);
     return;
   }
 
@@ -792,19 +792,28 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
 
   {
     struct bmp_log_peer_up blpu;
+    struct bgp_peer bgp_peer_loc, bgp_peer_rem;
+    int bgp_open_len;
 
     bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
     bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
     bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
 
+    bgp_open_len = bgp_parse_open_msg(&bgp_peer_loc, (*bmp_packet), FALSE, FALSE);
+    bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
+    bgp_open_len = bgp_parse_open_msg(&bgp_peer_rem, (*bmp_packet), FALSE, FALSE);
+    bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
+    bmp_eval_loc_rem_peers(&bgp_peer_loc, &bgp_peer_rem);
+    // XXX: save bgp_peer_rem
+
     if (nfacctd_bmp_msglog_backend_methods) {
       char event_type[] = "log";
 
-      bmp_log_msg(peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
+      bmp_log_msg(bmp_peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
     }
 
     if (bmp_dump_backend_methods)
-      bmp_dump_se_ll_append(peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
+      bmp_dump_se_ll_append(bmp_peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
   }
 }
 
@@ -1223,6 +1232,14 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   strcpy(bms->peer_str, "bmp_router");
 }
 
+void bmp_eval_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
+{
+  if (!bgp_peer_loc || !bgp_peer_rem) return;
+
+  if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
+  if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
+}
+
 void bmp_compose_peer(struct bgp_peer *peer, struct bmp_data *bdata)
 {
   if (!peer || !bdata) return;
@@ -1231,7 +1248,8 @@ void bmp_compose_peer(struct bgp_peer *peer, struct bmp_data *bdata)
   
   memcpy(&peer->addr, &bdata->peer_ip, sizeof(struct host_addr));
   memcpy(&peer->id, &bdata->bgp_id, sizeof(struct host_addr));
+  addr_to_str(peer->addr_str, &peer->addr);
   peer->as = bdata->peer_asn;
-  peer->myas = bdata->peer_asn;
   peer->status = Established;
+  peer->type = FUNC_TYPE_BMP;
 } 
