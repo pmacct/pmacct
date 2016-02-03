@@ -936,7 +936,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   if (insert_status == SQL_INSERT_SAFE_ACTION) {
     safe_action:
 
-    Log(LOG_WARNING, "WARN ( %s/%s ): purging process (CAUSE: safe action)\n", config.name, config.type);
+    Log(LOG_INFO, "INFO ( %s/%s ): Finished cache entries (ie. sql_cache_entries). Purging.\n", config.name, config.type);
   
     if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
 

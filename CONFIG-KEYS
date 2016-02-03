@@ -1032,15 +1032,28 @@ DEFAULT:	10
 KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries |
 		  kafka_cache_entries ]
 DESC:		All plugins have a memory cache in order to store data until next purging event (see
-		sql_refresh_time). In case of network traffic data caching allows to accumulate bytes
-		and packets counters. This directive sets the number of cache buckets. Default value
-		is suitable for most common scenarios, however when facing large-scale networks, it
-		is higly recommended to tune this parameter to improve performances. Use a prime
+		refresh time directives, ie. sql_refresh_time). In case of network traffic data, the
+		cache allows to accumulate bytes and packets counters. This directive sets the number
+		of cache buckets, the cache being structured in memory as a hash with conflict chains.
+		Default value is suitable for mid-sized scenarios, however when facing large-scale
+		networks, it is recommended to tune this parameter to improve performances (ie. keep
+		conflict chains shorter). Cache entries value should be also reviewed if the amount
+		of entries are not sufficient for a full refresh time interval - in which case a
+		"Finished cache entries" informational message will appear in the logs. Use a prime
 		number of buckets.
-NOTES:		all non SQL plugins share the same cache structure: as said, this setting defines the
-		amount of cache bucket (ie. not the total among of entries). The default value (16411)
-		allows for some 150K entries to fit the cache structure (calculate ten times the
-		supplied value).
+NOTES:		non SQL plugins: the cache structure has two dimensions, a base and a depth. This
+		setting defines the base (the amount of cache buckets) whereas the depth can't be
+		influenced by configuration and is set to an average depth of 10. This means that
+		the default value (16411) allows for approx 150K entries to fit the cache structure.
+		To properly size a plugin cache, it is recommended to determine the maximum amount
+		of entries purged by such plugin and make calculations basing on that; if, for
+		example, the plugin purges a peak of 2M entries then a cache entries value of 259991
+		is sufficient to cover the worse-case scenario. In case memory is constrained, the
+		alternative option is to purge more often (ie. lower print_refresh_time) while
+		retaining the same time-binning (ie. equal print_history) at the expense of having
+		to consolidate/aggregate entries later in the collection pipeline; if opting for this,
+		be careful having print_output_file_append set to true if using the print plugin). 
+		
 DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries,
 		kafka_cache_entries: 16411
 

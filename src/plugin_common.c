@@ -311,11 +311,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       }
       else {
 	cache_ptr = P_cache_attach_new_node(cache_ptr); 
-	if (!cache_ptr) {
-	  Log(LOG_WARNING, "WARN ( %s/%s ): Finished cache entries. Purging.\n", config.name, config.type);
-	  Log(LOG_WARNING, "WARN ( %s/%s ): You may want to set a larger print_cache_entries value.\n", config.name, config.type);
-	  goto safe_action;
-	}
+	if (!cache_ptr) goto safe_action;
 	else {
 	  queries_queue[qq_ptr] = cache_ptr;
 	  qq_ptr++;
@@ -332,10 +328,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (pbgp) {
       if (!cache_ptr->pbgp) cache_ptr->pbgp = (struct pkt_bgp_primitives *) malloc(PbgpSz);
       if (cache_ptr->pbgp) memcpy(cache_ptr->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
-      else {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
-        goto safe_action;
-      }
+      else goto safe_action;
     }
     else {
       if (cache_ptr->pbgp) free(cache_ptr->pbgp);
@@ -345,10 +338,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (pnat) {
       if (!cache_ptr->pnat) cache_ptr->pnat = (struct pkt_nat_primitives *) malloc(PnatSz);
       if (cache_ptr->pnat) memcpy(cache_ptr->pnat, pnat, sizeof(struct pkt_nat_primitives));
-      else {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
-        goto safe_action;
-      }
+      else goto safe_action;
     }
     else {
       if (cache_ptr->pnat) free(cache_ptr->pnat);
@@ -358,10 +348,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (pmpls) {
       if (!cache_ptr->pmpls) cache_ptr->pmpls = (struct pkt_mpls_primitives *) malloc(PmplsSz);
       if (cache_ptr->pmpls) memcpy(cache_ptr->pmpls, pmpls, sizeof(struct pkt_mpls_primitives));
-      else {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
-        goto safe_action;
-      }
+      else goto safe_action;
     }
     else {
       if (cache_ptr->pmpls) free(cache_ptr->pmpls);
@@ -371,10 +358,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (pcust) {
       if (!cache_ptr->pcust) cache_ptr->pcust = malloc(config.cpptrs.len);
       if (cache_ptr->pcust) memcpy(cache_ptr->pcust, pcust, config.cpptrs.len);
-      else {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
-        goto safe_action;
-      }
+      else goto safe_action;
     }
     else {
       if (cache_ptr->pcust) free(cache_ptr->pcust);
@@ -390,10 +374,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
 
     if (pvlen) {
       cache_ptr->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
-      if (!cache_ptr->pvlen) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for cache entries. Purging.\n", config.name, config.type);
-        goto safe_action;
-      }
+      if (!cache_ptr->pvlen) goto safe_action;
     }
 
     cache_ptr->packet_counter = data->pkt_num;
@@ -496,7 +477,9 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   {
     int ret;
 
-    if (config.type_id == PLUGIN_ID_PRINT && config.sql_table)
+    Log(LOG_INFO, "INFO ( %s/%s ): Finished cache entries (ie. print_cache_entries). Purging.\n", config.name, config.type);
+
+    if (config.type_id == PLUGIN_ID_PRINT && config.sql_table && !config.print_output_file_append)
       Log(LOG_WARNING, "WARN ( %s/%s ): Make sure print_output_file_append is set to true.\n", config.name, config.type);
 
     if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
