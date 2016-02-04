@@ -1041,18 +1041,32 @@ DESC:		All plugins have a memory cache in order to store data until next purging
 		of entries are not sufficient for a full refresh time interval - in which case a
 		"Finished cache entries" informational message will appear in the logs. Use a prime
 		number of buckets.
-NOTES:		non SQL plugins: the cache structure has two dimensions, a base and a depth. This
-		setting defines the base (the amount of cache buckets) whereas the depth can't be
-		influenced by configuration and is set to an average depth of 10. This means that
-		the default value (16411) allows for approx 150K entries to fit the cache structure.
-		To properly size a plugin cache, it is recommended to determine the maximum amount
-		of entries purged by such plugin and make calculations basing on that; if, for
-		example, the plugin purges a peak of 2M entries then a cache entries value of 259991
-		is sufficient to cover the worse-case scenario. In case memory is constrained, the
-		alternative option is to purge more often (ie. lower print_refresh_time) while
-		retaining the same time-binning (ie. equal print_history) at the expense of having
-		to consolidate/aggregate entries later in the collection pipeline; if opting for this,
-		be careful having print_output_file_append set to true if using the print plugin). 
+NOTES:		* non SQL plugins: the cache structure has two dimensions, a base and a depth. This
+		  setting defines the base (the amount of cache buckets) whereas the depth can't be
+		  influenced by configuration and is set to an average depth of 10. This means that
+		  the default value (16411) allows for approx 150K entries to fit the cache structure.
+		  To properly size a plugin cache, it is recommended to determine the maximum amount
+		  of entries purged by such plugin and make calculations basing on that; if, for
+		  example, the plugin purges a peak of 2M entries then a cache entries value of 259991
+		  is sufficient to cover the worse-case scenario. In case memory is constrained, the
+		  alternative option is to purge more often (ie. lower print_refresh_time) while
+		  retaining the same time-binning (ie. equal print_history) at the expense of having
+		  to consolidate/aggregate entries later in the collection pipeline; if opting for
+		  this, be careful having print_output_file_append set to true if using the print
+		  plugin). 
+		* SQL plugins: the cache structure is similar to the one described for the non SQL
+		  plugins but slightly different and more complex. Soon this cache structure will
+		  be removed and SQL plugins will be migrated to the same structure as the non SQL
+		  plugins, as described in the previous paragraph.
+		* It is important to estimate how much space will take the base cache structure for
+		  a configured amount of cache entries - especially because configuring too many
+		  entries for the available memory can result in a crash of the plugin process right
+		  at startup. For this purpose, before trying to allocate the cache structure, the
+		  plugin will log an informational message saying "base cache memory=<size>". Why
+		  the wording "base cache memory": because cache entries, depending on the configured
+		  aggregation method, can have extra structures allocated ad-hoc, ie. BGP-, NAT-,
+		  MPLS-related primitives; all these can make the total cache memory size increase
+		  slightly at runtime. 
 		
 DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries,
 		kafka_cache_entries: 16411
