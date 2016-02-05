@@ -67,7 +67,8 @@ void skinny_bmp_daemon()
   afi_t afi;
   safi_t safi;
 
-  struct bgp_peer *peer;
+  struct bmp_peer *bmpp = NULL;
+  struct bgp_peer *peer = NULL;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -132,12 +133,12 @@ void skinny_bmp_daemon()
   if (!config.nfacctd_bmp_max_peers) config.nfacctd_bmp_max_peers = BMP_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/core/BMP ): maximum BMP peers allowed: %d\n", config.name, config.nfacctd_bmp_max_peers);
 
-  bmp_peers = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
+  bmp_peers = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
   if (!bmp_peers) {
     Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers structure. Terminating thread.\n", config.name);
     exit_all(1);
   }
-  memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer));
+  memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
 
   if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key || config.nfacctd_bmp_msglog_kafka_topic) {
     if (config.nfacctd_bmp_msglog_file) nfacctd_bmp_msglog_backend_methods++;
@@ -355,8 +356,8 @@ void skinny_bmp_daemon()
       max_peers_idx = -1; /* .. since valid indexes include 0 */
 
       for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-        if (select_fd < bmp_peers[peers_idx].fd) select_fd = bmp_peers[peers_idx].fd;
-        if (bmp_peers[peers_idx].fd) max_peers_idx = peers_idx;
+        if (select_fd < bmp_peers[peers_idx].self.fd) select_fd = bmp_peers[peers_idx].self.fd;
+        if (bmp_peers[peers_idx].self.fd) max_peers_idx = peers_idx;
       }
       select_fd++;
       max_peers_idx++;
@@ -452,7 +453,7 @@ void skinny_bmp_daemon()
       }
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-        if (!bmp_peers[peers_idx].fd) {
+        if (!bmp_peers[peers_idx].self.fd) {
           now = time(NULL);
 
           /*
@@ -462,7 +463,9 @@ void skinny_bmp_daemon()
              *  we can start a new batch 
           */
           if (bgp_batch_is_admitted(&bp_batch, now)) {
-            peer = &bmp_peers[peers_idx];
+            peer = &bmp_peers[peers_idx].self;
+	    bmpp = &bmp_peers[peers_idx];
+
             if (bgp_peer_init(peer, FUNC_TYPE_BMP)) peer = NULL;
             else recalc_fds = TRUE;
 
@@ -522,16 +525,16 @@ void skinny_bmp_daemon()
 
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
-        if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].addr))) {
+        if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].self.addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].self.addr))) {
           Log(LOG_ERR, "ERROR ( %s/core/BMP ): [%s] Refusing new connection from existing peer.\n",
-                                config.name, bmp_peers[peers_check_idx].addr_str);
+                                config.name, bmp_peers[peers_check_idx].self.addr_str);
           FD_CLR(peer->fd, &bkp_read_descs);
           bgp_peer_close(peer, FUNC_TYPE_BMP);
 	  recalc_fds = TRUE;
           goto read_data;
         }
         else {
-          if (bmp_peers[peers_check_idx].fd) peers_num++;
+          if (bmp_peers[peers_check_idx].self.fd) peers_num++;
         }
       }
 
@@ -550,8 +553,9 @@ void skinny_bmp_daemon()
     for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
       int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
 
-      if (bmp_peers[loc_idx].fd && FD_ISSET(bmp_peers[loc_idx].fd, &read_descs)) {
-        peer = &bmp_peers[loc_idx];
+      if (bmp_peers[loc_idx].self.fd && FD_ISSET(bmp_peers[loc_idx].self.fd, &read_descs)) {
+        peer = &bmp_peers[loc_idx].self;
+	bmpp = &bmp_peers[loc_idx];
         peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
         break;
       }
@@ -570,7 +574,7 @@ void skinny_bmp_daemon()
       goto select_again;
     }
     else {
-      pkt_remaining_len = bmp_process_packet(peer->buf.base, peer->msglen, peer);
+      pkt_remaining_len = bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
 
       /* handling offset for TCP segment reassembly */
       if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(peer->buf.base, peer->buf.len, peer->msglen,
@@ -580,12 +584,16 @@ void skinny_bmp_daemon()
   }
 }
 
-u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *peer)
+u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   char *bmp_packet_ptr = bmp_packet;
   u_int32_t pkt_remaining_len, msg_len, msg_start_len;
 
   struct bmp_common_hdr *bch = NULL;
+
+  if (!bmpp) return FALSE;
+  peer = &bmpp->self;
 
   if (len < sizeof(struct bmp_common_hdr)) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n", config.name, peer->addr_str);
@@ -611,25 +619,25 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
 
     switch (bch->type) {
     case BMP_MSG_ROUTE_MONITOR:
-      bmp_process_msg_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      bmp_process_msg_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
       break;
     case BMP_MSG_STATS:
-      bmp_process_msg_stats(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      bmp_process_msg_stats(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
       break;
     case BMP_MSG_PEER_DOWN:
-      bmp_process_msg_peer_down(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      bmp_process_msg_peer_down(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
       break;
     case BMP_MSG_PEER_UP:
-      bmp_process_msg_peer_up(&bmp_packet_ptr, &pkt_remaining_len, peer); 
+      bmp_process_msg_peer_up(&bmp_packet_ptr, &pkt_remaining_len, bmpp); 
       break;
     case BMP_MSG_INIT:
-      bmp_process_msg_init(&bmp_packet_ptr, &pkt_remaining_len, msg_len, peer); 
+      bmp_process_msg_init(&bmp_packet_ptr, &pkt_remaining_len, msg_len, bmpp); 
       break;
     case BMP_MSG_TERM:
-      bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, msg_len, peer); 
+      bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, msg_len, bmpp); 
       break;
     case BMP_MSG_ROUTE_MIRROR:
-      bmp_process_msg_route_mirror(&bmp_packet_ptr, &pkt_remaining_len, peer);
+      bmp_process_msg_route_mirror(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: unknown message type (%u)\n", config.name, peer->addr_str, bch->type);
@@ -645,12 +653,16 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bgp_peer *p
   return FALSE;
 }
 
-void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bgp_peer *peer)
+void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_init_hdr *bih;
   u_int16_t bmp_init_len;
   char *bmp_init_info;
+
+  if (!bmpp) return;
+  peer = &bmpp->self;
 
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
@@ -701,12 +713,16 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   }
 }
 
-void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bgp_peer *peer)
+void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_term_hdr *bth;
   u_int16_t bmp_term_len, reason_type = 0;
   char *bmp_term_info;
+
+  if (!bmpp) return;
+  peer = &bmpp->self;
 
   memset(&bdata, 0, sizeof(bdata));
   gettimeofday(&bdata.tstamp, NULL);
@@ -760,23 +776,27 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   }
 }
 
-void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer *bmp_peer)
+void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_peer_up_hdr *bpuh;
+
+  if (!bmpp) return;
+  peer = &bmpp->self;
 
   memset(&bdata, 0, sizeof(bdata));
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
-	config.name, bmp_peer->addr_str);
+	config.name, peer->addr_str);
     return;
   }
 
   if (!(bpuh = (struct bmp_peer_up_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_up_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP peer up hdr\n",
-	config.name, bmp_peer->addr_str);
+	config.name, peer->addr_str);
     return;
   }
 
@@ -809,19 +829,23 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bgp_peer 
     if (nfacctd_bmp_msglog_backend_methods) {
       char event_type[] = "log";
 
-      bmp_log_msg(bmp_peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
+      bmp_log_msg(peer, &bdata, &blpu, event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_PEER_UP);
     }
 
     if (bmp_dump_backend_methods)
-      bmp_dump_se_ll_append(bmp_peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
+      bmp_dump_se_ll_append(peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
   }
 }
 
-void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_peer_down_hdr *bpdh;
+
+  if (!bmpp) return;
+  peer = &bmpp->self;
 
   memset(&bdata, 0, sizeof(bdata));
 
@@ -866,16 +890,19 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bgp_pee
   // XXX: withdraw routes from peer
 }
 
-void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bgp_peer *bmp_peer)
+void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
-  struct bgp_peer peer; 
+
+  if (!bmpp) return;
+  peer = &bmpp->self;
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
-        config.name, bmp_peer->addr_str);
+        config.name, peer->addr_str);
     return;
   }
 
@@ -892,17 +919,18 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bgp
   compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
   addr_to_str(peer_ip, &bdata.peer_ip);
 
-  bmp_compose_peer(&peer, &bdata);
+  // bmp_compose_peer(<bgp peer>, &bdata);
   // XXX: parse BGP UPDATE(s)
 }
 
-void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
   // XXX: support route mirroring
 }
 
-void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *peer)
+void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_stats_hdr *bsh;
@@ -911,6 +939,9 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bgp_peer *p
   u_int32_t index, count = 0, cnt_data32;
   u_int16_t cnt_type, cnt_len;
   u_int8_t got_data;
+
+  if (!bmpp) return;
+  peer = &bmpp->self;
 
   memset(&bdata, 0, sizeof(bdata));
 

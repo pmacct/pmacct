@@ -104,6 +104,11 @@ struct bmp_stats_hdr {
   u_int32_t	count;
 } __attribute__ ((packed));
 
+struct bmp_peer {
+  struct bgp_peer self;
+  void *bgp_peers;
+};
+
 #define BMP_STATS_TYPE0		0 /* (32-bit Counter) Number of prefixes rejected by inbound policy */
 #define BMP_STATS_TYPE1		1 /* (32-bit Counter) Number of (known) duplicate prefix advertisements */
 #define BMP_STATS_TYPE2		2 /* (32-bit Counter) Number of (known) duplicate withdraws */
@@ -169,14 +174,14 @@ struct bmp_data {
 #endif
 EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
-EXT u_int32_t bmp_process_packet(char *, u_int32_t, struct bgp_peer *);
-EXT void bmp_process_msg_init(char **, u_int32_t *, u_int32_t, struct bgp_peer *);
-EXT void bmp_process_msg_term(char **, u_int32_t *, u_int32_t, struct bgp_peer *);
-EXT void bmp_process_msg_peer_up(char **, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_peer_down(char **, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_stats(char **, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_route_monitor(char **, u_int32_t *, struct bgp_peer *);
-EXT void bmp_process_msg_route_mirror(char **, u_int32_t *, struct bgp_peer *);
+EXT u_int32_t bmp_process_packet(char *, u_int32_t, struct bmp_peer *);
+EXT void bmp_process_msg_init(char **, u_int32_t *, u_int32_t, struct bmp_peer *);
+EXT void bmp_process_msg_term(char **, u_int32_t *, u_int32_t, struct bmp_peer *);
+EXT void bmp_process_msg_peer_up(char **, u_int32_t *, struct bmp_peer *);
+EXT void bmp_process_msg_peer_down(char **, u_int32_t *, struct bmp_peer *);
+EXT void bmp_process_msg_stats(char **, u_int32_t *, struct bmp_peer *);
+EXT void bmp_process_msg_route_monitor(char **, u_int32_t *, struct bmp_peer *);
+EXT void bmp_process_msg_route_mirror(char **, u_int32_t *, struct bmp_peer *);
 
 EXT void bmp_common_hdr_get_len(struct bmp_common_hdr *, u_int32_t *);
 EXT void bmp_init_hdr_get_len(struct bmp_init_hdr *, u_int16_t *);
@@ -213,7 +218,7 @@ EXT void bmp_compose_peer(struct bgp_peer *, struct bmp_data *);
 #else
 #define EXT
 #endif
-EXT struct bgp_peer *bmp_peers;
+EXT struct bmp_peer *bmp_peers;
 EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bmp_msglog_backend_methods;
 EXT int bmp_dump_backend_methods;

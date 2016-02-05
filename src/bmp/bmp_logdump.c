@@ -466,6 +466,7 @@ void bmp_handle_dump_event()
   time_t start;
 
   struct bgp_peer *peer, *saved_peer;
+  struct bmp_peer *bmpp, *saved_bmpp;
   struct bmp_dump_se_ll *bdsell;
   struct bgp_peer_log peer_log;      
 
@@ -505,8 +506,9 @@ void bmp_handle_dump_event()
     tables_num = 0;
 
     for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-      if (bmp_peers[peers_idx].fd) {
-        peer = &bmp_peers[peers_idx];
+      if (bmp_peers[peers_idx].self.fd) {
+        peer = &bmp_peers[peers_idx].self;
+        bmpp = &bmp_peers[peers_idx];
         peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 	bdsell = peer->bmp_se;
 
@@ -587,6 +589,7 @@ void bmp_handle_dump_event()
 	}
  
 	saved_peer = peer;
+	saved_bmpp = bmpp;
         strlcpy(last_filename, current_filename, SRVBUFLEN);
         bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
         tables_num++;
@@ -620,8 +623,9 @@ void bmp_handle_dump_event()
 
     /* destroy bmp_se linked-list content after dump event */
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
-      if (bmp_peers[peers_idx].fd) {
-        peer = &bmp_peers[peers_idx];
+      if (bmp_peers[peers_idx].self.fd) {
+        peer = &bmp_peers[peers_idx].self;
+        bmpp = &bmp_peers[peers_idx];
         bdsell = peer->bmp_se;
 
 	if (bdsell && bdsell->start) bmp_dump_se_ll_destroy(bdsell);
