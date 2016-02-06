@@ -36,6 +36,7 @@
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
+#include <search.h>
 
 /* variables to be exported away */
 thread_pool_t *bmp_pool;
@@ -466,7 +467,10 @@ void skinny_bmp_daemon()
             peer = &bmp_peers[peers_idx].self;
 	    bmpp = &bmp_peers[peers_idx];
 
-            if (bgp_peer_init(peer, FUNC_TYPE_BMP)) peer = NULL;
+            if (bmp_peer_init(bmpp, FUNC_TYPE_BMP)) {
+	      peer = NULL;
+	      bmpp = NULL;
+	    }
             else recalc_fds = TRUE;
 
             log_notification_unset(&log_notifications.bgp_peers_throttling);
@@ -529,7 +533,7 @@ void skinny_bmp_daemon()
           Log(LOG_ERR, "ERROR ( %s/core/BMP ): [%s] Refusing new connection from existing peer.\n",
                                 config.name, bmp_peers[peers_check_idx].self.addr_str);
           FD_CLR(peer->fd, &bkp_read_descs);
-          bgp_peer_close(peer, FUNC_TYPE_BMP);
+          bmp_peer_close(bmpp, FUNC_TYPE_BMP);
 	  recalc_fds = TRUE;
           goto read_data;
         }
@@ -569,7 +573,7 @@ void skinny_bmp_daemon()
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] BMP connection reset by peer (%d).\n", config.name, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
-      bgp_peer_close(peer, FUNC_TYPE_BMP);
+      bmp_peer_close(bmpp, FUNC_TYPE_BMP);
       recalc_fds = TRUE;
       goto select_again;
     }
@@ -812,8 +816,9 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
   {
     struct bmp_log_peer_up blpu;
-    struct bgp_peer bgp_peer_loc, bgp_peer_rem;
+    struct bgp_peer bgp_peer_loc, bgp_peer_rem, *bmpp_bgp_peer;
     int bgp_open_len;
+    void *ret;
 
     bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
     bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
@@ -821,10 +826,17 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
     bgp_open_len = bgp_parse_open_msg(&bgp_peer_loc, (*bmp_packet), FALSE, FALSE);
     bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
+    memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
     bgp_open_len = bgp_parse_open_msg(&bgp_peer_rem, (*bmp_packet), FALSE, FALSE);
     bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
-    bmp_eval_loc_rem_peers(&bgp_peer_loc, &bgp_peer_rem);
-    // XXX: save bgp_peer_rem
+    memcpy(&bgp_peer_rem.addr, &bdata.peer_ip, sizeof(struct host_addr));
+
+    bmpp_bgp_peer = bmp_sync_loc_rem_peers(&bgp_peer_loc, &bgp_peer_rem);
+    ret = tsearch(bmpp_bgp_peer, &bmpp->bgp_peers, bmp_bmpp_bgp_peers_cmp);
+    if (!ret) {
+      Log(LOG_ERR, "ERROR ( %s/core/BMP ): tsearch() unable to insert. Terminating thread.\n", config.name);
+      exit_all(1);
+    }
 
     if (nfacctd_bmp_msglog_backend_methods) {
       char event_type[] = "log";
@@ -888,14 +900,16 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   }
 
   // XXX: withdraw routes from peer
+  // XXX: remove peer from bmpp->bgp_peers
 }
 
 void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
-  struct bgp_peer *peer;
+  struct bgp_peer *peer, bmpp_bgp_peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
+  void *ret;
 
   if (!bmpp) return;
   peer = &bmpp->self;
@@ -919,7 +933,10 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
   addr_to_str(peer_ip, &bdata.peer_ip);
 
-  // bmp_compose_peer(<bgp peer>, &bdata);
+  bmp_peer_compose(&bmpp_bgp_peer, &bdata);
+  ret = tfind(&bmpp_bgp_peer, &bmpp->bgp_peers, bmp_bmpp_bgp_peers_cmp);
+
+  // XXX: process tfind() results
   // XXX: parse BGP UPDATE(s)
 }
 
@@ -1263,24 +1280,55 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   strcpy(bms->peer_str, "bmp_router");
 }
 
-void bmp_eval_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
+void *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
 {
+  void *ptr;
+
   if (!bgp_peer_loc || !bgp_peer_rem) return;
 
   if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
   if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
+
+  ptr = malloc(sizeof(struct bgp_peer));
+  memcpy(ptr, bgp_peer_rem, sizeof(struct bgp_peer));
+
+  return ptr;
 }
 
-void bmp_compose_peer(struct bgp_peer *peer, struct bmp_data *bdata)
+void bmp_peer_compose(struct bgp_peer *peer, struct bmp_data *bdata)
 {
   if (!peer || !bdata) return;
 
   memset(peer, 0, sizeof(struct bgp_peer));
   
   memcpy(&peer->addr, &bdata->peer_ip, sizeof(struct host_addr));
+/* XXX:
   memcpy(&peer->id, &bdata->bgp_id, sizeof(struct host_addr));
   addr_to_str(peer->addr_str, &peer->addr);
   peer->as = bdata->peer_asn;
   peer->status = Established;
   peer->type = FUNC_TYPE_BMP;
+*/
 } 
+
+int bmp_peer_init(struct bmp_peer *bmpp, int type)
+{
+  return bgp_peer_init(&bmpp->self, type);
+}
+
+void bmp_peer_close(struct bmp_peer *bmpp, int type)
+{
+  if (!bmpp) return;
+
+  tdestroy(&bmpp->bgp_peers, bmp_bmpp_bgp_peers_free);
+  bgp_peer_close(&bmpp->self, type);
+}
+
+int bmp_bmpp_bgp_peers_cmp(const void *a, const void *b)
+{
+  return memcmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
+}
+
+void bmp_bmpp_bgp_peers_free(void *a)
+{
+}
