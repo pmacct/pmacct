@@ -30,6 +30,7 @@
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
+#include <search.h>
 
 static const char pkt_len_distrib_unknown[] = "unknown";
 
@@ -1267,6 +1268,35 @@ void *pm_malloc(size_t size)
   }
 
   return obj;
+}
+
+void *pm_tsearch(const void *key, void **rootp, int (*compar)(const void *key1, const void *key2), size_t alloc_size)
+{
+  void *alloc_key;
+
+  if (alloc_size) {
+    alloc_key = pm_malloc(alloc_size);
+    memcpy(alloc_key, key, alloc_size);
+    return tsearch(alloc_key, rootp, compar);
+  }
+  else return tsearch(key, rootp, compar); 
+}
+
+void *pm_tfind(const void *key, void *const *rootp, int (*compar) (const void *key1, const void *key2))
+{
+  return tfind(key, rootp, compar);
+}
+
+void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, const void *key2))
+{
+  void *ptr = tdelete(key, rootp, compar);
+
+  if (ptr) {
+    free(ptr);
+    ptr = NULL;
+  }
+
+  return ptr;
 }
 
 void load_allow_file(char *filename, struct hosts_table *t)

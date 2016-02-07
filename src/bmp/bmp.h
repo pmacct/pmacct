@@ -208,11 +208,12 @@ EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
 EXT void bmp_link_misc_structs(struct bgp_misc_structs *);
-EXT void *bmp_sync_loc_rem_peers(struct bgp_peer *, struct bgp_peer *);
+EXT struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *, struct bgp_peer *);
 EXT void bmp_peer_compose(struct bgp_peer *, struct bmp_data *);
 EXT int bmp_peer_init(struct bmp_peer *, int);
 EXT void bmp_peer_close(struct bmp_peer *, int);
 EXT int bmp_bmpp_bgp_peers_cmp(const void *, const void *);
+EXT int bmp_bmpp_bgp_peer_host_addr_cmp(const void *, const void *);
 EXT void bmp_bmpp_bgp_peers_free(void *);
 #undef EXT
 

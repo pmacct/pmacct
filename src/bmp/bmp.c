@@ -36,7 +36,6 @@
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
-#include <search.h>
 
 /* variables to be exported away */
 thread_pool_t *bmp_pool;
@@ -832,11 +831,8 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     memcpy(&bgp_peer_rem.addr, &bdata.peer_ip, sizeof(struct host_addr));
 
     bmpp_bgp_peer = bmp_sync_loc_rem_peers(&bgp_peer_loc, &bgp_peer_rem);
-    ret = tsearch(bmpp_bgp_peer, &bmpp->bgp_peers, bmp_bmpp_bgp_peers_cmp);
-    if (!ret) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): tsearch() unable to insert. Terminating thread.\n", config.name);
-      exit_all(1);
-    }
+    ret = pm_tsearch(bmpp_bgp_peer, &bmpp->bgp_peers, bmp_bmpp_bgp_peers_cmp, sizeof(struct bgp_peer));
+    if (!ret) Log(LOG_WARNING, "WARN ( %s/core/BMP ): [%s] [peer up] tsearch() unable to insert.\n", config.name, peer->addr_str);
 
     if (nfacctd_bmp_msglog_backend_methods) {
       char event_type[] = "log";
@@ -851,7 +847,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
 void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
-  struct bgp_peer *peer;
+  struct bgp_peer *peer, bmpp_bgp_peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_peer_down_hdr *bpdh;
@@ -900,16 +896,16 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   }
 
   // XXX: withdraw routes from peer
-  // XXX: remove peer from bmpp->bgp_peers
+
+  pm_tdelete(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
 }
 
 void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
-  struct bgp_peer *peer, bmpp_bgp_peer;
+  struct bgp_peer *peer, *bmpp_bgp_peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
-  void *ret;
 
   if (!bmpp) return;
   peer = &bmpp->self;
@@ -933,10 +929,9 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
   addr_to_str(peer_ip, &bdata.peer_ip);
 
-  bmp_peer_compose(&bmpp_bgp_peer, &bdata);
-  ret = tfind(&bmpp_bgp_peer, &bmpp->bgp_peers, bmp_bmpp_bgp_peers_cmp);
+  bmpp_bgp_peer = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
 
-  // XXX: process tfind() results
+  // XXX: process pm_tfind() results
   // XXX: parse BGP UPDATE(s)
 }
 
@@ -1280,19 +1275,14 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   strcpy(bms->peer_str, "bmp_router");
 }
 
-void *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
+struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
 {
-  void *ptr;
-
-  if (!bgp_peer_loc || !bgp_peer_rem) return;
+  if (!bgp_peer_loc || !bgp_peer_rem) return NULL;
 
   if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
   if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
 
-  ptr = malloc(sizeof(struct bgp_peer));
-  memcpy(ptr, bgp_peer_rem, sizeof(struct bgp_peer));
-
-  return ptr;
+  return bgp_peer_rem;
 }
 
 void bmp_peer_compose(struct bgp_peer *peer, struct bmp_data *bdata)
@@ -1327,6 +1317,11 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 int bmp_bmpp_bgp_peers_cmp(const void *a, const void *b)
 {
   return memcmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
+}
+
+int bmp_bmpp_bgp_peer_host_addr_cmp(const void *a, const void *b)
+{
+  return memcmp(a, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
 }
 
 void bmp_bmpp_bgp_peers_free(void *a)
