@@ -517,7 +517,8 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
   if (attr.ecommunity)
     ecommunity_unintern(bgp_select_routing_db(peer->type), attr.ecommunity);
 
-  return SUCCESS;
+  ret = ntohs(bhdr.bgpo_len);
+  return ret;
 }
 
 /* BGP UPDATE Attribute parsing */

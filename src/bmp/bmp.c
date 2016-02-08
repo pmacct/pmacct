@@ -36,6 +36,7 @@
 #ifdef WITH_JANSSON
 #include <jansson.h>
 #endif
+#include <search.h>
 
 /* variables to be exported away */
 thread_pool_t *bmp_pool;
@@ -817,7 +818,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     struct bmp_log_peer_up blpu;
     struct bgp_peer bgp_peer_loc, bgp_peer_rem, *bmpp_bgp_peer;
     int bgp_open_len;
-    void *ret;
+    void *ret, *alloc_key;
 
     bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
     bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
@@ -906,6 +907,8 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
+  int bgp_update_len;
+  void *ret;
 
   if (!bmpp) return;
   peer = &bmpp->self;
@@ -929,10 +932,15 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
   addr_to_str(peer_ip, &bdata.peer_ip);
 
-  bmpp_bgp_peer = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
+  ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
 
-  // XXX: process pm_tfind() results
-  // XXX: parse BGP UPDATE(s)
+  if (ret) {
+    bmpp_bgp_peer = (*(struct bgp_peer **) ret);
+    /* XXX: parse BGP UPDATE(s)
+    bgp_update_len = bgp_parse_update_msg(bmpp_bgp_peer, (*bmp_packet)); 
+    bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
+    */
+  }
 }
 
 void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
@@ -1281,6 +1289,8 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
 
   if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
   if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
+
+  bgp_peer_rem->type = FUNC_TYPE_BMP;
 
   return bgp_peer_rem;
 }

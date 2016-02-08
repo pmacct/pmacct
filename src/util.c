@@ -1272,12 +1272,16 @@ void *pm_malloc(size_t size)
 
 void *pm_tsearch(const void *key, void **rootp, int (*compar)(const void *key1, const void *key2), size_t alloc_size)
 {
-  void *alloc_key;
+  void *alloc_key, *ret_key;
 
   if (alloc_size) {
-    alloc_key = pm_malloc(alloc_size);
+    alloc_key = malloc(alloc_size);
     memcpy(alloc_key, key, alloc_size);
-    return tsearch(alloc_key, rootp, compar);
+    ret_key = tsearch(alloc_key, rootp, compar);
+
+    if ((*(void **) ret_key) != alloc_key) free(alloc_key);
+
+    return ret_key;
   }
   else return tsearch(key, rootp, compar); 
 }
@@ -1291,12 +1295,9 @@ void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, 
 {
   void *ptr = tdelete(key, rootp, compar);
 
-  if (ptr) {
-    free(ptr);
-    ptr = NULL;
-  }
+  if (ptr) free((*(void **) ptr));
 
-  return ptr;
+  return NULL;
 }
 
 void load_allow_file(char *filename, struct hosts_table *t)

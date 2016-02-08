@@ -679,7 +679,11 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
 {
   path_id_t local_path_id = 1;
 
+  printf("CI PASSO 1\n");
+
   if (path_id && *path_id) local_path_id = *path_id;
+
+  printf("CI PASSO 2\n");
 
   return (((peer->fd * config.bgp_table_per_peer_buckets) +
           ((local_path_id - 1) % config.bgp_table_per_peer_buckets)) %
