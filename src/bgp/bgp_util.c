@@ -936,5 +936,5 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
-  strcpy(bms->peer_str, "peer_src_ip");
+  strcpy(bms->peer_str, "peer_ip_src");
 }
