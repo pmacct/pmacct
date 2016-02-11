@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -65,7 +65,7 @@ struct hash
 #else
 #define EXT
 #endif
-EXT struct hash *hash_create (unsigned int (*) (void *), int (*) (const void *, const void *));
+EXT struct hash *hash_create (int, unsigned int (*) (void *), int (*) (const void *, const void *));
 EXT struct hash *hash_create_size (unsigned int, unsigned int (*) (void *), int (*) (const void *, const void *));
 EXT void *hash_get (struct hash *, void *, void * (*) (void *));
 EXT void *hash_alloc_intern (void *);

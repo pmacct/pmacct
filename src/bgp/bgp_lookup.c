@@ -677,11 +677,12 @@ void free_cache_bgp_primitives(struct cache_bgp_primitives **c)
 
 u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   path_id_t local_path_id = 1;
 
   if (path_id && *path_id) local_path_id = *path_id;
 
-  return (((peer->fd * config.bgp_table_per_peer_buckets) +
-          ((local_path_id - 1) % config.bgp_table_per_peer_buckets)) %
-          (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets));
+  return (((peer->fd * bms->table_per_peer_buckets) +
+          ((local_path_id - 1) % bms->table_per_peer_buckets)) %
+          (bms->table_peer_buckets * bms->table_per_peer_buckets));
 }

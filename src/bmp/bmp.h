@@ -224,8 +224,8 @@ EXT void bmp_bmpp_bgp_peers_free(void *);
 #define EXT
 #endif
 EXT struct bmp_peer *bmp_peers;
-EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int nfacctd_bmp_msglog_backend_methods;
+EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
 EXT int bmp_dump_backend_methods;
 
 EXT struct bgp_rt_structs *bmp_routing_db;

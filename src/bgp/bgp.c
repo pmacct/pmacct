@@ -97,7 +97,7 @@ void skinny_bgp_daemon()
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
   if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
-  bgp_attr_init(bgp_routing_db);
+  bgp_attr_init(config.bgp_table_attr_hash_buckets, bgp_routing_db);
 
   /* socket creation for BGP server: IPv4 only */
 #if (defined ENABLE_IPV6)

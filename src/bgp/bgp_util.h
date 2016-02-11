@@ -50,7 +50,7 @@ EXT struct bgp_info *bgp_info_new();
 EXT void bgp_info_add(struct bgp_node *, struct bgp_info *, u_int32_t);
 EXT void bgp_info_delete(struct bgp_rt_structs *, struct bgp_node *, struct bgp_info *, u_int32_t);
 EXT void bgp_info_free(struct bgp_rt_structs *, struct bgp_info *);
-EXT void bgp_attr_init(struct bgp_rt_structs *);
+EXT void bgp_attr_init(int, struct bgp_rt_structs *);
 EXT struct bgp_attr *bgp_attr_intern(struct bgp_rt_structs *, struct bgp_attr *);
 EXT void bgp_attr_unintern (struct bgp_rt_structs *, struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
@@ -73,6 +73,6 @@ EXT void bgp_batch_rollback(struct bgp_peer_batch *);
 
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
-EXT void attrhash_init(struct hash **);
+EXT void attrhash_init(int, struct hash **);
 #undef EXT
 #endif 

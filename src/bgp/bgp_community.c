@@ -651,8 +651,8 @@ community_str2com (const char *str)
 
 /* Initialize comminity related hash. */
 void
-community_init (struct hash **loc_comhash)
+community_init (int buckets, struct hash **loc_comhash)
 {
-  (*loc_comhash) = hash_create ((unsigned int (*) (void *))community_hash_make,
+  (*loc_comhash) = hash_create (buckets, (unsigned int (*) (void *))community_hash_make,
 			 (int (*) (const void *, const void *))community_cmp);
 }

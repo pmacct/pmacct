@@ -248,12 +248,12 @@ void bgp_info_free(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_in
 }
 
 /* Initialization of attributes */
-void bgp_attr_init(struct bgp_rt_structs *inter_domain_routing_db)
+void bgp_attr_init(int buckets, struct bgp_rt_structs *inter_domain_routing_db)
 {
-  aspath_init(&inter_domain_routing_db->ashash);
-  attrhash_init(&inter_domain_routing_db->attrhash);
-  community_init(&inter_domain_routing_db->comhash);
-  ecommunity_init(&inter_domain_routing_db->ecomhash);
+  aspath_init(buckets, &inter_domain_routing_db->ashash);
+  attrhash_init(buckets, &inter_domain_routing_db->attrhash);
+  community_init(buckets, &inter_domain_routing_db->comhash);
+  ecommunity_init(buckets, &inter_domain_routing_db->ecomhash);
 }
 
 unsigned int attrhash_key_make(void *p)
@@ -313,9 +313,9 @@ int attrhash_cmp(const void *p1, const void *p2)
   return SUCCESS;
 }
 
-void attrhash_init(struct hash **loc_attrhash)
+void attrhash_init(int buckets, struct hash **loc_attrhash)
 {
-  (*loc_attrhash) = (struct hash *) hash_create(attrhash_key_make, attrhash_cmp);
+  (*loc_attrhash) = (struct hash *) hash_create(buckets, attrhash_key_make, attrhash_cmp);
 }
 
 /* Internet argument attribute. */
@@ -937,4 +937,10 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
   strcpy(bms->peer_str, "peer_ip_src");
+
+  bms->table_peer_buckets = config.bgp_table_peer_buckets;
+  bms->table_per_peer_buckets = config.bgp_table_per_peer_buckets;
+  bms->table_attr_hash_buckets = config.bgp_table_attr_hash_buckets;
+  bms->table_per_peer_hash = config.bgp_table_per_peer_hash;
+  bms->route_info_modulo = bgp_route_info_modulo;
 }

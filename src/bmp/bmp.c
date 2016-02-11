@@ -194,7 +194,7 @@ void skinny_bmp_daemon()
   }
 
   if (!config.bmp_table_attr_hash_buckets) config.bmp_table_attr_hash_buckets = HASHTABSIZE;
-  bgp_attr_init(bmp_routing_db);
+  bgp_attr_init(config.bmp_table_attr_hash_buckets, bmp_routing_db);
 
   if (!config.bmp_table_peer_buckets) config.bmp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bmp_table_per_peer_buckets) config.bmp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
@@ -942,7 +942,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     if (ret) {
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
       /* XXX: parse BGP UPDATE(s)
-      bgp_update_len = bgp_parse_update_msg(&blabla, (*bmp_packet)); 
+      bgp_update_len = bgp_parse_update_msg(bmpp_bgp_peer, (*bmp_packet)); 
       bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
       */
     }
@@ -1291,6 +1291,12 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
   strcpy(bms->peer_str, "bmp_router");
+
+  bms->table_peer_buckets = config.bmp_table_peer_buckets;
+  bms->table_per_peer_buckets = config.bmp_table_per_peer_buckets;
+  bms->table_attr_hash_buckets = config.bmp_table_attr_hash_buckets;
+  bms->table_per_peer_hash = config.bmp_table_per_peer_hash;
+  bms->route_info_modulo = bmp_route_info_modulo;
 }
 
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)

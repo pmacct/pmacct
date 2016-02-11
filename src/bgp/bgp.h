@@ -113,6 +113,12 @@ struct bgp_misc_structs {
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
+
+  int table_peer_buckets;
+  int table_per_peer_buckets;
+  int table_attr_hash_buckets;
+  int table_per_peer_hash;
+  u_int32_t (*route_info_modulo)(struct bgp_peer *, path_id_t *);
 };
 
 /* all require definition of bgp_rt_structs */

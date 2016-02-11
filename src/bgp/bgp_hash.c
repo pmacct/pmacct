@@ -27,8 +27,7 @@
 #define __BGP_HASH_C
 
 #include "pmacct.h"
-#include "bgp_packet.h"
-#include "bgp_hash.h"
+#include "bgp.h"
 
 /* Allocate a new hash.  */
 struct hash *
@@ -59,10 +58,10 @@ hash_create_size (unsigned int size, unsigned int (*hash_key) (void *),
 
 /* Allocate a new hash with default hash size.  */
 struct hash *
-hash_create (unsigned int (*hash_key) (void *), 
+hash_create (int buckets, unsigned int (*hash_key) (void *), 
              int (*hash_cmp) (const void *, const void *))
 {
-  return hash_create_size (config.bgp_table_attr_hash_buckets, hash_key, hash_cmp);
+  return hash_create_size (buckets, hash_key, hash_cmp);
 }
 
 /* Utility function for hash_get().  When this function is specified

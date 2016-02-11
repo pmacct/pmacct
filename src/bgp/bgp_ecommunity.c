@@ -279,9 +279,9 @@ ecommunity_cmp (const void *arg1, const void *arg2)
 
 /* Initialize Extended Comminities related hash. */
 void
-ecommunity_init (struct hash **loc_ecomhash)
+ecommunity_init (int buckets, struct hash **loc_ecomhash)
 {
-  (*loc_ecomhash) = hash_create (ecommunity_hash_make, ecommunity_cmp);
+  (*loc_ecomhash) = hash_create (buckets, ecommunity_hash_make, ecommunity_cmp);
 }
 
 /* Extended Communities token enum. */
