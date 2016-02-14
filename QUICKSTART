@@ -33,7 +33,8 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 'memory':  data is stored in a memory table and can be fetched via the pmacct
 	   command-line client tool, 'pmacct'. This plugin also allows easily to
 	   inject data into 3rd party tools like GNUplot, RRDtool or a Net-SNMP
-	   server.
+	   server. The plugin is good for prototype solutions and smaller-scale
+	   environments.
 'mysql':   a working MySQL installation can be used for data storage.
 'pgsql':   a working PostgreSQL installation can be used for data storage.
 'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite
@@ -47,6 +48,12 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 	   are ElasticSearch, Cassandra and CouchDB.
 'kafka':   data is sent to a Kafka broker for delivery to consumer applications
 	   or tools.
+'tee':	   applies to nfacctd and sfacctd daemons only. It's a featureful packet
+	   replicator for NetFlow/IPFIX/sFlow data.
+'nfprobe': applies to pmacctd and uacctd daemons only. Exports collected data via
+	   NetFlow v5/v9 or IPFIX.
+'sfprobe': applies to pmacctd and uacctd daemons only. Exports collected data via
+	   sFlow v5.
 
 
 II. Configuring pmacct for compilation and installing
