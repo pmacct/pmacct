@@ -949,7 +949,7 @@ int pretag_index_allocate(struct id_table *t)
 
 int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr)
 {
-  struct id_entry e;
+  struct id_entry e, e_cmp;
   u_int32_t index = 0, iterator = 0, handler_index = 0;
 
   if (!t) return TRUE;
@@ -971,6 +971,21 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
         if (!idie->e[index]) {
           idie->e[index] = ptr;
           break;
+        }
+        /* removing duplicates */
+        else {
+	  pm_id_t saved_pos_idie, saved_pos_ptr;
+	  int match = FALSE;
+
+	  saved_pos_idie = idie->e[index]->pos; idie->e[index]->pos = 0;
+	  saved_pos_ptr = ptr->pos; ptr->pos = 0;
+
+          if (!memcmp(idie->e[index], ptr, sizeof(struct id_entry))) match = TRUE;
+
+          idie->e[index]->pos = saved_pos_idie;
+          ptr->pos = saved_pos_ptr;
+
+	  if (match) break;
         }
       }
 
