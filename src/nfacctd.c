@@ -388,15 +388,6 @@ int main(int argc,char **argv, char **envp)
   /* Enforcing policies over aggregation methods */
   list = plugins_list;
   while (list) {
-    if (!list->cfg.proc_name) {
-      list->cfg.proc_name = default_proc_name;
-      config.proc_name = default_proc_name;
-    }
-
-    set_truefalse_nonzero(&list->cfg.nfacctd_disable_checks, &config.nfacctd_disable_checks, list->type.id); 
-    set_truefalse_nonzero(&list->cfg.pipe_check_core_pid, &config.pipe_check_core_pid, list->type.id); 
-    set_truefalse_nonzero(&list->cfg.tmp_net_own_field, &config.tmp_net_own_field, list->type.id); 
-
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
       plugin_pipe_check(&list->cfg);

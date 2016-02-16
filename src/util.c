@@ -1135,7 +1135,14 @@ void reset_fallback_status(struct packet_ptrs *pptrs)
 
 void set_default_preferences(struct configuration *cfg)
 {
-  if (!cfg->nfacctd_as) cfg->nfacctd_as = NF_AS_KEEP;
+  if (!cfg->proc_name) cfg->proc_name = default_proc_name;
+  if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
+    if (!cfg->nfacctd_net) cfg->nfacctd_net = NF_NET_KEEP;
+    if (!cfg->nfacctd_as) cfg->nfacctd_as = NF_AS_KEEP;
+    set_truefalse_nonzero(&cfg->nfacctd_disable_checks);
+  }
+  set_truefalse_nonzero(&cfg->pipe_check_core_pid);
+  set_truefalse_nonzero(&cfg->tmp_net_own_field);
   if (!cfg->nfacctd_bgp_peer_as_src_type) cfg->nfacctd_bgp_peer_as_src_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->nfacctd_bgp_src_std_comm_type) cfg->nfacctd_bgp_src_std_comm_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->nfacctd_bgp_src_ext_comm_type) cfg->nfacctd_bgp_src_ext_comm_type = BGP_SRC_PRIMITIVES_KEEP;
@@ -2871,16 +2878,10 @@ void replace_string(char *str, int string_len, char *var, char *value)
   }
 }
 
-void set_truefalse_nonzero(int *value, int *config_value, int plugin_type)
+void set_truefalse_nonzero(int *value)
 {
-  if (!value || !config_value) return;
+  if (!value) return;
 
-  if (!(*value)) {
-    (*value) = TRUE;
-    if (plugin_type == PLUGIN_ID_CORE) (*config_value) = TRUE;
-  }
-  else if ((*value) == FALSE_NONZERO) {
-    (*value) = FALSE;
-    if (plugin_type == PLUGIN_ID_CORE) (*config_value) = FALSE;
-  }
+  if (!(*value)) (*value) = TRUE;
+  else if ((*value) == FALSE_NONZERO) (*value) = FALSE;
 }

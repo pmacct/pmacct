@@ -395,11 +395,6 @@ int main(int argc,char **argv, char **envp)
   /* Enforcing policies over aggregation methods */
   list = plugins_list;
   while (list) {
-    if (!list->cfg.proc_name) {
-      list->cfg.proc_name = default_proc_name;
-      config.proc_name = default_proc_name;
-    }
-
     if (list->type.id != PLUGIN_ID_CORE) {
       /* applies to all plugins */
       plugin_pipe_check(&list->cfg);
@@ -413,12 +408,6 @@ int main(int argc,char **argv, char **envp)
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit(1);
       }
-
-      if (!list->cfg.pipe_check_core_pid) list->cfg.pipe_check_core_pid = TRUE;
-      else if (list->cfg.pipe_check_core_pid == FALSE_NONZERO) list->cfg.pipe_check_core_pid = FALSE;
-
-      if (!list->cfg.tmp_net_own_field) list->cfg.tmp_net_own_field = TRUE;
-      else if (list->cfg.tmp_net_own_field == FALSE_NONZERO) list->cfg.tmp_net_own_field = FALSE;
 
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_TEE) {
