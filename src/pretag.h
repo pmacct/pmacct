@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -192,7 +192,8 @@ typedef int (*pretag_copier)(struct id_entry *, void *);
 
 struct id_index_entry {
   u_int16_t depth;
-  struct id_entry *e[ID_TABLE_INDEX_DEPTH];
+  struct id_entry key[ID_TABLE_INDEX_DEPTH];
+  struct id_entry *result[ID_TABLE_INDEX_DEPTH];
 };
 
 struct id_table_index {
@@ -262,6 +263,7 @@ EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
 EXT int pretag_index_set_handlers(struct id_table *);
 EXT int pretag_index_allocate(struct id_table *);
 EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
+EXT void pretag_index_report(struct id_table *);
 EXT void pretag_index_destroy(struct id_table *);
 EXT void pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
 EXT void pretag_index_results_sort(struct id_entry **, int);

@@ -607,6 +607,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                 config.name, config.type, filename);
         pretag_index_destroy(t);
       }
+      else pretag_index_report(t);
     }
   }
 
@@ -968,8 +969,9 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       idie = &t->index[iterator].idx_t[modulo];
 
       for (index = 0; index < idie->depth; index++) {
-        if (!idie->e[index]) {
-          idie->e[index] = ptr;
+        if (!idie->result[index]) {
+	  memcpy(&idie->key[index], &e, sizeof(struct id_entry));
+          idie->result[index] = ptr;
           break;
         }
         /* removing duplicates */
@@ -977,12 +979,12 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 	  pm_id_t saved_pos_idie, saved_pos_ptr;
 	  int match = FALSE;
 
-	  saved_pos_idie = idie->e[index]->pos; idie->e[index]->pos = 0;
+	  saved_pos_idie = idie->result[index]->pos; idie->result[index]->pos = 0;
 	  saved_pos_ptr = ptr->pos; ptr->pos = 0;
 
-          if (!memcmp(idie->e[index], ptr, sizeof(struct id_entry))) match = TRUE;
+          if (!memcmp(idie->result[index], ptr, sizeof(struct id_entry))) match = TRUE;
 
-          idie->e[index]->pos = saved_pos_idie;
+          idie->result[index]->pos = saved_pos_idie;
           ptr->pos = saved_pos_ptr;
 
 	  if (match) break;
@@ -999,6 +1001,37 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
   }
 
   return FALSE;
+}
+
+void pretag_index_report(struct id_table *t)
+{
+  u_int32_t iterator = 0, buckets = 0, index = 0;
+
+  if (!t) return;
+
+  for (iterator = 0; iterator < t->index_num; iterator++) {
+    if (t->index[iterator].entries) {
+      u_int32_t bucket_depths[ID_TABLE_INDEX_DEPTH];
+
+      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      memset(&bucket_depths, 0, sizeof(bucket_depths));
+
+      for (index = 0; index < buckets; index++) {
+	struct id_index_entry *idie = &t->index[iterator].idx_t[index]; 
+	u_int32_t depth = 0;
+
+	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++); 
+
+	bucket_depths[depth]++;
+      }
+
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] maps_index: index %x depths: 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u size: %u\n",
+	  config.name, config.type, t->filename, t->index[iterator].bitmap,
+	  bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
+	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
+	  (buckets * sizeof(struct id_index_entry)));
+    } 
+  }
 }
 
 void pretag_index_destroy(struct id_table *t)
@@ -1021,7 +1054,7 @@ void pretag_index_destroy(struct id_table *t)
 
 void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
 {
-  struct id_entry res_idt, res_fdata;
+  struct id_entry res_fdata;
   struct id_index_entry *idie;
   u_int32_t iterator, iterator_ir, index_cc, index_hdlr;
   int modulo;
@@ -1033,7 +1066,6 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries) {
-      memset(&res_idt, 0, sizeof(res_idt));
       memset(&res_fdata, 0, sizeof(res_fdata));
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
@@ -1043,13 +1075,9 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
       modulo = cache_crc32((unsigned char *)&res_fdata, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
       idie = &t->index[iterator].idx_t[modulo];
 
-      for (index_cc = 0; idie->e[index_cc] && index_cc < idie->depth; index_cc++) {
-        for (index_hdlr = 0; (*t->index[iterator].idt_handler[index_hdlr]); index_hdlr++) {
-          (*t->index[iterator].idt_handler[index_hdlr])(&res_idt, idie->e[index_cc]);
-        }
-	
-        if (!memcmp(&res_idt, &res_fdata, sizeof(struct id_entry))) {
-          index_results[iterator_ir] = idie->e[index_cc];
+      for (index_cc = 0; idie->result[index_cc] && index_cc < idie->depth; index_cc++) {
+        if (!memcmp(&idie->key[index_cc], &res_fdata, sizeof(struct id_entry))) {
+          index_results[iterator_ir] = idie->result[index_cc];
 	  if (iterator_ir < ir_entries) iterator_ir++;
 	  else {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: out of index results space. Indexing disabled.\n",
@@ -1061,6 +1089,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
 	}
       }
     }
+    else break;
   }
 
   pretag_index_results_compress(index_results, ir_entries);
