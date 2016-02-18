@@ -1533,7 +1533,8 @@ DESC:		Enables indexing of maps (ie. pre_tag_map and all directives with the 'MA
 		are supported as part of the 'ip' field. Also, negations are not supported (ie. 'in=-216' match
 		all but input interface 216). bgp_agent_map and sampling_map implement a separate caching
 		mechanism and hence do not leverage this feature. Duplicates in the key part of the map
-		entry, key being defined as all fields except set_* ones, are not supported.
+		entry, key being defined as all fields except set_* ones, are not supported and may result
+		in a "out of index space" message.
 DEFAULT:        false
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]

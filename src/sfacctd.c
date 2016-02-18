@@ -354,7 +354,8 @@ int main(int argc,char **argv, char **envp)
   if (config.daemon) {
     list = plugins_list;
     while (list) {
-      if (!strcmp(list->type.string, "print")) printf("INFO ( %s/core ): Daemonizing. Bye bye screen.\n", config.name);
+      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
+        printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
       list = list->next;
     }
     if (debug || config.debug)
