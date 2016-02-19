@@ -2313,7 +2313,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 #endif
 
   for (x = begin; x < end; x++) {
-    if (host_addr_mask_sa_cmp(&t->e[x].agent_ip.a, &t->e[x].agent_mask, sa) == 0) {
+    if (host_addr_mask_sa_cmp(&t->e[x].key.agent_ip.a, &t->e[x].key.agent_mask, sa) == 0) {
       ret = pretag_entry_process(&t->e[x], pptrs, tag, tag2);
 
       if (!ret || ret > TRUE) {

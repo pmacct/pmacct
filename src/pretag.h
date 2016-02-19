@@ -137,12 +137,7 @@ typedef struct {
   char *v;
 } ptlt_t;
 
-struct id_entry {
-  pm_id_t id;
-  pm_id_t id2;
-  pt_label_t label;
-  pm_id_t flags;
-  pm_id_t pos;
+struct id_entry_key {
   pt_hostaddr_t agent_ip;
   pt_hostmask_t agent_mask;
   pt_hostaddr_t nexthop;
@@ -157,7 +152,7 @@ struct id_entry {
   pt_uint32_t sample_type; /* applies to sFlow sample type */
   pt_uint8_t direction;
   pt_uint32_t src_as;
-  pt_uint32_t dst_as; 
+  pt_uint32_t dst_as;
   pt_uint32_t peer_src_as;
   pt_uint32_t peer_dst_as;
   pt_uint32_t src_local_pref;
@@ -167,7 +162,6 @@ struct id_entry {
   pt_etheraddr_t dst_mac;
   pt_uint16_t vlan_id;
   pt_uint16_t cvlan_id;
-  s_uint8_t set_tos;
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
@@ -175,6 +169,16 @@ struct id_entry {
   pt_uint32_t mpls_pw_id;
   struct bpf_program filter;
   pt_uint8_t v8agg;
+};
+
+struct id_entry {
+  pm_id_t id;
+  pm_id_t id2;
+  pt_label_t label;
+  pm_id_t flags;
+  pm_id_t pos;
+  s_uint8_t set_tos;
+  struct id_entry_key key;
   pretag_handler func[N_MAP_HANDLERS];
   pt_bitmap_t func_type[N_MAP_HANDLERS];
   pretag_handler set_func[N_MAP_HANDLERS];
@@ -192,7 +196,7 @@ typedef int (*pretag_copier)(struct id_entry *, void *);
 
 struct id_index_entry {
   u_int16_t depth;
-  struct id_entry key[ID_TABLE_INDEX_DEPTH];
+  struct id_entry_key key[ID_TABLE_INDEX_DEPTH];
   struct id_entry *result[ID_TABLE_INDEX_DEPTH];
 };
 

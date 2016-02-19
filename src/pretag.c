@@ -114,7 +114,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  pretag_index_destroy(t);
 	}
 	for (index = 0; index < t->num; index++) {
-	  pcap_freecode(&t->e[index].filter);
+	  pcap_freecode(&t->e[index].key.filter);
 	  pretag_free_label(&t->e[index].label);
 	}
 
@@ -349,7 +349,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len) 
 		   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
-                else if (!err && tmp.e[tmp.num].agent_ip.a.family) {
+                else if (!err && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j, z;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
@@ -358,15 +358,15 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		    tmp.e[tmp.num].func_type[j] = tmp.e[tmp.num].set_func_type[z];
 		  }
 
-	          if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+	          if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-	          else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+	          else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
                 }
 	        /* if any required field is missing and other errors have been signalled
 	           before we will trap an error message */
-	        else if (!err && !tmp.e[tmp.num].agent_ip.a.family)
+	        else if (!err && !tmp.e[tmp.num].key.agent_ip.a.family)
 	          Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required key is: 'ip'. Line ignored.\n",
 			config.name, config.type, filename, tot_lines); 
 	      }
@@ -374,7 +374,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len)
                    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
-	        else if (tmp.e[tmp.num].agent_ip.a.family)
+	        else if (tmp.e[tmp.num].key.agent_ip.a.family)
 		  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] key 'ip' not applicable. Line ignored.\n",
 			config.name, config.type, filename, tot_lines);
 	        else if (!err) {
@@ -385,29 +385,29 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		    tmp.e[tmp.num].func[j] = tmp.e[tmp.num].set_func[z];
 		    tmp.e[tmp.num].func_type[j] = tmp.e[tmp.num].set_func_type[z];
 		  }
-		  tmp.e[tmp.num].agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
+		  tmp.e[tmp.num].key.agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
 		  v4_num++; tmp.num++;
 	        }
 	      }
 	      else if (acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_SRC_LOCAL_PREF ||
 	  	       acct_type == MAP_BGP_SRC_MED) {
-                if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].flags) && tmp.e[tmp.num].agent_ip.a.family) {
+                if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].flags) && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
-                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
                 }
-                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
 	      }
               else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
-                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j, z;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
@@ -418,42 +418,42 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		  /* imposing pretag_id_handler to be the last one */
 		  tmp.e[tmp.num].func[j] = pretag_id_handler;
 
-                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
                 }
-                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
                         config.name, config.type, filename, tot_lines);
               }
               else if (acct_type == MAP_FLOW_TO_RD) {
-                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
-                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
                 }
 	      }
               else if (acct_type == MAP_SAMPLING) {
-                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].agent_ip.a.family) {
+                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
-                  if (tmp.e[tmp.num].agent_ip.a.family == AF_INET) v4_num++;
+                  if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
 #if defined ENABLE_IPV6
-                  else if (tmp.e[tmp.num].agent_ip.a.family == AF_INET6) v6_num++;
+                  else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
                 }
-                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].agent_ip.a.family) && !err)
+                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
 			config.name, config.type, filename, tot_lines);
               }
@@ -485,7 +485,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       t->ipv4_base = &t->e[x];
       t->flags = tmp.flags;
       for (index = 0; index < tmp.num; index++) {
-        if (tmp.e[index].agent_ip.a.family == AF_INET) { 
+        if (tmp.e[index].key.agent_ip.a.family == AF_INET) { 
           memcpy(&t->e[x], &tmp.e[index], sizeof(struct id_entry));
 	  t->e[x].pos = x;
 	  x++;
@@ -495,7 +495,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       t->ipv6_num = v6_num;
       t->ipv6_base = &t->e[x];
       for (index = 0; index < tmp.num; index++) {
-        if (tmp.e[index].agent_ip.a.family == AF_INET6) {
+        if (tmp.e[index].key.agent_ip.a.family == AF_INET6) {
           memcpy(&t->e[x], &tmp.e[index], sizeof(struct id_entry));
 	  t->e[x].pos = x;
           x++;
@@ -965,12 +965,12 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
 	(*t->index[iterator].idt_handler[handler_index])(&e, ptr);
       }
-      modulo = cache_crc32((unsigned char *)&e, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      modulo = cache_crc32((unsigned char *)&e.key, sizeof(struct id_entry_key)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
       idie = &t->index[iterator].idx_t[modulo];
 
       for (index = 0; index < idie->depth; index++) {
         if (!idie->result[index]) {
-	  memcpy(&idie->key[index], &e, sizeof(struct id_entry));
+	  memcpy(&idie->key[index], &e.key, sizeof(struct id_entry_key));
           idie->result[index] = ptr;
           break;
         }
@@ -1072,11 +1072,11 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
         (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, pptrs);
       }
 
-      modulo = cache_crc32((unsigned char *)&res_fdata, sizeof(struct id_entry)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      modulo = cache_crc32((unsigned char *)&res_fdata.key, sizeof(struct id_entry_key)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
       idie = &t->index[iterator].idx_t[modulo];
 
       for (index_cc = 0; idie->result[index_cc] && index_cc < idie->depth; index_cc++) {
-        if (!memcmp(&idie->key[index_cc], &res_fdata, sizeof(struct id_entry))) {
+        if (!memcmp(&idie->key[index_cc], &res_fdata.key, sizeof(struct id_entry_key))) {
           index_results[iterator_ir] = idie->result[index_cc];
 	  if (iterator_ir < ir_entries) iterator_ir++;
 	  else {
