@@ -1092,7 +1092,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
     else break;
   }
 
-  pretag_index_results_compress(index_results, ir_entries);
+  // pretag_index_results_compress(index_results, ir_entries);
   pretag_index_results_sort(index_results, ir_entries);
   pretag_index_results_compress_jeqs(index_results, ir_entries);
 }
