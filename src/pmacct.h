@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -183,6 +183,16 @@ struct plugin_requests {
   int map_entries;		/* number of map entries: wins over global setting */
   int map_row_len;		/* map row length: wins over global setting */
 };
+
+typedef struct {
+  char *val;
+  u_int16_t len;
+} pm_hash_key_t;
+
+typedef struct {
+  pm_hash_key_t key;
+  u_int16_t off;
+} pm_hash_serial_t;
 
 #include "pmacct-defines.h"
 #include "network.h"

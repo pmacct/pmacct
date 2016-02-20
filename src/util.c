@@ -2885,3 +2885,34 @@ void set_truefalse_nonzero(int *value)
   if (!(*value)) (*value) = TRUE;
   else if ((*value) == FALSE_NONZERO) (*value) = FALSE;
 }
+
+void hash_init_key(pm_hash_key_t *key)
+{
+  if (!key) return;
+
+  memset(key->val, 0, key->len); 
+}
+
+int hash_alloc_key(pm_hash_key_t *key, u_int16_t key_len)
+{
+  if (!key || !key_len) return ERR;
+
+  key->val = malloc(key_len);
+  if (key->val) {
+    key->len = key_len;
+    hash_init_key(key);
+  }
+  else return ERR;
+
+  return SUCCESS;
+}
+
+int hash_init_serializer(pm_hash_serial_t *serial, u_int16_t key_len)
+{
+  int ret;
+
+  if (!serial || !key_len) return ERR;
+
+  memset(serial, 0, sizeof(pm_hash_serial_t));
+  return hash_alloc_key(&serial->key, key_len);
+}
