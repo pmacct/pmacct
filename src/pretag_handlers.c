@@ -2675,9 +2675,10 @@ int PT_map_index_entries_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_s
 {
   struct id_entry *src_e = (struct id_entry *) src; 
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.agent_ip, &src_e->key.agent_ip, sizeof(pt_hostaddr_t));
+  hash_serial_append(hash_serializer, &src_e->key.agent_ip, sizeof(pt_hostaddr_t), TRUE);
 
   return FALSE;
 }
@@ -2686,9 +2687,10 @@ int PT_map_index_entries_input_handler(struct id_entry *e, pm_hash_serial_t *has
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.input, &src_e->key.input, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.input, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2697,9 +2699,10 @@ int PT_map_index_entries_output_handler(struct id_entry *e, pm_hash_serial_t *ha
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.output, &src_e->key.output, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.output, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2708,9 +2711,10 @@ int PT_map_index_entries_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.bgp_nexthop, &src_e->key.bgp_nexthop, sizeof(pt_hostaddr_t));
+  hash_serial_append(hash_serializer, &src_e->key.bgp_nexthop, sizeof(pt_hostaddr_t), TRUE);
 
   return FALSE;
 }
@@ -2719,9 +2723,10 @@ int PT_map_index_entries_src_as_handler(struct id_entry *e, pm_hash_serial_t *ha
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.src_as, &src_e->key.src_as, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.src_as, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2730,9 +2735,10 @@ int PT_map_index_entries_dst_as_handler(struct id_entry *e, pm_hash_serial_t *ha
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.dst_as, &src_e->key.dst_as, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.dst_as, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2741,9 +2747,10 @@ int PT_map_index_entries_peer_src_as_handler(struct id_entry *e, pm_hash_serial_
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.peer_src_as, &src_e->key.peer_src_as, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.peer_src_as, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2752,9 +2759,10 @@ int PT_map_index_entries_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.peer_dst_as, &src_e->key.peer_dst_as, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.peer_dst_as, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2763,9 +2771,10 @@ int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.mpls_vpn_rd, &src_e->key.mpls_vpn_rd, sizeof(pt_rd_t));
+  hash_serial_append(hash_serializer, &src_e->key.mpls_vpn_rd, sizeof(pt_rd_t), TRUE);
 
   return FALSE;
 }
@@ -2774,9 +2783,10 @@ int PT_map_index_entries_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE;
+  if (!e || !hash_serializer || !src_e) return TRUE;
 
   memcpy(&e->key.mpls_pw_id, &src_e->key.mpls_pw_id, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.mpls_pw_id, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2785,9 +2795,10 @@ int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *e, pm_hash_s
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE;
+  if (!e || !hash_serializer || !src_e) return TRUE;
 
   memcpy(&e->key.mpls_label_bottom, &src_e->key.mpls_label_bottom, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, &src_e->key.mpls_label_bottom, sizeof(pt_uint32_t), TRUE);
 
   return FALSE;
 }
@@ -2796,9 +2807,10 @@ int PT_map_index_entries_src_mac_handler(struct id_entry *e, pm_hash_serial_t *h
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.src_mac, &src_e->key.src_mac, sizeof(pt_etheraddr_t));
+  hash_serial_append(hash_serializer, &src_e->key.src_mac, sizeof(pt_etheraddr_t), TRUE);
 
   return FALSE;
 }
@@ -2807,9 +2819,10 @@ int PT_map_index_entries_dst_mac_handler(struct id_entry *e, pm_hash_serial_t *h
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE;
+  if (!e || !hash_serializer || !src_e) return TRUE;
 
   memcpy(&e->key.dst_mac, &src_e->key.dst_mac, sizeof(pt_etheraddr_t));
+  hash_serial_append(hash_serializer, &src_e->key.dst_mac, sizeof(pt_etheraddr_t), TRUE);
 
   return FALSE;
 }
@@ -2818,9 +2831,10 @@ int PT_map_index_entries_vlan_id_handler(struct id_entry *e, pm_hash_serial_t *h
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE; 
+  if (!e || !hash_serializer || !src_e) return TRUE; 
 
   memcpy(&e->key.vlan_id, &src_e->key.vlan_id, sizeof(pt_uint16_t));
+  hash_serial_append(hash_serializer, &src_e->key.vlan_id, sizeof(pt_uint16_t), TRUE);
 
   return FALSE;
 }
@@ -2829,9 +2843,10 @@ int PT_map_index_entries_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *
 {
   struct id_entry *src_e = (struct id_entry *) src;
 
-  if (!e || !src_e) return TRUE;
+  if (!e || !hash_serializer || !src_e) return TRUE;
 
   memcpy(&e->key.cvlan_id, &src_e->key.cvlan_id, sizeof(pt_uint16_t));
+  hash_serial_append(hash_serializer, &src_e->key.cvlan_id, sizeof(pt_uint16_t), TRUE);
 
   return FALSE;
 }

@@ -968,7 +968,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 {
   u_int32_t index = 0, iterator = 0, handler_index = 0;
 
-  if (!t) return TRUE;
+  if (!t) return ERR;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].bitmap && t->index[iterator].bitmap == idx_bmap) {
@@ -984,6 +984,8 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
       buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+
+      if (!hash_key) return ERR;
 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
 	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
@@ -1026,7 +1028,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
     }
   }
 
-  return FALSE;
+  return SUCCESS;
 }
 
 void pretag_index_report(struct id_table *t)
@@ -1082,8 +1084,10 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
 {
   struct id_entry res_fdata;
   struct id_index_entry *idie;
+  pm_hash_serial_t *hash_serializer;
+  pm_hash_key_t *hash_key;
   u_int32_t iterator, iterator_ir, index_cc, index_hdlr;
-  int modulo;
+  int modulo, buckets;
 
   if (!t || !pptrs || !index_results) return;
 
@@ -1092,17 +1096,20 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries) {
-      memset(&res_fdata, 0, sizeof(res_fdata));
+      hash_serializer = &t->index[iterator].hash_serializer;
+      hash_serial_set_off(hash_serializer, 0);
+      hash_key = hash_serial_get_key(hash_serializer);
+      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
         (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);
       }
 
-      modulo = cache_crc32((unsigned char *)&res_fdata.key, sizeof(struct id_entry_key)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      modulo = cache_crc32(hash_key_get_val(hash_key), hash_key_get_len(hash_key)) % buckets;
       idie = &t->index[iterator].idx_t[modulo];
 
       for (index_cc = 0; idie->result[index_cc] && index_cc < idie->depth; index_cc++) {
-        if (!memcmp(&idie->key[index_cc], &res_fdata.key, sizeof(struct id_entry_key))) {
+	if (!hash_key_cmp(&idie->hash_key[index_cc], hash_key)) {
           index_results[iterator_ir] = idie->result[index_cc];
 	  if (iterator_ir < ir_entries) iterator_ir++;
 	  else {

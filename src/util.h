@@ -153,6 +153,7 @@ EXT pm_hash_key_t *hash_serial_get_key(pm_hash_serial_t *);
 EXT u_int16_t hash_serial_get_off(pm_hash_serial_t *);
 EXT u_int16_t hash_key_get_len(pm_hash_key_t *);
 EXT char *hash_key_get_val(pm_hash_key_t *);
+EXT int hash_key_cmp(pm_hash_key_t *, pm_hash_key_t *);
 
 EXT void replace_string(char *, int, char *, char *);
 #undef EXT

@@ -2977,12 +2977,14 @@ char *hash_key_get_val(pm_hash_key_t *key)
 
 void hash_serial_append(pm_hash_serial_t *serial, char *val, u_int16_t len, int realloc)
 {
-  u_int16_t rem_len;
+  u_int16_t key_len, key_off, rem_len;
   int ret;
 
   if (!serial || !val || !len) return;
 
-  rem_len = (hash_key_get_len(&serial->key) - hash_serial_get_off(serial));
+  key_len = hash_key_get_len(&serial->key);
+  key_off = hash_serial_get_off(serial);
+  rem_len = (key_len - key_off);
  
   if (len > rem_len) {
     if (!realloc) return;
@@ -2992,5 +2994,13 @@ void hash_serial_append(pm_hash_serial_t *serial, char *val, u_int16_t len, int 
     }
   }
 
-  memcpy((hash_key_get_val(&serial->key) + hash_serial_get_off(serial)), val, len); 
+  memcpy((hash_key_get_val(&serial->key) + key_off), val, len); 
+  hash_serial_set_off(serial, (key_off + len));
+}
+
+int hash_key_cmp(pm_hash_key_t *a, pm_hash_key_t *b)
+{
+  if (a->len != b->len) return (a->len - b->len);
+
+  return memcmp(a->val, b->val, b->len);
 }
