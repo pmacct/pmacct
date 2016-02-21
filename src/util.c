@@ -2897,17 +2897,32 @@ int hash_alloc_key(pm_hash_key_t *key, u_int16_t key_len)
 {
   if (!key || !key_len) return ERR;
 
-  key->val = malloc(key_len);
-  if (key->val) {
-    key->len = key_len;
-    hash_init_key(key);
+  if (!key->val) {
+    key->val = malloc(key_len);
+    if (key->val) {
+      key->len = key_len;
+      hash_init_key(key);
+    }
+    else return ERR;
   }
-  else return ERR;
+  else {
+    key->val = realloc(key->val, key_len);
+    if (key->val) key->len = key_len;
+    else return ERR; 
+  }
 
   return SUCCESS;
 }
 
-int hash_init_serializer(pm_hash_serial_t *serial, u_int16_t key_len)
+void hash_destroy_key(pm_hash_key_t *key)
+{
+  if (!key) return;
+
+  free(key->val);
+  memset(key, 0, sizeof(pm_hash_key_t));
+}
+
+int hash_init_serial(pm_hash_serial_t *serial, u_int16_t key_len)
 {
   int ret;
 
@@ -2915,4 +2930,67 @@ int hash_init_serializer(pm_hash_serial_t *serial, u_int16_t key_len)
 
   memset(serial, 0, sizeof(pm_hash_serial_t));
   return hash_alloc_key(&serial->key, key_len);
+}
+
+void hash_destroy_serial(pm_hash_serial_t *serial)
+{
+  if (!serial) return;
+
+  hash_destroy_key(&serial->key);
+  memset(serial, 0, sizeof(pm_hash_serial_t));
+}
+
+void hash_serial_set_off(pm_hash_serial_t *serial, u_int16_t off)
+{
+  if (!serial) return;
+
+  serial->off = off;
+}
+
+u_int16_t hash_serial_get_off(pm_hash_serial_t *serial)
+{
+  if (!serial) return;
+
+  return serial->off;
+}
+
+pm_hash_key_t *hash_serial_get_key(pm_hash_serial_t *serial)
+{
+  if (!serial) return;
+
+  return &serial->key;
+}
+
+u_int16_t hash_key_get_len(pm_hash_key_t *key)
+{
+  if (!key) return;
+
+  return key->len;
+}
+
+char *hash_key_get_val(pm_hash_key_t *key)
+{
+  if (!key) return;
+
+  return key->val;
+}
+
+void hash_serial_append(pm_hash_serial_t *serial, char *val, u_int16_t len, int realloc)
+{
+  u_int16_t rem_len;
+  int ret;
+
+  if (!serial || !val || !len) return;
+
+  rem_len = (hash_key_get_len(&serial->key) - hash_serial_get_off(serial));
+ 
+  if (len > rem_len) {
+    if (!realloc) return;
+    else {
+      ret = hash_alloc_key(&serial->key, (hash_key_get_len(&serial->key) + (len - rem_len)));      
+      if (ret == ERR) return;
+    }
+  }
+
+  memcpy((hash_key_get_val(&serial->key) + hash_serial_get_off(serial)), val, len); 
 }

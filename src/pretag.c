@@ -917,6 +917,7 @@ int pretag_index_allocate(struct id_table *t)
 {
   pt_bitmap_t idx_t_size = 0;
   u_int32_t iterator = 0, j = 0;
+  int ret, destroy = FALSE;
 
   if (!t) return TRUE;
 
@@ -934,6 +935,8 @@ int pretag_index_allocate(struct id_table *t)
 		config.type, t->filename, t->index[iterator].bitmap);
 	t->index[iterator].bitmap = 0;
 	t->index[iterator].entries = 0;
+	destroy = TRUE;
+	break;
       }
       else {
 	memset(t->index[iterator].idx_t, 0, idx_t_size); 
@@ -941,36 +944,56 @@ int pretag_index_allocate(struct id_table *t)
 	for (j = 0; j < IDT_INDEX_HASH_BASE(t->index[iterator].entries); j++) {
 	  t->index[iterator].idx_t[j].depth = ID_TABLE_INDEX_DEPTH;
 	}
+
+	hash_init_serial(&t->index[iterator].hash_serializer, 16 /* dummy len for init sake */);
+	if (ret == ERR) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate hash serializer for index %x.\n", config.name,
+		config.type, t->filename, t->index[iterator].bitmap);
+	  destroy = TRUE;
+	  break;
+	}
       }
     }
   }
 
-  return FALSE;
+  if (destroy) {
+    pretag_index_destroy(t);
+    return ERR;
+  }
+
+  return SUCCESS;
 }
 
 int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr)
 {
-  struct id_entry e, e_cmp;
   u_int32_t index = 0, iterator = 0, handler_index = 0;
 
   if (!t) return TRUE;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].bitmap && t->index[iterator].bitmap == idx_bmap) {
+      struct id_entry e;
       struct id_index_entry *idie;
-      int modulo;
+      pm_hash_serial_t *hash_serializer;
+      pm_hash_key_t *hash_key;
+      int modulo, buckets;
 
-      /* fill 'e' in and compute modulo */
+      /* fill serializer in and compute modulo */
       memset(&e, 0, sizeof(struct id_entry));
+      hash_serializer = &t->index[iterator].hash_serializer;
+      hash_serial_set_off(hash_serializer, 0);
+      hash_key = hash_serial_get_key(hash_serializer);
+      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
-	(*t->index[iterator].idt_handler[handler_index])(&e, ptr);
+	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
       }
-      modulo = cache_crc32((unsigned char *)&e.key, sizeof(struct id_entry_key)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      modulo = cache_crc32(hash_key_get_val(hash_key), hash_key_get_len(hash_key)) % buckets;
       idie = &t->index[iterator].idx_t[modulo];
 
       for (index = 0; index < idie->depth; index++) {
         if (!idie->result[index]) {
-	  memcpy(&idie->key[index], &e.key, sizeof(struct id_entry_key));
+	  memcpy(&idie->hash_key[index], hash_key, sizeof(pm_hash_key_t));
           idie->result[index] = ptr;
           break;
         }
@@ -987,7 +1010,10 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
           idie->result[index]->pos = saved_pos_idie;
           ptr->pos = saved_pos_ptr;
 
-	  if (match) break;
+	  if (match) {
+	    hash_destroy_key(hash_key);
+	    break;
+	  }
         }
       }
 
@@ -1069,7 +1095,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
       memset(&res_fdata, 0, sizeof(res_fdata));
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
-        (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, pptrs);
+        (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);
       }
 
       modulo = cache_crc32((unsigned char *)&res_fdata.key, sizeof(struct id_entry_key)) % IDT_INDEX_HASH_BASE(t->index[iterator].entries);

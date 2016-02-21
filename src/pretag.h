@@ -192,11 +192,12 @@ struct id_entry {
   u_int8_t id2_inc;
 };
 
-typedef int (*pretag_copier)(struct id_entry *, void *);
+typedef int (*pretag_copier)(struct id_entry *, pm_hash_serial_t *, void *);
 
 struct id_index_entry {
   u_int16_t depth;
-  struct id_entry_key key[ID_TABLE_INDEX_DEPTH];
+  pm_hash_key_t hash_key[ID_TABLE_INDEX_DEPTH];
+  struct id_entry_key key[ID_TABLE_INDEX_DEPTH]; /* XXX: to be removed */
   struct id_entry *result[ID_TABLE_INDEX_DEPTH];
 };
 
@@ -205,6 +206,7 @@ struct id_table_index {
   int entries;
   pretag_copier idt_handler[MAX_BITMAP_ENTRIES];
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
+  pm_hash_serial_t hash_serializer;
   struct id_index_entry *idx_t;
 };
 
