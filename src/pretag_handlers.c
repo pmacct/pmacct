@@ -2875,6 +2875,8 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_ser
   }
   else return TRUE;
 
+  hash_serial_append(hash_serializer, &e->key.agent_ip, sizeof(pt_hostaddr_t), FALSE);
+
   return FALSE;
 }
 
@@ -2921,6 +2923,8 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_
     e->key.input.n = pptrs->ifindex_in;
   }
 
+  hash_serial_append(hash_serializer, &e->key.input, sizeof(pt_uint32_t), FALSE);
+
   return FALSE;
 }
 
@@ -2966,6 +2970,8 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash
   else if (config.acct_type == ACCT_PM) {
     e->key.output.n = pptrs->ifindex_out;
   }
+
+  hash_serial_append(hash_serializer, &e->key.output, sizeof(pt_uint32_t), FALSE);
 
   return FALSE;
 }
@@ -3050,6 +3056,8 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
     else return TRUE;
   }
 
+  hash_serial_append(hash_serializer, &e->key.bgp_nexthop, sizeof(pt_hostaddr_t), FALSE);
+
   return FALSE;
 }
 
@@ -3101,6 +3109,8 @@ int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash
     else return TRUE;
   }
 
+  hash_serial_append(hash_serializer, &e->key.src_as, sizeof(pt_uint32_t), FALSE);
+
   return FALSE;
 }
 
@@ -3151,6 +3161,8 @@ int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash
     }
   }
   else return TRUE;
+
+  hash_serial_append(hash_serializer, &e->key.dst_as, sizeof(pt_uint32_t), FALSE);
 
   return FALSE;
 }
@@ -3204,6 +3216,8 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t 
     }
   }
 
+  hash_serial_append(hash_serializer, &e->key.peer_src_as, sizeof(pt_uint32_t), FALSE);
+
   return FALSE;
 }
 
@@ -3251,6 +3265,8 @@ int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_t 
     else return TRUE;
   }
 
+  hash_serial_append(hash_serializer, &e->key.peer_dst_as, sizeof(pt_uint32_t), FALSE);
+
   return FALSE;
 }
 
@@ -3288,6 +3304,8 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
     }
   }
 
+  hash_serial_append(hash_serializer, &e->key.mpls_vpn_rd, sizeof(pt_rd_t), FALSE);
+
   return FALSE;
 }
 
@@ -3313,6 +3331,8 @@ int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t *
     e->key.mpls_pw_id.n = sample->mpls_vll_vc_id;
   }
   else return TRUE;
+
+  hash_serial_append(hash_serializer, &e->key.mpls_pw_id, sizeof(pt_uint32_t), FALSE);
 
   return FALSE;
 }
@@ -3340,6 +3360,8 @@ int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_ser
     }
   }
 
+  hash_serial_append(hash_serializer, &e->key.mpls_label_bottom, sizeof(pt_uint32_t), FALSE);
+
   return FALSE;
 }
 
@@ -3364,6 +3386,8 @@ int PT_map_index_fdata_src_mac_handler(struct id_entry *e, pm_hash_serial_t *has
   }
   else return TRUE;
 
+  hash_serial_append(hash_serializer, &e->key.src_mac, sizeof(pt_etheraddr_t), FALSE);
+
   return FALSE;
 }
 
@@ -3387,6 +3411,8 @@ int PT_map_index_fdata_dst_mac_handler(struct id_entry *e, pm_hash_serial_t *has
     memcpy(&e->key.dst_mac.a, sample->eth_dst, ETH_ADDR_LEN);
   }
   else return TRUE;
+
+  hash_serial_append(hash_serializer, &e->key.dst_mac, sizeof(pt_etheraddr_t), FALSE);
 
   return FALSE;
 }
@@ -3418,6 +3444,8 @@ int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, pm_hash_serial_t *has
   }
   else return TRUE;
 
+  hash_serial_append(hash_serializer, &e->key.vlan_id, sizeof(pt_uint16_t), FALSE);
+
   return FALSE;
 }
 
@@ -3439,6 +3467,8 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *ha
     }
   }
   else return TRUE;
+
+  hash_serial_append(hash_serializer, &e->key.cvlan_id, sizeof(pt_uint16_t), FALSE);
 
   return FALSE;
 }
