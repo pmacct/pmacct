@@ -14,10 +14,9 @@ SIGUSR1:        returns various statistics via either console or syslog; the
 		syslog level used is NOTICE; the facility is selected through
 		configuration (ie. key 'syslog'). The feature works for all
 		daemons;
-SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes Core
-		Process-based maps to be reloaded (ie. Pre-Tagging, BGP source
-		peer ASN, NetFlow/sFlow agent to BGP peer, BGP MD5, GeoIPv2,
-		etc.).
+SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes maps
+		to be reloaded (ie. pre_tag_map, bgp_agent_map, etc.). If also
+		indexing is enabled, ie. maps_index, indexes are re-compited. 
 SIGINT:		if starting pmacct in foreground the signal is propagated to
 		each running plugin, which is in turn gracefully terminated;
 		if starting pmacct in background, this signal is ignored by

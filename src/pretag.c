@@ -1064,16 +1064,23 @@ void pretag_index_report(struct id_table *t)
 
 void pretag_index_destroy(struct id_table *t)
 {
+  pm_hash_serial_t *hash_serializer;
+  pm_hash_key_t *hash_key;
   u_int32_t iterator = 0;
 
   if (!t) return;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].idx_t) {
+      // XXX: hash_destroy_key's
       free(t->index[iterator].idx_t);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: destroyed index %x.\n",
 		config.name, config.type, t->filename, t->index[iterator].bitmap);
     }
+
+    hash_serializer = &t->index[iterator].hash_serializer;
+    hash_key = hash_serial_get_key(hash_serializer);
+    hash_destroy_key(hash_key);
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
   }
 
