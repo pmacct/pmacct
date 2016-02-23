@@ -340,7 +340,10 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   }
 
   for (x = 0; e->func[x]; x++);
-  if (config.nfacctd_bgp) e->func[x] = BPAS_bgp_nexthop_handler;
+  if (config.nfacctd_bgp) {
+    e->func[x] = BPAS_bgp_nexthop_handler;
+    e->func_type[x] = PRETAG_BGP_NEXTHOP;
+  }
 
   return FALSE;
 }
@@ -357,7 +360,10 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
   e->key.peer_dst_as.n = tmp;
 
   for (x = 0; e->func[x]; x++);
-  if (config.nfacctd_bgp) e->func[x] = BPAS_bgp_peer_dst_as_handler; 
+  if (config.nfacctd_bgp) {
+    e->func[x] = BPAS_bgp_peer_dst_as_handler; 
+    e->func_type[x] = PRETAG_BGP_NEXTHOP;
+  }
 
   return FALSE;
 }
