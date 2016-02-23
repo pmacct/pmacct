@@ -1548,7 +1548,7 @@ dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
 dnl AC_CHECK_FUNCS(inet_ntoa socket)
-AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt])
+AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt json_object_update_missing])
 
 dnl final checks
 dnl trivial solution to portability issue 

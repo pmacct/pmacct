@@ -27,9 +27,7 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "kafka_plugin.h"
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#else
+#ifndef WITH_JANSSON
 #error "--enable-kafka requires --enable-jansson"
 #endif
 

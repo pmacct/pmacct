@@ -35,4 +35,4 @@ uacctd_SOURCES = uacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
 	plugin_common.c preprocess.c
 uacctd_LDFLAGS = $(DEFS) 
 uacctd_LDADD = $(pmacctd_PLUGINS)
-pmacct_SOURCES = pmacct.c strlcpy.c addr.c
+pmacct_SOURCES = pmacct.c strlcpy.c addr.c jansson.c

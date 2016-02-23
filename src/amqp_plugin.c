@@ -27,9 +27,7 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "amqp_plugin.h"
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#else
+#ifndef WITH_JANSSON
 #error "--enable-rabbitmq requires --enable-jansson"
 #endif
 

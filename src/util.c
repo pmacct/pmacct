@@ -27,9 +27,6 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "plugin_hooks.h"
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#endif
 #include <search.h>
 
 static const char pkt_len_distrib_unknown[] = "unknown";

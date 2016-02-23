@@ -27,9 +27,6 @@
 #include "imt_plugin.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#endif
 
 /* prototypes */
 int Recv(int, unsigned char **);
