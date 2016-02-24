@@ -43,7 +43,7 @@ void Log(short int level, char *msg, ...)
     vsnprintf(syslog_string, LOGSTRLEN, msg, ap);
     va_end(ap);
 
-    if (config.syslog) syslog(level, syslog_string);
+    if (config.syslog) syslog(level, "%s", syslog_string);
 
     if (config.logfile_fd) {
       char timebuf[SRVBUFLEN];
