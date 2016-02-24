@@ -3,6 +3,8 @@ dnl configuration file for pmacct
 
 AC_INIT([src/pmacctd.c], [1.6.0-git], [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([foreign])
+AC_CONFIG_MACRO_DIR([m4])
+LT_INIT
 AC_PREFIX_DEFAULT([/usr/local])
 
 COMPILE_ARGS="${ac_configure_args}"
@@ -19,8 +21,6 @@ AC_MSG_RESULT($host_os)
 
 AC_MSG_CHECKING(hardware)
 AC_MSG_RESULT($host_cpu)
-
-AC_PROG_RANLIB
 
 dnl initial checks; tweakings to CFLAGS and LDFLAGS
 dnl see final checks for tweakings to LIBS
