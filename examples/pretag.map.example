@@ -10,12 +10,12 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg,
-! sampling_rate, sample_type, direction, src_mac, dst_mac, mpls_pw_id, vlan,
-! cvlan; mandatory keys for each rule: ip.
+! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan;
+! mandatory keys for each rule: ip.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
-! dst_mac, mpls_pw_id, vlan; mandatory keys for each rule: ip.
+! dst_mac, vlan; mandatory keys for each rule: ip.
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label and filter.
 !
@@ -130,10 +130,6 @@
 ! 'mpls_vpn_rd'		MATCH: Destination IP prefix BGP-signalled MPLS L2/L3
 !			VPN Route Distinguisher (RD) value. Encoding types #0, #1
 !			and #2 are supported as per rfc4364. See example below.
-! 'mpls_pw_id'		MATCH: Signalled MPLS L2 VPNs Pseudowire ID. In NetFlow
-!			v9/IPFIX this is compared against IE #249; in sFlow v5
-!			this is compared against vll_vc_id field, extended MPLS
-!			VC object.
 ! 'src_mac'		MATCH: In NetFlow v9 and IPFIX this is compared against
 !			IE #56, in sFlow against source MAC address field part
 !			of the Extended Switch object.
