@@ -1561,15 +1561,12 @@ case "$host_os" in
     ;;
 esac
 
-SERVER_LIBS="-lnfprobe_plugin -Lnfprobe_plugin/ -lsfprobe_plugin -Lsfprobe_plugin/ -lbgp -Lbgp/ -ltee_plugin -Ltee_plugin/ -lisis -Lisis/ -lbmp -Lbmp/"
-
 echo "
 PLATFORM ..... : `uname -m`
 OS ........... : `uname -rs` (`uname -n`)
 COMPILER ..... : ${CC}
 CFLAGS ....... : ${CFLAGS}
 LIBS ......... : ${LIBS}
-SERVER_LIBS ...: ${SERVER_LIBS}
 LDFLAGS ...... : ${LDFLAGS}
 
 Now type 'make' to compile the source code.
@@ -1584,7 +1581,6 @@ Read the README file or go to http://wiki.pmacct.net/
 AC_SUBST([PLUGINS])
 AC_SUBST([THREADS_SOURCES])
 AC_SUBST([EXTRABIN])
-AC_SUBST([SERVER_LIBS])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \

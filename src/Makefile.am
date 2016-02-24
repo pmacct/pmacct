@@ -1,8 +1,15 @@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd
-bin_PROGRAMS = pmacct @EXTRABIN@ 
+bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
-pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@ @SERVER_LIBS@
+pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@
+pmacctd_PLUGINS += nfprobe_plugin/libnfprobe_plugin.la
+pmacctd_PLUGINS += sfprobe_plugin/libsfprobe_plugin.la
+pmacctd_PLUGINS += bmp/libbmp.la
+pmacctd_PLUGINS += bgp/libbgp.la
+pmacctd_PLUGINS += tee_plugin/libtee_plugin.la
+pmacctd_PLUGINS += isis/libisis.la
+
 pmacctd_SOURCES = pmacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
 	server.c acct.c memory.c ll.c cfg.c imt_plugin.c log.c pkt_handlers.c \
 	cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c ip_frag.c \
