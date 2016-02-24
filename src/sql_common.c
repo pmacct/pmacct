@@ -26,7 +26,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
-#include "crc32.c"
+#include "crc32.h"
 #include "sql_common_m.c"
 
 /* Functions */

@@ -41,7 +41,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
-#include "crc32.c"
+#include "crc32.h"
 
 /* variables to be exported away */
 int debug;
