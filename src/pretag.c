@@ -1066,16 +1066,23 @@ void pretag_index_destroy(struct id_table *t)
 {
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator = 0;
+  u_int32_t iterator = 0, buckets = 0, bucket_idx = 0, depth_idx = 0;
 
   if (!t) return;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].idx_t) {
-      // XXX: hash_destroy_key's
+      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+
+      for (bucket_idx = 0; bucket_idx < buckets; bucket_idx++) {
+        for (depth_idx = 0; depth_idx < ID_TABLE_INDEX_DEPTH; depth_idx++) {
+          hash_destroy_key(&t->index[iterator].idx_t[bucket_idx].hash_key[depth_idx]);
+        }
+      }
+
       free(t->index[iterator].idx_t);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: destroyed index %x.\n",
-		config.name, config.type, t->filename, t->index[iterator].bitmap);
+                config.name, config.type, t->filename, t->index[iterator].bitmap);
     }
 
     hash_serializer = &t->index[iterator].hash_serializer;
