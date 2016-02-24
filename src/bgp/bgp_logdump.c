@@ -33,9 +33,6 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#endif
 
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type, int output, int log_type)
 {

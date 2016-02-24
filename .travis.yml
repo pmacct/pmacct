@@ -4,8 +4,6 @@ sudo: required
 
 install:
   - sudo apt-get install libtool autoconf cmake
-  - git clone https://github.com/akheron/jansson
-  - cd jansson && autoreconf -i && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/edenhill/librdkafka
   - cd librdkafka && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/alanxz/rabbitmq-c
@@ -27,4 +25,5 @@ addons:
       - libpq-dev
       - libsqlite3-dev
       - libmysqlclient-dev
+      - libjansson-dev
       - mysql-client

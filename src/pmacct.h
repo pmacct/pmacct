@@ -346,6 +346,11 @@ EXT struct child_ctl sql_writers;
 size_t strlcpy(char *, const char *, size_t);
 #endif
 
+#if (defined WITH_JANSSON) && (!defined HAVE_JANSSON_OBJECT_UPDATE_MISSING)
+#include <jansson.h>
+int json_object_update_missing(json_t *, json_t *);
+#endif
+
 /* global variables */
 pcap_t *glob_pcapt;
 struct pcap_stat ps;

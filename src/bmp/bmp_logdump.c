@@ -33,9 +33,6 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#endif
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, char *event_type, int output, int log_type)
 {

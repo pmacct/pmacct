@@ -43,9 +43,6 @@
 #include "classifier.h"
 #include "net_aggr.h"
 #include "crc32.c"
-#ifdef WITH_JANSSON
-#include <jansson.h>
-#endif
 
 /* variables to be exported away */
 int debug;
