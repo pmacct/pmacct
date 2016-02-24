@@ -29,7 +29,7 @@
 #include "print_plugin.h"
 #include "ip_flow.h"
 #include "classifier.h"
-#include "crc32.c"
+#include "crc32.h"
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

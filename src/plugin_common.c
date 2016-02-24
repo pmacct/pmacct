@@ -27,7 +27,7 @@
 #include "plugin_common.h"
 #include "ip_flow.h"
 #include "classifier.h"
-#include "crc32.c"
+#include "crc32.h"
 
 /* Functions */
 void P_set_signals()

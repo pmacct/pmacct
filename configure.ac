@@ -596,7 +596,7 @@ AC_ARG_ENABLE(mysql,
     fi
 
     AC_DEFINE(WITH_MYSQL, 1)
-    PLUGINS="${PLUGINS} mysql_plugin.c"
+    PLUGINS="${PLUGINS} mysql"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -708,7 +708,7 @@ AC_ARG_ENABLE(pgsql,
     fi
 
     AC_DEFINE(WITH_PGSQL, 1)
-    PLUGINS="${PLUGINS} pgsql_plugin.c"
+    PLUGINS="${PLUGINS} pgsql"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -812,7 +812,7 @@ dnl USING_SQL="yes"
     fi
 
     AC_DEFINE(WITH_MONGODB, 1)
-    PLUGINS="${PLUGINS} mongodb_plugin.c"
+    PLUGINS="${PLUGINS} mongodb"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -923,7 +923,7 @@ AC_ARG_ENABLE(sqlite3,
     fi
 
     AC_DEFINE(WITH_SQLITE3, 1)
-    PLUGINS="${PLUGINS} sqlite3_plugin.c"
+    PLUGINS="${PLUGINS} sqlite3"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1026,7 +1026,7 @@ AC_ARG_ENABLE(rabbitmq,
     fi
 
     AC_DEFINE(WITH_RABBITMQ, 1)
-    PLUGINS="${PLUGINS} amqp_common.c amqp_plugin.c"
+    PLUGINS="${PLUGINS} rabbitmq"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1130,7 +1130,7 @@ AC_ARG_ENABLE(kafka,
     fi
 
     AC_DEFINE(WITH_KAFKA, 1)
-    PLUGINS="${PLUGINS} kafka_common.c kafka_plugin.c"
+    PLUGINS="${PLUGINS} kafka"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1454,11 +1454,6 @@ else
 	fi
 fi
 
-if test x"$USING_SQL" = x"yes"; then
-	PLUGINS="${PLUGINS} sql_common.c sql_handlers.c"
-	LIBS="${LIBS} -lm"
-fi
-
 AC_CHECK_LIB([z], [deflate], [
 	LIBS="${LIBS} -lz"
 	AC_DEFINE(HAVE_ZLIB, 1)]
@@ -1512,10 +1507,9 @@ AC_ARG_ENABLE(threads,
 
 
 	  LIBS="${LIBS} -lpthread"
-	  THREADS_SOURCES="thread_pool.c"
+          USING_THREADPOOL=yes
 	else
           AC_MSG_RESULT(no)
-	  THREADS_SOURCES=""
         fi
         ,
         AC_MSG_RESULT(yes)
@@ -1533,7 +1527,7 @@ AC_ARG_ENABLE(threads,
 
 
           LIBS="${LIBS} -lpthread"
-          THREADS_SOURCES="thread_pool.c"
+          USING_THREADPOOL=yes
 )
 
 AC_MSG_CHECKING(whether to enable ULOG support)
@@ -1572,6 +1566,7 @@ COMPILER ..... : ${CC}
 CFLAGS ....... : ${CFLAGS}
 LIBS ......... : ${LIBS}
 LDFLAGS ...... : ${LDFLAGS}
+PLUGINS ...... : ${PLUGINS}
 
 Now type 'make' to compile the source code.
 
@@ -1582,9 +1577,15 @@ Need for documentation and examples?
 Read the README file or go to http://wiki.pmacct.net/
 
 "
-AC_SUBST([PLUGINS])
-AC_SUBST([THREADS_SOURCES])
 AC_SUBST([EXTRABIN])
+AM_CONDITIONAL([WITH_MYSQL], [test x"$USING_MYSQL" = x"yes"])
+AM_CONDITIONAL([WITH_PGSQL], [test x"$USING_PGSQL" = x"yes"])
+AM_CONDITIONAL([WITH_MONGODB], [test x"$USING_MONGODB" = x"yes"])
+AM_CONDITIONAL([WITH_SQLITE3], [test x"$USING_SQLITE3" = x"yes"])
+AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
+AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
+AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
+AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \

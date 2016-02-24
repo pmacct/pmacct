@@ -31,7 +31,7 @@
 #include "tee_plugin/tee_recvs-data.h"
 #include "isis/isis.h"
 #include "isis/isis-data.h"
-#include "crc32.c"
+#include "crc32.h"
 
 /*
    XXX: load_id_file() interface cleanup pending:
