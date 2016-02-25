@@ -351,7 +351,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_mpls_primitives empty_pmpls;
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], *sep = config.print_output_separator;
+  char rd_str[SRVBUFLEN], *sep = config.print_output_separator, *fd_buf;
   char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL;
@@ -383,6 +383,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   memset(&elem_prim_ptrs, 0, sizeof(elem_prim_ptrs));
   memset(&elem_dummy_data, 0, sizeof(elem_dummy_data));
 
+  fd_buf = malloc(OUTPUT_FILE_BUFSZ);
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
     stop = P_preprocess_funcs[j](queue, &index, j);
@@ -420,6 +421,12 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       f = open_output_file(current_table, "a", TRUE);
     else
       f = open_output_file(current_table, "w", TRUE);
+
+    if (fd_buf) {
+      if (setvbuf(f, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, config.type, current_table, errno);
+      else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
+    }
 
     if (f && !config.print_output_file_append) { 
       if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", stamp, config.sql_refresh_time);

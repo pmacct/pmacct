@@ -617,7 +617,7 @@ void bgp_handle_dump_event()
     memset(current_filename, 0, sizeof(current_filename));
     memset(&peer_log, 0, sizeof(struct bgp_peer_log));
     memset(&bds, 0, sizeof(struct bgp_dump_stats));
-    fd_buf = malloc(BGP_LOG_BUFSZ);
+    fd_buf = malloc(OUTPUT_FILE_BUFSZ);
 
 #ifdef WITH_RABBITMQ
     if (config.bgp_table_dump_amqp_routing_key) {
@@ -672,8 +672,9 @@ void bgp_handle_dump_event()
 	    }
 	    peer->log->fd = open_output_file(current_filename, "w", TRUE);
 	    if (fd_buf) {
-	      setbuffer(peer->log->fd, fd_buf, BGP_LOG_BUFSZ);
-	      memset(fd_buf, 0, BGP_LOG_BUFSZ); 
+	      if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
+		Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] setvbuf() failed: %s\n", config.name, current_filename, errno);
+	      else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ); 
 	    }
 	  }
 	}

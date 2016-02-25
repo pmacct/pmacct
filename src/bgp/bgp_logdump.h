@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -33,8 +33,6 @@
 #define BGP_LOG_TYPE_DELETE	3
 #define BGP_LOG_TYPE_OPEN	4
 #define BGP_LOG_TYPE_CLOSE	5
-
-#define BGP_LOG_BUFSZ		(100 * LARGEBUFLEN)
 
 struct bgp_peer_log {
   FILE *fd;
