@@ -210,7 +210,8 @@ DESC:		Defines the size of the kernel socket to read (ie. daemons) and write (ie
 		On Linux systems, if this configuration directive is not specified default socket size
 		awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable
 		socket size is defined in /proc/sys/net/core/[rw]mem_max instead. Still on Linux, the
-		"drops" field of /proc/net/udp can be checked to ensure its value  is not increasing.
+		"drops" field of /proc/net/udp or /proc/net/udp6 can be checked to ensure its value
+		is not increasing.
 DEFAULT:	Operating System default 
 
 KEY:            [ bgp_daemon_pipe_size | bmp_daemon_pipe_size ] [GLOBAL]
@@ -1315,9 +1316,9 @@ NOTES:		* Jansson library does not seem to have concept of unsigned integers. in
 DEFAULT:	formatted
 
 KEY:            print_output_separator
-DESC:           Defines the print plugin output separator. Value is expected to be a single character and
-		cannot be a spacing (if spacing separator is wanted then 'formatted' output should be the
-		natural choice)
+DESC:           Defines the print plugin output separator when print_output is set to csv or event_csv. Value
+		is expected to be a single character and cannot be a spacing (if spacing separator is wanted
+		then 'formatted' output should be the natural choice instead)
 DEFAULT:	','
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos | kafka_num_protos ]

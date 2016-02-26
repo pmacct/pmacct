@@ -1593,10 +1593,11 @@ nfacctd_pipe_size and its equivalents, is more tricky and issues with it can
 only be inferred by symptoms like sequence number checks failing (and only
 for protocols like NetFlow v9/IPFIX supporting this feature). Two commands
 useful to check this kind of buffering on Linux systems are:
-1) "cat /proc/net/udp" ensuring that "drops" value is not increasing and 2)
-"netstat -s" ensuring, under the section UDP, that errors are not increasing
-(since this command returns system-wide counters, the counter-check would be:
-stop the pmacct daemon running and, granted the counter was increasing, verify
-it does not increase anymore). As suggested in CONFIG-KEYS description for the
-nfacctd_pipe_size configuration directive, any lift in the buffering must be
-supported by the kernel adjusting /proc/sys/net/core/rmem_max.
+1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops" value
+is not increasing and 2) "netstat -s" ensuring, under the section UDP, that
+errors are not increasing (since this command returns system-wide counters,
+the counter-check would be: stop the pmacct daemon running and, granted the
+counter was increasing, verify it does not increase anymore). As suggested
+in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
+any lift in the buffering must be also supported by the kernel, adjusting
+/proc/sys/net/core/rmem_max.
