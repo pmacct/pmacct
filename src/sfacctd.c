@@ -902,6 +902,7 @@ int main(int argc,char **argv, char **envp)
     }
     else {
       sf_cnt_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_SFLOW_COUNTER];
+      config.sfacctd_counter_max_nodes = MAX_SF_CNT_LOG_ENTRIES;
       memset(sf_cnt_misc_db, 0, sizeof(struct bgp_misc_structs));
       sf_cnt_link_misc_structs(sf_cnt_misc_db);
 
@@ -911,7 +912,6 @@ int main(int argc,char **argv, char **envp)
         exit(1);
       }
       memset(sf_cnt_misc_db->peers_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
-      config.sfacctd_counter_max_nodes = MAX_SF_CNT_LOG_ENTRIES;
       bgp_peer_log_seq_init(&sf_cnt_misc_db->log_seq);
     }
 
@@ -930,7 +930,7 @@ int main(int argc,char **argv, char **envp)
     p_amqp_connect_to_publish(&sfacctd_counter_amqp_host);
 
     if (!config.sfacctd_counter_amqp_retry)
-    config.sfacctd_counter_amqp_retry = AMQP_DEFAULT_RETRY;
+      config.sfacctd_counter_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
     Log(LOG_WARNING, "WARN ( %s/core ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
