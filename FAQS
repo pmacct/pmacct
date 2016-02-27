@@ -66,10 +66,14 @@ A: CPU cycles are proportional to the amount of traffic (packets, flows, samples
    ones. Kernel-to-userspace copies are critical and hence the first to be optimized;
    for this purpose you may look at the following solutions: 
 
-   libpcap-mmap, http://public.lanl.gov/cpw/ : a libpcap version which supports mmap()
-   on the linux kernel 2.[46].x . Applications, like pmacctd, need just to be linked
-   against the mmap()ed version of libpcap to work correctly. 
-
+   Linux kernel has support for mmap() since 2.4. The kernel needs to
+   be 2.6.34+ or compiled with option CONFIG_PACKET_MMAP. You need at
+   least a 2.6.27 to get compatibility with 64bit. Starting from 3.10,
+   you get 20% increase of performance and packet capture rate. You
+   also need a matching libpcap library. mmap() support has been added
+   in 1.0.0. To take advantage of the performance boost from Linux
+   3.10, you need at least libpcap 1.5.0.
+   
    PF_RING, http://www.ntop.org/PF_RING.html : it's a new type of network socket that
    improves the packet capture speed; it's available for Linux kernels 2.[46].x; it's
    kernel based; has libpcap support for seamless integration with existing applications.
