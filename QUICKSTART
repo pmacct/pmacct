@@ -23,7 +23,7 @@ XVII.	Quickstart guide to setup the BMP daemon
 XVIII.	Running the print plugin to write to flat-files
 XIX.	Quickstart guide to setup GeoIP lookups
 XX.	Using pmacct as traffic/event logger
-XXI.	Notes on how to troubleshoot
+XXI.	Miscellaneous notes and troubleshooting tips
 
 
 I. Plugins included with pmacct distribution
@@ -1539,7 +1539,7 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XXI.  Notes on how to troubleshoot
+XXI. Miscellaneous notes and troubleshooting tips
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
@@ -1601,3 +1601,11 @@ counter was increasing, verify it does not increase anymore). As suggested
 in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
 any lift in the buffering must be also supported by the kernel, adjusting
 /proc/sys/net/core/rmem_max.
+
+f) If changes are needed to the building system (configure script, Makefiles,
+etc.) please note that ancient versions of autotools are currently in use.
+These are: automake 1.4p6 and autoconf 2.13. While stale, buggy and have to
+be downloaded and compiled, these versions serve to their purpose without
+producing massive scripts like their more recent counterparts. The building
+system is currently under review and possibly newer versions of autotools may
+be adopted soon - at which point this note will disappear. 
