@@ -26,7 +26,6 @@
 #include "pmacct.h"
 #include "bgp.h"
 #include "../bmp/bmp.h"
-#include "../sfacctd_logdump.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif

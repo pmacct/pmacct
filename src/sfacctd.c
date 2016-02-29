@@ -34,7 +34,6 @@
 #include "bgp/bgp.h"
 #include "sfacctd.h"
 #include "sfv5_module.h"
-#include "sfacctd_logdump.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -3014,9 +3013,10 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
 
 int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char *event_type, int output, u_int32_t tag)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_SFLOW_COUNTER);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
-  if (!peer || !sample || !event_type) {
+  if (!bms || !peer || !sample || !event_type) {
     skipBytes(sample, len);
     return ret;
   }
@@ -3041,12 +3041,12 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
 
     /* no need for seq and timestamp for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", sf_cnt_log_seq);
+      kv = json_pack("{sI}", "seq", bms->log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
-      bgp_peer_log_seq_increment(&sf_cnt_log_seq);
+      bgp_peer_log_seq_increment(&bms->log_seq);
 
-      kv = json_pack("{ss}", "timestamp", sf_cnt_log_tstamp_str);
+      kv = json_pack("{ss}", "timestamp", bms->log_tstamp_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
