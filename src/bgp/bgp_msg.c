@@ -917,7 +917,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
   if (!inter_domain_routing_db) return ERR;
 
-  route = bgp_node_get(inter_domain_routing_db->rib[afi][safi], p);
+  route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
 
   /* Check previously received route. */
   for (ri = route->info[modulo]; ri; ri = ri->next) {
@@ -1046,14 +1046,15 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 			 rd_t *rd, path_id_t *path_id, char *label)
 {
   struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
-  u_int32_t modulo = bgp_route_info_modulo(peer, path_id);
+  u_int32_t modulo = bms->route_info_modulo(peer, path_id);
 
   if (!inter_domain_routing_db) return ERR;
 
   /* Lookup node. */
-  route = bgp_node_get(inter_domain_routing_db->rib[afi][safi], p);
+  route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
 
   /* Check previously received route. */
   for (ri = route->info[modulo]; ri; ri = ri->next) {

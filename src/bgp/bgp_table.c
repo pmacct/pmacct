@@ -54,16 +54,17 @@ bgp_table_init (afi_t afi, safi_t safi)
 }
 
 static struct bgp_node *
-bgp_node_create ()
+bgp_node_create (struct bgp_peer *peer)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_node *rn;
 
   rn = (struct bgp_node *) malloc (sizeof (struct bgp_node));
   if (rn) {
     memset (rn, 0, sizeof (struct bgp_node));
 
-    rn->info = (void **) malloc(sizeof(struct bgp_info *) * (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets));
-    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets));
+    rn->info = (void **) malloc(sizeof(struct bgp_info *) * (bms->table_peer_buckets * bms->table_per_peer_buckets));
+    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * (bms->table_peer_buckets * bms->table_per_peer_buckets));
     else goto malloc_failed;
   }
   else goto malloc_failed;
@@ -77,11 +78,12 @@ bgp_node_create ()
 
 /* Allocate new route node with prefix set. */
 static struct bgp_node *
-bgp_node_set (struct bgp_table *table, struct prefix *prefix)
+bgp_node_set (struct bgp_peer *peer, struct bgp_table *table, struct prefix *prefix)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_node *node;
   
-  node = bgp_node_create ();
+  node = bgp_node_create (peer);
 
   prefix_copy (&node->p, prefix);
   node->table = table;
@@ -253,8 +255,9 @@ bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struc
 
 /* Add node to routing table. */
 struct bgp_node *
-bgp_node_get (struct bgp_table *const table, struct prefix *p)
+bgp_node_get (struct bgp_peer *peer, struct bgp_table *const table, struct prefix *p)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_node *new;
   struct bgp_node *node;
   struct bgp_node *match;
@@ -275,7 +278,7 @@ bgp_node_get (struct bgp_table *const table, struct prefix *p)
 
   if (node == NULL)
     {
-      new = bgp_node_set (table, p);
+      new = bgp_node_set (peer, table, p);
       if (match)
 	set_link (match, new);
       else
@@ -283,7 +286,7 @@ bgp_node_get (struct bgp_table *const table, struct prefix *p)
     }
   else
     {
-      new = bgp_node_create ();
+      new = bgp_node_create (peer);
       route_common (&node->p, p, &new->p);
       new->p.family = p->family;
       new->table = table;
@@ -297,7 +300,7 @@ bgp_node_get (struct bgp_table *const table, struct prefix *p)
       if (new->p.prefixlen != p->prefixlen)
 	{
 	  match = new;
-	  new = bgp_node_set (table, p);
+	  new = bgp_node_set (peer, table, p);
 	  set_link (match, new);
 	  table->count++;
 	}
@@ -317,6 +320,8 @@ bgp_node_delete (struct bgp_node *node)
   u_int32_t ri_idx;
 
   assert (node->lock == 0);
+
+  // XXX: config.bgp's to be replaced by a bgp_misc_struct
   for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++)
     assert (node->info[ri_idx] == NULL);
 
