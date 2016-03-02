@@ -687,7 +687,6 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_msglog_kafka_topic_rr", cfg_key_nfacctd_bmp_msglog_kafka_topic_rr},
   {"bmp_daemon_msglog_kafka_partition", cfg_key_nfacctd_bmp_msglog_kafka_partition},
   {"bmp_daemon_msglog_kafka_retry", cfg_key_nfacctd_bmp_msglog_kafka_retry},
-  {"bmp_neighbors_file", cfg_key_nfacctd_bmp_neighbors_file},
   {"bmp_table_peer_buckets", cfg_key_nfacctd_bmp_table_peer_buckets},
   {"bmp_table_per_peer_buckets", cfg_key_nfacctd_bmp_table_per_peer_buckets},
   {"bmp_table_attr_hash_buckets", cfg_key_nfacctd_bmp_table_attr_hash_buckets},

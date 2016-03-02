@@ -109,6 +109,7 @@ struct bgp_misc_structs {
   char *dump_kafka_topic;
   int dump_kafka_topic_rr;
   char *msglog_file;
+  int msglog_output;
   char *msglog_amqp_routing_key;
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;
@@ -119,6 +120,9 @@ struct bgp_misc_structs {
   int table_attr_hash_buckets;
   int table_per_peer_hash;
   u_int32_t (*route_info_modulo)(struct bgp_peer *, path_id_t *);
+
+  int msglog_backend_methods;
+  int dump_backend_methods;
 };
 
 /* all require definition of bgp_rt_structs */
@@ -217,8 +221,6 @@ EXT char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 EXT struct bgp_comm_range peer_src_as_ifrange; 
 EXT struct bgp_comm_range peer_src_as_asrange; 
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *);
-EXT int nfacctd_bgp_msglog_backend_methods;
-EXT int bgp_table_dump_backend_methods;
 
 EXT struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 EXT struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;

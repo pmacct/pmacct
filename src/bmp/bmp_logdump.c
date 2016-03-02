@@ -468,7 +468,7 @@ void bmp_handle_dump_event()
   struct bgp_peer_log peer_log;      
 
   /* pre-flight check */
-  if (!bmp_dump_backend_methods || !config.bmp_dump_refresh_time)
+  if (!bms->dump_backend_methods || !config.bmp_dump_refresh_time)
     return;
 
   switch (ret = fork()) {

@@ -85,8 +85,6 @@ void skinny_bgp_daemon()
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
   memset(&allow, 0, sizeof(struct hosts_table));
-  nfacctd_bgp_msglog_backend_methods = 0;
-  bgp_table_dump_backend_methods = 0;
 
   bgp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP];
   memset(bgp_routing_db, 0, sizeof(struct bgp_rt_structs));
@@ -136,11 +134,11 @@ void skinny_bgp_daemon()
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
-    if (config.nfacctd_bgp_msglog_file) nfacctd_bgp_msglog_backend_methods++;
-    if (config.nfacctd_bgp_msglog_amqp_routing_key) nfacctd_bgp_msglog_backend_methods++;
-    if (config.nfacctd_bgp_msglog_kafka_topic) nfacctd_bgp_msglog_backend_methods++;
+    if (config.nfacctd_bgp_msglog_file) bgp_misc_db->msglog_backend_methods++;
+    if (config.nfacctd_bgp_msglog_amqp_routing_key) bgp_misc_db->msglog_backend_methods++;
+    if (config.nfacctd_bgp_msglog_kafka_topic) bgp_misc_db->msglog_backend_methods++;
 
-    if (nfacctd_bgp_msglog_backend_methods > 1) {
+    if (bgp_misc_db->msglog_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_daemon_msglog_file, bgp_daemon_msglog_amqp_routing_key and bgp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
       exit_all(1);
     }
@@ -172,11 +170,11 @@ void skinny_bgp_daemon()
   }
 
   if (config.bgp_table_dump_file || config.bgp_table_dump_amqp_routing_key || config.bgp_table_dump_kafka_topic) {
-    if (config.bgp_table_dump_file) bgp_table_dump_backend_methods++;
-    if (config.bgp_table_dump_amqp_routing_key) bgp_table_dump_backend_methods++;
-    if (config.bgp_table_dump_kafka_topic) bgp_table_dump_backend_methods++;
+    if (config.bgp_table_dump_file) bgp_misc_db->dump_backend_methods++;
+    if (config.bgp_table_dump_amqp_routing_key) bgp_misc_db->dump_backend_methods++;
+    if (config.bgp_table_dump_kafka_topic) bgp_misc_db->dump_backend_methods++;
 
-    if (bgp_table_dump_backend_methods > 1) {
+    if (bgp_misc_db->dump_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): bgp_table_dump_file, bgp_table_dump_amqp_routing_key and bgp_table_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
       exit_all(1);
     }
@@ -297,7 +295,7 @@ void skinny_bgp_daemon()
   }
   else bgp_batch_init(&bp_batch, config.nfacctd_bgp_batch, config.nfacctd_bgp_batch_interval);
 
-  if (nfacctd_bgp_msglog_backend_methods) {
+  if (bgp_misc_db->msglog_backend_methods) {
 #ifdef WITH_JANSSON
     if (!config.nfacctd_bgp_msglog_output) config.nfacctd_bgp_msglog_output = PRINT_OUTPUT_JSON;
 #else
@@ -305,7 +303,7 @@ void skinny_bgp_daemon()
 #endif
   }
 
-  if (bgp_table_dump_backend_methods) {
+  if (bgp_misc_db->dump_backend_methods) {
 #ifdef WITH_JANSSON
     if (!config.bgp_table_dump_output) config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
 #else
@@ -313,7 +311,7 @@ void skinny_bgp_daemon()
 #endif
   }
 
-  if (bgp_table_dump_backend_methods) {
+  if (bgp_misc_db->dump_backend_methods) {
     char dump_roundoff[] = "m";
     time_t tmp_time;
 
@@ -362,7 +360,7 @@ void skinny_bgp_daemon()
 
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
-    if (bgp_table_dump_backend_methods) {
+    if (bgp_misc_db->dump_backend_methods) {
       int delta;
 
       calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, &delta);
@@ -398,11 +396,11 @@ void skinny_bgp_daemon()
       }
     }
 
-    if (nfacctd_bgp_msglog_backend_methods || bgp_table_dump_backend_methods) {
+    if (bgp_misc_db->msglog_backend_methods || bgp_misc_db->dump_backend_methods) {
       gettimeofday(&bgp_misc_db->log_tstamp, NULL);
       compose_timestamp(bgp_misc_db->log_tstamp_str, SRVBUFLEN, &bgp_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
 
-      if (bgp_table_dump_backend_methods) {
+      if (bgp_misc_db->dump_backend_methods) {
 	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_handle_dump_event();
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
@@ -516,7 +514,7 @@ void skinny_bgp_daemon()
       }
 #endif
 
-      if (nfacctd_bgp_msglog_backend_methods)
+      if (bgp_misc_db->msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
 
       /* Check: only one TCP connection is allowed per peer */
@@ -544,7 +542,7 @@ void skinny_bgp_daemon()
       Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP peers usage: %u/%u\n", config.name,
 		bgp_peer_print(peer), peers_num, config.nfacctd_bgp_max_peers);
 
-      if (config.nfacctd_bgp_neighbors_file) write_neighbors_file(config.nfacctd_bgp_neighbors_file);
+      if (config.nfacctd_bgp_neighbors_file) write_neighbors_file(config.nfacctd_bgp_neighbors_file, FUNC_TYPE_BGP);
     }
 
     read_data:

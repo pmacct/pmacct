@@ -603,7 +603,7 @@ void bgp_handle_dump_event()
   u_int64_t dump_elems;
 
   /* pre-flight check */
-  if (!bgp_table_dump_backend_methods || !config.bgp_table_dump_refresh_time)
+  if (!bms->dump_backend_methods || !config.bgp_table_dump_refresh_time)
     return;
 
   switch (ret = fork()) {

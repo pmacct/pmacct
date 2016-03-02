@@ -425,43 +425,22 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
 
 void bgp_peer_close(struct bgp_peer *peer, int type)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   afi_t afi;
   safi_t safi;
 
-  /* pointers to BGP or BMP vars */
-  char *msglog_file, *neighbors_file, *msglog_amqp_routing_key;
-  char *msglog_kafka_topic;
-  char *dump_file = NULL, *dump_amqp_routing_key = NULL;
-  char *dump_kafka_topic = NULL;
-  int msglog_output;
-
-  if (type == FUNC_TYPE_BGP) {
-    msglog_file = config.nfacctd_bgp_msglog_file;
-    msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
-    msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
-    msglog_output = config.nfacctd_bgp_msglog_output;
-    neighbors_file = config.nfacctd_bgp_neighbors_file; 
-  }
-  else if (type == FUNC_TYPE_BMP) {
-    msglog_file = config.nfacctd_bmp_msglog_file;
-    msglog_amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
-    msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
-    msglog_output = config.nfacctd_bmp_msglog_output;
-    neighbors_file = config.nfacctd_bmp_neighbors_file;
-    dump_file = config.bmp_dump_file;
-    dump_amqp_routing_key = config.bmp_dump_amqp_routing_key;
-    dump_kafka_topic = config.bmp_dump_kafka_topic;
-  }
-  else return;
+  if (!bms) return;
 
   bgp_peer_info_delete(peer);
 
-  if (msglog_file || msglog_amqp_routing_key || msglog_kafka_topic)
-    bgp_peer_log_close(peer, msglog_output, type);
+  if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
+    bgp_peer_log_close(peer, bms->msglog_output, type);
 
   /* BMP case only */
-  if (dump_file || dump_amqp_routing_key || dump_kafka_topic)
-    bmp_dump_close_peer(peer);
+  if (peer->type == FUNC_TYPE_BMP) {
+    if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
+      bmp_dump_close_peer(peer);
+  }
 
   close(peer->fd);
   peer->fd = 0;
@@ -471,8 +450,8 @@ void bgp_peer_close(struct bgp_peer *peer, int type)
 
   free(peer->buf.base);
 
-  if (neighbors_file)
-    write_neighbors_file(neighbors_file);
+  if (bms->neighbors_file)
+    write_neighbors_file(bms->neighbors_file, peer->type);
 }
 
 char *bgp_peer_print(struct bgp_peer *peer)
@@ -515,13 +494,10 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
         for (peer_buckets = 0; peer_buckets < bms->table_per_peer_buckets; peer_buckets++) {
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
-	      if (nfacctd_bgp_msglog_backend_methods) {
+	      if (bms->msglog_backend_methods) {
 		char event_type[] = "log";
 
-		if (peer->type == FUNC_TYPE_BGP) 
-		  bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_DELETE);
-		else if (peer->type == FUNC_TYPE_BMP) 
-		  bgp_peer_log_msg(node, ri, safi, event_type, config.nfacctd_bmp_msglog_output, BGP_LOG_TYPE_DELETE);
+		bgp_peer_log_msg(node, ri, safi, event_type, bms->msglog_output, BGP_LOG_TYPE_DELETE);
 	      }
 
 	      ri_next = ri->next; /* let's save pointer to next before free up */
@@ -700,7 +676,7 @@ as_t evaluate_first_asn(char *src)
     is_space = FALSE;
   }
 
-  if (config.nfacctd_bgp_peer_as_skip_subas && sub_as) {
+  if (config.nfacctd_bgp_peer_as_skip_subas /* XXX */ && sub_as) {
     while (idx < len && (src[idx] == ' ' || src[idx] == ')')) idx++;
 
     if (idx != len-1) { 
@@ -717,13 +693,17 @@ as_t evaluate_first_asn(char *src)
   return asn;
 }
 
-void write_neighbors_file(char *filename)
+/* XXX: only BGP is supported due to use of peers struct */
+void write_neighbors_file(char *filename, int type)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   FILE *file;
   char neighbor[INET6_ADDRSTRLEN+1];
   int idx, len, ret;
   uid_t owner = -1;
   gid_t group = -1;
+
+  if (!bms) return;
 
   unlink(filename);
 
@@ -739,7 +719,7 @@ void write_neighbors_file(char *filename)
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] Unable to obtain lock.\n", config.name, filename);
       return;
     }
-    for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
+    for (idx = 0; idx < bms->max_peers; idx++) {
       if (peers[idx].fd) {
         if (peers[idx].addr.family == AF_INET) {
           inet_ntop(AF_INET, &peers[idx].addr.address.ipv4, neighbor, INET6_ADDRSTRLEN);
@@ -898,7 +878,7 @@ void bgp_batch_rollback(struct bgp_peer_batch *bp_batch)
   if (bp_batch && bgp_batch_is_enabled(bp_batch)) {
     bgp_batch_increase_counter(bp_batch);
     if (bp_batch->num_current == bp_batch->num)
-      bgp_batch_init(bp_batch, config.nfacctd_bgp_batch, config.nfacctd_bgp_batch_interval); 
+      bgp_batch_init(bp_batch, bp_batch->num, bp_batch->interval);
   }
 }
 
@@ -934,6 +914,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
   bms->msglog_file = config.nfacctd_bgp_msglog_file;
+  bms->msglog_output = config.nfacctd_bgp_msglog_output;
   bms->msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;

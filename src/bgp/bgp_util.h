@@ -36,7 +36,7 @@ EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
-EXT void write_neighbors_file(char *);
+EXT void write_neighbors_file(char *, int);
 EXT struct bgp_rt_structs *bgp_select_routing_db(int);
 EXT void process_bgp_md5_file(int, struct bgp_md5_table *);
 EXT void bgp_config_checks(struct configuration *);

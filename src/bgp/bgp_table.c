@@ -207,7 +207,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   struct bgp_node *node;
   struct bgp_node *matched;
   struct bgp_info *info;
-  u_int32_t modulo = bgp_route_info_modulo(peer, NULL);
+  u_int32_t modulo = bgp_route_info_modulo(peer, NULL); // XXX
 
   matched = NULL;
   node = table->top;

@@ -286,7 +286,6 @@ struct configuration {
   int nfacctd_bmp_ipprec;
   int nfacctd_bmp_batch;
   int nfacctd_bmp_batch_interval;
-  char *nfacctd_bmp_neighbors_file;
   int nfacctd_bmp_msglog_output;
   char *nfacctd_bmp_msglog_file;
   char *nfacctd_bmp_msglog_amqp_host;

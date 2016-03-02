@@ -287,7 +287,6 @@ EXT int cfg_key_nfacctd_bmp_allow_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_ip_precedence(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_batch(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_batch_interval(char *, char *, char *);
-EXT int cfg_key_nfacctd_bmp_neighbors_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_msglog_output(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_msglog_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_msglog_amqp_host(char *, char *, char *);

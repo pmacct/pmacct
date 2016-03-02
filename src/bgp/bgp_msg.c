@@ -950,7 +950,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
       bgp_unlock_node(peer, route);
       bgp_attr_unintern(inter_domain_routing_db, attr_new);
 
-      if (nfacctd_bgp_msglog_backend_methods)
+      if (bms->msglog_backend_methods)
 	goto log_update;
 
       return SUCCESS;
@@ -980,7 +980,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
       bgp_unlock_node (peer, route);
 
-      if (nfacctd_bgp_msglog_backend_methods)
+      if (bms->msglog_backend_methods)
 	goto log_update;
 
       return SUCCESS;
@@ -1018,7 +1018,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   /* route_node_get lock */
   bgp_unlock_node(peer, route);
 
-  if (nfacctd_bgp_msglog_backend_methods) {
+  if (bms->msglog_backend_methods) {
     ri = new;
     goto log_update;
   }
@@ -1033,10 +1033,7 @@ log_update:
   {
     char event_type[] = "log";
 
-    if (peer->type == FUNC_TYPE_BGP)
-      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_UPDATE);
-    else if (peer->type == FUNC_TYPE_BMP)
-      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bmp_msglog_output, BGP_LOG_TYPE_UPDATE);
+    bgp_peer_log_msg(route, ri, safi, event_type, bms->msglog_output, BGP_LOG_TYPE_UPDATE);
   }
 
   return SUCCESS;
@@ -1079,13 +1076,10 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
     }
   }
 
-  if (ri && nfacctd_bgp_msglog_backend_methods) {
+  if (ri && bms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    if (peer->type == FUNC_TYPE_BGP) 
-      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bgp_msglog_output, BGP_LOG_TYPE_WITHDRAW);
-    else if (peer->type == FUNC_TYPE_BMP) 
-      bgp_peer_log_msg(route, ri, safi, event_type, config.nfacctd_bmp_msglog_output, BGP_LOG_TYPE_WITHDRAW);
+    bgp_peer_log_msg(route, ri, safi, event_type, bms->msglog_output, BGP_LOG_TYPE_WITHDRAW);
   }
 
   /* Withdraw specified route from routing table. */
