@@ -2,6 +2,10 @@ SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd pmtelemetryd
 bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
+
+AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@
+AM_CFLAGS  = @GEOIP_CFLAGS@ @GEOIPV2_CFLAGS@ @JANSSON_CFLAGS@
+
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
 libcommon_la_SOURCES = strlcpy.c addr.c jansson.c addr.h pmacct.h	\
 	pmacct-build.h pmacct-data.h pmacct-defines.h mpls.h network.h once.h
@@ -27,23 +31,36 @@ libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
 libdaemons_la_LIBADD += isis/libisis.la
 libdaemons_la_LIBADD += telemetry/libtelemetry.la
 libdaemons_la_LIBADD += libcommon.la
+libdaemons_la_CFLAGS  = $(AM_CFLAGS)
 if WITH_MYSQL
 libdaemons_la_SOURCES += mysql_plugin.c mysql_plugin.h
+libdaemons_la_LIBADD  += @MYSQL_LIBS@
+libdaemons_la_CFLAGS  += @MYSQL_CFLAGS@
 endif
 if WITH_PGSQL
 libdaemons_la_SOURCES += pgsql_plugin.c pgsql_plugin.h
+libdaemons_la_LIBADD  += @PGSQL_LIBS@
+libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@
 endif
 if WITH_MONGODB
 libdaemons_la_SOURCES += mongodb_plugin.c mongodb_plugin.h
+libdaemons_la_LIBADD  += @MONGODB_LIBS@
+libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@
 endif
 if WITH_SQLITE3
 libdaemons_la_SOURCES += sqlite3_plugin.c sqlite3_plugin.c
+libdaemons_la_LIBADD  += @SQLITE3_LIBS@
+libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
 endif
 if WITH_RABBITMQ
 libdaemons_la_SOURCES += amqp_common.c amqp_common.h amqp_plugin.c amqp_plugin.h
+libdaemons_la_LIBADD  += @RABBITMQ_LIBS@
+libdaemons_la_CFLAGS  += @RABBITMQ_CFLAGS@
 endif
 if WITH_KAFKA
 libdaemons_la_SOURCES += kafka_common.c kafka_common.h kafka_plugin.c kafka_plugin.h
+libdaemons_la_LIBADD  += @KAFKA_LIBS@
+libdaemons_la_CFLAGS  += @KAFKA_CFLAGS@
 endif
 if USING_SQL
 libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common.h
@@ -54,16 +71,12 @@ libdaemons_la_SOURCES += thread_pool.c thread_pool.h
 endif
 
 pmacctd_SOURCES = pmacctd.c
-pmacctd_LDFLAGS = $(DEFS)
 pmacctd_LDADD = libdaemons.la
 nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_template.c
-nfacctd_LDFLAGS = $(DEFS)
 nfacctd_LDADD = libdaemons.la
 sfacctd_SOURCES = sfacctd.c sfacctd.h sfv5_module.c sfv5_module.h
-sfacctd_LDFLAGS = $(DEFS)
 sfacctd_LDADD = libdaemons.la
 uacctd_SOURCES = uacctd.c uacctd.h
-uacctd_LDFLAGS = $(DEFS)
 uacctd_LDADD = libdaemons.la
 pmacct_SOURCES = pmacct.c
 pmacct_LDADD = libcommon.la
