@@ -705,7 +705,7 @@ void bgp_handle_dump_event()
 	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
 	    table = inter_domain_routing_db->rib[afi][safi];
-	    node = bgp_table_top(table);
+	    node = bgp_table_top(peer, table);
 
 	    while (node) {
 	      u_int32_t modulo = bgp_route_info_modulo(peer, NULL);
@@ -721,7 +721,7 @@ void bgp_handle_dump_event()
 		}
 	      }
 
-	      node = bgp_route_next(node);
+	      node = bgp_route_next(peer, node);
 	    }
 	  }
 	}

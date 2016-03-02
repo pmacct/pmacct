@@ -204,7 +204,7 @@ struct bgp_info *bgp_info_new()
   return new;
 }
 
-void bgp_info_add(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
+void bgp_info_add(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
   struct bgp_info *top;
 
@@ -216,12 +216,11 @@ void bgp_info_add(struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
     top->prev = ri;
   rn->info[modulo] = ri;
 
-  // ri->lock++;
-  bgp_lock_node(rn);
+  bgp_lock_node(peer, rn);
   ri->peer->lock++;
 }
 
-void bgp_info_delete(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
+void bgp_info_delete(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
   if (ri->next)
     ri->next->prev = ri->prev;
@@ -230,14 +229,16 @@ void bgp_info_delete(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_
   else
     rn->info[modulo] = ri->next;
 
-  bgp_info_free(inter_domain_routing_db, ri);
+  bgp_info_free(peer, ri);
 
-  bgp_unlock_node(rn);
+  bgp_unlock_node(peer, rn);
 }
 
 /* Free bgp route information. */
-void bgp_info_free(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_info *ri)
+void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri)
 {
+  struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
   if (ri->attr)
     bgp_attr_unintern(inter_domain_routing_db, ri->attr);
 
@@ -492,6 +493,7 @@ char *bgp_peer_print(struct bgp_peer *peer)
 void bgp_peer_info_delete(struct bgp_peer *peer)
 {
   struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_table *table;
   struct bgp_node *node;
   afi_t afi;
@@ -502,15 +504,15 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
       table = inter_domain_routing_db->rib[afi][safi];
-      node = bgp_table_top(table);
+      node = bgp_table_top(peer, table);
 
       while (node) {
-        u_int32_t modulo = bgp_route_info_modulo(peer, NULL);
+        u_int32_t modulo = bms->route_info_modulo(peer, NULL);
         u_int32_t peer_buckets;
         struct bgp_info *ri;
         struct bgp_info *ri_next;
 
-        for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
+        for (peer_buckets = 0; peer_buckets < bms->table_per_peer_buckets; peer_buckets++) {
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
 	      if (nfacctd_bgp_msglog_backend_methods) {
@@ -523,13 +525,13 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
 	      }
 
 	      ri_next = ri->next; /* let's save pointer to next before free up */
-              bgp_info_delete(inter_domain_routing_db, node, ri, modulo+peer_buckets);
+              bgp_info_delete(peer, node, ri, modulo+peer_buckets);
             }
 	    else ri_next = ri->next;
           }
         }
 
-        node = bgp_route_next(node);
+        node = bgp_route_next(peer, node);
       }
     }
   }

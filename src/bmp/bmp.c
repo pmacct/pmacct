@@ -938,10 +938,8 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
     if (ret) {
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
-      /* XXX: parse BGP UPDATE(s)
       bgp_update_len = bgp_parse_update_msg(bmpp_bgp_peer, (*bmp_packet)); 
       bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
-      */
     }
   }
 }

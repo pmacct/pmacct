@@ -105,19 +105,16 @@ struct bgp_info
 #define EXT
 #endif
 EXT struct bgp_table *bgp_table_init (afi_t, safi_t);
-EXT void bgp_table_finish (struct bgp_table **);
-EXT void bgp_unlock_node (struct bgp_node *node);
-EXT struct bgp_node *bgp_table_top (const struct bgp_table *const);
-EXT struct bgp_node *bgp_route_next (struct bgp_node *);
-EXT struct bgp_node *bgp_route_next_until (struct bgp_node *, struct bgp_node *);
+EXT void bgp_unlock_node (struct bgp_peer *, struct bgp_node *node);
+EXT struct bgp_node *bgp_table_top (struct bgp_peer *, const struct bgp_table *const);
+EXT struct bgp_node *bgp_route_next (struct bgp_peer *, struct bgp_node *);
+EXT struct bgp_node *bgp_route_next_until (struct bgp_peer *, struct bgp_node *, struct bgp_node *);
 EXT struct bgp_node *bgp_node_get (struct bgp_peer *, struct bgp_table *const, struct prefix *);
-EXT struct bgp_node *bgp_lock_node (struct bgp_node *node);
+EXT struct bgp_node *bgp_lock_node (struct bgp_peer *, struct bgp_node *node);
 EXT struct bgp_node *bgp_node_match (const struct bgp_table *, struct prefix *, struct bgp_peer *);
 EXT struct bgp_node *bgp_node_match_ipv4 (const struct bgp_table *, struct in_addr *, struct bgp_peer *);
 #ifdef ENABLE_IPV6
 EXT struct bgp_node *bgp_node_match_ipv6 (const struct bgp_table *, struct in6_addr *, struct bgp_peer *);
 #endif /* ENABLE_IPV6 */
-EXT unsigned long bgp_table_count (const struct bgp_table *const);
-
 #undef EXT
 #endif 

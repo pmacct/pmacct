@@ -947,7 +947,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   if (ri) {
     /* Received same information */
     if (attrhash_cmp(ri->attr, attr_new)) {
-      bgp_unlock_node(route);
+      bgp_unlock_node(peer, route);
       bgp_attr_unintern(inter_domain_routing_db, attr_new);
 
       if (nfacctd_bgp_msglog_backend_methods)
@@ -978,7 +978,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 	if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
       }
 
-      bgp_unlock_node (route);
+      bgp_unlock_node (peer, route);
 
       if (nfacctd_bgp_msglog_backend_methods)
 	goto log_update;
@@ -1013,10 +1013,10 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   else return ERR;
 
   /* Register new BGP information. */
-  bgp_info_add(route, new, modulo);
+  bgp_info_add(peer, route, new, modulo);
 
   /* route_node_get lock */
-  bgp_unlock_node(route);
+  bgp_unlock_node(peer, route);
 
   if (nfacctd_bgp_msglog_backend_methods) {
     ri = new;
@@ -1089,10 +1089,10 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
   }
 
   /* Withdraw specified route from routing table. */
-  if (ri) bgp_info_delete(inter_domain_routing_db, route, ri, modulo); 
+  if (ri) bgp_info_delete(peer, route, ri, modulo); 
 
   /* Unlock bgp_node_get() lock. */
-  bgp_unlock_node(route);
+  bgp_unlock_node(peer, route);
 
   return SUCCESS;
 }

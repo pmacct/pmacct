@@ -30,7 +30,13 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "pmacct.h"
 #include "bgp.h"
 
-static void bgp_node_delete (struct bgp_node *);
+static void bgp_node_delete (struct bgp_peer *, struct bgp_node *);
+static struct bgp_node *bgp_node_create (struct bgp_peer *);
+static struct bgp_node *bgp_node_set (struct bgp_peer *, struct bgp_table *, struct prefix *);
+static void bgp_node_free (struct bgp_node *);
+static void route_common (struct prefix *, struct prefix *, struct prefix *);
+static int check_bit (u_char *, u_char);
+static void set_link (struct bgp_node *, struct bgp_node *);
 
 struct bgp_table *
 bgp_table_init (afi_t afi, safi_t safi)
@@ -178,7 +184,7 @@ set_link (struct bgp_node *node, struct bgp_node *new)
 
 /* Lock node. */
 struct bgp_node *
-bgp_lock_node (struct bgp_node *node)
+bgp_lock_node (struct bgp_peer *peer, struct bgp_node *node)
 {
   node->lock++;
   return node;
@@ -186,12 +192,12 @@ bgp_lock_node (struct bgp_node *node)
 
 /* Unlock node. */
 void
-bgp_unlock_node (struct bgp_node *node)
+bgp_unlock_node (struct bgp_peer *peer, struct bgp_node *node)
 {
   node->lock--;
 
   if (node->lock == 0)
-    bgp_node_delete (node);
+    bgp_node_delete (peer, node);
 }
 
 /* Find matched prefix. */
@@ -220,7 +226,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   }
 
   /* If matched route found, return it. */
-  if (matched) return bgp_lock_node (matched);
+  if (matched) return bgp_lock_node (NULL /* XXX */, matched);
 
   return NULL;
 }
@@ -269,7 +275,7 @@ bgp_node_get (struct bgp_peer *peer, struct bgp_table *const table, struct prefi
     {
       if (node->p.prefixlen == p->prefixlen)
 	{
-	  bgp_lock_node (node);
+	  bgp_lock_node (peer, node);
 	  return node;
 	}
       match = node;
@@ -306,23 +312,23 @@ bgp_node_get (struct bgp_peer *peer, struct bgp_table *const table, struct prefi
 	}
     }
   table->count++;
-  bgp_lock_node (new);
+  bgp_lock_node (peer, new);
   
   return new;
 }
 
 /* Delete node from the routing table. */
 static void
-bgp_node_delete (struct bgp_node *node)
+bgp_node_delete (struct bgp_peer *peer, struct bgp_node *node)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_node *child;
   struct bgp_node *parent;
   u_int32_t ri_idx;
 
   assert (node->lock == 0);
 
-  // XXX: config.bgp's to be replaced by a bgp_misc_struct
-  for (ri_idx = 0; ri_idx < (config.bgp_table_peer_buckets * config.bgp_table_per_peer_buckets); ri_idx++)
+  for (ri_idx = 0; ri_idx < (bms->table_peer_buckets * bms->table_per_peer_buckets); ri_idx++)
     assert (node->info[ri_idx] == NULL);
 
   if (node->l_left && node->l_right)
@@ -354,13 +360,13 @@ bgp_node_delete (struct bgp_node *node)
 
   /* If parent node is stub then delete it also. */
   if (parent && parent->lock == 0)
-    bgp_node_delete (parent);
+    bgp_node_delete (peer, parent);
 }
 
 /* Get fist node and lock it.  This function is useful when one want
    to lookup all the node exist in the routing table. */
 struct bgp_node *
-bgp_table_top (const struct bgp_table *const table)
+bgp_table_top (struct bgp_peer *peer, const struct bgp_table *const table)
 {
   if (table) {
     /* If there is no node in the routing table return NULL. */
@@ -368,7 +374,7 @@ bgp_table_top (const struct bgp_table *const table)
       return NULL;
 
     /* Lock the top node and return it. */
-    bgp_lock_node (table->top);
+    bgp_lock_node (peer, table->top);
     return table->top;
   }
   
@@ -377,7 +383,7 @@ bgp_table_top (const struct bgp_table *const table)
 
 /* Unlock current node and lock next node then return it. */
 struct bgp_node *
-bgp_route_next (struct bgp_node *node)
+bgp_route_next (struct bgp_peer *peer, struct bgp_node *node)
 {
   struct bgp_node *next;
   struct bgp_node *start;
@@ -388,15 +394,15 @@ bgp_route_next (struct bgp_node *node)
   if (node->l_left)
     {
       next = node->l_left;
-      bgp_lock_node (next);
-      bgp_unlock_node (node);
+      bgp_lock_node (peer, next);
+      bgp_unlock_node (peer, node);
       return next;
     }
   if (node->l_right)
     {
       next = node->l_right;
-      bgp_lock_node (next);
-      bgp_unlock_node (node);
+      bgp_lock_node (peer, next);
+      bgp_unlock_node (peer, node);
       return next;
     }
 
@@ -406,19 +412,19 @@ bgp_route_next (struct bgp_node *node)
       if (node->parent->l_left == node && node->parent->l_right)
 	{
 	  next = node->parent->l_right;
-	  bgp_lock_node (next);
-	  bgp_unlock_node (start);
+	  bgp_lock_node (peer, next);
+	  bgp_unlock_node (peer, start);
 	  return next;
 	}
       node = node->parent;
     }
-  bgp_unlock_node (start);
+  bgp_unlock_node (peer, start);
   return NULL;
 }
 
 /* Unlock current node and lock next node until limit. */
 struct bgp_node *
-bgp_route_next_until (struct bgp_node *node, struct bgp_node *limit)
+bgp_route_next_until (struct bgp_peer *peer, struct bgp_node *node, struct bgp_node *limit)
 {
   struct bgp_node *next;
   struct bgp_node *start;
@@ -429,15 +435,15 @@ bgp_route_next_until (struct bgp_node *node, struct bgp_node *limit)
   if (node->l_left)
     {
       next = node->l_left;
-      bgp_lock_node (next);
-      bgp_unlock_node (node);
+      bgp_lock_node (peer, next);
+      bgp_unlock_node (peer, node);
       return next;
     }
   if (node->l_right)
     {
       next = node->l_right;
-      bgp_lock_node (next);
-      bgp_unlock_node (node);
+      bgp_lock_node (peer, next);
+      bgp_unlock_node (peer, node);
       return next;
     }
 
@@ -447,18 +453,12 @@ bgp_route_next_until (struct bgp_node *node, struct bgp_node *limit)
       if (node->parent->l_left == node && node->parent->l_right)
 	{
 	  next = node->parent->l_right;
-	  bgp_lock_node (next);
-	  bgp_unlock_node (start);
+	  bgp_lock_node (peer, next);
+	  bgp_unlock_node (peer, start);
 	  return next;
 	}
       node = node->parent;
     }
-  bgp_unlock_node (start);
+  bgp_unlock_node (peer, start);
   return NULL;
-}
-
-unsigned long
-bgp_table_count (const struct bgp_table *table)
-{
-  return table->count;
 }
