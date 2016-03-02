@@ -13,6 +13,7 @@ AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
 
 dnl Checks for programs.
 AC_PROG_CC
+PKG_PROG_PKG_CONFIG
 host_os=`uname`
 host_cpu=`uname -m`
 host_os1=`uname -rs`
@@ -488,116 +489,24 @@ AC_ARG_ENABLE(mysql,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+
+dnl Unfortunately, no pkg-config support for MySQL
+    AC_CHECK_PROG([MYSQL_CONFIG], [mysql_config], [mysql_config], [no],,)
+    if test "x${MYSQL_CONFIG}" = "xno"; then
+      AC_MSG_ERROR([ERROR: missing mysql_config program])
+    fi
+    AC_CHECK_LIB([mysqlclient], [mysql_init],
+                 [MYSQL_CFLAGS=`$MYSQL_CONFIG --cflags`
+                  MYSQL_LIBS=`$MYSQL_CONFIG --libs`],
+                 [AC_MSG_ERROR([ERROR: missing MySQL client library])],
+                 [`$MYSQL_CONFIG --libs`])
+    AC_SUBST(MYSQL_CFLAGS)
+    AC_SUBST(MYSQL_LIBS)
+
+    PLUGINS="${PLUGINS} mysql"
     USING_SQL="yes"
     USING_MYSQL="yes"
-
-    AC_ARG_WITH(mysql-libs,
-      [  --with-mysql-libs=DIR            Search for MySQL libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	MYSQLLIB=$withval
-	MYSQLLIBFOUND=1
-      ]) 
-
-    if test x"$MYSQLLIB" != x""; then
-      AC_MSG_CHECKING(your own MySQL client library)
-      if test -r $MYSQLLIB/libmysqlclient.a -o -r $MYSQLLIB/libmysqlclient.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing MySQL client library in $MYSQLLIB)
-      fi
-    fi
-
-    if test x"$MYSQLLIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for libmysqlclient])
-      if test -r /usr/lib/mysql/libmysqlclient.a -o -r /usr/lib/mysql/libmysqlclient.so; then
-	LIBS="${LIBS} -L/usr/lib/mysql"
-	AC_MSG_RESULT([found in /usr/lib/mysql])
-	MYSQLLIBFOUND=1
-      elif test -r /usr/lib64/mysql/libmysqlclient.a -o -r /usr/lib64/mysql/libmysqlclient.so; then
-        LIBS="${LIBS} -L/usr/lib64/mysql"
-        AC_MSG_RESULT([found in /usr/lib64/mysql])
-        MYSQLLIBFOUND=1
-      elif test -r /usr/local/mysql/lib/libmysqlclient.a -o -r /usr/local/mysql/lib/libmysqlclient.so; then
-	LIBS="${LIBS} -L/usr/local/mysql/lib"
-	AC_MSG_RESULT([found in /usr/local/mysql/lib])
-	MYSQLLIBFOUND=1
-      elif test -r /usr/local/lib/mysql/libmysqlclient.a -o -r /usr/local/lib/mysql/libmysqlclient.so; then
-	LIBS="${LIBS} -L/usr/local/lib/mysql"
-	AC_MSG_RESULT([found in /usr/local/lib/mysql])
-	MYSQLLIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MYSQLLIBFOUND" = x""; then
-      AC_CHECK_LIB([mysqlclient], [mysql_real_connect], [], [AC_MSG_ERROR([
-        ERROR: missing MySQL client library. Refer to: http://www.mysql.com/
-      ])])
-    else 
-      LIBS="${LIBS} -lmysqlclient"
-    fi 
-
-    # Adding these as prerequisite for MySQL 5.6 
-    AC_CHECK_LIB([stdc++], [main], [LIBS="${LIBS} -lstdc++"], [AC_MSG_ERROR([
-      ERROR: missing libstdc++ devel. Requirement for building MySQL.
-    ])])
-    AC_CHECK_LIB([rt], [clock_gettime], [LIBS="${LIBS} -lrt"], [AC_MSG_ERROR([
-      ERROR: missing librt devel. Requirement for building MySQL.
-    ])])
-
-    AC_ARG_WITH(mysql-includes,
-      [  --with-mysql-includes=DIR        Search for MySQL includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	MYSQLINCLUDES=$withval
-	MYSQLINCLUDESFOUND=1
-      ])
-
-    if test x"$MYSQLINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own MySQL headers)
-      if test -r $MYSQLINCLUDES/mysql/mysql.h; then
-        AC_MSG_RESULT(ok)
-      elif test -r $MYSQLINCLUDES/mysql.h; then
-	AC_MSG_RESULT(ok)
-	AC_DEFINE(CUT_MYSQLINCLUDES_DIR, 1)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing MySQL headers in $MYSQLINCLUDES)
-      fi
-    fi
-
-    if test x"$MYSQLINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for mysql.h])
-      if test -r /usr/include/mysql/mysql.h; then
-	AC_MSG_RESULT([found in /usr/include/mysql])
-	MYSQLINCLUDESFOUND=1;
-      elif test -r /usr/local/include/mysql/mysql.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include/mysql])
-	MYSQLINCLUDESFOUND=1;
-      elif test -r /usr/local/mysql/include/mysql.h; then
-        INCLUDES="${INCLUDES} -I/usr/local/mysql/include"
-        AC_MSG_RESULT([found in /usr/local/mysql/include])
-	AC_DEFINE(CUT_MYSQLINCLUDES_DIR, 1)
-        MYSQLINCLUDESFOUND=1;
-      fi
-      if test x"$MYSQLINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MYSQLINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([mysql/mysql.h],,
-      [AC_MSG_ERROR(ERROR: missing MySQL headers)])      
-    fi
-
     AC_DEFINE(WITH_MYSQL, 1)
-    PLUGINS="${PLUGINS} mysql"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -613,103 +522,11 @@ AC_ARG_ENABLE(pgsql,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([PGSQL], [libpq])
+    PLUGINS="${PLUGINS} pgsql"
     USING_SQL="yes"
     USING_PGSQL="yes"
-
-    AC_ARG_WITH(pgsql-libs,
-      [  --with-pgsql-libs=DIR            Search for PostgreSQL libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	PGSQLLIB=$withval
-	PGSQLLIBFOUND=1
-      ]) 
-
-    if test x"$PGSQLLIB" != x""; then
-      AC_MSG_CHECKING(your own PostgreSQL client library)
-      if test -r $PGSQLLIB/libpq.a -o -r $PGSQLLIB/libpq.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing PostgreSQL client library in $PGSQLLIB)
-      fi
-    fi
-
-    if test x"$PGSQLLIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for libpq])
-      if test -r /usr/lib/libpq.a -o -r /usr/lib/libpq.so; then
-        AC_MSG_RESULT([found in /usr/lib])
-        PGSQLLIBFOUND=1
-      elif test -r /usr/lib64/libpq.a -o -r /usr/lib64/libpq.so; then
-	LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        PGSQLLIBFOUND=1
-      elif test -r /usr/local/lib/libpq.a -o -r /usr/local/lib/libpq.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	PGSQLLIBFOUND=1
-      elif test -r /usr/local/pgsql/lib/libpq.a -o -r /usr/local/pgsql/lib/libpq.so; then
-	LIBS="${LIBS} -L/usr/local/pgsql/lib"
-	AC_MSG_RESULT([found in /usr/local/pgsql/lib])
-	PGSQLLIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$PGSQLLIBFOUND" = x""; then
-      AC_CHECK_LIB([pq], [PQconnectdb], [], [AC_MSG_ERROR([
-        ERROR: missing PQ library. Refer to: http://www.postgresql.org/
-      ])])
-    else 
-      LIBS="${LIBS} -lpq"
-    fi 
-
-    AC_ARG_WITH(pgsql-includes,
-      [  --with-pgsql-includes=DIR        Search for PostgreSQL includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	PGSQLINCLUDES=$withval
-	PGSQLINCLUDESFOUND=1
-      ])
-
-    if test x"$PGSQLINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own PostgreSQL headers)
-      if test -r $PGSQLINCLUDES/libpq-fe.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing pgsql headers in $PGSQLINCLUDES)
-      fi
-    fi
-
-    if test x"$PGSQLINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for libpq-fe.h])
-      if test -r /usr/include/libpq-fe.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	PGSQLINCLUDESFOUND=1;
-      elif test -r /usr/local/include/libpq-fe.h; then
-        AC_MSG_RESULT([found in /usr/local/include])
-        INCLUDES="${INCLUDES} -I/usr/local/include"
-        PGSQLINCLUDESFOUND=1;
-      elif test -r /usr/local/pgsql/include/libpq-fe.h; then
-	AC_MSG_RESULT([found in /usr/local/pgsql/include])
-	INCLUDES="${INCLUDES} -I/usr/local/pgsql/include"
-	PGSQLINCLUDESFOUND=1;
-      fi
-      if test x"$PGSQLINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$PGSQLINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([libpq-fe.h],,
-      [AC_MSG_ERROR(ERROR: missing PostgreSQL headers)])      
-    fi
-
     AC_DEFINE(WITH_PGSQL, 1)
-    PLUGINS="${PLUGINS} pgsql"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -725,95 +542,11 @@ AC_ARG_ENABLE(mongodb,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([MONGODB], [libmongoc-1.0])
+    PLUGINS="${PLUGINS} mongodb"
 dnl USING_SQL="yes"
     USING_MONGODB="yes"
-
-    AC_ARG_WITH(mongodb-libs,
-      [  --with-mongodb-libs=DIR          Search for MongoDB libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	MONGODBLIB=$withval
-	MONGODBLIBFOUND=1
-      ]) 
-
-    if test x"$MONGODBLIB" != x""; then
-      AC_MSG_CHECKING(your own MongoDB library)
-      if test -r $MONGODBLIB/libmongoc.a -o -r $MONGODBLIB/libmongoc.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing MongoDB library in $MONGODBLIB)
-      fi
-    fi
-
-    if test x"$MONGODBLIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for libmongoc])
-      if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	MONGODBLIBFOUND=1
-      elif test -r /usr/lib64/libmongoc.a -o -r /usr/lib64/libmongoc.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        MONGODBLIBFOUND=1
-      elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	MONGODBLIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MONGODBLIBFOUND" = x""; then
-      AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
-        ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
-      ])])
-    else 
-      LIBS="${LIBS} -lmongoc"
-    fi 
-
-    AC_ARG_WITH(mongodb-includes,
-      [  --with-mongodb-includes=DIR      Search for MongoDB includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	MONGODBINCLUDES=$withval
-	MONGODBINCLUDESFOUND=1
-      ])
-
-    if test x"$MONGODBINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own MongoDB headers)
-      if test -r $MONGODBINCLUDES/mongo.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing MongoDB headers in $MONGODBINCLUDES)
-      fi
-    fi
-
-    if test x"$MONGODBINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for mongo.h])
-      if test -r /usr/include/mongo.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	MONGODBINCLUDESFOUND=1;
-      elif test -r /usr/local/include/mongo.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	MONGODBINCLUDESFOUND=1;
-      fi
-      if test x"$MONGODBINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MONGODBINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([mongo.h],,
-      [AC_MSG_ERROR(ERROR: missing MongoDB headers)])      
-    fi
-
     AC_DEFINE(WITH_MONGODB, 1)
-    PLUGINS="${PLUGINS} mongodb"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -828,103 +561,11 @@ AC_ARG_ENABLE(sqlite3,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([SQLITE3], [sqlite3])
+    PLUGINS="${PLUGINS} sqlite3"
     USING_SQL="yes"
     USING_SQLITE3="yes"
-
-    AC_ARG_WITH(sqlite3-libs,
-      [  --with-sqlite3-libs=DIR          Search for SQLite3 libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	SQLITE3LIB=$withval
-	SQLITE3LIBFOUND=1
-      ]) 
-
-    if test x"$SQLITE3LIB" != x""; then
-      AC_MSG_CHECKING(your own SQLite3 client library)
-      if test -r $SQLITE3LIB/libsqlite3.a -o -r $SQLITE3LIB/libsqlite3.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing SQLite3 client library in $SQLITE3LIB)
-      fi
-    fi
-
-    if test x"$SQLITE3LIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for libsqlite3])
-      if test -r /usr/lib/libsqlite3.a -o -r /usr/lib/libsqlite3.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	SQLITE3LIBFOUND=1
-      elif test -r /usr/lib64/libsqlite3.a -o -r /usr/lib64/libsqlite3.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        SQLITE3LIBFOUND=1
-      elif test -r /usr/local/sqlite3/lib/libsqlite3.a -o -r /usr/local/sqlite3/lib/libsqlite3.so; then
-	LIBS="${LIBS} -L/usr/local/sqlite3/lib"
-	AC_MSG_RESULT([found in /usr/local/sqlite3/lib])
-	SQLITE3LIBFOUND=1
-      elif test -r /usr/local/lib/libsqlite3.a -o -r /usr/local/lib/libsqlite3.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	SQLITE3LIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$SQLITE3LIBFOUND" = x""; then
-      AC_CHECK_LIB([sqlite3], [sqlite3_open], [], [AC_MSG_ERROR([
-        ERROR: missing SQLite3 client library. Refer to: http://sqlite.org/
-      ])])
-    else 
-      LIBS="${LIBS} -lsqlite3"
-    fi 
-
-    AC_ARG_WITH(sqlite3-includes,
-      [  --with-sqlite3-includes=DIR      Search for SQLite3 includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	SQLITE3INCLUDES=$withval
-	SQLITE3INCLUDESFOUND=1
-      ])
-
-    if test x"$SQLITE3INCLUDES" != x""; then
-      AC_MSG_CHECKING(your own SQLite3 headers)
-      if test -r $SQLITE3INCLUDES/sqlite3.h; then
-	AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing SQLite3 headers in $SQLITE3INCLUDES)
-      fi
-    fi
-
-    if test x"$SQLITE3INCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for sqlite3.h])
-      if test -r /usr/include/sqlite3.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	SQLITE3INCLUDESFOUND=1;
-      elif test -r /usr/local/include/sqlite3.h; then
-	# INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	SQLITE3INCLUDESFOUND=1;
-      elif test -r /usr/local/sqlite3/include/sqlite3.h; then
-        INCLUDES="${INCLUDES} -I/usr/local/sqlite3/include"
-        AC_MSG_RESULT([found in /usr/local/sqlite3/include])
-        SQLITE3INCLUDESFOUND=1;
-      fi
-      if test x"$SQLITE3INCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$SQLITE3INCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([sqlite3.h],,
-      [AC_MSG_ERROR(ERROR: missing SQLite3 headers)])      
-    fi
-
     AC_DEFINE(WITH_SQLITE3, 1)
-    PLUGINS="${PLUGINS} sqlite3"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -940,94 +581,10 @@ AC_ARG_ENABLE(rabbitmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    USING_RABBITMQ="yes"
-
-    AC_ARG_WITH(rabbitmq-libs,
-      [  --with-rabbitmq-libs=DIR         Search for RabbitMQ libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	RABBITMQLIB=$withval
-	RABBITMQLIBFOUND=1
-      ]) 
-
-    if test x"$RABBITMQLIB" != x""; then
-      AC_MSG_CHECKING(your own RabbitMQ library)
-      if test -r $RABBITMQLIB/librabbitmq.a -o -r $RABBITMQLIB/librabbitmq.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing RabbitMQ library in $RABBITMQLIB)
-      fi
-    fi
-
-    if test x"$RABBITMQLIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for librabbitmq])
-      if test -r /usr/lib/librabbitmq.a -o -r /usr/lib/librabbitmq.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	RABBITMQLIBFOUND=1
-      elif test -r /usr/lib64/librabbitmq.a -o -r /usr/lib64/librabbitmq.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        RABBITMQLIBFOUND=1
-      elif test -r /usr/local/lib/librabbitmq.a -o -r /usr/local/lib/librabbitmq.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	RABBITMQLIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$RABBITMQLIBFOUND" = x""; then
-      AC_CHECK_LIB([rabbitmq], [amqp_new_connection], [], [AC_MSG_ERROR([
-        ERROR: missing RabbitMQ library. Refer to: https://github.com/alanxz/rabbitmq-c/
-      ])])
-    else 
-      LIBS="${LIBS} -lrabbitmq"
-    fi 
-
-    AC_ARG_WITH(rabbitmq-includes,
-      [  --with-rabbitmq-includes=DIR     Search for RabbitMQ includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	RABBITMQINCLUDES=$withval
-	RABBITMQINCLUDESFOUND=1
-      ])
-
-    if test x"$RABBITMQINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own RabbitMQ headers)
-      if test -r $RABBITMQINCLUDES/amqp.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing RabbitMQ headers in $RABBITMQINCLUDES)
-      fi
-    fi
-
-    if test x"$RABBITMQINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for amqp.h])
-      if test -r /usr/include/amqp.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	RABBITMQINCLUDESFOUND=1;
-      elif test -r /usr/local/include/rabbitmq.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	RABBITMQINCLUDESFOUND=1;
-      fi
-      if test x"$RABBITMQINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$RABBITMQINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([amqp.h],,
-      [AC_MSG_ERROR(ERROR: missing RabbitMQ headers)])      
-    fi
-
-    AC_DEFINE(WITH_RABBITMQ, 1)
+    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq])
     PLUGINS="${PLUGINS} rabbitmq"
+    USING_RABBITMQ="yes"
+    AC_DEFINE(WITH_RABBITMQ, 1)
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1044,94 +601,10 @@ AC_ARG_ENABLE(kafka,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    USING_KAFKA="yes"
-
-    AC_ARG_WITH(kafka-libs,
-      [  --with-kafka-libs=DIR            Search for Kafka libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	KAFKALIB=$withval
-	KAFKALIBFOUND=1
-      ]) 
-
-    if test x"$KAFKALIB" != x""; then
-      AC_MSG_CHECKING(your own Kafka library)
-      if test -r $KAFKALIB/librdkafka.a -o -r $KAFKALIB/librdkafka.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Kafka library in $KAFKALIB)
-      fi
-    fi
-
-    if test x"$KAFKALIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for librdkafka])
-      if test -r /usr/lib/librdkafka.a -o -r /usr/lib/librdkafka.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	KAFKALIBFOUND=1
-      elif test -r /usr/lib64/librdkafka.a -o -r /usr/lib64/librdkafka.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        KAFKALIBFOUND=1
-      elif test -r /usr/local/lib/librdkafka.a -o -r /usr/local/lib/librdkafka.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	KAFKALIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$KAFKALIBFOUND" = x""; then
-      AC_CHECK_LIB([rdkafka], [rd_kafka_new], [], [AC_MSG_ERROR([
-        ERROR: missing Kafka library. Refer to: https://github.com/edenhill/librdkafka/
-      ])])
-    else 
-      LIBS="${LIBS} -lrdkafka"
-    fi 
-
-    AC_ARG_WITH(kafka-includes,
-      [  --with-kafka-includes=DIR        Search for Kafka includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	KAFKAINCLUDES=$withval
-	KAFKAINCLUDESFOUND=1
-      ])
-
-    if test x"$KAFKAINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own Kafka headers)
-      if test -r $KAFKAINCLUDES/librdkafka/rdkafka.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Kafka headers in $KAFKAINCLUDES)
-      fi
-    fi
-
-    if test x"$KAFKAINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for rdkafka.h])
-      if test -r /usr/include/librdkafka/rdkafka.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	KAFKAINCLUDESFOUND=1;
-      elif test -r /usr/local/include/librdkafka/rdkafka.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	KAFKAINCLUDESFOUND=1;
-      fi
-      if test x"$KAFKAINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$KAFKAINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([librdkafka/rdkafka.h],,
-      [AC_MSG_ERROR(ERROR: missing Kafka headers)])      
-    fi
-
-    AC_DEFINE(WITH_KAFKA, 1)
+    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.8.5])
     PLUGINS="${PLUGINS} kafka"
+    USING_KAFKA="yes"
+    AC_DEFINE(WITH_KAFKA, 1)
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1147,92 +620,9 @@ AC_ARG_ENABLE(geoip,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0])
+    PLUGINS="${PLUGINS} geoip"
     USING_MMGEOIP="yes"
-
-    AC_ARG_WITH(geoip-libs,
-      [  --with-geoip-libs=DIR            Search for Maxmind GeoIP libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	MMGEOIPLIB=$withval
-	MMGEOIPLIBFOUND=1
-      ]) 
-
-    if test x"$MMGEOIPLIB" != x""; then
-      AC_MSG_CHECKING(your own Maxmind GeoIP library)
-      if test -r $MMGEOIPLIB/libGeoIP.a -o -r $MMGEOIPLIB/libGeoIP.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Maxmind GeoIP library in $MMGEOIPLIB)
-      fi
-    fi
-
-    if test x"$MMGEOIPLIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for libGeoIP])
-      if test -r /usr/lib/libGeoIP.a -o -r /usr/lib/libGeoIP.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	MMGEOIPLIBFOUND=1
-      elif test -r /usr/lib64/libGeoIP.a -o -r /usr/lib64/libGeoIP.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        MMGEOIPLIBFOUND=1
-      elif test -r /usr/local/lib/libGeoIP.a -o -r /usr/local/lib/libGeoIP.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	MMGEOIPLIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MMGEOIPLIBFOUND" = x""; then
-      AC_CHECK_LIB([GeoIP], [GeoIP_open], [], [AC_MSG_ERROR([
-	ERROR: missing Maxmind GeoIP library. Refer to: http://www.maxmind.com/download/geoip/api/c/ 
-      ])])
-    else 
-      LIBS="${LIBS} -lGeoIP"
-    fi 
-
-    AC_ARG_WITH(geoip-includes,
-      [  --with-geoip-includes=DIR        Search for Maxmind GeoIP includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	MMGEOIPINCLUDES=$withval
-	MMGEOIPINCLUDESFOUND=1
-      ])
-
-    if test x"$MMGEOIPINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own Maxmind GeoIP headers)
-      if test -r $MMGEOIPINCLUDES/GeoIP.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Maximind GeoIP headers in $MMGEOIPINCLUDES)
-      fi
-    fi
-
-    if test x"$MMGEOIPINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for GeoIP.h])
-      if test -r /usr/include/GeoIP.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	MMGEOIPINCLUDESFOUND=1;
-      elif test -r /usr/local/include/GeoIP.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	MMGEOIPINCLUDESFOUND=1;
-      fi
-      if test x"$MMGEOIPINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MMGEOIPINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([GeoIP.h],,
-      [AC_MSG_ERROR(ERROR: missing Maxmind GeoIP headers)])      
-    fi
-
     AC_DEFINE(WITH_GEOIP, 1)
     ;;
   no)
@@ -1247,92 +637,9 @@ AC_ARG_ENABLE(geoipv2,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.0.0])
+    PLUGINS="${PLUGINS} geoipv2"
     USING_MMGEOIPV2="yes"
-
-    AC_ARG_WITH(geoipv2-libs,
-      [  --with-geoipv2-libs=DIR          Search for Maxmind libmaxminddb libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	MMGEOIPLIBV2=$withval
-	MMGEOIPLIBFOUNDV2=1
-      ]) 
-
-    if test x"$MMGEOIPLIBV2" != x""; then
-      AC_MSG_CHECKING(your own Maxmind libmaxminddb library)
-      if test -r $MMGEOIPLIBV2/libmaxminddb.a -o -r $MMGEOIPLIBV2/libmaxminddb.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb library in $MMGEOIPLIBV2)
-      fi
-    fi
-
-    if test x"$MMGEOIPLIBFOUNDV2" = x""; then
-      AC_MSG_CHECKING([default locations for libmaxminddb])
-      if test -r /usr/lib/libmaxminddb.a -o -r /usr/lib/libmaxminddb.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	MMGEOIPLIBFOUNDV2=1
-      elif test -r /usr/lib64/libmaxminddb.a -o -r /usr/lib64/libmaxminddb.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        MMGEOIPLIBFOUNDV2=1
-      elif test -r /usr/local/lib/libmaxminddb.a -o -r /usr/local/lib/libmaxminddb.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	MMGEOIPLIBFOUNDV2=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MMGEOIPLIBFOUNDV2" = x""; then
-      AC_CHECK_LIB([libmaxminddb], [MMDB_open], [], [AC_MSG_ERROR([
-	ERROR: missing Maxmind libmaxminddb library. Refer to: http://www.maxmind.com/download/geoip/api/c/ 
-      ])])
-    else 
-      LIBS="${LIBS} -lmaxminddb"
-    fi 
-
-    AC_ARG_WITH(geoipv2-includes,
-      [  --with-geoipv2-includes=DIR      Search for Maxmind libmaxminddb includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	MMGEOIPINCLUDESV2=$withval
-	MMGEOIPINCLUDESFOUNDV2=1
-      ])
-
-    if test x"$MMGEOIPINCLUDESV2" != x""; then
-      AC_MSG_CHECKING(your own Maxmind libmaxminddb headers)
-      if test -r $MMGEOIPINCLUDESV2/maxminddb.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Maximind libmaxminddb headers in $MMGEOIPINCLUDESV2)
-      fi
-    fi
-
-    if test x"$MMGEOIPINCLUDESFOUNDV2" = x""; then 
-      AC_MSG_CHECKING([default locations for maxminddb.h])
-      if test -r /usr/include/maxminddb.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	MMGEOIPINCLUDESFOUNDV2=1;
-      elif test -r /usr/local/include/maxminddb.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	MMGEOIPINCLUDESFOUNDV2=1;
-      fi
-      if test x"$MMGEOIPINCLUDESFOUNDV2" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$MMGEOIPINCLUDESFOUNDV2" = x""; then
-      AC_CHECK_HEADER([maxminddb.h],,
-      [AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb headers)])      
-    fi
-
     AC_DEFINE(WITH_GEOIPV2, 1)
     ;;
   no)
@@ -1349,92 +656,9 @@ AC_ARG_ENABLE(jansson,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2])
+    PLUGINS="${PLUGINS} jansson"
     USING_JANSSON="yes"
-
-    AC_ARG_WITH(jansson-libs,
-      [  --with-jansson-libs=DIR          Search for Jansson libs in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	JANSSONLIB=$withval
-	JANSSONLIBFOUND=1
-      ]) 
-
-    if test x"$JANSSONLIB" != x""; then
-      AC_MSG_CHECKING(your own Jansson library)
-      if test -r $JANSSONLIB/libjansson.a -o -r $JANSSONLIB/libjansson.so; then
-        AC_MSG_RESULT(ok)
-      else
-        AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Jansson library in $JANSSONLIB)
-      fi
-    fi
-
-    if test x"$JANSSONLIBFOUND" = x""; then
-      AC_MSG_CHECKING([default locations for Jansson library])
-      if test -r /usr/lib/libjansson.a -o -r /usr/lib/libjansson.so; then
-	AC_MSG_RESULT([found in /usr/lib])
-	JANSSONLIBFOUND=1
-      elif test -r /usr/lib64/libjansson.a -o -r /usr/lib64/libjansson.so; then
-        LIBS="${LIBS} -L/usr/lib64"
-        AC_MSG_RESULT([found in /usr/lib64])
-        JANSSONLIBFOUND=1
-      elif test -r /usr/local/lib/libjansson.a -o -r /usr/local/lib/libjansson.so; then
-	LIBS="${LIBS} -L/usr/local/lib"
-	AC_MSG_RESULT([found in /usr/local/lib])
-	JANSSONLIBFOUND=1
-      else 
-        AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$JANSSONLIBFOUND" = x""; then
-      AC_CHECK_LIB([jansson], [json_object], [], [AC_MSG_ERROR([
-	ERROR: missing Jansson library. Refer to: http://www.digip.org/jansson/ 
-      ])])
-    else 
-      LIBS="${LIBS} -ljansson"
-    fi 
-
-    AC_ARG_WITH(jansson-includes,
-      [  --with-jansson-includes=DIR      Search for Jansson includes in the specified directory],
-      [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	JANSSONINCLUDES=$withval
-	JANSSONINCLUDESFOUND=1
-      ])
-
-    if test x"$JANSSONINCLUDES" != x""; then
-      AC_MSG_CHECKING(your own Jansson headers)
-      if test -r $JANSSONINCLUDES/jansson.h; then
-        AC_MSG_RESULT(ok)
-      else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(ERROR: missing Jansson headers in $JANSSONINCLUDES)
-      fi
-    fi
-
-    if test x"$JANSSONINCLUDESFOUND" = x""; then 
-      AC_MSG_CHECKING([default locations for jansson.h])
-      if test -r /usr/include/jansson.h; then
-	AC_MSG_RESULT([found in /usr/include])
-	JANSSONINCLUDESFOUND=1;
-      elif test -r /usr/local/include/jansson.h; then
-	INCLUDES="${INCLUDES} -I/usr/local/include"
-	AC_MSG_RESULT([found in /usr/local/include])
-	JANSSONINCLUDESFOUND=1;
-      fi
-      if test x"$JANSSONINCLUDESFOUND" = x""; then
-	AC_MSG_RESULT([not found])
-      fi
-    fi
-
-    if test x"$JANSSONINCLUDESFOUND" = x""; then
-      AC_CHECK_HEADER([jansson.h],,
-      [AC_MSG_ERROR(ERROR: missing Jansson headers)])      
-    fi
-
     AC_DEFINE(WITH_JANSSON, 1)
     ;;
   no)
