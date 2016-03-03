@@ -35,29 +35,32 @@
 
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, char *event_type, int output, int log_type)
 {
-  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
+  struct bgp_misc_structs *bms;
   char log_rk[SRVBUFLEN];
   struct bgp_peer *peer;
   struct bgp_attr *attr;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
-  if (!bms || !ri || !ri->peer || !ri->peer->log || !event_type) return ERR;
+  if (!ri || !ri->peer || !ri->peer->log || !event_type) return ERR;
 
   peer = ri->peer;
   attr = ri->attr;
+
+  bms = bgp_select_misc_db(peer->type);
+  if (!bms) return ERR;
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
 
 #ifdef WITH_RABBITMQ
-  if ((config.nfacctd_bgp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
-      (config.bgp_table_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
+  if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+      (bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP))
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
 
 #ifdef WITH_KAFKA
-  if ((config.nfacctd_bgp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
-      (config.bgp_table_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP))
+  if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+      (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP))
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
 #endif
 
@@ -98,6 +101,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
+
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer);
 
     addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", "peer_ip_src", ip_address);
@@ -171,21 +176,21 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       json_decref(kv);
     }
 
-    if ((config.nfacctd_bgp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
-	(config.bgp_table_dump_file && etype == BGP_LOGDUMP_ET_DUMP))
+    if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
 
 #ifdef WITH_RABBITMQ
-    if ((config.nfacctd_bgp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
-	(config.bgp_table_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+    if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
 #endif
 
 #ifdef WITH_KAFKA
-    if ((config.nfacctd_bgp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
-        (config.bgp_table_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+    if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+        (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }

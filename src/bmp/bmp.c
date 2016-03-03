@@ -831,6 +831,8 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       int bgp_open_len;
       void *ret, *alloc_key;
 
+      memset(&bgp_peer_loc, 0, sizeof(bgp_peer_loc));
+      memset(&bgp_peer_rem, 0, sizeof(bgp_peer_rem));
       bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
       bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
       bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
@@ -843,6 +845,8 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       memcpy(&bgp_peer_rem.addr, &bdata.peer_ip, sizeof(struct host_addr));
 
       bmpp_bgp_peer = bmp_sync_loc_rem_peers(&bgp_peer_loc, &bgp_peer_rem);
+      bmpp_bgp_peer->log = bmpp->self.log; 
+      bmpp_bgp_peer->bmp_se = bmpp; /* using bmp_se field to back-point a BGP peer to its parent BMP peer */  
       ret = pm_tsearch(bmpp_bgp_peer, &bmpp->bgp_peers, bmp_bmpp_bgp_peers_cmp, sizeof(struct bgp_peer));
       if (!ret) Log(LOG_WARNING, "WARN ( %s/core/BMP ): [%s] [peer up] tsearch() unable to insert.\n", config.name, peer->addr_str);
 
@@ -1288,6 +1292,11 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
   return remaining_len;
 }
 
+void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer)
+{
+  // XXX
+}
+
 void bmp_link_misc_structs(struct bgp_misc_structs *bms)
 {
 #if defined WITH_RABBITMQ
@@ -1309,6 +1318,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
   strcpy(bms->peer_str, "bmp_router");
+  bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
 
   bms->table_peer_buckets = config.bmp_table_peer_buckets;
   bms->table_per_peer_buckets = config.bmp_table_per_peer_buckets;

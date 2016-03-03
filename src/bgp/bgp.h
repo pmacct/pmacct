@@ -114,6 +114,7 @@ struct bgp_misc_structs {
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
+  void (*bgp_peer_log_msg_extras)(struct bgp_peer *);
 
   int table_peer_buckets;
   int table_per_peer_buckets;
@@ -155,7 +156,12 @@ struct bgp_peer {
   u_int32_t msglen;
   struct bgp_peer_buf buf;
   struct bgp_peer_log *log;
-  void *bmp_se; /* struct bmp_dump_se_ll */
+
+  /*
+     bmp_peer.self.bmp_se:		pointer to struct bmp_dump_se_ll
+     bmp_peer.bgp_peers[n].bmp_se:	backpointer to parent struct bmp_peer
+  */
+  void *bmp_se;
 };
 
 struct bgp_peer_batch {

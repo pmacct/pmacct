@@ -920,6 +920,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
   strcpy(bms->peer_str, "peer_ip_src");
+  bms->bgp_peer_log_msg_extras = NULL;
 
   bms->table_peer_buckets = config.bgp_table_peer_buckets;
   bms->table_per_peer_buckets = config.bgp_table_per_peer_buckets;
