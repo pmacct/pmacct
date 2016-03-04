@@ -459,8 +459,14 @@ void bmp_handle_dump_event()
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
   int ret, peers_idx, duration, tables_num;
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_table *table;
+  struct bgp_node *node;
+  afi_t afi;
+  safi_t safi;
   pid_t dumper_pid;
   time_t start;
+  u_int64_t dump_elems;
 
   struct bgp_peer *peer, *saved_peer;
   struct bmp_peer *bmpp, *saved_bmpp;
@@ -558,6 +564,36 @@ void bmp_handle_dump_event()
 #endif
 
 	bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
+	inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BMP);
+        dump_elems = 0;
+
+        if (!inter_domain_routing_db) return;
+
+        for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+          for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+            table = inter_domain_routing_db->rib[afi][safi];
+            node = bgp_table_top(peer, table);
+
+            while (node) {
+              u_int32_t modulo = bms->route_info_modulo(peer, NULL);
+              u_int32_t peer_buckets;
+              struct bgp_info *ri;
+
+              for (peer_buckets = 0; peer_buckets < config.bmp_table_per_peer_buckets; peer_buckets++) {
+                for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
+		  struct bmp_peer *local_bmpp = ri->peer->bmp_se;
+
+                  if (local_bmpp && (&local_bmpp->self == peer)) {
+                    bgp_peer_log_msg(node, ri, safi, event_type, config.bmp_dump_output, BGP_LOG_TYPE_MISC);
+                    dump_elems++;
+                  }
+                }
+              }
+
+              node = bgp_route_next(peer, node);
+	    }
+	  }
+	}
 
 	if (bdsell && bdsell->start) {
 	  struct bmp_dump_se_ll_elem *se_ll_elem;

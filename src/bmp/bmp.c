@@ -197,7 +197,7 @@ void skinny_bmp_daemon()
   if (!config.bmp_table_per_peer_buckets) config.bmp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
 
   if (config.bmp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
-    bmp_route_info_modulo = bgp_route_info_modulo_pathid;
+    bmp_route_info_modulo = bmp_route_info_modulo_pathid;
   else {
     Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unknown 'bmp_table_per_peer_hash' value. Terminating thread.\n", config.name);
     exit_all(1);
@@ -1428,4 +1428,23 @@ int bmp_bmpp_bgp_peer_host_addr_cmp(const void *a, const void *b)
 
 void bmp_bmpp_bgp_peers_free(void *a)
 {
+}
+
+u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)
+{
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  struct bmp_peer *bmpp = peer->bmp_se;
+  path_id_t local_path_id = 1;
+  int fd = 0;
+
+  if (path_id && *path_id) local_path_id = *path_id;
+
+  if (peer->fd) fd = peer->fd;
+  else {
+    if (bmpp && bmpp->self.fd) fd = bmpp->self.fd;
+  }
+
+  return (((fd * bms->table_per_peer_buckets) +
+          ((local_path_id - 1) % bms->table_per_peer_buckets)) %
+          (bms->table_peer_buckets * bms->table_per_peer_buckets));
 }
