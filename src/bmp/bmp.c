@@ -926,6 +926,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
 void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_misc_structs *bms;
   struct bgp_peer *peer, *bmpp_bgp_peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
@@ -934,7 +935,11 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   void *ret;
 
   if (!bmpp) return;
+
   peer = &bmpp->self;
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
     Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
@@ -959,8 +964,14 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
 
     if (ret) {
+      char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
+
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
+
+      bms->peer_str = peer_str;
       bgp_update_len = bgp_parse_update_msg(bmpp_bgp_peer, (*bmp_packet)); 
+      bms->peer_str = saved_peer_str;
+
       bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
     }
   }
@@ -1292,9 +1303,33 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
   return remaining_len;
 }
 
-void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer)
+void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_obj)
 {
-  // XXX
+  char bmp_msg_type[] = "route_monitor";
+  struct bgp_misc_structs *bms;
+  struct bmp_peer *bmpp;
+
+  if (!peer || !void_obj) return;
+
+  bms = bgp_select_misc_db(peer->type);
+  bmpp = peer->bmp_se;
+  if (!bms || !bmpp) return;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = void_obj, *kv;
+
+    addr_to_str(ip_address, &bmpp->self.addr);
+    kv = json_pack("{ss}", "bmp_router", ip_address);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+#endif
+  }
 }
 
 void bmp_link_misc_structs(struct bgp_misc_structs *bms)
@@ -1317,6 +1352,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bmp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
+  bms->peer_str = malloc(strlen("bmp_router") + 1);
   strcpy(bms->peer_str, "bmp_router");
   bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
 
@@ -1362,10 +1398,22 @@ int bmp_peer_init(struct bmp_peer *bmpp, int type)
 
 void bmp_peer_close(struct bmp_peer *bmpp, int type)
 {
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer;
+
   if (!bmpp) return;
 
+  peer = &bmpp->self;
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
   tdestroy(&bmpp->bgp_peers, bmp_bmpp_bgp_peers_free);
-  bgp_peer_close(&bmpp->self, type);
+
+  if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
+    bmp_dump_close_peer(peer);
+
+  bgp_peer_close(peer, type);
 }
 
 int bmp_bmpp_bgp_peers_cmp(const void *a, const void *b)

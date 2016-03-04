@@ -102,10 +102,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       json_decref(kv);
     }
 
-    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer);
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
-    kv = json_pack("{ss}", "peer_ip_src", ip_address);
+    kv = json_pack("{ss}", bms->peer_str, ip_address);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 

@@ -92,7 +92,7 @@ struct bgp_misc_structs {
   u_int64_t log_seq;
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
-  char peer_str[SRVBUFLEN]; /* bmp_router vs peer_src_ip */
+  char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
 
 #if defined WITH_RABBITMQ
   struct p_amqp_host *msglog_amqp_host;
@@ -114,7 +114,7 @@ struct bgp_misc_structs {
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
-  void (*bgp_peer_log_msg_extras)(struct bgp_peer *);
+  void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, void *);
 
   int table_peer_buckets;
   int table_per_peer_buckets;

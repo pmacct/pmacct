@@ -436,12 +436,6 @@ void bgp_peer_close(struct bgp_peer *peer, int type)
   if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
     bgp_peer_log_close(peer, bms->msglog_output, type);
 
-  /* BMP case only */
-  if (peer->type == FUNC_TYPE_BMP) {
-    if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
-      bmp_dump_close_peer(peer);
-  }
-
   close(peer->fd);
   peer->fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
@@ -919,6 +913,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
+  bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
   bms->bgp_peer_log_msg_extras = NULL;
 
