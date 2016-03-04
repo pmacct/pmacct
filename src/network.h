@@ -363,8 +363,8 @@ struct packet_ptrs {
   struct class_st cst; /* classifiers: class status */
   u_int8_t shadow; /* 0=the packet is being distributed for the 1st time
 		      1=the packet is being distributed for the 2nd+ time */
-  u_int16_t ifindex_in;  /* input ifindex; only used by ULOG for the time being */
-  u_int16_t ifindex_out; /* output ifindex; only used by ULOG for the time being */
+  u_int16_t ifindex_in;  /* input ifindex; only used by NFLOG for the time being */
+  u_int16_t ifindex_out; /* output ifindex; only used by NFLOG for the time being */
   u_int8_t tun_stack; /* tunnelling stack */
   u_int8_t tun_layer; /* tunnelling layer count */
   u_int32_t sample_type; /* sFlow sample type */

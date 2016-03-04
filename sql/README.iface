@@ -3,7 +3,7 @@ using, ie. README.mysql, README.pgsql or README.sqlite3.
 
 The 'iface_in' and 'iface_out' fields.
 Such fields are being introduced to natively support input/output interface indexes as
-received from sFlow, NetFlow or ULOG packet capturing framework. The guidelines below
+received from sFlow, NetFlow or NFLOG packet capturing framework. The guidelines below
 (typically in MySQL format) are to add such primitives to the SQL schema:
 
 * iface_in field:

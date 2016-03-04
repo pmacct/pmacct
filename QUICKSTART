@@ -8,7 +8,7 @@ II.	Configuring pmacct for compilation and installing
 III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) and noSQL (MongoDB) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
-VI.	Running the ULOG-based daemon (uacctd)
+VI.	Running the NFLOG-based daemon (uacctd)
 VII.	Running the pmacct client (pmacct)
 VIII.	Running the RabbitMQ/AMQP plugin
 IX.	Running the Kafka plugin
@@ -462,24 +462,23 @@ name=vrf_id_ingress     field_type=234  len=4   semantics=u_int
 name=vrf_id_egress      field_type=235  len=4   semantics=u_int
 name=vrf_name           field_type=236  len=32  semantics=str
 
-VI. Running the ULOG-based daemon (uacctd)
+VI. Running the NFLOG-based daemon (uacctd)
 All examples about pmacctd are also valid for uacctd with the exception of directives
 that apply exclusively to libpcap. If you've skipped examples in section 'IV', please
 read them before continuing. All configuration keys available are in the CONFIG-KEYS
 document.
 
-The Linux ULOG infrastructure requires a couple parameters in order to work properly.
-These are the ULOG multicast group (uacctd_group) to which captured packets have to be
+The Linux NFLOG infrastructure requires a couple parameters in order to work properly.
+These are the NFLOG multicast group (uacctd_group) to which captured packets have to be
 sent to and the Netlink buffer size (uacctd_nl_size). The default buffer settings (4KB)
-typically works OK for small environments. If the uacctd user is not already familiar
-with the iptables ULOG target, it is adviceable to start with a tutorial, like the one
-at the following URL ("6.5.15. ULOG target" section):
+typically works OK for small environments. The traffic is captured
+with an iptables rule. For example:
 
-http://www.faqs.org/docs/iptables/targets.html
+iptables -t raw -I PREROUTING -i eth0 j NFLOG --nflog-group 10
 
 Apart from determining how and what traffic to capture with iptables, which is topic
-outside the scope of this document, the most relevant point is the "--ulog-nlgroup"
-iptables setting has to match with the "uacctd_group" uacctd one. 
+outside the scope of this document, the most relevant point is the "--nflog-nlgroup"
+iptables setting has to match with the "uacctd_group" uacctd one.
 
 A couple examples follow:
 
@@ -487,7 +486,7 @@ Run uacctd reading configuration from a specified file.
 shell> uacctd -f uacctd.conf
 
 Daemonize the process; aggregate data by sum_host (by host, summing inbound + outbound
-traffic); write to a local MySQL server. Listen on ULOG multicast group #5. Let's make
+traffic); write to a local MySQL server. Listen on NFLOG multicast group #5. Let's make
 pmacct divide data into historical time-bins of 5 minutes. Let's disable UPDATE queries
 and hence align refresh time with the timeslot length. Finally, let's make use of a SQL
 table, version 4:

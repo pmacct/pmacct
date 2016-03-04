@@ -473,6 +473,7 @@ struct configuration {
   int tee_pipe_size;
   int uacctd_group;
   int uacctd_nl_size;
+  int uacctd_threshold;
   char *tunnel0;
   char *pkt_len_distrib_bins_str;
   char *pkt_len_distrib_bins[MAX_PKT_LEN_DISTRIB_BINS];

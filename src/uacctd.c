@@ -33,17 +33,84 @@
 #include "ip_flow.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
+#include "classifier.h"
+#include "bgp/bgp.h"
+#include "isis/isis.h"
+#include <netinet/ip.h>
+#include <libnfnetlink/libnfnetlink.h>
+#include <libnetfilter_log/libnetfilter_log.h>
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
-#ifdef ENABLE_ULOG
-
 /* Functions */
+static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
+                          struct nflog_data *nfa, void *p)
+{
+  static char jumbo_container[10000];
+  struct timeval tv = {};
+  struct pcap_pkthdr hdr;
+  char *pkt = NULL;
+  ssize_t pkt_len = nflog_get_payload(nfa, &pkt);
+  ssize_t mac_len = nflog_get_msg_packet_hwhdrlen(nfa);
+  struct pcap_callback_data *cb_data = p;
+
+  /* Check we can handle this packet */
+  switch (nfmsg->nfgen_family) {
+  case AF_INET: break;
+#ifdef ENABLE_IPV6
+  case AF_INET6: break;
+#endif
+  default: return 0;
+  }
+
+  if (pkt_len == -1)
+    return -1;
+  nflog_get_timestamp(nfa, &tv);
+  hdr.ts = tv;
+  hdr.caplen = MIN(pkt_len, config.snaplen);
+  hdr.len = pkt_len;
+
+  cb_data->ifindex_in = nflog_get_physindev(nfa);
+  if (cb_data->ifindex_in == 0)
+    cb_data->ifindex_in = nflog_get_indev(nfa);
+
+  cb_data->ifindex_out = nflog_get_physoutdev(nfa);
+  if (cb_data->ifindex_out == 0)
+    cb_data->ifindex_out = nflog_get_outdev(nfa);
+
+#if defined (HAVE_L2)
+  if (mac_len) {
+    memcpy(jumbo_container, nflog_get_msg_packet_hwhdr(nfa), mac_len);
+    memcpy(jumbo_container + mac_len, pkt, hdr.caplen);
+    hdr.caplen += mac_len;
+    hdr.len += mac_len;
+  } else {
+    memset(jumbo_container, 0, ETHER_HDRLEN);
+    memcpy(jumbo_container+ETHER_HDRLEN, pkt, hdr.caplen);
+    hdr.caplen += ETHER_HDRLEN;
+    hdr.len += ETHER_HDRLEN;
+
+    switch (nfmsg->nfgen_family) {
+    case AF_INET:
+      ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IP);
+      break;
+    case AF_INET6:
+      ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IPV6);
+      break;
+    }
+  }
+
+  pcap_cb((u_char *) cb_data, &hdr, jumbo_container);
+#else
+  pcap_cb((u_char *) cb_data, &hdr, pkt);
+#endif
+}
+
 void usage_daemon(char *prog_name)
 {
   printf("%s (%s)\n", UACCTD_USAGE_HEADER, PMACCT_BUILD);
-  printf("Usage: %s [ -D | -d ] [ -g ULOG group ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
+  printf("Usage: %s [ -D | -d ] [ -g NFLOG group ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
   printf("\nGeneral options:\n");
@@ -60,8 +127,8 @@ void usage_daemon(char *prog_name)
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
   printf("  -R  \tRenormalize sampled data\n");
-  printf("  -g  \tNetlink ULOG group\n");
-  printf("  -L  \tNetlink socket read buffer size\n");
+  printf("  -g  \tNetlink NFLOG group\n");
+  printf("  -L  \tSnapshot length\n");
   printf("  -u  \tLeave IP protocols in numerical format\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
@@ -83,16 +150,12 @@ void usage_daemon(char *prog_name)
 
 int main(int argc,char **argv, char **envp)
 {
-  bpf_u_int32 localnet, netmask;  /* pcap library stuff */
-  struct bpf_program filter;
   struct pcap_device device;
-  char errbuf[PCAP_ERRBUF_SIZE];
   int index, logf, ret;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
   char config_file[SRVBUFLEN];
-  int psize = ULOG_BUFLEN;
 
   struct id_table bpas_table;
   struct id_table blp_table;
@@ -104,23 +167,14 @@ int main(int argc,char **argv, char **envp)
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
-  int errflag, cp; 
+  int errflag, cp;
 
-  /* ULOG stuff */
-  int ulog_fd, one = 1;
-  struct nlmsghdr *nlh;
-  struct sockaddr_nl nls;
-  ulog_packet_msg_t *ulog_pkt;
+  /* NFLOG stuff */
+  struct nflog_handle *nfh = NULL;
+  struct nflog_g_handle *nfgh = NULL;
+  int one = 1;
   ssize_t len = 0;
-  socklen_t alen;
-  unsigned char *ulog_buffer;
-  struct pcap_pkthdr hdr;
-  struct timeval tv;
-
-  char jumbo_container[10000];
-  u_int8_t mac_len;
-
-
+  unsigned char *nflog_buffer;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage client;
@@ -317,8 +371,9 @@ int main(int argc,char **argv, char **envp)
 
   if (config.files_umask) umask(config.files_umask);
 
-  if (!config.snaplen) config.snaplen = psize;
-  if (!config.uacctd_nl_size) config.uacctd_nl_size = psize;
+  if (!config.snaplen) config.snaplen = DEFAULT_SNAPLEN;
+  if (!config.uacctd_nl_size) config.uacctd_nl_size = DEFAULT_NFLOG_BUFLEN;
+  if (!config.uacctd_threshold) config.uacctd_threshold = DEFAULT_NFLOG_THRESHOLD;
 
   /* Let's check whether we need superuser privileges */
   if (getuid() != 0) {
@@ -328,10 +383,10 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (!config.uacctd_group) {
-    config.uacctd_group = DEFAULT_ULOG_GROUP;
+    config.uacctd_group = DEFAULT_NFLOG_GROUP;
     list = plugins_list;
     while (list) {
-      list->cfg.uacctd_group = DEFAULT_ULOG_GROUP;
+      list->cfg.uacctd_group = DEFAULT_NFLOG_GROUP;
       list = list->next;
     }
   }
@@ -478,7 +533,7 @@ int main(int argc,char **argv, char **envp)
            we cancel the sampling information from the probe plugin */
         if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
 
-	if (psize < 128) psize = config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
+	if (config.snaplen < 128) config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
 	list->cfg.what_to_count_2 = 0;
 	if (list->cfg.classifiers_path) {
@@ -645,45 +700,82 @@ int main(int argc,char **argv, char **envp)
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
 
-  ulog_fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_NFLOG);
-  if (ulog_fd == -1) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Failed to create Netlink ULOG socket\n", config.name);
+  nfh = nflog_open();
+  if (nfh == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to create Netlink NFLOG socket\n", config.name);
+    nflog_close(nfh);
     exit_all(1);
   }
 
-  Log(LOG_INFO, "INFO ( %s/core ): Successfully connected Netlink ULOG socket\n", config.name);
+  Log(LOG_INFO, "INFO ( %s/core ): Successfully connected Netlink NFLOG socket\n", config.name);
+
+  /* Bind to IPv4 (and IPv6) */
+  if (nflog_unbind_pf(nfh, AF_INET) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to unbind Netlink NFLOG socket from IPv4\n", config.name);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+  if (nflog_bind_pf(nfh, AF_INET) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to bind Netlink NFLOG socket from IPv4\n", config.name);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+#if defined ENABLE_IPV6
+  if (nflog_unbind_pf(nfh, AF_INET6) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to unbind Netlink NFLOG socket from IPv6\n", config.name);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+  if (nflog_bind_pf(nfh, AF_INET6) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to bind Netlink NFLOG socket from IPv6\n", config.name);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+#endif
+
+  /* Bind to group */
+  if ((nfgh = nflog_bind_group(nfh, config.uacctd_group)) == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to join NFLOG group %d\n", config.name, config.uacctd_group);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+
+  /* Set snaplen */
+  if (nflog_set_mode(nfgh, NFULNL_COPY_PACKET, config.snaplen) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to set snaplen to %d\n", config.name, config.snaplen);
+    nflog_unbind_group(nfgh);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+
+  /* Set threshold */
+  if (nflog_set_qthresh(nfgh, config.uacctd_threshold) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to set threshold to %d\n", config.name, config.uacctd_threshold);
+    nflog_unbind_group(nfgh);
+    nflog_close(nfh);
+    exit_all(1);
+  }
+
+  /* Set buffer size */
+  if (nflog_set_nlbufsiz(nfgh, config.uacctd_nl_size) < 0) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Failed to set receive buffer size to %d\n", config.name, config.uacctd_nl_size);
+    nflog_unbind_group(nfgh);
+    nflog_close(nfh);
+    exit_all(1);
+  }
 
   /* Turn off netlink errors from overrun. */
-  if (setsockopt(ulog_fd, SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, sizeof(one)))
+  if (setsockopt(nflog_fd(nfh), SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, sizeof(one)))
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to turn off netlink ENOBUFS\n", config.name);
 
-  if (config.uacctd_nl_size > ULOG_BUFLEN) {
-    /* If configured buffer size is larger than default 4KB */
-    if (setsockopt(ulog_fd, SOL_SOCKET, SO_RCVBUF, &config.uacctd_nl_size, sizeof(config.uacctd_nl_size)))
-      Log(LOG_ERR, "ERROR ( %s/core ): Failed to set Netlink receive buffer size\n", config.name);
-    else
-      Log(LOG_INFO, "INFO ( %s/core ): Netlink receive buffer size set to %u\n", config.name, config.uacctd_nl_size);
-  }
-
-  ulog_buffer = malloc(config.snaplen);
-  if (ulog_buffer == NULL) {
+  nflog_callback_register(nfgh, &nflog_incoming, &cb_data);
+  nflog_buffer = malloc(config.uacctd_nl_size);
+  if (nflog_buffer == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): ULOG buffer malloc() failed\n", config.name);
-    close(ulog_fd);
+    nflog_unbind_group(nfgh);
+    nflog_close(nfh);
     exit_all(1);
   }
-
-  memset(&nls, 0, sizeof(nls));
-  nls.nl_family = AF_NETLINK;
-  nls.nl_pid = getpid();
-  nls.nl_groups = config.uacctd_group;
-  alen = sizeof(nls);
-
-  if (bind(ulog_fd, (struct sockaddr *) &nls, sizeof(nls))) {
-    Log(LOG_ERR, "ERROR ( %s/core ): bind() to Netlink ULOG socket failed\n", config.name);
-    close(ulog_fd);
-    exit_all(1);
-  }
-  Log(LOG_INFO, "INFO ( %s/core ): Netlink ULOG: binding to group %u\n", config.name, config.uacctd_group);
 
 #if defined ENABLE_THREADS
   /* starting the ISIS threa */
@@ -811,149 +903,8 @@ int main(int argc,char **argv, char **envp)
       }
     }
 
-    len = recvfrom(ulog_fd, ulog_buffer, config.snaplen, 0, (struct sockaddr*) &nls, &alen);
-
-    /*
-     * Read timeout or failure condition.
-     */
-    if (len < (int)sizeof(struct nlmsghdr)) continue;
-    if (alen != sizeof(nls)) continue;
-
-    nlh = (struct nlmsghdr*) ulog_buffer;
-    if ((nlh->nlmsg_flags & MSG_TRUNC) || ((size_t)len > config.snaplen)) continue;
-
-    gettimeofday(&tv, NULL);
-
-    while (NLMSG_OK(nlh, (size_t)len)) {
-      ulog_pkt = NLMSG_DATA(nlh);
-      hdr.ts = tv;
-      hdr.caplen = MIN(ulog_pkt->data_len, config.snaplen);
-      hdr.len = ulog_pkt->data_len;
-
-      if (strlen(ulog_pkt->indev_name) > 1) {
-	cb_data.ifindex_in = cache_ifindex(ulog_pkt->indev_name, tv.tv_sec);
-      }
-      else cb_data.ifindex_in = 0;
-
-      if (strlen(ulog_pkt->outdev_name) > 1) {
-	cb_data.ifindex_out = cache_ifindex(ulog_pkt->outdev_name, tv.tv_sec);
-      }
-      else cb_data.ifindex_out = 0;
-
-#if defined (HAVE_L2)
-      if (ulog_pkt->mac_len) {
-	memcpy(jumbo_container, ulog_pkt->mac, ulog_pkt->mac_len);
-	memcpy(jumbo_container+ulog_pkt->mac_len, ulog_pkt->payload, hdr.caplen);
-	// XXX
-	hdr.caplen += ulog_pkt->mac_len;
-	hdr.len += ulog_pkt->mac_len;
-      }
-      else {
-	memset(jumbo_container, 0, ETHER_HDRLEN);
-	memcpy(jumbo_container+ETHER_HDRLEN, ulog_pkt->payload, hdr.caplen);
-	hdr.caplen += ETHER_HDRLEN;
-	hdr.len += ETHER_HDRLEN;
-
-	switch (IP_V((struct my_iphdr *) ulog_pkt->payload)) {
-	case 4:
-	  ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IP);
-	  break;
-	case 6:
-	  ((struct eth_header *)jumbo_container)->ether_type = ntohs(ETHERTYPE_IPV6);
-	  break;
-	}
-
-      }
-
-      pcap_cb((u_char *) &cb_data, &hdr, jumbo_container);
-#else
-      pcap_cb((u_char *) &cb_data, &hdr, ulog_pkt->payload);
-#endif
-
-      if (nlh->nlmsg_type == NLMSG_DONE || !(nlh->nlmsg_flags & NLM_F_MULTI)) {
-        /* Last part of the multilink message */
-        break;
-      }
-      nlh = NLMSG_NEXT(nlh, len);
-    }
+    len = recv(nflog_fd(nfh), nflog_buffer, config.uacctd_nl_size, 0);
+    if (len < 0) continue;
+    if (nflog_handle_packet(nfh, nflog_buffer, len) != 0) continue;
   }
 }
-
-unsigned int get_ifindex(char *device) 
-{
-  static int sock = -1;
-
-  if (sock < 0) {
-    sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-    if (sock < 0) {
-      Log(LOG_ERR, "ERROR ( %s/core ): Unable to open socket for ifindex", config.name);
-      return -1;
-    }
-  }
-  
-  struct ifreq req;
-  strcpy(req.ifr_name, device);
-  if (ioctl(sock, SIOCGIFINDEX, &req)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Interface %s not found\n", config.name, device);
-    return -1;
-  }
-
-  return req.ifr_ifindex;
-}
-
-unsigned int hash_ifname(char *name)
-{
-  unsigned hash = 0;
-
-  while (*name)
-    hash = 33 * hash + *name++;
-
-  return (hash & IFCACHE_HASHSIZ-1);
-}
-
-/* Cache name to ifindex mapping */
-unsigned int cache_ifindex(char *device, unsigned long now)
-{
-  struct ifname_cache *ifc, **top;
-  unsigned int ifindex;
-
-  top = &hash_heads[hash_ifname(device)];
-  while ( (ifc = *top) != NULL) {
-    if (strncmp(device, ifc->name, IFNAMSIZ)) {
-      top = &ifc->next;
-      continue;
-    }
-
-    /* prune old entry to deal with hotplug */
-    if ((long)(now - ifc->tstamp) > IFCACHE_LIFETIME) {
-      *top = ifc->next;
-      free(ifc);
-      break;
-    }
-
-    return ifc->index;
-  }
-
-  ifindex = get_ifindex(device);
-  if (ifindex) {
-    ifc = malloc(sizeof(struct ifname_cache));
-    if (ifc) {
-      ifc->index = ifindex;
-      strncpy(ifc->name, device, IFNAMSIZ);
-      ifc->tstamp = now;
-      ifc->next = *top;
-      *top = ifc;
-    }
-  }
-
-  return ifindex;
-}
-
-#else
-
-int main(int argc,char **argv, char **envp)
-{
-  printf("WARN: uacctd (Linux NetFilter ULOG accounting) daemon is not active. This is enabled by --enable-ulog\n");
-}
-
-#endif

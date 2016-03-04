@@ -1199,7 +1199,7 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
     payload->priority = vlan_id >> 13;
   }
 
-  /* Typically don't have L2 info under ULOG */
+  /* Typically don't have L2 info under NFLOG */
   if (!pptrs->mac_ptr) {
     ethHdrLen = sizeof(struct eth_header);
     memset(&eh, 0, ethHdrLen);
