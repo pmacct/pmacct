@@ -979,7 +979,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
 void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
-  // XXX: support route mirroring
+  // XXX: maybe support route mirroring
 }
 
 void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
@@ -1374,22 +1374,6 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
 
   return bgp_peer_rem;
 }
-
-void bmp_peer_compose(struct bgp_peer *peer, struct bmp_data *bdata)
-{
-  if (!peer || !bdata) return;
-
-  memset(peer, 0, sizeof(struct bgp_peer));
-  
-  memcpy(&peer->addr, &bdata->peer_ip, sizeof(struct host_addr));
-/* XXX:
-  memcpy(&peer->id, &bdata->bgp_id, sizeof(struct host_addr));
-  addr_to_str(peer->addr_str, &peer->addr);
-  peer->as = bdata->peer_asn;
-  peer->status = Established;
-  peer->type = FUNC_TYPE_BMP;
-*/
-} 
 
 int bmp_peer_init(struct bmp_peer *bmpp, int type)
 {

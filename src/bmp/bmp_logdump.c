@@ -584,7 +584,12 @@ void bmp_handle_dump_event()
 		  struct bmp_peer *local_bmpp = ri->peer->bmp_se;
 
                   if (local_bmpp && (&local_bmpp->self == peer)) {
+		    char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
+
+		    ri->peer->log = peer->log;
+		    bms->peer_str = peer_str;
                     bgp_peer_log_msg(node, ri, safi, event_type, config.bmp_dump_output, BGP_LOG_TYPE_MISC);
+		    bms->peer_str = saved_peer_str;
                     dump_elems++;
                   }
                 }
