@@ -24,7 +24,7 @@
 /* includes */
 #include "pmacct.h"
 #include "imt_plugin.h"
-#include "crc32.c"
+#include "crc32.h"
 
 /* functions */
 struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
