@@ -98,7 +98,7 @@ assegment_new (u_char type, u_short length)
   
   new = malloc(sizeof (struct assegment));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (assegment_new: new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (assegment_new: new). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   memset(new, 0, sizeof (struct assegment));
@@ -106,7 +106,7 @@ assegment_new (u_char type, u_short length)
   if (length) {
     new->as = assegment_data_new (length);
     if (!new->as) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (assegment_new: new->as). Exiting ..\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (assegment_new: new->as). Exiting ..\n", config.name); // XXX
       exit_all(1);
     }
     memset(new->as, 0, length);
@@ -319,7 +319,7 @@ aspath_new (void)
 
   aspath = malloc(sizeof (struct aspath));
   if (!aspath) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_new). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   memset (aspath, 0, sizeof (struct aspath));
@@ -340,9 +340,16 @@ aspath_free (struct aspath *aspath)
 
 /* Unintern aspath from AS path bucket. */
 void
-aspath_unintern(struct bgp_rt_structs *inter_domain_routing_db, struct aspath *aspath)
+aspath_unintern(struct bgp_peer *peer, struct aspath *aspath)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct aspath *ret;
+
+  if (!peer) return;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return;
 
   if (aspath->refcnt)
     aspath->refcnt--;
@@ -530,7 +537,7 @@ aspath_make_str_count (struct aspath *as)
     {
       str_buf = malloc(1);
       if (!str_buf) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name); // XXX
 	exit_all(1);
       }
       str_buf[0] = '\0';
@@ -553,7 +560,7 @@ aspath_make_str_count (struct aspath *as)
                   ASPATH_STR_DEFAULT_LEN);
   str_buf = malloc(str_size);
   if (!str_buf) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
 
@@ -636,9 +643,16 @@ aspath_str_update (struct aspath *as)
 
 /* Intern allocated AS path. */
 struct aspath *
-aspath_intern (struct bgp_rt_structs *inter_domain_routing_db, struct aspath *aspath)
+aspath_intern (struct bgp_peer *peer, struct aspath *aspath)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct aspath *find;
+
+  if (!peer) return NULL;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return NULL;
   
   /* Assert this AS path structure is not interned. */
   assert (aspath->refcnt == 0);
@@ -666,7 +680,7 @@ aspath_dup (struct aspath *aspath)
 
   new = malloc(sizeof (struct aspath));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_dup). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_dup). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   memset(new, 0, sizeof(struct aspath));
@@ -770,10 +784,17 @@ assegments_parse(char *s, size_t length, int use32bit)
 
 /* AS path parse function. If there is same AS path in the the AS
    path hash then return it else make new AS path structure. */
-struct aspath *aspath_parse(struct bgp_rt_structs *inter_domain_routing_db, char *s, size_t length, int use32bit)
+struct aspath *aspath_parse(struct bgp_peer *peer, char *s, size_t length, int use32bit)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct aspath as;
   struct aspath *find;
+
+  if (!peer) return NULL;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return NULL;
 
   /* If length is odd it's malformed AS path. */
   /* Nit-picking: if (use32bit == 0) it is malformed if odd,

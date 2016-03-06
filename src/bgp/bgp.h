@@ -93,6 +93,7 @@ struct bgp_misc_structs {
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
   char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
+  char *log_thread_str; /* "BGP", "BMP" */
 
 #if defined WITH_RABBITMQ
   struct p_amqp_host *msglog_amqp_host;

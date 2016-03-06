@@ -158,13 +158,13 @@ int bgp_str2rd(rd_t *output, char *value)
 }
 
 /* Allocate bgp_info_extra */
-struct bgp_info_extra *bgp_info_extra_new(void)
+struct bgp_info_extra *bgp_info_extra_new()
 {
   struct bgp_info_extra *new;
 
   new = malloc(sizeof(struct bgp_info_extra));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info_extra));
@@ -196,7 +196,7 @@ struct bgp_info *bgp_info_new()
 
   new = malloc(sizeof(struct bgp_info));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_new). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info));
@@ -237,10 +237,8 @@ void bgp_info_delete(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info
 /* Free bgp route information. */
 void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri)
 {
-  struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
-
   if (ri->attr)
-    bgp_attr_unintern(inter_domain_routing_db, ri->attr);
+    bgp_attr_unintern(peer, ri->attr);
 
   bgp_info_extra_free(&ri->extra);
 
@@ -320,26 +318,33 @@ void attrhash_init(int buckets, struct hash **loc_attrhash)
 }
 
 /* Internet argument attribute. */
-struct bgp_attr *bgp_attr_intern(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_attr *attr)
+struct bgp_attr *bgp_attr_intern(struct bgp_peer *peer, struct bgp_attr *attr)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_attr *find;
+
+  if (!peer) return NULL;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return NULL;
  
   /* Intern referenced strucutre. */
   if (attr->aspath) {
     if (! attr->aspath->refcnt)
-      attr->aspath = aspath_intern(inter_domain_routing_db, attr->aspath);
+      attr->aspath = aspath_intern(peer, attr->aspath);
   else
     attr->aspath->refcnt++;
   }
   if (attr->community) {
     if (! attr->community->refcnt)
-      attr->community = community_intern(inter_domain_routing_db, attr->community);
+      attr->community = community_intern(peer, attr->community);
     else
       attr->community->refcnt++;
   }
   if (attr->ecommunity) {
     if (!attr->ecommunity->refcnt)
-      attr->ecommunity = ecommunity_intern(inter_domain_routing_db, attr->ecommunity);
+      attr->ecommunity = ecommunity_intern(peer, attr->ecommunity);
   else
     attr->ecommunity->refcnt++;
   }
@@ -351,12 +356,21 @@ struct bgp_attr *bgp_attr_intern(struct bgp_rt_structs *inter_domain_routing_db,
 }
 
 /* Free bgp attribute and aspath. */
-void bgp_attr_unintern(struct bgp_rt_structs *inter_domain_routing_db, struct bgp_attr *attr)
+void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_misc_structs *bms;
   struct bgp_attr *ret;
   struct aspath *aspath;
   struct community *community;
   struct ecommunity *ecommunity = NULL;
+
+  if (!peer) return;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!inter_domain_routing_db) return;
  
   /* Decrement attribute reference. */
   attr->refcnt--;
@@ -368,17 +382,17 @@ void bgp_attr_unintern(struct bgp_rt_structs *inter_domain_routing_db, struct bg
   if (attr->refcnt == 0) {
     ret = (struct bgp_attr *) hash_release(inter_domain_routing_db->attrhash, attr);
     // assert (ret != NULL);
-    if (!ret) Log(LOG_INFO, "INFO ( %s/core/BGP ): bgp_attr_unintern() hash lookup failed.\n", config.name);
+    if (!ret) Log(LOG_INFO, "INFO ( %s/core/%s ): bgp_attr_unintern() hash lookup failed.\n", config.name, bms->log_thread_str);
     free(attr);
   }
 
   /* aspath refcount shoud be decrement. */
   if (aspath)
-    aspath_unintern(inter_domain_routing_db, aspath);
+    aspath_unintern(peer, aspath);
   if (community)
-    community_unintern(inter_domain_routing_db, community);
+    community_unintern(peer, community);
   if (ecommunity)
-    ecommunity_unintern(inter_domain_routing_db, ecommunity);
+    ecommunity_unintern(peer, ecommunity);
 }
 
 void *bgp_attr_hash_alloc(void *p)
@@ -388,7 +402,7 @@ void *bgp_attr_hash_alloc(void *p)
 
   attr = malloc(sizeof (struct bgp_attr));
   if (!attr) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_attr_hash_alloc). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_attr_hash_alloc). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   else {
@@ -402,9 +416,14 @@ void *bgp_attr_hash_alloc(void *p)
 
 int bgp_peer_init(struct bgp_peer *peer, int type)
 {
+  struct bgp_misc_structs *bms;
   int ret = TRUE;
   afi_t afi;
   safi_t safi;
+
+  bms = bgp_select_misc_db(type);
+
+  if (!peer || !bms) return ERR;
 
   memset(peer, 0, sizeof(struct bgp_peer));
   peer->type = type;
@@ -412,7 +431,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   peer->buf.len = BGP_BUFFER_SIZE;
   peer->buf.base = malloc(peer->buf.len);
   if (!peer->buf.base) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   else {
@@ -423,18 +442,22 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   return ret;
 }
 
-void bgp_peer_close(struct bgp_peer *peer, int type)
+void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */)
 {
-  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  struct bgp_misc_structs *bms;
   afi_t afi;
   safi_t safi;
+
+  if (!peer) return;
+
+  bms = bgp_select_misc_db(peer->type);
 
   if (!bms) return;
 
   bgp_peer_info_delete(peer);
 
   if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
-    bgp_peer_log_close(peer, bms->msglog_output, type);
+    bgp_peer_log_close(peer, bms->msglog_output, peer->type);
 
   close(peer->fd);
   peer->fd = 0;
@@ -518,8 +541,8 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   // XXX if (as4path && !attr->aspath) return ERR;
 
   newpath = aspath_reconcile_as4(attr->aspath, as4path);
-  aspath_unintern(bgp_select_routing_db(peer->type), attr->aspath);
-  attr->aspath = aspath_intern(bgp_select_routing_db(peer->type), newpath);
+  aspath_unintern(peer, attr->aspath);
+  attr->aspath = aspath_intern(peer, newpath);
 
   return SUCCESS;
 }
@@ -687,7 +710,7 @@ as_t evaluate_first_asn(char *src)
   return asn;
 }
 
-/* XXX: only BGP is supported due to use of peers struct */
+/* XXX: currently only BGP is supported due to use of peers struct */
 void write_neighbors_file(char *filename, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
@@ -707,10 +730,10 @@ void write_neighbors_file(char *filename, int type)
   file = fopen(filename,"w");
   if (file) {
     if ((ret = chown(filename, owner, group)) == -1)
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] Unable to chown() (%s).\n", config.name, filename, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/core/%s ): [%s] Unable to chown() (%s).\n", config.name, bms->log_thread_str, filename, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] Unable to obtain lock.\n", config.name, filename);
+      Log(LOG_ERR, "ERROR ( %s/core/%s ): [%s] Unable to obtain lock.\n", config.name, bms->log_thread_str, filename);
       return;
     }
     for (idx = 0; idx < bms->max_peers; idx++) {
@@ -738,7 +761,7 @@ void write_neighbors_file(char *filename, int type)
     fclose(file);
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] fopen() failed.\n", config.name, filename);
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): [%s] fopen() failed.\n", config.name, bms->log_thread_str, filename);
     return;
   }
 }
@@ -915,6 +938,8 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
+  bms->log_thread_str = malloc(strlen("BGP") + 1);
+  strcpy(bms->log_thread_str, "BGP");
   bms->bgp_peer_log_msg_extras = NULL;
 
   bms->table_peer_buckets = config.bgp_table_peer_buckets;

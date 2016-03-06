@@ -52,7 +52,7 @@ bgp_table_init (afi_t afi, safi_t safi)
     rt->safi = safi;
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_table_init). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_table_init). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   
@@ -62,8 +62,14 @@ bgp_table_init (afi_t afi, safi_t safi)
 static struct bgp_node *
 bgp_node_create (struct bgp_peer *peer)
 {
-  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  struct bgp_misc_structs *bms;
   struct bgp_node *rn;
+
+  if (!peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
 
   rn = (struct bgp_node *) malloc (sizeof (struct bgp_node));
   if (rn) {
@@ -78,7 +84,7 @@ bgp_node_create (struct bgp_peer *peer)
   return rn;
 
   malloc_failed:
-  Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_node_create). Exiting ..\n", config.name);
+  Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_node_create). Exiting ..\n", config.name, bms->log_thread_str);
   exit_all(1);
 }
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -246,7 +246,7 @@ str2prefix_ipv4 (const char *str, struct prefix_ipv4 *p)
     {
       cp = malloc ((pnt - str) + 1);
       if (!cp) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (str2prefix_ipv4). Exiting ..\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (str2prefix_ipv4). Exiting ..\n", config.name, config.type);
 	exit_all(1);
       }
       strncpy (cp, str, pnt - str);
@@ -395,7 +395,7 @@ str2prefix_ipv6 (const char *str, struct prefix_ipv6 *p)
 
       cp = malloc((pnt - str) + 1);
       if (!cp) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (str2prefix_ipv6). Exiting ..\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (str2prefix_ipv6). Exiting ..\n", config.name, config.type);
 	exit_all(1);
       }
       strncpy (cp, str, pnt - str);
@@ -519,71 +519,6 @@ apply_mask (struct prefix *p)
   return;
 }
 
-/* Utility function of convert between struct prefix <=> union sockunion.
- * FIXME This function isn't used anywhere. */
-/*
-struct prefix *
-sockunion2prefix (const union sockunion *dest,
-		  const union sockunion *mask)
-{
-  if (dest->sa.sa_family == AF_INET)
-    {
-      struct prefix_ipv4 *p;
-
-      p = prefix_ipv4_new ();
-      p->family = AF_INET;
-      p->prefix = dest->sin.sin_addr;
-      p->prefixlen = ip_masklen (mask->sin.sin_addr);
-      return (struct prefix *) p;
-    }
-#ifdef ENABLE_IPV6
-  if (dest->sa.sa_family == AF_INET6)
-    {
-      struct prefix_ipv6 *p;
-
-      p = prefix_ipv6_new ();
-      p->family = AF_INET6;
-      p->prefixlen = ip6_masklen (mask->sin6.sin6_addr);
-      memcpy (&p->prefix, &dest->sin6.sin6_addr, sizeof (struct in6_addr));
-      return (struct prefix *) p;
-    }
-#endif // ENABLE_IPV6 
-  return NULL;
-}
-*/
-
-/* Utility function of convert between struct prefix <=> union sockunion. */
-/*
-struct prefix *
-sockunion2hostprefix (const union sockunion *su)
-{
-  if (su->sa.sa_family == AF_INET)
-    {
-      struct prefix_ipv4 *p;
-
-      p = prefix_ipv4_new ();
-      p->family = AF_INET;
-      p->prefix = su->sin.sin_addr;
-      p->prefixlen = IPV4_MAX_BITLEN;
-      return (struct prefix *) p;
-    }
-#ifdef ENABLE_IPV6
-  if (su->sa.sa_family == AF_INET6)
-    {
-      struct prefix_ipv6 *p;
-
-      p = prefix_ipv6_new ();
-      p->family = AF_INET6;
-      p->prefixlen = IPV6_MAX_BITLEN;
-      memcpy (&p->prefix, &su->sin6.sin6_addr, sizeof (struct in6_addr));
-      return (struct prefix *) p;
-    }
-#endif // ENABLE_IPV6
-  return NULL;
-}
-
-*/
-
 int
 prefix_blen (const struct prefix *p)
 {
@@ -639,7 +574,7 @@ prefix_new ()
 
   p = malloc (sizeof *p);
   if (!p) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (prefix_new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (prefix_new). Exiting ..\n", config.name, config.type);
     exit_all(1);
   }
   memset(p, 0, sizeof *p); 

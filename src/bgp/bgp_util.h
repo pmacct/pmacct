@@ -51,8 +51,8 @@ EXT void bgp_info_add(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u
 EXT void bgp_info_delete(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);
 EXT void bgp_info_free(struct bgp_peer *, struct bgp_info *);
 EXT void bgp_attr_init(int, struct bgp_rt_structs *);
-EXT struct bgp_attr *bgp_attr_intern(struct bgp_rt_structs *, struct bgp_attr *);
-EXT void bgp_attr_unintern (struct bgp_rt_structs *, struct bgp_attr *);
+EXT struct bgp_attr *bgp_attr_intern(struct bgp_peer *, struct bgp_attr *);
+EXT void bgp_attr_unintern (struct bgp_peer *, struct bgp_attr *);
 EXT void *bgp_attr_hash_alloc (void *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 

@@ -630,7 +630,7 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     return;
 
     malloc_failed:
-    Log(LOG_WARNING, "WARN ( %s/core/BGP ): malloc() failed (pkt_to_cache_bgp_primitives).\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/%s ): malloc() failed (pkt_to_cache_bgp_primitives).\n", config.name, config.type);
   }
 }
 

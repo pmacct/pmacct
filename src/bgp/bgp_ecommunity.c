@@ -41,7 +41,7 @@ ecommunity_new ()
 
   tmp = malloc(sizeof (struct ecommunity));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_new). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct ecommunity));
@@ -76,7 +76,7 @@ ecommunity_add_val (struct ecommunity *ecom, struct ecommunity_val *eval)
       ecom->size++;
       ecom->val = malloc(ecom_length (ecom));
       if (!ecom->val) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name); // XXX
 	exit_all(1);
       }
       memcpy (ecom->val, eval->val, ECOMMUNITY_SIZE);
@@ -131,7 +131,7 @@ ecommunity_uniq_sort (struct ecommunity *ecom)
 
 /* Parse Extended Communites Attribute in BGP packet.  */
 struct ecommunity *
-ecommunity_parse (struct bgp_rt_structs *inter_domain_routing_db, u_int8_t *pnt, u_short length)
+ecommunity_parse (struct bgp_peer *peer, u_int8_t *pnt, u_short length)
 {
   struct ecommunity tmp;
   struct ecommunity *new;
@@ -149,33 +149,7 @@ ecommunity_parse (struct bgp_rt_structs *inter_domain_routing_db, u_int8_t *pnt,
      Extended Communities value  */
   new = ecommunity_uniq_sort (&tmp);
 
-  return ecommunity_intern (inter_domain_routing_db, new);
-}
-
-/* Duplicate the Extended Communities Attribute structure.  */
-struct ecommunity *
-ecommunity_dup (struct ecommunity *ecom)
-{
-  struct ecommunity *new;
-
-  new = malloc(sizeof (struct ecommunity));
-  if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_dup). Exiting ..\n", config.name);
-    exit_all(1);
-  }
-  new->size = ecom->size;
-  if (new->size)
-    {
-      new->val = malloc(ecom->size * ECOMMUNITY_SIZE);
-      if (!new->val) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_dup). Exiting ..\n", config.name);
-	exit_all(1);
-      }
-      memcpy (new->val, ecom->val, ecom->size * ECOMMUNITY_SIZE);
-    }
-  else
-    new->val = NULL;
-  return new;
+  return ecommunity_intern (peer, new);
 }
 
 /* Retrun string representation of communities attribute. */
@@ -187,32 +161,18 @@ ecommunity_str (struct ecommunity *ecom)
   return ecom->str;
 }
 
-/* Merge two Extended Communities Attribute structure.  */
-struct ecommunity *
-ecommunity_merge (struct ecommunity *ecom1, struct ecommunity *ecom2)
-{
-  if (ecom1->val)
-    ecom1->val = realloc(ecom1->val, (ecom1->size + ecom2->size) * ECOMMUNITY_SIZE);
-  else {
-    ecom1->val = malloc((ecom1->size + ecom2->size) * ECOMMUNITY_SIZE);
-    if (!ecom1->val) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_merge). Exiting ..\n", config.name);
-      exit_all(1);
-    }
-  }
-
-  memcpy (ecom1->val + (ecom1->size * ECOMMUNITY_SIZE),
-	  ecom2->val, ecom2->size * ECOMMUNITY_SIZE);
-  ecom1->size += ecom2->size;
-
-  return ecom1;
-}
-
 /* Intern Extended Communities Attribute.  */
 struct ecommunity *
-ecommunity_intern (struct bgp_rt_structs *inter_domain_routing_db, struct ecommunity *ecom)
+ecommunity_intern (struct bgp_peer *peer, struct ecommunity *ecom)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct ecommunity *find;
+
+  if (!peer) return NULL;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return NULL;
 
   assert (ecom->refcnt == 0);
 
@@ -231,9 +191,16 @@ ecommunity_intern (struct bgp_rt_structs *inter_domain_routing_db, struct ecommu
 
 /* Unintern Extended Communities Attribute.  */
 void
-ecommunity_unintern (struct bgp_rt_structs *inter_domain_routing_db, struct ecommunity *ecom)
+ecommunity_unintern (struct bgp_peer *peer, struct ecommunity *ecom)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct ecommunity *ret;
+
+  if (!peer) return;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return;
 
   if (ecom->refcnt)
     ecom->refcnt--;
@@ -623,7 +590,7 @@ ecommunity_ecom2str (struct ecommunity *ecom, int format)
     {
       str_buf = malloc(1);
       if (!str_buf) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name); // XXX
 	exit_all(1);
       }
       str_buf[0] = '\0';
@@ -633,7 +600,7 @@ ecommunity_ecom2str (struct ecommunity *ecom, int format)
   /* Prepare buffer.  */
   str_buf = malloc(ECOMMUNITY_STR_DEFAULT_LEN + 1);
   if (!str_buf) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   str_size = ECOMMUNITY_STR_DEFAULT_LEN + 1;

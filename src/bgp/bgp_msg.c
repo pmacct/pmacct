@@ -28,11 +28,16 @@
 
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {
+  struct bgp_misc_structs *bms;
   char tmp_packet[BGP_BUFFER_SIZE], *bgp_packet_ptr;
   struct bgp_header *bhdr;
   int ret, bgp_len = 0;
 
   if (!peer || !peer->buf.base) return ERR;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
 
   for (bgp_packet_ptr = peer->buf.base; peer->msglen > 0; peer->msglen -= bgp_len, bgp_packet_ptr += bgp_len) {
     bhdr = (struct bgp_header *) bgp_packet_ptr;
@@ -50,8 +55,8 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
     else peer->buf.truncated_len = 0;
 
     if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) < 0) {
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (marker check failed).\n",
-		config.name, bgp_peer_print(peer));
+      Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (marker check failed).\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
       return ERR;
     }
 
@@ -61,10 +66,10 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       if (ret < 0) return ret;
       break;
     case BGP_NOTIFICATION:
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP_NOTIFICATION received\n", config.name, bgp_peer_print(peer));
+      Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] BGP_NOTIFICATION received\n", config.name, bms->log_thread_str, bgp_peer_print(peer));
       return ERR;
     case BGP_KEEPALIVE:
-      Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [%s] BGP_KEEPALIVE received\n", config.name, bgp_peer_print(peer));
+      Log(LOG_DEBUG, "DEBUG ( %s/core/%s ): [%s] BGP_KEEPALIVE received\n", config.name, bms->log_thread_str, bgp_peer_print(peer));
       if (peer->status >= OpenSent) {
         if (peer->status < Established) peer->status = Established;
 
@@ -77,7 +82,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
           ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
           peer->last_keepalive = now;
 
-	  Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [%s] BGP_KEEPALIVE sent\n", config.name, bgp_peer_print(peer));
+	  Log(LOG_DEBUG, "DEBUG ( %s/core/%s ): [%s] BGP_KEEPALIVE sent\n", config.name, bms->log_thread_str, bgp_peer_print(peer));
 	}
       }
       /* If we didn't pass through a successful BGP OPEN exchange just yet
@@ -85,20 +90,20 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       break;
     case BGP_UPDATE:
       if (peer->status < Established) {
-	Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): [%s] BGP UPDATE received (no neighbor). Discarding.\n",
-		config.name, bgp_peer_print(peer));
+	Log(LOG_DEBUG, "DEBUG ( %s/core/%s ): [%s] BGP UPDATE received (no neighbor). Discarding.\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
 	return ERR;
       }
 
       ret = bgp_parse_update_msg(peer, bgp_packet_ptr);
       if (ret < 0) {
-	Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] BGP UPDATE: malformed (%d).\n", config.name, bgp_peer_print(peer), ret);
+	Log(LOG_WARNING, "WARN ( %s/core/%s ): [%s] BGP UPDATE: malformed (%d).\n", config.name, bms->log_thread_str, bgp_peer_print(peer), ret);
 	return ERR;
       }
       break;
     default:
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (unsupported message type).\n",
-	  config.name, bgp_peer_print(peer));
+      Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (unsupported message type).\n",
+	  config.name, bms->log_thread_str, bgp_peer_print(peer));
       return ERR;
     }
   }
@@ -108,6 +113,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 
 int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, int online)
 {
+  struct bgp_misc_structs *bms;
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
   struct bgp_open *bopen;
   int ret;
@@ -115,6 +121,10 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
   u_int32_t remote_as4 = 0;
 
   if (!peer || !bgp_packet_ptr) return ERR;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
 
   if (!online || (peer->status < OpenSent)) {
     peer->status = Active;
@@ -142,8 +152,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	  opt_len = (u_int8_t) ptr[1];
 
 	  if (opt_len > bopen->bgpo_optlen) {
-	    Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (option length).\n",
-		config.name, bgp_peer_print(peer));
+	    Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (option length).\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
 	    return ERR;
 	  } 
 
@@ -166,8 +176,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	      u_int8_t cap_type = optcap_ptr[0];
 
 	      if (cap_len > optcap_len) {
-		Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (malformed capability: %x).\n",
-			config.name, bgp_peer_print(peer), cap_type);
+		Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (malformed capability: %x).\n",
+			config.name, bms->log_thread_str, bgp_peer_print(peer), cap_type);
 		return ERR;
    	      }
 				     
@@ -178,8 +188,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	  	memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 					  
 		if (online)
-	  	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
-			config.name, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi);
+	  	  Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+			config.name, bms->log_thread_str, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi);
 		peer->cap_mp = TRUE;
 
 		if (online) {
@@ -197,8 +207,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 		  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
 		  if (online)
-		    Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: 4-bytes AS [%x] ASN [%u]\n",
-	    		config.name, bgp_peer_print(peer), cap_type, ntohl(cap_data.as4));
+		    Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Capability: 4-bytes AS [%x] ASN [%u]\n",
+	    		config.name, bms->log_thread_str, bgp_peer_print(peer), cap_type, ntohl(cap_data.as4));
 		  memcpy(&as4_ptr, cap_ptr, 4);
 		  remote_as4 = ntohl(as4_ptr);
 		  peer->cap_4as = bgp_open_cap_ptr+4;
@@ -209,8 +219,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 		  }
 		}
 		else {
-		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (malformed AS4 option).\n",
-			config.name, bgp_peer_print(peer));
+		  Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (malformed AS4 option).\n",
+			config.name, bms->log_thread_str, bgp_peer_print(peer));
 		  return ERR;
 		}
 	      }
@@ -221,8 +231,9 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 		memcpy(&cap_data, cap_ptr, sizeof(cap_data));
 
 		if (online)
-		  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
-			config.name, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi, cap_data.sndrcv);
+		  Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+			config.name, bms->log_thread_str, bgp_peer_print(peer), cap_type, ntohs(cap_data.afi), cap_data.safi,
+			cap_data.sndrcv);
 
 		if (cap_data.sndrcv == 2 /* send */) {
 		  peer->cap_add_paths = TRUE; 
@@ -252,8 +263,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	/* It is not valid to use the transitional ASN in the BGP OPEN and
  	   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 	else {
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (invalid AS4 option).\n",
-		config.name, bgp_peer_print(peer));
+	  Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (invalid AS4 option).\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
 	  return ERR;
 	}
       }
@@ -263,15 +274,15 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
  	/* It is not valid to not use the transitional ASN in the BGP OPEN and
 	   present an ASN != remote_as in the 4AS capability */
 	else {
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (mismatching AS4 option).\n",
-		config.name, bgp_peer_print(peer));
+	  Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (mismatching AS4 option).\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
 	  return ERR;
 	}
       }
 
       if (online)
-        Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
-		bgp_peer_print(peer), peer->as, peer->ht);
+        Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
+		bms->log_thread_str, bgp_peer_print(peer), peer->as, peer->ht);
 
       if (online) {
         bgp_reply_pkt_ptr = bgp_reply_pkt;
@@ -281,8 +292,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
         ret = bgp_write_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
         if (ret > 0) bgp_reply_pkt_ptr += ret;
         else {
-	  Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n",
-		config.name, bgp_peer_print(peer));
+	  Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Local peer is 4AS while remote peer is 2AS: unsupported configuration.\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
 	  return ERR;
         }
 
@@ -293,8 +304,8 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
       }
     }
     else {
-      Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] Received malformed BGP packet (unsupported version).\n",
-		config.name, bgp_peer_print(peer));
+      Log(LOG_INFO, "INFO ( %s/core/%s ): [%s] Received malformed BGP packet (unsupported version).\n",
+		config.name, bms->log_thread_str, bgp_peer_print(peer));
       return ERR;
     }
 
@@ -511,11 +522,11 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
   /* Everything is done.  We unintern temporary structures which
 	 interned in bgp_attr_parse(). */
   if (attr.aspath)
-    aspath_unintern(bgp_select_routing_db(peer->type), attr.aspath);
+    aspath_unintern(peer, attr.aspath);
   if (attr.community)
-    community_unintern(bgp_select_routing_db(peer->type), attr.community);
+    community_unintern(peer, attr.community);
   if (attr.ecommunity)
-    ecommunity_unintern(bgp_select_routing_db(peer->type), attr.ecommunity);
+    ecommunity_unintern(peer, attr.ecommunity);
 
   ret = ntohs(bhdr.bgpo_len);
   return ret;
@@ -597,7 +608,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
 
     /* AS_PATH and AS4_PATH info are now fully merged;
        hence we can free up temporary structures. */
-    aspath_unintern(bgp_select_routing_db(peer->type), as4_path);
+    aspath_unintern(peer, as4_path);
   
     if (ret < 0) return ret;
   }
@@ -609,14 +620,14 @@ int bgp_attr_parse_aspath(struct bgp_peer *peer, u_int16_t len, struct bgp_attr 
 {
   u_int8_t cap_4as = peer->cap_4as ? 1 : 0;
 
-  attr->aspath = aspath_parse(bgp_select_routing_db(peer->type), ptr, len, cap_4as);
+  attr->aspath = aspath_parse(peer, ptr, len, cap_4as);
 
   return SUCCESS;
 }
 
 int bgp_attr_parse_as4path(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag, struct aspath **aspath4)
 {
-  *aspath4 = aspath_parse(bgp_select_routing_db(peer->type), ptr, len, 1);
+  *aspath4 = aspath_parse(peer, ptr, len, 1);
 
   return SUCCESS;
 }
@@ -638,7 +649,7 @@ int bgp_attr_parse_nexthop(struct bgp_peer *peer, u_int16_t len, struct bgp_attr
 int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->community = NULL;
-  else attr->community = (struct community *) community_parse(bgp_select_routing_db(peer->type), (u_int32_t *)ptr, len);
+  else attr->community = (struct community *) community_parse(peer, (u_int32_t *)ptr, len);
 
   return SUCCESS;
 }
@@ -646,7 +657,7 @@ int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_at
 int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->ecommunity = NULL;
-  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(bgp_select_routing_db(peer->type), ptr, len);
+  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(peer, ptr, len);
 
   return SUCCESS;
 }
@@ -908,15 +919,21 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
 		       rd_t *rd, path_id_t *path_id, char *label)
 {
-  struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
-  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_misc_structs *bms;
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL, *new = NULL;
   struct bgp_attr *attr_new = NULL;
-  u_int32_t modulo = bms->route_info_modulo(peer, path_id);
+  u_int32_t modulo;
 
-  if (!inter_domain_routing_db) return ERR;
+  if (!peer) return ERR;
 
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!inter_domain_routing_db || !bms) return ERR;
+
+  modulo = bms->route_info_modulo(peer, path_id);
   route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
 
   /* Check previously received route. */
@@ -942,13 +959,13 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
     }
   }
 
-  attr_new = bgp_attr_intern(inter_domain_routing_db, attr);
+  attr_new = bgp_attr_intern(peer, attr);
 
   if (ri) {
     /* Received same information */
     if (attrhash_cmp(ri->attr, attr_new)) {
       bgp_unlock_node(peer, route);
-      bgp_attr_unintern(inter_domain_routing_db, attr_new);
+      bgp_attr_unintern(peer, attr_new);
 
       if (bms->msglog_backend_methods)
 	goto log_update;
@@ -959,7 +976,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
       struct bgp_info_extra *rie = NULL;
 
       /* Update to new attribute.  */
-      bgp_attr_unintern(inter_domain_routing_db, ri->attr);
+      bgp_attr_unintern(peer, ri->attr);
       ri->attr = attr_new;
 
       /* Install/update MPLS stuff if required */

@@ -65,17 +65,15 @@ struct community
 EXT void community_init (int, struct hash **);
 EXT void community_free (struct community *);
 EXT struct community *community_uniq_sort (struct community *);
-EXT struct community *community_intern (struct bgp_rt_structs *, struct community *);
-EXT void community_unintern (struct bgp_rt_structs *, struct community *);
+EXT struct community *community_intern (struct bgp_peer *, struct community *);
+EXT void community_unintern (struct bgp_peer *, struct community *);
 EXT char *community_str (struct community *);
 EXT unsigned int community_hash_make (struct community *);
 EXT struct community *community_str2com (const char *);
 EXT int community_match (const struct community *, const struct community *);
 EXT int community_cmp (const struct community *, const struct community *);
-EXT struct community *community_merge (struct community *, struct community *);
 EXT struct community *community_delete (struct community *, struct community *);
-EXT struct community *community_parse (struct bgp_rt_structs *, u_int32_t *, u_short);
-EXT struct community *community_dup (struct community *);
+EXT struct community *community_parse (struct bgp_peer *, u_int32_t *, u_short);
 EXT int community_include (struct community *, u_int32_t);
 EXT void community_del_val (struct community *, u_int32_t *);
 

@@ -34,13 +34,13 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 
 /* Allocate a new communities value.  */
 static struct community *
-community_new (void)
+community_new ()
 {
   void *tmp;
 
   tmp = malloc(sizeof (struct community));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_new). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_new). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct community));
@@ -67,7 +67,7 @@ community_add_val (struct community *com, u_int32_t val)
   else {
     com->val = malloc(com_length (com));
     if (!com->val) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_add_val). Exiting ..\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_add_val). Exiting ..\n", config.name); // XXX
       exit_all(1);
     }
   }
@@ -228,7 +228,7 @@ community_com2str  (struct community *com)
     {
       str = malloc(1);
       if (!str) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name); // XXX
 	exit_all(1);
       }
       str[0] = '\0';
@@ -267,7 +267,7 @@ community_com2str  (struct community *com)
   /* Allocate memory.  */
   str = pnt = malloc(len);
   if (!str) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name); // XXX
     exit_all(1);
   }
   first = 1;
@@ -316,9 +316,16 @@ community_com2str  (struct community *com)
 
 /* Intern communities attribute.  */
 struct community *
-community_intern (struct bgp_rt_structs *inter_domain_routing_db, struct community *com)
+community_intern (struct bgp_peer *peer, struct community *com)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct community *find;
+
+  if (!peer) return NULL;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return NULL;
 
   /* Assert this community structure is not interned. */
   assert (com->refcnt == 0);
@@ -343,9 +350,16 @@ community_intern (struct bgp_rt_structs *inter_domain_routing_db, struct communi
 
 /* Free community attribute. */
 void
-community_unintern (struct bgp_rt_structs *inter_domain_routing_db, struct community *com)
+community_unintern (struct bgp_peer *peer, struct community *com)
 {
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct community *ret;
+
+  if (!peer) return;
+  
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return;
 
   if (com->refcnt)
     com->refcnt--;
@@ -362,7 +376,7 @@ community_unintern (struct bgp_rt_structs *inter_domain_routing_db, struct commu
 
 /* Create new community attribute. */
 struct community *
-community_parse (struct bgp_rt_structs *inter_domain_routing_db, u_int32_t *pnt, u_short length)
+community_parse (struct bgp_peer *peer, u_int32_t *pnt, u_short length)
 {
   struct community tmp;
   struct community *new;
@@ -377,33 +391,7 @@ community_parse (struct bgp_rt_structs *inter_domain_routing_db, u_int32_t *pnt,
 
   new = community_uniq_sort (&tmp);
 
-  return community_intern (inter_domain_routing_db, new);
-}
-
-struct community *
-community_dup (struct community *com)
-{
-  struct community *new;
-
-  new = malloc(sizeof (struct community));
-  if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_dup). Exiting ..\n", config.name);
-    exit_all(1);
-  }
-
-  new->size = com->size;
-  if (new->size)
-    {
-      new->val = malloc(com->size * 4);
-      if (!new->val) {
-        Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_dup). Exiting ..\n", config.name);
-        exit_all(1);
-      }
-      memcpy (new->val, com->val, com->size * 4);
-    }
-  else
-    new->val = NULL;
-  return new;
+  return community_intern (peer, new);
 }
 
 /* Retrun string representation of communities attribute. */
@@ -479,26 +467,6 @@ community_cmp (const struct community *com1, const struct community *com2)
     if (memcmp (com1->val, com2->val, com1->size * 4) == 0)
       return 1;
   return 0;
-}
-
-/* Add com2 to the end of com1. */
-struct community *
-community_merge (struct community *com1, struct community *com2)
-{
-  if (com1->val)
-    com1->val = realloc(com1->val, (com1->size + com2->size) * 4);
-  else {
-    com1->val = malloc((com1->size + com2->size) * 4);
-    if (!com1->val) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_merge). Exiting ..\n", config.name);
-      exit_all(1);
-    }
-  }
-
-  memcpy (com1->val + com1->size, com2->val, com2->size * 4);
-  com1->size += com2->size;
-
-  return com1;
 }
 
 /* Community token enum. */
