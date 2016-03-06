@@ -75,16 +75,8 @@ struct aspath
 EXT void aspath_init (int, struct hash **);
 EXT struct aspath *aspath_parse (struct bgp_peer *, char *, size_t, int);
 EXT struct aspath *aspath_dup (struct aspath *);
-EXT struct aspath *aspath_aggregate (struct aspath *, struct aspath *);
-EXT struct aspath *aspath_prepend (struct aspath *, struct aspath *);
-EXT struct aspath *aspath_filter_exclude (struct aspath *, struct aspath *);
-EXT struct aspath *aspath_add_seq (struct aspath *, as_t);
-EXT struct aspath *aspath_add_confed_seq (struct aspath *, as_t);
 EXT int aspath_cmp_left (const struct aspath *, const struct aspath *);
 EXT int aspath_cmp_left_confed (const struct aspath *, const struct aspath *);
-EXT struct aspath *aspath_delete_confed_seq (struct aspath *);
-EXT struct aspath *aspath_empty_get (void);
-EXT struct aspath *aspath_str2aspath (const char *);
 EXT void aspath_free (struct aspath *);
 EXT struct aspath *aspath_intern (struct bgp_peer *, struct aspath *);
 EXT void aspath_unintern (struct bgp_peer *, struct aspath *);
@@ -98,7 +90,7 @@ EXT unsigned int aspath_count_confeds (struct aspath *);
 EXT unsigned int aspath_size (struct aspath *);
 EXT as_t aspath_highest (struct aspath *);
 
-EXT struct aspath *aspath_reconcile_as4 (struct aspath *, struct aspath *);
+EXT struct aspath *aspath_reconcile_as4 (struct bgp_peer *, struct aspath *, struct aspath *);
 EXT unsigned int aspath_has_as4 (struct aspath *);
 EXT unsigned int aspath_count_numas (struct aspath *);
 

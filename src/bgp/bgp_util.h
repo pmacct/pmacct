@@ -43,10 +43,10 @@ EXT void bgp_config_checks(struct configuration *);
 EXT struct bgp_misc_structs *bgp_select_misc_db(int);
 EXT void bgp_link_misc_structs(struct bgp_misc_structs *);
 
-EXT struct bgp_info_extra *bgp_info_extra_new();
+EXT struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *);
 EXT void bgp_info_extra_free(struct bgp_info_extra **);
 EXT struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *);
-EXT struct bgp_info *bgp_info_new();
+EXT struct bgp_info *bgp_info_new(struct bgp_peer *);
 EXT void bgp_info_add(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);
 EXT void bgp_info_delete(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);
 EXT void bgp_info_free(struct bgp_peer *, struct bgp_info *);

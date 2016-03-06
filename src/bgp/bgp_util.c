@@ -158,13 +158,20 @@ int bgp_str2rd(rd_t *output, char *value)
 }
 
 /* Allocate bgp_info_extra */
-struct bgp_info_extra *bgp_info_extra_new()
+struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
 {
+  struct bgp_misc_structs *bms;
   struct bgp_info_extra *new;
+
+  if (!ri || !ri->peer) return NULL;
+
+  bms = bgp_select_misc_db(ri->peer->type);
+
+  if (!bms) return NULL;
 
   new = malloc(sizeof(struct bgp_info_extra));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name); // XXX
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info_extra));
@@ -184,19 +191,26 @@ void bgp_info_extra_free(struct bgp_info_extra **extra)
 struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
 {
   if (!ri->extra)
-    ri->extra = bgp_info_extra_new();
+    ri->extra = bgp_info_extra_new(ri);
 
   return ri->extra;
 }
 
 /* Allocate new bgp info structure. */
-struct bgp_info *bgp_info_new()
+struct bgp_info *bgp_info_new(struct bgp_peer *peer)
 {
+  struct bgp_misc_structs *bms;
   struct bgp_info *new;
+
+  if (!peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
 
   new = malloc(sizeof(struct bgp_info));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_info_new). Exiting ..\n", config.name); // XXX
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_info_new). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info));
@@ -349,7 +363,7 @@ struct bgp_attr *bgp_attr_intern(struct bgp_peer *peer, struct bgp_attr *attr)
     attr->ecommunity->refcnt++;
   }
  
-  find = (struct bgp_attr *) hash_get(inter_domain_routing_db->attrhash, attr, bgp_attr_hash_alloc);
+  find = (struct bgp_attr *) hash_get(peer, inter_domain_routing_db->attrhash, attr, bgp_attr_hash_alloc);
   find->refcnt++;
 
   return find;
@@ -370,7 +384,7 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
   inter_domain_routing_db = bgp_select_routing_db(peer->type);
   bms = bgp_select_misc_db(peer->type);
 
-  if (!inter_domain_routing_db) return;
+  if (!inter_domain_routing_db || !bms) return;
  
   /* Decrement attribute reference. */
   attr->refcnt--;
@@ -540,7 +554,7 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   /* pre-requisite for AS4_PATH is AS_PATH indeed */ 
   // XXX if (as4path && !attr->aspath) return ERR;
 
-  newpath = aspath_reconcile_as4(attr->aspath, as4path);
+  newpath = aspath_reconcile_as4(peer, attr->aspath, as4path);
   aspath_unintern(peer, attr->aspath);
   attr->aspath = aspath_intern(peer, newpath);
 

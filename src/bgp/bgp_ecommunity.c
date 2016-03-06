@@ -35,13 +35,20 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 
 /* Allocate a new ecommunities.  */
 struct ecommunity *
-ecommunity_new ()
+ecommunity_new (struct bgp_peer *peer)
 {
+  struct bgp_misc_structs *bms;
   void *tmp;
+
+  if (!peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
 
   tmp = malloc(sizeof (struct ecommunity));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_new). Exiting ..\n", config.name); // XXX
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_new). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct ecommunity));
@@ -64,11 +71,18 @@ ecommunity_free (struct ecommunity *ecom)
    numerical order.  When the value is added to the structure return 1
    else return 0.  */
 static int
-ecommunity_add_val (struct ecommunity *ecom, struct ecommunity_val *eval)
+ecommunity_add_val (struct bgp_peer *peer, struct ecommunity *ecom, struct ecommunity_val *eval)
 {
+  struct bgp_misc_structs *bms;
   u_int8_t *p;
   int ret;
   int c;
+
+  if (!peer) return ERR;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
 
   /* When this is fist value, just add it.  */
   if (ecom->val == NULL)
@@ -76,7 +90,7 @@ ecommunity_add_val (struct ecommunity *ecom, struct ecommunity_val *eval)
       ecom->size++;
       ecom->val = malloc(ecom_length (ecom));
       if (!ecom->val) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name); // XXX
+	Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name, bms->log_thread_str);
 	exit_all(1);
       }
       memcpy (ecom->val, eval->val, ECOMMUNITY_SIZE);
@@ -110,21 +124,20 @@ ecommunity_add_val (struct ecommunity *ecom, struct ecommunity_val *eval)
    create a new Extended Communities structure by uniq and sort each
    Exteneded Communities value.  */
 static struct ecommunity *
-ecommunity_uniq_sort (struct ecommunity *ecom)
+ecommunity_uniq_sort (struct bgp_peer *peer, struct ecommunity *ecom)
 {
   int i;
   struct ecommunity *new;
   struct ecommunity_val *eval;
   
-  if (! ecom)
-    return NULL;
+  if (!ecom) return NULL;
   
-  new = ecommunity_new ();;
+  new = ecommunity_new (peer);
   
   for (i = 0; i < ecom->size; i++)
     {
       eval = (struct ecommunity_val *) (ecom->val + (i * ECOMMUNITY_SIZE));
-      ecommunity_add_val (new, eval);
+      ecommunity_add_val (peer, new, eval);
     }
   return new;
 }
@@ -147,17 +160,17 @@ ecommunity_parse (struct bgp_peer *peer, u_int8_t *pnt, u_short length)
 
   /* Create a new Extended Communities Attribute by uniq and sort each
      Extended Communities value  */
-  new = ecommunity_uniq_sort (&tmp);
+  new = ecommunity_uniq_sort (peer, &tmp);
 
   return ecommunity_intern (peer, new);
 }
 
 /* Retrun string representation of communities attribute. */
 char *
-ecommunity_str (struct ecommunity *ecom)
+ecommunity_str (struct bgp_peer *peer, struct ecommunity *ecom)
 {
   if (! ecom->str)
-    ecom->str = ecommunity_ecom2str (ecom, ECOMMUNITY_FORMAT_DISPLAY);
+    ecom->str = ecommunity_ecom2str (peer, ecom, ECOMMUNITY_FORMAT_DISPLAY);
   return ecom->str;
 }
 
@@ -176,7 +189,7 @@ ecommunity_intern (struct bgp_peer *peer, struct ecommunity *ecom)
 
   assert (ecom->refcnt == 0);
 
-  find = (struct ecommunity *) hash_get(inter_domain_routing_db->ecomhash, ecom, hash_alloc_intern);
+  find = (struct ecommunity *) hash_get(peer, inter_domain_routing_db->ecomhash, ecom, hash_alloc_intern);
 
   if (find != ecom)
     ecommunity_free (ecom);
@@ -184,7 +197,7 @@ ecommunity_intern (struct bgp_peer *peer, struct ecommunity *ecom)
   find->refcnt++;
 
   if (! find->str)
-    find->str = ecommunity_ecom2str (find, ECOMMUNITY_FORMAT_DISPLAY);
+    find->str = ecommunity_ecom2str (peer, find, ECOMMUNITY_FORMAT_DISPLAY);
 
   return find;
 }
@@ -454,89 +467,6 @@ ecommunity_gettoken (const char *str, struct ecommunity_val *eval,
   return p;
 }
 
-/* Convert string to extended community attribute. 
-
-   When type is already known, please specify both str and type.  str
-   should not include keyword such as "rt" and "soo".  Type is
-   ECOMMUNITY_ROUTE_TARGET or ECOMMUNITY_SITE_ORIGIN.
-   keyword_included should be zero.
-
-   For example route-map's "set extcommunity" command case:
-
-   "rt 100:1 100:2 100:3"        -> str = "100:1 100:2 100:3"
-                                    type = ECOMMUNITY_ROUTE_TARGET
-                                    keyword_included = 0
-
-   "soo 100:1"                   -> str = "100:1"
-                                    type = ECOMMUNITY_SITE_ORIGIN
-                                    keyword_included = 0
-
-   When string includes keyword for each extended community value.
-   Please specify keyword_included as non-zero value.
-
-   For example standard extcommunity-list case:
-
-   "rt 100:1 rt 100:2 soo 100:1" -> str = "rt 100:1 rt 100:2 soo 100:1"
-                                    type = 0
-                                    keyword_include = 1
-*/
-struct ecommunity *
-ecommunity_str2com (const char *str, int type, int keyword_included)
-{
-  struct ecommunity *ecom = NULL;
-  enum ecommunity_token token;
-  struct ecommunity_val eval;
-  int keyword = 0;
-
-  while ((str = ecommunity_gettoken (str, &eval, &token)))
-    {
-      switch (token)
-	{
-	case ecommunity_token_rt:
-	case ecommunity_token_soo:
-	  if (! keyword_included || keyword)
-	    {
-	      if (ecom)
-		ecommunity_free (ecom);
-	      return NULL;
-	    }
-	  keyword = 1;
-
-	  if (token == ecommunity_token_rt)
-	    {
-	      type = ECOMMUNITY_ROUTE_TARGET;
-	    }
-	  if (token == ecommunity_token_soo)
-	    {
-	      type = ECOMMUNITY_SITE_ORIGIN;
-	    }
-	  break;
-	case ecommunity_token_val:
-	  if (keyword_included)
-	    {
-	      if (! keyword)
-		{
-		  if (ecom)
-		    ecommunity_free (ecom);
-		  return NULL;
-		}
-	      keyword = 0;
-	    }
-	  if (ecom == NULL)
-	    ecom = ecommunity_new ();
-	  eval.val[1] = type;
-	  ecommunity_add_val (ecom, &eval);
-	  break;
-	case ecommunity_token_unknown:
-	default:
-	  if (ecom)
-	    ecommunity_free (ecom);
-	  return NULL;
-	}
-    }
-  return ecom;
-}
-
 /* Convert extended community attribute to string.  
 
    Due to historical reason of industry standard implementation, there
@@ -559,8 +489,9 @@ ecommunity_str2com (const char *str, int type, int keyword_included)
    ECOMMUNITY_FORMAT_DISPLAY
 */
 char *
-ecommunity_ecom2str (struct ecommunity *ecom, int format)
+ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 {
+  struct bgp_misc_structs *bms;
   int i;
   u_int8_t *pnt;
   int encode = 0;
@@ -586,11 +517,17 @@ ecommunity_ecom2str (struct ecommunity *ecom, int format)
     u_int16_t val;
   } eip;
 
+  if (!peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
+
   if (ecom->size == 0)
     {
       str_buf = malloc(1);
       if (!str_buf) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name); // XXX
+	Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_thread_str);
 	exit_all(1);
       }
       str_buf[0] = '\0';
@@ -600,7 +537,7 @@ ecommunity_ecom2str (struct ecommunity *ecom, int format)
   /* Prepare buffer.  */
   str_buf = malloc(ECOMMUNITY_STR_DEFAULT_LEN + 1);
   if (!str_buf) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name); // XXX
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   str_size = ECOMMUNITY_STR_DEFAULT_LEN + 1;

@@ -67,9 +67,8 @@ struct hash
 #endif
 EXT struct hash *hash_create (int, unsigned int (*) (void *), int (*) (const void *, const void *));
 EXT struct hash *hash_create_size (unsigned int, unsigned int (*) (void *), int (*) (const void *, const void *));
-EXT void *hash_get (struct hash *, void *, void * (*) (void *));
+EXT void *hash_get (struct bgp_peer *, struct hash *, void *, void * (*) (void *));
 EXT void *hash_alloc_intern (void *);
-EXT void *hash_lookup (struct hash *, void *);
 EXT void *hash_release (struct hash *, void *);
 EXT void hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
 EXT void hash_clean (struct hash *, void (*) (void *));

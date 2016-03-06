@@ -19,7 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include "bgp_hash.h"
 #include "bgp_prefix.h"
 #include "bgp_packet.h"
 #include "bgp_table.h"
@@ -127,11 +126,6 @@ struct bgp_misc_structs {
   int dump_backend_methods;
 };
 
-/* all require definition of bgp_rt_structs */
-#include "bgp_aspath.h"
-#include "bgp_community.h"
-#include "bgp_ecommunity.h"
-
 struct bgp_peer_buf {
   char *base;
   u_int32_t len;
@@ -164,6 +158,13 @@ struct bgp_peer {
   */
   void *bmp_se;
 };
+
+/* these includes require definition of bgp_rt_structs and bgp_peer */
+#include "bgp_aspath.h"
+#include "bgp_community.h"
+#include "bgp_ecommunity.h"
+/* this include requires definition of bgp_peer */
+#include "bgp_hash.h"
 
 struct bgp_peer_batch {
   int num;

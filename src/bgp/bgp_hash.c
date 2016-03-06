@@ -77,12 +77,19 @@ hash_alloc_intern (void *arg)
    corresponding hash backet and alloc_func is specified, create new
    hash backet.  */
 void *
-hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
+hash_get (struct bgp_peer *peer, struct hash *hash, void *data, void * (*alloc_func) (void *))
 {
+  struct bgp_misc_structs *bms;
   unsigned int key;
   unsigned int index;
   void *newdata;
   struct hash_backet *backet;
+
+  if (!peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
 
   key = (*hash->hash_key) (data);
   index = key % hash->size;
@@ -95,13 +102,13 @@ hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
     {
       newdata = (*alloc_func) (data);
       if (!newdata) {
-        Log(LOG_ERR, "ERROR ( %s/core/BGP ): alloc_func failed (hash_get). Exiting ..\n", config.name); // XXX
+        Log(LOG_ERR, "ERROR ( %s/core/%s ): alloc_func failed (hash_get). Exiting ..\n", config.name, bms->log_thread_str);
         exit_all(1);
       }
 
       backet = malloc(sizeof (struct hash_backet));
       if (!backet) {
-        Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (hash_get). Exiting ..\n", config.name); // XXX
+        Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (hash_get). Exiting ..\n", config.name, bms->log_thread_str);
         exit_all(1);
       }
       memset(backet, 0, sizeof (struct hash_backet));
@@ -112,14 +119,8 @@ hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
       hash->count++;
       return backet->data;
     }
-  return NULL;
-}
 
-/* Hash lookup.  */
-void *
-hash_lookup (struct hash *hash, void *data)
-{
-  return hash_get (hash, data, NULL);
+  return NULL;
 }
 
 /* This function release registered value from specified hash.  When

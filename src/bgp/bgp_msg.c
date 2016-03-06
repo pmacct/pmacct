@@ -1005,7 +1005,7 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
   }
 
   /* Make new BGP info. */
-  new = bgp_info_new();
+  new = bgp_info_new(peer);
   if (new) {
     struct bgp_info_extra *rie = NULL;
 

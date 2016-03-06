@@ -34,13 +34,20 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 
 /* Allocate a new communities value.  */
 static struct community *
-community_new ()
+community_new (struct bgp_peer *peer)
 {
+  struct bgp_misc_structs *bms;
   void *tmp;
+
+  if (!peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
 
   tmp = malloc(sizeof (struct community));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_new). Exiting ..\n", config.name); // XXX
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_new). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct community));
@@ -59,15 +66,23 @@ community_free (struct community *com)
 
 /* Add one community value to the community. */
 static void
-community_add_val (struct community *com, u_int32_t val)
+community_add_val (struct bgp_peer *peer, struct community *com, u_int32_t val)
 {
+  struct bgp_misc_structs *bms;
+
+  if (!peer) return;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
   com->size++;
   if (com->val)
     com->val = realloc(com->val, com_length (com));
   else {
     com->val = malloc(com_length (com));
     if (!com->val) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_add_val). Exiting ..\n", config.name); // XXX
+      Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_add_val). Exiting ..\n", config.name, bms->log_thread_str);
       exit_all(1);
     }
   }
@@ -174,7 +189,7 @@ community_val_get (struct community *com, int i)
 
 /* Sort and uniq given community. */
 struct community *
-community_uniq_sort (struct community *com)
+community_uniq_sort (struct bgp_peer *peer, struct community *com)
 {
   int i;
   struct community *new;
@@ -183,14 +198,14 @@ community_uniq_sort (struct community *com)
   if (! com)
     return NULL;
   
-  new = community_new ();;
+  new = community_new (peer);
   
   for (i = 0; i < com->size; i++)
     {
       val = community_val_get (com, i);
 
       if (! community_include (new, val))
-	community_add_val (new, val);
+	community_add_val (peer, new, val);
     }
 
   qsort (new->val, new->size, sizeof (u_int32_t), community_compare);
@@ -209,8 +224,9 @@ community_uniq_sort (struct community *com)
 
    For other values, "AS:VAL" format is used.  */
 static char *
-community_com2str  (struct community *com)
+community_com2str  (struct bgp_peer *peer, struct community *com)
 {
+  struct bgp_misc_structs *bms;
   int i;
   char *str;
   char *pnt;
@@ -220,15 +236,18 @@ community_com2str  (struct community *com)
   u_int16_t as;
   u_int16_t val;
 
-  if (!com)
-    return NULL;
+  if (!com || !peer) return NULL;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return NULL;
   
   /* When communities attribute is empty.  */
   if (com->size == 0)
     {
       str = malloc(1);
       if (!str) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name); // XXX
+	Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_com2str). Exiting ..\n", config.name, bms->log_thread_str);
 	exit_all(1);
       }
       str[0] = '\0';
@@ -267,7 +286,7 @@ community_com2str  (struct community *com)
   /* Allocate memory.  */
   str = pnt = malloc(len);
   if (!str) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (community_com2str). Exiting ..\n", config.name); // XXX
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_com2str). Exiting ..\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
   first = 1;
@@ -331,7 +350,7 @@ community_intern (struct bgp_peer *peer, struct community *com)
   assert (com->refcnt == 0);
 
   /* Lookup community hash. */
-  find = (struct community *) hash_get(inter_domain_routing_db->comhash, com, hash_alloc_intern);
+  find = (struct community *) hash_get(peer, inter_domain_routing_db->comhash, com, hash_alloc_intern);
 
   /* Arguemnt com is allocated temporary.  So when it is not used in
      hash, it should be freed.  */
@@ -343,7 +362,7 @@ community_intern (struct bgp_peer *peer, struct community *com)
 
   /* Make string.  */
   if (! find->str)
-    find->str = community_com2str (find);
+    find->str = community_com2str (peer, find);
 
   return find;
 }
@@ -389,20 +408,20 @@ community_parse (struct bgp_peer *peer, u_int32_t *pnt, u_short length)
   tmp.size = length / 4;
   tmp.val = pnt;
 
-  new = community_uniq_sort (&tmp);
+  new = community_uniq_sort (peer, &tmp);
 
   return community_intern (peer, new);
 }
 
 /* Retrun string representation of communities attribute. */
 char *
-community_str (struct community *com)
+community_str (struct bgp_peer *peer, struct community *com)
 {
   if (!com)
     return NULL;
   
   if (! com->str)
-    com->str = community_com2str (com);
+    com->str = community_com2str (peer, com);
   return com->str;
 }
 
@@ -575,46 +594,6 @@ community_gettoken (const char *buf, enum community_token *token,
     }
   *token = community_token_unknown;
   return NULL;
-}
-
-/* convert string to community structure */
-struct community *
-community_str2com (const char *str)
-{
-  struct community *com = NULL;
-  struct community *com_sort = NULL;
-  u_int32_t val = 0;
-  enum community_token token = community_token_unknown;
-
-  do 
-    {
-      str = community_gettoken (str, &token, &val);
-      
-      switch (token)
-	{
-	case community_token_val:
-	case community_token_no_export:
-	case community_token_no_advertise:
-	case community_token_local_as:
-	  if (com == NULL)
-	    com = community_new();
-	  community_add_val (com, val);
-	  break;
-	case community_token_unknown:
-	default:
-	  if (com)
-	    community_free (com);
-	  return NULL;
-	}
-    } while (str);
-  
-  if (! com)
-    return NULL;
-
-  com_sort = community_uniq_sort (com);
-  community_free (com);
-
-  return com_sort;
 }
 
 /* Initialize comminity related hash. */
