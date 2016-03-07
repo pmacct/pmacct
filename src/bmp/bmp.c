@@ -33,7 +33,6 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#include <search.h>
 
 /* variables to be exported away */
 thread_pool_t *bmp_pool;
@@ -865,10 +864,11 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
   struct bgp_misc_structs *bms;
-  struct bgp_peer *peer, bmpp_bgp_peer;
+  struct bgp_peer *peer, *bmpp_bgp_peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_peer_down_hdr *bpdh;
+  void *ret;
 
   if (!bmpp) return;
 
@@ -918,7 +918,17 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
         bmp_dump_se_ll_append(peer, &bdata, &blpd, BMP_LOG_TYPE_PEER_DOWN);
     }
 
-    // XXX: withdraw routes from peer
+    ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
+
+    if (ret) {
+      char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
+
+      bmpp_bgp_peer = (*(struct bgp_peer **) ret);
+
+      bms->peer_str = peer_str;
+      bgp_peer_info_delete(bmpp_bgp_peer);
+      bms->peer_str = saved_peer_str;
+    } 
 
     pm_tdelete(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
   }
@@ -1394,7 +1404,9 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
   if (!bms) return;
 
-  tdestroy(&bmpp->bgp_peers, bmp_bmpp_bgp_peers_free);
+  pm_twalk(bmpp->bgp_peers, bmp_bmpp_bgp_peers_walk_delete);
+
+  pm_tdestroy(&bmpp->bgp_peers, bmp_bmpp_bgp_peers_free);
 
   if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
     bmp_dump_close_peer(peer);
@@ -1414,6 +1426,26 @@ int bmp_bmpp_bgp_peer_host_addr_cmp(const void *a, const void *b)
 
 void bmp_bmpp_bgp_peers_free(void *a)
 {
+}
+
+void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const int depth)
+{
+  struct bgp_misc_structs *bms;
+  char peer_str[] = "peer_ip", *saved_peer_str;
+  struct bgp_peer *peer;
+
+  peer = (*(struct bgp_peer **) nodep);
+
+  if (!peer) return;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
+  saved_peer_str = bms->peer_str;
+  bms->peer_str = peer_str;
+  bgp_peer_info_delete(peer);
+  bms->peer_str = saved_peer_str;
 }
 
 u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)

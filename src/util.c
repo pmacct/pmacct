@@ -1304,6 +1304,17 @@ void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, 
   return NULL;
 }
 
+void pm_twalk(const void *root, void (*action)(const void *nodep, const VISIT which, const int depth))
+{
+  twalk(root, action);
+}
+
+void pm_tdestroy(void **root, void (*free_node)(void *nodep))
+{
+  tdestroy((*root), free_node);
+  (*root) = NULL;
+}
+
 void load_allow_file(char *filename, struct hosts_table *t)
 {
   FILE *file;

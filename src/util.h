@@ -85,6 +85,8 @@ EXT void *pm_malloc(size_t);
 EXT void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
 EXT void *pm_tfind(const void *, void *const *, int (*compar)(const void *, const void *));
 EXT void *pm_tdelete(const void *, void **, int (*compar)(const void *, const void *));
+EXT void pm_twalk(const void *, void (*action)(const void *, const VISIT, const int));
+EXT void pm_tdestroy(void **, void (*free_node)(void *));
 EXT void load_allow_file(char *, struct hosts_table *);
 EXT int check_allow(struct hosts_table *, struct sockaddr *);
 EXT void load_bgp_md5_file(char *, struct bgp_md5_table *);

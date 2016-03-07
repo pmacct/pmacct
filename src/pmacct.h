@@ -60,6 +60,7 @@
 #include <signal.h>
 #include <syslog.h>
 #include <sys/resource.h>
+#include <search.h>
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)
