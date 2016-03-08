@@ -327,6 +327,7 @@ void skinny_bgp_daemon()
     }
     else {
       config.bgp_table_dump_file = NULL;
+      bgp_misc_db->dump_backend_methods = FALSE;
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): Invalid 'bgp_table_dump_refresh_time'.\n", config.name);
     }
 

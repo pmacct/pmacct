@@ -215,6 +215,7 @@ EXT u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
 EXT int bmp_bmpp_bgp_peers_cmp(const void *, const void *);
 EXT int bmp_bmpp_bgp_peer_host_addr_cmp(const void *, const void *);
 EXT void bmp_bmpp_bgp_peers_free(void *);
+EXT void bmp_bmpp_bgp_peers_walk_print(const void *, const VISIT, const int);
 EXT void bmp_bmpp_bgp_peers_walk_delete(const void *, const VISIT, const int);
 #undef EXT
 

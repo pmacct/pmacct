@@ -333,6 +333,7 @@ void skinny_bmp_daemon()
     }
     else {
       config.bmp_dump_file = NULL;
+      bmp_misc_db->dump_backend_methods = FALSE;
       Log(LOG_WARNING, "WARN ( %s/core/BMP ): Invalid 'bmp_dump_refresh_time'.\n", config.name);
     }
 
@@ -924,13 +925,13 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
       char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
 
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
-
+    
       bms->peer_str = peer_str;
       bgp_peer_info_delete(bmpp_bgp_peer);
       bms->peer_str = saved_peer_str;
-    } 
 
-    pm_tdelete(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
+      pm_tdelete(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);
+    } 
   }
 }
 
@@ -1383,6 +1384,7 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
   if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
 
   bgp_peer_rem->type = FUNC_TYPE_BMP;
+  memcpy(&bgp_peer_rem->id, &bgp_peer_rem->addr, sizeof(struct host_addr));
 
   return bgp_peer_rem;
 }
@@ -1426,6 +1428,20 @@ int bmp_bmpp_bgp_peer_host_addr_cmp(const void *a, const void *b)
 
 void bmp_bmpp_bgp_peers_free(void *a)
 {
+}
+
+void bmp_bmpp_bgp_peers_walk_print(const void *nodep, const VISIT which, const int depth)
+{
+  struct bgp_peer *peer;
+  char peer_str[INET6_ADDRSTRLEN];
+
+  peer = (*(struct bgp_peer **) nodep);
+
+  if (!peer) Log(LOG_INFO, "INFO ( %s/core/BMP ): bmp_bmpp_bgp_peers_walk_print(): null\n", config.name);
+  else {
+    addr_to_str(peer_str, &peer->addr);
+    Log(LOG_INFO, "INFO ( %s/core/BMP ): bmp_bmpp_bgp_peers_walk_print(): %s\n", config.name, peer_str);
+  }
 }
 
 void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const int depth)
