@@ -525,7 +525,8 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time); 
 
   if (config.sql_trigger_exec) {
-    if (!config.debug) idata->elap_time = time(NULL)-start;
+    if (queue && queue[0]) idata->basetime = queue[0]->basetime;
+    idata->elap_time = time(NULL)-start;
     SQL_SetENV_child(idata);
   }
 }
