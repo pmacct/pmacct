@@ -1161,9 +1161,10 @@ hijacks, etc.
 
 Both features export data formatted as JSON messages, hence compiling pmacct
 against libjansson is a requirement. Messages can be written to plain-text
-files or pointed at AMQP exchanges (in which case compiling against RabbitMQ
-is required; read more about this in the "Running the RabbitMQ/AMQP plugin"
-section of this document):
+files or pointed at AMQP or Kafka brokers (in which case compiling against
+RabbitMQ or Kafka libraries is required; read more in respectively the
+"Running the RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections
+of this document):
 
 shell> ./configure --enable-jansson
 
@@ -1307,17 +1308,16 @@ router isis
 
 
 XVII. Quickstart guide to setup the BMP daemon
-The BMP daemon thread is introduced in pmacct 1.5.1. The implementation is
-based on the draft-ietf-grow-bmp-07 IETF document. To quote the document:
-"BMP is intended to provide a more convenient interface for obtaining route
-views for research purpose than the screen-scraping approach in common use
-today. The design goals are to keep BMP simple, useful, easily implemented,
-and minimally service-affecting.". The BMP daemon currently supports BMP
-events and stats only, ie. initiation, termination, peer up, peer down and
-stats reports messages. Route Monitoring is future (upcoming) work but routes
-can be currently sourced via the BGP daemon thread (best path only or ADD-PATH),
-making the two daemons complementary. The daemon enables to write BMP messages
-to files or AMQP queues, real-time (msglog) or at regular time intervals (dump).
+The BMP daemon thread was introduced in pmacct 1.5. The implementation was
+originally based on the draft-ietf-grow-bmp-07 IETF document (then review #1
+was done against draft-ietf-grow-bmp-17). If unfamiliar with BMP, to quote the
+document: "BMP is intended to provide a more convenient interface for obtaining
+route views for research purpose than the screen-scraping approach in common
+use today. The design goals are to keep BMP simple, useful, easily implemented,
+and minimally service-affecting.". The BMP daemon currently supports BMP data,
+events and stats, ie. initiation, termination, peer up, peer down, stats and
+route monitoring messages. The daemon enables to write BMP messages to files,
+AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
 
 Following a simple example on how to configure nfacctd to enable the BMP daemon
 to a) log, in real-time, BGP stats and events received via BMP to a text-file

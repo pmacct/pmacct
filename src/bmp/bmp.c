@@ -1462,6 +1462,8 @@ void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const 
   bms->peer_str = peer_str;
   bgp_peer_info_delete(peer);
   bms->peer_str = saved_peer_str;
+
+  // XXX: test pm_tdelete() here to optimize walk
 }
 
 u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)

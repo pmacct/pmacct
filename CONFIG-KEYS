@@ -1851,15 +1851,14 @@ DEFAULT:	false
 KEY:		bmp_daemon [GLOBAL]
 VALUES:         [ true | false ]
 DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can be used to monitor BGP
-		sessions. The current implementation is based on the draft-ietf-grow-bmp-07 IETF draft.
-		The BMP daemon currently supports BMP events and stats only, ie. initiation, termination, 
-		peer up, peer down and stats reports messages. Route Monitoring is future (upcoming) work
-		but routes can be currently sourced via the BGP daemon thread (best path only or ADD-PATH),
-		making the two daemons complementary. The daemon enables to write BMP messages to files,
-		AMQP and Kafka queues real-time (msglog) or at regular time intervals (dump). For further
-		referece see examples in the QUICKSTART document and/or description of the bmp_* config
-		keys in this document. The BMP daemon is a separate thread in the NetFlow (nfacctd) and
-		sFlow (sfacctd) collectors.
+		sessions. The implementation was originally based on the draft-ietf-grow-bmp-07 IETF
+		document (then review #1 was done against draft-ietf-grow-bmp-17). The BMP daemon
+		currently supports BMP data, events and stats, ie. initiation, termination, peer up,
+		peer down, stats and route monitoring messages. The daemon enables to write BMP messages
+		to files, AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
+		For further referece see examples in the QUICKSTART document and/or description of the
+		bmp_* config keys in this document. The BMP daemon is a separate thread in the NetFlow
+		(nfacctd) and sFlow (sfacctd) collectors.
 DEFAULT:        false
 
 KEY:		[ bgp_daemon_ip | bmp_daemon_ip ] [GLOBAL]
