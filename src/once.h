@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -22,7 +22,7 @@
 #ifndef _ONCE_H_
 #define _ONCE_H_
 
-#if defined __PMACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C || defined __UACCTD_C || defined __PMACCT_CLIENT_C 
+#if defined __PMACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C || defined __UACCTD_C || defined __PMACCT_CLIENT_C || defined __PMTELEMETRYD_C 
 #define EXT 
 #else
 #define EXT extern

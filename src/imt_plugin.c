@@ -140,9 +140,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
   }
 
-  if ((!config.num_memory_pools) && (!have_num_memory_pools))
-    config.num_memory_pools = NUM_MEMORY_POOLS;
-  
+  if (!config.num_memory_pools) config.num_memory_pools = NUM_MEMORY_POOLS;
   if (!config.memory_pool_size) config.memory_pool_size = MEMORY_POOL_SIZE;  
   else {
     if (config.memory_pool_size < sizeof(struct acc)) {

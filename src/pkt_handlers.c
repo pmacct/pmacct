@@ -2877,7 +2877,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       pdata->primitives.sampling_rate = xsentry->st.tag;
     }
     else {
-      NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
+      find_id_func((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
 
       if (xsentry) {
         xsentry->st.tag = pdata->primitives.sampling_rate;
@@ -3676,7 +3676,7 @@ void NF_counters_map_renormalize_handler(struct channels_list_entry *chptr, stru
     pptrs->st = xsentry->st.tag;
   }
   else { 
-    NF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+    find_id_func((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
 
     if (xsentry) {
       xsentry->st.tag = pptrs->st;
@@ -4186,7 +4186,7 @@ void SF_counters_map_renormalize_handler(struct channels_list_entry *chptr, stru
     pptrs->st = xsentry->st.tag;
   }
   else {
-    SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
+    find_id_func((struct id_table *)pptrs->sampling_table, pptrs, &pptrs->st, NULL);
 
     if (xsentry) {
       xsentry->st.tag = pptrs->st;
@@ -4392,7 +4392,7 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       pdata->primitives.sampling_rate = xsentry->st.tag;
     }
     else {
-      SF_find_id((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
+      find_id_func((struct id_table *)pptrs->sampling_table, pptrs, (pm_id_t *) &pdata->primitives.sampling_rate, NULL);
 
       if (xsentry) {
         xsentry->st.tag = pdata->primitives.sampling_rate;

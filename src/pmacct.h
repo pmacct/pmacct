@@ -329,7 +329,7 @@ EXT void compute_once();
 EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 #undef EXT
 
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C)
+#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C)
 #define EXT extern
 #else
 #define EXT
@@ -341,6 +341,11 @@ EXT int reload_log_sf_cnt;
 EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;
+EXT int debug;
+EXT struct configuration config; /* global configuration structure */
+EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
+EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
+EXT u_char dummy_tlhdr[16];
 #undef EXT
 
 #ifndef HAVE_STRLCPY
@@ -355,14 +360,5 @@ int json_object_update_missing(json_t *, json_t *);
 /* global variables */
 pcap_t *glob_pcapt;
 struct pcap_stat ps;
-
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C)
-extern int debug;
-extern int have_num_memory_pools; /* global getopt() stuff */
-extern struct configuration config; /* global configuration structure */ 
-extern struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
-extern pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
-extern u_char dummy_tlhdr[16];
-#endif
 
 #endif /* _PMACCT_H_ */

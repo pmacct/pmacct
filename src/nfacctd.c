@@ -36,12 +36,7 @@
 #include "bgp/bgp.h"
 
 /* variables to be exported away */
-int debug;
-struct configuration config; /* global configuration */ 
-struct plugins_list_entry *plugins_list = NULL; /* linked list of each plugin configuration */ 
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
-int have_num_memory_pools; /* global getopt() stuff */
-pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -147,7 +142,6 @@ int main(int argc,char **argv, char **envp)
   compute_once();
 
   /* a bunch of default definitions */ 
-  have_num_memory_pools = FALSE;
   reload_map = FALSE;
   reload_geoipv2_file = FALSE;
   sampling_map_allocated = FALSE;
@@ -161,6 +155,7 @@ int main(int argc,char **argv, char **envp)
   bta_map_caching = TRUE;
   sampling_map_caching = TRUE;
   find_id_func = NF_find_id;
+  plugins_list = NULL;
 
   data_plugins = 0;
   tee_plugins = 0;
@@ -260,7 +255,6 @@ int main(int argc,char **argv, char **envp)
     case 'm':
       strlcpy(cfg_cmdline[rows], "imt_mem_pools_number: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
-      have_num_memory_pools = TRUE;
       rows++;
       break;
     case 'p':
@@ -2384,9 +2378,4 @@ pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_cl
   }
 
   return 0;
-}
-
-/* Dummy objects here - ugly to see but well portable */
-void SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
-{
 }

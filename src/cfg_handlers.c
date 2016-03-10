@@ -660,7 +660,6 @@ int cfg_key_imt_mem_pools_number(char *filename, char *name, char *value_ptr)
     }
   }
 
-  have_num_memory_pools = TRUE;
   return changes;
 }
 
