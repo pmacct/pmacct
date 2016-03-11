@@ -1311,7 +1311,11 @@ void pm_twalk(const void *root, void (*action)(const void *nodep, const VISIT wh
 
 void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 {
+  /* in implementations where tdestroy() is not defined, tdelete() against
+     the root node of the three destroys also the last few remaining bits */
+#if (defined HAVE_TDESTROY)
   tdestroy((*root), free_node);
+#endif
   (*root) = NULL;
 }
 
@@ -2957,28 +2961,28 @@ void hash_serial_set_off(pm_hash_serial_t *serial, u_int16_t off)
 
 u_int16_t hash_serial_get_off(pm_hash_serial_t *serial)
 {
-  if (!serial) return;
+  if (!serial) return ERR;
 
   return serial->off;
 }
 
 pm_hash_key_t *hash_serial_get_key(pm_hash_serial_t *serial)
 {
-  if (!serial) return;
+  if (!serial) return NULL;
 
   return &serial->key;
 }
 
 u_int16_t hash_key_get_len(pm_hash_key_t *key)
 {
-  if (!key) return;
+  if (!key) return ERR;
 
   return key->len;
 }
 
 char *hash_key_get_val(pm_hash_key_t *key)
 {
-  if (!key) return;
+  if (!key) return NULL;
 
   return key->val;
 }

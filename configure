@@ -5023,7 +5023,7 @@ EOF
 
 
 
-for ac_func in strlcpy vsnprintf setproctitle mallopt json_object_update_missing
+for ac_func in strlcpy vsnprintf setproctitle mallopt json_object_update_missing tdestroy
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:5030: checking for $ac_func" >&5
