@@ -28,8 +28,8 @@ COMMON=
 
 all: $(TARGETS)
 
-libbmp.a: bmp.o bmp_logdump.o $(COMMON)
-	ar rc $@ bmp.o bmp_logdump.o $(COMMON)
+libbmp.a: bmp.o bmp_logdump.o bmp_msg.o bmp_util.o $(COMMON)
+	ar rc $@ bmp.o bmp_logdump.o bmp_msg.o bmp_util.o $(COMMON)
 	$(RANLIB) $@
 
 clean:
