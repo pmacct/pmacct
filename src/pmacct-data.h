@@ -508,6 +508,11 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"uacctd_stitching", cfg_key_nfacctd_stitching},
   {"uacctd_renormalize", cfg_key_sfacctd_renormalize},
+  {"pmtelemetryd_proc_name", cfg_key_proc_name},
+  {"pmtelemetryd_port", cfg_key_nfacctd_port},
+  {"pmtelemetryd_ip", cfg_key_nfacctd_ip},
+  {"pmtelemetryd_allow_file", cfg_key_nfacctd_allow_file},
+  {"pmtelemetryd_pipe_size", cfg_key_nfacctd_pipe_size},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"refresh_maps", cfg_key_maps_refresh}, // legacy
   {"maps_refresh", cfg_key_maps_refresh},

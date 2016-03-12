@@ -24,6 +24,7 @@
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:v:o:O:uRVa"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:RVaz"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:Va"
+#define ARGS_PMTELEMETRYD "hVL:l:f:dDS:F:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDVUoiI"
 #define N_PRIMITIVES 57
 #define N_FUNCS 10 
@@ -85,6 +86,7 @@
 #define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.6.0-git"
 #define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.6.0-git"
 #define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.6.0-git"
+#define PMTELEMETRYD_USAGE_HEADER "Telemetry Accounting Daemon, pmtelemetryd 1.6.0-git"
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
@@ -121,7 +123,8 @@
 #define ACCT_NF		2	/* NetFlow */
 #define ACCT_SF		3	/* sFlow */
 #define ACCT_UL		4	/* Linux NetFilter ULOG */
-#define ACCT_MEMCLIENT	5	/* pmacct memroy client */
+#define ACCT_PMTELE	5	/* Telemetry */
+#define ACCT_MEMCLIENT	6	/* pmacct memroy client */
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
