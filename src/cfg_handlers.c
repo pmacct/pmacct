@@ -6012,3 +6012,91 @@ int cfg_key_thread_stack(char *filename, char *name, char *value_ptr)
 
   return changes;
 }
+
+int cfg_key_telemetry_daemon(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_daemon = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_ip(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_ip = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_allow_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_allow_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_allow_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_pipe_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoull(value_ptr, &endptr, 10);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN: [%s] '[nf|sf|pm]acctd_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_pipe_size = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_pipe_size'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_ip_precedence(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value < 0) || (value > 7)) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_ipprec' has to be in the range 0-7.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_ipprec = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_ipprec'. Globalized.\n", filename);
+
+  return changes;
+}

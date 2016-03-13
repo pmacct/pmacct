@@ -202,6 +202,13 @@ struct configuration {
   int sfacctd_counter_kafka_broker_port;
   int sfacctd_counter_kafka_retry;
   int nfacctd_disable_checks;
+  int telemetry_daemon;
+  int telemetry_sock;
+  int telemetry_port;
+  char *telemetry_ip;
+  char *telemetry_allow_file;
+  int telemetry_pipe_size;
+  int telemetry_ipprec;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;
   char *nfacctd_bgp_msglog_file;

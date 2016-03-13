@@ -19,9 +19,17 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* includes */
+
+/* defines */
+#define TELEMETRY_TCP_PORT	1620
+
+/* prototypes */
 #if (!defined __TELEMETRY_C)
 #define EXT extern
 #else
 #define EXT
 #endif
+EXT void telemetry_wrapper();
+EXT void telemetry_daemon();
 #undef EXT

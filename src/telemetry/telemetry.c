@@ -24,4 +24,35 @@
 
 /* includes */
 #include "pmacct.h"
-#include "pmacct-data.h"
+#include "thread_pool.h"
+#include "telemetry.h"
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
+
+/* variables to be exported away */
+thread_pool_t *telemetry_pool;
+
+/* Functions */
+#if defined ENABLE_THREADS
+void telemetry_wrapper()
+{
+  /* initialize variables */
+  if (!config.telemetry_port) config.telemetry_port = TELEMETRY_TCP_PORT;
+
+  /* initialize threads pool */
+  telemetry_pool = allocate_thread_pool(1);
+  assert(telemetry_pool);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/TELE ): %d thread(s) initialized\n", config.name, 1);
+
+  /* giving a kick to the BMP thread */
+  send_to_pool(telemetry_pool, telemetry_daemon, NULL);
+}
+#endif
+
+void telemetry_daemon()
+{
+}
