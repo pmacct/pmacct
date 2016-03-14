@@ -19,6 +19,21 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* includes */
+
+/* defines */
+
+/* prototypes */
+#if (!defined __PMTELEMETRYD_C)
+#define EXT extern
+#else
+#define EXT
+EXT void usage_daemon(char *);
+EXT void compute_once();
+#endif
+#undef EXT
+
+/* global variables */
 #if (!defined __PMTELEMETRYD_C)
 #define EXT extern
 #else

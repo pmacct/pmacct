@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "telemetry/telemetry.h"
 #include "pmtelemetryd.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
@@ -66,6 +67,7 @@ void compute_once()
 
 int main(int argc,char **argv, char **envp)
 {
+  struct telemetry_data t_data;
   struct plugins_list_entry *list;
   char config_file[SRVBUFLEN];
   int logf;
@@ -218,4 +220,7 @@ int main(int argc,char **argv, char **envp)
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
+
+  telemetry_prepare_daemon(&t_data);
+  telemetry_daemon(&t_data);
 }

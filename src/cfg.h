@@ -206,6 +206,7 @@ struct configuration {
   int telemetry_sock;
   int telemetry_port;
   char *telemetry_ip;
+  int telemetry_max_peers;
   char *telemetry_allow_file;
   int telemetry_pipe_size;
   int telemetry_ipprec;

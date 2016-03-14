@@ -6100,3 +6100,20 @@ int cfg_key_telemetry_ip_precedence(char *filename, char *name, char *value_ptr)
 
   return changes;
 }
+
+int cfg_key_telemetry_max_peers(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 1) {
+        Log(LOG_ERR, "WARN: [%s] 'telemetry_max_peers' has to be >= 1.\n", filename);
+        return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_max_peers = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_max_peers'. Globalized.\n", filename);
+
+  return changes;
+}

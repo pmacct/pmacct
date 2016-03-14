@@ -62,7 +62,6 @@ void skinny_bgp_daemon()
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
-  struct ipv6_mreq multi_req6;
 #else
   struct sockaddr server, client;
 #endif
@@ -223,7 +222,7 @@ void skinny_bgp_daemon()
 
 #if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
   rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, errno);
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BGP ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, errno);
 #endif
 
   if (config.nfacctd_bgp_pipe_size) {

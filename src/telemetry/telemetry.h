@@ -22,7 +22,25 @@
 /* includes */
 
 /* defines */
-#define TELEMETRY_TCP_PORT	1620
+#define TELEMETRY_TCP_PORT		1620
+#define TELEMETRY_MAX_PEERS_DEFAULT	100
+
+struct telemetry_data {
+  int is_thread;
+  char *log_str;
+};
+
+struct telemetry_peer {
+  int fd;
+  struct host_addr addr;
+  char addr_str[INET6_ADDRSTRLEN];
+  u_int32_t msglen;
+/* XXX:
+  struct bgp_peer_buf buf;
+  struct bgp_peer_log *log;
+*/
+  void *telemetry_se;
+};
 
 /* prototypes */
 #if (!defined __TELEMETRY_C)
@@ -31,5 +49,16 @@
 #define EXT
 #endif
 EXT void telemetry_wrapper();
-EXT void telemetry_daemon();
+EXT void telemetry_daemon(void *);
+EXT void telemetry_prepare_thread(struct telemetry_data *);
+EXT void telemetry_prepare_daemon(struct telemetry_data *);
+#undef EXT
+
+/* global variables */
+#if (!defined __TELEMETRY_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT struct telemetry_peer *telemetry_peers;
 #undef EXT
