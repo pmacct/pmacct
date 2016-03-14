@@ -40,19 +40,22 @@ thread_pool_t *telemetry_pool;
 #if defined ENABLE_THREADS
 void telemetry_wrapper()
 {
-  struct telemetry_data t_data;
-
-  /* initialize variables */
-  if (!config.telemetry_port) config.telemetry_port = TELEMETRY_TCP_PORT;
+  struct telemetry_data *t_data;
 
   /* initialize threads pool */
   telemetry_pool = allocate_thread_pool(1);
   assert(telemetry_pool);
   Log(LOG_DEBUG, "DEBUG ( %s/core/TELE ): %d thread(s) initialized\n", config.name, 1);
-  telemetry_prepare_thread(&t_data);
 
-  /* giving a kick to the BMP thread */
-  send_to_pool(telemetry_pool, telemetry_daemon, &t_data);
+  t_data = malloc(sizeof(struct telemetry_data));
+  if (!t_data) {
+    Log(LOG_ERR, "ERROR ( %s/core/TELE ): malloc() struct telemetry_data failed. Terminating.\n", config.name);
+    exit_all(1);
+  }
+  telemetry_prepare_thread(t_data);
+
+  /* giving a kick to the telemetry thread */
+  send_to_pool(telemetry_pool, telemetry_daemon, t_data);
 }
 #endif
 
@@ -60,9 +63,7 @@ void telemetry_daemon(void *t_data_void)
 {
   struct telemetry_data *t_data = t_data_void;
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
-  int peers_idx_rr = 0, max_peers_idx = 0;
-  char *telemetry_packet_ptr;
-  u_int32_t pkt_remaining_len=0;
+  int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
   time_t now;
 
   struct telemetry_peer *peer = NULL;
@@ -94,6 +95,9 @@ void telemetry_daemon(void *t_data_void)
   memset(&client, 0, sizeof(client));
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
+
+  /* initialize variables */
+  if (!config.telemetry_port) config.telemetry_port = TELEMETRY_TCP_PORT;
 
   /* socket creation for telemetry server: IPv4 only */
 #if (defined ENABLE_IPV6)
@@ -225,7 +229,146 @@ void telemetry_daemon(void *t_data_void)
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 
-  // XXX: for (;;) loop
+  for (;;) {
+    select_again:
+
+    if (recalc_fds) {
+      select_fd = config.telemetry_sock;
+      max_peers_idx = -1; /* .. since valid indexes include 0 */
+
+      for (peers_idx = 0, peers_num = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
+        if (select_fd < telemetry_peers[peers_idx].fd) select_fd = telemetry_peers[peers_idx].fd;
+        if (telemetry_peers[peers_idx].fd) {
+	  max_peers_idx = peers_idx;
+	  peers_num++;
+	}
+      }
+      select_fd++;
+      max_peers_idx++;
+
+      bkp_select_fd = select_fd;
+      recalc_fds = FALSE;
+    }
+    else select_fd = bkp_select_fd;
+
+    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+    drt_ptr = NULL; /* XXX: set timeout if having to schedule dumps */
+
+    select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
+    if (select_num < 0) goto select_again;
+
+    // XXX: handle reload log
+
+    // XXX: handle msglog + dump, session reopening, etc. 
+
+    /* 
+       If select_num == 0 then we got out of select() due to a timeout rather
+       than because we had a message from a peeer to handle. By now we did all
+       routine checks and can happily return to selet() again.
+    */
+    if (!select_num) goto select_again;
+
+    /* New connection is coming in */
+    if (FD_ISSET(config.telemetry_sock, &read_descs)) {
+      int peers_check_idx;
+
+      fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
+      if (fd == ERR) goto read_data;
+
+#if defined ENABLE_IPV6
+      ipv4_mapped_to_ipv4(&client);
+#endif
+
+      /* If an ACL is defined, here we check against and enforce it */
+      if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
+      else allowed = TRUE;
+
+      if (!allowed) {
+        close(fd);
+        goto read_data;
+      }
+
+      for (peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
+        if (!telemetry_peers[peers_idx].fd) {
+          now = time(NULL);
+	  peer = &telemetry_peers[peers_idx];
+
+	  /* XXX:
+          if (bmp_peer_init(bmpp, FUNC_TYPE_BMP)) peer = NULL;
+          else recalc_fds = TRUE;
+	  */
+
+	  break;
+	}
+      }
+
+      if (!peer) {
+        int fd;
+
+        /* We briefly accept the new connection to be able to drop it */
+        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of telemetry peers has been configured by 'telemetry_max_peers' (%d).\n",
+                        config.name, t_data->log_str, config.telemetry_max_peers);
+        close(fd);
+        goto read_data;
+      }
+
+      peer->fd = fd;
+      FD_SET(peer->fd, &bkp_read_descs);
+      peer->addr.family = ((struct sockaddr *)&client)->sa_family;
+      if (peer->addr.family == AF_INET) {
+        peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
+        peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
+      }
+#if defined ENABLE_IPV6
+      else if (peer->addr.family == AF_INET6) {
+        memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
+        peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
+      }
+#endif
+      addr_to_str(peer->addr_str, &peer->addr);
+
+      /* XXX: msglog + dump peer init */
+
+      peers_num++;
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry peers usage: %u/%u\n",
+	  config.name, t_data->log_str, peer->addr_str, peers_num, config.telemetry_max_peers);
+    }
+
+    read_data:
+
+    /*
+       We have something coming in: let's lookup which peer is that.
+       FvD: To avoid starvation of the "later established" peers, we
+       offset the start of the search in a round-robin style.
+    */
+    for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+      int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
+
+      if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
+        peer = &telemetry_peers[loc_idx];
+        peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
+        break;
+      }
+    }
+
+    if (!peer) goto select_again;
+
+    /* XXX:
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+    peer->msglen = (ret + peer->buf.truncated_len);
+    */ 
+
+    if (ret <= 0) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
+      FD_CLR(peer->fd, &bkp_read_descs);
+      /* XXX: bmp_peer_close(bmpp, FUNC_TYPE_BMP); */
+      recalc_fds = TRUE;
+      goto select_again;
+    }
+    else {
+      /* XXX: process/handle telemetry data */
+    }
+  }
 }
 
 void telemetry_prepare_thread(struct telemetry_data *t_data) 

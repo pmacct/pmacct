@@ -34,6 +34,7 @@ struct telemetry_peer {
   int fd;
   struct host_addr addr;
   char addr_str[INET6_ADDRSTRLEN];
+  u_int16_t tcp_port;
   u_int32_t msglen;
 /* XXX:
   struct bgp_peer_buf buf;

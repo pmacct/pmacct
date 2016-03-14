@@ -58,7 +58,6 @@ void skinny_bmp_daemon()
 {
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0;
-  char *bmp_packet_ptr;
   u_int32_t pkt_remaining_len=0;
   time_t now;
   afi_t afi;

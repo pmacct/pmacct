@@ -684,6 +684,14 @@ int main(int argc,char **argv, char **envp)
     /* Let's give the BMP thread some advantage to create its structures */
     sleep(5);
   }
+
+  /* starting the telemetry thread */
+  if (config.telemetry_daemon) {
+    telemetry_wrapper();
+
+    /* Let's give the telemetry thread some advantage to create its structures */
+    sleep(5);
+  }
 #else
   if (config.nfacctd_isis) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
@@ -697,6 +705,11 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
+    exit(1);
+  }
+
+  if (config.telemetry_daemon) {
+    Log(LOG_ERR, "ERROR ( %s/core ): 'telemetry_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
 #endif
