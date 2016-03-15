@@ -66,7 +66,7 @@ void telemetry_daemon(void *t_data_void)
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
   time_t now;
 
-  struct telemetry_peer *peer = NULL;
+  telemetry_peer *peer = NULL;
 
   if (!t_data) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon(): missing telemetry data. Terminating.\n", config.name, t_data->log_str);
@@ -95,6 +95,9 @@ void telemetry_daemon(void *t_data_void)
   memset(&client, 0, sizeof(client));
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
+
+  telemetry_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_TELEMETRY];
+  memset(telemetry_misc_db, 0, sizeof(telemetry_misc_structs));
 
   /* initialize variables */
   if (!config.telemetry_port) config.telemetry_port = TELEMETRY_TCP_PORT;
@@ -131,12 +134,12 @@ void telemetry_daemon(void *t_data_void)
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
-  telemetry_peers = malloc(config.telemetry_max_peers*sizeof(struct telemetry_peer));
+  telemetry_peers = malloc(config.telemetry_max_peers*sizeof(telemetry_peer));
   if (!telemetry_peers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry peers structure. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
   }
-  memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(struct telemetry_peer));
+  memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
   // XXX: msglog + dump init
 
@@ -229,6 +232,8 @@ void telemetry_daemon(void *t_data_void)
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 
+  telemetry_link_misc_structs(telemetry_misc_db);
+
   for (;;) {
     select_again:
 
@@ -293,10 +298,8 @@ void telemetry_daemon(void *t_data_void)
           now = time(NULL);
 	  peer = &telemetry_peers[peers_idx];
 
-	  /* XXX:
-          if (bmp_peer_init(bmpp, FUNC_TYPE_BMP)) peer = NULL;
-          else recalc_fds = TRUE;
-	  */
+	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
+	  else recalc_fds = TRUE;
 
 	  break;
 	}
@@ -353,15 +356,13 @@ void telemetry_daemon(void *t_data_void)
 
     if (!peer) goto select_again;
 
-    /* XXX:
     ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
     peer->msglen = (ret + peer->buf.truncated_len);
-    */ 
 
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
-      /* XXX: bmp_peer_close(bmpp, FUNC_TYPE_BMP); */
+      telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
       recalc_fds = TRUE;
       goto select_again;
     }
@@ -389,4 +390,27 @@ void telemetry_prepare_daemon(struct telemetry_data *t_data)
   t_data->is_thread = FALSE;
   t_data->log_str = malloc(strlen("core") + 1);
   strcpy(t_data->log_str, "core");
+}
+
+int telemetry_peer_init(telemetry_peer *peer, int type)
+{
+  return bgp_peer_init(peer, type);
+}
+
+void telemetry_peer_close(telemetry_peer *peer, int type)
+{
+  // XXX
+
+  bgp_peer_close(peer, type);
+}
+
+void telemetry_link_misc_structs(telemetry_misc_structs *tms)
+{
+  tms->max_peers = config.telemetry_max_peers;
+  tms->peer_str = malloc(strlen("telemetry_node") + 1);
+  strcpy(tms->peer_str, "telemetry_node");
+  tms->log_thread_str = malloc(strlen("TELE") + 1);
+  strcpy(tms->log_thread_str, "TELE");
+
+  // XXX
 }

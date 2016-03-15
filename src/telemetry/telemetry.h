@@ -20,6 +20,7 @@
 */
 
 /* includes */
+#include "../bgp/bgp.h"
 
 /* defines */
 #define TELEMETRY_TCP_PORT		1620
@@ -30,18 +31,8 @@ struct telemetry_data {
   char *log_str;
 };
 
-struct telemetry_peer {
-  int fd;
-  struct host_addr addr;
-  char addr_str[INET6_ADDRSTRLEN];
-  u_int16_t tcp_port;
-  u_int32_t msglen;
-/* XXX:
-  struct bgp_peer_buf buf;
-  struct bgp_peer_log *log;
-*/
-  void *telemetry_se;
-};
+typedef struct bgp_peer telemetry_peer;
+typedef struct bgp_misc_structs telemetry_misc_structs;
 
 /* prototypes */
 #if (!defined __TELEMETRY_C)
@@ -53,6 +44,9 @@ EXT void telemetry_wrapper();
 EXT void telemetry_daemon(void *);
 EXT void telemetry_prepare_thread(struct telemetry_data *);
 EXT void telemetry_prepare_daemon(struct telemetry_data *);
+EXT int telemetry_peer_init(telemetry_peer *, int);
+EXT void telemetry_peer_close(telemetry_peer *, int);
+EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
 #undef EXT
 
 /* global variables */
@@ -61,5 +55,6 @@ EXT void telemetry_prepare_daemon(struct telemetry_data *);
 #else
 #define EXT
 #endif
-EXT struct telemetry_peer *telemetry_peers;
+EXT telemetry_peer *telemetry_peers;
+EXT telemetry_misc_structs *telemetry_misc_db; 
 #undef EXT
