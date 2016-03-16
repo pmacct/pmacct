@@ -3639,16 +3639,8 @@ int cfg_key_nfacctd_bmp_msglog_amqp_routing_key_rr(char *filename, char *name, c
     return ERR;
   }
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_amqp_routing_key_rr = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.nfacctd_bmp_msglog_amqp_routing_key_rr = value;
-        changes++;
-        break;
-      }
-    }
-  }
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_amqp_routing_key_rr = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_msglog_amqp_routing_key_rr'. Globalized.\n", filename);
 
   return changes;
 }
@@ -3875,16 +3867,8 @@ int cfg_key_nfacctd_bmp_dump_amqp_routing_key_rr(char *filename, char *name, cha
     return ERR;
   }
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.bmp_dump_amqp_routing_key_rr = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.bmp_dump_amqp_routing_key_rr = value;
-        changes++;
-        break;
-      }
-    }
-  }
+  for (; list; list = list->next, changes++) list->cfg.bmp_dump_amqp_routing_key_rr = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_amqp_routing_key_rr'. Globalized.\n", filename);
 
   return changes;
 }
@@ -6114,6 +6098,573 @@ int cfg_key_telemetry_max_peers(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_max_peers = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_max_peers'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
+    value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN: [%s] telemetry_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
+  else {
+    Log(LOG_WARNING, "WARN: [%s] Invalid telemetry_daemon_msglog_output value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_output = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_output'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_vhost = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_vhost'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_user(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_user = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_user'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_passwd(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_passwd = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_passwd'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_exchange(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_exchange = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_exchange'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_exchange_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_exchange_type = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_exchange_type'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_routing_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_routing_key = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_routing_key'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_amqp_routing_key_rr' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_routing_key_rr = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_routing_key_rr'. Globalized.\n", filename); 
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_persistent_msg = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_persistent_msg'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+      
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_frame_max = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_frame_max'. Globalized.\n", filename);
+  
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_heartbeat_interval = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_heartbeat_interval'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_amqp_retry(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_amqp_retry' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_amqp_retry = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_amqp_retry'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_latest_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_latest_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_latest_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
+    value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN: [%s] telemetry_dump_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
+  else {
+    Log(LOG_WARNING, "WARN: [%s] Invalid telemetry_dump_output value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_output = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_output'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_refresh_time(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0, i, len = strlen(value_ptr);
+
+  for (i = 0; i < len; i++) {
+    if (!isdigit(value_ptr[i]) && !isspace(value_ptr[i])) {
+      Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_refresh_time' is expected in secs but contains non-digit chars: '%c'\n", filename, value_ptr[i]);
+      return ERR;
+    }
+  }
+
+  value = atoi(value_ptr);
+  if (value < 60 || value > 86400) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_refresh_time' value has to be >= 60 and <= 86400 secs.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_refresh_time = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_refresh_time'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_vhost(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_vhost = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_vhost'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_user(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_user = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_user'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_passwd(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_passwd = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_passwd'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_exchange(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_exchange = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_exchange'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_exchange_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_exchange_type = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_exchange_type'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_routing_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_routing_key = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_routing_key'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_amqp_routing_key_rr' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_routing_key_rr = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_routing_key_rr'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_persistent_msg = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_persistent_msg'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_frame_max(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_amqp_frame_max' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_frame_max = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_frame_max'. Globalized.\n", filename);
+  
+  return changes;
+}
+
+int cfg_key_telemetry_dump_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int32_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_amqp_heartbeat_interval = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_amqp_heartbeat_interval'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_kafka_broker_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_broker_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_broker_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_kafka_broker_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_broker_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_broker_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_kafka_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_topic = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_topic'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_kafka_topic_rr(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_kafka_topic_rr' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_topic_rr = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_topic_rr'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_kafka_partition(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_partition' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_partition = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_partition'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_msglog_kafka_retry(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_retry' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_retry = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_retry'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_broker_host = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_broker_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_broker_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_broker_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_broker_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_topic = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_topic'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_topic_rr(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_kafka_topic_rr' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_topic_rr = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_topic_rr'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_partition(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_kafka_partition' has to be >= 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_partition = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_partition'. Globalized.\n", filename);
 
   return changes;
 }
