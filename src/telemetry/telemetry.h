@@ -21,6 +21,7 @@
 
 /* includes */
 #include "../bgp/bgp.h"
+#include "../bmp/bmp.h"
 
 /* defines */
 #define TELEMETRY_TCP_PORT		1620
@@ -32,6 +33,7 @@ struct telemetry_data {
 };
 
 typedef struct bgp_peer telemetry_peer;
+typedef struct bgp_peer_log telemetry_peer_log;
 typedef struct bgp_misc_structs telemetry_misc_structs;
 
 /* prototypes */
@@ -44,9 +46,21 @@ EXT void telemetry_wrapper();
 EXT void telemetry_daemon(void *);
 EXT void telemetry_prepare_thread(struct telemetry_data *);
 EXT void telemetry_prepare_daemon(struct telemetry_data *);
+
 EXT int telemetry_peer_init(telemetry_peer *, int);
 EXT void telemetry_peer_close(telemetry_peer *, int);
+EXT void telemetry_peer_log_seq_init(u_int64_t *);
+EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
+EXT void telemetry_dump_init_peer(telemetry_peer *);
+
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
+
+EXT void telemetry_handle_dump_event();
+EXT void telemetry_daemon_msglog_init_amqp_host();
+EXT void telemetry_dump_init_amqp_host();
+EXT int telemetry_daemon_msglog_init_kafka_host();
+EXT int telemetry_dump_init_kafka_host();
+
 #undef EXT
 
 /* global variables */

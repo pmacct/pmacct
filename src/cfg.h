@@ -137,7 +137,6 @@ struct configuration {
   int sql_history;
   int sql_history_offset;
   int sql_history_howmany; /* internal */
-  int sql_history_since_epoch;
   int sql_startup_delay;
   int sql_cache_entries;
   int sql_dont_try_update;
@@ -155,6 +154,7 @@ struct configuration {
   int sql_use_copy;
   char *sql_delimiter;
   int timestamps_secs;
+  int timestamps_since_epoch;
   int mongo_insert_batch;
   char *amqp_exchange_type;
   int amqp_persistent_msg;

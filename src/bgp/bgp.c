@@ -398,7 +398,7 @@ void skinny_bgp_daemon()
 
     if (bgp_misc_db->msglog_backend_methods || bgp_misc_db->dump_backend_methods) {
       gettimeofday(&bgp_misc_db->log_tstamp, NULL);
-      compose_timestamp(bgp_misc_db->log_tstamp_str, SRVBUFLEN, &bgp_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
+      compose_timestamp(bgp_misc_db->log_tstamp_str, SRVBUFLEN, &bgp_misc_db->log_tstamp, TRUE, config.timestamps_since_epoch);
 
       if (bgp_misc_db->dump_backend_methods) {
 	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {

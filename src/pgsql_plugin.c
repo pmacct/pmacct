@@ -609,7 +609,7 @@ int PG_evaluate_history(int primitive)
       strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
-    if (!config.sql_history_since_epoch)
+    if (!config.timestamps_since_epoch)
       strncat(where[primitive].string, "ABSTIME(%u)::Timestamp::Timestamp without time zone = ", SPACELEFT(where[primitive].string));
     else
       strncat(where[primitive].string, "%u = ", SPACELEFT(where[primitive].string));
@@ -625,7 +625,7 @@ int PG_evaluate_history(int primitive)
       else
         snprintf(delim_buf, SRVBUFLEN, "%s ", config.sql_delimiter);
 
-      if (!config.sql_history_since_epoch) { 
+      if (!config.timestamps_since_epoch) { 
 	strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
 	strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
 	strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
@@ -639,7 +639,7 @@ int PG_evaluate_history(int primitive)
       }
     }
     else {
-      if (!config.sql_history_since_epoch)
+      if (!config.timestamps_since_epoch)
 	strncat(values[primitive].string, "ABSTIME(%u)::Timestamp, ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
       else
 	strncat(values[primitive].string, "%u, %u", SPACELEFT(values[primitive].string));
@@ -718,7 +718,7 @@ int PG_compose_static_queries()
   set_event_primitives = sql_compose_static_set_event();
 
   if (config.sql_history) {
-    if (!config.sql_history_since_epoch) {
+    if (!config.timestamps_since_epoch) {
       strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
       strncat(set[set_primitives].string, "stamp_updated=CURRENT_TIMESTAMP(0)", SPACELEFT(set[set_primitives].string)); 
       set[set_primitives].type = TIMESTAMP;

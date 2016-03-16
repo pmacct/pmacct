@@ -419,7 +419,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     /* If no timestamp in BMP then let's generate one */
     if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE, config.timestamps_since_epoch);
     addr_to_str(peer_ip, &bdata.peer_ip);
 
     ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bmp_bmpp_bgp_peer_host_addr_cmp);

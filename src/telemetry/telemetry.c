@@ -141,7 +141,68 @@ void telemetry_daemon(void *t_data_void)
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
-  // XXX: msglog + dump init
+  if (config.telemetry_msglog_file || config.telemetry_msglog_amqp_routing_key || config.telemetry_msglog_kafka_topic) {
+    if (config.telemetry_msglog_file) telemetry_misc_db->msglog_backend_methods++;
+    if (config.telemetry_msglog_amqp_routing_key) telemetry_misc_db->msglog_backend_methods++;
+    if (config.telemetry_msglog_kafka_topic) telemetry_misc_db->msglog_backend_methods++;
+
+    if (telemetry_misc_db->msglog_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_msglog_file, telemetry_daemon_msglog_amqp_routing_key and telemetry_daemon_msglog_kafka_topic are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+  }
+
+  if (config.telemetry_dump_file || config.telemetry_dump_amqp_routing_key || config.telemetry_dump_kafka_topic) {
+    if (config.telemetry_dump_file) telemetry_misc_db->dump_backend_methods++;
+    if (config.telemetry_dump_amqp_routing_key) telemetry_misc_db->dump_backend_methods++;
+    if (config.telemetry_dump_kafka_topic) telemetry_misc_db->dump_backend_methods++;
+
+    if (telemetry_misc_db->dump_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_dump_file, telemetry_dump_amqp_routing_key and telemetry_dump_kafka_topic are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+  }
+
+  if (config.telemetry_dump_file || config.telemetry_dump_amqp_routing_key || config.telemetry_dump_kafka_topic) {
+    if (config.telemetry_dump_file) telemetry_misc_db->dump_backend_methods++;
+    if (config.telemetry_dump_amqp_routing_key) telemetry_misc_db->dump_backend_methods++;
+    if (config.telemetry_dump_kafka_topic) telemetry_misc_db->dump_backend_methods++;
+
+    if (telemetry_misc_db->dump_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_dump_file, telemetry_dump_amqp_routing_key and telemetry_dump_kafka_topic are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+  }
+
+  if (telemetry_misc_db->msglog_backend_methods) {
+    telemetry_misc_db->peers_log = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_log));
+    if (!telemetry_misc_db->peers_log) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry peers log structure. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+    memset(telemetry_misc_db->peers_log, 0, config.telemetry_max_peers*sizeof(telemetry_peer_log));
+    telemetry_peer_log_seq_init(&telemetry_misc_db->log_seq);
+
+    if (config.telemetry_msglog_amqp_routing_key) {
+#ifdef WITH_RABBITMQ
+      telemetry_daemon_msglog_init_amqp_host();
+      p_amqp_connect_to_publish(&telemetry_daemon_msglog_amqp_host);
+
+      if (!config.telemetry_msglog_amqp_retry)
+        config.telemetry_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
+#else
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name, t_data->log_str);
+#endif
+    }
+
+    if (config.telemetry_msglog_kafka_topic) {
+#ifdef WITH_KAFKA
+      telemetry_daemon_msglog_init_kafka_host();
+#else
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_connect_to_produce() not possible due to missing --enable-kafka\n", config.name, t_data->log_str);
+#endif
+    }
+  }
 
   config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.telemetry_sock < 0) {
@@ -257,14 +318,52 @@ void telemetry_daemon(void *t_data_void)
     else select_fd = bkp_select_fd;
 
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
-    drt_ptr = NULL; /* XXX: set timeout if having to schedule dumps */
+    if (telemetry_misc_db->dump_backend_methods) {
+      int delta;
+
+      calc_refresh_timeout_sec(dump_refresh_deadline, telemetry_misc_db->log_tstamp.tv_sec, &delta);
+      dump_refresh_timeout.tv_sec = delta;
+      dump_refresh_timeout.tv_usec = 0;
+      drt_ptr = &dump_refresh_timeout;
+    }
+    else drt_ptr = NULL;
 
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
     // XXX: handle reload log
 
-    // XXX: handle msglog + dump, session reopening, etc. 
+    if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods) {
+      gettimeofday(&telemetry_misc_db->log_tstamp, NULL);
+      compose_timestamp(telemetry_misc_db->log_tstamp_str, SRVBUFLEN, &telemetry_misc_db->log_tstamp, TRUE, config.timestamps_since_epoch);
+
+      if (telemetry_misc_db->dump_backend_methods) {
+        while (telemetry_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
+          telemetry_handle_dump_event();
+          dump_refresh_deadline += config.telemetry_dump_refresh_time;
+        }
+      }
+
+#ifdef WITH_RABBITMQ
+      if (config.telemetry_msglog_amqp_routing_key) {
+        time_t last_fail = P_broker_timers_get_last_fail(&telemetry_daemon_msglog_amqp_host.btimers);
+
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&telemetry_daemon_msglog_amqp_host.btimers)) <= telemetry_misc_db->log_tstamp.tv_sec)) {
+          telemetry_daemon_msglog_init_amqp_host();
+          p_amqp_connect_to_publish(&telemetry_daemon_msglog_amqp_host);
+        }
+      }
+#endif
+
+#ifdef WITH_KAFKA
+      if (config.telemetry_msglog_kafka_topic) {
+        time_t last_fail = P_broker_timers_get_last_fail(&telemetry_daemon_msglog_kafka_host.btimers);
+
+        if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&telemetry_daemon_msglog_kafka_host.btimers)) <= telemetry_misc_db->log_tstamp.tv_sec))
+          telemetry_daemon_msglog_init_kafka_host();
+      }
+#endif
+    }
 
     /* 
        If select_num == 0 then we got out of select() due to a timeout rather
@@ -330,7 +429,11 @@ void telemetry_daemon(void *t_data_void)
 #endif
       addr_to_str(peer->addr_str, &peer->addr);
 
-      /* XXX: msglog + dump peer init */
+      if (telemetry_misc_db->msglog_backend_methods)
+        telemetry_peer_log_init(peer, config.telemetry_msglog_output, FUNC_TYPE_TELEMETRY);
+
+      if (telemetry_misc_db->dump_backend_methods)
+        telemetry_dump_init_peer(peer);
 
       peers_num++;
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry peers usage: %u/%u\n",
@@ -399,18 +502,173 @@ int telemetry_peer_init(telemetry_peer *peer, int type)
 
 void telemetry_peer_close(telemetry_peer *peer, int type)
 {
-  // XXX
+  telemetry_misc_structs *tms;
+
+  if (!peer) return;
+
+  tms = bgp_select_misc_db(peer->type);
+
+  if (!tms) return;
+ 
+/* XXX:
+  if (tms->dump_file || tms->dump_amqp_routing_key || tms->dump_kafka_topic)
+    bmp_dump_close_peer(peer);
+*/
 
   bgp_peer_close(peer, type);
 }
 
+void telemetry_peer_log_seq_init(u_int64_t *seq)
+{
+  bgp_peer_log_seq_init(seq);
+}
+
+int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
+{
+  return bgp_peer_log_init(peer, output, type);
+}
+
+void telemetry_dump_init_peer(telemetry_peer *peer)
+{
+/* XXX:
+  bmp_dump_init_peer(peer);
+*/
+}
+
+#if defined WITH_RABBITMQ
+void telemetry_daemon_msglog_init_amqp_host()
+{
+  p_amqp_init_host(&telemetry_daemon_msglog_amqp_host);
+
+  if (!config.telemetry_msglog_amqp_user) config.telemetry_msglog_amqp_user = rabbitmq_user;
+  if (!config.telemetry_msglog_amqp_passwd) config.telemetry_msglog_amqp_passwd = rabbitmq_pwd;
+  if (!config.telemetry_msglog_amqp_exchange) config.telemetry_msglog_amqp_exchange = default_amqp_exchange;
+  if (!config.telemetry_msglog_amqp_exchange_type) config.telemetry_msglog_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.telemetry_msglog_amqp_host) config.telemetry_msglog_amqp_host = default_amqp_host;
+  if (!config.telemetry_msglog_amqp_vhost) config.telemetry_msglog_amqp_vhost = default_amqp_vhost;
+  if (!config.telemetry_msglog_amqp_retry) config.telemetry_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
+
+  p_amqp_set_user(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_user);
+  p_amqp_set_passwd(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_passwd);
+  p_amqp_set_exchange(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_exchange);
+  p_amqp_set_exchange_type(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_exchange_type);
+  p_amqp_set_host(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_host);
+  p_amqp_set_vhost(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_vhost);
+  p_amqp_set_persistent_msg(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_persistent_msg);
+  p_amqp_set_frame_max(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_frame_max);
+  p_amqp_set_content_type_json(&telemetry_daemon_msglog_amqp_host);
+  p_amqp_set_heartbeat_interval(&telemetry_daemon_msglog_amqp_host, config.telemetry_msglog_amqp_heartbeat_interval);
+  P_broker_timers_set_retry_interval(&telemetry_daemon_msglog_amqp_host.btimers, config.telemetry_msglog_amqp_retry);
+}
+#else
+void telemetry_daemon_msglog_init_amqp_host()
+{
+}
+#endif
+
+#if defined WITH_RABBITMQ
+void telemetry_dump_init_amqp_host()
+{
+  p_amqp_init_host(&telemetry_dump_amqp_host);
+
+  if (!config.telemetry_dump_amqp_user) config.telemetry_dump_amqp_user = rabbitmq_user;
+  if (!config.telemetry_dump_amqp_passwd) config.telemetry_dump_amqp_passwd = rabbitmq_pwd;
+  if (!config.telemetry_dump_amqp_exchange) config.telemetry_dump_amqp_exchange = default_amqp_exchange;
+  if (!config.telemetry_dump_amqp_exchange_type) config.telemetry_dump_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.telemetry_dump_amqp_host) config.telemetry_dump_amqp_host = default_amqp_host;
+  if (!config.telemetry_dump_amqp_vhost) config.telemetry_dump_amqp_vhost = default_amqp_vhost;
+
+  p_amqp_set_user(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_user);
+  p_amqp_set_passwd(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_passwd);
+  p_amqp_set_exchange(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_exchange);
+  p_amqp_set_exchange_type(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_exchange_type);
+  p_amqp_set_host(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_host);
+  p_amqp_set_vhost(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_vhost);
+  p_amqp_set_persistent_msg(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_persistent_msg);
+  p_amqp_set_frame_max(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_frame_max);
+  p_amqp_set_content_type_json(&telemetry_dump_amqp_host);
+  p_amqp_set_heartbeat_interval(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_heartbeat_interval);
+}
+#else
+void telemetry_dump_init_amqp_host()
+{
+}
+#endif
+
+#if defined WITH_KAFKA
+int telemetry_daemon_msglog_init_kafka_host()
+{
+  int ret;
+
+  p_kafka_init_host(&telemetry_daemon_msglog_kafka_host);
+  ret = p_kafka_connect_to_produce(&telemetry_daemon_msglog_kafka_host);
+
+  if (!config.telemetry_msglog_kafka_broker_host) config.telemetry_msglog_kafka_broker_host = default_kafka_broker_host;
+  if (!config.telemetry_msglog_kafka_broker_port) config.telemetry_msglog_kafka_broker_port = default_kafka_broker_port;
+  if (!config.telemetry_msglog_kafka_retry) config.telemetry_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+
+  p_kafka_set_broker(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_broker_host, config.telemetry_msglog_kafka_broker_port);
+  p_kafka_set_topic(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_topic);
+  p_kafka_set_partition(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_partition);
+  p_kafka_set_content_type(&telemetry_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  P_broker_timers_set_retry_interval(&telemetry_daemon_msglog_kafka_host.btimers, config.telemetry_msglog_kafka_retry);
+
+  return ret;
+}
+#else
+int telemetry_daemon_msglog_init_kafka_host()
+{
+  return ERR;
+}
+#endif
+
+#if defined WITH_KAFKA
+int telemetry_dump_init_kafka_host()
+{
+  int ret;
+
+  p_kafka_init_host(&telemetry_dump_kafka_host);
+  ret = p_kafka_connect_to_produce(&telemetry_dump_kafka_host);
+
+  if (!config.telemetry_dump_kafka_broker_host) config.telemetry_dump_kafka_broker_host = default_kafka_broker_host;
+  if (!config.telemetry_dump_kafka_broker_port) config.telemetry_dump_kafka_broker_port = default_kafka_broker_port;
+
+  p_kafka_set_broker(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_broker_host, config.telemetry_dump_kafka_broker_port);
+  p_kafka_set_topic(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_topic);
+  p_kafka_set_partition(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition);
+  p_kafka_set_content_type(&telemetry_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+
+  return ret;
+}
+#else
+int telemetry_dump_init_kafka_host()
+{
+  return ERR;
+}
+#endif
+
 void telemetry_link_misc_structs(telemetry_misc_structs *tms)
 {
+#if defined WITH_RABBITMQ
+  tms->msglog_amqp_host = &telemetry_daemon_msglog_amqp_host;
+#endif
+#if defined WITH_KAFKA
+  tms->msglog_kafka_host = &telemetry_daemon_msglog_kafka_host;
+#endif
   tms->max_peers = config.telemetry_max_peers;
+  tms->dump_file = config.telemetry_dump_file;
+  tms->dump_amqp_routing_key = config.telemetry_dump_amqp_routing_key;
+  tms->dump_amqp_routing_key_rr = config.telemetry_dump_amqp_routing_key_rr;
+  tms->dump_kafka_topic = config.telemetry_dump_kafka_topic;
+  tms->dump_kafka_topic_rr = config.telemetry_dump_kafka_topic_rr;
+  tms->msglog_file = config.telemetry_msglog_file;
+  tms->msglog_output = config.telemetry_msglog_output;
+  tms->msglog_amqp_routing_key = config.telemetry_msglog_amqp_routing_key;
+  tms->msglog_amqp_routing_key_rr = config.telemetry_msglog_amqp_routing_key_rr;
+  tms->msglog_kafka_topic = config.telemetry_msglog_kafka_topic;
+  tms->msglog_kafka_topic_rr = config.telemetry_msglog_kafka_topic_rr;
   tms->peer_str = malloc(strlen("telemetry_node") + 1);
   strcpy(tms->peer_str, "telemetry_node");
   tms->log_thread_str = malloc(strlen("TELE") + 1);
   strcpy(tms->log_thread_str, "TELE");
-
-  // XXX
 }

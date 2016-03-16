@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -89,6 +89,8 @@ EXT struct p_kafka_host bgp_table_dump_kafka_host;
 EXT struct p_kafka_host bmp_daemon_msglog_kafka_host;
 EXT struct p_kafka_host bmp_dump_kafka_host;
 EXT struct p_kafka_host sfacctd_counter_kafka_host;
+EXT struct p_kafka_host telemetry_daemon_msglog_kafka_host;
+EXT struct p_kafka_host telemetry_dump_kafka_host;
 
 EXT int kafkap_ret_err_cb;
 

@@ -2085,33 +2085,33 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
-    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "timestamp_start", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_END) {
-    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "timestamp_end", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
-    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "timestamp_arrival", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (config.nfacctd_stitching && stitch) {
-    compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_min, TRUE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_min, TRUE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "timestamp_min", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_max, TRUE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_max, TRUE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "timestamp_max", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -2158,14 +2158,14 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 
     tv.tv_sec = basetime->tv_sec;
     tv.tv_usec = 0;
-    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "stamp_inserted", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
     tv.tv_sec = time(NULL);
     tv.tv_usec = 0;
-    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE, config.sql_history_since_epoch);
+    compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE, config.timestamps_since_epoch);
     kv = json_pack("{ss}", "stamp_updated", tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -2330,7 +2330,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
   time_t time1;
   struct tm *time2;
 
-  if (config.sql_history_since_epoch) {
+  if (config.timestamps_since_epoch) {
     if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
     else snprintf(buf, buflen, "%u", tv->tv_sec);
   }

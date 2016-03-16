@@ -552,14 +552,14 @@ int MY_evaluate_history(int primitive)
       strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
-    if (!config.sql_history_since_epoch)
+    if (!config.timestamps_since_epoch)
       strncat(where[primitive].string, "FROM_UNIXTIME(%u) = ", SPACELEFT(where[primitive].string));
     else
       strncat(where[primitive].string, "%u = ", SPACELEFT(where[primitive].string));
     strncat(where[primitive].string, "stamp_inserted", SPACELEFT(where[primitive].string));
 
     strncat(insert_clause, "stamp_updated, stamp_inserted", SPACELEFT(insert_clause));
-    if (!config.sql_history_since_epoch)
+    if (!config.timestamps_since_epoch)
       strncat(values[primitive].string, "FROM_UNIXTIME(%u), FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
     else
       strncat(values[primitive].string, "%u, %u", SPACELEFT(values[primitive].string));
@@ -611,7 +611,7 @@ int MY_compose_static_queries()
   set_event_primitives = sql_compose_static_set_event();
 
   if (config.sql_history) {
-    if (!config.sql_history_since_epoch) {
+    if (!config.timestamps_since_epoch) {
       strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
       strncat(set[set_primitives].string, "stamp_updated=NOW()", SPACELEFT(set[set_primitives].string));
       set[set_primitives].type = TIMESTAMP;

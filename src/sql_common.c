@@ -2301,7 +2301,7 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "timestamp_start", SPACELEFT(insert_clause));
-    if (config.sql_history_since_epoch) {
+    if (config.timestamps_since_epoch) {
       strncat(where[primitive].string, "timestamp_start=%u", SPACELEFT(where[primitive].string));
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     }
@@ -2353,7 +2353,7 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "timestamp_end", SPACELEFT(insert_clause));
-    if (config.sql_history_since_epoch) {
+    if (config.timestamps_since_epoch) {
       strncat(where[primitive].string, "timestamp_end=%u", SPACELEFT(where[primitive].string));
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     }
@@ -2405,7 +2405,7 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "timestamp_arrival", SPACELEFT(insert_clause));
-    if (config.sql_history_since_epoch) {
+    if (config.timestamps_since_epoch) {
       strncat(where[primitive].string, "timestamp_arrival=%u", SPACELEFT(where[primitive].string));
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     }
@@ -2458,7 +2458,7 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "timestamp_min", SPACELEFT(insert_clause));
-    if (config.sql_history_since_epoch) {
+    if (config.timestamps_since_epoch) {
       strncat(where[primitive].string, "timestamp_min=%u", SPACELEFT(where[primitive].string));
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     }
@@ -2507,7 +2507,7 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
     strncat(insert_clause, "timestamp_max", SPACELEFT(insert_clause));
-    if (config.sql_history_since_epoch) {
+    if (config.timestamps_since_epoch) {
       strncat(where[primitive].string, "timestamp_max=%u", SPACELEFT(where[primitive].string));
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     }

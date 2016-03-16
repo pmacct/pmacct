@@ -182,7 +182,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_KAFKA
       bmp_daemon_msglog_init_kafka_host();
 #else
-      Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_kafka_connect_to_produce() not possible due to missing --enable-rabbitmq\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_kafka_connect_to_produce() not possible due to missing --enable-kafka\n", config.name);
 #endif
     }
   }
@@ -391,7 +391,7 @@ void skinny_bmp_daemon()
 
     if (bmp_misc_db->msglog_backend_methods || bmp_misc_db->dump_backend_methods) {
       gettimeofday(&bmp_misc_db->log_tstamp, NULL);
-      compose_timestamp(bmp_misc_db->log_tstamp_str, SRVBUFLEN, &bmp_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
+      compose_timestamp(bmp_misc_db->log_tstamp_str, SRVBUFLEN, &bmp_misc_db->log_tstamp, TRUE, config.timestamps_since_epoch);
 
       if (bmp_misc_db->dump_backend_methods) {
         while (bmp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {

@@ -1294,7 +1294,7 @@ int cfg_key_sql_history_offset(char *filename, char *name, char *value_ptr)
 }
 
 
-int cfg_key_sql_history_since_epoch(char *filename, char *name, char *value_ptr)
+int cfg_key_timestamps_since_epoch(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -1302,11 +1302,11 @@ int cfg_key_sql_history_since_epoch(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_history_since_epoch = value;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.timestamps_since_epoch = value;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.sql_history_since_epoch = value;
+        list->cfg.timestamps_since_epoch = value;
         changes++;
         break;
       }

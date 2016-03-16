@@ -998,7 +998,7 @@ int main(int argc,char **argv, char **envp)
 
     if (sfacctd_counter_backend_methods) {
       gettimeofday(&sf_cnt_misc_db->log_tstamp, NULL);
-      compose_timestamp(sf_cnt_misc_db->log_tstamp_str, SRVBUFLEN, &sf_cnt_misc_db->log_tstamp, TRUE, config.sql_history_since_epoch);
+      compose_timestamp(sf_cnt_misc_db->log_tstamp_str, SRVBUFLEN, &sf_cnt_misc_db->log_tstamp, TRUE, config.timestamps_since_epoch);
 
 #ifdef WITH_RABBITMQ
       if (config.sfacctd_counter_amqp_routing_key) {

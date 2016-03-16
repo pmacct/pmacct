@@ -456,7 +456,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   if (!bms || !peer || !peer->log) return ERR;
 
   gettimeofday(&bms->log_tstamp, NULL);
-  compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bms->log_tstamp, TRUE, config.sql_history_since_epoch);
+  compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bms->log_tstamp, TRUE, config.timestamps_since_epoch);
 
 #ifdef WITH_RABBITMQ
   if (bms->dump_amqp_routing_key)
@@ -527,7 +527,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   if (!bms || !peer || !peer->log) return ERR;
 
   gettimeofday(&bms->log_tstamp, NULL);
-  compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bms->log_tstamp, TRUE, config.sql_history_since_epoch);
+  compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bms->log_tstamp, TRUE, config.timestamps_since_epoch);
 
 #ifdef WITH_RABBITMQ
   if (bms->dump_amqp_routing_key)

@@ -774,7 +774,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
   
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
 	    snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
 	  }
 	  else {
@@ -792,7 +792,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
         
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
           }
           else {
@@ -810,7 +810,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
 
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
           }
           else {
@@ -828,7 +828,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
 
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
             fprintf(f, "%-30s ", buf2);
 
@@ -1078,7 +1078,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
  
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
           }
           else {
@@ -1096,7 +1096,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
   
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
           }
           else {
@@ -1114,7 +1114,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
 
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
           }
           else {
@@ -1132,7 +1132,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           time_t time1;
           struct tm *time2;
 
-          if (config.sql_history_since_epoch) {
+          if (config.timestamps_since_epoch) {
             snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
 	    fprintf(f, "%s%s", write_sep(sep, &count), buf2);
 

@@ -353,7 +353,7 @@ static const struct _dictionary_line dictionary[] = {
   {"networks_cache_entries", cfg_key_networks_cache_entries},
   {"ports_file", cfg_key_ports_file},
   {"timestamps_secs", cfg_key_timestamps_secs},
-  {"timestamps_since_epoch", cfg_key_sql_history_since_epoch},
+  {"timestamps_since_epoch", cfg_key_timestamps_since_epoch},
   {"imt_path", cfg_key_imt_path},
   {"imt_passwd", cfg_key_imt_passwd},
   {"imt_buckets", cfg_key_imt_buckets},
@@ -375,7 +375,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_history", cfg_key_sql_history},
   {"sql_history_offset", cfg_key_sql_history_offset},
   {"sql_history_roundoff", cfg_key_sql_history_roundoff},
-  {"sql_history_since_epoch", cfg_key_sql_history_since_epoch},
+  {"sql_history_since_epoch", cfg_key_timestamps_since_epoch}, // legacy
   {"sql_recovery_backup_host", cfg_key_sql_recovery_backup_host},
   {"sql_delimiter", cfg_key_sql_delimiter},
   {"sql_max_writers", cfg_key_sql_max_writers},

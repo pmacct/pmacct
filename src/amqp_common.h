@@ -100,6 +100,8 @@ EXT struct p_amqp_host bgp_table_dump_amqp_host;
 EXT struct p_amqp_host bmp_daemon_msglog_amqp_host;
 EXT struct p_amqp_host bmp_dump_amqp_host;
 EXT struct p_amqp_host sfacctd_counter_amqp_host;
+EXT struct p_amqp_host telemetry_daemon_msglog_amqp_host;
+EXT struct p_amqp_host telemetry_dump_amqp_host;
 
 static char rabbitmq_user[] = "guest";
 static char rabbitmq_pwd[] = "guest";
