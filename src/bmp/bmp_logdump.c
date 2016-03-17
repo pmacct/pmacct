@@ -347,13 +347,19 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
 void bmp_dump_init_peer(struct bgp_peer *peer)
 {
+  struct bgp_misc_structs *bms;
+
   if (!peer) return;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
 
   assert(!peer->bmp_se);
 
   peer->bmp_se = malloc(sizeof(struct bmp_dump_se_ll));
   if (!peer->bmp_se) {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() bmp_se structure. Terminating thread.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core/%s ): Unable to malloc() bmp_se structure. Terminating thread.\n", config.name, bms->log_thread_str);
     exit_all(1);
   }
 

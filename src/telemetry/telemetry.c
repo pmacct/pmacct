@@ -290,6 +290,46 @@ void telemetry_daemon(void *t_data_void)
   /* Preparing ACL, if any */
   if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
 
+  if (telemetry_misc_db->msglog_backend_methods) {
+#ifdef WITH_JANSSON
+    if (!config.telemetry_msglog_output) config.telemetry_msglog_output = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name, t_data->log_str);
+#endif
+  }
+
+  if (telemetry_misc_db->dump_backend_methods) {
+#ifdef WITH_JANSSON
+    if (!config.telemetry_dump_output) config.telemetry_dump_output = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, t_data->log_str);
+#endif
+  }
+
+  if (telemetry_misc_db->dump_backend_methods) {
+    char dump_roundoff[] = "m";
+    time_t tmp_time;
+
+    if (config.telemetry_dump_refresh_time) {
+      gettimeofday(&telemetry_misc_db->log_tstamp, NULL);
+      dump_refresh_deadline = telemetry_misc_db->log_tstamp.tv_sec;
+      tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
+      while ((tmp_time+config.telemetry_dump_refresh_time) < dump_refresh_deadline) {
+        tmp_time += config.telemetry_dump_refresh_time;
+      }
+      dump_refresh_deadline = tmp_time;
+      dump_refresh_deadline += config.telemetry_dump_refresh_time; /* it's a deadline not a basetime */
+    }
+    else {
+      config.telemetry_dump_file = NULL;
+      telemetry_misc_db->dump_backend_methods = FALSE;
+      Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'telemetry_dump_refresh_time'.\n", config.name, t_data->log_str);
+    }
+
+    if (config.telemetry_dump_amqp_routing_key) telemetry_dump_init_amqp_host();
+    if (config.telemetry_dump_kafka_topic) telemetry_dump_init_kafka_host();
+  }
+
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 
@@ -331,7 +371,16 @@ void telemetry_daemon(void *t_data_void)
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
-    // XXX: handle reload log
+    if (reload_log_telemetry_thread) {
+      for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
+        if (telemetry_misc_db->peers_log[peers_idx].fd) {
+          fclose(telemetry_misc_db->peers_log[peers_idx].fd);
+          telemetry_misc_db->peers_log[peers_idx].fd = open_output_file(telemetry_misc_db->peers_log[peers_idx].filename, "a", FALSE);
+          setlinebuf(telemetry_misc_db->peers_log[peers_idx].fd);
+        }
+        else break;
+      }
+    }
 
     if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods) {
       gettimeofday(&telemetry_misc_db->log_tstamp, NULL);
@@ -510,10 +559,8 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
 
   if (!tms) return;
  
-/* XXX:
   if (tms->dump_file || tms->dump_amqp_routing_key || tms->dump_kafka_topic)
     bmp_dump_close_peer(peer);
-*/
 
   bgp_peer_close(peer, type);
 }
@@ -530,7 +577,7 @@ int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
 
 void telemetry_dump_init_peer(telemetry_peer *peer)
 {
-  // XXX: bmp_dump_init_peer(peer);
+  bmp_dump_init_peer(peer);
 }
 
 void telemetry_handle_dump_event()
