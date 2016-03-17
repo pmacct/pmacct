@@ -530,9 +530,12 @@ int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
 
 void telemetry_dump_init_peer(telemetry_peer *peer)
 {
-/* XXX:
-  bmp_dump_init_peer(peer);
-*/
+  // XXX: bmp_dump_init_peer(peer);
+}
+
+void telemetry_handle_dump_event()
+{
+  // XXX 
 }
 
 #if defined WITH_RABBITMQ
@@ -669,6 +672,10 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->msglog_kafka_topic_rr = config.telemetry_msglog_kafka_topic_rr;
   tms->peer_str = malloc(strlen("telemetry_node") + 1);
   strcpy(tms->peer_str, "telemetry_node");
-  tms->log_thread_str = malloc(strlen("TELE") + 1);
-  strcpy(tms->log_thread_str, "TELE");
+  tms->log_thread_str = malloc(strlen("TELE") + 1); // XXX
+  strcpy(tms->log_thread_str, "TELE"); // XXX
+}
+
+void telemetry_dummy()
+{
 }

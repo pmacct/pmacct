@@ -2184,6 +2184,11 @@ void compute_once()
   IP6AddrSz = sizeof(struct in6_addr);
   IP6TlSz = sizeof(struct ip6_hdr)+sizeof(struct my_tlhdr);
 #endif
+
+  bgp_dummy();
+  bmp_dummy();
+  telemetry_dummy();
+  isis_dummy();
 }
 
 u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)

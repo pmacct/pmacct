@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -410,6 +410,11 @@ void compute_once()
   IP6HdrSz = sizeof(struct ip6_hdr);
   IP6AddrSz = sizeof(struct in6_addr);
 #endif
+
+  bgp_dummy();
+  bmp_dummy();
+  telemetry_dummy();
+  isis_dummy();
 }
 
 void tunnel_registry_init()

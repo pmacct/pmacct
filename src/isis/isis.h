@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -102,6 +102,7 @@ EXT void igp_daemon_map_initialize(char *, struct plugin_requests *);
 EXT void igp_daemon_map_finalize(char *, struct plugin_requests *);
 EXT int igp_daemon_map_handle_len(int *, int, struct plugin_requests *, char *);
 EXT int igp_daemon_map_handle_lsp_id(char *, struct host_addr *);
+EXT void isis_dummy();
 
 /* global variables */
 EXT struct thread_master *master;
@@ -112,6 +113,5 @@ EXT struct igp_map_entry ime;
 EXT pcap_dumper_t *idmm_fd; /* igp_daemon_map : file descriptor for igp_daemon_map_msglog */
 EXT u_int32_t glob_isis_seq_num; 
 EXT struct sysid_fragment sysid_fragment_table[MAX_IGP_MAP_NODES];
-
 #undef EXT
 #endif

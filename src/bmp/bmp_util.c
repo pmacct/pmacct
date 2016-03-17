@@ -245,3 +245,7 @@ u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
           ((local_path_id - 1) % bms->table_per_peer_buckets)) %
           (bms->table_peer_buckets * bms->table_per_peer_buckets));
 }
+
+void bmp_dummy()
+{
+}

@@ -60,7 +60,9 @@ EXT void telemetry_daemon_msglog_init_amqp_host();
 EXT void telemetry_dump_init_amqp_host();
 EXT int telemetry_daemon_msglog_init_kafka_host();
 EXT int telemetry_dump_init_kafka_host();
+EXT void telemetry_handle_dump_event();
 
+EXT void telemetry_dummy();
 #undef EXT
 
 /* global variables */
