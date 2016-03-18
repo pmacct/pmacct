@@ -35,6 +35,8 @@ struct telemetry_data {
 typedef struct bgp_peer telemetry_peer;
 typedef struct bgp_peer_log telemetry_peer_log;
 typedef struct bgp_misc_structs telemetry_misc_structs;
+typedef struct bmp_dump_se_ll telemetry_dump_se_ll;
+typedef struct bmp_dump_se_ll_elem telemetry_dump_se_ll_elem;
 
 /* prototypes */
 #if (!defined __TELEMETRY_C)
@@ -55,7 +57,7 @@ EXT void telemetry_dump_init_peer(telemetry_peer *);
 
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
 
-EXT void telemetry_handle_dump_event();
+EXT void telemetry_handle_dump_event(struct telemetry_data *);
 EXT void telemetry_daemon_msglog_init_amqp_host();
 EXT void telemetry_dump_init_amqp_host();
 EXT int telemetry_daemon_msglog_init_kafka_host();
