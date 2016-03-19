@@ -163,17 +163,6 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (config.telemetry_dump_file || config.telemetry_dump_amqp_routing_key || config.telemetry_dump_kafka_topic) {
-    if (config.telemetry_dump_file) telemetry_misc_db->dump_backend_methods++;
-    if (config.telemetry_dump_amqp_routing_key) telemetry_misc_db->dump_backend_methods++;
-    if (config.telemetry_dump_kafka_topic) telemetry_misc_db->dump_backend_methods++;
-
-    if (telemetry_misc_db->dump_backend_methods > 1) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_dump_file, telemetry_dump_amqp_routing_key and telemetry_dump_kafka_topic are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
-    }
-  }
-
   if (telemetry_misc_db->msglog_backend_methods) {
     telemetry_misc_db->peers_log = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_log));
     if (!telemetry_misc_db->peers_log) {
@@ -575,9 +564,29 @@ int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
   return bgp_peer_log_init(peer, output, type);
 }
 
+void telemetry_peer_log_dynname(char *new, int newlen, char *old, telemetry_peer *peer)
+{
+  bgp_peer_log_dynname(new, newlen, old, peer);
+}
+
+int telemetry_peer_dump_init(telemetry_peer *peer, int output, int type)
+{
+  return bgp_peer_dump_init(peer, output, type);
+}
+
+int telemetry_peer_dump_close(telemetry_peer *peer, int output, int type)
+{
+  return bgp_peer_dump_close(peer, NULL, output, type);
+}
+
 void telemetry_dump_init_peer(telemetry_peer *peer)
 {
   bmp_dump_init_peer(peer);
+}
+
+void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *tdsell)
+{
+  bmp_dump_se_ll_destroy(tdsell);
 }
 
 void telemetry_handle_dump_event(struct telemetry_data *t_data)
@@ -632,12 +641,12 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
       if (telemetry_peers[peers_idx].fd) {
         peer = &telemetry_peers[peers_idx];
-        peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
+        peer->log = &peer_log; /* abusing telemetry_peer a bit, but we are in a child */
         tdsell = peer->bmp_se;
 
-        if (config.telemetry_dump_file) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
-        if (config.telemetry_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
-        if (config.telemetry_dump_kafka_topic) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_kafka_topic, peer);
+        if (config.telemetry_dump_file) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
+        if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
+        if (config.telemetry_dump_kafka_topic) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_kafka_topic, peer);
 
         strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->log_tstamp.tv_sec);
 
@@ -652,7 +661,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
               close_output_file(saved_peer->log->fd);
 
               if (config.telemetry_dump_latest_file) {
-                bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, saved_peer);
+                telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, saved_peer);
                 link_latest_output_file(latest_filename, last_filename);
               }
             }
@@ -683,7 +692,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
         }
 #endif
 
-        bgp_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
+        telemetry_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
         dump_elems = 0;
 
 	if (tdsell && tdsell->start) {
@@ -695,7 +704,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
         saved_peer = peer;
         strlcpy(last_filename, current_filename, SRVBUFLEN);
-        bgp_peer_dump_close(peer, NULL, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
+        telemetry_peer_dump_close(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
         tables_num++;
       }
     }
@@ -711,7 +720,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 #endif
 
     if (config.telemetry_dump_latest_file && peer) {
-      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, peer);
+      telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, peer);
       link_latest_output_file(latest_filename, last_filename);
     }
 
@@ -731,7 +740,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
         peer = &telemetry_peers[peers_idx];
         tdsell = peer->bmp_se;
 
-        if (tdsell && tdsell->start) bmp_dump_se_ll_destroy(tdsell);
+        if (tdsell && tdsell->start) telemetry_dump_se_ll_destroy(tdsell);
       }
     }
 

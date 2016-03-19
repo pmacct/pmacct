@@ -53,7 +53,11 @@ EXT int telemetry_peer_init(telemetry_peer *, int);
 EXT void telemetry_peer_close(telemetry_peer *, int);
 EXT void telemetry_peer_log_seq_init(u_int64_t *);
 EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
+EXT void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
+EXT int telemetry_peer_dump_init(telemetry_peer *, int, int);
+EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
 EXT void telemetry_dump_init_peer(telemetry_peer *);
+EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
 
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
 
