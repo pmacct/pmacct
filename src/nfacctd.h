@@ -544,7 +544,7 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_INPUT_PHYSINT		252
 #define NF9_OUTPUT_PHYSINT		253
-/* ... */
+#define NF9_POST_DOT1QVLANID		254
 #define NF9_POST_DOT1QCVLANID		255
 #define NF9_ETHERTYPE			256
 /* ... */
