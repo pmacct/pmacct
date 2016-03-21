@@ -2187,11 +2187,6 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
-/*
-  tmpbuf = json_dumps(obj, 0);
-  json_decref(obj);
-*/
-
   return obj;
 }
 
