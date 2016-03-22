@@ -204,7 +204,8 @@ struct configuration {
   int nfacctd_disable_checks;
   int telemetry_daemon;
   int telemetry_sock;
-  int telemetry_port;
+  int telemetry_port_tcp;
+  int telemetry_port_udp;
   char *telemetry_ip;
   int telemetry_max_peers;
   char *telemetry_allow_file;

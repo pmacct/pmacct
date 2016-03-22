@@ -25,7 +25,9 @@
 
 /* defines */
 #define TELEMETRY_TCP_PORT		1620
+#define TELEMETRY_UDP_PORT		1620
 #define TELEMETRY_MAX_PEERS_DEFAULT	100
+#define TELEMETRY_UDP_TIMEOUT		300
 
 struct telemetry_data {
   int is_thread;

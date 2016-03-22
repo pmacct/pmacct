@@ -6011,19 +6011,36 @@ int cfg_key_telemetry_daemon(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_telemetry_port(char *filename, char *name, char *value_ptr)
+int cfg_key_telemetry_port_tcp(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port_tcp' has to be in the range 0-65535.\n", filename);
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.telemetry_port = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_port'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.telemetry_port_tcp = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_port_tcp'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_port_udp(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port_udp' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_port_udp = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_port_udp'. Globalized.\n", filename);
 
   return changes;
 }

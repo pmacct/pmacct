@@ -64,14 +64,11 @@ void telemetry_daemon(void *t_data_void)
   struct telemetry_data *t_data = t_data_void;
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
+  u_int16_t port = 0;
+  char *srv_proto = NULL;
   time_t now;
 
   telemetry_peer *peer = NULL;
-
-  if (!t_data) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon(): missing telemetry data. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
-  }
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -89,6 +86,11 @@ void telemetry_daemon(void *t_data_void)
   time_t dump_refresh_deadline;
   struct timeval dump_refresh_timeout, *drt_ptr;
 
+  if (!t_data) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon(): missing telemetry data. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
+  }
+
   /* initial cleanups */
   reload_log_telemetry_thread = FALSE;
   memset(&server, 0, sizeof(server));
@@ -100,7 +102,29 @@ void telemetry_daemon(void *t_data_void)
   memset(telemetry_misc_db, 0, sizeof(telemetry_misc_structs));
 
   /* initialize variables */
-  if (!config.telemetry_port) config.telemetry_port = TELEMETRY_TCP_PORT;
+  if (config.telemetry_port_tcp && config.telemetry_port_udp) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
+  }
+  else if (!config.telemetry_port_tcp && !config.telemetry_port_udp) {
+    /* defaulting to TCP */
+    port = config.telemetry_port_tcp = TELEMETRY_TCP_PORT;
+    srv_proto = malloc(strlen("tcp") + 1);
+    strcpy(srv_proto, "tcp");
+  }
+  else {
+    if (config.telemetry_port_tcp) {
+      port = config.telemetry_port_tcp; 
+      srv_proto = malloc(strlen("tcp") + 1);
+      strcpy(srv_proto, "tcp");
+    }
+
+    if (config.telemetry_port_udp) {
+      port = config.telemetry_port_udp;
+      srv_proto = malloc(strlen("udp") + 1);
+      strcpy(srv_proto, "udp");
+    }
+  }
 
   /* socket creation for telemetry server: IPv4 only */
 #if (defined ENABLE_IPV6)
@@ -108,7 +132,7 @@ void telemetry_daemon(void *t_data_void)
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
     sa6->sin6_family = AF_INET6;
-    sa6->sin6_port = htons(config.telemetry_port);
+    sa6->sin6_port = htons(port);
     slen = sizeof(struct sockaddr_in6);
   }
 #else
@@ -117,7 +141,7 @@ void telemetry_daemon(void *t_data_void)
 
     sa4->sin_family = AF_INET;
     sa4->sin_addr.s_addr = htonl(0);
-    sa4->sin_port = htons(config.telemetry_port);
+    sa4->sin_port = htons(port);
     slen = sizeof(struct sockaddr_in);
   }
 #endif
@@ -128,7 +152,7 @@ void telemetry_daemon(void *t_data_void)
       Log(LOG_ERR, "ERROR ( %s/%s ): 'telemetry_ip' value is not a valid IPv4/IPv6 address. Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
     }
-    slen = addr_to_sa((struct sockaddr *)&server, &addr, config.telemetry_port);
+    slen = addr_to_sa((struct sockaddr *)&server, &addr, port);
   }
 
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
@@ -193,7 +217,9 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
-  config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+  if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+  else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
+
   if (config.telemetry_sock < 0) {
 #if (defined ENABLE_IPV6)
     /* retry with IPv4 */
@@ -202,10 +228,11 @@ void telemetry_daemon(void *t_data_void)
 
       sa4->sin_family = AF_INET;
       sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(config.telemetry_port);
+      sa4->sin_port = htons(port);
       slen = sizeof(struct sockaddr_in);
 
-      config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+      if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+      else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
     }
 #endif
 
@@ -250,15 +277,17 @@ void telemetry_daemon(void *t_data_void)
     char *ip_address;
 
     ip_address = config.telemetry_ip ? config.telemetry_ip : null_ip_address;
-    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n",
-	config.name, t_data->log_str, ip_address, config.telemetry_port, errno);
+    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%u/%s failed (errno: %d).\n",
+	config.name, t_data->log_str, ip_address, port, srv_proto, errno);
     exit_all(1);
   }
 
-  rc = listen(config.telemetry_sock, 1);
-  if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, t_data->log_str, errno);
-    exit_all(1);
+  if (config.telemetry_port_tcp) {
+    rc = listen(config.telemetry_sock, 1);
+    if (rc < 0) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, t_data->log_str, errno);
+      exit_all(1);
+    }
   }
 
   /* Preparing for syncronous I/O multiplexing */
@@ -273,7 +302,7 @@ void telemetry_daemon(void *t_data_void)
 
     sa_to_addr(&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u\n", config.name, t_data->log_str, srv_string, srv_port);
+    Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
   }
 
   /* Preparing ACL, if any */
@@ -360,6 +389,8 @@ void telemetry_daemon(void *t_data_void)
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
+    /* XXX: UDP case: check last datagram and expire peer if TELEMETRY_UDP_TIMEOUT secs are passed from last message */
+
     if (reload_log_telemetry_thread) {
       for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
         if (telemetry_misc_db->peers_log[peers_idx].fd) {
@@ -412,10 +443,17 @@ void telemetry_daemon(void *t_data_void)
 
     /* New connection is coming in */
     if (FD_ISSET(config.telemetry_sock, &read_descs)) {
-      int peers_check_idx;
+      if (config.telemetry_port_tcp) {
+        fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
+        if (fd == ERR) goto read_data;
+      }
+      else if (config.telemetry_port_udp) {
+	char dummy_local_buf[TRUE];	
 
-      fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
-      if (fd == ERR) goto read_data;
+	ret = recvfrom(config.telemetry_sock, dummy_local_buf, TRUE, MSG_PEEK, (struct sockaddr *) &client, &clen);
+	/* XXX: handle cases of ret == 0 or ret == -1 */ 
+	fd = config.telemetry_sock;
+      }
 
 #if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
@@ -426,7 +464,7 @@ void telemetry_daemon(void *t_data_void)
       else allowed = TRUE;
 
       if (!allowed) {
-        close(fd);
+        if (config.telemetry_port_tcp) close(fd);
         goto read_data;
       }
 
@@ -440,6 +478,21 @@ void telemetry_daemon(void *t_data_void)
 
 	  break;
 	}
+	else {
+	  /* XXX: optimize UDP case */
+	  if (config.telemetry_port_udp) {
+	    struct host_addr client_addr;
+	    u_int16_t client_port;
+
+	    sa_to_addr(&client, &client_addr, &client_port);
+	    if (!memcmp(&telemetry_peers[peers_idx].addr, &client_addr, HostAddrSz)) {
+	      now = time(NULL);
+	      peer = &telemetry_peers[peers_idx];
+
+	      goto read_data;
+	    }
+	  }
+	}
       }
 
       if (!peer) {
@@ -448,12 +501,12 @@ void telemetry_daemon(void *t_data_void)
         /* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of telemetry peers has been configured by 'telemetry_max_peers' (%d).\n",
                         config.name, t_data->log_str, config.telemetry_max_peers);
-        close(fd);
+        if (config.telemetry_port_tcp) close(fd);
         goto read_data;
       }
 
       peer->fd = fd;
-      FD_SET(peer->fd, &bkp_read_descs);
+      if (config.telemetry_port_tcp) FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = ((struct sockaddr *)&client)->sa_family;
       if (peer->addr.family == AF_INET) {
         peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
@@ -485,13 +538,15 @@ void telemetry_daemon(void *t_data_void)
        FvD: To avoid starvation of the "later established" peers, we
        offset the start of the search in a round-robin style.
     */
-    for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
-      int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
+    if (config.telemetry_port_tcp) {
+      for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+        int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
 
-      if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
-        peer = &telemetry_peers[loc_idx];
-        peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
-        break;
+        if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
+          peer = &telemetry_peers[loc_idx];
+          peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
+          break;
+        }
       }
     }
 
