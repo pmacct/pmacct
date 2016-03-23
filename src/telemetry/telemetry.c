@@ -451,8 +451,8 @@ void telemetry_daemon(void *t_data_void)
 	char dummy_local_buf[TRUE];	
 
 	ret = recvfrom(config.telemetry_sock, dummy_local_buf, TRUE, MSG_PEEK, (struct sockaddr *) &client, &clen);
-	/* XXX: handle cases of ret == 0 or ret == -1 */ 
-	fd = config.telemetry_sock;
+	if (ret <= 0) goto select_again;
+	else fd = config.telemetry_sock;
       }
 
 #if defined ENABLE_IPV6

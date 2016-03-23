@@ -22,12 +22,16 @@
 /* includes */
 #include "../bgp/bgp.h"
 #include "../bmp/bmp.h"
+#if defined (HAVE_ZLIB)
+#include <zlib.h>
+#endif
 
 /* defines */
 #define TELEMETRY_TCP_PORT		1620
 #define TELEMETRY_UDP_PORT		1620
 #define TELEMETRY_MAX_PEERS_DEFAULT	100
 #define TELEMETRY_UDP_TIMEOUT		300
+#define TELEMETRY_UDP_MAXMSG		65535
 
 struct telemetry_data {
   int is_thread;
