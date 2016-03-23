@@ -33,6 +33,10 @@
 #define TELEMETRY_UDP_TIMEOUT		300
 #define TELEMETRY_UDP_MAXMSG		65535
 
+#define TELEMETRY_DECODER_UNKNOWN	0
+#define TELEMETRY_DECODER_JSON		1
+#define TELEMETRY_DECODER_ZJSON		2
+
 struct telemetry_data {
   int is_thread;
   char *log_str;
@@ -64,6 +68,11 @@ EXT int telemetry_peer_dump_init(telemetry_peer *, int, int);
 EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
 EXT void telemetry_dump_init_peer(telemetry_peer *);
 EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
+
+EXT int telemetry_recv_generic(telemetry_peer *);
+EXT int telemetry_recv_json(telemetry_peer *, int *);
+EXT int telemetry_recv_zjson(telemetry_peer *, int *);
+EXT int telemetry_basic_validate_json(telemetry_peer *);
 
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
 

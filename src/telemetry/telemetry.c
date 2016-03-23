@@ -64,6 +64,7 @@ void telemetry_daemon(void *t_data_void)
   struct telemetry_data *t_data = t_data_void;
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
+  int decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t now;
@@ -149,10 +150,30 @@ void telemetry_daemon(void *t_data_void)
     trim_spaces(config.telemetry_ip);
     ret = str_to_addr(config.telemetry_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): 'telemetry_ip' value is not a valid IPv4/IPv6 address. Terminating.\n", config.name, t_data->log_str);
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip value is not a valid IPv4/IPv6 address. Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, port);
+  }
+
+  if (!config.telemetry_decoder) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder is not specified. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
+  }
+  else {
+    if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
+    else if (!strcmp(config.telemetry_decoder, "zjson")) {
+#if defined (HAVE_ZLIB)
+      decoder = TELEMETRY_DECODER_ZJSON;
+#else
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to 'zjson' but zlib not available. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+#endif
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
   }
 
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
@@ -499,7 +520,7 @@ void telemetry_daemon(void *t_data_void)
         int fd;
 
         /* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of telemetry peers has been configured by 'telemetry_max_peers' (%d).\n",
+        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of telemetry peers has been configured by telemetry_max_peers (%d).\n",
                         config.name, t_data->log_str, config.telemetry_max_peers);
         if (config.telemetry_port_tcp) close(fd);
         goto read_data;
@@ -552,18 +573,28 @@ void telemetry_daemon(void *t_data_void)
 
     if (!peer) goto select_again;
 
-    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
-    peer->msglen = (ret + peer->buf.truncated_len);
+    recv_flags = 999; // XXX
+    switch(decoder) {
+    case TELEMETRY_DECODER_JSON:
+      ret = telemetry_recv_json(peer, &recv_flags);
+      break;
+    case TELEMETRY_DECODER_ZJSON:
+      ret = telemetry_recv_zjson(peer, &recv_flags);
+      break;
+    default:
+      break;
+    }
 
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
       recalc_fds = TRUE;
-      goto select_again;
     }
     else {
-      /* XXX: process/handle telemetry data */
+      if (recv_flags != ERR) {
+        /* XXX: process/handle telemetry data */
+      }
     }
   }
 }
@@ -801,6 +832,57 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
     break;
   }
+}
+
+int telemetry_recv_generic(telemetry_peer *peer)
+{
+  int ret;
+
+  ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+  peer->msglen = (ret + peer->buf.truncated_len);
+
+  return ret;
+}
+
+int telemetry_recv_json(telemetry_peer *peer, int *flags)
+{
+  int ret = 0;
+
+  (*flags) = FALSE;
+  ret = telemetry_recv_generic(peer);
+
+  if (peer->buf.len >= (peer->msglen + 1))
+    peer->buf.base[peer->msglen + 1] = '\0';
+
+  if (ret) (*flags) = telemetry_basic_validate_json(peer);
+
+  return ret;
+}
+
+int telemetry_recv_zjson(telemetry_peer *peer, int *flags)
+{
+  int ret = 0;
+
+#if defined (HAVE_ZLIB)
+  (*flags) = FALSE;
+  ret = telemetry_recv_generic(peer);
+
+  // XXX: Decompression
+
+  // XXX: Append trailing '\0'
+
+  if (ret) (*flags) = telemetry_basic_validate_json(peer);
+#endif
+
+  return ret;
+}
+
+int telemetry_basic_validate_json(telemetry_peer *peer)
+{
+  if (peer->buf.base[peer->buf.truncated_len] != '{')
+    return ERR;
+  else
+    return FALSE;
 }
 
 #if defined WITH_RABBITMQ
