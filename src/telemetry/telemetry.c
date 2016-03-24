@@ -70,6 +70,7 @@ void telemetry_daemon(void *t_data_void)
   time_t now;
 
   telemetry_peer *peer = NULL;
+  telemetry_peer_z *peer_z = NULL;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -181,10 +182,19 @@ void telemetry_daemon(void *t_data_void)
 
   telemetry_peers = malloc(config.telemetry_max_peers*sizeof(telemetry_peer));
   if (!telemetry_peers) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry peers structure. Terminating.\n", config.name, t_data->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers structure. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
+
+  if (decoder == TELEMETRY_DECODER_ZJSON) {
+    telemetry_peers_z = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_z));
+    if (!telemetry_peers_z) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_z structure. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+    memset(telemetry_peers_z, 0, config.telemetry_max_peers*sizeof(telemetry_peer_z));
+  }
 
   if (config.telemetry_msglog_file || config.telemetry_msglog_amqp_routing_key || config.telemetry_msglog_kafka_topic) {
     if (config.telemetry_msglog_file) telemetry_misc_db->msglog_backend_methods++;
@@ -211,7 +221,7 @@ void telemetry_daemon(void *t_data_void)
   if (telemetry_misc_db->msglog_backend_methods) {
     telemetry_misc_db->peers_log = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_log));
     if (!telemetry_misc_db->peers_log) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry peers log structure. Terminating.\n", config.name, t_data->log_str);
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry peers_log structure. Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
     }
     memset(telemetry_misc_db->peers_log, 0, config.telemetry_max_peers*sizeof(telemetry_peer_log));
@@ -495,7 +505,16 @@ void telemetry_daemon(void *t_data_void)
 	  peer = &telemetry_peers[peers_idx];
 
 	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
-	  else recalc_fds = TRUE;
+
+	  if (decoder == TELEMETRY_DECODER_ZJSON) {
+	    peer_z = &telemetry_peers_z[peers_idx];
+	    if (telemetry_peer_z_init(peer_z)) {
+	      peer = NULL;
+	      peer_z = NULL;
+	    }
+	  }
+
+	  if (peer) recalc_fds = TRUE;
 
 	  break;
 	}
@@ -509,6 +528,9 @@ void telemetry_daemon(void *t_data_void)
 	    if (!memcmp(&telemetry_peers[peers_idx].addr, &client_addr, HostAddrSz)) {
 	      now = time(NULL);
 	      peer = &telemetry_peers[peers_idx];
+
+	      if (decoder == TELEMETRY_DECODER_ZJSON)
+		peer_z = &telemetry_peers_z[peers_idx];
 
 	      goto read_data;
 	    }
@@ -565,6 +587,10 @@ void telemetry_daemon(void *t_data_void)
 
         if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
           peer = &telemetry_peers[loc_idx];
+
+	  if (decoder == TELEMETRY_DECODER_ZJSON)
+	    peer_z = &telemetry_peers_z[loc_idx];
+
           peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
           break;
         }
@@ -573,13 +599,12 @@ void telemetry_daemon(void *t_data_void)
 
     if (!peer) goto select_again;
 
-    recv_flags = 999; // XXX
     switch(decoder) {
     case TELEMETRY_DECODER_JSON:
       ret = telemetry_recv_json(peer, &recv_flags);
       break;
     case TELEMETRY_DECODER_ZJSON:
-      ret = telemetry_recv_zjson(peer, &recv_flags);
+      ret = telemetry_recv_zjson(peer, peer_z, &recv_flags);
       break;
     default:
       break;
@@ -589,6 +614,7 @@ void telemetry_daemon(void *t_data_void)
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
+      if (decoder == TELEMETRY_DECODER_ZJSON) telemetry_peer_z_close(peer_z);
       recalc_fds = TRUE;
     }
     else {
@@ -624,6 +650,21 @@ int telemetry_peer_init(telemetry_peer *peer, int type)
   return bgp_peer_init(peer, type);
 }
 
+int telemetry_peer_z_init(telemetry_peer_z *peer_z)
+{
+#if defined (HAVE_ZLIB)
+  peer_z->stm.zalloc = Z_NULL;
+  peer_z->stm.zfree = Z_NULL;
+  peer_z->stm.opaque = Z_NULL;
+  peer_z->stm.avail_in = 0;
+  peer_z->stm.next_in = Z_NULL;
+
+  if (inflateInit(&peer_z->stm) != Z_OK) return ERR;
+#endif
+
+  return FALSE;
+}
+
 void telemetry_peer_close(telemetry_peer *peer, int type)
 {
   telemetry_misc_structs *tms;
@@ -638,6 +679,13 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
     bmp_dump_close_peer(peer);
 
   bgp_peer_close(peer, type);
+}
+
+void telemetry_peer_z_close(telemetry_peer_z *peer_z)
+{
+#if defined (HAVE_ZLIB)
+  inflateEnd(&peer_z->stm);
+#endif
 }
 
 void telemetry_peer_log_seq_init(u_int64_t *seq)
@@ -834,12 +882,20 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   }
 }
 
-int telemetry_recv_generic(telemetry_peer *peer)
+int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret;
 
-  ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
-  peer->msglen = (ret + peer->buf.truncated_len);
+  if (!len) {
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+    peer->msglen = (ret + peer->buf.truncated_len);
+  }
+  else {
+    if (len <= (peer->buf.len - peer->buf.truncated_len)) { 
+      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], len, 0);
+      peer->msglen = (ret + peer->buf.truncated_len);
+    }
+  }
 
   return ret;
 }
@@ -849,7 +905,7 @@ int telemetry_recv_json(telemetry_peer *peer, int *flags)
   int ret = 0;
 
   (*flags) = FALSE;
-  ret = telemetry_recv_generic(peer);
+  ret = telemetry_recv_generic(peer, 0);
 
   if (peer->buf.len >= (peer->msglen + 1))
     peer->buf.base[peer->msglen + 1] = '\0';
@@ -859,19 +915,33 @@ int telemetry_recv_json(telemetry_peer *peer, int *flags)
   return ret;
 }
 
-int telemetry_recv_zjson(telemetry_peer *peer, int *flags)
+int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *flags)
 {
   int ret = 0;
 
 #if defined (HAVE_ZLIB)
   (*flags) = FALSE;
-  ret = telemetry_recv_generic(peer);
+  memset(peer_z->inflate_buf, 0, sizeof(peer_z->inflate_buf));
+  peer_z->stm.avail_out = (uInt) sizeof(peer_z->inflate_buf);
+  peer_z->stm.next_out = (Bytef *) peer_z->inflate_buf;
 
-  // XXX: Decompression
+  ret = telemetry_recv_generic(peer, 0);
 
-  // XXX: Append trailing '\0'
+  peer_z->stm.avail_in = (uInt) peer->msglen;
+  peer_z->stm.next_in = (Bytef *) peer->buf.base;
 
-  if (ret) (*flags) = telemetry_basic_validate_json(peer);
+  if (ret > 0) { 
+    if (inflate(&peer_z->stm, Z_NO_FLUSH) != Z_OK) ret = FALSE;
+    else {
+      peer->msglen = (sizeof(peer_z->inflate_buf) - peer_z->stm.avail_out);
+      memcpy(peer->buf.base, peer_z->inflate_buf, peer->msglen);
+
+      if (peer->buf.len >= (peer->msglen + 1))
+        peer->buf.base[peer->msglen + 1] = '\0';
+
+      (*flags) = telemetry_basic_validate_json(peer);
+    }
+  }
 #endif
 
   return ret;

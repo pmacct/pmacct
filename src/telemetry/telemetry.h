@@ -42,11 +42,19 @@ struct telemetry_data {
   char *log_str;
 };
 
+struct _telemetry_peer_z {
+  char inflate_buf[BGP_BUFFER_SIZE];
+#if defined (HAVE_ZLIB)
+  z_stream stm;
+#endif
+};
+
 typedef struct bgp_peer telemetry_peer;
 typedef struct bgp_peer_log telemetry_peer_log;
 typedef struct bgp_misc_structs telemetry_misc_structs;
 typedef struct bmp_dump_se_ll telemetry_dump_se_ll;
 typedef struct bmp_dump_se_ll_elem telemetry_dump_se_ll_elem;
+typedef struct _telemetry_peer_z telemetry_peer_z;
 
 /* prototypes */
 #if (!defined __TELEMETRY_C)
@@ -60,7 +68,9 @@ EXT void telemetry_prepare_thread(struct telemetry_data *);
 EXT void telemetry_prepare_daemon(struct telemetry_data *);
 
 EXT int telemetry_peer_init(telemetry_peer *, int);
+EXT int telemetry_peer_z_init(telemetry_peer_z *);
 EXT void telemetry_peer_close(telemetry_peer *, int);
+EXT void telemetry_peer_z_close(telemetry_peer_z *);
 EXT void telemetry_peer_log_seq_init(u_int64_t *);
 EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
 EXT void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
@@ -69,9 +79,9 @@ EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
 EXT void telemetry_dump_init_peer(telemetry_peer *);
 EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
 
-EXT int telemetry_recv_generic(telemetry_peer *);
+EXT int telemetry_recv_generic(telemetry_peer *, u_int32_t);
 EXT int telemetry_recv_json(telemetry_peer *, int *);
-EXT int telemetry_recv_zjson(telemetry_peer *, int *);
+EXT int telemetry_recv_zjson(telemetry_peer *, telemetry_peer_z *, int *);
 EXT int telemetry_basic_validate_json(telemetry_peer *);
 
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
@@ -93,5 +103,6 @@ EXT void telemetry_dummy();
 #define EXT
 #endif
 EXT telemetry_peer *telemetry_peers;
+EXT telemetry_peer_z *telemetry_peers_z;
 EXT telemetry_misc_structs *telemetry_misc_db; 
 #undef EXT
