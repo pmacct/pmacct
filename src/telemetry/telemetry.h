@@ -37,6 +37,10 @@
 #define TELEMETRY_DECODER_JSON		1
 #define TELEMETRY_DECODER_ZJSON		2
 
+#define TELEMETRY_LOGDUMP_ET_NONE	BGP_LOGDUMP_ET_NONE
+#define TELEMETRY_LOGDUMP_ET_LOG	BGP_LOGDUMP_ET_LOG
+#define TELEMETRY_LOGDUMP_ET_DUMP	BGP_LOGDUMP_ET_DUMP
+
 struct telemetry_data {
   int is_thread;
   char *log_str;
@@ -49,11 +53,26 @@ struct _telemetry_peer_z {
 #endif
 };
 
+struct _telemetry_dump_se {
+  u_int32_t len;
+  void *data;
+};
+
+struct _telemetry_dump_se_ll_elem {
+  struct _telemetry_dump_se rec; // XXX: fix, prevents reusability
+  struct _telemetry_dump_se_ll_elem *next;
+};
+
+struct _telemetry_dump_se_ll {
+  struct _telemetry_dump_se_ll_elem *start;
+  struct _telemetry_dump_se_ll_elem *last;
+};
+
 typedef struct bgp_peer telemetry_peer;
 typedef struct bgp_peer_log telemetry_peer_log;
 typedef struct bgp_misc_structs telemetry_misc_structs;
-typedef struct bmp_dump_se_ll telemetry_dump_se_ll;
-typedef struct bmp_dump_se_ll_elem telemetry_dump_se_ll_elem;
+typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
+typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_z telemetry_peer_z;
 
 /* prototypes */
@@ -66,6 +85,7 @@ EXT void telemetry_wrapper();
 EXT void telemetry_daemon(void *);
 EXT void telemetry_prepare_thread(struct telemetry_data *);
 EXT void telemetry_prepare_daemon(struct telemetry_data *);
+EXT void telemetry_process_data(telemetry_peer *, struct telemetry_data *);
 
 EXT int telemetry_peer_init(telemetry_peer *, int);
 EXT int telemetry_peer_z_init(telemetry_peer_z *);
@@ -78,6 +98,8 @@ EXT int telemetry_peer_dump_init(telemetry_peer *, int, int);
 EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
 EXT void telemetry_dump_init_peer(telemetry_peer *);
 EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
+EXT void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *);
+EXT int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, char *, int);
 
 EXT int telemetry_recv_generic(telemetry_peer *, u_int32_t);
 EXT int telemetry_recv_json(telemetry_peer *, int *);
