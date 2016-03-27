@@ -636,19 +636,19 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data)
   if (tms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    telemetry_log_msg(peer, t_data, event_type, config.telemetry_msglog_output);
+    telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, event_type, config.telemetry_msglog_output);
   }
 
   if (tms->dump_backend_methods)
     telemetry_dump_se_ll_append(peer, t_data);
 }
 
-int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, char *event_type, int output)
+int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void *log_data, u_int32_t log_data_len, char *event_type, int output)
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
 
-  if (!tms || !peer || !peer->log || !t_data || !event_type) return ERR;
+  if (!peer || !peer->log || !log_data || !log_data_len || !t_data || !event_type) return ERR;
 
   tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
 
@@ -674,7 +674,30 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, char 
     json_t *obj = json_object(), *kv;
     char tstamp_str[SRVBUFLEN];
 
-    // XXX: actual message log
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    /* no need for seq for "dump" event_type */
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      kv = json_pack("{sI}", "seq", tms->log_seq);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+      bgp_peer_log_seq_increment(&tms->log_seq);
+    }
+
+    compose_timestamp(tstamp_str, SRVBUFLEN, &tms->log_tstamp, TRUE, config.timestamps_since_epoch);
+    kv = json_pack("{ss}", "timestamp", tstamp_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "telemetry_node", peer->addr_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "telemetry_data", log_data);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))
@@ -966,7 +989,9 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
           telemetry_dump_se_ll_elem *se_ll_elem;
           char event_type[] = "dump";
 
-	  // XXX: dump actual data 
+	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
+	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, event_type, config.telemetry_msglog_output);
+	  }
 	}
 
         saved_peer = peer;
