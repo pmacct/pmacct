@@ -674,7 +674,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, char 
     json_t *obj = json_object(), *kv;
     char tstamp_str[SRVBUFLEN];
 
-    // XXX
+    // XXX: actual message log
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))
@@ -703,7 +703,45 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, char 
 
 void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_data)
 {
-  // XXX
+  telemetry_dump_se_ll *se_ll;
+  telemetry_dump_se_ll_elem *se_ll_elem;
+
+  if (!peer) return;
+
+  assert(peer->bmp_se);
+
+  se_ll_elem = malloc(sizeof(telemetry_dump_se_ll_elem));
+  if (!se_ll_elem) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() se_ll_elem structure. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
+  }
+
+  memset(se_ll_elem, 0, sizeof(telemetry_dump_se_ll_elem));
+
+  se_ll_elem->rec.data = malloc(peer->msglen);
+  if (!se_ll_elem->rec.data) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() se_ll_elem->rec.data structure. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
+  }
+  memcpy(se_ll_elem->rec.data, peer->buf.base, peer->msglen); 
+  se_ll_elem->rec.len = peer->msglen;
+
+  se_ll = (telemetry_dump_se_ll *) peer->bmp_se;
+
+  /* append to an empty ll */
+  if (!se_ll->start) {
+    assert(!se_ll->last);
+
+    se_ll->start = se_ll_elem;
+    se_ll->last = se_ll_elem;
+  }
+  /* append to an existing ll */
+  else {
+    assert(se_ll->last);
+
+    se_ll->last->next = se_ll_elem;
+    se_ll->last = se_ll_elem;
+  }
 }
 
 void telemetry_prepare_thread(struct telemetry_data *t_data) 
@@ -810,6 +848,7 @@ void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *tdsell)
   assert(tdsell->last);
   for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
     se_ll_elem_next = se_ll_elem->next;
+    free(se_ll_elem->rec.data);
     free(se_ll_elem);
   }
 
