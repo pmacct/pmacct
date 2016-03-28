@@ -990,7 +990,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
           char event_type[] = "dump";
 
 	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
-	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, event_type, config.telemetry_msglog_output);
+	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, event_type, config.telemetry_dump_output);
 	  }
 	}
 
@@ -1058,15 +1058,28 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
   return ret;
 }
 
+void telemetry_basic_process_json(telemetry_peer *peer)
+{
+  int idx;
+
+  for (idx = 0; idx < peer->msglen; idx++) {
+    if (!isprint(peer->buf.base[idx])) peer->buf.base[idx] = '\0';
+  }
+
+  if (peer->buf.len >= (peer->msglen + 1)) {
+    peer->buf.base[peer->msglen + 1] = '\0';
+    peer->msglen++;
+  }
+}
+
 int telemetry_recv_json(telemetry_peer *peer, int *flags)
 {
-  int ret = 0;
+  int ret = 0, idx;
 
   (*flags) = FALSE;
   ret = telemetry_recv_generic(peer, 0);
 
-  if (peer->buf.len >= (peer->msglen + 1))
-    peer->buf.base[peer->msglen + 1] = '\0';
+  telemetry_basic_process_json(peer);
 
   if (ret) (*flags) = telemetry_basic_validate_json(peer);
 
@@ -1075,7 +1088,7 @@ int telemetry_recv_json(telemetry_peer *peer, int *flags)
 
 int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *flags)
 {
-  int ret = 0;
+  int ret = 0, idx;
 
 #if defined (HAVE_ZLIB)
   (*flags) = FALSE;
@@ -1094,8 +1107,7 @@ int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *fl
       peer->msglen = (sizeof(peer_z->inflate_buf) - peer_z->stm.avail_out);
       memcpy(peer->buf.base, peer_z->inflate_buf, peer->msglen);
 
-      if (peer->buf.len >= (peer->msglen + 1))
-        peer->buf.base[peer->msglen + 1] = '\0';
+      telemetry_basic_process_json(peer);
 
       (*flags) = telemetry_basic_validate_json(peer);
     }

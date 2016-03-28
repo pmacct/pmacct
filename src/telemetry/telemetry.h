@@ -104,6 +104,7 @@ EXT int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_i
 EXT int telemetry_recv_generic(telemetry_peer *, u_int32_t);
 EXT int telemetry_recv_json(telemetry_peer *, int *);
 EXT int telemetry_recv_zjson(telemetry_peer *, telemetry_peer_z *, int *);
+EXT void telemetry_basic_process_json(telemetry_peer *);
 EXT int telemetry_basic_validate_json(telemetry_peer *);
 
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
