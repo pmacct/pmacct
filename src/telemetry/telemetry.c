@@ -171,6 +171,15 @@ void telemetry_daemon(void *t_data_void)
       exit_all(1);
 #endif
     }
+    else if (!strcmp(config.telemetry_decoder, "cisco_json")) decoder = TELEMETRY_DECODER_CISCO_JSON;
+    else if (!strcmp(config.telemetry_decoder, "cisco_zjson")) {
+#if defined (HAVE_ZLIB)
+      decoder = TELEMETRY_DECODER_CISCO_ZJSON;
+#else
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to 'cisco_zjson' but zlib not available. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+#endif
+    }
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
@@ -187,7 +196,7 @@ void telemetry_daemon(void *t_data_void)
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
-  if (decoder == TELEMETRY_DECODER_ZJSON) {
+  if (telemetry_is_zjson(decoder)) {
     telemetry_peers_z = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_z));
     if (!telemetry_peers_z) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_z structure. Terminating.\n", config.name, t_data->log_str);
@@ -506,7 +515,7 @@ void telemetry_daemon(void *t_data_void)
 
 	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
 
-	  if (decoder == TELEMETRY_DECODER_ZJSON) {
+	  if (telemetry_is_zjson(decoder)) {
 	    peer_z = &telemetry_peers_z[peers_idx];
 	    if (telemetry_peer_z_init(peer_z)) {
 	      peer = NULL;
@@ -529,8 +538,7 @@ void telemetry_daemon(void *t_data_void)
 	      now = time(NULL);
 	      peer = &telemetry_peers[peers_idx];
 
-	      if (decoder == TELEMETRY_DECODER_ZJSON)
-		peer_z = &telemetry_peers_z[peers_idx];
+	      if (telemetry_is_zjson(decoder)) peer_z = &telemetry_peers_z[peers_idx];
 
 	      goto read_data;
 	    }
@@ -588,8 +596,7 @@ void telemetry_daemon(void *t_data_void)
         if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
           peer = &telemetry_peers[loc_idx];
 
-	  if (decoder == TELEMETRY_DECODER_ZJSON)
-	    peer_z = &telemetry_peers_z[loc_idx];
+	  if (telemetry_is_zjson(decoder)) peer_z = &telemetry_peers_z[loc_idx];
 
           peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
           break;
@@ -601,10 +608,16 @@ void telemetry_daemon(void *t_data_void)
 
     switch(decoder) {
     case TELEMETRY_DECODER_JSON:
-      ret = telemetry_recv_json(peer, &recv_flags);
+      ret = telemetry_recv_json(peer, 0, &recv_flags);
       break;
     case TELEMETRY_DECODER_ZJSON:
-      ret = telemetry_recv_zjson(peer, peer_z, &recv_flags);
+      ret = telemetry_recv_zjson(peer, peer_z, 0, &recv_flags);
+      break;
+    case TELEMETRY_DECODER_CISCO_JSON:
+      ret = telemetry_recv_cisco_json(peer, &recv_flags);
+      break;
+    case TELEMETRY_DECODER_CISCO_ZJSON:
+      ret = telemetry_recv_cisco_zjson(peer, peer_z, &recv_flags);
       break;
     default:
       break;
@@ -614,7 +627,7 @@ void telemetry_daemon(void *t_data_void)
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
-      if (decoder == TELEMETRY_DECODER_ZJSON) telemetry_peer_z_close(peer_z);
+      if (telemetry_is_zjson(decoder)) telemetry_peer_z_close(peer_z);
       recalc_fds = TRUE;
     }
     else {
@@ -1072,12 +1085,12 @@ void telemetry_basic_process_json(telemetry_peer *peer)
   }
 }
 
-int telemetry_recv_json(telemetry_peer *peer, int *flags)
+int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 {
   int ret = 0, idx;
 
   (*flags) = FALSE;
-  ret = telemetry_recv_generic(peer, 0);
+  ret = telemetry_recv_generic(peer, len);
 
   telemetry_basic_process_json(peer);
 
@@ -1086,7 +1099,7 @@ int telemetry_recv_json(telemetry_peer *peer, int *flags)
   return ret;
 }
 
-int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *flags)
+int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, u_int32_t len, int *flags)
 {
   int ret = 0, idx;
 
@@ -1096,7 +1109,7 @@ int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *fl
   peer_z->stm.avail_out = (uInt) sizeof(peer_z->inflate_buf);
   peer_z->stm.next_out = (Bytef *) peer_z->inflate_buf;
 
-  ret = telemetry_recv_generic(peer, 0);
+  ret = telemetry_recv_generic(peer, len);
 
   peer_z->stm.avail_in = (uInt) peer->msglen;
   peer_z->stm.next_in = (Bytef *) peer->buf.base;
@@ -1117,12 +1130,56 @@ int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *fl
   return ret;
 }
 
+int telemetry_recv_cisco_json(telemetry_peer *peer, int *flags)
+{
+  int ret = 0;
+  u_int32_t len;
+
+  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
+  if (ret == TELEMETRY_CISCO_HDR_LEN) {
+    len = telemetry_cisco_hdr_get_len(peer);
+    ret = telemetry_recv_json(peer, len, flags);
+  }
+  
+  return ret;
+}
+
+int telemetry_recv_cisco_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, int *flags)
+{
+  int ret = 0;
+  u_int32_t len;
+
+  ret = telemetry_recv_generic(peer, 12);
+  if (ret > 0) {
+    len = telemetry_cisco_hdr_get_len(peer); 
+    ret = telemetry_recv_zjson(peer, peer_z, len, flags); 
+  }
+
+  return ret;
+}
+
+u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *peer)
+{
+  u_int32_t len;
+
+  memcpy(&len, (peer->buf.base + 8), 4);
+  len = ntohl(len);
+
+  return len;
+}
+
 int telemetry_basic_validate_json(telemetry_peer *peer)
 {
   if (peer->buf.base[peer->buf.truncated_len] != '{')
     return ERR;
   else
     return FALSE;
+}
+
+int telemetry_is_zjson(int decoder)
+{
+  if (decoder == TELEMETRY_DECODER_ZJSON || decoder == TELEMETRY_DECODER_CISCO_ZJSON) return TRUE;
+  else return FALSE;
 }
 
 #if defined WITH_RABBITMQ
