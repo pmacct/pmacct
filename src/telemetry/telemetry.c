@@ -62,6 +62,8 @@ void telemetry_wrapper()
 void telemetry_daemon(void *t_data_void)
 {
   struct telemetry_data *t_data = t_data_void;
+  telemetry_peer_udp_cache tpuc;
+
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
   int decoder = 0, recv_flags = 0;
@@ -508,6 +510,20 @@ void telemetry_daemon(void *t_data_void)
         goto read_data;
       }
 
+      /* XXX: UDP case may be optimized further */
+      if (config.telemetry_port_udp) {
+	telemetry_peer_udp_cache *tpuc_ret;
+	u_int16_t client_port;
+
+        sa_to_addr(&client, &tpuc.addr, &client_port);
+	tpuc_ret = pm_tfind(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp);
+
+	if (tpuc_ret) {
+	 peer = &telemetry_peers[tpuc_ret->index];
+	 goto read_data;
+	}
+      }
+
       for (peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
         if (!telemetry_peers[peers_idx].fd) {
           now = time(NULL);
@@ -523,26 +539,18 @@ void telemetry_daemon(void *t_data_void)
 	    }
 	  }
 
-	  if (peer) recalc_fds = TRUE;
+	  if (peer) {
+	    recalc_fds = TRUE;
+	
+	    if (config.telemetry_port_udp) {
+	      tpuc.index = peers_idx;
 
-	  break;
-	}
-	else {
-	  /* XXX: optimize UDP case */
-	  if (config.telemetry_port_udp) {
-	    struct host_addr client_addr;
-	    u_int16_t client_port;
-
-	    sa_to_addr(&client, &client_addr, &client_port);
-	    if (!memcmp(&telemetry_peers[peers_idx].addr, &client_addr, HostAddrSz)) {
-	      now = time(NULL);
-	      peer = &telemetry_peers[peers_idx];
-
-	      if (telemetry_is_zjson(decoder)) peer_z = &telemetry_peers_z[peers_idx];
-
-	      goto read_data;
+	      if (!pm_tsearch(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp, sizeof(telemetry_peer_udp_cache)))
+		Log(LOG_WARNING, "WARN ( %s/%s ): tsearch() unable to insert in UDP peers cache.\n", config.name, t_data->log_str);
 	    }
 	  }
+
+	  break;
 	}
       }
 
@@ -606,7 +614,7 @@ void telemetry_daemon(void *t_data_void)
 
     if (!peer) goto select_again;
 
-    switch(decoder) {
+    switch (decoder) {
     case TELEMETRY_DECODER_JSON:
       ret = telemetry_recv_json(peer, 0, &recv_flags);
       break;
@@ -1318,6 +1326,11 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   strcpy(tms->peer_str, "telemetry_node");
   tms->log_thread_str = malloc(strlen("TELE") + 1);
   strcpy(tms->log_thread_str, "TELE");
+}
+
+int telemetry_tpuc_addr_cmp(const void *a, const void *b)
+{
+  return memcmp(&((telemetry_peer_udp_cache *)a)->addr, &((telemetry_peer_udp_cache *)b)->addr, sizeof(struct host_addr));
 }
 
 void telemetry_dummy()

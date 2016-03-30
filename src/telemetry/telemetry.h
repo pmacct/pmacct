@@ -56,6 +56,11 @@ struct _telemetry_peer_z {
 #endif
 };
 
+struct _telemetry_peer_udp_cache {
+  struct host_addr addr;
+  int index;
+};
+
 struct _telemetry_dump_se {
   u_int32_t len;
   void *data;
@@ -77,6 +82,7 @@ typedef struct bgp_misc_structs telemetry_misc_structs;
 typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
 typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_z telemetry_peer_z;
+typedef struct _telemetry_peer_udp_cache telemetry_peer_udp_cache;
 
 /* prototypes */
 #if (!defined __TELEMETRY_C)
@@ -123,6 +129,8 @@ EXT int telemetry_daemon_msglog_init_kafka_host();
 EXT int telemetry_dump_init_kafka_host();
 EXT void telemetry_handle_dump_event();
 
+EXT int telemetry_tpuc_addr_cmp(const void *, const void *);
+
 EXT void telemetry_dummy();
 #undef EXT
 
@@ -135,4 +143,5 @@ EXT void telemetry_dummy();
 EXT telemetry_peer *telemetry_peers;
 EXT telemetry_peer_z *telemetry_peers_z;
 EXT telemetry_misc_structs *telemetry_misc_db; 
+EXT void *telemetry_peers_udp_cache;
 #undef EXT
