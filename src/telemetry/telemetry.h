@@ -90,6 +90,11 @@ typedef struct _telemetry_peer_z telemetry_peer_z;
 typedef struct _telemetry_peer_udp_cache telemetry_peer_udp_cache;
 typedef struct _telemetry_peer_udp_timeout telemetry_peer_udp_timeout;
 
+/* more includes */
+#include "telemetry_logdump.h"
+#include "telemetry_msg.h"
+#include "telemetry_util.h"
+
 /* prototypes */
 #if (!defined __TELEMETRY_C)
 #define EXT extern
@@ -100,48 +105,10 @@ EXT void telemetry_wrapper();
 EXT void telemetry_daemon(void *);
 EXT void telemetry_prepare_thread(struct telemetry_data *);
 EXT void telemetry_prepare_daemon(struct telemetry_data *);
-EXT void telemetry_process_data(telemetry_peer *, struct telemetry_data *);
-
-EXT int telemetry_peer_init(telemetry_peer *, int);
-EXT int telemetry_peer_z_init(telemetry_peer_z *);
-EXT void telemetry_peer_close(telemetry_peer *, int);
-EXT void telemetry_peer_z_close(telemetry_peer_z *);
-EXT void telemetry_peer_log_seq_init(u_int64_t *);
-EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
-EXT void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
-EXT int telemetry_peer_dump_init(telemetry_peer *, int, int);
-EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
-EXT void telemetry_dump_init_peer(telemetry_peer *);
-EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
-EXT void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *);
-EXT int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_int32_t, char *, int);
-
-EXT int telemetry_recv_generic(telemetry_peer *, u_int32_t);
-EXT int telemetry_recv_json(telemetry_peer *, u_int32_t, int *);
-EXT int telemetry_recv_zjson(telemetry_peer *, telemetry_peer_z *, u_int32_t, int *);
-EXT int telemetry_recv_cisco_json(telemetry_peer *, int *);
-EXT int telemetry_recv_cisco_zjson(telemetry_peer *, telemetry_peer_z *, int *);
-EXT u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *);
-EXT void telemetry_basic_process_json(telemetry_peer *);
-EXT int telemetry_basic_validate_json(telemetry_peer *);
-EXT int telemetry_is_zjson(int);
-
-EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
-
-EXT void telemetry_handle_dump_event(struct telemetry_data *);
-EXT void telemetry_daemon_msglog_init_amqp_host();
-EXT void telemetry_dump_init_amqp_host();
-EXT int telemetry_daemon_msglog_init_kafka_host();
-EXT int telemetry_dump_init_kafka_host();
-EXT void telemetry_handle_dump_event();
-
-EXT int telemetry_tpuc_addr_cmp(const void *, const void *);
-
-EXT void telemetry_dummy();
 #undef EXT
 
 /* global variables */
-#if (!defined __TELEMETRY_C)
+#if !defined(__TELEMETRY_C) && !defined(__TELEMETRY_LOGDUMP_C) && !defined(__TELEMETRY_MSG_C) && !defined(__TELEMETRY_UTIL_C)
 #define EXT extern
 #else
 #define EXT

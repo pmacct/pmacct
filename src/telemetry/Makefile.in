@@ -28,8 +28,8 @@ COMMON=
 
 all: $(TARGETS)
 
-libtelemetry.a: telemetry.o $(COMMON)
-	ar rc $@ telemetry.o $(COMMON)
+libtelemetry.a: telemetry.o telemetry_logdump.o telemetry_msg.o telemetry_util.o $(COMMON)
+	ar rc $@ telemetry.o telemetry_logdump.o telemetry_msg.o telemetry_util.o $(COMMON)
 	$(RANLIB) $@
 
 clean:
