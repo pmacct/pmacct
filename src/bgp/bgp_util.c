@@ -473,7 +473,8 @@ void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */)
   if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
     bgp_peer_log_close(peer, bms->msglog_output, peer->type);
 
-  close(peer->fd);
+  if (peer->fd != ERR) close(peer->fd);
+
   peer->fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));

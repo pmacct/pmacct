@@ -209,6 +209,7 @@ struct configuration {
   char *telemetry_ip;
   char *telemetry_decoder;
   int telemetry_max_peers;
+  int telemetry_udp_timeout;
   char *telemetry_allow_file;
   int telemetry_pipe_size;
   int telemetry_ipprec;

@@ -515,6 +515,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_daemon_ip", cfg_key_telemetry_ip},
   {"telemetry_daemon_decoder", cfg_key_telemetry_decoder},
   {"telemetry_daemon_max_peers", cfg_key_telemetry_max_peers},
+  {"telemetry_daemon_udp_timeout", cfg_key_telemetry_udp_timeout},
   {"telemetry_daemon_allow_file", cfg_key_telemetry_allow_file},
   {"telemetry_daemon_pipe_size", cfg_key_telemetry_pipe_size},
   {"telemetry_daemon_ipprec", cfg_key_telemetry_ip_precedence},

@@ -175,6 +175,7 @@ EXT int cfg_key_telemetry_port_udp(char *, char *, char *);
 EXT int cfg_key_telemetry_ip(char *, char *, char *);
 EXT int cfg_key_telemetry_decoder(char *, char *, char *);
 EXT int cfg_key_telemetry_max_peers(char *, char *, char *);
+EXT int cfg_key_telemetry_udp_timeout(char *, char *, char *);
 EXT int cfg_key_telemetry_allow_file(char *, char *, char *);
 EXT int cfg_key_telemetry_pipe_size(char *, char *, char *);
 EXT int cfg_key_telemetry_ip_precedence(char *, char *, char *);

@@ -69,7 +69,7 @@ void telemetry_daemon(void *t_data_void)
   int decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
-  time_t now;
+  time_t now, last_udp_timeout_check;
 
   telemetry_peer *peer = NULL;
   telemetry_peer_z *peer_z = NULL;
@@ -101,6 +101,8 @@ void telemetry_daemon(void *t_data_void)
   memset(&client, 0, sizeof(client));
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
+  telemetry_peers_udp_cache = NULL;
+  last_udp_timeout_check = FALSE;
 
   telemetry_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_TELEMETRY];
   memset(telemetry_misc_db, 0, sizeof(telemetry_misc_structs));
@@ -191,6 +193,11 @@ void telemetry_daemon(void *t_data_void)
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
+  if (config.telemetry_port_udp) {
+    if (!config.telemetry_udp_timeout) config.telemetry_udp_timeout = TELEMETRY_UDP_TIMEOUT_DEFAULT;
+    Log(LOG_INFO, "INFO ( %s/%s ): telemetry UDP peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_udp_timeout);
+  }
+
   telemetry_peers = malloc(config.telemetry_max_peers*sizeof(telemetry_peer));
   if (!telemetry_peers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers structure. Terminating.\n", config.name, t_data->log_str);
@@ -205,6 +212,15 @@ void telemetry_daemon(void *t_data_void)
       exit_all(1);
     }
     memset(telemetry_peers_z, 0, config.telemetry_max_peers*sizeof(telemetry_peer_z));
+  }
+
+  if (config.telemetry_port_udp) {
+    telemetry_peers_udp_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_udp_timeout));
+    if (!telemetry_peers_udp_timeout) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_udp_timeout structure. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+    memset(telemetry_peers_udp_timeout, 0, config.telemetry_max_peers*sizeof(telemetry_peer_udp_timeout));
   }
 
   if (config.telemetry_msglog_file || config.telemetry_msglog_amqp_routing_key || config.telemetry_msglog_kafka_topic) {
@@ -431,7 +447,29 @@ void telemetry_daemon(void *t_data_void)
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
-    /* XXX: UDP case: check last datagram and expire peer if TELEMETRY_UDP_TIMEOUT secs are passed from last message */
+    // XXX: UDP case: timeout handling (to be tested)
+    if (config.telemetry_port_udp) {
+      now = time(NULL);
+
+      if (now > (last_udp_timeout_check + TELEMETRY_UDP_TIMEOUT_INTERVAL)) {
+	for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
+	  telemetry_peer_udp_timeout *peer_udp_timeout;
+
+	  peer = &telemetry_peers[peers_idx];
+	  peer_z = &telemetry_peers_z[peers_idx];
+	  peer_udp_timeout = &telemetry_peers_udp_timeout[peers_idx];
+
+	  if (peer->fd) {
+	    if (now > (peer_udp_timeout->last_msg + config.telemetry_udp_timeout)) {
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry UDP peer removed (timeout).\n", config.name, t_data->log_str, peer->addr_str);
+	      telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
+	      if (telemetry_is_zjson(decoder)) telemetry_peer_z_close(peer_z);
+	      recalc_fds = TRUE;
+	    }
+	  }
+	}
+      }
+    }
 
     if (reload_log_telemetry_thread) {
       for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
@@ -519,14 +557,15 @@ void telemetry_daemon(void *t_data_void)
 	tpuc_ret = pm_tfind(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp);
 
 	if (tpuc_ret) {
-	 peer = &telemetry_peers[tpuc_ret->index];
-	 goto read_data;
+	  peer = &telemetry_peers[tpuc_ret->index];
+	  telemetry_peers_udp_timeout[tpuc_ret->index].last_msg = now;
+
+	  goto read_data;
 	}
       }
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
         if (!telemetry_peers[peers_idx].fd) {
-          now = time(NULL);
 	  peer = &telemetry_peers[peers_idx];
 
 	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
@@ -544,6 +583,7 @@ void telemetry_daemon(void *t_data_void)
 	
 	    if (config.telemetry_port_udp) {
 	      tpuc.index = peers_idx;
+	      telemetry_peers_udp_timeout[peers_idx].last_msg = now;
 
 	      if (!pm_tsearch(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp, sizeof(telemetry_peer_udp_cache)))
 		Log(LOG_WARNING, "WARN ( %s/%s ): tsearch() unable to insert in UDP peers cache.\n", config.name, t_data->log_str);
@@ -840,6 +880,15 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
  
   if (tms->dump_file || tms->dump_amqp_routing_key || tms->dump_kafka_topic)
     bmp_dump_close_peer(peer);
+
+  if (config.telemetry_port_udp) {
+    telemetry_peer_udp_cache tpuc;
+
+    memcpy(&tpuc.addr, &peer->addr, sizeof(struct host_addr));
+    pm_tdelete(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp);
+
+    peer->fd = ERR; /* dirty trick to prevent close() a valid fd in bgp_peer_close() */
+  }
 
   bgp_peer_close(peer, type);
 }

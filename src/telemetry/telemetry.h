@@ -30,7 +30,8 @@
 #define TELEMETRY_TCP_PORT		1620
 #define TELEMETRY_UDP_PORT		1620
 #define TELEMETRY_MAX_PEERS_DEFAULT	100
-#define TELEMETRY_UDP_TIMEOUT		300
+#define TELEMETRY_UDP_TIMEOUT_DEFAULT	300
+#define TELEMETRY_UDP_TIMEOUT_INTERVAL	60
 #define TELEMETRY_UDP_MAXMSG		65535
 #define TELEMETRY_CISCO_HDR_LEN		12
 
@@ -61,6 +62,10 @@ struct _telemetry_peer_udp_cache {
   int index;
 };
 
+struct _telemetry_peer_udp_timeout {
+  time_t last_msg;
+};
+
 struct _telemetry_dump_se {
   u_int32_t len;
   void *data;
@@ -83,6 +88,7 @@ typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
 typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_z telemetry_peer_z;
 typedef struct _telemetry_peer_udp_cache telemetry_peer_udp_cache;
+typedef struct _telemetry_peer_udp_timeout telemetry_peer_udp_timeout;
 
 /* prototypes */
 #if (!defined __TELEMETRY_C)
@@ -140,8 +146,10 @@ EXT void telemetry_dummy();
 #else
 #define EXT
 #endif
+EXT telemetry_misc_structs *telemetry_misc_db; 
+
 EXT telemetry_peer *telemetry_peers;
 EXT telemetry_peer_z *telemetry_peers_z;
-EXT telemetry_misc_structs *telemetry_misc_db; 
 EXT void *telemetry_peers_udp_cache;
+EXT telemetry_peer_udp_timeout *telemetry_peers_udp_timeout; 
 #undef EXT
