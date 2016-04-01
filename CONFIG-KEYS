@@ -412,17 +412,11 @@ DEFAULT:	8192
 KEY:		syslog (-S)
 VALUES:		[ auth | mail | daemon | kern | user | local[0-7] ]
 DESC:		Enables syslog logging, using the specified facility.
-DEFAULT:	none (console logging)
-NOTES:		Console logging (ie. no syslog, logfile specified) can be inconsistent if other parts
-		of the tool (ie. one or multiple print plugins with no print_output_file specified)
-		are also writing to standard output. 
+DEFAULT:	none (logging to stderr)
 
 KEY:		logfile 
 DESC:           Enables logging to a file (bypassing syslog); expected value is a pathname
-DEFAULT:	none (console logging)
-NOTES:		Console logging (ie. no syslog, logfile specified) can be inconsistent if other parts
-		of the tool (ie. one or multiple print plugins with no print_output_file specified)
-		are also writing to standard output. 
+DEFAULT:	none (logging to stderr)
 
 KEY:		[ amqp_host | plugin_pipe_amqp_host ]
 DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to the broker used by an
@@ -836,7 +830,7 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		names. 
 		* not specifying a print_output_file, makes print plugin output go to standard output;
 		integrity of output can be compromised if multiple print plugins are instantiated and
-		all writing to standard output as well as if logging is set to standard output.
+		all writing to standard output.
 
 		MongoDB plugin notes:
 		The table name is expected as <database>.<collection> . Default table is test.acct

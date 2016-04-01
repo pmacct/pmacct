@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -36,7 +36,7 @@ void Log(short int level, char *msg, ...)
     va_start(ap, msg);
     vprintf(msg, ap);
     va_end(ap);
-    fflush(stdout);
+    fflush(stderr);
   }
   else {
     va_start(ap, msg);

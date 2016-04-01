@@ -179,7 +179,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.daemon) {
     if (debug || config.debug)
-      printf("WARN ( %s/core ): debug is enabled; forking in background. Console logging will get lost.\n", config.name);
+      printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
     daemonize();
   }
 
@@ -188,7 +188,7 @@ int main(int argc,char **argv, char **envp)
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
       config.syslog = NULL;
-      printf("WARN ( %s/core ): specified syslog facility is not supported; logging to console.\n", config.name);
+      printf("WARN ( %s/core ): specified syslog facility is not supported. Logging to standard error (stderr).\n", config.name);
     }
     else openlog(NULL, LOG_PID, logf);
     Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
