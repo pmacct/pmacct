@@ -157,10 +157,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  if (!config.sql_table && config.print_output & PRINT_OUTPUT_FORMATTED)
-    P_write_stats_header_formatted(stdout, is_event);
-  else if (!config.sql_table && config.print_output & PRINT_OUTPUT_CSV)
-    P_write_stats_header_csv(stdout, is_event);
+  print_output_stdout_header = TRUE;
 
   if (config.sql_table) {
     if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$'))
@@ -237,7 +234,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      if (timeout == refresh_timeout) P_cache_handle_flush_event(&pt);
+      if (timeout == refresh_timeout) {
+	P_cache_handle_flush_event(&pt);
+	if (qq_ptr) print_output_stdout_header = FALSE;
+      }
       break;
     default: /* we received data */
       read_data:
@@ -295,7 +295,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #endif
 
       /* lazy refresh time handling */ 
-      if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
+      if (idata.now > refresh_deadline) {
+	P_cache_handle_flush_event(&pt);
+	if (qq_ptr) print_output_stdout_header = FALSE;
+      }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
@@ -437,7 +440,19 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         P_write_stats_header_csv(f, is_event);
     }
   }
-  else f = stdout; /* write to standard output */
+  else {
+    /* writing to stdout: pointing f and obtaining lock */
+    f = stdout;
+    file_lock(fileno(stdout));
+
+    /* writing to stdout: writing header only once */
+    if (print_output_stdout_header) {
+      if (config.print_output & PRINT_OUTPUT_FORMATTED)
+        P_write_stats_header_formatted(stdout, is_event);
+      else if (config.print_output & PRINT_OUTPUT_CSV)
+        P_write_stats_header_csv(stdout, is_event);
+    }
+  }
 
   for (j = 0; j < index; j++) {
     int count = 0;
@@ -1214,6 +1229,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
 
     close_output_file(f);
+  }
+  else {
+    /* writing to stdout: releasing lock */
+    file_unlock(fileno(stdout));
   }
 
   /* If we have pending queries then start again */

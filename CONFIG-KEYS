@@ -828,9 +828,6 @@ DESC:           In SQL and mongodb plugins this defines the table to use; in pri
 		supported though, ie. '~' symbol to denote the user home directory. print_history
 		values are used for time-related variables substitution of dynamic print_output_file
 		names. 
-		* not specifying a print_output_file, makes print plugin output go to standard output;
-		integrity of output can be compromised if multiple print plugins are instantiated and
-		all writing to standard output.
 
 		MongoDB plugin notes:
 		The table name is expected as <database>.<collection> . Default table is test.acct
