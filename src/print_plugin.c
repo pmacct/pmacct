@@ -235,8 +235,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     switch (ret) {
     case 0: /* timeout */
       if (timeout == refresh_timeout) {
+	int saved_qq_ptr;
+
+	saved_qq_ptr = qq_ptr;
 	P_cache_handle_flush_event(&pt);
-	if (qq_ptr) print_output_stdout_header = FALSE;
+	if (saved_qq_ptr) print_output_stdout_header = FALSE;
       }
       break;
     default: /* we received data */
@@ -296,8 +299,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       /* lazy refresh time handling */ 
       if (idata.now > refresh_deadline) {
+	int saved_qq_ptr;
+
+	saved_qq_ptr = qq_ptr;
 	P_cache_handle_flush_event(&pt);
-	if (qq_ptr) print_output_stdout_header = FALSE;
+	if (saved_qq_ptr) print_output_stdout_header = FALSE;
       }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
