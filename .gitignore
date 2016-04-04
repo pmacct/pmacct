@@ -31,3 +31,4 @@ Makefile
 /src/nfacctd
 /src/sfacctd
 /src/uacctd
+/src/pmtelemetryd

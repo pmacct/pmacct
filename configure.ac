@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl configuration file for pmacct 
 
-AC_INIT([src/pmacctd.c], [1.6.0-git], [paolo@pmacct.net])
+AC_INIT([pmacct], [1.6.0-git], [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
