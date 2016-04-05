@@ -1461,8 +1461,7 @@ fi
 
 AC_CHECK_LIB([z], [deflate], [
 	LIBS="${LIBS} -lz"
-	AC_DEFINE(HAVE_ZLIB, 1)],
-	[]
+	AC_DEFINE(HAVE_ZLIB, 1)]
 )
 
 dnl Checks for header files.
