@@ -1,9 +1,15 @@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
 sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd pmtelemetryd
-bin_PROGRAMS = pmacct @EXTRABIN@ 
+bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
-pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@ @SERVER_LIBS@
-pmtelemetryd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@ @SERVER_LIBS@
+pmacctd_PLUGINS = @PLUGINS@ @THREADS_SOURCES@
+pmacctd_PLUGINS += nfprobe_plugin/libnfprobe_plugin.la
+pmacctd_PLUGINS += sfprobe_plugin/libsfprobe_plugin.la
+pmacctd_PLUGINS += bmp/libbmp.la
+pmacctd_PLUGINS += bgp/libbgp.la
+pmacctd_PLUGINS += tee_plugin/libtee_plugin.la
+pmacctd_PLUGINS += isis/libisis.la
+pmacctd_PLUGINS += telemetry/libtelemetry.la
 pmacctd_SOURCES = pmacctd.c signals.c util.c strlcpy.c plugin_hooks.c \
 	server.c acct.c memory.c ll.c cfg.c imt_plugin.c log.c pkt_handlers.c \
 	cfg_handlers.c net_aggr.c bpf_filter.c print_plugin.c ip_frag.c \
@@ -43,5 +49,5 @@ pmtelemetryd_SOURCES = pmtelemetryd.c signals.c util.c strlcpy.c plugin_hooks.c 
 	classifier.c regexp.c regsub.c conntrack.c xflow_status.c \
 	plugin_common.c preprocess.c
 pmtelemetryd_LDFLAGS = $(DEFS)
-pmtelemetryd_LDADD = $(pmtelemetryd_PLUGINS)
+pmtelemetryd_LDADD = $(pmacctd_PLUGINS)
 pmacct_SOURCES = pmacct.c strlcpy.c addr.c jansson.c
