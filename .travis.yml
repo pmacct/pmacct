@@ -17,6 +17,7 @@ script:
   - ./configure --enable-ipv6 --enable-mysql --enable-pgsql  --with-pgsql-includes=/usr/include/postgresql  --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ulog
   - make
   - sudo make install
+  - make distcheck
 
 addons:
   apt:
