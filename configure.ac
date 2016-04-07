@@ -33,46 +33,43 @@ dnl initial checks; tweakings to CFLAGS and LDFLAGS
 dnl see final checks for tweakings to LIBS
 if test "x$ac_cv_prog_gcc" = xyes ; then
   CFLAGS="-O2 ${CFLAGS}"
-  case "$host_os" in
-    IRIX*)
-      CFLAGS="-mabi=n32 -fno-builtins"
-      LDFLAGS="-mabi=n32 -Wl,-rpath,/usr/lib32 ${LDFLAGS}"
-      ;;
-  esac
-else
-  case "$host_os" in
-    IRIX*)
-      CFLAGS="-O2 -I/usr/freeware/include ${CFLAGS}"
-      LDFLAGS="-n32 -L/usr/lib32 -L/usr/freeware/lib32 ${LDFLAGS}"
-      ;;
-    OSF*)
-      CFLAGS="-O -assume noaligned_objects ${CFLAGS}"
-      ;;
-  esac
 fi
 
 dnl set debug level
 AC_MSG_CHECKING([whether to enable debugging compiler options])
 AC_ARG_ENABLE(debug,
 	[  --enable-debug                   Enable debugging compiler options (default: no)],
-	AC_MSG_RESULT(yes)
-	tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
-	CFLAGS="$tmp_CFLAGS"
-  	CFLAGS="$CFLAGS -g -W -Wall",
-  	#CFLAGS="$CFLAGS -Waggregate-return"
-  	#CFLAGS="$CFLAGS -Wcast-align -Wcast-qual -Wnested-externs"
-  	#CFLAGS="$CFLAGS -Wshadow -Wbad-function-cast -Wwrite-strings"
-	AC_MSG_RESULT(no)
+	[
+	        if test x$enableval = x"yes" ; then
+			AC_MSG_RESULT(yes)
+			tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
+			CFLAGS="$tmp_CFLAGS"
+  			CFLAGS="$CFLAGS -g -W -Wall"
+		else
+			AC_MSG_RESULT(no)
+		fi
+	],
+	[
+		AC_MSG_RESULT(no)
+	]
 )
 
 dnl set relax level
 AC_MSG_CHECKING([whether to relax compiler optimizations])
 AC_ARG_ENABLE(relax,
 [  --enable-relax                   Relax compiler optimization (default: no)],
-	AC_MSG_RESULT(yes)
-        tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
-        CFLAGS="$tmp_CFLAGS",
-        AC_MSG_RESULT(no)
+	[
+		if test x$enableval = x"yes" ; then
+			AC_MSG_RESULT(yes)
+        		tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
+       			CFLAGS="$tmp_CFLAGS"
+		else
+			AC_MSG_RESULT(no)
+		fi
+	],
+	[
+        	AC_MSG_RESULT(no)
+	]
 )
 
 dnl: shared object handling
@@ -113,15 +110,9 @@ dnl finish: shared object handling
 
 dnl os specific flags
 case "$host_os" in
-  OSF*)
-    AC_DEFINE(OSF1, 1)
-    ;;
   Sun*)
     AC_DEFINE(SOLARIS, 1)
     LIBS="-lresolv -lsocket -lnsl ${LIBS}"
-    ;;
-  IRIX*)
-    AC_DEFINE(IRIX, 1)
     ;;
   *BSD)
     AC_DEFINE(BSD, 1)
@@ -162,11 +153,6 @@ dnl
       
 AC_MSG_CHECKING(for extra flags needed to export symbols)
 if test "x$ac_cv_prog_gcc" = xyes ; then
-  case $host_os in
-    aix4*|aix5*)
-	CFLAGS="${CFLAGS} -Wl,-bexpall,-brtl"
-    ;;
-    *)
 	save_ldflags="${LDFLAGS}"
 	LDFLAGS="-Wl,--export-dynamic ${save_ldflags}"
 	AC_TRY_LINK(,,
@@ -179,9 +165,8 @@ if test "x$ac_cv_prog_gcc" = xyes ; then
 		  )
 		]
 	)
-    ;;
-  esac
-  else AC_MSG_RESULT(none)
+else
+	AC_MSG_RESULT(none)
 fi
 
 dnl
@@ -287,41 +272,47 @@ fi
 AC_MSG_CHECKING([whether to enable L2 features])
 AC_ARG_ENABLE(l2,
         [  --enable-l2                      Enable Layer-2 features and support (default: yes)],
-        if test x$enableval = x"yes" ; then
-          AC_MSG_RESULT(yes)
-	  AC_DEFINE(HAVE_L2, 1) 
-        else
-          AC_MSG_RESULT(no)
-        fi
-        ,
-        AC_MSG_RESULT(yes)
-	AC_DEFINE(HAVE_L2, 1) 
+	[
+        	if test x$enableval = x"yes" ; then
+        		AC_MSG_RESULT(yes)
+	  		AC_DEFINE(HAVE_L2, 1) 
+        	else
+			AC_MSG_RESULT(no)
+        	fi
+	],
+	[
+        	AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_L2, 1) 
+	]
 )
 
 AC_MSG_CHECKING([whether to enable IPv6 code])
 AC_ARG_ENABLE(ipv6,
         [  --enable-ipv6                    Enable IPv6 code (default: no)],
 	[ 
-        AC_MSG_RESULT(yes)
-        AC_CHECK_FUNCS(inet_pton)
-        if test x"$ac_cv_func_inet_pton" = x"no"; then
-          AC_MSG_ERROR(ERROR: missing inet_pton(); disable IPv6 hooks !)
-        fi
+		if test x$enableval = x"yes" ; then
+        		AC_MSG_RESULT(yes)
+        		AC_CHECK_FUNCS(inet_pton)
+        		if test x"$ac_cv_func_inet_pton" = x"no"; then
+        			AC_MSG_ERROR(ERROR: missing inet_pton(); disable IPv6 hooks !)
+        		fi
 
-	AC_CHECK_FUNCS(inet_ntop)
-	if test x"$ac_cv_func_inet_ntop" = x"no"; then
-          AC_MSG_ERROR(ERROR: missing inet_ntop(); disable IPv6 hooks !)
-        fi
+			AC_CHECK_FUNCS(inet_ntop)
+			if test x"$ac_cv_func_inet_ntop" = x"no"; then
+          			AC_MSG_ERROR(ERROR: missing inet_ntop(); disable IPv6 hooks !)
+        		fi
 
-	AC_DEFINE(ENABLE_IPV6, 1)
-	ipv6support="yes"
-	case "$host_os" in
-	IRIX*)
-	  AC_DEFINE(INET6, 1)
-	  ;;
-	esac ],
-        AC_MSG_RESULT(no)
-	ipv6support="no"
+			AC_DEFINE(ENABLE_IPV6, 1)
+			ipv6support="yes"
+		else
+			AC_MSG_RESULT(no)
+			ipv6support="no"
+		fi
+	],
+	[
+        	AC_MSG_RESULT(no)
+		ipv6support="no"
+	]
 )
 
 AC_MSG_CHECKING([whether to enable IP prefix labels])
@@ -523,7 +514,10 @@ dnl Unfortunately, no pkg-config support for MySQL
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: mysql handling
 
 dnl start: pgsql handling
@@ -579,7 +573,10 @@ AC_ARG_ENABLE(pgsql,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: pgsql handling
 
 dnl start: mongodb handling
@@ -627,7 +624,10 @@ AC_ARG_ENABLE(mongodb,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: mongodb handling
 
 AC_MSG_CHECKING(whether to enable SQLite3 support)
@@ -647,7 +647,10 @@ AC_ARG_ENABLE(sqlite3,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: sqlite3 handling
 
 dnl start: RabbitMQ/AMQP handling
@@ -667,7 +670,10 @@ AC_ARG_ENABLE(rabbitmq,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: RabbitMQ/AMQP handling
 
 
@@ -716,7 +722,10 @@ AC_ARG_ENABLE(kafka,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: Kafka handling
 
 dnl start: geoip handling
@@ -736,7 +745,10 @@ AC_ARG_ENABLE(geoip,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 
 AC_MSG_CHECKING(whether to enable GeoIPv2 (libmaxminddb) support)
 AC_ARG_ENABLE(geoipv2,
@@ -782,7 +794,10 @@ AC_ARG_ENABLE(geoipv2,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: GeoIP handling
 
 dnl start: Jansson handling
@@ -802,7 +817,10 @@ AC_ARG_ENABLE(jansson,
     AC_MSG_RESULT(no)
     ;;
   esac ],
-AC_MSG_RESULT(no))
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
 dnl finish: Jansson handling
 
 if test x"$USING_DLOPEN" = x"yes"; then
@@ -839,70 +857,73 @@ AC_CHECK_TYPEDEF(uint8_t, sys/types.h)
 AC_MSG_CHECKING([whether to enable 64bit counters])
 AC_ARG_ENABLE(64bit,
         [  --enable-64bit                   Enable 64bit counters (default: yes)],
-        if test x$enableval = x"yes" ; then
+	[
+          if test x$enableval = x"yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
+          else
+            AC_MSG_RESULT(no)
+          fi
+        ],
+	[
           AC_MSG_RESULT(yes)
-          AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
-        else
-          AC_MSG_RESULT(no)
-        fi
-        ,
-        AC_MSG_RESULT(yes)
-	AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
+	  AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
+	]
 )
 
 AC_MSG_CHECKING([whether to enable multithreading in pmacct])
 AC_ARG_ENABLE(threads,
         [  --enable-threads                 Enable multi-threading in pmacct (default: yes)],
-        if test x$enableval = x"yes" ; then
-          AC_MSG_RESULT(yes)
-          AC_DEFINE(ENABLE_THREADS, 1)
+	[
+          if test x$enableval = x"yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE(ENABLE_THREADS, 1)
 	  
-	  dnl OS Specifics
-	  [
+	    dnl OS Specifics
 	    case "$host" in
 	    *-linux-*)
-	      AC_DEFINE(_XOPEN_SOURCE, 600)
-	      AC_DEFINE(_GNU_SOURCE, 1)
+	        AC_DEFINE(_XOPEN_SOURCE, 600)
+	        AC_DEFINE(_GNU_SOURCE, 1)
 	      ;;
 	    esac
-	  ]
 
-
-	  LIBS="${LIBS} -lpthread"
-          USING_THREADPOOL=yes
-	else
-          AC_MSG_RESULT(no)
-        fi
-        ,
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(ENABLE_THREADS, 1)
+	    LIBS="${LIBS} -lpthread"
+            USING_THREADPOOL=yes
+	  else
+            AC_MSG_RESULT(no)
+          fi
+        ],
+	[
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(ENABLE_THREADS, 1)
 
           dnl OS Specifics
-          [
-            case "$host" in
-            *-linux-*)
+          case "$host" in
+          *-linux-*)
               AC_DEFINE(_XOPEN_SOURCE, 600)
               AC_DEFINE(_GNU_SOURCE, 1)
-              ;;
-            esac
-          ]
-
+            ;;
+          esac
 
           LIBS="${LIBS} -lpthread"
           USING_THREADPOOL=yes
+	]
 )
 
 AC_MSG_CHECKING(whether to enable ULOG support)
 AC_ARG_ENABLE(ulog,
   [  --enable-ulog                    Enable ULOG support (default: no)],
+  [
        if test "x$enableval" = xyes ; then
                AC_MSG_RESULT(yes)
                CFLAGS="${CFLAGS} -DENABLE_ULOG"
        else
                AC_MSG_RESULT(no)
        fi
-       ,
+  ],
+  [
        AC_MSG_RESULT(no)
+  ]
 )
 
 dnl Checks for library functions.
@@ -914,12 +935,6 @@ dnl final checks
 dnl trivial solution to portability issue 
 CFLAGS="${CFLAGS} ${INCLUDES}"
 INCLUDES=""
-
-case "$host_os" in
-  IRIX*)
-    LIBS="${LIBS} -lgen"
-    ;;
-esac
 
 echo "
 PLATFORM ..... : `uname -m`
