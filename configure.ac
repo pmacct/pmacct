@@ -13,7 +13,12 @@ AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
 
 dnl Checks for programs.
 AC_PROG_CC
+
+dnl pkg-config stuff
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:/usr/local/lib/pkgconfig
+export PKG_CONFIG_PATH
 PKG_PROG_PKG_CONFIG
+
 host_os=`uname`
 host_cpu=`uname -m`
 host_os1=`uname -rs`
@@ -631,9 +636,8 @@ AC_ARG_ENABLE(sqlite3,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([SQLITE3], [sqlite3],, [
-dnl reasonably old libsqlite3 already support pkg-config
-    ])
+    dnl reasonably old libsqlite3 already support pkg-config
+    PKG_CHECK_MODULES([SQLITE3], [sqlite3])
     PLUGINS="${PLUGINS} sqlite3"
     USING_SQL="yes"
     USING_SQLITE3="yes"
@@ -653,9 +657,8 @@ AC_ARG_ENABLE(rabbitmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq],, [
-dnl reasonably old librabbitmq already support pkg-config
-    ])
+    dnl reasonably old librabbitmq already support pkg-config
+    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq])
     PLUGINS="${PLUGINS} rabbitmq"
     USING_RABBITMQ="yes"
     AC_DEFINE(WITH_RABBITMQ, 1)
@@ -694,10 +697,10 @@ AC_ARG_ENABLE(kafka,
 	fi
 
 	AC_MSG_CHECKING([default locations for rdkafka.h])
-	if test -r /usr/include/rdkafka.h; then
+	if test -r /usr/include/librdkafka/rdkafka.h; then
 		KAFKA_CFLAGS="-I/usr/include"
 		AC_MSG_RESULT([found in /usr/include])
-	elif test -r /usr/local/include/rdkafka.h; then
+	elif test -r /usr/local/include/librdkafka/rdkafka.h; then
 		KAFKA_CFLAGS="-I/usr/local/include"
 		AC_MSG_RESULT([found in /usr/local/include])
 	else
@@ -723,9 +726,8 @@ AC_ARG_ENABLE(geoip,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0],, [
-dnl reasonably old Maxmind GeoIP v1 already support pkg-config
-    ])
+    dnl reasonably old Maxmind GeoIP v1 already support pkg-config
+    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0])
     PLUGINS="${PLUGINS} geoip"
     USING_MMGEOIP="yes"
     AC_DEFINE(WITH_GEOIP, 1)
@@ -790,9 +792,8 @@ AC_ARG_ENABLE(jansson,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2],, [
-dnl reasonably old Jansson already support pkg-config
-    ])
+    dnl reasonably old Jansson already support pkg-config
+    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2])
     PLUGINS="${PLUGINS} jansson"
     USING_JANSSON="yes"
     AC_DEFINE(WITH_JANSSON, 1)
