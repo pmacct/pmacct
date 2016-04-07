@@ -323,9 +323,15 @@ AC_MSG_CHECKING([whether to enable IP prefix labels])
 AC_ARG_ENABLE(plabel,
   [  --enable-plabel                  Enable IP prefix labels (default: no)],
   [
-        AC_MSG_RESULT(yes)
-
-        AC_DEFINE(ENABLE_PLABEL, 1)
+	if test x$enableval = x"yes" ; then
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(ENABLE_PLABEL, 1)
+	else
+          AC_MSG_RESULT(no)
+	fi
+  ],
+  [
+	AC_MSG_RESULT(no)
   ])
 
 AC_ARG_WITH(pcap-includes,
@@ -522,7 +528,43 @@ AC_ARG_ENABLE(pgsql,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([PGSQL], [libpq])
+    PKG_CHECK_MODULES([PGSQL], [libpq],, [
+	AC_MSG_CHECKING([default locations for libpq])
+	if test -r /usr/lib/libpq.a -o -r /usr/lib/libpq.so; then
+		PGSQL_LIBS="-L/usr/lib -lpq"
+		AC_MSG_RESULT([found in /usr/lib])
+	elif test -r /usr/lib64/libpq.a -o -r /usr/lib64/libpq.so; then
+		PGSQL_LIBS="-L/usr/lib64 -lpq"
+		AC_MSG_RESULT([found in /usr/lib64])
+	elif test -r /usr/local/lib/libpq.a -o -r /usr/local/lib/libpq.so; then
+		PGSQL_LIBS="-L/usr/local/lib -lpq"
+		AC_MSG_RESULT([found in /usr/local/lib])
+	elif test -r /usr/local/pgsql/lib/libpq.a -o -r /usr/local/pgsql/lib/libpq.so; then
+		PGSQL_LIBS="-L/usr/local/pgsql/lib -lpq"
+		AC_MSG_RESULT([found in /usr/local/pgsql/lib])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_LIB([pq], [PQconnectdb], [], [AC_MSG_ERROR([ERROR: missing PQ library. Refer to: http://www.postgresql.org/])])
+	fi
+
+	AC_MSG_CHECKING([default locations for libpq-fe.h])
+	if test -r /usr/include/libpq-fe.h; then
+		PGSQL_CFLAGS="-I/usr/include"
+		AC_MSG_RESULT([found in /usr/include])
+	elif test -r /usr/include/postgresql/libpq-fe.h; then
+		PGSQL_CFLAGS="-I/usr/include/postgresql"
+		AC_MSG_RESULT([found in /usr/include/postgresql])
+	elif test -r /usr/local/include/libpq-fe.h; then
+		PGSQL_CFLAGS="-I/usr/local/include"
+		AC_MSG_RESULT([found in /usr/local/include])
+	elif test -r /usr/local/pgsql/include/libpq-fe.h; then
+		PGSQL_CFLAGS="-I/usr/local/pgsql/include"
+		AC_MSG_RESULT([found in /usr/local/pgsql/include])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_HEADER([libpq-fe.h], [], [AC_MSG_ERROR(ERROR: missing PostgreSQL headers)])
+	fi
+    ])
     PLUGINS="${PLUGINS} pgsql"
     USING_SQL="yes"
     USING_PGSQL="yes"
@@ -542,9 +584,37 @@ AC_ARG_ENABLE(mongodb,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([MONGODB], [libmongoc-1.0])
+    PKG_CHECK_MODULES([MONGODB], [libmongoc],, [
+	AC_MSG_CHECKING([default locations for libmongoc])
+	if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
+		MONGODB_LIBS="-L/usr/lib -lmongoc"
+		AC_MSG_RESULT([found in /usr/lib])
+	elif test -r /usr/lib64/libmongoc.a -o -r /usr/lib64/libmongoc.so; then
+		MONGODB_LIBS="-L/usr/lib64 -lmongoc"
+		AC_MSG_RESULT([found in /usr/lib64])
+	elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
+		MONGODB_LIBS="-L/usr/local/lib -lmongoc"
+		AC_MSG_RESULT([found in /usr/local/lib])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
+			ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
+		])])
+	fi
+
+	AC_MSG_CHECKING([default locations for mongo.h])
+	if test -r /usr/include/mongo.h; then
+		MONGODB_CFLAGS="-I/usr/include"
+		AC_MSG_RESULT([found in /usr/include])
+	elif test -r /usr/local/include/mongo.h; then
+		MONGODB_CFLAGS="-I/usr/local/include"
+		AC_MSG_RESULT([found in /usr/local/include])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_HEADER([mongo.h], [], [AC_MSG_ERROR(ERROR: missing MongoDB headers)])
+	fi
+    ])
     PLUGINS="${PLUGINS} mongodb"
-dnl USING_SQL="yes"
     USING_MONGODB="yes"
     AC_DEFINE(WITH_MONGODB, 1)
     ;;
@@ -561,7 +631,9 @@ AC_ARG_ENABLE(sqlite3,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([SQLITE3], [sqlite3])
+    PKG_CHECK_MODULES([SQLITE3], [sqlite3],, [
+dnl reasonably old libsqlite3 already support pkg-config
+    ])
     PLUGINS="${PLUGINS} sqlite3"
     USING_SQL="yes"
     USING_SQLITE3="yes"
@@ -581,7 +653,9 @@ AC_ARG_ENABLE(rabbitmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq])
+    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq],, [
+dnl reasonably old librabbitmq already support pkg-config
+    ])
     PLUGINS="${PLUGINS} rabbitmq"
     USING_RABBITMQ="yes"
     AC_DEFINE(WITH_RABBITMQ, 1)
@@ -601,7 +675,36 @@ AC_ARG_ENABLE(kafka,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.8.5])
+    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.8.5],, [
+	AC_MSG_CHECKING([default locations for librdkafka])
+	if test -r /usr/lib/librdkafka.a -o -r /usr/lib/librdkafka.so; then
+		KAFKA_LIBS="-L/usr/lib -lrdkafka"
+		AC_MSG_RESULT([found in /usr/lib])
+	elif test -r /usr/lib64/librdkafka.a -o -r /usr/lib64/librdkafka.so; then
+		KAFKA_LIBS="-L/usr/lib64 -lrdkafka"
+		AC_MSG_RESULT([found in /usr/lib64])
+	elif test -r /usr/local/lib/librdkafka.a -o -r /usr/local/lib/librdkafka.so; then
+		KAFKA_LIBS="-L/usr/local/lib -lrdkafka"
+		AC_MSG_RESULT([found in /usr/local/lib])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_LIB([rdkafka], [rd_kafka_new], [], [AC_MSG_ERROR([
+			ERROR: missing Kafka library. Refer to: https://github.com/edenhill/librdkafka/
+		])])
+	fi
+
+	AC_MSG_CHECKING([default locations for rdkafka.h])
+	if test -r /usr/include/rdkafka.h; then
+		KAFKA_CFLAGS="-I/usr/include"
+		AC_MSG_RESULT([found in /usr/include])
+	elif test -r /usr/local/include/rdkafka.h; then
+		KAFKA_CFLAGS="-I/usr/local/include"
+		AC_MSG_RESULT([found in /usr/local/include])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_HEADER([rdkafka.h], [], [AC_MSG_ERROR(ERROR: missing Kafka headers)])
+	fi
+    ])
     PLUGINS="${PLUGINS} kafka"
     USING_KAFKA="yes"
     AC_DEFINE(WITH_KAFKA, 1)
@@ -620,7 +723,9 @@ AC_ARG_ENABLE(geoip,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0])
+    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0],, [
+dnl reasonably old Maxmind GeoIP v1 already support pkg-config
+    ])
     PLUGINS="${PLUGINS} geoip"
     USING_MMGEOIP="yes"
     AC_DEFINE(WITH_GEOIP, 1)
@@ -637,7 +742,36 @@ AC_ARG_ENABLE(geoipv2,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.0.0])
+    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.0.0],, [
+	AC_MSG_CHECKING([default locations for libmaxminddb])
+	if test -r /usr/lib/libmaxminddb.a -o -r /usr/lib/libmaxminddb.so; then
+		GEOIPV2_LIBS="-L/usr/lib -lmaxminddb"
+		AC_MSG_RESULT([found in /usr/lib])
+	elif test -r /usr/lib64/libmaxminddb.a -o -r /usr/lib64/libmaxminddb.so; then
+		GEOIPV2_LIBS="-L/usr/lib64 -lmaxminddb"
+		AC_MSG_RESULT([found in /usr/lib64])
+	elif test -r /usr/local/lib/libmaxminddb.a -o -r /usr/local/lib/libmaxminddb.so; then
+		GEOIPV2_LIBS="-L/usr/local/lib -lmaxminddb"
+		AC_MSG_RESULT([found in /usr/local/lib])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_LIB([maxminddb], [MMDB_open], [], [AC_MSG_ERROR([
+			ERROR: missing Maxmind libmaxminddb library. Refer to: http://www.maxmind.com/download/geoip/api/c/
+		])])
+	fi
+
+	AC_MSG_CHECKING([default locations for maxminddb.h])
+	if test -r /usr/include/maxminddb.h; then
+		GEOIPV2_CFLAGS="-I/usr/include"
+		AC_MSG_RESULT([found in /usr/include])
+	elif test -r /usr/local/include/maxminddb.h; then
+		GEOIPV2_CFLAGS="-I/usr/local/include"
+		AC_MSG_RESULT([found in /usr/local/include])
+	else
+		AC_MSG_RESULT([not found])
+		AC_CHECK_HEADER([maxminddb.h], [], [AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb headers)])
+	fi
+    ])
     PLUGINS="${PLUGINS} geoipv2"
     USING_MMGEOIPV2="yes"
     AC_DEFINE(WITH_GEOIPV2, 1)
@@ -656,7 +790,9 @@ AC_ARG_ENABLE(jansson,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2])
+    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2],, [
+dnl reasonably old Jansson already support pkg-config
+    ])
     PLUGINS="${PLUGINS} jansson"
     USING_JANSSON="yes"
     AC_DEFINE(WITH_JANSSON, 1)
