@@ -1,0 +1,28 @@
+  CC				C compiler command
+  CFLAGS			C compiler flags
+  LDFLAGS     			linker flags, e.g. -L<lib dir> if you have libraries in a
+              			nonstandard directory <lib dir>
+  LIBS        			libraries to pass to the linker, e.g. -l<library>
+  CPPFLAGS    			(Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
+              			you have headers in a nonstandard directory <include dir>
+  CPP         			C preprocessor
+  PKG_CONFIG  			path to pkg-config utility
+  PKG_CONFIG_PATH		directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR		path overriding pkg-config's built-in search path
+  PGSQL_CFLAGS			C compiler flags for PGSQL, overriding pkg-config
+  PGSQL_LIBS			linker flags for PGSQL, overriding pkg-config
+  MONGODB_CFLAGS		C compiler flags for MONGODB, overriding pkg-config
+  MONGODB_LIBS			linker flags for MONGODB, overriding pkg-config
+  SQLITE3_CFLAGS		C compiler flags for SQLITE3, overriding pkg-config
+  SQLITE3_LIBS			linker flags for SQLITE3, overriding pkg-config
+  RABBITMQ_CFLAGS		C compiler flags for RABBITMQ, overriding pkg-config
+  RABBITMQ_LIBS			linker flags for RABBITMQ, overriding pkg-config
+  KAFKA_CFLAGS			C compiler flags for KAFKA, overriding pkg-config
+  KAFKA_LIBS			linker flags for KAFKA, overriding pkg-config
+  GEOIP_CFLAGS			C compiler flags for GEOIP, overriding pkg-config
+  GEOIP_LIBS			linker flags for GEOIP, overriding pkg-config
+  GEOIPV2_CFLAGS		C compiler flags for GEOIPV2, overriding pkg-config
+  GEOIPV2_LIBS			linker flags for GEOIPV2, overriding pkg-config
+  JANSSON_CFLAGS		C compiler flags for JANSSON, overriding pkg-config
+  JANSSON_LIBS			linker flags for JANSSON, overriding pkg-config
+

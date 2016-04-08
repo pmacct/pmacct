@@ -58,11 +58,13 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 
 II. Configuring pmacct for compilation and installing
 The simplest way to configure the package for compilation is to let the configure
-script to probe default headers and libraries for you. Switches you are likely to
-want enabled are already set so, ie. 64 bits counters and multi-threading (pre-
-requisite for the BGP and IGP daemon codes). SQL plugins and IPv6 support are by
-default disabled instead. A few examples will follow; as usual to get the list of
-available switches, you can use the following command-line:
+script to probe default headers and libraries for you. A first round of guessing
+is done via pkg-config then, for some libraries, "typical" default locations
+are checked, ie. /usr/local/lib. Switches you are likely to want enabled are
+already set so, ie. 64 bits counters and multi-threading (pre- requisite for
+the BGP, BMP, and IGP daemon codes). SQL plugins and IPv6 support are by default
+disabled instead. A few examples will follow; as usual to get the list of available
+switches, you can use the following command-line:
 
 shell> ./configure --help
 
@@ -75,9 +77,18 @@ Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
 (4) shell> ./configure --enable-mongodb
 (5) shell> ./configure --enable-mysql --enable-pgsql
 
-Then to compile and install simply:
+Then to compile and install simply typing:
 
 shell> make; make install
+
+But, for example, should you want to compile pmacct with PostgreSQL support and
+have installed PostgreSQL in /usr/local/postgresql and pkg-config is unable to
+help, you can supply this non-default location as follows (assuming you are
+running the bash shell):
+
+shell> export PGSQL_LIBS="-L/usr/local/postgresql/lib -lpq"
+shell> export PGSQL_CFLAGS="-I/usr/local/postgresql/include"
+shell> ./configure --enable-pgsql
 
 Once daemons are installed you can check:
 * how to instrument each daemon via its usage help page: 
@@ -555,14 +566,20 @@ party applications. Requirements to use the plugin are:
 * RabbitMQ C API, rabbitmq-c: https://github.com/alanxz/rabbitmq-c/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
 
-Once these elements are installed, pmacct can be configured for compilation as
-follows (assumptions: Jansson is installed in /usr/local/lib and RabbitMQ server
-and rabbitmq-c are installed in /usr/local/rabbitmq as base path):
+Once these elements are installed, pmacct can be configured for compiling. pmacct
+makes use of pkg-config for finding libraries and headers location and checks some
+"typical" default locations, ie. /usr/local/lib and /usr/local/include. So all
+you should do is just:
 
-./configure --enable-rabbitmq \
-            --with-rabbitmq-libs=/usr/local/rabbitmq/lib/ \
-            --with-rabbitmq-includes=/usr/local/rabbitmq/include/ \
-            --enable-jansson
+./configure --enable-rabbitmq --enable-jansson
+
+But, for example, should you have installed RabbitMQ in /usr/local/rabbitmq and
+pkg-config is unable to help, you can supply this non-default location as follows 
+(assuming you are running the bash shell):
+
+export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq" 
+export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
+./configure --enable-rabbitmq --enable-jansson
 
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic RabbitMQ/AMQP plugin configuration (assumes: RabbitMQ server is available
@@ -604,10 +621,19 @@ are:
 * Librdkafka: https://github.com/edenhill/librdkafka/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
 
-Once these elements are installed, pmacct can be configured for compilation as
-follows (assumptions: Jansson, librdkafka and the Kafka broker are installed in
-their default paths under /usr/local):
+Once these elements are installed, pmacct can be configured for compiling. pmacct
+makes use of pkg-config for finding libraries and headers location and checks some
+"typical" default locations, ie. /usr/local/lib and /usr/local/include. So all
+you should do is just:
 
+./configure --enable-kafka --enable-jansson
+
+But, for example, should you have installed Kafka in /usr/local/kafka and pkg-
+config is unable to help, you can supply this non-default location as follows
+(assuming you are running the bash shell):
+
+export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
+export KAFKA_CFLAGS="-I/usr/local/kafka/include"
 ./configure --enable-kafka --enable-jansson
 
 Then "make; make install" as usual. Following a configuration snippet showing a
@@ -1168,6 +1194,14 @@ of this document):
 
 shell> ./configure --enable-jansson
 
+But, for example, should you have installed Jansson in /usr/local/jansson and
+pkg-config is unable to help, you can supply this non-default location as
+follows (assuming you are running the bash shell):
+
+shell> export JANSSON_LIBS="-L/usr/local/jansson/lib -ljansson"
+shell> export JANSSON_CFLAGS="-I/usr/local/jansson/include"
+shell> ./configure --enable-jansson
+
 A basic dump of BGP tables at regular intervals (60 secs) to plain-text files,
 split by BGP peer and time of the day, is configured as follows:
 
@@ -1377,8 +1411,9 @@ Which, over time, would produce a would produce a series of files as follows:
 JSON output requires compiling pmacct against Jansson library, which can be
 found at the following URL: http://www.digip.org/jansson/ . pmacct can be
 configured for compilation against the library using the --enable-jansson
-switch. Please refer to the configure script help screen to supply custom
-locations of Jansson library and/or headers. 
+switch. Please refer to the configure script help screen (and/or "Configuring
+pmacct for compilation and installing" section of this document) to supply
+custom locations of Jansson library and/or headers. 
 
 Splitting data into time bins is supported via print_history directive. When
 enabled, time-related variable substitutions of dynamic print_output_file names
@@ -1411,9 +1446,17 @@ GeoIP v1 (libGeoIP):
   database also available: http://dev.maxmind.com/geoip/legacy/install/country/ 
 
 * To compile the pmacct package with support for GeoIP lookups, the code must
-  be configured for compilation as follows: ./configure --enable-geoip [ ... ]
-  The switches --with-geoip-libs and --with-geoip-includes can be of help if
-  the library is installed in some non-standard location.
+  be configured for compilation as follows:
+
+  ./configure --enable-geoip [ ... ]
+
+  But, for example, should you have installed libGeoIP in /usr/local/geoip and
+  pkg-config is unable to help, you can supply this non-default location as
+  follows (assuming you are running the bash shell):
+
+  export GEOIP_LIBS="-L/usr/local/geoip/lib -lgeoip"
+  export GEOIP_CFLAGS="-I/usr/local/geoip/include"
+  ./configure --enable-geoip [ ... ]
 
 * Include as part of the pmacct configuration the following fragment:
 
@@ -1429,9 +1472,17 @@ GeoIP v2 (libmaxminddb):
   database binary format is supported.
 
 * To compile the pmacct package with support for GeoIP lookups, the code must
-  be configured for compilation as follows: ./configure --enable-geoipv2
-  [ ... ] The switches --with-geoipv2-libs and --with-geoipv2-includes can be
-  of help if the library is installed in some non-standard location.
+  be configured for compilation as follows:
+
+  ./configure --enable-geoipv2 [ ... ]
+
+  But, for example, should you have installed libmaxminddb in /usr/local/geoipv2
+  and pkg-config is unable to help, you can supply this non-default location
+  as follows (assuming you are running the bash shell):
+
+  export GEOIPV2_LIBS="-L/usr/local/geoipv2/lib -lmaxminddb"
+  export GEOIPV2_CFLAGS="-I/usr/local/geoipv2/include"
+  ./configure --enable-geoipv2 [ ... ]
 
 * Include as part of the pmacct configuration the following fragment:
 

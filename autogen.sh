@@ -69,6 +69,8 @@ ${AUTORECONF} -vif -I m4 || {
     ${AUTOMAKE} --add-missing --copy --force-missing
 }
 
+bin/configure-help-replace.sh
+
 echo "autogen.sh: for the next step, run './configure' [or './configure --help' to check available options]"
 
 exit 0
