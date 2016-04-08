@@ -22,7 +22,7 @@ DOCUMENTATION
 - Build GitHub code:
   * git clone https://github.com/pmacct/pmacct.git
   * cd pmacct
-  * ./autogen.sh *[libtool, autoconf and automake packages required]*
+  * ./autogen.sh *[pkg-config, libtool, autoconf and automake packages required]*
   * ./configure *[check-out available configure knobs via ./configure --help]* 
   * make
   * make install *[with super-user permission]*
