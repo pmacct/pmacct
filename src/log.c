@@ -34,7 +34,7 @@ void Log(short int level, char *msg, ...)
 
   if (!config.syslog && !config.logfile_fd) {
     va_start(ap, msg);
-    vprintf(msg, ap);
+    vfprintf(stderr, msg, ap);
     va_end(ap);
     fflush(stderr);
   }
