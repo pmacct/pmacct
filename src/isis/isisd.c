@@ -48,7 +48,6 @@
 #include "isis_route.h"
 #include "isis_csm.h"
 
-struct isis *isis = NULL;
 extern struct thread_master *master;
 
 /*

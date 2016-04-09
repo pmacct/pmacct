@@ -630,4 +630,11 @@ struct tunnel_entry {
   tunnel_configurator tc;
 };
 
-struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
+/* global variables */
+#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
+#undef EXT

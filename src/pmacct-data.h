@@ -35,7 +35,13 @@
 #define PLUGIN_ID_UNKNOWN       -1
 
 /* vars */
-int protocols_number;
+#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMACCT_CLIENT_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT int protocols_number;
+#undef EXT
 
 /* structures */
 static const struct _primitives_matrix_struct _primitives_matrix[] = {

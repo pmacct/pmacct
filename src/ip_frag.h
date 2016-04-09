@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -74,13 +74,19 @@ struct lru_l6 {
 #endif
 
 /* global vars */
-struct ip_fragment *ipft[IPFT_HASHSZ];
-struct lru_l lru_list;
+#if (!defined __IP_FRAG_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT struct ip_fragment *ipft[IPFT_HASHSZ];
+EXT struct lru_l lru_list;
 
 #if defined ENABLE_IPV6
-struct ip6_fragment *ipft6[IPFT_HASHSZ];
-struct lru_l6 lru_list6;
+EXT struct ip6_fragment *ipft6[IPFT_HASHSZ];
+EXT struct lru_l6 lru_list6;
 #endif
+#undef EXT
 
 /* prototypes */
 #if (!defined __IP_FRAG_C)

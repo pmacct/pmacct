@@ -19,4 +19,6 @@ sed --posix -e "/$HEAD/,/$TAIL/{ /$HEAD/{p; r $FILE_REPLACE
 if [ $? = 0 ]; then
         chmod 755 $FILE_TMP
         mv -f $FILE_TMP $FILE_ORIGINAL
+else
+	rm -f $FILE_TMP
 fi

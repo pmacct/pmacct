@@ -179,7 +179,7 @@ EXT void skinny_bmp_daemon();
 #undef EXT
 
 /* global variables */
-#if !defined(__BMP_C) && !defined(__BMP_LOGDUMP_C) && !defined(__BMP_MSG_C) && !defined(__BMP_UTIL_C)
+#if !defined(__BMP_C)
 #define EXT extern
 #else
 #define EXT

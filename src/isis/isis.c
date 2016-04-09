@@ -98,6 +98,7 @@ void skinny_isis_daemon()
   glob_isis_seq_num = 0;
 
   /* initializing IS-IS structures */
+  isis = NULL;
   isis_init();
   dyn_cache_init();
 

@@ -217,7 +217,7 @@ EXT void skinny_bgp_daemon();
 #undef EXT
 
 /* global variables */
-#if (!defined __BGP_C) && (!defined __BGP_UTIL_C) && (!defined __BGP_LOOKUP_C) && (!defined __BGP_MSG_C) && (!defined __BGP_LOGDUMP_C)
+#if (!defined __BGP_C)
 #define EXT extern
 #else
 #define EXT

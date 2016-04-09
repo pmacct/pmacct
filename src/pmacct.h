@@ -329,6 +329,16 @@ EXT void compute_once();
 EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 #undef EXT
 
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char *, const char *, size_t);
+#endif
+
+#if (defined WITH_JANSSON) && (!defined HAVE_JANSSON_OBJECT_UPDATE_MISSING)
+#include <jansson.h>
+int json_object_update_missing(json_t *, json_t *);
+#endif
+
+/* global variables */
 #if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C)
 #define EXT extern
 #else
@@ -346,19 +356,7 @@ EXT struct configuration config; /* global configuration structure */
 EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 EXT u_char dummy_tlhdr[16];
+EXT pcap_t *glob_pcapt;
+EXT struct pcap_stat ps;
 #undef EXT
-
-#ifndef HAVE_STRLCPY
-size_t strlcpy(char *, const char *, size_t);
-#endif
-
-#if (defined WITH_JANSSON) && (!defined HAVE_JANSSON_OBJECT_UPDATE_MISSING)
-#include <jansson.h>
-int json_object_update_missing(json_t *, json_t *);
-#endif
-
-/* global variables */
-pcap_t *glob_pcapt;
-struct pcap_stat ps;
-
 #endif /* _PMACCT_H_ */

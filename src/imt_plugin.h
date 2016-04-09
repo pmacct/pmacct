@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -176,7 +176,7 @@ EXT void free_extra_allocs();
 #else
 #define EXT
 #endif
-EXT void (*insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+EXT void (*imt_insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
 EXT unsigned char *mpd;  /* memory pool descriptors table */
 EXT unsigned char *a;  /* accounting in-memory table */
 EXT struct memory_pool_desc *current_pool; /* pointer to currently used memory pool */

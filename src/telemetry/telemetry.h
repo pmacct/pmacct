@@ -108,7 +108,7 @@ EXT void telemetry_prepare_daemon(struct telemetry_data *);
 #undef EXT
 
 /* global variables */
-#if !defined(__TELEMETRY_C) && !defined(__TELEMETRY_LOGDUMP_C) && !defined(__TELEMETRY_MSG_C) && !defined(__TELEMETRY_UTIL_C)
+#if !defined(__TELEMETRY_C)
 #define EXT extern
 #else
 #define EXT
