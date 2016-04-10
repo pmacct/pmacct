@@ -126,6 +126,7 @@ EXT int cfg_key_print_markers(char *, char *, char *);
 EXT int cfg_key_print_output(char *, char *, char *);
 EXT int cfg_key_print_output_file(char *, char *, char *);
 EXT int cfg_key_print_output_file_append(char *, char *, char *);
+EXT int cfg_key_print_output_lock_file(char *, char *, char *);
 EXT int cfg_key_print_output_separator(char *, char *, char *);
 EXT int cfg_key_print_latest_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_port(char *, char *, char *);

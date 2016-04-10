@@ -158,6 +158,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 
   print_output_stdout_header = TRUE;
+  if (!config.sql_table && !config.print_output_lock_file)
+    Log(LOG_WARNING, "WARN ( %s/%s ): no print_output_file and no print_output_lock_file defined.\n", config.name, config.type);
 
   if (config.sql_table) {
     if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$'))
@@ -363,7 +365,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator, *fd_buf;
   char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
-  FILE *f = NULL;
+  FILE *f = NULL, *lockf = NULL;
   int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index;
   time_t start, duration;
   char tmpbuf[LONGLONGSRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
@@ -449,7 +451,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   else {
     /* writing to stdout: pointing f and obtaining lock */
     f = stdout;
-    file_lock(fileno(stdout));
+    if (config.print_output_lock_file) {
+      lockf = open_output_file(config.print_output_lock_file, "w", TRUE);
+      if (!lockf)
+        Log(LOG_WARNING, "WARN ( %s/%s ): Failed locking print_output_lock_file: %s\n", config.name, config.type, config.print_output_lock_file);
+    }
 
     /* writing to stdout: writing header only once */
     if (print_output_stdout_header) {
@@ -1238,7 +1244,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   }
   else {
     /* writing to stdout: releasing lock */
-    file_unlock(fileno(stdout));
+    close_output_file(lockf);
   }
 
   /* If we have pending queries then start again */

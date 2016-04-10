@@ -368,6 +368,8 @@ FILE *open_output_file(char *filename, char *mode, int lock)
   gid_t group = -1;
   int ret;
 
+  if (!filename || !mode) return file;
+
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
