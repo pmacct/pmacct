@@ -845,14 +845,14 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([getopt.h sys/select.h sys/time.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_TYPEDEF(u_int64_t, sys/types.h)
-AC_CHECK_TYPEDEF(u_int32_t, sys/types.h)
-AC_CHECK_TYPEDEF(u_int16_t, sys/types.h)
-AC_CHECK_TYPEDEF(u_int8_t, sys/types.h)
-AC_CHECK_TYPEDEF(uint64_t, sys/types.h)
-AC_CHECK_TYPEDEF(uint32_t, sys/types.h)
-AC_CHECK_TYPEDEF(uint16_t, sys/types.h)
-AC_CHECK_TYPEDEF(uint8_t, sys/types.h)
+AC_CHECK_TYPE(u_int64_t, [AC_DEFINE(HAVE_U_INT64_T, 1)])
+AC_CHECK_TYPE(u_int32_t, [AC_DEFINE(HAVE_U_INT32_T, 1)])
+AC_CHECK_TYPE(u_int16_t, [AC_DEFINE(HAVE_U_INT16_T, 1)])
+AC_CHECK_TYPE(u_int8_t, [AC_DEFINE(HAVE_U_INT8_T, 1)])
+AC_CHECK_TYPE(uint64_t, [AC_DEFINE(HAVE_UINT64_T, 1)])
+AC_CHECK_TYPE(uint32_t, [AC_DEFINE(HAVE_UINT32_T, 1)])
+AC_CHECK_TYPE(uint16_t, [AC_DEFINE(HAVE_UINT16_T, 1)])
+AC_CHECK_TYPE(uint8_t, [AC_DEFINE(HAVE_UINT8_T, 1)])
 
 AC_MSG_CHECKING([whether to enable 64bit counters])
 AC_ARG_ENABLE(64bit,
