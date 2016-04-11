@@ -2851,7 +2851,7 @@ int Recv(int sd, unsigned char **buf)
           elem += unpacked;
 	}
 	/* check 2: enough space in dss */
-	if (((u_int32_t)elem+num) > (u_int32_t)sbrk(0)) sbrk(LARGEBUFLEN);
+	if (((char *)elem+num) > (char *)sbrk(0)) sbrk(LARGEBUFLEN);
 
 	memcpy(elem, rxbuf, num);
 	unpacked += num;

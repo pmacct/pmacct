@@ -251,7 +251,7 @@ route_node_match_ipv6 (const struct route_table *table,
   p.prefixlen = IPV6_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return route_node_match (table, (struct sis_prefix *) &p);
+  return route_node_match (table, (struct isis_prefix *) &p);
 }
 #endif /* ENABLE_IPV6 */
 

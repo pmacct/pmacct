@@ -41,5 +41,5 @@ EXT void P_fprintf_csv_label(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgreg
 #else
 #define EXT
 #endif
-EXT print_output_stdout_header;
+EXT int print_output_stdout_header;
 #undef EXT

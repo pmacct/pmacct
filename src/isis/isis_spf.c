@@ -97,7 +97,7 @@ vtype2string (enum vertextype vtype)
   return NULL;                  /* Not reached */
 }
 
-char *
+const char *
 vid2string (struct isis_vertex *vertex, u_char * buff)
 {
   switch (vertex->type)

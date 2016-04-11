@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -465,7 +465,7 @@ int parse_shared_object(char *fname, struct pkt_classifier *css)
 
 int pm_scandir(const char *dir, struct dirent ***namelist,
             int (*select)(const struct dirent *),
-            int (*compar)(const struct dirent **, const struct dirent **))
+            int (*compar)(const void *, const void *))
 {
   DIR *d;
   struct dirent *entry;
@@ -504,9 +504,12 @@ int pm_scandir(const char *dir, struct dirent ***namelist,
   return(i);
 }
 
-int pm_alphasort(const struct dirent **a, const struct dirent **b)
+int pm_alphasort(const void *a, const void *b)
 {
-  return(strcmp((*a)->d_name, (*b)->d_name));
+  const struct dirent *dira = a;
+  const struct dirent *dirb = b;
+
+  return(strcmp(dira->d_name, dirb->d_name));
 }
 
 void link_conntrack_helper(struct pkt_classifier *css)

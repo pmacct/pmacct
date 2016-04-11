@@ -29,8 +29,6 @@
 #include "plugin_hooks.h"
 #include <search.h>
 
-static const char pkt_len_distrib_unknown[] = "unknown";
-
 /* functions */
 void setnonblocking(int sock)
 {
@@ -1170,62 +1168,6 @@ void set_sampling_table(struct packet_ptrs_vector *pptrsv, u_char *t)
 #endif
 }
 
-struct packet_ptrs *copy_packet_ptrs(struct packet_ptrs *pptrs)
-{
-  struct packet_ptrs *new_pptrs;
-  int offset;
-  u_char dummy_tlhdr[16];
-
-  /* Copy the whole structure first */
-  if ((new_pptrs = malloc(sizeof(struct packet_ptrs))) == NULL) {
-    return NULL;
-  }
-  memcpy(new_pptrs, pptrs, sizeof(struct packet_ptrs));
-
-  /* Copy the packet buffer */
-  if ((new_pptrs->packet_ptr = malloc(pptrs->pkthdr->caplen)) == NULL) {
-    free(new_pptrs);
-    return NULL;
-  }
-  memcpy(new_pptrs->packet_ptr, pptrs->packet_ptr, pptrs->pkthdr->caplen);
-
-  /* Copy the pcap packet header */
-  if ((new_pptrs->pkthdr = malloc(sizeof(struct pcap_pkthdr))) == NULL) {
-    free(new_pptrs->packet_ptr);
-    free(new_pptrs);
-    return NULL;
-  }
-  memcpy(new_pptrs->pkthdr, pptrs->pkthdr, sizeof(struct pcap_pkthdr));
-
-  /* Fix the pointers */
-  offset = (int) new_pptrs->packet_ptr - (int) pptrs->packet_ptr;
-
-  /* Pointers can be NULL */
-  if (pptrs->iph_ptr)
-    new_pptrs->iph_ptr += offset;
-  if (pptrs->tlh_ptr) {
-    if (pptrs->tlh_ptr > pptrs->packet_ptr && pptrs->tlh_ptr < pptrs->packet_ptr+offset) {
-      // If it is not a dummy tlh_ptr
-      new_pptrs->tlh_ptr += offset;
-    }
-    else {
-      memset(dummy_tlhdr, 0, sizeof(dummy_tlhdr));
-      new_pptrs->tlh_ptr = dummy_tlhdr;
-    }
-  }
-  if (pptrs->payload_ptr)
-    new_pptrs->payload_ptr += offset;
-
-  return new_pptrs;
-}
-
-void free_packet_ptrs(struct packet_ptrs *pptrs)
-{
-  free(pptrs->pkthdr);
-  free(pptrs->packet_ptr);
-  free(pptrs);
-}
-
 void evaluate_bgp_aspath_radius(char *path, int len, int radius)
 {
   int count, idx;
@@ -1584,11 +1526,14 @@ int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 
 void load_pkt_len_distrib_bins()
 {
-  char *ptr, *endptr_v, *endptr_r, *token, *range_ptr;
+  char *ptr, *endptr_v, *endptr_r, *token, *range_ptr, *pkt_len_distrib_unknown;
   u_int16_t value = 0, range = 0;
   int idx, aux_idx;
 
   ptr = config.pkt_len_distrib_bins_str;
+
+  pkt_len_distrib_unknown = malloc(strlen("unknown") + 1);
+  strcpy(pkt_len_distrib_unknown, "unknown");
 
   /* We leave config.pkt_len_distrib_bins[0] to NULL to catch unknowns */
   config.pkt_len_distrib_bins[0] = pkt_len_distrib_unknown;
