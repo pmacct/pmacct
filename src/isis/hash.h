@@ -59,15 +59,15 @@ struct hash
 #else
 #define EXT
 #endif
-EXT struct hash *hash_create (unsigned int (*) (void *), int (*) (const void *, const void *));
-EXT struct hash *hash_create_size (unsigned int, unsigned int (*) (void *),  int (*) (const void *, const void *));
-EXT void *hash_get (struct hash *, void *, void * (*) (void *));
-EXT void *hash_alloc_intern (void *);
-EXT void *hash_lookup (struct hash *, void *);
-EXT void *hash_release (struct hash *, void *);
-EXT void hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
-EXT void hash_clean (struct hash *, void (*) (void *));
-EXT void hash_free (struct hash *);
+EXT struct hash *isis_hash_create (unsigned int (*) (void *), int (*) (const void *, const void *));
+EXT struct hash *isis_hash_create_size (unsigned int, unsigned int (*) (void *),  int (*) (const void *, const void *));
+EXT void *isis_hash_get (struct hash *, void *, void * (*) (void *));
+EXT void *isis_hash_alloc_intern (void *);
+EXT void *isis_hash_lookup (struct hash *, void *);
+EXT void *isis_hash_release (struct hash *, void *);
+EXT void isis_hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
+EXT void isis_hash_clean (struct hash *, void (*) (void *));
+EXT void isis_hash_free (struct hash *);
 EXT unsigned int string_hash_make (const char *);
 #undef EXT
 
