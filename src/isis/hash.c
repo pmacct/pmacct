@@ -28,7 +28,7 @@
 
 /* Allocate a new hash.  */
 struct hash *
-hash_create_size (unsigned int size, unsigned int (*hash_key) (void *),
+isis_hash_create_size (unsigned int size, unsigned int (*hash_key) (void *),
                                      int (*hash_cmp) (const void *, const void *))
 {
   struct hash *hash;
@@ -45,17 +45,17 @@ hash_create_size (unsigned int size, unsigned int (*hash_key) (void *),
 
 /* Allocate a new hash with default hash size.  */
 struct hash *
-hash_create (unsigned int (*hash_key) (void *), 
+isis_hash_create (unsigned int (*hash_key) (void *), 
              int (*hash_cmp) (const void *, const void *))
 {
-  return hash_create_size (HASHTABSIZE, hash_key, hash_cmp);
+  return isis_hash_create_size (HASHTABSIZE, hash_key, hash_cmp);
 }
 
 /* Utility function for hash_get().  When this function is specified
    as alloc_func, return arugment as it is.  This function is used for
    intern already allocated value.  */
 void *
-hash_alloc_intern (void *arg)
+isis_hash_alloc_intern (void *arg)
 {
   return arg;
 }
@@ -64,7 +64,7 @@ hash_alloc_intern (void *arg)
    corresponding hash backet and alloc_func is specified, create new
    hash backet.  */
 void *
-hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
+isis_hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
 {
   unsigned int key;
   unsigned int index;
@@ -97,9 +97,9 @@ hash_get (struct hash *hash, void *data, void * (*alloc_func) (void *))
 
 /* Hash lookup.  */
 void *
-hash_lookup (struct hash *hash, void *data)
+isis_hash_lookup (struct hash *hash, void *data)
 {
-  return hash_get (hash, data, NULL);
+  return isis_hash_get (hash, data, NULL);
 }
 
 /* Simple Bernstein hash which is simple and fast for common case */
@@ -117,7 +117,7 @@ unsigned int string_hash_make (const char *str)
    release is successfully finished, return the data pointer in the
    hash backet.  */
 void *
-hash_release (struct hash *hash, void *data)
+isis_hash_release (struct hash *hash, void *data)
 {
   void *ret;
   unsigned int key;
@@ -149,7 +149,7 @@ hash_release (struct hash *hash, void *data)
 
 /* Iterator function for hash.  */
 void
-hash_iterate (struct hash *hash, 
+isis_hash_iterate (struct hash *hash, 
 	      void (*func) (struct hash_backet *, void *), void *arg)
 {
   unsigned int i;
@@ -169,7 +169,7 @@ hash_iterate (struct hash *hash,
 
 /* Clean up hash.  */
 void
-hash_clean (struct hash *hash, void (*free_func) (void *))
+isis_hash_clean (struct hash *hash, void (*free_func) (void *))
 {
   unsigned int i;
   struct hash_backet *hb;
@@ -194,7 +194,7 @@ hash_clean (struct hash *hash, void (*free_func) (void *))
 /* Free hash memory.  You may call hash_clean before call this
    function.  */
 void
-hash_free (struct hash *hash)
+isis_hash_free (struct hash *hash)
 {
   free(hash->index);
   free(hash);

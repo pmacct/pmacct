@@ -257,7 +257,7 @@ cpu_record_hash_clear (struct hash_backet *bucket,
   if ( !(a->types & *filter) )
        return;
   
-  hash_release (cpu_record, bucket->data);
+  isis_hash_release (cpu_record, bucket->data);
 }
 
 /* Allocate new thread master.  */
@@ -266,7 +266,7 @@ thread_master_create ()
 {
   if (cpu_record == NULL) 
     cpu_record 
-      = hash_create_size (1011, (unsigned int (*) (void *))cpu_record_hash_key, 
+      = isis_hash_create_size (1011, (unsigned int (*) (void *))cpu_record_hash_key, 
                           (int (*) (const void *, const void *))cpu_record_hash_cmp);
     
   return (struct thread_master *) calloc(1, sizeof (struct thread_master));
@@ -365,8 +365,8 @@ thread_master_free (struct thread_master *m)
 
   if (cpu_record)
     {
-      hash_clean (cpu_record, cpu_record_hash_free);
-      hash_free (cpu_record);
+      isis_hash_clean (cpu_record, cpu_record_hash_free);
+      isis_hash_free (cpu_record);
       cpu_record = NULL;
     }
 }
@@ -923,7 +923,7 @@ thread_call (struct thread *thread)
       tmp.func = thread->func;
       tmp.funcname = thread->funcname;
       
-      thread->hist = hash_get (cpu_record, &tmp, 
+      thread->hist = isis_hash_get (cpu_record, &tmp, 
                     (void * (*) (void *))cpu_record_hash_alloc);
     }
 
