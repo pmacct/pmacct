@@ -1244,6 +1244,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   }
   else {
     /* writing to stdout: releasing lock */
+    fflush(f);
     close_output_file(lockf);
   }
 
