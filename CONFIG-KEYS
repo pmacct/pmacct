@@ -153,7 +153,7 @@ DESC:		This filter is global and applied to all incoming packets. It's passed to
 		pmacctd.
 DEFAULT:	none
 
-KEY:		snaplen (-L) [GLOBAL, PMACCTD_ONLY]
+KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Specifies the maximum number of bytes to capture for each packet. This directive has
 		key importance when enabling both classification and connection tracking engines. In
 		fact, some protocols (mostly text-based eg.: RTSP, SIP, etc.) benefit of extra bytes
@@ -162,10 +162,6 @@ DESC:		Specifies the maximum number of bytes to capture for each packet. This di
 		resources. The right value need to be traded-off. In case classification is enabled, 
 		values under 200 bytes are often meaningless. 500-750 bytes are enough even for text
 		based protocols. Default snaplen values are ok if classification is disabled.
-		For uacctd daemon, this option doesn't apply to packet snapshot length but rather to
-		the Netlink socket read buffer size. This should be reasonably large - at least 4KB,
-		which is the default value. For large uacctd_nl_size values snaplen could be further
-		increased.
 DEFAULT:	68 bytes; 128 bytes if compiled with --enable-ipv6
 
 KEY:		plugins (-P)
@@ -1644,7 +1640,7 @@ KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampl
 		Flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
 		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow
 		probe plugins, if any of them is activated. External sampling might be performed by capturing
-		frameworks the daemon is linked against (ie. PF_RING, ULOG) or appliances (ie. sampled packet
+		frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie. sampled packet
 		mirroring).
 		In nfacctd and sfacctd daemons this directive can be used to tackle corner cases, ie. sampling
 		rate reported by the NetFlow/sFlow agent is missing or not correct.
@@ -1821,7 +1817,7 @@ DESC:           Associates an interface index (ifIndex) to a given nfprobe or sf
 		sources on the same interface (ie. split by VLAN). Can be statically defined via a 32-bit integer
 		or semi-dynamically determined via lookup to either 'tag' or 'tag2' values (read full elaboration
 		on [ns]probe_direction directive). This definition will be also always overridden whenever the
-		ifIndex can be determined dynamically (ie. via ULOG framework).
+		ifIndex can be determined dynamically (ie. via NFLOG framework).
 DEFAULT:	none
 
 KEY:		sfprobe_receiver
@@ -2242,15 +2238,20 @@ DESC:           If pmacct is compiled with --enable-geoipv2, this defines full p
 		nfacctd").
 
 KEY:		uacctd_group [GLOBAL, UACCTD_ONLY]
-DESC:		Sets the Linux Netlink ULOG multicast group to be joined.
-DEFAULT:	1
+DESC:		Sets the Linux Netlink NFLOG multicast group to be joined.
+DEFAULT:	0
 
 KEY:		uacctd_nl_size [GLOBAL, UACCTD_ONLY]
-DESC:		Sets ULOG Netlink internal buffer size (specified in bytes). It is 4KB by default, but to
+DESC:		Sets NFLOG Netlink internal buffer size (specified in bytes). It is 128KB by default, but to
 		safely record bursts of high-speed traffic, it could be further increased. For high loads,
 		values as large as 2MB are recommended. When modifying this value, it is also recommended
 		to reflect the change to the 'snaplen' option.
-DEFAULT:	4096
+DEFAULT:	131072
+
+KEY:		uacctd_threshold [GLOBAL, UACCTD_ONLY]
+DESC:		Sets the number of packets to queue inside the kernel before sending them to userspace. Higher
+		values result in less overhead per packet but increase delay until the packets reach userspace.
+DEFAULT:	1
 
 KEY:		tunnel_0 [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Defines tunnel inspection, disabled by default. The daemon will then account on tunnelled

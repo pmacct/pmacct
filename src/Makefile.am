@@ -1,5 +1,5 @@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
-sbin_PROGRAMS = pmacctd nfacctd sfacctd uacctd pmtelemetryd
+sbin_PROGRAMS = pmacctd nfacctd sfacctd pmtelemetryd
 bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
 
@@ -76,8 +76,12 @@ nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_templ
 nfacctd_LDADD = libdaemons.la
 sfacctd_SOURCES = sfacctd.c sfacctd.h sfv5_module.c sfv5_module.h
 sfacctd_LDADD = libdaemons.la
+if WITH_NFLOG
+sbin_PROGRAMS += uacctd
 uacctd_SOURCES = uacctd.c uacctd.h
-uacctd_LDADD = libdaemons.la
+uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@
+uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
+endif
 pmacct_SOURCES = pmacct.c
 pmacct_LDADD = libcommon.la
 pmtelemetryd_SOURCES = pmtelemetryd.c pmtelemetryd.h

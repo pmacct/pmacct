@@ -5139,9 +5139,9 @@ int cfg_key_uacctd_group(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 1 || value > 32) return ERR;
+  if (value < 0 || value > 65535) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.uacctd_group = (1 << (value-1));
+  for (; list; list = list->next, changes++) list->cfg.uacctd_group = value;
   return changes;
 }
 
@@ -5153,6 +5153,17 @@ int cfg_key_uacctd_nl_size(char *filename, char *name, char *value_ptr)
   value = atoi(value_ptr);
 
   for (; list; list = list->next, changes++) list->cfg.uacctd_nl_size = value;
+  return changes;
+}
+
+int cfg_key_uacctd_threshold(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.uacctd_threshold = value;
   return changes;
 }
 

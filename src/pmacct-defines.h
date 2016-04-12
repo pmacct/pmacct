@@ -80,7 +80,7 @@
 
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.6.0-git"
-#define UACCTD_USAGE_HEADER "Linux NetFilter ULOG Accounting Daemon, uacctd 1.6.0-git"
+#define UACCTD_USAGE_HEADER "Linux NetFilter NFLOG Accounting Daemon, uacctd 1.6.0-git"
 #define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.6.0-git"
 #define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 1.6.0-git"
 #define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.6.0-git"
@@ -122,7 +122,7 @@
 #define ACCT_PM		1	/* promiscuous mode */
 #define ACCT_NF		2	/* NetFlow */
 #define ACCT_SF		3	/* sFlow */
-#define ACCT_UL		4	/* Linux NetFilter ULOG */
+#define ACCT_UL		4	/* Linux NetFilter NFLOG */
 #define ACCT_PMTELE	5	/* Telemetry */
 #define ACCT_MEMCLIENT	6	/* pmacct memroy client */
 

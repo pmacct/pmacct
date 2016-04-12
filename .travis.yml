@@ -14,7 +14,7 @@ install:
 
 script:
   - ./autogen.sh
-  - ./configure --enable-ipv6 --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ulog
+  - ./configure --enable-ipv6 --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog
   - make
   - sudo make install
   - make distcheck
@@ -27,6 +27,7 @@ addons:
       - libsqlite3-dev
       - libmysqlclient-dev
       - libjansson-dev
+      - libnetfilter-log-dev
       - mysql-client
       - libtool
       - autoconf

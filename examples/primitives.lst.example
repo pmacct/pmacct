@@ -11,7 +11,7 @@
 !			primitive itself and hence must be unique. This name
 !			can be used in 'aggregate' statements to include the
 !			primitive as part of plugin aggregation methods.
-! 'packet_ptr'		Applies to pmacctd (libpcap) and uacctd (ULOG):
+! 'packet_ptr'		Applies to pmacctd (libpcap) and uacctd (NFLOG):
 !			defines the base pointer in the packet where to read
 !			the primitive value; intuitively, this is to be used
 !			in conjunction with 'len'. The supported syntax is:

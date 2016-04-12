@@ -910,21 +910,21 @@ AC_ARG_ENABLE(threads,
 	]
 )
 
-AC_MSG_CHECKING(whether to enable ULOG support)
-AC_ARG_ENABLE(ulog,
-  [  --enable-ulog                    Enable ULOG support (default: no)],
-  [
-       if test "x$enableval" = xyes ; then
-               AC_MSG_RESULT(yes)
-               CFLAGS="${CFLAGS} -DENABLE_ULOG"
-       else
-               AC_MSG_RESULT(no)
-       fi
-  ],
-  [
-       AC_MSG_RESULT(no)
-  ]
-)
+AC_MSG_CHECKING(whether to enable NFLOG support)
+AC_ARG_ENABLE(nflog,
+  [  --enable-nflog                   Enable NFLOG support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([NFLOG], [libnetfilter_log >= 1])
+    USING_NFLOG="yes"
+    AC_DEFINE(WITH_NFLOG, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+AC_MSG_RESULT(no))
 
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
@@ -963,6 +963,7 @@ AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
+AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
