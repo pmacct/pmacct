@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #
+# This script is meant to be called by autogen.sh from the parent directory.
 #
 
 # Silence on

@@ -10,16 +10,16 @@ A: 'pmacct' is intended to be the name of the project; 'pmacctd' is the name of 
    libpcap-based IPv4/IPv6 accounting daemon; 'nfacctd' is the name of the NetFlow
    (versions supported NetFlow v1 to v9) and IPFIX accounting daemon; 'sfacctd' is
    the name of the sFlow v2/v4/v5 accounting daemon; 'uacctd' is the name of the
-   Linux Netlink NFLOG-based accounting daemon (historically, it was
-   using ULOG, hence its name).   
+   Linux Netlink NFLOG-based accounting daemon (historically, it was using ULOG,
+   hence its name).   
 
 
 Q3: Does pmacct stand for Promiscuous mode IP Accounting package ?
 A: That is not entirely correct today, it was originally though. pmacct born as a
    libpcap-based project only. Over the time it evolved to include NetFlow first,
-   sFlow shortly afterwards and ULOG more recently - striving to maintain a consistent
-   implementation over the set, unless technical considerations prevent that to happen
-   for specific cases.  
+   sFlow shortly afterwards and NFLOG more recently - this is striving to maintain
+   a consistent implementation over the set, unless technical considerations
+   prevent that to happen for specific cases.  
 
 
 Q4: What are pmacct main features?

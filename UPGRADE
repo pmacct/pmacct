@@ -10,6 +10,44 @@ been (and will be) very limited through the development process.
 
 TO:	>= 1.6.0
 FROM:	<= 1.5.3
+TOPIC:	uacctd switched from ULOG to NFLOG
+DESC:	NFLOG supports both IPv4 and IPv6. While ULOG is still supported in
+        recent kernels, NFLOG is supported since 2.6.14 and there is little
+        point to support both - so a switch was made. The new daemon depends
+        on the package libnetfilter-log-dev (in Debian/Ubuntu or equivalent
+        in the prefered Linux distribution). For a quick test one can setup
+	iptables as follows:
+
+	iptables -t mangle -I POSTROUTING -j NFLOG --nflog-group 4
+	iptables -t raw -I PREROUTING -j NFLOG --nflog-group 4
+
+	And use the following command:
+
+	uacctd -c in_iface,out_iface,src_mac,dst_mac,src_host,dst_host,proto,src_port,dst_port -P print -g 4
+
+TO:	>= 1.6.0
+FROM:	<= 1.5.3
+TOPIC:	build system refreshed
+DESC:	autoconf and automake from early 2000 were being used to compile the
+	build system until 1.5.3. This was for the sake of simplicity and
+	robustness and, of course, came with drawbacks: somebody wanting to
+	touch the build system should know which version of the tools to use,
+	no leverage of the latest and greatest advancements made in the last
+	one and half decades. The switch for should be almost transparent,
+	the only impact being how to supply information in case the build
+	system is unable to determine location of libraries (ie. via pkg-config
+	and checking "typical" locations like /usr/local/lib): taking as an
+	example PostgreSQL, before --with-pgsql-libs and --with-pgsql-includes
+	were to be used to supply path to library and headers respectively;
+	now environment variables PGSQL_LIBS and PGSQL_CFLAGS should be used
+	instead for the same purpose, ie.:
+
+	PGSQL_LIBS="-L/usr/local/postgresql/lib -lpq"
+	PGSQL_CFLAGS="-I/usr/local/postgresql/include"
+	./configure --enable-pgsql
+
+TO:	>= 1.6.0
+FROM:	<= 1.5.3
 TOPIC:	nfacctd_disable_checks and sfacctd_disable_checks
 DESC:	Default for this feature changed from false to true, ie. log warning
 	messages for failing basic checks against incoming NetFlow/sFlow

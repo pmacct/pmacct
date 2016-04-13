@@ -468,11 +468,12 @@ that apply exclusively to libpcap. If you've skipped examples in section 'IV', p
 read them before continuing. All configuration keys available are in the CONFIG-KEYS
 document.
 
-The Linux NFLOG infrastructure requires a couple parameters in order to work properly.
-These are the NFLOG multicast group (uacctd_group) to which captured packets have to be
-sent to and the Netlink buffer size (uacctd_nl_size). The default buffer settings (4KB)
-typically works OK for small environments. The traffic is captured
-with an iptables rule. For example:
+The daemon depends on the package libnetfilter-log-dev (in Debian/Ubuntu or equivalent
+in the prefered Linux distribution). The Linux NFLOG infrastructure requires a couple
+parameters in order to work properly: the NFLOG multicast group (uacctd_group) to
+which captured packets have to be sent to and the Netlink buffer size (uacctd_nl_size).
+The default buffer settings (128KB) typically works OK for small environments. The
+traffic is captured with an iptables rule. For example:
 
 iptables -t raw -I PREROUTING -i eth0 j NFLOG --nflog-group 10
 

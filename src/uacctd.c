@@ -771,7 +771,7 @@ int main(int argc,char **argv, char **envp)
   nflog_callback_register(nfgh, &nflog_incoming, &cb_data);
   nflog_buffer = malloc(config.uacctd_nl_size);
   if (nflog_buffer == NULL) {
-    Log(LOG_ERR, "ERROR ( %s/core ): ULOG buffer malloc() failed\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): NFLOG buffer malloc() failed\n", config.name);
     nflog_unbind_group(nfgh);
     nflog_close(nfh);
     exit_all(1);
