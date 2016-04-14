@@ -27,3 +27,4 @@
   JANSSON_LIBS			linker flags for JANSSON, overriding pkg-config
   NFLOG_CFLAGS			C compiler flags for NFLOG, overriding pkg-config
   NFLOG_LIBS			linker flags for NFLOG, overriding pkg-config
+

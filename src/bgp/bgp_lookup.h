@@ -28,8 +28,8 @@
 #else
 #define EXT
 #endif
-EXT void bgp_srcdst_lookup(struct packet_ptrs *);
-EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *);
+EXT void bgp_srcdst_lookup(struct packet_ptrs *, int);
+EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *, int);
 EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
 EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
 EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *, pm_cfgreg_t);

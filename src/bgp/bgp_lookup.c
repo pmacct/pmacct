@@ -26,8 +26,10 @@
 #include "pmacct.h"
 #include "bgp.h"
 
-void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
+void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 {
+  struct bgp_misc_structs *bms;
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
   struct xflow_status_entry *xs_entry = (struct xflow_status_entry *) pptrs->f_status;
   struct bgp_peer *peer;
@@ -44,6 +46,11 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   u_int32_t peer_idx, *peer_idx_ptr;
   safi_t safi;
   rd_t rd;
+
+  bms = bgp_select_misc_db(type);
+  inter_domain_routing_db = bgp_select_routing_db(type);
+
+  if (!bms || !inter_domain_routing_db) return;
 
   pptrs->bgp_src = NULL;
   pptrs->bgp_dst = NULL;
@@ -95,6 +102,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
 #endif
   }
 
+  // XXX: to be generalized
   if (xs_entry && peer_idx) {
     if ((!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) &&
         (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
@@ -108,7 +116,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     }
   }
   else {
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+    for (peer = NULL, peers_idx = 0; peers_idx < bms->max_peers; peers_idx++) {
       if ((!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) && 
 	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
         peer = &peers[peers_idx];
@@ -122,10 +130,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
   if (peer) {
     struct host_addr peer_dst_ip;
 
-    modulo = bgp_route_info_modulo(peer, NULL);
+    modulo = bms->route_info_modulo(peer, NULL);
 
     // XXX: to be optimized 
-    if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_per_peer_buckets; 
+    if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets; 
     else modulo_max = 1;
 
     if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
@@ -149,8 +157,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
-	pptrs->bgp_src = (char *) bgp_node_match_ipv4(bgp_routing_db->rib[AFI_IP][safi],
-						      &pref4, (struct bgp_peer *) pptrs->bgp_peer);
+	pptrs->bgp_src = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
+						      &pref4, (struct bgp_peer *) pptrs->bgp_peer,
+						      type);
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;	
@@ -176,8 +185,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst) {
 	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-	pptrs->bgp_dst = (char *) bgp_node_match_ipv4(bgp_routing_db->rib[AFI_IP][safi],
-						      &pref4, (struct bgp_peer *) pptrs->bgp_peer);
+	pptrs->bgp_dst = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
+						      &pref4, (struct bgp_peer *) pptrs->bgp_peer,
+						      type);
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst;
@@ -226,8 +236,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       if (!pptrs->bgp_src) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-	pptrs->bgp_src = (char *) bgp_node_match_ipv6(bgp_routing_db->rib[AFI_IP6][safi],
-						      &pref6, (struct bgp_peer *) pptrs->bgp_peer);
+	pptrs->bgp_src = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+						      &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+						      type);
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;
@@ -253,8 +264,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
       }
       if (!pptrs->bgp_dst) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-	pptrs->bgp_dst = (char *) bgp_node_match_ipv6(bgp_routing_db->rib[AFI_IP6][safi],
-						      &pref6, (struct bgp_peer *) pptrs->bgp_peer);
+	pptrs->bgp_dst = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+						      &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+						      type);
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst; 
@@ -377,12 +389,14 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs)
     }
 
     if (config.nfacctd_bgp_follow_nexthop[0].family && pptrs->bgp_dst && safi != SAFI_MPLS_VPN)
-      bgp_follow_nexthop_lookup(pptrs);
+      bgp_follow_nexthop_lookup(pptrs, type);
   }
 }
 
-void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
+void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 {
+  struct bgp_misc_structs *bms;
+  struct bgp_rt_structs *inter_domain_routing_db;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
   struct bgp_peer *nh_peer;
   struct bgp_node *result_node = NULL;
@@ -399,6 +413,11 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   pm_id_t bta;
   u_int32_t modulo, local_modulo, modulo_idx, modulo_max;
 
+  bms = bgp_select_misc_db(type);
+  inter_domain_routing_db = bgp_select_routing_db(type);
+
+  if (!bms || !inter_domain_routing_db) return;
+
   start_again:
 
   if (config.nfacctd_bgp_to_agent_map && (*find_id_func)) {
@@ -411,7 +430,8 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     }
   }
 
-  for (nh_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+  // XXX: to be generalized
+  for (nh_peer = NULL, peers_idx = 0; peers_idx < bms->max_peers; peers_idx++) {
     if (!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) {
       nh_peer = &peers[peers_idx];
       break;
@@ -419,10 +439,10 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
   }
 
   if (nh_peer) {
-    modulo = bgp_route_info_modulo(nh_peer, NULL);
+    modulo = bms->route_info_modulo(nh_peer, NULL);
 
     // XXX: to be optimized 
-    if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = config.bgp_table_per_peer_buckets;
+    if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
     else modulo_max = 1;
 
     memset(&ch, 0, sizeof(ch));
@@ -433,12 +453,12 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs)
     if (!result) {
       if (pptrs->l3_proto == ETHERTYPE_IP) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-        result = (char *) bgp_node_match_ipv4(bgp_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer);
+        result = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer, type);
       }
 #if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-        result = (char *) bgp_node_match_ipv6(bgp_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer);
+        result = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer, type);
       }
 #endif
     }
