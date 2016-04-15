@@ -67,7 +67,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
 
     /* no need for seq for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", bms->log_seq);
+      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
       bgp_peer_log_seq_increment(&bms->log_seq);
@@ -146,15 +146,15 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "peer_asn", bdata->peer_asn);
+  kv = json_pack("{sI}", "peer_asn", (json_int_t)bdata->peer_asn);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "peer_type", bdata->peer_type);
+  kv = json_pack("{sI}", "peer_type", (json_int_t)bdata->peer_type);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "counter_type", blstats->cnt_type);
+  kv = json_pack("{sI}", "counter_type", (json_int_t)blstats->cnt_type);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
@@ -170,7 +170,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
   }
 
   if (blstats->got_data) {
-    kv = json_pack("{sI}", "counter_value", blstats->cnt_data);
+    kv = json_pack("{sI}", "counter_value", (json_int_t)blstats->cnt_data);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -193,11 +193,11 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   json_decref(kv);
 
   if (blinit) {
-    kv = json_pack("{sI}", "bmp_init_data_type", blinit->type);
+    kv = json_pack("{sI}", "bmp_init_data_type", (json_int_t)blinit->type);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    kv = json_pack("{sI}", "bmp_init_data_len", blinit->len);
+    kv = json_pack("{sI}", "bmp_init_data_len", (json_int_t)blinit->len);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -226,11 +226,11 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   json_decref(kv);
 
   if (blterm) {
-    kv = json_pack("{sI}", "bmp_term_data_type", blterm->type);
+    kv = json_pack("{sI}", "bmp_term_data_type", (json_int_t)blterm->type);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    kv = json_pack("{sI}", "bmp_term_data_len", blterm->len);
+    kv = json_pack("{sI}", "bmp_term_data_len", (json_int_t)blterm->len);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -240,7 +240,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
       json_decref(kv);
     }
     else if (blterm->type == BMP_TERM_INFO_REASON) {
-      kv = json_pack("{sI}", "bmp_term_data_val_reas_type", blterm->reas_type);
+      kv = json_pack("{sI}", "bmp_term_data_val_reas_type", (json_int_t)blterm->reas_type);
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
@@ -275,11 +275,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "peer_asn", bdata->peer_asn);
+  kv = json_pack("{sI}", "peer_asn", (json_int_t)bdata->peer_asn);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "peer_type", bdata->peer_type);
+  kv = json_pack("{sI}", "peer_type", (json_int_t)bdata->peer_type);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
@@ -287,11 +287,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "local_port", blpu->loc_port);
+  kv = json_pack("{sI}", "local_port", (json_int_t)blpu->loc_port);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "remote_port", blpu->rem_port);
+  kv = json_pack("{sI}", "remote_port", (json_int_t)blpu->rem_port);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
@@ -323,20 +323,20 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "peer_asn", bdata->peer_asn);
+  kv = json_pack("{sI}", "peer_asn", (json_int_t)bdata->peer_asn);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "peer_type", bdata->peer_type);
+  kv = json_pack("{sI}", "peer_type", (json_int_t)bdata->peer_type);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "reason_type", blpd->reason);
+  kv = json_pack("{sI}", "reason_type", (json_int_t)blpd->reason);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
   if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
-    kv = json_pack("{sI}", "reason_loc_code", blpd->loc_code);
+    kv = json_pack("{sI}", "reason_loc_code", (json_int_t)blpd->loc_code);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }

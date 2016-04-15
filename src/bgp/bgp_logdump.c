@@ -75,7 +75,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
 
     /* no need for seq and timestamp for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", bms->log_seq);
+      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
       bgp_peer_log_seq_increment(&bms->log_seq);
@@ -95,7 +95,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
 	kv = json_pack("{ss}", "log_type", "delete");
 	break;
       default:
-	kv = json_pack("{sI}", "log_type", log_type);
+	kv = json_pack("{sI}", "log_type", (json_int_t)log_type);
 	break;
       }
       json_object_update_missing(obj, kv);
@@ -122,7 +122,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
     }
 
     if (ri && ri->extra && ri->extra->path_id) {
-      kv = json_pack("{sI}", "as_path_id", ri->extra->path_id);
+      kv = json_pack("{sI}", "as_path_id", (json_int_t)ri->extra->path_id);
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
@@ -152,16 +152,16 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
         json_decref(kv);
       }
 
-      kv = json_pack("{sI}", "origin", attr->origin);
+      kv = json_pack("{sI}", "origin", (json_int_t)attr->origin);
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
-      kv = json_pack("{sI}", "local_pref", attr->local_pref);
+      kv = json_pack("{sI}", "local_pref", (json_int_t)attr->local_pref);
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
       if (attr->med) {
-        kv = json_pack("{sI}", "med", attr->med);
+        kv = json_pack("{sI}", "med", (json_int_t)attr->med);
         json_object_update_missing(obj, kv);
         json_decref(kv);
       }
@@ -276,7 +276,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       char ip_address[INET6_ADDRSTRLEN];
       json_t *obj = json_object(), *kv;
 
-      kv = json_pack("{sI}", "seq", bms->log_seq);
+      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
       bgp_peer_log_seq_increment(&bms->log_seq);
@@ -350,7 +350,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
-    kv = json_pack("{sI}", "seq", bms->log_seq);
+    kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
     json_object_update_missing(obj, kv);
     json_decref(kv);
     bgp_peer_log_seq_increment(&bms->log_seq);
@@ -558,11 +558,11 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     json_decref(kv);
 
     if (bds) {
-      kv = json_pack("{sI}", "entries", bds->entries);
+      kv = json_pack("{sI}", "entries", (json_int_t)bds->entries);
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
-      kv = json_pack("{sI}", "tables", bds->tables);
+      kv = json_pack("{sI}", "tables", (json_int_t)bds->tables);
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }

@@ -70,7 +70,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 
     /* no need for seq for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", tms->log_seq);
+      kv = json_pack("{sI}", "seq", (json_int_t)tms->log_seq);
       json_object_update_missing(obj, kv);
       json_decref(kv);
       bgp_peer_log_seq_increment(&tms->log_seq);
