@@ -121,6 +121,7 @@ struct bgp_misc_structs {
   int table_attr_hash_buckets;
   int table_per_peer_hash;
   u_int32_t (*route_info_modulo)(struct bgp_peer *, path_id_t *);
+  struct bgp_peer *(*bgp_lookup_find_peer)(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int);
 
   int msglog_backend_methods;
   int dump_backend_methods;

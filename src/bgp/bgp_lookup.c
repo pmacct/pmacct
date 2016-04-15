@@ -36,14 +36,13 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   struct bgp_node *default_node, *result;
   struct bgp_info *info;
   struct prefix default_prefix;
-  int peers_idx, compare_bgp_port;
+  int compare_bgp_port;
   int follow_default = config.nfacctd_bgp_follow_default;
   struct in_addr pref4;
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
   u_int32_t modulo, local_modulo, modulo_idx, modulo_max;
-  u_int32_t peer_idx, *peer_idx_ptr;
   safi_t safi;
   rd_t rd;
 
@@ -88,44 +87,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 
   start_again:
 
-  peer_idx = 0; peer_idx_ptr = NULL;
-  if (xs_entry) {
-    if (pptrs->l3_proto == ETHERTYPE_IP) {
-      peer_idx = xs_entry->peer_v4_idx; 
-      peer_idx_ptr = &xs_entry->peer_v4_idx;
-    }
-#if defined ENABLE_IPV6
-    else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      peer_idx = xs_entry->peer_v6_idx; 
-      peer_idx_ptr = &xs_entry->peer_v6_idx;
-    }
-#endif
-  }
-
-  // XXX: to be generalized
-  if (xs_entry && peer_idx) {
-    if ((!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) &&
-        (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
-      peer = &peers[peer_idx];
-      pptrs->bgp_peer = (char *) &peers[peer_idx];
-    }
-    /* If no match then let's invalidate the entry */
-    else {
-      *peer_idx_ptr = 0;
-      peer = NULL;
-    }
-  }
-  else {
-    for (peer = NULL, peers_idx = 0; peers_idx < bms->max_peers; peers_idx++) {
-      if ((!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) && 
-	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
-        peer = &peers[peers_idx];
-        pptrs->bgp_peer = (char *) &peers[peers_idx];
-        if (xs_entry && peer_idx_ptr) *peer_idx_ptr = peers_idx;
-        break;
-      }
-    }
-  }
+  peer = bms->bgp_lookup_find_peer(sa, xs_entry, pptrs->l3_proto, compare_bgp_port);
+  pptrs->bgp_peer = (char *) peer;
 
   if (peer) {
     struct host_addr peer_dst_ip;
@@ -554,6 +517,51 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 
   if (saved_info) pptrs->bgp_nexthop_info = saved_info; 
   pptrs->f_agent = saved_agent;
+}
+
+struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *sa, struct xflow_status_entry *xs_entry, u_int16_t l3_proto, int compare_bgp_port)
+{
+  struct bgp_peer *peer;
+  u_int32_t peer_idx, *peer_idx_ptr;
+  int peers_idx;
+
+  peer_idx = 0; peer_idx_ptr = NULL;
+  if (xs_entry) {
+    if (l3_proto == ETHERTYPE_IP) {
+      peer_idx = xs_entry->peer_v4_idx; 
+      peer_idx_ptr = &xs_entry->peer_v4_idx;
+    }
+#if defined ENABLE_IPV6
+    else if (l3_proto == ETHERTYPE_IPV6) {
+      peer_idx = xs_entry->peer_v6_idx; 
+      peer_idx_ptr = &xs_entry->peer_v6_idx;
+    }
+#endif
+  }
+
+  if (xs_entry && peer_idx) {
+    if ((!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) &&
+        (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
+      peer = &peers[peer_idx];
+    }
+    /* If no match then let's invalidate the entry */
+    else {
+      *peer_idx_ptr = 0;
+      peer = NULL;
+    }
+  }
+  else {
+    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+      if ((!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) && 
+	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
+        peer = &peers[peers_idx];
+        if (xs_entry && peer_idx_ptr) *peer_idx_ptr = peers_idx;
+        break;
+      }
+    }
+  }
+
+  return peer;
 }
 
 void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p, pm_cfgreg_t what_to_count)

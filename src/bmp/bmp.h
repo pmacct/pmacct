@@ -167,6 +167,7 @@ struct bmp_data {
 #include "bmp_logdump.h"
 #include "bmp_msg.h"
 #include "bmp_util.h"
+#include "bmp_lookup.h"
 
 /* prototypes */
 #if !defined(__BMP_C)

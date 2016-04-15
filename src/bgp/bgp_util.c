@@ -962,6 +962,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->table_attr_hash_buckets = config.bgp_table_attr_hash_buckets;
   bms->table_per_peer_hash = config.bgp_table_per_peer_hash;
   bms->route_info_modulo = bgp_route_info_modulo;
+  bms->bgp_lookup_find_peer = bgp_lookup_find_bgp_peer;
 }
 
 void bgp_dummy()

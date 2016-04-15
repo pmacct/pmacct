@@ -1,4 +1,4 @@
-/*  
+/*
     pmacct (Promiscuous mode IP Accounting package)
     pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
@@ -19,21 +19,15 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifndef _BGP_LOOKUP_H_
-#define _BGP_LOOKUP_H_
+/* includes */
+
+/* defines */
 
 /* prototypes */
-#if (!defined __BGP_LOOKUP_C)
+#if !defined(__BMP_LOOKUP_C)
 #define EXT extern
 #else
 #define EXT
 #endif
-EXT void bgp_srcdst_lookup(struct packet_ptrs *, int);
-EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *, int);
-EXT struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int); 
-EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *);
-EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
-EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *, pm_cfgreg_t);
-EXT void free_cache_bgp_primitives(struct cache_bgp_primitives **);
+EXT struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int);
 #undef EXT
-#endif 
