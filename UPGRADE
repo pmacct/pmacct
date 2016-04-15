@@ -16,12 +16,12 @@ DESC:	NFLOG supports both IPv4 and IPv6. While ULOG is still supported in
         point to support both - so a switch was made. The new daemon depends
         on the package libnetfilter-log-dev (in Debian/Ubuntu or equivalent
         in the prefered Linux distribution). For a quick test one can setup
-	iptables as follows:
+	iptables to produce data in one of the following ways:
 
-	iptables -t mangle -I POSTROUTING -j NFLOG --nflog-group 4
-	iptables -t raw -I PREROUTING -j NFLOG --nflog-group 4
+	* iptables -t mangle -I POSTROUTING -j NFLOG --nflog-group 4
+	* iptables -t raw -I PREROUTING -j NFLOG --nflog-group 4
 
-	And use the following command:
+	And use the following command to collect data back:
 
 	uacctd -c in_iface,out_iface,src_mac,dst_mac,src_host,dst_host,proto,src_port,dst_port -P print -g 4
 

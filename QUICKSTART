@@ -473,9 +473,10 @@ in the prefered Linux distribution). The Linux NFLOG infrastructure requires a c
 parameters in order to work properly: the NFLOG multicast group (uacctd_group) to
 which captured packets have to be sent to and the Netlink buffer size (uacctd_nl_size).
 The default buffer settings (128KB) typically works OK for small environments. The
-traffic is captured with an iptables rule. For example:
+traffic is captured with an iptables rule. For example in one of the following ways:
 
-iptables -t raw -I PREROUTING -i eth0 j NFLOG --nflog-group 10
+* iptables -t mangle -I POSTROUTING -j NFLOG --nflog-group 5
+* iptables -t raw -I PREROUTING -j NFLOG --nflog-group 5 
 
 Apart from determining how and what traffic to capture with iptables, which is topic
 outside the scope of this document, the most relevant point is the "--nflog-nlgroup"
