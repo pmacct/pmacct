@@ -122,7 +122,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
 	pptrs->bgp_src = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
 						      &pref4, (struct bgp_peer *) pptrs->bgp_peer,
-						      type);
+						      &rd, bgp_route_info_modulo_pathid,
+						      bms->bgp_lookup_node_match_cmp);
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;	
@@ -131,6 +132,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_method_src = NF_NET_BGP;
         }
 
+	// XXX: fixme
 	for (info = result->info[modulo]; info; info = info->next) {
 	  if (safi != SAFI_MPLS_VPN) {
 	    if (info->peer == peer) {
@@ -150,7 +152,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
 	pptrs->bgp_dst = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
 						      &pref4, (struct bgp_peer *) pptrs->bgp_peer,
-						      type);
+						      &rd, bgp_route_info_modulo_pathid,
+						      bms->bgp_lookup_node_match_cmp);
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst;
@@ -201,7 +204,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
 	pptrs->bgp_src = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
 						      &pref6, (struct bgp_peer *) pptrs->bgp_peer,
-						      type);
+						      &rd, bgp_route_info_modulo_pathid,
+						      bms->bgp_lookup_node_match_cmp);
       }
       if (!pptrs->bgp_src_info && pptrs->bgp_src) {
 	result = (struct bgp_node *) pptrs->bgp_src;
@@ -229,7 +233,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
 	pptrs->bgp_dst = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
 						      &pref6, (struct bgp_peer *) pptrs->bgp_peer,
-						      type);
+						      &rd, bgp_route_info_modulo_pathid,
+						      bms->bgp_lookup_node_match_cmp);
       }
       if (!pptrs->bgp_dst_info && pptrs->bgp_dst) {
 	result = (struct bgp_node *) pptrs->bgp_dst; 
@@ -416,12 +421,16 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
     if (!result) {
       if (pptrs->l3_proto == ETHERTYPE_IP) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
-        result = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer, type);
+        result = (char *) bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer,
+					      NULL, bgp_route_info_modulo_pathid,
+					      bms->bgp_lookup_node_match_cmp);
       }
 #if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-        result = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer, type);
+        result = (char *) bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer,
+					      NULL, bgp_route_info_modulo_pathid,
+					      bms->bgp_lookup_node_match_cmp);
       }
 #endif
     }
@@ -562,6 +571,12 @@ struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *sa, struct xflow_stat
   }
 
   return peer;
+}
+
+int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct bgp_peer *peer)
+{
+  if (info->peer == peer) return FALSE; 
+  else return TRUE;
 }
 
 void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p, pm_cfgreg_t what_to_count)

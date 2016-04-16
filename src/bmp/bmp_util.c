@@ -136,6 +136,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->table_per_peer_hash = config.bmp_table_per_peer_hash;
   bms->route_info_modulo = bmp_route_info_modulo;
   bms->bgp_lookup_find_peer = bgp_lookup_find_bmp_peer;
+  bms->bgp_lookup_node_match_cmp = bgp_lookup_node_match_cmp_bmp;
 }
 
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
@@ -226,25 +227,6 @@ void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const 
   bms->peer_str = saved_peer_str;
 
   // XXX: test pm_tdelete() here to optimize walk
-}
-
-u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)
-{
-  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
-  struct bmp_peer *bmpp = peer->bmp_se;
-  path_id_t local_path_id = 1;
-  int fd = 0;
-
-  if (path_id && *path_id) local_path_id = *path_id;
-
-  if (peer->fd) fd = peer->fd;
-  else {
-    if (bmpp && bmpp->self.fd) fd = bmpp->self.fd;
-  }
-
-  return (((fd * bms->table_per_peer_buckets) +
-          ((local_path_id - 1) % bms->table_per_peer_buckets)) %
-          (bms->table_peer_buckets * bms->table_per_peer_buckets));
 }
 
 void bmp_dummy()
