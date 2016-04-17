@@ -88,11 +88,33 @@ u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
           (bms->table_peer_buckets * bms->table_per_peer_buckets));
 }
 
-int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct bgp_peer *peer)
+int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
 {
   struct bmp_peer *bmpp = info->peer->bmp_se;
   struct bgp_peer *peer_local = &bmpp->self;
+  int no_match = FALSE;
 
-  if (peer_local == peer) return FALSE;
-  else return TRUE;
+  if (peer_local == nmct2->peer) {
+    if (nmct2->safi == SAFI_MPLS_VPN) no_match++;
+    if (nmct2->peer->cap_add_paths) no_match++;
+
+    if (nmct2->safi == SAFI_MPLS_VPN) {
+      if (info->extra && !memcmp(&info->extra->rd, &nmct2->rd, sizeof(rd_t))) no_match--;
+    }
+
+    if (nmct2->peer->cap_add_paths) {
+      if (info->attr) {
+        if (info->attr->mp_nexthop.family == nmct2->peer_dst_ip->family) {
+          if (!memcmp(&info->attr->mp_nexthop, &nmct2->peer_dst_ip, HostAddrSz)) no_match--;
+        }
+        else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
+          if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) no_match--;
+        }
+      }
+    }
+
+    if (!no_match) return FALSE;
+  }
+
+  return TRUE;
 }

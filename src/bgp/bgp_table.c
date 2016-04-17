@@ -47,7 +47,6 @@ bgp_table_init (afi_t afi, safi_t safi)
   if (rt) {
     memset (rt, 0, sizeof (struct bgp_table));
 
-    rt->type = BGP_TABLE_MAIN;
     rt->afi = afi;
     rt->safi = safi;
   }
@@ -207,46 +206,63 @@ bgp_unlock_node (struct bgp_peer *peer, struct bgp_node *node)
 }
 
 /* Find matched prefix. */
-struct bgp_node *
+void
 bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer *peer,
-		rd_t *rd, u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *),
-		int (*cmp_func)(struct bgp_info *, struct bgp_peer *))
+		u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *),
+		int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
+		struct node_match_cmp_term2 *nmct2,
+		struct bgp_node **result_node, struct bgp_info **result_info)
 {
-  struct bgp_node *node;
-  struct bgp_node *matched;
-  struct bgp_info *info;
-  u_int32_t modulo;
+  struct bgp_misc_structs *bms;
+  struct bgp_node *node, *matched_node;
+  struct bgp_info *info, *matched_info;
+  u_int32_t modulo, modulo_idx, local_modulo, modulo_max;
 
-  if (!table || !peer || !modulo_func || !cmp_func) return NULL;
+  if (!table || !peer || !modulo_func || !cmp_func) return;
+
+  bms = bgp_select_misc_db(peer->type);
+  if (!bms) return;
 
   modulo = modulo_func(peer, NULL);
+  if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
+  else modulo_max = 1;
 
-  matched = NULL;
+  matched_node = NULL;
+  matched_info = NULL;
   node = table->top;
 
-  /* Walk down tree.  If there is matched route then store it to
-     matched. */
+  /* Walk down tree.  If there is matched route then store it to matched. */
   while (node && node->p.prefixlen <= p->prefixlen && prefix_match(&node->p, p)) {
-    for (info = node->info[modulo]; info; info = info->next) {
-      if (!cmp_func(info, peer)) {
-	matched = node;
-        break;
+    for (local_modulo = modulo, modulo_idx = 0; modulo_idx < modulo_max; local_modulo++, modulo_idx++) {
+      for (info = node->info[local_modulo]; info; info = info->next) {
+	if (!cmp_func(info, nmct2)) {
+	  matched_node = node;
+	  matched_info = info;
+	  break;
+	}
       }
     }
 
     node = node->link[check_bit(&p->u.prefix, node->p.prefixlen)];
   }
 
-  /* If matched route found, return it. */
-  if (matched) return bgp_lock_node (NULL /* XXX */, matched);
-
-  return NULL;
+  if (matched_node) {
+    (*result_node) = matched_node;
+    (*result_info) = matched_info;
+    bgp_lock_node (NULL /* XXX */, matched_node);
+  }
+  else {
+    (*result_node) = NULL;
+    (*result_info) = NULL;
+  }
 }
 
-struct bgp_node *
+void
 bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr, struct bgp_peer *peer,
-		     rd_t *rd, u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *),
-		     int (*cmp_func)(struct bgp_info *, struct bgp_peer *))
+		     u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *),
+		     int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
+		     struct node_match_cmp_term2 *nmct2,
+		     struct bgp_node **result_node, struct bgp_info **result_info)
 {
   struct prefix_ipv4 p;
 
@@ -255,14 +271,16 @@ bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr, struct
   p.prefixlen = IPV4_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return bgp_node_match (table, (struct prefix *) &p, peer, rd, modulo_func, cmp_func);
+  bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, result_node, result_info);
 }
 
 #ifdef ENABLE_IPV6
-struct bgp_node *
+void
 bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struct bgp_peer *peer,
-		     rd_t *rd, u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *),
-		     int (*cmp_func)(struct bgp_info *, struct bgp_peer *))
+		     u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *),
+		     int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
+		     struct node_match_cmp_term2 *nmct2,
+		     struct bgp_node **result_node, struct bgp_info **result_info)
 {
   struct prefix_ipv6 p;
 
@@ -271,7 +289,7 @@ bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struc
   p.prefixlen = IPV6_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  return bgp_node_match (table, (struct prefix *) &p, peer, rd, modulo_func, cmp_func);
+  bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, result_node, result_info);
 }
 #endif /* ENABLE_IPV6 */
 
