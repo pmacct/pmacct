@@ -1105,6 +1105,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
 
   if (!t || !pptrs || !index_results) return;
 
+  memset(&res_fdata, 0, sizeof(res_fdata));
   memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
   iterator_ir = 0;
 
