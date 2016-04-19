@@ -995,7 +995,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
       for (index = 0; index < idie->depth; index++) {
         if (!idie->result[index]) {
-	  memcpy(&idie->hash_key[index], hash_key, sizeof(pm_hash_key_t));
+	  hash_dup_key(&idie->hash_key[index], hash_key);
           idie->result[index] = ptr;
           break;
         }

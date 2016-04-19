@@ -146,6 +146,7 @@ EXT int vlen_prims_delete(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 EXT void hash_init_key(pm_hash_key_t *);
 EXT int hash_init_serial(pm_hash_serial_t *, u_int16_t);
 EXT int hash_alloc_key(pm_hash_key_t *, u_int16_t);
+EXT int hash_dup_key(pm_hash_key_t *, pm_hash_key_t *);
 EXT void hash_destroy_key(pm_hash_key_t *);
 EXT void hash_destroy_serial(pm_hash_serial_t *);
 EXT void hash_serial_set_off(pm_hash_serial_t *, u_int16_t);

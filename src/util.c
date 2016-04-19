@@ -2868,6 +2868,17 @@ int hash_alloc_key(pm_hash_key_t *key, u_int16_t key_len)
   return SUCCESS;
 }
 
+int hash_dup_key(pm_hash_key_t *dst, pm_hash_key_t *src)
+{
+  if (!src || !dst) return ERR;
+
+  if (hash_alloc_key(dst, src->len) == ERR) return ERR;
+
+  memcpy(dst->val, src->val, src->len);
+
+  return SUCCESS;
+}
+
 void hash_destroy_key(pm_hash_key_t *key)
 {
   if (!key) return;
