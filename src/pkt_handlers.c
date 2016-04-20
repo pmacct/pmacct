@@ -2039,17 +2039,14 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
-    if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) { 
-      if (tpl->tpl[NF9_L4_SRC_PORT].len) 
-	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
-      else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_SRC_PORT].len) 
-	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_UDP_SRC_PORT].off, MIN(tpl->tpl[NF9_UDP_SRC_PORT].len, 2));
-      else if (l4_proto == IPPROTO_TCP && tpl->tpl[NF9_TCP_SRC_PORT].len) 
-	memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_TCP_SRC_PORT].off, MIN(tpl->tpl[NF9_TCP_SRC_PORT].len, 2));
+    if (tpl->tpl[NF9_L4_SRC_PORT].len) 
+      memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_L4_SRC_PORT].off, MIN(tpl->tpl[NF9_L4_SRC_PORT].len, 2));
+    else if (tpl->tpl[NF9_UDP_SRC_PORT].len) 
+      memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_UDP_SRC_PORT].off, MIN(tpl->tpl[NF9_UDP_SRC_PORT].len, 2));
+    else if (tpl->tpl[NF9_TCP_SRC_PORT].len) 
+      memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_TCP_SRC_PORT].off, MIN(tpl->tpl[NF9_TCP_SRC_PORT].len, 2));
 
-      pdata->primitives.src_port = ntohs(pdata->primitives.src_port);
-    }
-    else pdata->primitives.src_port = 0;
+    pdata->primitives.src_port = ntohs(pdata->primitives.src_port);
     break;
   case 8:
     switch(hdr->aggregation) {
@@ -2101,17 +2098,14 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
-    if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
-      if (tpl->tpl[NF9_L4_DST_PORT].len)
-	memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
-      else if (l4_proto == IPPROTO_UDP && tpl->tpl[NF9_UDP_DST_PORT].len)
-        memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_UDP_DST_PORT].off, MIN(tpl->tpl[NF9_UDP_DST_PORT].len, 2));
-      else if (l4_proto == IPPROTO_TCP && tpl->tpl[NF9_TCP_DST_PORT].len)
-        memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_TCP_DST_PORT].off, MIN(tpl->tpl[NF9_TCP_DST_PORT].len, 2));
+    if (tpl->tpl[NF9_L4_DST_PORT].len)
+      memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_L4_DST_PORT].off, MIN(tpl->tpl[NF9_L4_DST_PORT].len, 2));
+    else if (tpl->tpl[NF9_UDP_DST_PORT].len)
+      memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_UDP_DST_PORT].off, MIN(tpl->tpl[NF9_UDP_DST_PORT].len, 2));
+    else if (tpl->tpl[NF9_TCP_DST_PORT].len)
+      memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_TCP_DST_PORT].off, MIN(tpl->tpl[NF9_TCP_DST_PORT].len, 2));
 
-      pdata->primitives.dst_port = ntohs(pdata->primitives.dst_port);
-    }
-    else pdata->primitives.dst_port = 0;
+    pdata->primitives.dst_port = ntohs(pdata->primitives.dst_port);
     break;
   case 8:
     switch(hdr->aggregation) {
@@ -2252,7 +2246,7 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   switch(hdr->version) {
   case 10:
   case 9:
-    if ((u_int8_t)*(pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off) == IPPROTO_TCP) {
+    if (tpl->tpl[NF9_TCP_FLAGS].len == 1) {
       memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, MIN(tpl->tpl[NF9_TCP_FLAGS].len, 1));
       pdata->tcp_flags = tcp_flags;
     }
@@ -3316,14 +3310,12 @@ void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct pack
     if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
-    if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
-      if (tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len)
-        memcpy(&pnat->post_nat_src_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len, 2));
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_SRC_PORT))
-        memcpy(&pnat->post_nat_src_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
+    if (tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len)
+      memcpy(&pnat->post_nat_src_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len, 2));
+    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_SRC_PORT))
+      memcpy(&pnat->post_nat_src_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
 
-      pnat->post_nat_src_port = ntohs(pnat->post_nat_src_port);
-    }
+    pnat->post_nat_src_port = ntohs(pnat->post_nat_src_port);
     break;
   default:
     break;
@@ -3345,14 +3337,12 @@ void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct pack
     if (tpl->tpl[NF9_L4_PROTOCOL].len == 1)
       memcpy(&l4_proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, 1);
 
-    if (l4_proto == IPPROTO_UDP || l4_proto == IPPROTO_TCP) {
-      if (tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len)
-        memcpy(&pnat->post_nat_dst_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len, 2));
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_DST_PORT))
-        memcpy(&pnat->post_nat_dst_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
+    if (tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len)
+      memcpy(&pnat->post_nat_dst_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len, 2));
+    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_DST_PORT))
+      memcpy(&pnat->post_nat_dst_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
 
-      pnat->post_nat_dst_port = ntohs(pnat->post_nat_dst_port);
-    }
+    pnat->post_nat_dst_port = ntohs(pnat->post_nat_dst_port);
     break;
   default:
     break;
