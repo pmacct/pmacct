@@ -410,11 +410,6 @@ void compute_once()
   IP6HdrSz = sizeof(struct ip6_hdr);
   IP6AddrSz = sizeof(struct in6_addr);
 #endif
-
-  bgp_dummy();
-  bmp_dummy();
-  telemetry_dummy();
-  isis_dummy();
 }
 
 void tunnel_registry_init()

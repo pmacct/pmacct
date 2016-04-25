@@ -74,7 +74,5 @@ EXT void bgp_batch_rollback(struct bgp_peer_batch *);
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
 EXT void attrhash_init(int, struct hash **);
-
-EXT void bgp_dummy();
 #undef EXT
 #endif 

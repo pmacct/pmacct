@@ -41,5 +41,4 @@ EXT int bmp_bmpp_bgp_peer_host_addr_cmp(const void *, const void *);
 EXT void bmp_bmpp_bgp_peers_free(void *);
 EXT void bmp_bmpp_bgp_peers_walk_print(const void *, const VISIT, const int);
 EXT void bmp_bmpp_bgp_peers_walk_delete(const void *, const VISIT, const int);
-EXT void bmp_dummy();
 #undef EXT

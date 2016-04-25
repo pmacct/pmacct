@@ -63,11 +63,6 @@ void usage_daemon(char *prog_name)
 void compute_once()
 {
   /* popular sizeof()'s here */
-
-  bgp_dummy();
-  bmp_dummy();
-  telemetry_dummy();
-  isis_dummy();
 }
 
 int main(int argc,char **argv, char **envp)

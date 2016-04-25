@@ -102,7 +102,6 @@ EXT void igp_daemon_map_initialize(char *, struct plugin_requests *);
 EXT void igp_daemon_map_finalize(char *, struct plugin_requests *);
 EXT int igp_daemon_map_handle_len(int *, int, struct plugin_requests *, char *);
 EXT int igp_daemon_map_handle_lsp_id(char *, struct host_addr *);
-EXT void isis_dummy();
 
 /* global variables */
 EXT struct thread_master *master;

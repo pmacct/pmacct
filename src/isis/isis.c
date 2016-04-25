@@ -894,7 +894,3 @@ int igp_daemon_map_handle_lsp_id(char *lsp_id, struct host_addr *addr)
     return TRUE;
   }
 }
-
-void isis_dummy()
-{
-}

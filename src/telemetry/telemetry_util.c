@@ -131,7 +131,3 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->log_thread_str = malloc(strlen("TELE") + 1);
   strcpy(tms->log_thread_str, "TELE");
 }
-
-void telemetry_dummy()
-{
-}

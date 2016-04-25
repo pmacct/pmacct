@@ -965,7 +965,3 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->bgp_lookup_find_peer = bgp_lookup_find_bgp_peer;
   bms->bgp_lookup_node_match_cmp = bgp_lookup_node_match_cmp_bgp;
 }
-
-void bgp_dummy()
-{
-}

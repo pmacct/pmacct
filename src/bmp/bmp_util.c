@@ -228,7 +228,3 @@ void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const 
 
   // XXX: test pm_tdelete() here to optimize walk
 }
-
-void bmp_dummy()
-{
-}

@@ -1275,11 +1275,6 @@ void compute_once()
   IP6AddrSz = sizeof(struct in6_addr);
   IP6TlSz = sizeof(struct ip6_hdr)+sizeof(struct my_tlhdr);
 #endif
-
-  bgp_dummy();
-  bmp_dummy();
-  telemetry_dummy();
-  isis_dummy();
 }
 
 void SF_notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
