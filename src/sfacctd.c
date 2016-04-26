@@ -2495,6 +2495,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
       exec_plugins(pptrs, req);
       break;
 #if defined ENABLE_IPV6
@@ -2531,6 +2532,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->v6);
       exec_plugins(&pptrsv->v6, req);
       break;
 #endif
@@ -2568,6 +2570,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan4);
       exec_plugins(&pptrsv->vlan4, req);
       break;
 #if defined ENABLE_IPV6
@@ -2605,6 +2608,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan6);
       exec_plugins(&pptrsv->vlan6, req);
       break;
 #endif
@@ -2655,6 +2659,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls4);
       exec_plugins(&pptrsv->mpls4, req);
       break;
 #if defined ENABLE_IPV6
@@ -2704,6 +2709,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls6);
       exec_plugins(&pptrsv->mpls6, req);
       break;
 #endif
@@ -2754,6 +2760,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
       exec_plugins(&pptrsv->vlanmpls4, req);
       break;
 #if defined ENABLE_IPV6
@@ -2804,6 +2811,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bgp_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
       if (config.nfacctd_bgp_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
       if (config.nfacctd_bgp_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
+      if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls6);
       exec_plugins(&pptrsv->vlanmpls6, req);
       break;
 #endif

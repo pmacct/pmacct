@@ -27,6 +27,11 @@
 #include "../bgp/bgp.h"
 #include "bmp.h"
 
+void bmp_srcdst_lookup(struct packet_ptrs *pptrs)
+{
+  bgp_srcdst_lookup(pptrs, FUNC_TYPE_BMP);
+}
+
 struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_status_entry *xs_entry, u_int16_t l3_proto, int compare_bgp_port)
 {
   struct bgp_peer *peer;
