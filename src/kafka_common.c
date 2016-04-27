@@ -35,6 +35,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
 
     kafka_host->cfg = rd_kafka_conf_new();
     if (kafka_host->cfg) {
+      rd_kafka_conf_set_log_cb(kafka_host->cfg, p_kafka_logger);
       rd_kafka_conf_set_error_cb(kafka_host->cfg, p_kafka_msg_error);
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
@@ -174,7 +175,6 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
       return ERR;
     }
 
-    rd_kafka_conf_set_log_cb(kafka_host->cfg, p_kafka_logger);
     if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
   }
   else return ERR;
@@ -192,7 +192,6 @@ int p_kafka_connect_to_consume(struct p_kafka_host *kafka_host)
       return ERR;
     }
 
-    rd_kafka_conf_set_log_cb(kafka_host->cfg, p_kafka_logger);
     if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
   }
   else return ERR;
