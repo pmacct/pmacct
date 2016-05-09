@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -56,6 +56,12 @@ struct _log_notifications {
   u_int8_t geoip_ipv6_file_null;
 };
 
+struct log_notification {
+  time_t stamp;
+  u_int8_t knob;
+  int timeout;
+};
+
 /* prototypes */
 #if (!defined __LOG_C)
 #define EXT extern
@@ -65,9 +71,9 @@ struct _log_notifications {
 EXT void Log(short int, char *, ...);
 EXT int parse_log_facility(const char *);
 EXT void log_notifications_init(struct _log_notifications *);
-EXT void log_notification_set(u_int8_t *);
-EXT void log_notification_unset(u_int8_t *);
-EXT int log_notification_isset(u_int8_t);
+EXT void log_notification_set(u_int8_t *, time_t *, time_t);
+EXT void log_notification_unset(u_int8_t *, time_t *);
+EXT int log_notification_isset(u_int8_t *, time_t *, time_t, int);
 
 /* global vars */
 EXT struct _log_notifications log_notifications;

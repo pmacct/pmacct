@@ -648,9 +648,9 @@ pm_class_t pmct_find_first_free()
   }
 
   if (num && idx == num) {
-    if (!log_notification_isset(log_notifications.max_classifiers)) {
+    if (!log_notification_isset(&log_notifications.max_classifiers, NULL, FALSE, FALSE)) {
       Log(LOG_WARNING, "WARN ( %s/%s ): Finished elements in class table (%u). Raise via classifier_table_num.\n", config.name, config.type, num);
-      log_notification_set(&log_notifications.max_classifiers);
+      log_notification_set(&log_notifications.max_classifiers, NULL, FALSE);
     }
   }
 

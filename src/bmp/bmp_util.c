@@ -154,7 +154,14 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
 
 int bmp_peer_init(struct bmp_peer *bmpp, int type)
 {
-  return bgp_peer_init(&bmpp->self, type);
+  int ret;
+
+  if (!bmpp) return ERR;
+
+  ret = bgp_peer_init(&bmpp->self, type);
+  // XXX: log_notification_unset(&bmpp->missing_peer_up.knob, &bmpp->missing_peer_up.stamp);  
+
+  return ret;
 }
 
 void bmp_peer_close(struct bmp_peer *bmpp, int type)

@@ -79,18 +79,46 @@ void log_notifications_init(struct _log_notifications *ln)
   }
 }
 
-void log_notification_set(u_int8_t *elem)
+void log_notification_set(u_int8_t *elem, time_t *stamp, time_t now)
 {
-  *elem = TRUE;
+  if (elem) {
+    (*elem) = TRUE;
+    if (stamp) {
+      if (now) (*stamp) = now;
+      else (*stamp) = time(NULL);
+    }
+  }
 }
 
-void log_notification_unset(u_int8_t *elem)
+void log_notification_unset(u_int8_t *elem, time_t *stamp)
 {
-  *elem = FALSE;
+  if (elem) {
+    (*elem) = FALSE;
+    if (stamp) (*stamp) = FALSE;
+  }
 }
 
-int log_notification_isset(u_int8_t elem)
+int log_notification_isset(u_int8_t *elem, time_t *stamp, time_t now, int timeout)
 {
-  if (elem == TRUE) return TRUE;
-  else return FALSE;
+  time_t now_local;
+
+  if (stamp && timeout) {
+    if (!now) now_local = time(NULL);
+    else now_local = now;
+
+    if (now < ((*stamp) + timeout)) {
+      /* valid */
+      if ((*elem) == TRUE) return TRUE;
+      else return FALSE;
+    }
+    else {
+      /* expired */
+      log_notification_unset(elem, stamp);
+      return FALSE;
+    }
+  }
+  else {
+    if ((*elem) == TRUE) return TRUE;
+    else return FALSE;
+  }
 }

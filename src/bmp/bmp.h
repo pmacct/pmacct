@@ -107,6 +107,7 @@ struct bmp_stats_hdr {
 struct bmp_peer {
   struct bgp_peer self;
   void *bgp_peers;
+  struct log_notification missing_peer_up;
 };
 
 #define BMP_STATS_TYPE0		0 /* (32-bit Counter) Number of prefixes rejected by inbound policy */

@@ -468,7 +468,7 @@ void skinny_bmp_daemon()
 	    }
             else recalc_fds = TRUE;
 
-            log_notification_unset(&log_notifications.bgp_peers_throttling);
+            log_notification_unset(&log_notifications.bgp_peers_throttling, NULL);
 
             if (bgp_batch_is_enabled(&bp_batch) && peer) {
               if (bgp_batch_is_expired(&bp_batch, now)) bgp_batch_reset(&bp_batch, now);
@@ -479,9 +479,9 @@ void skinny_bmp_daemon()
           }
           else { /* throttle */
             /* We briefly accept the new connection to be able to drop it */
-            if (!log_notification_isset(log_notifications.bmp_peers_throttling)) {
+            if (!log_notification_isset(&log_notifications.bmp_peers_throttling, NULL, FALSE, FALSE)) {
               Log(LOG_INFO, "INFO ( %s/core/BGP ): throttling at BMP peer #%u\n", config.name, peers_idx);
-              log_notification_set(&log_notifications.bmp_peers_throttling);
+              log_notification_set(&log_notifications.bmp_peers_throttling, NULL, FALSE);
             }
 
             close(fd);

@@ -4527,9 +4527,9 @@ void pm_geoip_init()
   if (config.geoip_ipv4_file && !config.geoip_ipv4) { 
     config.geoip_ipv4 = GeoIP_open(config.geoip_ipv4_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
 
-    if (!config.geoip_ipv4 && !log_notification_isset(log_notifications.geoip_ipv4_file_null)) {
+    if (!config.geoip_ipv4 && !log_notification_isset(&log_notifications.geoip_ipv4_file_null, NULL, FALSE, FALSE)) {
       Log(LOG_WARNING, "WARN ( %s/%s ): geoip_ipv4_file database can't be loaded.\n", config.name, config.type);
-      log_notification_set(&log_notifications.geoip_ipv4_file_null);
+      log_notification_set(&log_notifications.geoip_ipv4_file_null, NULL, FALSE);
     }
   }
 
@@ -4537,9 +4537,9 @@ void pm_geoip_init()
   if (config.geoip_ipv6_file && !config.geoip_ipv6) {
     config.geoip_ipv6 = GeoIP_open(config.geoip_ipv6_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
 
-    if (!config.geoip_ipv6 && !log_notification_isset(log_notifications.geoip_ipv6_file_null)) {
+    if (!config.geoip_ipv6 && !log_notification_isset(&log_notifications.geoip_ipv6_file_null, NULL, FALSE, FALSE)) {
       Log(LOG_WARNING, "WARN ( %s/%s ): geoip_ipv6_file database can't be loaded.\n", config.name, config.type);
-      log_notification_set(&log_notifications.geoip_ipv6_file_null);
+      log_notification_set(&log_notifications.geoip_ipv6_file_null, NULL, FALSE);
     }
   }
 #endif
@@ -4596,7 +4596,7 @@ void pm_geoipv2_init()
 
     if (status != MMDB_SUCCESS) {
       Log(LOG_WARNING, "WARN ( %s/%s ): geoipv2_file database can't be loaded (%s).\n", config.name, config.type, MMDB_strerror(status));
-      log_notification_set(&log_notifications.geoip_ipv4_file_null);
+      log_notification_set(&log_notifications.geoip_ipv4_file_null, NULL, FALSE);
       memset(&config.geoipv2_db, 0, sizeof(config.geoipv2_db));
     }
     else Log(LOG_INFO, "INFO ( %s/%s ): geoipv2_file database %s loaded\n", config.name, config.type, config.geoipv2_file);
