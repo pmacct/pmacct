@@ -48,18 +48,18 @@ static const struct _facility_map facility_map[] = {
 	{"-1", -1},
 };
 
-struct _log_notifications {
-  u_int8_t max_classifiers;
-  u_int8_t bgp_peers_throttling;
-  u_int8_t bmp_peers_throttling;
-  u_int8_t geoip_ipv4_file_null;
-  u_int8_t geoip_ipv6_file_null;
-};
-
 struct log_notification {
   time_t stamp;
   u_int8_t knob;
   int timeout;
+};
+
+struct _log_notifications {
+  struct log_notification max_classifiers;
+  struct log_notification bgp_peers_throttling;
+  struct log_notification bmp_peers_throttling;
+  struct log_notification geoip_ipv4_file_null;
+  struct log_notification geoip_ipv6_file_null;
 };
 
 /* prototypes */
@@ -70,10 +70,11 @@ struct log_notification {
 #endif
 EXT void Log(short int, char *, ...);
 EXT int parse_log_facility(const char *);
+EXT void log_notification_init(struct log_notification *);
 EXT void log_notifications_init(struct _log_notifications *);
-EXT void log_notification_set(u_int8_t *, time_t *, time_t);
-EXT void log_notification_unset(u_int8_t *, time_t *);
-EXT int log_notification_isset(u_int8_t *, time_t *, time_t, int);
+EXT int log_notification_set(struct log_notification *, time_t, int);
+EXT int log_notification_unset(struct log_notification *);
+EXT int log_notification_isset(struct log_notification *, time_t);
 
 /* global vars */
 EXT struct _log_notifications log_notifications;

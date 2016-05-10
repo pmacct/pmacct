@@ -159,7 +159,7 @@ int bmp_peer_init(struct bmp_peer *bmpp, int type)
   if (!bmpp) return ERR;
 
   ret = bgp_peer_init(&bmpp->self, type);
-  // XXX: log_notification_unset(&bmpp->missing_peer_up.knob, &bmpp->missing_peer_up.stamp);  
+  log_notification_init(&bmpp->missing_peer_up);
 
   return ret;
 }

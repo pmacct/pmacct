@@ -72,6 +72,13 @@ int parse_log_facility(const char *facility)
   return ERR;
 }
 
+void log_notification_init(struct log_notification *ln)
+{
+  if (ln) {
+    memset(ln, 0, sizeof(struct log_notification));
+  }
+}
+
 void log_notifications_init(struct _log_notifications *ln)
 {
   if (ln) {
@@ -79,46 +86,52 @@ void log_notifications_init(struct _log_notifications *ln)
   }
 }
 
-void log_notification_set(u_int8_t *elem, time_t *stamp, time_t now)
+int log_notification_set(struct log_notification *ln, time_t now, int timeout)
 {
-  if (elem) {
-    (*elem) = TRUE;
-    if (stamp) {
-      if (now) (*stamp) = now;
-      else (*stamp) = time(NULL);
-    }
+  if (ln) {
+    ln->knob = TRUE;
+    if (now) ln->stamp = now;
+    else ln->stamp = time(NULL);
+    ln->timeout = timeout;
+
+    return SUCCESS;
   }
+  else return ERR;
 }
 
-void log_notification_unset(u_int8_t *elem, time_t *stamp)
+int log_notification_unset(struct log_notification *ln)
 {
-  if (elem) {
-    (*elem) = FALSE;
-    if (stamp) (*stamp) = FALSE;
+  if (ln) {
+    log_notification_init(ln);
+
+    return SUCCESS;
   }
+  else return ERR;
 }
 
-int log_notification_isset(u_int8_t *elem, time_t *stamp, time_t now, int timeout)
+int log_notification_isset(struct log_notification *ln, time_t now)
 {
   time_t now_local;
 
-  if (stamp && timeout) {
-    if (!now) now_local = time(NULL);
-    else now_local = now;
+  if (ln) {
+    if (ln->timeout) {
+      if (!now) now_local = time(NULL);
+      else now_local = now;
 
-    if (now < ((*stamp) + timeout)) {
-      /* valid */
-      if ((*elem) == TRUE) return TRUE;
-      else return FALSE;
+      if (now_local < (ln->stamp + ln->timeout)) {
+        /* valid */
+        if (ln->knob == TRUE) return TRUE;
+        else return FALSE;
+      }
+      else {
+        /* expired */
+        log_notification_unset(ln);
+        return FALSE;
+      }
     }
     else {
-      /* expired */
-      log_notification_unset(elem, stamp);
-      return FALSE;
+      if (ln->knob == TRUE) return TRUE;
+      else return FALSE;
     }
-  }
-  else {
-    if ((*elem) == TRUE) return TRUE;
-    else return FALSE;
   }
 }
