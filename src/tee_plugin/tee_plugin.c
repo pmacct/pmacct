@@ -459,6 +459,7 @@ void Tee_init_socks()
     for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
       target = &receivers.pools[pool_idx].receivers[recv_idx];
       sa = (struct sockaddr *) &target->dest;
+      target->dest_len = sizeof(target->dest);
 
       if (sa->sa_family != 0) {
         if ((err = getnameinfo(sa, target->dest_len, dest_addr, sizeof(dest_addr),
