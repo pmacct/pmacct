@@ -26,6 +26,8 @@
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
 
+#define BMP_MISSING_PEER_UP_LOG_TOUT	60
+
 /* definitions originally based on draft-ietf-grow-bmp-07 */
 /* definitions review #1 based on draft-ietf-grow-bmp-17 */
 
