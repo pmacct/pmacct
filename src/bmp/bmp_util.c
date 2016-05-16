@@ -233,5 +233,5 @@ void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const 
   bgp_peer_info_delete(peer);
   bms->peer_str = saved_peer_str;
 
-  // XXX: test pm_tdelete() here to optimize walk
+  // XXX: count tree elements to index and free() later
 }
