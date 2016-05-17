@@ -386,8 +386,12 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     } 
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {
-      if (!log_notification_isset(&bmpp->missing_peer_up, FALSE)) {
-        log_notification_set(&bmpp->missing_peer_up, FALSE, BMP_MISSING_PEER_UP_LOG_TOUT);
+      char peer_ip[INET6_ADDRSTRLEN];
+
+      addr_to_str(peer_ip, &bdata.peer_ip);
+
+      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
+        log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
         Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [peer down] packet discarded: missing peer up BMP message for peer %s\n",
                 config.name, peer->addr_str, peer_ip);
       }
@@ -447,8 +451,8 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {
-      if (!log_notification_isset(&bmpp->missing_peer_up, FALSE)) {
-	log_notification_set(&bmpp->missing_peer_up, FALSE, BMP_MISSING_PEER_UP_LOG_TOUT);
+      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
+	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
 	Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] [route] packet discarded: missing peer up BMP message for peer %s\n",
 		config.name, peer->addr_str, peer_ip);
       }
