@@ -214,6 +214,8 @@ int main(int argc,char **argv, char **envp)
   }
   else Log(LOG_INFO, "INFO ( %s/core ): Reading configuration from cmdline.\n", config.name);
 
+  pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
+
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
   signal(SIGHUP, reload); /* handles reopening of syslog channel */
