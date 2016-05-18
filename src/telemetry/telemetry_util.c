@@ -55,6 +55,7 @@ int telemetry_peer_z_init(telemetry_peer_z *peer_z)
 
 void telemetry_peer_close(telemetry_peer *peer, int type)
 {
+  telemetry_dump_se_ll *tdsell;
   telemetry_misc_structs *tms;
 
   if (!peer) return;
@@ -63,8 +64,14 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
 
   if (!tms) return;
  
-  if (tms->dump_file || tms->dump_amqp_routing_key || tms->dump_kafka_topic)
-    bmp_dump_close_peer(peer);
+  if (tms->dump_file || tms->dump_amqp_routing_key || tms->dump_kafka_topic) {
+    tdsell = (telemetry_dump_se_ll *) peer->bmp_se;
+
+    if (tdsell && tdsell->start) telemetry_dump_se_ll_destroy(tdsell);
+
+    free(peer->bmp_se);
+    peer->bmp_se = NULL;
+  }
 
   if (config.telemetry_port_udp) {
     telemetry_peer_udp_cache tpuc;
