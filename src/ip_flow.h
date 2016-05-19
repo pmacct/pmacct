@@ -45,9 +45,10 @@ struct ip_flow_common {
      [0] = forward flow data
      [1] = reverse flow data
   */
-  u_int16_t bucket;
+  u_int32_t bucket;
   struct timeval last[2];
   u_int32_t last_tcp_seq;
+  u_int32_t next_tcp_seq[2];
   u_int8_t tcp_flags[2];
   u_int8_t proto;
   /* classifier hooks */

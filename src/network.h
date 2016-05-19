@@ -377,6 +377,9 @@ struct packet_ptrs {
   MMDB_lookup_result_s geoipv2_src;
   MMDB_lookup_result_s geoipv2_dst;
 #endif
+  u_int8_t tcp_retransmission;
+  u_int16_t l3_payload_len;
+  u_int8_t tunnel_level;
 };
 
 struct host_addr {
@@ -435,6 +438,7 @@ struct pkt_primitives {
   u_int16_t pkt_len_distrib;
   u_int32_t export_proto_seqno;
   u_int16_t export_proto_version;
+  u_int8_t tcp_retransmission;
 };
 
 struct pkt_data {
