@@ -55,7 +55,7 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data)
 
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
-  int ret;
+  int ret = 0;
 
   if (!len) {
     ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
@@ -63,7 +63,7 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
   }
   else {
     if (len <= (peer->buf.len - peer->buf.truncated_len)) { 
-      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], len, 0);
+      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], len, MSG_WAITALL);
       peer->msglen = (ret + peer->buf.truncated_len);
     }
   }
