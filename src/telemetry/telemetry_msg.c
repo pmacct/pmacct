@@ -117,10 +117,8 @@ int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, u_int32
   if (ret > 0) { 
     if (inflate(&peer_z->stm, Z_NO_FLUSH) != Z_OK) ret = FALSE;
     else {
-      peer->msglen = (sizeof(peer_z->inflate_buf) - peer_z->stm.avail_out);
-      memcpy(peer->buf.base, peer_z->inflate_buf, peer->msglen);
-
-      telemetry_basic_process_json(peer);
+      strlcpy(peer->buf.base, peer_z->inflate_buf, peer->buf.len);
+      peer->msglen = strlen(peer->buf.base) + 1;
 
       (*flags) = telemetry_basic_validate_json(peer);
     }
@@ -149,7 +147,7 @@ int telemetry_recv_cisco_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, i
   int ret = 0;
   u_int32_t len;
 
-  ret = telemetry_recv_generic(peer, 12);
+  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
   if (ret > 0) {
     len = telemetry_cisco_hdr_get_len(peer); 
     ret = telemetry_recv_zjson(peer, peer_z, len, flags); 
