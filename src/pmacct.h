@@ -258,6 +258,7 @@ struct _primitives_matrix_struct {
   u_int8_t uacctd;
   u_int8_t nfacctd;
   u_int8_t sfacctd;
+  u_int8_t pmtelemetryd;
   char desc[PRIMITIVE_DESC_LEN];
 };
 

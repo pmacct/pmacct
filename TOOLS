@@ -23,6 +23,9 @@ uacctd		Linux Netlink NFLOG accounting daemon; it captures packets by
 		leveraging a NFLOG multicast group - and works only on Linux.
 		Other than acting as a collector, this daemon can also export
 		statistics via NetFlow, IPFIX and sFlow protocols.
+pmtelemetryd	Streamed telemetry collector daemon; it listens for telemetry
+		data binding to a TCP or UDP port and logs real-time and/or
+		dumps at regular time-intervals to configured backend.
 pmacct  	commandline pmacct client; it allows to retrieve data from a
 		memory table plugin; it can perform queries over data or do
 		bulk data retrieval. Output is formatted, CSV or JSON format.
