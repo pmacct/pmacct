@@ -94,6 +94,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   if (peer) {
     struct host_addr peer_dst_ip;
 
+    memset(&peer_dst_ip, 0, sizeof(peer_dst_ip));
     if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
       /* administrativia */
       struct pkt_bgp_primitives pbgp, *pbgp_ptr = &pbgp;
@@ -361,7 +362,18 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
     memcpy(&ch.u.prefix4, &nh_peer->addr.address.ipv4, 4);
 
     if (!result_node) {
-      // XXX: nmct2
+      struct host_addr peer_dst_ip;
+      rd_t rd;
+
+      // XXX: rd and peer_dst_ip (add_paths capability) not supported
+      memset(&peer_dst_ip, 0, sizeof(peer_dst_ip));
+      memset(&rd, 0, sizeof(rd));
+      memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+
+      nmct2.peer = (struct bgp_peer *) nh_peer;
+      nmct2.rd = &rd;
+      nmct2.peer_dst_ip = &peer_dst_ip;
+
       if (pptrs->l3_proto == ETHERTYPE_IP) {
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
         bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer,
