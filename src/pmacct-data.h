@@ -516,7 +516,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_stitching", cfg_key_nfacctd_stitching},
   {"uacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"telemetry_daemon", cfg_key_telemetry_daemon},
-  {"telemetry_daemon_proc_name", cfg_key_proc_name},
+  {"telemetry_daemon_proc_name", cfg_key_proc_name}, /* XXX */
   {"telemetry_daemon_port_tcp", cfg_key_telemetry_port_tcp},
   {"telemetry_daemon_port_udp", cfg_key_telemetry_port_udp},
   {"telemetry_daemon_ip", cfg_key_telemetry_ip},
