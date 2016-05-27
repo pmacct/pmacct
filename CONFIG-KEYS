@@ -421,14 +421,18 @@ DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to 
 DEFAULT:        localhost
 
 KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
-		  bmp_daemon_msglog_amqp_host | sfacctd_counter_amqp_host ] [GLOBAL]
+		  bmp_daemon_msglog_amqp_host | sfacctd_counter_amqp_host |
+		  telemetry_daemon_msglog_amqp_host | telemetry_dump_amqp_host ] [GLOBAL]
 DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker used by the BGP
 		thread to stream data out; bgp_table_dump_amqp_* directives refer to the broker used
 		by the BGP thread to dump data out at regular time intervals; bmp_daemon_msglog_amqp_*
 		directives refer to the broker used by the BMP thread to stream data out; bmp_dump_amqp_*
 		directives refer to the broker used by the BMP thread to dump data out at regular time
 		intervals; sfacctd_counter_amqp_* directives refer to the broker used by sfacctd to
-		stream sFlow counter data out.
+		stream sFlow counter data out; telemetry_daemon_msglog_amqp_* directives refer to the
+		broker used by the streamed telemetry thread/daemon to stream data out; 
+		telemetry_dump_amqp_* directives refer to the broker used by the streamed telemetry
+		thread/daemon to dump data out at regular time intervals.
 DEFAULT:	See amqp_host	
 
 KEY:            [ amqp_vhost | plugin_pipe_amqp_vhost ]
@@ -1910,22 +1914,23 @@ DESC:		To prevent all BGP/BMP peers to contend resources, this defines the numbe
 		conservative, batch might have been set too big, let's try to limit flapping).
 DEFAULT: 	0
 
-KEY:            [ bgp_daemon_msglog_file | bmp_daemon_msglog_file ] [GLOBAL]
-DESC:		Enables streamed logging of BGP/BMP messages/events. Each log entry features a time reference,
-		BGP/BMP peer IP address, event type and a sequence number (to order events when time reference
-		is not granular enough). BGP UPDATE messages also contain full prefix and BGP attributes
-		information. The list of supported filename variables follows:
+KEY:            [ bgp_daemon_msglog_file | bmp_daemon_msglog_file | telemetry_daemon_msglog_file ] [GLOBAL]
+DESC:		Enables streamed logging of BGP tables/BMP events/streamed telemetry data. Each log entry
+		features a time reference, peer/exporter IP address, event type and a sequence number (to
+		order events when time reference is not granular enough). BGP UPDATE messages also contain
+		full prefix and BGP attributes information. The list of supported filename variables follows:
 
                 $peer_src_ip    BGP/BMP peer IP address.
 
 		Files can be re-opened by sending a SIGHUP to the daemon core process.
 DEFAULT:	none
 
-KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output ] [GLOBAL]
+KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output | telemetry_daemon_msglog_output ]
+		[GLOBAL]
 VALUES:         [ json ]
-DESC:		Defines output format for the streamed logging of BGP/BMP messages/events. Only JSON format
-		is currently supported and requires compiling against Jansson library (--enable-jansson when
-		configuring for compiling).
+DESC:		Defines output format for the streamed logging of BGP/BMP messages and events/streamed
+		telemetry. Only JSON format is currently supported and requires compiling against Jansson
+		library (--enable-jansson when configuring for compiling).
 DEFAULT:	json
 
 KEY:		bgp_aspath_radius [GLOBAL]
@@ -2135,11 +2140,12 @@ DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to
 		radar) are planned to be supported in future.
 DEFAULT:	path_id
 
-KEY:            [ bgp_table_dump_file | bmp_dump_file ] [GLOBAL] 
-DESC:           Enables dump of BGP tables/BMP events at regular time intervals (as defined by, for
-		example, bgp_table_dump_refresh_time) into files. Each dump event features a time
-		reference and BGP/BMP peer IP address along with the rest of BGP/BMP info. The list
-		of supported filename variables follows:
+KEY:            [ bgp_table_dump_file | bmp_dump_file | telemetry_dump_file ] [GLOBAL] 
+DESC:           Enables dump of BGP tables/BMP events/streamed telemetry data at regular time
+		intervals (as defined by, for example, bgp_table_dump_refresh_time) into files.
+		Each dump event features a time reference and peer/exporter IP address along with the
+		rest of BGP/BMP/streamed telemetry data. The list of supported filename variables
+		follows:
 
                 %d              The day of the month as a decimal number (range 01 to 31).
 
@@ -2159,28 +2165,30 @@ DESC:           Enables dump of BGP tables/BMP events at regular time intervals 
 
                 %Y              The year as a decimal number including the century.
 
-                $peer_src_ip    BGP peer IP address.
+                $peer_src_ip    BGP or BMP peer/streamed telemetry exporter IP address.
 DEFAULT:	none
 
-KEY:            [ bgp_table_dump_output | bmp_dump_output ] [GLOBAL]
+KEY:            [ bgp_table_dump_output | bmp_dump_output | telemetry_dump_output ] [GLOBAL]
 VALUES:         [ json ]
-DESC:           Defines output format for the dump of BGP/BMP tables. Only JSON format is currently
-		supported and requires compiling against Jansson library (--enable-jansson when
-		configuring for compiling).
+DESC:           Defines output format for the dump of BGP tables/BMP events/streamed telemetry
+		data. Only JSON format is currently supported and requires compiling against
+		Jansson library (--enable-jansson when configuring for compiling).
 DEFAULT:	json
 
-KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time ] [GLOBAL]
+KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
+		[GLOBAL]
 VALUES:		[ 60 .. 86400 ]
-DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP/BMP
-		tables to files.
+DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP
+		tables/BMP events/streamed telemetry data to files.
 DEFAULT:	0
 
-KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file ] [GLOBAL]
+KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_refresh_time ]
+		[GLOBAL]
 DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
                 through the use of variables, which are computed at the moment when data is purged to the
-                backend: refer to bgp_table_dump_file for a full listing of supported variables; time-
-		based variables are not allowed. Update of the latest pointer is done evaluating files
-		modification time. See print_latest_file for examples.
+                backend: refer to bgp_table_dump_file (and companion directives) for a full listing of
+		supported variables; time-based variables are not allowed. Update of the latest pointer
+		is done evaluating files modification time. See also print_latest_file for examples.
 DEFAULT:        none
 
 KEY:		isis_daemon [GLOBAL]
