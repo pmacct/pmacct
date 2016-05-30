@@ -660,35 +660,41 @@ DEFAULT:	0
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |
                   bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host |
-		  sfacctd_counter_kafka_broker_host ] [GLOBAL]
+		  sfacctd_counter_kafka_broker_host | telemetry_daemon_msglog_kafka_broker_host |
+		  telemetry_dump_kafka_broker_host ] [GLOBAL]
 DESC:           See kafka_broker_host
 DEFAULT:        See kafka_broker_host
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_port | bgp_table_dump_kafka_broker_port |
                   bmp_daemon_msglog_kafka_broker_port | bmp_dump_kafka_broker_port |
-		  sfacctd_counter_kafka_broker_port ] [GLOBAL]
+		  sfacctd_counter_kafka_broker_port | telemetry_daemon_msglog_kafka_broker_port |
+		  telemetry_dump_kafka_broker_port ] [GLOBAL]
 DESC:           See kafka_broker_port
 DEFAULT:        See kafka_broker_port
 
 KEY:            [ bgp_daemon_msglog_kafka_topic | bgp_table_dump_kafka_topic |
                   bmp_daemon_msglog_kafka_topic | bmp_dump_kafka_topic |
-		  sfacctd_counter_kafka_topic ] [GLOBAL]
+		  sfacctd_counter_kafka_topic | telemetry_daemon_msglog_kafka_topic |
+		  telemetry_dump_kafka_topic ] [GLOBAL]
 DESC:           See kafka_topic
 DEFAULT:        none
 
 KEY:            [ bgp_daemon_msglog_kafka_topic_rr | bgp_table_dump_kafka_topic_rr |
-                  bmp_daemon_msglog_kafka_topic_rr | bmp_dump_kafka_topic_rr ] [GLOBAL]
+                  bmp_daemon_msglog_kafka_topic_rr | bmp_dump_kafka_topic_rr |
+		  telemetry_daemon_msglog_kafka_topic_rr | telemetry_dump_kafka_topic_rr ]
+		[GLOBAL]
 DESC:           See kafka_topic_rr
 DEFAULT:        See kafka_topic_rr
 
 KEY:            [ bgp_daemon_msglog_kafka_partition | bgp_table_dump_kafka_partition |
                   bmp_daemon_msglog_kafka_partition | bmp_dump_kafka_partition |
-		  sfacctd_counter_kafka_partition ] [GLOBAL]
+		  sfacctd_counter_kafka_partition | telemetry_daemon_msglog_kafka_partition |
+		  telemetry_dump_kafka_partition ] [GLOBAL]
 DESC:           See kafka_partition
 DEFAULT:        See kafka_partition
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
-		  sfacctd_counter_kafka_retry ] [GLOBAL]
+		  sfacctd_counter_kafka_retry | telemetry_daemon_msglog_kafka_retry ] [GLOBAL]
 DESC:           See plugin_pipe_kafka_retry
 DEFAULT:        See plugin_pipe_kafka_retry
 
