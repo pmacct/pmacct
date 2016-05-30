@@ -421,14 +421,18 @@ DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to 
 DEFAULT:        localhost
 
 KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
-		  bmp_daemon_msglog_amqp_host | sfacctd_counter_amqp_host ] [GLOBAL]
+		  bmp_daemon_msglog_amqp_host | sfacctd_counter_amqp_host |
+		  telemetry_daemon_msglog_amqp_host | telemetry_dump_amqp_host ] [GLOBAL]
 DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker used by the BGP
 		thread to stream data out; bgp_table_dump_amqp_* directives refer to the broker used
 		by the BGP thread to dump data out at regular time intervals; bmp_daemon_msglog_amqp_*
 		directives refer to the broker used by the BMP thread to stream data out; bmp_dump_amqp_*
 		directives refer to the broker used by the BMP thread to dump data out at regular time
 		intervals; sfacctd_counter_amqp_* directives refer to the broker used by sfacctd to
-		stream sFlow counter data out.
+		stream sFlow counter data out; telemetry_daemon_msglog_amqp_* directives refer to the
+		broker used by the streamed telemetry thread/daemon to stream data out; 
+		telemetry_dump_amqp_* directives refer to the broker used by the streamed telemetry
+		thread/daemon to dump data out at regular time intervals.
 DEFAULT:	See amqp_host	
 
 KEY:            [ amqp_vhost | plugin_pipe_amqp_vhost ]
@@ -436,7 +440,8 @@ DESC:           Defines the AMQP/RabbitMQ server virtual host; see also amqp_hos
 DEFAULT:        "/"
 
 KEY:		[ bgp_daemon_msglog_amqp_vhost | bgp_table_dump_amqp_vhost | bmp_dump_amqp_vhost |
-		  bmp_daemon_msglog_amqp_vhost | sfacctd_counter_amqp_vhost ] [GLOBAL]
+		  bmp_daemon_msglog_amqp_vhost | sfacctd_counter_amqp_vhost |
+		  telemetry_daemon_msglog_amqp_vhost | telemetry_dump_amqp_vhost ] [GLOBAL]
 DESC:           See amqp_vhost; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_vhost 
 
@@ -446,7 +451,8 @@ DESC:           Defines the username to use when connecting to the AMQP/RabbitMQ
 DEFAULT:        guest
 
 KEY:		[ bgp_daemon_msglog_amqp_user | bgp_table_dump_amqp_user | bmp_dump_amqp_user |
-		  bmp_daemon_msglog_amqp_user | sfacctd_counter_amqp_user ] [GLOBAL]
+		  bmp_daemon_msglog_amqp_user | sfacctd_counter_amqp_user |
+		  telemetry_daemon_msglog_amqp_user | telemetry_dump_amqp_user ] [GLOBAL]
 DESC:		See amqp_user; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_user
 
@@ -455,7 +461,9 @@ DESC:           Defines the password to use when connecting to the server; see a
 DEFAULT:        guest
 
 KEY:		[ bgp_daemon_msglog_amqp_passwd | bgp_table_dump_amqp_passwd |
-		  bmp_dump_amqp_passwd | bmp_daemon_msglog_amqp_passwd | sfacctd_counter_amqp_passwd ]
+		  bmp_dump_amqp_passwd | bmp_daemon_msglog_amqp_passwd |
+		  sfacctd_counter_amqp_passwd | telemetry_daemon_msglog_amqp_passwd |
+		  telemetry_dump_amqp_passwd ]
 		[GLOBAL]
 DESC:		See amqp_passwd; see also bgp_daemon_msglog_amqp_host.
 DEFAULT: 	See amqp_passwd
@@ -479,7 +487,8 @@ DEFAULT:	'acct'
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key | bgp_table_dump_amqp_routing_key |
 		  bmp_daemon_msglog_amqp_routing_key | bmp_dump_amqp_routing_key |
-		  sfacctd_counter_amqp_routing_key ] [GLOBAL]
+		  sfacctd_counter_amqp_routing_key | telemetry_daemon_msglog_amqp_routing_key |
+		  telemetry_dump_amqp_routing_key ] [GLOBAL]
 DESC:		See amqp_routing_key; see also bgp_daemon_msglog_amqp_host. Variables supported by
 		the configuration directives described in this section:
 
@@ -500,7 +509,9 @@ DESC:           Performs round-robin load-balancing over a set of AMQP routing k
 DEFAULT:        0
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_rr |
-		  bmp_daemon_msglog_amqp_routing_key_rr | bmp_dump_amqp_routing_key_rr ] [GLOBAL]
+		  bmp_daemon_msglog_amqp_routing_key_rr | bmp_dump_amqp_routing_key_rr |
+		  telemetry_daemon_msglog_amqp_routing_key_rr | telemetry_dump_amqp_routing_key_rr ]
+		[GLOBAL]
 DESC:		See amqp_routing_key_rr; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_routing_key_rr
 
@@ -510,7 +521,8 @@ DEFAULT:	pmacct
 
 KEY:		[ bgp_daemon_msglog_amqp_exchange | bgp_table_dump_amqp_exchange |
 		  bmp_daemon_msglog_amqp_exchange | bmp_dump_amqp_exchange |
-		  sfacctd_counter_amqp_exchange ] [GLOBAL]
+		  sfacctd_counter_amqp_exchange | telemetry_daemon_msglog_amqp_exchange |
+		  telemetry_dump_amqp_exchange ] [GLOBAL]
 DESC:           See amqp_exchange
 DEFAULT:	See amqp_exchange; see also bgp_daemon_msglog_amqp_host.
 
@@ -521,7 +533,8 @@ DEFAULT:	direct
 
 KEY:		[ bgp_daemon_msglog_amqp_exchange_type | bgp_table_dump_amqp_exchange_type |
 		  bmp_daemon_msglog_amqp_exchange_type | bmp_dump_amqp_exchange_type |
-		  sfactd_counter_amqp_exchange_type ] [GLOBAL]
+		  sfactd_counter_amqp_exchange_type | telemetry_daemon_msglog_amqp_exchange_type |
+		  telemetry_dump_amqp_exchange_type ] [GLOBAL]
 DESC:           See amqp_exchange_type; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_exchange_type
 
@@ -538,7 +551,8 @@ DEFAULT:        false
 
 KEY:		[ bgp_daemon_msglog_amqp_persistent_msg  | bgp_table_dump_amqp_persistent_msg |
 		  bmp_daemon_msglog_amqp_persistent_msg | bmp_dump_amqp_persistent_msg |
-		  sfacctd_counter_persistent_msg ] [GLOBAL]
+		  sfacctd_counter_persistent_msg | telemetry_daemon_msglog_amqp_persistent_msg |
+		  telemetry_dump_amqp_persistent_msg ] [GLOBAL]
 VALUES:         See amqp_persistent_msg; see also bgp_daemon_msglog_amqp_host.
 DESC:		See amqp_persistent_msg
 DEFAULT:	See amqp_persistent_msg
@@ -550,7 +564,8 @@ DEFAULT:	131072
 
 KEY:		[ bgp_daemon_msglog_amqp_frame_max | bgp_table_dump_amqp_frame_max |
 		  bmp_daemon_msglog_amqp_frame_max | bmp_dump_amqp_frame_max |
-		  sfacctd_counter_amqp_frame_max ] [GLOBAL]
+		  sfacctd_counter_amqp_frame_max | telemetry_daemon_msglog_amqp_frame_max |
+		  telemetry_dump_amqp_frame_max ] [GLOBAL]
 DESC:		See amqp_frame_max; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_frame_max
 
@@ -564,7 +579,8 @@ DEFAULT:	0
 
 KEY:		[ bgp_daemon_msglog_amqp_heartbeat_interval | bgp_table_dump_amqp_heartbeat_interval |
 		  bmp_daemon_msglog_amqp_heartbeat_interval | bmp_dump_amqp_heartbeat_interval |
-		  sfacctd_counter_amqp_heartbeat_interval ] [GLOBAL]
+		  sfacctd_counter_amqp_heartbeat_interval | telemetry_daemon_msglog_amqp_heartbeat_interval |
+		  telemetry_dump_amqp_heartbeat_interval ] [GLOBAL]
 DESC:           See amqp_heartbeat_interval; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_heartbeat_interval
 
@@ -588,7 +604,7 @@ DESC:           Defines the interval of time, in seconds, after which a connecti
 DEFAULT:	60
 
 KEY:		[ bgp_daemon_msglog_amqp_retry | bmp_daemon_msglog_amqp_retry |
-		  sfacctd_counter_amqp_retry ] [GLOBAL]
+		  sfacctd_counter_amqp_retry | telemetry_daemon_msglog_amqp_retry ] [GLOBAL]
 DESC:		See plugin_pipe_amqp_retry; see also bgp_daemon_msglog_amqp_host.
 DEFAULT: 	See plugin_pipe_amqp_retry	
 
@@ -1910,22 +1926,23 @@ DESC:		To prevent all BGP/BMP peers to contend resources, this defines the numbe
 		conservative, batch might have been set too big, let's try to limit flapping).
 DEFAULT: 	0
 
-KEY:            [ bgp_daemon_msglog_file | bmp_daemon_msglog_file ] [GLOBAL]
-DESC:		Enables streamed logging of BGP/BMP messages/events. Each log entry features a time reference,
-		BGP/BMP peer IP address, event type and a sequence number (to order events when time reference
-		is not granular enough). BGP UPDATE messages also contain full prefix and BGP attributes
-		information. The list of supported filename variables follows:
+KEY:            [ bgp_daemon_msglog_file | bmp_daemon_msglog_file | telemetry_daemon_msglog_file ] [GLOBAL]
+DESC:		Enables streamed logging of BGP tables/BMP events/streamed telemetry data. Each log entry
+		features a time reference, peer/exporter IP address, event type and a sequence number (to
+		order events when time reference is not granular enough). BGP UPDATE messages also contain
+		full prefix and BGP attributes information. The list of supported filename variables follows:
 
                 $peer_src_ip    BGP/BMP peer IP address.
 
 		Files can be re-opened by sending a SIGHUP to the daemon core process.
 DEFAULT:	none
 
-KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output ] [GLOBAL]
+KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output | telemetry_daemon_msglog_output ]
+		[GLOBAL]
 VALUES:         [ json ]
-DESC:		Defines output format for the streamed logging of BGP/BMP messages/events. Only JSON format
-		is currently supported and requires compiling against Jansson library (--enable-jansson when
-		configuring for compiling).
+DESC:		Defines output format for the streamed logging of BGP/BMP messages and events/streamed
+		telemetry. Only JSON format is currently supported and requires compiling against Jansson
+		library (--enable-jansson when configuring for compiling).
 DEFAULT:	json
 
 KEY:		bgp_aspath_radius [GLOBAL]
@@ -2135,11 +2152,12 @@ DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to
 		radar) are planned to be supported in future.
 DEFAULT:	path_id
 
-KEY:            [ bgp_table_dump_file | bmp_dump_file ] [GLOBAL] 
-DESC:           Enables dump of BGP tables/BMP events at regular time intervals (as defined by, for
-		example, bgp_table_dump_refresh_time) into files. Each dump event features a time
-		reference and BGP/BMP peer IP address along with the rest of BGP/BMP info. The list
-		of supported filename variables follows:
+KEY:            [ bgp_table_dump_file | bmp_dump_file | telemetry_dump_file ] [GLOBAL] 
+DESC:           Enables dump of BGP tables/BMP events/streamed telemetry data at regular time
+		intervals (as defined by, for example, bgp_table_dump_refresh_time) into files.
+		Each dump event features a time reference and peer/exporter IP address along with the
+		rest of BGP/BMP/streamed telemetry data. The list of supported filename variables
+		follows:
 
                 %d              The day of the month as a decimal number (range 01 to 31).
 
@@ -2159,28 +2177,30 @@ DESC:           Enables dump of BGP tables/BMP events at regular time intervals 
 
                 %Y              The year as a decimal number including the century.
 
-                $peer_src_ip    BGP peer IP address.
+                $peer_src_ip    BGP or BMP peer/streamed telemetry exporter IP address.
 DEFAULT:	none
 
-KEY:            [ bgp_table_dump_output | bmp_dump_output ] [GLOBAL]
+KEY:            [ bgp_table_dump_output | bmp_dump_output | telemetry_dump_output ] [GLOBAL]
 VALUES:         [ json ]
-DESC:           Defines output format for the dump of BGP/BMP tables. Only JSON format is currently
-		supported and requires compiling against Jansson library (--enable-jansson when
-		configuring for compiling).
+DESC:           Defines output format for the dump of BGP tables/BMP events/streamed telemetry
+		data. Only JSON format is currently supported and requires compiling against
+		Jansson library (--enable-jansson when configuring for compiling).
 DEFAULT:	json
 
-KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time ] [GLOBAL]
+KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
+		[GLOBAL]
 VALUES:		[ 60 .. 86400 ]
-DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP/BMP
-		tables to files.
+DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP
+		tables/BMP events/streamed telemetry data to files.
 DEFAULT:	0
 
-KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file ] [GLOBAL]
+KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_refresh_time ]
+		[GLOBAL]
 DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
                 through the use of variables, which are computed at the moment when data is purged to the
-                backend: refer to bgp_table_dump_file for a full listing of supported variables; time-
-		based variables are not allowed. Update of the latest pointer is done evaluating files
-		modification time. See print_latest_file for examples.
+                backend: refer to bgp_table_dump_file (and companion directives) for a full listing of
+		supported variables; time-based variables are not allowed. Update of the latest pointer
+		is done evaluating files modification time. See also print_latest_file for examples.
 DEFAULT:        none
 
 KEY:		isis_daemon [GLOBAL]
@@ -2325,3 +2345,63 @@ DESC:		Defines the stack size for threads screated by the daemon. The value is e
 		minimum (8192000) if system default is too low. Some systems may throw an error if
 		the defined size is not a multiple of the system page size.
 DEFAULT:	0
+
+KEY:		telemetry_daemoni [GLOBAL]
+VALUES:         [ true | false ]
+DESC:		Enables the streamed telemetry thread in all daemons except pmtelemetryd (which does
+		collect telemetry as part of its core functionalities). Quoting Cisco IOS-XR Telemetry
+		Configuration Guide at the time of this writing: "Streaming telemetry lets users direct
+		data to a configured receiver. This data can be used for analysis and troubleshooting
+		purposes to maintain the health of the network. This is achieved by leveraging the
+		capabilities of machine-to-machine communication. The data is used by development and
+		operations (DevOps) personnel who plan to optimize networks by collecting analytics of
+		the network in real-time, locate where problems occur, and investigate issues in a
+		collaborative manner.".
+DEFAULT:        false
+
+KEY:		telemetry_daemon_port_tcpi [GLOBAL]
+DESC:		Makes the streamed telemetry daemon, pmtelemetryd, or the streamed telemetry thread
+		listen on the specified TCP port.	
+DEFAULT:	none
+
+KEY:            telemetry_daemon_port_udp [GLOBAL]
+DESC:           Makes the streamed telemetry daemon, pmtelemetryd, or the streamed telemetry thread
+                listen on the specified UDP port. 
+DEFAULT:        none
+
+KEY:		telemetry_daemon_ip [GLOBAL]
+DESC:		Binds the streamed telemetry daemon to a specific interface. Expects as value an IPv4/
+		IPv6 address.
+DEFAULT:        0.0.0.0
+
+KEY:		telemetry_daemon_decoder [GLOBAL]
+VALUES:		[ json | zjson | cisco_json | cisco_zjson ]
+DESC:		Sets the streamed telemetry data decoder to the specified type. Cisco versions of json
+		and zjson prepend a 12 bytes proprietary header.
+DEFAULT:	none
+
+KEY:            telemetry_daemon_max_peers [GLOBAL]
+DESC:           Sets the maximum number of exporters the streamed telemetry daemon can receive data
+		from. Upon reaching of such limit, no more exporters can send data to the daemon.
+DEFAULT:        100
+
+KEY:		telemetry_daemon_udp_timeout [GLOBAL]
+DESC:		Sets the timeout time, in seconds, to determine when a UDP session is to be expired.
+DEFAULT:	300
+
+KEY:		telemetry_daemon_allow_file [GLOBAL]
+DESC:           Full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line)
+		allowed to send packets to the daemon. Current syntax does not implement network masks
+		but individual IP addresses only. The Allow List is intended to be small; firewall
+		rules should be preferred to long ACLs.
+DEFAULT:        none (ie. allow all)
+
+KEY:		telemetry_daemon_pipe_size [GLOBAL]
+DESC:           Defines the size of the kernel socket used for streamed telemetry datagrams (see also
+		bgp_daemon_pipe_size for more info).
+DEFAULT:        Operating System default
+
+KEY:		telemetry_daemon_ipprec
+DESC:           Marks self-originated streamed telemetry messages with the supplied IP precedence
+		value. Applies to TCP sessions only.
+DEFAULT:        0
