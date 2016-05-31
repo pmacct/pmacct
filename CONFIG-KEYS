@@ -2352,7 +2352,7 @@ DESC:		Defines the stack size for threads screated by the daemon. The value is e
 		the defined size is not a multiple of the system page size.
 DEFAULT:	0
 
-KEY:		telemetry_daemoni [GLOBAL]
+KEY:		telemetry_daemon [GLOBAL]
 VALUES:         [ true | false ]
 DESC:		Enables the streamed telemetry thread in all daemons except pmtelemetryd (which does
 		collect telemetry as part of its core functionalities). Quoting Cisco IOS-XR Telemetry
@@ -2365,7 +2365,7 @@ DESC:		Enables the streamed telemetry thread in all daemons except pmtelemetryd 
 		collaborative manner.".
 DEFAULT:        false
 
-KEY:		telemetry_daemon_port_tcpi [GLOBAL]
+KEY:		telemetry_daemon_port_tcp [GLOBAL]
 DESC:		Makes the streamed telemetry daemon, pmtelemetryd, or the streamed telemetry thread
 		listen on the specified TCP port.	
 DEFAULT:	none
@@ -2407,7 +2407,7 @@ DESC:           Defines the size of the kernel socket used for streamed telemetr
 		bgp_daemon_pipe_size for more info).
 DEFAULT:        Operating System default
 
-KEY:		telemetry_daemon_ipprec
+KEY:		telemetry_daemon_ipprec [GLOBAL]
 DESC:           Marks self-originated streamed telemetry messages with the supplied IP precedence
 		value. Applies to TCP sessions only.
 DEFAULT:        0

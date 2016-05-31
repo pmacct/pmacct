@@ -20,10 +20,11 @@ XIV.	Quickstart guide to setup the BGP daemon
 XV.	Quickstart guide to setup a NetFlow/sFlow replicator
 XVI.	Quickstart guide to setup the IS-IS daemon
 XVII.	Quickstart guide to setup the BMP daemon
-XVIII.	Running the print plugin to write to flat-files
-XIX.	Quickstart guide to setup GeoIP lookups
-XX.	Using pmacct as traffic/event logger
-XXI.	Miscellaneous notes and troubleshooting tips
+XVIII.	Quickstart guide to setup Streamed Telemetry accounting
+XIX.	Running the print plugin to write to flat-files
+XX.	Quickstart guide to setup GeoIP lookups
+XXI.	Using pmacct as traffic/event logger
+XXII.	Miscellaneous notes and troubleshooting tips
 
 
 I. Plugins included with pmacct distribution
@@ -1387,7 +1388,59 @@ router bgp 64512
 
 Any equivalent examples using IOS-XR or JunOS are much welcome.
  
-XVIII. Running the print plugin to write to flat-files
+
+XVIII.  Quickstart guide to setup Streamed Telemetry accounting
+Quoting Cisco IOS-XR Telemetry Configuration Guide at the time of this writing:
+"Streaming telemetry lets users direct data to a configured receiver. This data
+can be used for analysis and troubleshooting purposes to maintain the health of
+the network. This is achieved by leveraging the capabilities of machine-to-
+machine communication. The data is used by development and operations (DevOps)
+personnel who plan to optimize networks by collecting analytics of the network
+in real-time, locate where problems occur, and investigate issues in a
+collaborative manner.". Streamed telemetry support comes in pmacct in two
+flavours: 1) a telemetry thread can be started in existing daemons, ie. sFlow,
+NetFlow/IPFIX, etc. for the purpose of data correlation and 2) a new daemon
+pmtelemetryd for standalone consumpton of data. Streamed telemetry data can be
+logged real-time and/or dumped at regular time intervals to flat-files, RabbitMQ
+or Kafka brokers.
+
+From a configuration standpoint both the thread (ie. telemetry configured part
+of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
+thread must be explicitely enabled with a 'telemetry_daemon: true' config line.
+Hence the following examples hold for both the thread and the daemon setups.  
+
+Following is a config example to receive telemetry data in JSON format over UDP
+port 1620 and log it real-time to flat-files:
+
+! Telemetry thread configuration
+! telemetry_daemon: true 
+!
+telemetry_daemon_port_udp: 1620
+telemetry_daemon_decoder: json
+!
+telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.txt
+! telemetry_daemon_msglog_amqp_routing_key: telemetry-msglog
+! telemetry_daemon_msglog_kafka_topic: telemetry-msglog
+
+Following is a config example to receive telemetry data with Cisco proprietary
+header (12 bytes), in compressed JSON format over TCP port 1620 and dump it at
+60 secs time intervals to flat-files:
+
+! Telemetry thread configuration
+! telemetry_daemon: true
+!
+telemetry_daemon_port_tcp: 1620
+telemetry_daemon_decoder: cisco_zjson
+!
+telemetry_dump_file: /path/to/spool/telemetry-dump-$peer_src_ip-%Y%m%d-%H%M.txt
+telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
+! telemetry_dump_amqp_routing_key: telemetry-dump
+! telemetry_dump_kafka_topic: telemetry-dump
+!
+telemetry_dump_refresh_time: 60
+
+
+XIX. Running the print plugin to write to flat-files
 Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
@@ -1433,7 +1486,7 @@ print_history_roundoff: m
 print_output_file_append: true 
 
 
-XIX. Quickstart guide to setup GeoIP lookups
+XX. Quickstart guide to setup GeoIP lookups
 From pmacct 0.14.2 it is possible to perform GeoIP country lookups against a
 Maxmind database v1 (--enable-geoip) and from 1.5.2 against a Maxmind database
 v2 (--enable-geoipv2). The two traffic aggregation primitives to leverage such
@@ -1498,7 +1551,7 @@ states, counties, metro areas, zip codes, etc.) are not yet supported: should
 you be interested into any of these, please get in touch.  
 
 
-XX. Using pmacct as traffic/event logger
+XXI. Using pmacct as traffic/event logger
 pmacct was originally conceived as a traffic aggregator. From pmacct 0.14.3 
 it is now possible to use pmacct as a traffic/event logger, such development
 being fostered particularly by the use of NetFlow/IPFIX as generic transport,
@@ -1591,7 +1644,7 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XXI. Miscellaneous notes and troubleshooting tips
+XXII. Miscellaneous notes and troubleshooting tips
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  

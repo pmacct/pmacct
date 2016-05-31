@@ -86,7 +86,7 @@
 #define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.6.0-git"
 #define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.6.0-git"
 #define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.6.0-git"
-#define PMTELEMETRYD_USAGE_HEADER "Telemetry Accounting Daemon, pmtelemetryd 1.6.0-git"
+#define PMTELEMETRYD_USAGE_HEADER "Streamed Telemetry Accounting Daemon, pmtelemetryd 1.6.0-git"
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
