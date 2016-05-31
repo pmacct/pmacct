@@ -1,6 +1,46 @@
 pmacct (Promiscuous mode IP Accounting package) v1.6.0
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
+1.6.0 -- XX-06-2016
+  + sfacctd: RabbitMQ and Kafka support was introduced to real-time log and/
+    or dump at regular time intervals of sFlow counters. This is in addition
+    to existing support for flat-files.
+  + Introduced 'export_proto_seqno' aggregation primitive to report on
+    sequence number of the export protocol (ie. NetFlow, sFlow, IPFIX). This
+    may offer more advanced offline analysis of packet loss, out of orders,
+    etc. over time windows than basic online analytics provided by the
+    daemons. 
+  ! Code refactoring: improved re-usability of much of the BGP code (so to
+    make it possible to use it as a library for some BMP daemon features, ie.
+    Route Monitoring messages support); consolidated functions to handle log
+    and print plugin output files; improved log messages to always include
+    process name and type.
+  ! fix, bpf_filter.c: issue compiling against libpcap 1.7.x; introduced a
+    check for existing bpf_filter() in libpcap in order to prevent namespace
+    conflicts.
+  ! fix, tmp_net_own_field default value changed to true. This knob can be
+    still switched to false for this release but is going to be removed soon.
+  ! fix, cfg.c, cfg_handlers.c, pmacct.c: some configuration directives and
+    pmacct CL parameters requiring string parsing, ie. -T -O -c, are now
+    passed through tolower().
+  ! fix, MongoDB plugin: removed version check around mongo_create_index()
+    and now defaulting to latest MongoDB C legacy driver API. This is due to
+    some versioning issue in the driver.
+  ! fix, timestamp_arrival: primitive was reporting incorrect results (ie.
+    always zero) if timestamp_start or timestamp_end were not also specified
+    as part of the same aggregation method. Many thanks to Vincent Morel for
+    reporting the issue.
+  ! fix, thread stack: a value of 0, default, leaves the stack size to the
+    system default or pmacct minimum (8192000) if system default is too low.
+    Some systems may throw an error if the defined size is not a multiple of
+    the system page size.
+  ! fix, nfacctd: improved NetFlow v9/IPFIX parsing. Added new length checks
+    and fixed some existing check. Thanks to Robert Wuttke ( @Benocs ) for his
+    support.
+  - SQL plugins: sql_recovery_logfile feature was removed from the code due
+    to lack of support and interest. Along with it, also pmmyplay and pmpgplay
+    tools have also been removed. 
+
 1.5.3 -- 14-01-2016
   + Introduced the Kafka plugin: Apache Kafka is publish-subscribe messaging
     rethought as a distributed commit log. Its qualities being: fast, scalable,
