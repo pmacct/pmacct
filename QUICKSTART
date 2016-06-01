@@ -1345,21 +1345,22 @@ router isis
 
 XVII. Quickstart guide to setup the BMP daemon
 The BMP daemon thread was introduced in pmacct 1.5. The implementation was
-originally based on the draft-ietf-grow-bmp-07 IETF document (then review #1
-was done against draft-ietf-grow-bmp-17). If unfamiliar with BMP, to quote the
-document: "BMP is intended to provide a more convenient interface for obtaining
-route views for research purpose than the screen-scraping approach in common
-use today. The design goals are to keep BMP simple, useful, easily implemented,
-and minimally service-affecting.". The BMP daemon currently supports BMP data,
-events and stats, ie. initiation, termination, peer up, peer down, stats and
-route monitoring messages. The daemon enables to write BMP messages to files,
-AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
+originally based on the draft-ietf-grow-bmp-07 IETF document (whereas the
+current review is against draft-ietf-grow-bmp-17). If unfamiliar with BMP, to
+quote the document: "BMP is intended to provide a more convenient interface for
+obtaining route views for research purpose than the screen-scraping approach in
+common use today. The design goals are to keep BMP simple, useful, easily
+implemented, and minimally service-affecting.". The BMP daemon currently
+supports BMP data, events and stats, ie. initiation, termination, peer up,
+peer down, stats and route monitoring messages. The daemon enables to write BMP
+messages to files, AMQP and Kafka brokers, real-time (msglog) or at regular time
+intervals (dump).
 
 Following a simple example on how to configure nfacctd to enable the BMP daemon
-to a) log, in real-time, BGP stats and events received via BMP to a text-file
-(bmp_daemon_msglog_file) and b) dump the same (ie. BGP stats and events received
-via BMP) to a text-file and at regular time intervals (bmp_dump_refresh_time,
-bmp_dump_file):
+to a) log, in real-time, BGP stats, events and routes received via BMP to a
+text-file (bmp_daemon_msglog_file) and b) dump the same (ie. BGP stats and
+events received via BMP) to a text-file and at regular time intervals
+(bmp_dump_refresh_time, bmp_dump_file):
 
 bmp_daemon: true
 !
@@ -1368,8 +1369,8 @@ bmp_daemon_msglog_file: /path/to/bmp-$peer_src_ip.log
 bmp_dump_file: /path/to/bmp-$peer_src_ip-%H%M.dump
 bmp_dump_refresh_time: 60
 
-Following is an example how a Cisco router running IOS should be configured
-in order to export BMP data to a collector:
+Following is an example how a Cisco router running IOS/IOS-XE should be
+configured in order to export BMP data to a collector:
 
 router bgp 64512
  bmp server 1
@@ -1377,7 +1378,7 @@ router bgp 64512
   initial-delay 60
   failure-retry-delay 60
   flapping-delay 60
-  stats-reporting-period 60
+  stats-reporting-period 300
   activate
  exit-bmp-server-mode
  !
@@ -1386,7 +1387,24 @@ router bgp 64512
  neighbor Z.Z.Z.Z remote-as 64514
  neighbor Z.Z.Z.Z bmp-activate all
 
-Any equivalent examples using IOS-XR or JunOS are much welcome.
+Following is an example how a Cisco router running IOS-XR should be configured
+in order to export BMP data to a collector:
+
+router bgp 64512
+ neighbor Y.Y.Y.Y
+  bmp-activate server 1
+ neighbor Z.Z.Z.Z
+  bmp-activate server 1
+ !
+!
+bmp server 1
+ host X.X.X.X port 1790
+ initial-delay 60
+ initial-refresh delay 60
+ stats-reporting-period 300
+!
+
+Any equivalent example using JunOS would be much welcome.
  
 
 XVIII.  Quickstart guide to setup Streamed Telemetry accounting

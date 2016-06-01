@@ -2,9 +2,22 @@ pmacct (Promiscuous mode IP Accounting package) v1.6.0
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
 1.6.0 -- XX-06-2016
+  + BMP daemon: introduced support for Route Monitoring messages. RM messages
+    provide an initial dump of all routes received from a peer as well as an
+    ongoing mechanism that sends the incremental routes advertised and
+    withdrawn by a peer to the monitoring station. Like for BMP events, RM
+    messages can be logged real-time and/or dumped at regular time intervals
+    to flat-files, RabbiMQ and Kafka brokers.
   + sfacctd: RabbitMQ and Kafka support was introduced to real-time log and/
     or dump at regular time intervals of sFlow counters. This is in addition
     to existing support for flat-files.
+  + maps_index: several improvements to indexing of maps: optimizations to
+    pretag_index_fill() and pretag_index_lookup() to improve lookup speeds;
+    optimized id_entry structure, ie. by splitting key and non-key parts,
+    and hashing key in order to consume less memory; added duplicate entry
+    detection (cause of sudden index destruction); pretag_index_destroy()
+    destroys hash keys for each index entry, solving a memory leak issue.
+    Thanks to Job Snijders ( @job ) for his support.
   + Introduced 'export_proto_seqno' aggregation primitive to report on
     sequence number of the export protocol (ie. NetFlow, sFlow, IPFIX). This
     may offer more advanced offline analysis of packet loss, out of orders,
@@ -37,9 +50,25 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
   ! fix, nfacctd: improved NetFlow v9/IPFIX parsing. Added new length checks
     and fixed some existing check. Thanks to Robert Wuttke ( @Benocs ) for his
     support.
+  ! fix, pretag_handlers.c: BPAS_map_bgp_nexthop_handler() and BPAS_map_bgp_
+    peer_dst_as_handler() were not setting a func_type.
+  ! fix, JSON support: Jansson 2.2 does not have json_object_update_missing()
+    function which was introduced in 2.3. Just provide the function if it is not
+    resent. It can be built from other functions. Thanks to Vincent Bernat
+    ( @vincentbernat ) for contributing the patch.
+  ! fix, log.c: use a format string when calling syslog(). Passing directly a
+    potentially uncontrolled string could crash the program if the string
+    contains formatting parameters. Thanks to Vincent Bernat ( @vincentbernat )
+    for contributing the patch.
+  ! fix, sfacctd.c default value for config.sfacctd_counter_max_nodes was set
+    after sf_cnt_link_misc_structs(). Thanks to Robin Douine for his support
+    resolving the issue.
+  ! fix, sfacctd.c: timestamp null in sFlow counters output. Thanks to Robin
+    Douine for his support resolving the issue.
   - SQL plugins: sql_recovery_logfile feature was removed from the code due
     to lack of support and interest. Along with it, also pmmyplay and pmpgplay
     tools have also been removed. 
+  - pre_tag_map: removed support for mpls_pw_id due to lack of interest.
 
 1.5.3 -- 14-01-2016
   + Introduced the Kafka plugin: Apache Kafka is publish-subscribe messaging

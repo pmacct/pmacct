@@ -1877,7 +1877,7 @@ KEY:		bmp_daemon [GLOBAL]
 VALUES:         [ true | false ]
 DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can be used to monitor BGP
 		sessions. The implementation was originally based on the draft-ietf-grow-bmp-07 IETF
-		document (then review #1 was done against draft-ietf-grow-bmp-17). The BMP daemon
+		document (whereas the current review is against draft-ietf-grow-bmp-17). The BMP daemon
 		currently supports BMP data, events and stats, ie. initiation, termination, peer up,
 		peer down, stats and route monitoring messages. The daemon enables to write BMP messages
 		to files, AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
