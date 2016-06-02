@@ -33,7 +33,7 @@
 #include "ip_flow.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
-
+#include <fstream>
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
