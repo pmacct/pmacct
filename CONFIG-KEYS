@@ -861,7 +861,7 @@ DESC:		If set to true, print plugin will append to existing files instead of ove
 		intuitively the title is not re-printed.
 DEFAULT:	false
 
-KEY:		print_output_lock_file [GLOBAL]
+KEY:		print_output_lock_file
 DESC:		If no print_output_file is defined (ie. print plugin output goes to stdout), this
 		directive defined a global lock to serialize output to stdout, ie. in cases where
 		multiple print plugins are defined or purging events of the same plugin queue up.

@@ -897,9 +897,17 @@ int cfg_key_print_output_lock_file(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.print_output_lock_file = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'print_output_lock_file'. Globalized.\n", filename);
-
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_lock_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_output_lock_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+   
   return changes;
 }
 
