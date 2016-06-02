@@ -431,6 +431,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
 	    PendingElem->pmpls = NULL;
 	    PendingElem->pcust = NULL;
 	    PendingElem->pvlen = NULL;
+	    PendingElem->stitch = NULL;
             RetireElem(PendingElem);
 
             queue[j] = Cursor;
