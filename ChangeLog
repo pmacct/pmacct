@@ -23,6 +23,17 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
     may offer more advanced offline analysis of packet loss, out of orders,
     etc. over time windows than basic online analytics provided by the
     daemons. 
+  + log.c: logging moved from standard output (stdout) to standard error
+    (stderr) so to not conflict with stdout printing of statistics (print
+    plugin). Thanks to Jim Westfall ( @jwestfall69 ) for his support. 
+  + print plugin: introduced a new print_output_lock_file config directive 
+    to lock stdout output so to prevent multiple processes (instances of the
+    same print plugin or different instances of print plugin) overlap output.
+    Thanks to Jim Westfall ( @jwestfall69 ) for his support. 
+  + pkt_handlers.c: euristics in NetFlow v9/IPFIX VLAN handler improved for
+    the case of egress flows. Also removed IP protocol checks for UDP/TCP
+    ports and TCP flags in case the export protocol is NetFlow v9/IPFIX.
+    Thanks to Alexander Ponamarchuk for his support.
   ! Code refactoring: improved re-usability of much of the BGP code (so to
     make it possible to use it as a library for some BMP daemon features, ie.
     Route Monitoring messages support); consolidated functions to handle log
@@ -65,6 +76,18 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
     resolving the issue.
   ! fix, sfacctd.c: timestamp null in sFlow counters output. Thanks to Robin
     Douine for his support resolving the issue.
+  ! fix, SQL plugins: $SQL_HISTORY_BASETIME environment variable was reporting a
+    wrong value (next basetime) in the sql_trigger_exec script. Thanks to Rain
+    Nõmm for reporting the issue.
+  ! fix, pretag.c: in pretag_index_fill(), replaced memcpy() with hash_dup_key()
+    and missing res_fdata initialization in pretag_index_lookup() as they were
+    originating false negatives upon lookup. Thanks to Rain Nõmm fo his support
+    resolving the issue.
+  ! fix, ISIS daemon: hash_* functions renamed into isis_hash_* to avoid name
+    space clashes with their BGP daemon counter-parts.
+  ! fix, kafka_common.c: rd_kafka_conf_set_log_cb moved to p_kafka_init_host()
+    due to crashes seen in p_kafka_connect_to_produce(). Thanks to Paul Mabey
+    for his support resolving the issue.
   - SQL plugins: sql_recovery_logfile feature was removed from the code due
     to lack of support and interest. Along with it, also pmmyplay and pmpgplay
     tools have also been removed. 
