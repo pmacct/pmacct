@@ -1881,6 +1881,7 @@ DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can
 		currently supports BMP data, events and stats, ie. initiation, termination, peer up,
 		peer down, stats and route monitoring messages. The daemon enables to write BMP messages
 		to files, AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
+		Also, route monitoring messages are saved in a RIB structure for IP prefix lookup.
 		For further referece see examples in the QUICKSTART document and/or description of the
 		bmp_* config keys in this document. The BMP daemon is a separate thread in the NetFlow
 		(nfacctd) and sFlow (sfacctd) collectors.

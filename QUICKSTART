@@ -1354,7 +1354,8 @@ implemented, and minimally service-affecting.". The BMP daemon currently
 supports BMP data, events and stats, ie. initiation, termination, peer up,
 peer down, stats and route monitoring messages. The daemon enables to write BMP
 messages to files, AMQP and Kafka brokers, real-time (msglog) or at regular time
-intervals (dump).
+intervals (dump). Also, route monitoring messages are saved in a RIB structure
+for IP prefix lookup.
 
 Following a simple example on how to configure nfacctd to enable the BMP daemon
 to a) log, in real-time, BGP stats, events and routes received via BMP to a
