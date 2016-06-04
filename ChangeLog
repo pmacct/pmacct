@@ -2,6 +2,16 @@ pmacct (Promiscuous mode IP Accounting package) v1.6.0
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
 1.6.0 -- XX-06-2016
+  + Streamed telemetry daemon: quoting Cisco IOS-XR Telemetry Configuration
+    Guide at the time of this writing: "Streaming telemetry [ .. ] data
+    can be used for analysis and troubleshooting purposes to maintain the
+    health of the network. This is achieved by leveraging the capabilities of
+    machine-to-machine communication. [ .. ]" Streamed telemetry support comes
+    in two flavours: 1) a telemetry thread can be started in existing daemons,
+    ie. sFlow, NetFlow/IPFIX, etc. for the purpose of data correlation and 2)
+    a new daemon pmtelemetryd for standalone consumpton of data. Streamed
+    telemetry data can be logged real-time and/or dumped at regular time
+    intervals to flat-files, RabbitMQ or Kafka brokers.
   + BMP daemon: introduced support for Route Monitoring messages. RM messages
     "provide an initial dump of all routes received from a peer as well as an
     ongoing mechanism that sends the incremental routes advertised and
@@ -9,6 +19,14 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
     messages can be logged real-time and/or dumped at regular time intervals
     to flat-files, RabbiMQ and Kafka brokers. RM messages are also saved in a
     RIB structure for IP prefix lookup.
+  + uacctd: ULOG support switched to NFLOG, the newer and L3 independent Linux
+    packet logging framework. One of the key advantages of NFLOG is support for
+    IPv4 and IPv6 (whereas ULOG was restricted to IPv4 only). The code has been
+    contributed by Vincent Bernat ( @vincentbernat ). 
+  + build system: it was modernized so not to rely on specific and old versions
+    of automake and autoconf, as it was the case until 1.5. Among the things,
+    pkg-config and libtool are leveraged and an autogen.sh script is generated.
+    The code has been contributed by Vincent Bernat ( @vincentbernat ).
   + sfacctd: RabbitMQ and Kafka support was introduced to real-time log and/
     or dump at regular time intervals of sFlow counters. This is in addition
     to existing support for flat-files.
