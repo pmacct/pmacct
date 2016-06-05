@@ -334,9 +334,11 @@ EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 size_t strlcpy(char *, const char *, size_t);
 #endif
 
-#if (defined WITH_JANSSON) && (!defined HAVE_JANSSON_OBJECT_UPDATE_MISSING)
+#if (defined WITH_JANSSON)
 #include <jansson.h>
+#if (!defined HAVE_JSON_OBJECT_UPDATE_MISSING)
 int json_object_update_missing(json_t *, json_t *);
+#endif
 #endif
 
 /* global variables */

@@ -5,7 +5,7 @@
  * it under the terms of the MIT license. See LICENSE for details.
  */
 
-#if (defined WITH_JANSSON) && (!defined HAVE_JANSSON_OBJECT_UPDATE_MISSING)
+#if (defined WITH_JANSSON) && (!defined HAVE_JSON_OBJECT_UPDATE_MISSING)
 #include <jansson.h>
 
 /* Introduced in Jansson 2.3. Rewritten to not use

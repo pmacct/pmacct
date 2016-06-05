@@ -812,6 +812,7 @@ AC_ARG_ENABLE(jansson,
     PLUGINS="${PLUGINS} jansson"
     USING_JANSSON="yes"
     AC_DEFINE(WITH_JANSSON, 1)
+    AC_CHECK_LIB(jansson, json_object, [], [])
     ;;
   no)
     AC_MSG_RESULT(no)
