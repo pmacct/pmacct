@@ -79,14 +79,14 @@
 #define PRIMITIVE_DESC_LEN	64
 
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
-#define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.6.0-git"
-#define UACCTD_USAGE_HEADER "Linux NetFilter NFLOG Accounting Daemon, uacctd 1.6.0-git"
-#define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.6.0-git"
-#define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 1.6.0-git"
-#define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.6.0-git"
-#define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.6.0-git"
-#define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.6.0-git"
-#define PMTELEMETRYD_USAGE_HEADER "Streamed Telemetry Accounting Daemon, pmtelemetryd 1.6.0-git"
+#define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.6.1-git"
+#define UACCTD_USAGE_HEADER "Linux NetFilter NFLOG Accounting Daemon, uacctd 1.6.1-git"
+#define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.6.1-git"
+#define PMMYPLAY_USAGE_HEADER "pmmyplay, pmacct MySQL logfile player 1.6.1-git"
+#define PMPGPLAY_USAGE_HEADER "pmpgplay, pmacct PGSQL logfile player 1.6.1-git"
+#define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.6.1-git"
+#define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.6.1-git"
+#define PMTELEMETRYD_USAGE_HEADER "Streamed Telemetry Accounting Daemon, pmtelemetryd 1.6.1-git"
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
