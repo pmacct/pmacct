@@ -1,7 +1,7 @@
 pmacct (Promiscuous mode IP Accounting package) v1.6.0
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
-1.6.0 -- XX-06-2016
+1.6.0 -- 07-06-2016
   + Streamed telemetry daemon: quoting Cisco IOS-XR Telemetry Configuration
     Guide at the time of this writing: "Streaming telemetry [ .. ] data
     can be used for analysis and troubleshooting purposes to maintain the
