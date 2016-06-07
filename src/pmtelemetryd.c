@@ -89,7 +89,7 @@ int main(int argc,char **argv, char **envp)
   memset(&config_file, 0, sizeof(config_file));
 
   log_notifications_init(&log_notifications);
-  config.acct_type = ACCT_NF;
+  config.acct_type = ACCT_PMTELE;
 
   find_id_func = NULL;
   plugins_list = NULL;

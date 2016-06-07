@@ -118,13 +118,15 @@
 #define PATH_MAX 4096
 #endif
 
-/* acct_type */ 
-#define ACCT_PM		1	/* promiscuous mode */
-#define ACCT_NF		2	/* NetFlow */
-#define ACCT_SF		3	/* sFlow */
-#define ACCT_UL		4	/* Linux NetFilter NFLOG */
-#define ACCT_PMTELE	5	/* Telemetry */
-#define ACCT_MEMCLIENT	6	/* pmacct memroy client */
+/* Daemon identificator */ 
+#define ACCT_PM			1	/* promiscuous mode */
+#define ACCT_NF			2	/* NetFlow */
+#define ACCT_SF			3	/* sFlow */
+#define ACCT_UL			4	/* Linux NetFilter NFLOG */
+#define ACCT_FWPLANE_MAX	100	/* Max ID for forwarding-plane daemons */ 
+#define ACCT_CTLPLANE_MAX	200	/* Max ID for control-plane daemons */ 
+#define ACCT_PMTELE		201	/* Streamed Telemetry */
+#define ACCT_INFRA_MAX		300	/* Max ID for infrastructure daemons */ 
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
