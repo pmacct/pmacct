@@ -690,6 +690,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_agent_map", cfg_key_nfacctd_bgp_to_agent_map},
   {"bgp_follow_default", cfg_key_nfacctd_bgp_follow_default},
   {"bgp_follow_nexthop", cfg_key_nfacctd_bgp_follow_nexthop},
+  {"bgp_follow_nexthop_external", cfg_key_nfacctd_bgp_follow_nexthop_external},
   {"bgp_neighbors_file", cfg_key_nfacctd_bgp_neighbors_file},
   {"bgp_table_peer_buckets", cfg_key_nfacctd_bgp_table_peer_buckets},
   {"bgp_table_per_peer_buckets", cfg_key_nfacctd_bgp_table_per_peer_buckets},

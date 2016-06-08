@@ -302,6 +302,7 @@ struct configuration {
   char *nfacctd_flow_to_rd_map;
   int nfacctd_bgp_follow_default;
   struct prefix nfacctd_bgp_follow_nexthop[FOLLOW_BGP_NH_ENTRIES];
+  int nfacctd_bgp_follow_nexthop_external;
   char *nfacctd_bgp_neighbors_file;
   char *nfacctd_bgp_md5_file;
   int bgp_table_peer_buckets;

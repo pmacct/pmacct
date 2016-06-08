@@ -300,6 +300,7 @@ EXT int cfg_key_nfacctd_bgp_src_med_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_to_agent_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_default(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_follow_nexthop(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_follow_nexthop_external(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_neighbors_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_md5_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_table_peer_buckets(char *, char *, char *);

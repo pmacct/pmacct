@@ -426,7 +426,10 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	  ttl--;
           goto start_again;
         }
-	else goto end;
+	else {
+	  if (config.nfacctd_bgp_follow_nexthop_external) saved_info = (char *) info;
+	  goto end;
+	}
       }
 #if defined ENABLE_IPV6
       else if (info->attr->mp_nexthop.family == AF_INET6) {
@@ -450,7 +453,10 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	  ttl--;
           goto start_again;
 	}
-	else goto end;
+	else {
+	  if (config.nfacctd_bgp_follow_nexthop_external) saved_info = (char *) info;
+	  goto end;
+	}
       }
 #endif
       else {
@@ -474,7 +480,10 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	  ttl--;
           goto start_again;
 	}
-	else goto end;
+	else {
+	  if (config.nfacctd_bgp_follow_nexthop_external) saved_info = (char *) info;
+	  goto end;
+	}
       }
     }
   }

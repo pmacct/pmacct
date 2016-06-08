@@ -2093,13 +2093,20 @@ KEY:            bgp_follow_nexthop [GLOBAL]
 DESC:		Expects one or more IP prefix(es), ie. 192.168.0.0/16, comma separated. A maximum of 32
 		IP prefixes is supported. It follows the BGP next-hop up (using each next-hop as BGP
 		source-address for the next BGP RIB lookup), returning the last next-hop part of the
-		supplied IP prefix as value for the 'peer_ip_dst' primitive. bgp_agent_map is supported
+		supplied IP prefix(es) as value for the 'peer_ip_dst' primitive. bgp_agent_map is supported
 		at each recursion. This feature is aimed at networks, for example, involving BGP
 		confederations; underlying goal being to see the routing-domain "exit-point". The
 		The feature is internally protected against routing loops with an hardcoded limit of 20
 		lookups; pmacctd, uacctd daemons are internally limited to only two BGP peers hence this
 		feature can't properly work.
 DEFAULT:	none
+
+KEY:            bgp_follow_nexthop_external [GLOBAL]
+VALUES:         [ true | false ]
+DESC:           If set to true makes bgp_follow_nexthop return the next-hop from the routing table of
+		the last node part of the supplied IP prefix(es) as value for the 'peer_ip_dst' primitive.  
+		This may help to pin-point the (set of) exit interface(s).
+DEFAULT:	false
 
 KEY:            bgp_neighbors_file [GLOBAL]
 DESC:		Writes a list of the BGP neighbors in the established state to the specified file, one
