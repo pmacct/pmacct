@@ -39,6 +39,7 @@ char nfacctd_globstr[] = "nfacctd\0";
 char sfacctd_globstr[] = "sfacctd\0";
 char uacctd_globstr[] = "uacctd\0";
 char pmtele_globstr[] = "pmtelemetryd\0";
+char pmbgpd_globstr[] = "pmbgpd\0";
 
 /*
  * NEWSTR -- Create a copy of a C string
@@ -139,6 +140,7 @@ initsetproctitle(argc, argv, envp)
 	else if (config.acct_type == ACCT_SF) __progname = sfacctd_globstr;
 	else if (config.acct_type == ACCT_UL) __progname = uacctd_globstr;
 	else if (config.acct_type == ACCT_PMTELE) __progname = pmtele_globstr;
+	else if (config.acct_type == ACCT_PMBGP) __progname = pmbgpd_globstr;
 #endif
 }
 
@@ -220,6 +222,7 @@ pm_setproctitle(fmt, va_alist)
   else if (config.acct_type == ACCT_NF) strcpy(prefix, nfacctd_globstr);
   else if (config.acct_type == ACCT_SF) strcpy(prefix, sfacctd_globstr);
   else if (config.acct_type == ACCT_PMTELE) strcpy(prefix, pmtele_globstr);
+  else if (config.acct_type == ACCT_PMBGP) strcpy(prefix, pmbgpd_globstr);
 
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);

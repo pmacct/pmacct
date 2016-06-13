@@ -25,6 +25,7 @@
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:v:o:O:uwWL:RVaz"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:v:o:O:uRg:L:Va"
 #define ARGS_PMTELEMETRYD "hVL:l:f:dDS:F:"
+#define ARGS_PMBGPD "hVL:l:f:dDS:F:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDVUoiI"
 #define N_PRIMITIVES 57
 #define N_FUNCS 10 
@@ -87,6 +88,7 @@
 #define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.6.1-git"
 #define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.6.1-git"
 #define PMTELEMETRYD_USAGE_HEADER "Streamed Telemetry Accounting Daemon, pmtelemetryd 1.6.1-git"
+#define PMBGPD_USAGE_HEADER "pmacct BGP Daemon, pmbgpd 1.6.1-git"
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1
@@ -124,6 +126,7 @@
 #define ACCT_SF			3	/* sFlow */
 #define ACCT_UL			4	/* Linux NetFilter NFLOG */
 #define ACCT_FWPLANE_MAX	100	/* Max ID for forwarding-plane daemons */ 
+#define ACCT_PMBGP		101	/* standalone BGP daemon */
 #define ACCT_CTLPLANE_MAX	200	/* Max ID for control-plane daemons */ 
 #define ACCT_PMTELE		201	/* Streamed Telemetry */
 #define ACCT_INFRA_MAX		300	/* Max ID for infrastructure daemons */ 
