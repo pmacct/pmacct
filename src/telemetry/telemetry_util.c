@@ -135,6 +135,4 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->msglog_kafka_topic_rr = config.telemetry_msglog_kafka_topic_rr;
   tms->peer_str = malloc(strlen("telemetry_node") + 1);
   strcpy(tms->peer_str, "telemetry_node");
-  tms->log_thread_str = malloc(strlen("TELE") + 1);
-  strcpy(tms->log_thread_str, "TELE");
 }

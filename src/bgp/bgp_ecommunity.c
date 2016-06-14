@@ -48,7 +48,7 @@ ecommunity_new (struct bgp_peer *peer)
 
   tmp = malloc(sizeof (struct ecommunity));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_new). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_new). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct ecommunity));
@@ -90,7 +90,7 @@ ecommunity_add_val (struct bgp_peer *peer, struct ecommunity *ecom, struct ecomm
       ecom->size++;
       ecom->val = malloc(ecom_length (ecom));
       if (!ecom->val) {
-	Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name, bms->log_thread_str);
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name, bms->log_str);
 	exit_all(1);
       }
       memcpy (ecom->val, eval->val, ECOMMUNITY_SIZE);
@@ -527,7 +527,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
     {
       str_buf = malloc(1);
       if (!str_buf) {
-	Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_thread_str);
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_str);
 	exit_all(1);
       }
       str_buf[0] = '\0';
@@ -537,7 +537,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
   /* Prepare buffer.  */
   str_buf = malloc(ECOMMUNITY_STR_DEFAULT_LEN + 1);
   if (!str_buf) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   str_size = ECOMMUNITY_STR_DEFAULT_LEN + 1;

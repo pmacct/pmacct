@@ -180,6 +180,7 @@ struct bmp_data {
 #endif
 EXT void nfacctd_bmp_wrapper();
 EXT void skinny_bmp_daemon();
+EXT void bmp_prepare_thread();
 #undef EXT
 
 /* global variables */

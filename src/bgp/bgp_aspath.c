@@ -326,7 +326,7 @@ aspath_new (struct bgp_peer *peer)
 
   aspath = malloc(sizeof (struct aspath));
   if (!aspath) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (aspath_new). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (aspath_new). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   memset (aspath, 0, sizeof (struct aspath));

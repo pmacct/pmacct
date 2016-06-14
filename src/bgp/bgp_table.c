@@ -83,7 +83,7 @@ bgp_node_create (struct bgp_peer *peer)
   return rn;
 
   malloc_failed:
-  Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_node_create). Exiting ..\n", config.name, bms->log_thread_str);
+  Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_node_create). Exiting ..\n", config.name, bms->log_str);
   exit_all(1);
 }
 

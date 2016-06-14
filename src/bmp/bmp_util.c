@@ -126,8 +126,6 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("bmp_router") + 1);
   strcpy(bms->peer_str, "bmp_router");
-  bms->log_thread_str = malloc(strlen("BMP") + 1);
-  strcpy(bms->log_thread_str, "BMP");
   bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
 
   bms->table_peer_buckets = config.bmp_table_peer_buckets;

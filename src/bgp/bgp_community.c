@@ -47,7 +47,7 @@ community_new (struct bgp_peer *peer)
 
   tmp = malloc(sizeof (struct community));
   if (!tmp) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_new). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (community_new). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   memset(tmp, 0, sizeof (struct community));
@@ -82,7 +82,7 @@ community_add_val (struct bgp_peer *peer, struct community *com, u_int32_t val)
   else {
     com->val = malloc(com_length (com));
     if (!com->val) {
-      Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_add_val). Exiting ..\n", config.name, bms->log_thread_str);
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (community_add_val). Exiting ..\n", config.name, bms->log_str);
       exit_all(1);
     }
   }
@@ -247,7 +247,7 @@ community_com2str  (struct bgp_peer *peer, struct community *com)
     {
       str = malloc(1);
       if (!str) {
-	Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_com2str). Exiting ..\n", config.name, bms->log_thread_str);
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (community_com2str). Exiting ..\n", config.name, bms->log_str);
 	exit_all(1);
       }
       str[0] = '\0';
@@ -286,7 +286,7 @@ community_com2str  (struct bgp_peer *peer, struct community *com)
   /* Allocate memory.  */
   str = pnt = malloc(len);
   if (!str) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (community_com2str). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (community_com2str). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   first = 1;

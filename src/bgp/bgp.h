@@ -92,7 +92,6 @@ struct bgp_misc_structs {
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
   char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
-  char *log_thread_str; /* "BGP", "BMP"; XXX: temporary, to be removed */
   char *log_str; /* BGP, BMP, thread, daemon, etc. */
   int is_thread;
 

@@ -171,7 +171,7 @@ struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
 
   new = malloc(sizeof(struct bgp_info_extra));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info_extra));
@@ -210,7 +210,7 @@ struct bgp_info *bgp_info_new(struct bgp_peer *peer)
 
   new = malloc(sizeof(struct bgp_info));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_info_new). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_info_new). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   else memset(new, 0, sizeof (struct bgp_info));
@@ -396,7 +396,7 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
   if (attr->refcnt == 0) {
     ret = (struct bgp_attr *) hash_release(inter_domain_routing_db->attrhash, attr);
     // assert (ret != NULL);
-    if (!ret) Log(LOG_INFO, "INFO ( %s/core/%s ): bgp_attr_unintern() hash lookup failed.\n", config.name, bms->log_thread_str);
+    if (!ret) Log(LOG_INFO, "INFO ( %s/%s ): bgp_attr_unintern() hash lookup failed.\n", config.name, bms->log_str);
     free(attr);
   }
 
@@ -445,7 +445,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   peer->buf.len = BGP_BUFFER_SIZE;
   peer->buf.base = malloc(peer->buf.len);
   if (!peer->buf.base) {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_thread_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
     exit_all(1);
   }
   else {
@@ -745,10 +745,10 @@ void write_neighbors_file(char *filename, int type)
   file = fopen(filename,"w");
   if (file) {
     if ((ret = chown(filename, owner, group)) == -1)
-      Log(LOG_WARNING, "WARN ( %s/core/%s ): [%s] Unable to chown() (%s).\n", config.name, bms->log_thread_str, filename, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unable to chown() (%s).\n", config.name, bms->log_str, filename, strerror(errno));
 
     if (file_lock(fileno(file))) {
-      Log(LOG_ERR, "ERROR ( %s/core/%s ): [%s] Unable to obtain lock.\n", config.name, bms->log_thread_str, filename);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unable to obtain lock.\n", config.name, bms->log_str, filename);
       return;
     }
     for (idx = 0; idx < bms->max_peers; idx++) {
@@ -776,7 +776,7 @@ void write_neighbors_file(char *filename, int type)
     fclose(file);
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/core/%s ): [%s] fopen() failed.\n", config.name, bms->log_thread_str, filename);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] fopen() failed.\n", config.name, bms->log_str, filename);
     return;
   }
 }
@@ -953,12 +953,6 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
-
-  // XXX: temporary
-  // bms->log_thread_str = malloc(strlen("BGP") + 1);
-  // strcpy(bms->log_thread_str, "BGP");
-  bms->log_thread_str = bms->log_str;
-
   bms->bgp_peer_log_msg_extras = NULL;
 
   bms->table_peer_buckets = config.bgp_table_peer_buckets;

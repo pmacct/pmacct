@@ -48,6 +48,7 @@ void nfacctd_bmp_wrapper()
   bmp_pool = allocate_thread_pool(1);
   assert(bmp_pool);
   Log(LOG_DEBUG, "DEBUG ( %s/core/BMP ): %d thread(s) initialized\n", config.name, 1);
+  bmp_prepare_thread();
 
   /* giving a kick to the BMP thread */
   send_to_pool(bmp_pool, skinny_bmp_daemon, NULL);
@@ -93,8 +94,6 @@ void skinny_bmp_daemon()
 
   bmp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BMP];
   memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
-  bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
-  memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
   /* socket creation for BMP server: IPv4 only */
 #if (defined ENABLE_IPV6)
@@ -119,18 +118,18 @@ void skinny_bmp_daemon()
     trim_spaces(config.nfacctd_bmp_ip);
     ret = str_to_addr(config.nfacctd_bmp_ip, &addr);
     if (!ret) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): 'bmp_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_all(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bmp_port);
   }
 
   if (!config.nfacctd_bmp_max_peers) config.nfacctd_bmp_max_peers = BMP_MAX_PEERS_DEFAULT;
-  Log(LOG_INFO, "INFO ( %s/core/BMP ): maximum BMP peers allowed: %d\n", config.name, config.nfacctd_bmp_max_peers);
+  Log(LOG_INFO, "INFO ( %s/%s ): maximum BMP peers allowed: %d\n", config.name, bmp_misc_db->log_str, config.nfacctd_bmp_max_peers);
 
   bmp_peers = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
   if (!bmp_peers) {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers structure. Terminating thread.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BMP peers structure. Terminating thread.\n", config.name, bmp_misc_db->log_str);
     exit_all(1);
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
@@ -141,7 +140,7 @@ void skinny_bmp_daemon()
     if (config.nfacctd_bmp_msglog_kafka_topic) bmp_misc_db->msglog_backend_methods++;
 
     if (bmp_misc_db->msglog_backend_methods > 1) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_daemon_msglog_file, bmp_daemon_msglog_amqp_routing_key and bmp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_msglog_file, bmp_daemon_msglog_amqp_routing_key and bmp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_all(1);
     }
   }
@@ -152,7 +151,7 @@ void skinny_bmp_daemon()
     if (config.bmp_dump_kafka_topic) bmp_misc_db->dump_backend_methods++;
 
     if (bmp_misc_db->dump_backend_methods > 1) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): bmp_dump_file, bmp_dump_amqp_routing_key and bmp_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/%s ): bmp_dump_file, bmp_dump_amqp_routing_key and bmp_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_all(1);
     }
   }
@@ -160,7 +159,7 @@ void skinny_bmp_daemon()
   if (bmp_misc_db->msglog_backend_methods) {
     bmp_misc_db->peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
     if (!bmp_misc_db->peers_log) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_all(1);
     }
     memset(bmp_misc_db->peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
@@ -174,7 +173,7 @@ void skinny_bmp_daemon()
       if (!config.nfacctd_bmp_msglog_amqp_retry)
         config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
-      Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name, bmp_misc_db->log_str);
 #endif
     }
 
@@ -182,7 +181,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_KAFKA
       bmp_daemon_msglog_init_kafka_host();
 #else
-      Log(LOG_WARNING, "WARN ( %s/core/BMP ): p_kafka_connect_to_produce() not possible due to missing --enable-kafka\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_connect_to_produce() not possible due to missing --enable-kafka\n", config.name, bmp_misc_db->log_str);
 #endif
     }
   }
@@ -196,7 +195,7 @@ void skinny_bmp_daemon()
   if (config.bmp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
     bmp_route_info_modulo = bmp_route_info_modulo_pathid;
   else {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unknown 'bmp_table_per_peer_hash' value. Terminating thread.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unknown 'bmp_table_per_peer_hash' value. Terminating thread.\n", config.name, bmp_misc_db->log_str);
     exit_all(1);
   }
 
@@ -217,7 +216,7 @@ void skinny_bmp_daemon()
 #endif
 
     if (config.bmp_sock < 0) {
-      Log(LOG_ERR, "ERROR ( %s/core/BMP ): thread socket() failed. Terminating thread.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_all(1);
     }
   }
@@ -225,15 +224,15 @@ void skinny_bmp_daemon()
     int opt = config.nfacctd_bmp_ipprec << 5;
 
     rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BMP ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, errno);
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
   }
 
   rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BMP ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, errno);
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 
 #if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
   rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BMP ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, errno);
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
   if (config.nfacctd_bmp_pipe_size) {
@@ -246,7 +245,7 @@ void skinny_bmp_daemon()
 
     Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): bmp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, obtained, config.nfacctd_bmp_pipe_size);
+    Log(LOG_INFO, "INFO ( %s/%s ): bmp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, bmp_misc_db->log_str, obtained, config.nfacctd_bmp_pipe_size);
   }
 
   rc = bind(config.bmp_sock, (struct sockaddr *) &server, slen);
@@ -255,13 +254,13 @@ void skinny_bmp_daemon()
     char *ip_address;
 
     ip_address = config.nfacctd_bmp_ip ? config.nfacctd_bmp_ip : null_ip_address;
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, ip_address, config.nfacctd_bmp_port, errno);
+    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bmp_misc_db->log_str, ip_address, config.nfacctd_bmp_port, errno);
     exit_all(1);
   }
 
   rc = listen(config.bmp_sock, 1);
   if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): listen() failed (errno: %d).\n", config.name, errno);
+    Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
     exit_all(1);
   }
 
@@ -277,7 +276,7 @@ void skinny_bmp_daemon()
 
     sa_to_addr(&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): waiting for BMP data on %s:%u\n", config.name, srv_string, srv_port);
+    Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on %s:%u\n", config.name, bmp_misc_db->log_str, srv_string, srv_port);
   }
 
   /* Preparing ACL, if any */
@@ -293,7 +292,7 @@ void skinny_bmp_daemon()
   /* BMP peers batching checks */
   if ((config.nfacctd_bmp_batch && !config.nfacctd_bmp_batch_interval) ||
       (config.nfacctd_bmp_batch_interval && !config.nfacctd_bmp_batch)) {
-    Log(LOG_WARNING, "WARN ( %s/core/BMP ): 'bmp_daemon_batch_interval' and 'bmp_daemon_batch' both set to zero.\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/%s ): 'bmp_daemon_batch_interval' and 'bmp_daemon_batch' both set to zero.\n", config.name, bmp_misc_db->log_str);
     config.nfacctd_bmp_batch = 0;
     config.nfacctd_bmp_batch_interval = 0;
   }
@@ -303,7 +302,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_JANSSON
     if (!config.nfacctd_bmp_msglog_output) config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
 #else
-    Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/%s ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bmp_misc_db->log_str);
 #endif
   }
 
@@ -311,7 +310,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_JANSSON
     if (!config.bmp_dump_output) config.bmp_dump_output = PRINT_OUTPUT_JSON;
 #else
-    Log(LOG_WARNING, "WARN ( %s/core/BMP ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/%s ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bmp_misc_db->log_str);
 #endif
   }
 
@@ -332,7 +331,7 @@ void skinny_bmp_daemon()
     else {
       config.bmp_dump_file = NULL;
       bmp_misc_db->dump_backend_methods = FALSE;
-      Log(LOG_WARNING, "WARN ( %s/core/BMP ): Invalid 'bmp_dump_refresh_time'.\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'bmp_dump_refresh_time'.\n", config.name, bmp_misc_db->log_str);
     }
 
     if (config.bmp_dump_amqp_routing_key) bmp_dump_init_amqp_host();
@@ -480,7 +479,7 @@ void skinny_bmp_daemon()
           else { /* throttle */
             /* We briefly accept the new connection to be able to drop it */
             if (!log_notification_isset(&log_notifications.bmp_peers_throttling, now)) {
-              Log(LOG_INFO, "INFO ( %s/core/BGP ): throttling at BMP peer #%u\n", config.name, peers_idx);
+              Log(LOG_INFO, "INFO ( %s/%s ): throttling at BMP peer #%u\n", config.name, bmp_misc_db->log_str, peers_idx);
               log_notification_set(&log_notifications.bmp_peers_throttling, now, FALSE);
             }
 
@@ -494,8 +493,8 @@ void skinny_bmp_daemon()
         int fd;
 
         /* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/core/BMP ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
-                        config.name, config.nfacctd_bmp_max_peers);
+        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
+                        config.name, bmp_misc_db->log_str, config.nfacctd_bmp_max_peers);
         close(fd);
         goto read_data;
       }
@@ -525,8 +524,8 @@ void skinny_bmp_daemon()
       /* Check: only one TCP connection is allowed per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].self.addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].self.addr))) {
-          Log(LOG_ERR, "ERROR ( %s/core/BMP ): [%s] Refusing new connection from existing peer.\n",
-                                config.name, bmp_peers[peers_check_idx].self.addr_str);
+          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Refusing new connection from existing peer.\n",
+                                config.name, bmp_misc_db->log_str, bmp_peers[peers_check_idx].self.addr_str);
           FD_CLR(peer->fd, &bkp_read_descs);
           bmp_peer_close(bmpp, FUNC_TYPE_BMP);
 	  recalc_fds = TRUE;
@@ -537,7 +536,7 @@ void skinny_bmp_daemon()
         }
       }
 
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] BMP peers usage: %u/%u\n", config.name, peer->addr_str, peers_num, config.nfacctd_bmp_max_peers);
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP peers usage: %u/%u\n", config.name, bmp_misc_db->log_str, peer->addr_str, peers_num, config.nfacctd_bmp_max_peers);
     }
 
     read_data:
@@ -564,7 +563,7 @@ void skinny_bmp_daemon()
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] BMP connection reset by peer (%d).\n", config.name, peer->addr_str, errno);
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP connection reset by peer (%d).\n", config.name, bmp_misc_db->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bmp_peer_close(bmpp, FUNC_TYPE_BMP);
       recalc_fds = TRUE;
@@ -579,4 +578,14 @@ void skinny_bmp_daemon()
       else peer->buf.truncated_len = 0;
     }
   }
+}
+
+void bmp_prepare_thread()
+{
+  bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
+  memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
+
+  bmp_misc_db->is_thread = TRUE;
+  bmp_misc_db->log_str = malloc(strlen("core/BMP") + 1);
+  strcpy(bmp_misc_db->log_str, "core/BMP");
 }

@@ -102,13 +102,13 @@ hash_get (struct bgp_peer *peer, struct hash *hash, void *data, void * (*alloc_f
     {
       newdata = (*alloc_func) (data);
       if (!newdata) {
-        Log(LOG_ERR, "ERROR ( %s/core/%s ): alloc_func failed (hash_get). Exiting ..\n", config.name, bms->log_thread_str);
+        Log(LOG_ERR, "ERROR ( %s/%s ): alloc_func failed (hash_get). Exiting ..\n", config.name, bms->log_str);
         exit_all(1);
       }
 
       backet = malloc(sizeof (struct hash_backet));
       if (!backet) {
-        Log(LOG_ERR, "ERROR ( %s/core/%s ): malloc() failed (hash_get). Exiting ..\n", config.name, bms->log_thread_str);
+        Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (hash_get). Exiting ..\n", config.name, bms->log_str);
         exit_all(1);
       }
       memset(backet, 0, sizeof (struct hash_backet));
