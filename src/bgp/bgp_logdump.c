@@ -616,7 +616,7 @@ void bgp_handle_dump_event()
     /* we have to ignore signals to avoid loops: because we are already forked */
     signal(SIGINT, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
-    pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BGP Dump Writer", config.name);
+    pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BGP Dump Writer", config.name, bms->log_str);
     memset(last_filename, 0, sizeof(last_filename));
     memset(current_filename, 0, sizeof(current_filename));
     memset(&peer_log, 0, sizeof(struct bgp_peer_log));
@@ -639,7 +639,7 @@ void bgp_handle_dump_event()
 #endif
 
     dumper_pid = getpid();
-    Log(LOG_INFO, "INFO ( %s/core/BGP ): *** Dumping BGP tables - START (PID: %u) ***\n", config.name, dumper_pid);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - START (PID: %u) ***\n", config.name, bms->log_str, dumper_pid);
     start = time(NULL);
     tables_num = 0;
 
@@ -677,7 +677,7 @@ void bgp_handle_dump_event()
 	    peer->log->fd = open_output_file(current_filename, "w", TRUE);
 	    if (fd_buf) {
 	      if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
-		Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] setvbuf() failed: %s\n", config.name, current_filename, errno);
+		Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, bms->log_str, current_filename, errno);
 	      else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ); 
 	    }
 	  }
@@ -757,13 +757,13 @@ void bgp_handle_dump_event()
     }
 
     duration = time(NULL)-start;
-    Log(LOG_INFO, "INFO ( %s/core/BGP ): *** Dumping BGP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
-		config.name, dumper_pid, tables_num, duration);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
+		config.name, bms->log_str, dumper_pid, tables_num, duration);
 
     exit(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
-      Log(LOG_WARNING, "WARN ( %s/core/BGP ): Unable to fork BGP table dump writer: %s\n", config.name, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BGP table dump writer: %s\n", config.name, bms->log_str, strerror(errno));
     }
 
     break;

@@ -953,8 +953,12 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
-  bms->log_thread_str = malloc(strlen("BGP") + 1);
-  strcpy(bms->log_thread_str, "BGP");
+
+  // XXX: temporary
+  // bms->log_thread_str = malloc(strlen("BGP") + 1);
+  // strcpy(bms->log_thread_str, "BGP");
+  bms->log_thread_str = bms->log_str;
+
   bms->bgp_peer_log_msg_extras = NULL;
 
   bms->table_peer_buckets = config.bgp_table_peer_buckets;
