@@ -932,8 +932,12 @@ sfprobe_receiver: 1.2.3.4:6343
 
 
 XIV. Quickstart guide to setup the BGP daemon
-The BGP daemon is run as a thread within the collector core process. The idea is
-to receive data-plane information, ie. via NetFlow, sFlow, etc., and control
+BGP can be run as a stand-alone collector daemon (pmbgpd, from 1.6.1) or as a
+thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
+alone daemon is suitable for consuming BGP data only, real-time or at regular
+intervals; the thread solution is suitable for correlation of BGP with other
+data sources, ie. NetFlow, IPFIX, sFlow, etc.. The thread implementation idea
+is to receive data-plane information, ie. via NetFlow, sFlow, etc., and control
 plane information, ie. full routing tables via BGP, from edge routers. Per-peer
 BGP RIBs are maintained to ensure local views of the network, a behaviour close
 to that of a BGP route-server. In case of routers with default-only or partial
@@ -947,11 +951,12 @@ do it:
 
 shell> ./configure
 
-The following configuration fragment is alone sufficient to set up a BGP daemon
-which will bind to an IP address and will support up to a maximum number of 100
-peers. Once PE routers start sending telemetry data and peer up, it should be
-possible to see the BGP-related fields, ie. as_path, peer_as_dst, local_pref,
-med, etc., correctly populated while querying the memory table:
+The following configuration snippet shows how to set up a BGP thread (ie. part
+of the NetFlow/IPFIX collector, nfacctd) which will bind to an IP address and
+will support up to a maximum number of 100 peers. Once PE routers start sending
+telemetry data and peer up, it should be possible to see the BGP-related fields,
+ie. as_path, peer_as_dst, local_pref, med, etc., correctly populated while
+querying the memory table:
 
 bgp_daemon: true
 bgp_daemon_ip: X.X.X.X
@@ -961,12 +966,25 @@ nfacctd_as: bgp
 plugins: memory
 aggregate: src_as, dst_as, local_pref, med, as_path, peer_dst_as 
 
-The BGP daemon reads the remote ASN upon receipt of a BGP OPEN message and dynamically
-presents itself as part of the same Autonomous System - to ensure an iBGP relationship
-is established all the times. Also, the BGP daemon acts as a passive BGP neighbor and
-hence will never try to re-establish a fallen peering session.  
-For debugging purposes related to the BGP feed(s), bgp_daemon_msglog_* configuration
-directives can be enabled in order to log BGP messaging.
+Setting up the stand-alone BGP collector daemon, pmbgpd, is not very different
+at all from the configuration above:
+
+bgp_daemon_ip: X.X.X.X
+bgp_daemon_max_peers: 100
+bgp_table_dump_file: /path/to/spool/bgp-$peer_src_ip-%H%M.log
+bgp_table_dump_refresh_time: 300
+
+Essentially: the 'bgp_daemon: true' line is not required and there is no need
+to instantiate plugins. On the other hand, the BGP daemon is instructed to dump
+BGP tables to disk every 300 secs with file names embedding the BGP peer info
+($peer_src_ip) and time reference (%H%M).
+
+The BGP implementation reads the remote ASN upon receipt of a BGP OPEN message
+and dynamically presents itself as part of the same Autonomous System - to
+ensure an iBGP relationship is established all the times. Also, it acts as a
+passive BGP neighbor and hence will never try to re-establish a fallen peering
+session. For debugging purposes related to the BGP feed(s), bgp_daemon_msglog_*
+configuration directives can be enabled in order to log BGP messaging.
 
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.
@@ -1178,21 +1196,20 @@ highly adviceable in real-life to run dynamic SQL tables, ie. table names that
 include time-related variables (see sql_table, sql_table_schema in CONFIG-KEYS). 
 
 XIVf. Exporting routing tables and/or BGP messaging to files.
-pmacct 1.5.0 introduces two new features: a) export/dump routing tables for
-all BGP peers at regular time intervals and b) log BGP messaging, real-time,
-with each of the BGP peers. Both features are useful for troubleshooting and
-debugging. In addition, the former is beneficial to gain visibility in extra
-BGP data: for example, if BGP ADD-PATH sessions are in use, dumping of BGP
-tables allows to see backup paths; the latter enables BGP analytics and BGP
-event management, for example spot unstable routes, trigger alarms on route
-hijacks, etc. 
+Both the stand-alone BGP collector daemon (pmbgpd) and the BGP thread within one
+of the traffic accounting daemons can: a) export/dump routing tables for all BGP
+peers at regular time intervals and b) log BGP messaging, real-time, with each
+of the BGP peers. Both features are useful for producing data useful for
+analytics, for troubleshooting and debugging. The former is beneficial to gain
+visibility in extra BGP data while providing event compression; the latter
+enables BGP analytics and BGP event management, for example spot unstable
+routes, trigger alarms on route hijacks, etc. 
 
 Both features export data formatted as JSON messages, hence compiling pmacct
-against libjansson is a requirement. Messages can be written to plain-text
-files or pointed at AMQP or Kafka brokers (in which case compiling against
-RabbitMQ or Kafka libraries is required; read more in respectively the
-"Running the RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections
-of this document):
+against libjansson is a requirement. Messages can be written to plain-text files
+or pointed at AMQP or Kafka brokers (in which case compiling against RabbitMQ or
+Kafka libraries is required; read more in respectively the "Running the
+RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document):
 
 shell> ./configure --enable-jansson
 
