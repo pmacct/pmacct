@@ -439,13 +439,24 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
     }
 
-    if (f && !config.print_output_file_append) { 
-      if (config.print_markers) fprintf(f, "--START (%ld+%d)--\n", stamp, config.sql_refresh_time);
+    if (f) {
+      if (config.print_markers) {
+	if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
+	  fprintf(f, "--START (%u)--\n", writer_pid);
+	else if (config.print_output & PRINT_OUTPUT_JSON) {
+          void *json_obj;
 
-      if (config.print_output & PRINT_OUTPUT_FORMATTED)
-        P_write_stats_header_formatted(f, is_event);
-      else if (config.print_output & PRINT_OUTPUT_CSV)
-        P_write_stats_header_csv(f, is_event);
+	  json_obj = compose_purge_init_json(writer_pid);
+          if (json_obj) write_and_free_json(f, json_obj);
+	}
+      }
+
+      if (!config.print_output_file_append) { // XXX: check to be refined
+	if (config.print_output & PRINT_OUTPUT_FORMATTED)
+	  P_write_stats_header_formatted(f, is_event);
+	else if (config.print_output & PRINT_OUTPUT_CSV)
+	  P_write_stats_header_csv(f, is_event);
+      }
     }
   }
   else {
@@ -455,6 +466,17 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       lockf = open_output_file(config.print_output_lock_file, "w", TRUE);
       if (!lockf)
         Log(LOG_WARNING, "WARN ( %s/%s ): Failed locking print_output_lock_file: %s\n", config.name, config.type, config.print_output_lock_file);
+    }
+
+    if (config.print_markers) {
+      if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
+        fprintf(stdout, "--START (%u)--\n", writer_pid);
+      else if (config.print_output & PRINT_OUTPUT_JSON) {
+        void *json_obj;
+
+        json_obj = compose_purge_init_json(writer_pid);
+        if (json_obj) write_and_free_json(stdout, json_obj);
+      }
     }
 
     /* writing to stdout: writing header only once */
@@ -1231,7 +1253,17 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
   }
 
-  if (f && config.print_markers) fprintf(f, "--END--\n");
+  if (f && config.print_markers) {
+    if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
+      fprintf(f, "--END (%u)--\n", writer_pid);
+    else if (config.print_output & PRINT_OUTPUT_JSON) {
+      void *json_obj;
+
+      json_obj = compose_purge_close_json(writer_pid, qn, saved_index, duration);
+      if (json_obj) write_and_free_json(f, json_obj);
+    }
+  }
+    
 
   if (f && config.sql_table) {
     if (config.print_latest_file) {

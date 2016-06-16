@@ -1320,8 +1320,9 @@ DESC:           Full pathname to a file containing a list of indexes to apply to
 
 KEY:		print_markers
 VALUES:		[ true | false ]
-DESC:		Enables the use of START/END markers each time data is written to 'stdout'. Start marker returns 
-		additional information about current time-bin and configured refresh time.
+DESC:		Enables the use of start/end markers each time data is purged to the backend. Both start
+		and end markers return additional information, ie. writer PID, number of entries purged,
+		elapsed time, etc.
 DEFAULT:	false
 
 KEY:		print_output

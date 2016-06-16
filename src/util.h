@@ -111,6 +111,8 @@ EXT void *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 		      struct pkt_stitching *);
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
+EXT void *compose_purge_init_json(pid_t);
+EXT void *compose_purge_close_json(pid_t, int, int, int);
 EXT int write_and_free_json_amqp(void *, void *);
 EXT int write_and_free_json_kafka(void *, void *);
 EXT void compose_timestamp(char *, int, struct timeval *, int, int);

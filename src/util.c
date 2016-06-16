@@ -1611,7 +1611,6 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *label_ptr;
   char tstamp_str[SRVBUFLEN];
-  int ret = FALSE;
   json_t *obj = json_object(), *kv;
 
   if (wtc & COUNT_TAG) {
@@ -2167,6 +2166,50 @@ void write_and_free_json(FILE *f, void *obj)
   }
 }
 
+void *compose_purge_init_json(pid_t writer_pid)
+{
+  char event_type[] = "purge_init";
+  json_t *obj = json_object(), *kv;
+
+  kv = json_pack("{ss}", "event_type", event_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "writer_pid", (json_int_t)writer_pid);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  return obj;
+}
+
+void *compose_purge_close_json(pid_t writer_pid, int purged_entries, int total_entries, int duration)
+{
+  char event_type[] = "purge_close";
+  json_t *obj = json_object(), *kv;
+
+  kv = json_pack("{ss}", "event_type", event_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "writer_pid", (json_int_t)writer_pid);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "purged_entries", (json_int_t)purged_entries);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "total_entries", (json_int_t)total_entries);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{sI}", "duration", (json_int_t)duration);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  return obj;
+}
+
 #ifdef WITH_RABBITMQ
 int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
@@ -2249,6 +2292,16 @@ char *compose_json_str(void *obj)
 void write_and_free_json(FILE *f, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+}
+
+void *compose_purge_init_json(pid_t writer_pid)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_purge_init_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+}
+
+void *compose_purge_close_json(pid_t writer_pid, int purged_entries, int total_entries, int duration)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_purge_close_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
 int write_and_free_json_amqp(void *amqp_log, void *obj)

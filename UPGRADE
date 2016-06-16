@@ -7,6 +7,13 @@ over the time.
 However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
+        
+TO:	>= 1.6.1
+FROM:	<= 1.6.0
+TOPIC:	print_markers
+DESC:	In the print plugin, start marker is now printed also in the case where
+	print_output_file_append is set to true; also, markers are printed as a
+	JSON object, if output is set to JSON. 
 
 TO:	>= 1.6.0
 FROM:	<= 1.5.3
