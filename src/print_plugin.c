@@ -366,7 +366,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
   FILE *f = NULL, *lockf = NULL;
-  int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index;
+  int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index, file_to_be_created;
   time_t start, duration;
   char tmpbuf[LONGLONGSRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs, elem_prim_ptrs;
@@ -408,7 +408,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   start:
   memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
   memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
-  index = pqq_ptr; pqq_ptr = 0;
+  index = pqq_ptr; pqq_ptr = 0; file_to_be_created = FALSE;
 
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;
 
@@ -428,8 +428,10 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
 
     
-    if (config.print_output_file_append)
+    if (config.print_output_file_append) {
+      file_to_be_created = access(current_table, F_OK);
       f = open_output_file(current_table, "a", TRUE);
+    }
     else
       f = open_output_file(current_table, "w", TRUE);
 
@@ -451,7 +453,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	}
       }
 
-      if (!config.print_output_file_append) { // XXX: check to be refined
+      if (!config.print_output_file_append || (config.print_output_file_append && file_to_be_created)) {
 	if (config.print_output & PRINT_OUTPUT_FORMATTED)
 	  P_write_stats_header_formatted(f, is_event);
 	else if (config.print_output & PRINT_OUTPUT_CSV)
