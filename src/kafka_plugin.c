@@ -344,6 +344,21 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
+  if (config.print_markers) {
+    void *json_obj;
+    char *json_str;
+
+    json_obj = compose_purge_init_json(writer_pid);
+    if (json_obj) json_str = compose_json_str(json_obj);
+    if (json_str) {
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
+      ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
+
+      free(json_str);
+      json_str = NULL;
+    }
+  }
+
   for (j = 0; j < index; j++) {
     void *json_obj;
     char *json_str;
@@ -448,10 +463,26 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
   ret = p_kafka_check_outq_len(&kafkap_kafka_host);
 
-  if (!ret) p_kafka_close(&kafkap_kafka_host, FALSE);
-  else qn -= ret;
-
+  if (ret) qn -= ret;
   duration = time(NULL)-start;
+
+  if (config.print_markers) {
+    void *json_obj;
+    char *json_str;
+
+    json_obj = compose_purge_close_json(writer_pid, qn, saved_index, duration);
+    if (json_obj) json_str = compose_json_str(json_obj);
+    if (json_str) {
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
+      ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
+
+      free(json_str);
+      json_str = NULL;
+    }
+  }
+
+  p_kafka_close(&kafkap_kafka_host, FALSE);
+
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
 		config.name, config.type, writer_pid, qn, saved_index, duration);
 

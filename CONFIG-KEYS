@@ -1318,7 +1318,7 @@ DESC:           Full pathname to a file containing a list of indexes to apply to
 		src_host, dst_host
 		src_port, dst_port
 
-KEY:		print_markers
+KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
 DESC:		Enables the use of start/end markers each time data is purged to the backend. Both start
 		and end markers return additional information, ie. writer PID, number of entries purged,

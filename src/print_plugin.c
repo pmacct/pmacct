@@ -1255,6 +1255,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
   }
 
+  duration = time(NULL)-start;
+
   if (f && config.print_markers) {
     if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
       fprintf(f, "--END (%u)--\n", writer_pid);
@@ -1266,7 +1268,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
   }
     
-
   if (f && config.sql_table) {
     if (config.print_latest_file) {
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
@@ -1285,7 +1286,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   /* If we have pending queries then start again */
   if (pqq_ptr) goto start;
 
-  duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
 		config.name, config.type, writer_pid, qn, saved_index, duration);
 
