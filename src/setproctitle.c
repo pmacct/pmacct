@@ -211,7 +211,7 @@ pm_setproctitle(fmt, va_alist)
 #endif /* __STDC__ */
 {
   char buf[SPT_BUFSIZE];
-  char prefix[10];
+  char prefix[16];
   va_list ap;
 
   memset(prefix, 0, sizeof(prefix));
