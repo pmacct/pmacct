@@ -2,16 +2,16 @@ pmacct (Promiscuous mode IP Accounting package) v1.6.1
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
 1.6.0 -- 07-06-2016
-  + Streamed telemetry daemon: quoting Cisco IOS-XR Telemetry Configuration
+  + Streaming telemetry daemon: quoting Cisco IOS-XR Telemetry Configuration
     Guide at the time of this writing: "Streaming telemetry [ .. ] data
     can be used for analysis and troubleshooting purposes to maintain the
     health of the network. This is achieved by leveraging the capabilities of
-    machine-to-machine communication. [ .. ]" Streamed telemetry support comes
+    machine-to-machine communication. [ .. ]" Streming telemetry support comes
     in two flavours: 1) a telemetry thread can be started in existing daemons,
     ie. sFlow, NetFlow/IPFIX, etc. for the purpose of data correlation and 2)
-    a new daemon pmtelemetryd for standalone consumpton of data. Streamed
-    telemetry data can be logged real-time and/or dumped at regular time
-    intervals to flat-files, RabbitMQ or Kafka brokers.
+    a new daemon pmtelemetryd for standalone consumpton of data. Streaming
+    network telemetry data can be logged real-time and/or dumped at regular
+    time intervals to flat-files, RabbitMQ or Kafka brokers.
   + BMP daemon: introduced support for Route Monitoring messages. RM messages
     "provide an initial dump of all routes received from a peer as well as an
     ongoing mechanism that sends the incremental routes advertised and
