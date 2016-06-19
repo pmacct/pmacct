@@ -120,8 +120,8 @@ void usage_daemon(char *prog_name)
   printf("  -a  \tPrint list of supported aggregation primitives\n");
   printf("  -c  \tAggregation method, see full list of primitives with -a (DEFAULT: src_host)\n");
   printf("  -D  \tDaemonize\n"); 
-  printf("  -n  \tPath to a file containing Network definitions\n");
-  printf("  -o  \tPath to a file containing Port definitions\n");
+  printf("  -n  \tPath to a file containing networks and/or ASNs definitions\n");
+  printf("  -t  \tPath to a file containing ports definitions\n");
   printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | mongodb | amqp | kafka | nfprobe | sfprobe ] \n\tActivate plugin\n"); 
   printf("  -d  \tEnable debug\n");
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
@@ -135,12 +135,12 @@ void usage_daemon(char *prog_name)
   printf("  -b  \tNumber of buckets\n");
   printf("  -m  \tNumber of memory pools\n");
   printf("  -s  \tMemory pool size\n");
-  printf("\nPostgreSQL (-P pgsql)/MySQL (-P mysql)/SQLite (-P sqlite3) plugin options:\n");
-  printf("  -r  \tRefresh time (in seconds)\n");
-  printf("  -v  \t[ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ] \n\tTable version\n");
   printf("\nPrint plugin (-P print) plugin options:\n");
   printf("  -r  \tRefresh time (in seconds)\n");
   printf("  -O  \t[ formatted | csv | json ] \n\tOutput format\n");
+  printf("  -o  \tPath to output file\n");
+  printf("  -A  \tAppend output (applies to -o)\n");
+  printf("  -E  \tCSV format serparator (applies to -O csv, DEFAULT: ',')\n");
   printf("\n");
   printf("  See QUICKSTART or visit http://wiki.pmacct.net/ for examples.\n");
   printf("\n");
@@ -250,13 +250,28 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
-    case 'o':
+    case 't':
       strlcpy(cfg_cmdline[rows], "ports_file: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break; 
     case 'O':
       strlcpy(cfg_cmdline[rows], "print_output: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'o':
+      strlcpy(cfg_cmdline[rows], "print_output_file: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'A':
+      strlcpy(cfg_cmdline[rows], "print_output_file_append: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'E':
+      strlcpy(cfg_cmdline[rows], "print_output_separator: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
@@ -294,11 +309,6 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'r':
       strlcpy(cfg_cmdline[rows], "sql_refresh_time: ", SRVBUFLEN);
-      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
-      rows++;
-      break;
-    case 'v':
-      strlcpy(cfg_cmdline[rows], "sql_table_version: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
