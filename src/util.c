@@ -1256,7 +1256,7 @@ void pm_twalk(const void *root, void (*action)(const void *nodep, const VISIT wh
 void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 {
   /* in implementations where tdestroy() is not defined, tdelete() against
-     the root node of the three destroys also the last few remaining bits */
+     the root node of the tree destroys also the last few remaining bits */
 #if (defined HAVE_TDESTROY)
   tdestroy((*root), free_node);
 #endif

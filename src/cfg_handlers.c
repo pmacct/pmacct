@@ -159,6 +159,20 @@ int cfg_key_daemonize(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_telemetry_dump_per_connection(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.dump_per_connection= value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_per_connection'. Globalized.\n", filename); 
+
+  return changes;
+}
+
 int cfg_key_use_ip_next_hop(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -6444,8 +6458,8 @@ int cfg_key_telemetry_dump_refresh_time(char *filename, char *name, char *value_
   }
 
   value = atoi(value_ptr);
-  if (value < 60 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_refresh_time' value has to be >= 60 and <= 86400 secs.\n", filename);
+  if (value < 10 || value > 86400) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_refresh_time' value has to be >= 10 and <= 86400 secs.\n", filename);
     return ERR;
   }
 

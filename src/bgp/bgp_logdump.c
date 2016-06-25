@@ -438,7 +438,8 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(peer_src_ip));
 
     escape_ip_uscores(peer_src_ip);
-    snprintf(buf, newlen, "%s", peer_src_ip);
+    if (config.dump_per_connection) snprintf(buf, newlen, "%s_%d", peer_src_ip, peer->tcp_port);
+    else snprintf(buf, newlen, "%s", peer_src_ip);
     strncat(buf, ptr_end, len);
 
     len = strlen(buf);
