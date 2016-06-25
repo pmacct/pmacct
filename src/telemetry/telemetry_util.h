@@ -34,6 +34,7 @@ EXT int telemetry_peer_z_init(telemetry_peer_z *);
 EXT void telemetry_peer_close(telemetry_peer *, int);
 EXT void telemetry_peer_z_close(telemetry_peer_z *);
 EXT u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *);
+EXT u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *);
 EXT int telemetry_is_zjson(int);
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
 EXT int telemetry_tpuc_addr_cmp(const void *, const void *);
