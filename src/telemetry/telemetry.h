@@ -44,6 +44,10 @@
 #define TELEMETRY_DECODER_CISCO_GPB	6
 #define TELEMETRY_DECODER_CISCO_GPB_KV	7
 
+#define TELEMETRY_DATA_DECODER_UNKNOWN	0
+#define TELEMETRY_DATA_DECODER_JSON	1
+#define TELEMETRY_DATA_DECODER_GPB	2
+
 #define TELEMETRY_CISCO_RESET_COMPRESSOR	1
 #define TELEMETRY_CISCO_JSON			2
 #define TELEMETRY_CISCO_GPB_COMPACT		3
@@ -75,12 +79,13 @@ struct _telemetry_peer_udp_timeout {
 };
 
 struct _telemetry_dump_se {
+  int decoder;
   u_int32_t len;
   void *data;
 };
 
 struct _telemetry_dump_se_ll_elem {
-  struct _telemetry_dump_se rec; // XXX: fix, prevents reusability
+  struct _telemetry_dump_se rec;
   struct _telemetry_dump_se_ll_elem *next;
 };
 

@@ -33,7 +33,7 @@
 #endif
 
 /* Functions */
-void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data)
+void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data, int data_decoder)
 {
   telemetry_misc_structs *tms;
 
@@ -46,11 +46,11 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data)
   if (tms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, event_type, config.telemetry_msglog_output);
+    telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, event_type, config.telemetry_msglog_output);
   }
 
   if (tms->dump_backend_methods)
-    telemetry_dump_se_ll_append(peer, t_data);
+    telemetry_dump_se_ll_append(peer, t_data, data_decoder);
 }
 
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
@@ -156,7 +156,7 @@ int telemetry_recv_cisco_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, i
   return ret;
 }
 
-int telemetry_recv_cisco(telemetry_peer *peer, int *flags)
+int telemetry_recv_cisco(telemetry_peer *peer, int *flags, int *data_decoder)
 {
   int ret = 0;
   u_int32_t type, len;
@@ -169,15 +169,19 @@ int telemetry_recv_cisco(telemetry_peer *peer, int *flags)
     switch (type) {
     case TELEMETRY_CISCO_RESET_COMPRESSOR:
       ret = telemetry_recv_jump(peer, len, flags);
+      (*data_decoder) = TELEMETRY_DATA_DECODER_UNKNOWN; /* XXX: JSON instead? */
       break;
     case TELEMETRY_CISCO_JSON:
       ret = telemetry_recv_json(peer, len, flags);
+      (*data_decoder) = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_CISCO_GPB_COMPACT:
       ret = telemetry_recv_jump(peer, len, flags);
+      (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
     case TELEMETRY_CISCO_GPB_KV:
       ret = telemetry_recv_jump(peer, len, flags);
+      (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
     }
   }
