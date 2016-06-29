@@ -427,7 +427,7 @@ void link_latest_output_file(char *link_filename, char *filename_to_link)
 
     memset(&s1, 0, sizeof(struct stat));
     memset(&s2, 0, sizeof(struct stat));
-    readlink(link_filename, buf, LARGEBUFLEN);
+    readlink(link_filename, buf, SRVBUFLEN);
 
     /* filename_to_link is newer than buf or buf is un-existing */
     stat(buf, &s1);
