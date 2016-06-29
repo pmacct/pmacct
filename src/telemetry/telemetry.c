@@ -66,7 +66,7 @@ void telemetry_daemon(void *t_data_void)
 
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
-  int decoder = 0, recv_flags = 0;
+  int decoder = 0, data_decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t now, last_udp_timeout_check;
@@ -184,6 +184,9 @@ void telemetry_daemon(void *t_data_void)
       exit_all(1);
 #endif
     }
+    else if (!strcmp(config.telemetry_decoder, "cisco")) decoder = TELEMETRY_DECODER_CISCO;
+    else if (!strcmp(config.telemetry_decoder, "cisco_gpb")) decoder = TELEMETRY_DECODER_CISCO_GPB;
+    else if (!strcmp(config.telemetry_decoder, "cisco_gpb_kv")) decoder = TELEMETRY_DECODER_CISCO_GPB_KV;
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
@@ -654,20 +657,39 @@ void telemetry_daemon(void *t_data_void)
 
     if (!peer) goto select_again;
 
+    recv_flags = 0;
+
     switch (decoder) {
     case TELEMETRY_DECODER_JSON:
       ret = telemetry_recv_json(peer, 0, &recv_flags);
+      data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_DECODER_ZJSON:
       ret = telemetry_recv_zjson(peer, peer_z, 0, &recv_flags);
+      data_decoder = TELEMETRY_DATA_DECODER_JSON;
+      break;
+    case TELEMETRY_DECODER_CISCO:
+      ret = telemetry_recv_cisco(peer, &recv_flags, &data_decoder);
       break;
     case TELEMETRY_DECODER_CISCO_JSON:
       ret = telemetry_recv_cisco_json(peer, &recv_flags);
+      data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_DECODER_CISCO_ZJSON:
       ret = telemetry_recv_cisco_zjson(peer, peer_z, &recv_flags);
+      data_decoder = TELEMETRY_DATA_DECODER_JSON;
+      break;
+    case TELEMETRY_DECODER_CISCO_GPB:
+      ret = telemetry_recv_cisco_gpb(peer, &recv_flags);
+      data_decoder = TELEMETRY_DATA_DECODER_GPB;
+      break;
+    case TELEMETRY_DECODER_CISCO_GPB_KV:
+      ret = telemetry_recv_cisco_gpb_kv(peer, &recv_flags);
+      data_decoder = TELEMETRY_DATA_DECODER_GPB;
       break;
     default:
+      ret = TRUE; recv_flags = ERR;
+      data_decoder = TELEMETRY_DATA_DECODER_UNKNOWN;
       break;
     }
 
@@ -679,7 +701,7 @@ void telemetry_daemon(void *t_data_void)
       recalc_fds = TRUE;
     }
     else {
-      if (recv_flags != ERR) telemetry_process_data(peer, t_data);
+      if (recv_flags != ERR) telemetry_process_data(peer, t_data, data_decoder);
     }
   }
 }

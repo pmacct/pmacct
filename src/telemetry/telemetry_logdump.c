@@ -33,7 +33,7 @@
 #endif
 
 /* Functions */
-int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void *log_data, u_int32_t log_data_len, char *event_type, int output)
+int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void *log_data, u_int32_t log_data_len, int data_decoder, char *event_type, int output)
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
@@ -85,9 +85,14 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    kv = json_pack("{ss}", "telemetry_data", log_data);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
+      kv = json_pack("{ss}", "telemetry_data", log_data);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+    else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
+      // XXX
+    }
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))
@@ -114,7 +119,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
   return (ret | amqp_ret | kafka_ret);
 }
 
-void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_data)
+void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_data, int data_decoder)
 {
   telemetry_dump_se_ll *se_ll;
   telemetry_dump_se_ll_elem *se_ll_elem;
@@ -138,6 +143,7 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   }
   memcpy(se_ll_elem->rec.data, peer->buf.base, peer->msglen); 
   se_ll_elem->rec.len = peer->msglen;
+  se_ll_elem->rec.decoder = data_decoder;
 
   se_ll = (telemetry_dump_se_ll *) peer->bmp_se;
 
@@ -317,7 +323,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
           char event_type[] = "dump";
 
 	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
-	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, event_type, config.telemetry_dump_output);
+	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder, event_type, config.telemetry_dump_output);
 	  }
 	}
 

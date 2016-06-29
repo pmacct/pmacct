@@ -102,6 +102,16 @@ u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *peer)
   return len;
 }
 
+u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *peer)
+{
+  u_int32_t type;
+
+  memcpy(&type, peer->buf.base, 4);
+  type = ntohl(type);
+
+  return type;
+}
+
 int telemetry_is_zjson(int decoder)
 {
   if (decoder == TELEMETRY_DECODER_ZJSON || decoder == TELEMETRY_DECODER_CISCO_ZJSON) return TRUE;
