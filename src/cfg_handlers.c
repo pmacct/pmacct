@@ -1657,6 +1657,31 @@ int cfg_key_kafka_partition(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.kafka_partition_key = value_ptr;
+    list->cfg.kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.kafka_partition_key = value_ptr;
+        list->cfg.kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_aggressive_classification(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2108,6 +2133,31 @@ int cfg_key_plugin_pipe_kafka_partition(char *filename, char *name, char *value_
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.pipe_kafka_partition = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_plugin_pipe_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.pipe_kafka_partition_key = value_ptr;
+    list->cfg.pipe_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pipe_kafka_partition_key = value_ptr;
+        list->cfg.pipe_kafka_partition_keylen = value_len;
         changes++;
         break;
       }
@@ -4445,6 +4495,31 @@ int cfg_key_sfacctd_counter_kafka_partition(char *filename, char *name, char *va
   return changes;
 }
 
+int cfg_key_sfacctd_counter_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.sfacctd_counter_kafka_partition_key = value_ptr;
+    list->cfg.sfacctd_counter_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sfacctd_counter_kafka_partition_key = value_ptr;
+        list->cfg.sfacctd_counter_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sfacctd_counter_kafka_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -5749,6 +5824,31 @@ int cfg_key_nfacctd_bgp_msglog_kafka_partition(char *filename, char *name, char 
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_msglog_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.nfacctd_bgp_msglog_kafka_partition_key = value_ptr;
+    list->cfg.nfacctd_bgp_msglog_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_bgp_msglog_kafka_partition_key = value_ptr;
+        list->cfg.nfacctd_bgp_msglog_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_msglog_kafka_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -5839,6 +5939,31 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_partition(char *filename, char *name, c
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_table_dump_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.bgp_table_dump_kafka_partition_key = value_ptr;
+    list->cfg.bgp_table_dump_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.bgp_table_dump_kafka_partition_key = value_ptr;
+        list->cfg.bgp_table_dump_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bmp_msglog_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -5908,6 +6033,31 @@ int cfg_key_nfacctd_bmp_msglog_kafka_partition(char *filename, char *name, char 
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_msglog_kafka_partition'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_msglog_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.nfacctd_bmp_msglog_kafka_partition_key = value_ptr;
+    list->cfg.nfacctd_bmp_msglog_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_bmp_msglog_kafka_partition_key = value_ptr;
+        list->cfg.nfacctd_bmp_msglog_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
@@ -5998,6 +6148,31 @@ int cfg_key_nfacctd_bmp_dump_kafka_partition(char *filename, char *name, char *v
 
   for (; list; list = list->next, changes++) list->cfg.bmp_dump_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_kafka_partition'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_dump_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.bmp_dump_kafka_partition_key = value_ptr;
+    list->cfg.bmp_dump_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.bmp_dump_kafka_partition_key = value_ptr;
+        list->cfg.bmp_dump_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
@@ -6668,6 +6843,31 @@ int cfg_key_telemetry_msglog_kafka_partition(char *filename, char *name, char *v
   return changes;
 }
 
+int cfg_key_telemetry_msglog_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.telemetry_msglog_kafka_partition_key = value_ptr;
+    list->cfg.telemetry_msglog_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.telemetry_msglog_kafka_partition_key = value_ptr;
+        list->cfg.telemetry_msglog_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_telemetry_msglog_kafka_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -6754,6 +6954,31 @@ int cfg_key_telemetry_dump_kafka_partition(char *filename, char *name, char *val
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_partition'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_partition_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value_len, changes = 0;
+
+  value_len = strlen(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.telemetry_dump_kafka_partition_key = value_ptr;
+    list->cfg.telemetry_dump_kafka_partition_keylen = value_len;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.telemetry_dump_kafka_partition_key = value_ptr;
+        list->cfg.telemetry_dump_kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
