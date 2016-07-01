@@ -664,14 +664,15 @@ http://kafka-python.readthedocs.org/
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
 queue implementation available since day one of pmacct (configured via plugin_pipe_size
-and documented in docs/INTERNALS) and 2) from release 1.5.2, use a RabbitMQ broker for
-queueing purposes (configured via plugin_pipe_amqp and plugin_pipe_amqp_* directives).
+and documented in docs/INTERNALS) and 2) use a RabbitMQ or Kafka broker for queueing
+purposes (configured via plugin_pipe_amqp and plugin_pipe_amqp_* or plugin_pipe_kafka
+and plugin_pipe_kafka_* directives).
 
-For a quick comparison: while relying on a RabbitMQ broker for queueing introduces an
-external dependency (rabbitmq-c library, RabbitMQ server, etc.), it reduces the amount
-of fine tuning needed by the home-grown circular queue implementation, for example
-trial and error tasks like determine a value for plugin_pipe_size and find a viable
-ratio among plugin_pipe_size and plugin_buffer_size. 
+For a quick comparison: while relying on a RabbitMQ or Kafka broker for queueing does
+introduce an external dependency (ie. rabbitmq-c library, RabbitMQ server, etc.), it
+reduces the amount of fine tuning needed by the home-grown queue implementation, for
+example trial and error tasks like determine a value for plugin_pipe_size and find a
+viable ratio among plugin_pipe_size and plugin_buffer_size. 
 
 The home-grown cicular queue has no external dependencies and is configured, for
 example, as:
@@ -701,6 +702,19 @@ plugin_pipe_amqp_host[blabla]: localhost
 plugin_pipe_amqp_vhost[blabla]: "/"
 plugin_pipe_amqp_routing_key[blabla]: blabla-print
 plugin_pipe_amqp_retry[blabla]: 60
+
+The Kafka queue has the same dependencies as the Kafka plugin; consult the "Running
+the Kafka plugin" chapter in this document for where to download the required
+packages/libraries and how to compile pmacct against these. When plugin_pipe_kafka is
+set to true, following is how data exchange via a Kafka broker is configured under
+default settings:
+
+plugins: print[blabla]
+plugin_buffer_size[blabla]: 10240
+!
+plugin_pipe_kafka[blabla]: true
+plugin_pipe_kafka_topic[blabla]: pmacct.blabla-print
+plugin_pipe_kafka_retry[blabla]: 60
 
 
 XI. Quickstart guide to packet classifiers
