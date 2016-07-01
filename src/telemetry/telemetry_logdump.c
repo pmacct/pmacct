@@ -85,6 +85,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
+    kv = json_pack("{sI}", "telemetry_port", (json_int_t)peer->tcp_port);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
     kv = json_pack("{ss}", "telemetry_data", log_data);
     json_object_update_missing(obj, kv);
     json_decref(kv);
