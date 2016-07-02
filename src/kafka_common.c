@@ -127,6 +127,21 @@ int p_kafka_get_partition(struct p_kafka_host *kafka_host)
   return FALSE;
 }
 
+void p_kafka_set_key(struct p_kafka_host *kafka_host, char *key, int key_len)
+{
+  if (kafka_host) {
+    kafka_host->key = key;
+    kafka_host->key_len = key_len;
+  }
+}
+
+char *p_kafka_get_key(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) return kafka_host->key;
+
+  return FALSE;
+}
+
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 {
   struct timeval tv;
@@ -207,7 +222,7 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t 
 
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
     ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
-			   data, data_len, NULL, 0, NULL);
+			   data, data_len, kafka_host->key, kafka_host->key_len, NULL);
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,

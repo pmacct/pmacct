@@ -756,6 +756,7 @@ int bmp_daemon_msglog_init_kafka_host()
   p_kafka_set_broker(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_broker_host, config.nfacctd_bmp_msglog_kafka_broker_port);
   p_kafka_set_topic(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_topic);
   p_kafka_set_partition(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_partition);
+  p_kafka_set_key(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_partition_key, config.nfacctd_bmp_msglog_kafka_partition_keylen);
   p_kafka_set_content_type(&bmp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   P_broker_timers_set_retry_interval(&bmp_daemon_msglog_kafka_host.btimers, config.nfacctd_bmp_msglog_kafka_retry);
 
@@ -782,6 +783,7 @@ int bmp_dump_init_kafka_host()
   p_kafka_set_broker(&bmp_dump_kafka_host, config.bmp_dump_kafka_broker_host, config.bmp_dump_kafka_broker_port);
   p_kafka_set_topic(&bmp_dump_kafka_host, config.bmp_dump_kafka_topic);
   p_kafka_set_partition(&bmp_dump_kafka_host, config.bmp_dump_kafka_partition);
+  p_kafka_set_key(&bmp_dump_kafka_host, config.bmp_dump_kafka_partition_key, config.bmp_dump_kafka_partition_keylen);
   p_kafka_set_content_type(&bmp_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   return ret;
