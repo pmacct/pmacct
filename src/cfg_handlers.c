@@ -1638,8 +1638,8 @@ int cfg_key_kafka_partition(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -2123,8 +2123,8 @@ int cfg_key_plugin_pipe_kafka_partition(char *filename, char *name, char *value_
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'plugin_pipe_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'plugin_pipe_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -4484,8 +4484,8 @@ int cfg_key_sfacctd_counter_kafka_partition(char *filename, char *name, char *va
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'sfacctd_counter_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'sfacctd_counter_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -5813,8 +5813,8 @@ int cfg_key_nfacctd_bgp_msglog_kafka_partition(char *filename, char *name, char 
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_msglog_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_msglog_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -5928,8 +5928,8 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_partition(char *filename, char *name, c
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -6026,8 +6026,8 @@ int cfg_key_nfacctd_bmp_msglog_kafka_partition(char *filename, char *name, char 
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -6141,8 +6141,8 @@ int cfg_key_nfacctd_bmp_dump_kafka_partition(char *filename, char *name, char *v
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -6832,8 +6832,8 @@ int cfg_key_telemetry_msglog_kafka_partition(char *filename, char *name, char *v
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
@@ -6947,8 +6947,8 @@ int cfg_key_telemetry_dump_kafka_partition(char *filename, char *name, char *val
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_kafka_partition' has to be >= 0.\n", filename);
+  if (value < -1) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
 
