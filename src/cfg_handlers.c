@@ -2142,31 +2142,6 @@ int cfg_key_plugin_pipe_kafka_partition(char *filename, char *name, char *value_
   return changes;
 }
 
-int cfg_key_plugin_pipe_kafka_partition_key(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value_len, changes = 0;
-
-  value_len = strlen(value_ptr);
-
-  if (!name) for (; list; list = list->next, changes++) {
-    list->cfg.pipe_kafka_partition_key = value_ptr;
-    list->cfg.pipe_kafka_partition_keylen = value_len;
-  }
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.pipe_kafka_partition_key = value_ptr;
-        list->cfg.pipe_kafka_partition_keylen = value_len;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_plugin_pipe_kafka_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

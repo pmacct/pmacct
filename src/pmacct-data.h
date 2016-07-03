@@ -344,7 +344,6 @@ static const struct _dictionary_line dictionary[] = {
   {"plugin_pipe_kafka_broker_port", cfg_key_plugin_pipe_kafka_broker_port},
   {"plugin_pipe_kafka_topic", cfg_key_plugin_pipe_kafka_topic},
   {"plugin_pipe_kafka_partition", cfg_key_plugin_pipe_kafka_partition},
-  {"plugin_pipe_kafka_partition_key", cfg_key_plugin_pipe_kafka_partition_key},
   {"plugin_pipe_kafka_retry", cfg_key_plugin_pipe_kafka_retry},
   {"plugin_buffer_size", cfg_key_plugin_buffer_size},
   {"interface", cfg_key_interface},

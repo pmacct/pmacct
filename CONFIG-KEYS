@@ -658,6 +658,10 @@ DESC:		Defines the Kafka broker topic partition ID. RD_KAFKA_PARTITION_UA or ((i
 		partition). See also kafka_broker_host. 
 DEFAULT:	0
 
+KEY:            kafka_partition_key
+DESC:           Defines the Kafka broker topic partition key. A string of printable characters is
+		expected as value.
+
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |
                   bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host |
 		  sfacctd_counter_kafka_broker_host | telemetry_daemon_msglog_kafka_broker_host |
@@ -692,6 +696,15 @@ KEY:            [ bgp_daemon_msglog_kafka_partition | bgp_table_dump_kafka_parti
 		  telemetry_dump_kafka_partition ] [GLOBAL]
 DESC:           See kafka_partition
 DEFAULT:        See kafka_partition
+
+KEY:            [ bgp_daemon_msglog_kafka_partition_key |
+		  bgp_table_dump_kafka_partition_key |
+                  bmp_daemon_msglog_kafka_partition_key | bmp_dump_kafka_partition |
+                  sfacctd_counter_kafka_partition_key |
+		  telemetry_daemon_msglog_kafka_partition_key |
+                  telemetry_dump_kafka_partition_key ] [GLOBAL]
+DESC:           See kafka_partition_key
+DEFAULT:        See kafka_partition_key
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
 		  sfacctd_counter_kafka_retry | telemetry_daemon_msglog_kafka_retry ] [GLOBAL]

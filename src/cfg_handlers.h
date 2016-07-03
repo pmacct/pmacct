@@ -114,7 +114,6 @@ EXT int cfg_key_plugin_pipe_kafka_broker_host(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_kafka_broker_port(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_kafka_topic(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_kafka_partition(char *, char *, char *);
-EXT int cfg_key_plugin_pipe_kafka_partition_key(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_kafka_retry(char *, char *, char *);
 EXT int cfg_key_plugin_buffer_size(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);
