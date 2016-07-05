@@ -17,5 +17,6 @@
 
 unsigned char * base64_encode(const unsigned char *src, size_t len, size_t *out_len);
 unsigned char * base64_decode(const unsigned char *src, size_t len, size_t *out_len);
+void base64_freebuf(unsigned char *);
 
 #endif /* _BASE64_H_ */

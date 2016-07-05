@@ -176,11 +176,11 @@ int telemetry_recv_cisco(telemetry_peer *peer, int *flags, int *data_decoder)
       (*data_decoder) = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_CISCO_GPB_COMPACT:
-      ret = telemetry_recv_jump(peer, len, flags);
+      ret = telemetry_recv_generic(peer, len);
       (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
     case TELEMETRY_CISCO_GPB_KV:
-      ret = telemetry_recv_jump(peer, len, flags);
+      ret = telemetry_recv_generic(peer, len);
       (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
     }
@@ -208,8 +208,7 @@ int telemetry_recv_cisco_gpb(telemetry_peer *peer, int *flags)
   ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
   if (ret == TELEMETRY_CISCO_HDR_LEN) {
     len = telemetry_cisco_hdr_get_len(peer);
-    /* XXX: not supported */
-    ret = telemetry_recv_jump(peer, len, flags);
+    ret = telemetry_recv_generic(peer, len);
   }
 
   return ret;
@@ -223,8 +222,7 @@ int telemetry_recv_cisco_gpb_kv(telemetry_peer *peer, int *flags)
   ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
   if (ret == TELEMETRY_CISCO_HDR_LEN) {
     len = telemetry_cisco_hdr_get_len(peer);
-    /* XXX: not supported yet */
-    ret = telemetry_recv_jump(peer, len, flags);
+    ret = telemetry_recv_generic(peer, len);
   }
 
   return ret;

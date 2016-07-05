@@ -38,6 +38,9 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
 
+  char *base64_tdata = NULL;
+  size_t base64_tdata_len = 0;
+  
   if (!peer || !peer->log || !log_data || !log_data_len || !t_data || !event_type) return ERR;
 
   tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
@@ -91,7 +94,21 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
       json_decref(kv);
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
-      // XXX
+      base64_tdata = base64_encode(log_data, strlen(log_data), &base64_tdata_len);
+
+      if (base64_tdata) {
+        kv = json_pack("{ss}", "telemetry_data", base64_tdata);
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+
+	base64_freebuf(base64_tdata);
+        base64_tdata_len = 0;
+      }
+      else {
+        kv = json_pack("{sn}", "telemetry_data");
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+      }
     }
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
