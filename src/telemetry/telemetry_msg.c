@@ -46,11 +46,16 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
   if (tms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, event_type, config.telemetry_msglog_output);
+    if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_msglog_output)) {
+      telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, event_type, config.telemetry_msglog_output);
+    }
   }
 
-  if (tms->dump_backend_methods)
-    telemetry_dump_se_ll_append(peer, t_data, data_decoder);
+  if (tms->dump_backend_methods) { 
+    if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_dump_output)) {
+      telemetry_dump_se_ll_append(peer, t_data, data_decoder);
+    }
+  }
 }
 
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)

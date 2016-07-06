@@ -146,3 +146,15 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->peer_str = malloc(strlen("telemetry_node") + 1);
   strcpy(tms->peer_str, "telemetry_node");
 }
+
+int telemetry_validate_input_output_decoders(int input, int output)
+{
+  if (input == TELEMETRY_DATA_DECODER_GPB) {
+    if (output == PRINT_OUTPUT_JSON) return FALSE;
+    /* else if (output == PRINT_OUTPUT_GPB) return FALSE; */
+  }
+  else if (input == TELEMETRY_DATA_DECODER_JSON) {
+    if (output == PRINT_OUTPUT_JSON) return FALSE;
+    /* else if (output == PRINT_OUTPUT_GPB) return ERR; */
+  }
+}
