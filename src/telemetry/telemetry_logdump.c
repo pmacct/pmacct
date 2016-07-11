@@ -94,7 +94,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
       json_decref(kv);
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
-      base64_tdata = base64_encode(log_data, strlen(log_data), &base64_tdata_len);
+      base64_tdata = base64_encode(log_data, log_data_len, &base64_tdata_len);
 
       if (base64_tdata) {
         kv = json_pack("{ss}", "telemetry_data", base64_tdata);
