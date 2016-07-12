@@ -2208,9 +2208,9 @@ void compute_once()
 #endif
 }
 
-u_int16_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
-  u_int16_t ret = NF9_FTYPE_TRAFFIC;
+  u_int8_t ret = NF9_FTYPE_TRAFFIC;
 
   /* first round: event vs traffic */
   if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len /* && packets? */) {

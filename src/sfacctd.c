@@ -2905,7 +2905,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   return ret;
 }
 
-u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
+u_int8_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
 {
   SFSample *sample = (SFSample *)pptrs->f_data;
   u_int8_t ret = NF9_FTYPE_TRAFFIC;

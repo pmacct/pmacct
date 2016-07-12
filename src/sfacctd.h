@@ -254,7 +254,7 @@ struct SF_icmphdr
 #else
 #define EXT
 #endif
-EXT u_int16_t SF_evaluate_flow_type(struct packet_ptrs *);
+EXT u_int8_t SF_evaluate_flow_type(struct packet_ptrs *);
 EXT void set_vector_sample_type(struct packet_ptrs_vector *, u_int32_t);
 EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);
