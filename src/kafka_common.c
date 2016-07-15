@@ -274,7 +274,10 @@ int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int tim
 
     (*data) = kafka_msg;
   }
-  else return ERR;
+  else {
+    (*data) = NULL;
+    ret = ERR;
+  }
 
   return ret;
 }
@@ -295,9 +298,11 @@ int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payl
 	ret = ERR;
       }
     } 
-    else return ERR;
+    else ret = ERR;
   }
-  else return ERR;
+  else ret = ERR;
+
+  rd_kafka_message_destroy(kafka_msg);
 
   return ret;
 }
