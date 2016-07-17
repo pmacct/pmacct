@@ -93,12 +93,25 @@ int p_kafka_get_topic_rr(struct p_kafka_host *kafka_host)
 
 void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
 {
-  if (kafka_host && kafka_host->rk) {
-    if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
+  int ret, multiple_brokers = FALSE;
 
-    if (rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker) == 0) {
+  if (strchr(host, ',')) multiple_brokers = TRUE;
+
+  if (kafka_host && kafka_host->rk) {
+    /* if host is a comma-separated list of brokers, assume port is part of the definition */
+    if (multiple_brokers) snprintf(kafka_host->broker, SRVBUFLEN, "%s", host);
+    else {
+      if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
+    }
+
+    printf("CI PASSO: %s\n", kafka_host->broker);
+
+    if ((ret = rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker)) == 0) {
       Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'kafka_broker_host' or 'kafka_broker_port' specified (%s).\n",
 	  config.name, config.type, kafka_host->broker);
+    }
+    else {
+      if (multiple_brokers) Log(LOG_INFO, "INFO ( %s/%s ): %u brokers successfully added.\n", config.name, config.type, ret); 
     }
   }
 }
