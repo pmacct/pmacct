@@ -462,12 +462,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   }
 #endif
 
-  ret = p_kafka_check_outq_len(&kafkap_kafka_host);
-
-  if (ret) {
-    if (ret <= qn) qn -= ret;
-    else qn = 0;
-  }
   duration = time(NULL)-start;
 
   if (config.print_markers) {
