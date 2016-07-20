@@ -92,6 +92,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
       kv = json_pack("{ss}", "telemetry_data", log_data);
       json_object_update_missing(obj, kv);
       json_decref(kv);
+
+      kv = json_pack("{ss}", "serialization", "json");
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
       base64_tdata = base64_encode(log_data, log_data_len, &base64_tdata_len);
@@ -109,6 +113,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
         json_object_update_missing(obj, kv);
         json_decref(kv);
       }
+
+      kv = json_pack("{ss}", "serialization", "gpb");
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
     }
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
