@@ -1495,10 +1495,11 @@ XIX. Running the print plugin to write to flat-files
 Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
-Output is text-based (no binary proprietary format) and can be JSON, CSV or
-formatted ('print_output' directive). Interval between writes can be configured
-via the 'print_refresh_time' directive. An example follows on how to write to
-files on a 15 mins basis in CSV format:
+Output is either text-based using JSON, CSV or formatted outputs, or
+binary-based using the Apache Avro file container ('print_output' directive).
+Interval between writes can be configured via the 'print_refresh_time'
+directive. An example follows on how to write to files on a 15 mins basis in
+CSV format:
 
 print_refresh_time: 900
 print_history: 15m
@@ -1519,6 +1520,13 @@ configured for compilation against the library using the --enable-jansson
 switch. Please refer to the configure script help screen (and/or "Configuring
 pmacct for compilation and installing" section of this document) to supply
 custom locations of Jansson library and/or headers. 
+
+Avro output requires compiling pmacct against Apache Avro library, which can be
+found at the following URL: http://avro.apache.org/ . pmacct can be configured
+for compilation against the library using the --enable-avro switch. Please
+refer to the configure script help screen (and/or "Configuring pmacct for
+compilation and installing" section of this document) to supply custom
+locations of Avro library and/or headers.
 
 Splitting data into time bins is supported via print_history directive. When
 enabled, time-related variable substitutions of dynamic print_output_file names

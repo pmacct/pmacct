@@ -2510,6 +2510,14 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_CSV;
     value |= PRINT_OUTPUT_EVENT;
   }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid print output value '%s'\n", filename, value_ptr);
     return ERR;
