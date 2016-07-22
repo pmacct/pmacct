@@ -1123,6 +1123,7 @@ int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_
     p_kafka_set_broker(kafka_host, list->cfg.pipe_kafka_broker_host, list->cfg.pipe_kafka_broker_port);
     p_kafka_set_topic(kafka_host, list->cfg.pipe_kafka_topic);
     p_kafka_set_partition(kafka_host, list->cfg.pipe_kafka_partition);
+    p_kafka_set_key(kafka_host, list->cfg.pipe_kafka_partition_key, list->cfg.pipe_kafka_partition_keylen);
     p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
     P_broker_timers_set_retry_interval(&kafka_host->btimers, list->cfg.pipe_kafka_retry);
   }

@@ -760,7 +760,7 @@ EXT void process_v7_packet(unsigned char *, u_int16_t, struct packet_ptrs *, str
 EXT void process_v8_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
 EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t);
 EXT void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
-EXT u_int16_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
+EXT u_int8_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
 EXT u_int16_t NF_evaluate_direction(struct template_cache_entry *, struct packet_ptrs *);
 EXT pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *, pm_class_t *, struct xflow_status_entry *);
 EXT void reset_mac(struct packet_ptrs *);

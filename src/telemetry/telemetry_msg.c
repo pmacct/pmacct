@@ -46,11 +46,16 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
   if (tms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, event_type, config.telemetry_msglog_output);
+    if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_msglog_output)) {
+      telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, event_type, config.telemetry_msglog_output);
+    }
   }
 
-  if (tms->dump_backend_methods)
-    telemetry_dump_se_ll_append(peer, t_data, data_decoder);
+  if (tms->dump_backend_methods) { 
+    if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_dump_output)) {
+      telemetry_dump_se_ll_append(peer, t_data, data_decoder);
+    }
+  }
 }
 
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
@@ -176,11 +181,11 @@ int telemetry_recv_cisco(telemetry_peer *peer, int *flags, int *data_decoder)
       (*data_decoder) = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_CISCO_GPB_COMPACT:
-      ret = telemetry_recv_jump(peer, len, flags);
+      ret = telemetry_recv_generic(peer, len);
       (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
     case TELEMETRY_CISCO_GPB_KV:
-      ret = telemetry_recv_jump(peer, len, flags);
+      ret = telemetry_recv_generic(peer, len);
       (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
     }
@@ -208,8 +213,7 @@ int telemetry_recv_cisco_gpb(telemetry_peer *peer, int *flags)
   ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
   if (ret == TELEMETRY_CISCO_HDR_LEN) {
     len = telemetry_cisco_hdr_get_len(peer);
-    /* XXX: not supported */
-    ret = telemetry_recv_jump(peer, len, flags);
+    ret = telemetry_recv_generic(peer, len);
   }
 
   return ret;
@@ -223,8 +227,7 @@ int telemetry_recv_cisco_gpb_kv(telemetry_peer *peer, int *flags)
   ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
   if (ret == TELEMETRY_CISCO_HDR_LEN) {
     len = telemetry_cisco_hdr_get_len(peer);
-    /* XXX: not supported yet */
-    ret = telemetry_recv_jump(peer, len, flags);
+    ret = telemetry_recv_generic(peer, len);
   }
 
   return ret;

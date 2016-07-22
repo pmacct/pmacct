@@ -93,12 +93,23 @@ int p_kafka_get_topic_rr(struct p_kafka_host *kafka_host)
 
 void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
 {
-  if (kafka_host && kafka_host->rk) {
-    if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
+  int ret, multiple_brokers = FALSE;
 
-    if (rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker) == 0) {
+  if (strchr(host, ',')) multiple_brokers = TRUE;
+
+  if (kafka_host && kafka_host->rk) {
+    /* if host is a comma-separated list of brokers, assume port is part of the definition */
+    if (multiple_brokers) snprintf(kafka_host->broker, SRVBUFLEN, "%s", host);
+    else {
+      if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
+    }
+
+    if ((ret = rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker)) == 0) {
       Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'kafka_broker_host' or 'kafka_broker_port' specified (%s).\n",
 	  config.name, config.type, kafka_host->broker);
+    }
+    else {
+      if (multiple_brokers) Log(LOG_INFO, "INFO ( %s/%s ): %u brokers successfully added.\n", config.name, config.type, ret); 
     }
   }
 }
@@ -123,6 +134,21 @@ void p_kafka_set_partition(struct p_kafka_host *kafka_host, int partition)
 int p_kafka_get_partition(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) return kafka_host->partition;
+
+  return FALSE;
+}
+
+void p_kafka_set_key(struct p_kafka_host *kafka_host, char *key, int key_len)
+{
+  if (kafka_host) {
+    kafka_host->key = key;
+    kafka_host->key_len = key_len;
+  }
+}
+
+char *p_kafka_get_key(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) return kafka_host->key;
 
   return FALSE;
 }
@@ -207,7 +233,7 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t 
 
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
     ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
-			   data, data_len, NULL, 0, NULL);
+			   data, data_len, kafka_host->key, kafka_host->key_len, NULL);
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
@@ -259,7 +285,10 @@ int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int tim
 
     (*data) = kafka_msg;
   }
-  else return ERR;
+  else {
+    (*data) = NULL;
+    ret = ERR;
+  }
 
   return ret;
 }
@@ -280,9 +309,11 @@ int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payl
 	ret = ERR;
       }
     } 
-    else return ERR;
+    else ret = ERR;
   }
-  else return ERR;
+  else ret = ERR;
+
+  rd_kafka_message_destroy(kafka_msg);
 
   return ret;
 }

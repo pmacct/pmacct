@@ -643,9 +643,13 @@ DESC:           Defines the interval of time, in seconds, after which a connecti
 DEFAULT:        60
 
 KEY:            [ kafka_broker_host | plugin_pipe_broker_host ]
-DESC:           Defines the Kafka broker IP address. kafka_* directives refer to the broker used by
-		a kafka plugin to purge data out; plugin_pipe_kafka_* directives refer to the broker
-		used by the core process to send data to plugins.
+DESC:           Defines one or multiple, comma-separated, Kafka brokers. If only a single broker
+		IP address is defined then the broker port is read via the kafka_broker_port config
+		directive (legacy syntax); if multiple brokers are defined then each broker port,
+		if not left to default 9092, is expected as part of this directive, for example:
+		"broker1:10000,broker2". kafka_* directives refer to the broker used by a kafka
+		plugin to purge data out; plugin_pipe_kafka_* directives refer to the broker used
+		by the core process to send data to plugins.
 DEFAULT:        127.0.0.1
 
 KEY:            [ kafka_broker_port | plugin_pipe_broker_port ]
@@ -657,6 +661,10 @@ DESC:		Defines the Kafka broker topic partition ID. RD_KAFKA_PARTITION_UA or ((i
 		is to define the configured or default partitioner (slower than sending to a fixed
 		partition). See also kafka_broker_host. 
 DEFAULT:	0
+
+KEY:            kafka_partition_key
+DESC:           Defines the Kafka broker topic partition key. A string of printable characters is
+		expected as value.
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |
                   bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host |
@@ -692,6 +700,15 @@ KEY:            [ bgp_daemon_msglog_kafka_partition | bgp_table_dump_kafka_parti
 		  telemetry_dump_kafka_partition ] [GLOBAL]
 DESC:           See kafka_partition
 DEFAULT:        See kafka_partition
+
+KEY:            [ bgp_daemon_msglog_kafka_partition_key |
+		  bgp_table_dump_kafka_partition_key |
+                  bmp_daemon_msglog_kafka_partition_key | bmp_dump_kafka_partition |
+                  sfacctd_counter_kafka_partition_key |
+		  telemetry_daemon_msglog_kafka_partition_key |
+                  telemetry_dump_kafka_partition_key ] [GLOBAL]
+DESC:           See kafka_partition_key
+DEFAULT:        See kafka_partition_key
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
 		  sfacctd_counter_kafka_retry | telemetry_daemon_msglog_kafka_retry ] [GLOBAL]

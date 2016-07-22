@@ -2905,7 +2905,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   return ret;
 }
 
-u_int16_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
+u_int8_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
 {
   SFSample *sample = (SFSample *)pptrs->f_data;
   u_int8_t ret = NF9_FTYPE_TRAFFIC;
@@ -3426,6 +3426,7 @@ int sfacctd_counter_init_kafka_host()
   p_kafka_set_broker(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_broker_host, config.sfacctd_counter_kafka_broker_port);
   p_kafka_set_topic(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_topic);
   p_kafka_set_partition(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_partition);
+  p_kafka_set_key(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_partition_key, config.sfacctd_counter_kafka_partition_keylen);
   p_kafka_set_content_type(&sfacctd_counter_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   P_broker_timers_set_retry_interval(&sfacctd_counter_kafka_host.btimers, config.sfacctd_counter_kafka_retry);
 

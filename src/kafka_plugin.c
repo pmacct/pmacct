@@ -336,6 +336,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
   p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
   p_kafka_set_partition(&kafkap_kafka_host, config.kafka_partition);
+  p_kafka_set_key(&kafkap_kafka_host, config.kafka_partition_key, config.kafka_partition_keylen);
   p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
@@ -461,12 +462,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   }
 #endif
 
-  ret = p_kafka_check_outq_len(&kafkap_kafka_host);
-
-  if (ret) {
-    if (ret <= qn) qn -= ret;
-    else qn = 0;
-  }
   duration = time(NULL)-start;
 
   if (config.print_markers) {
