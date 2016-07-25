@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -155,13 +155,15 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
       ptr->list[count].type = TPL_TYPE_LEGACY;
     }
     else {
-      struct utpl_field *ext_db_ptr = ext_db_get_next_ie(ptr, type);
+      u_int8_t repeat_id = 0;
+      struct utpl_field *ext_db_ptr = ext_db_get_next_ie(ptr, type, &repeat_id);
 
       if (ext_db_ptr) {
 	if (pen) ext_db_ptr->pen = ntohl(*pen);
 	ext_db_ptr->type = type;
 	ext_db_ptr->off = ptr->len;
 	ext_db_ptr->tpl_len = ntohs(field->len);
+	ext_db_ptr->repeat_id = repeat_id;
 
         if (ptr->vlen) ext_db_ptr->off = 0;
 
@@ -264,13 +266,15 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
       tpl->list[count].type = TPL_TYPE_LEGACY;
     }
     else {
-      struct utpl_field *ext_db_ptr = ext_db_get_next_ie(tpl, type);
+      u_int8_t repeat_id = 0;
+      struct utpl_field *ext_db_ptr = ext_db_get_next_ie(tpl, type, &repeat_id);
 
       if (ext_db_ptr) {
         if (pen) ext_db_ptr->pen = ntohl(*pen);
         ext_db_ptr->type = type;
         ext_db_ptr->off = tpl->len;
         ext_db_ptr->tpl_len = ntohs(field->len);
+	ext_db_ptr->repeat_id = repeat_id;
 
         if (tpl->vlen) ext_db_ptr->off = 0;
 
@@ -601,12 +605,16 @@ struct utpl_field *ext_db_get_ie(struct template_cache_entry *ptr, u_int32_t pen
   return ext_db_ptr;
 }
 
-struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *ptr, u_int16_t type)
+struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *ptr, u_int16_t type, u_int8_t *repeat_id)
 {
   u_int16_t ie_idx, ext_db_modulo = (type%TPL_EXT_DB_ENTRIES);
   struct utpl_field *ext_db_ptr = NULL;
 
+  (*repeat_id) = 0;
+
   for (ie_idx = 0; ie_idx < IES_PER_TPL_EXT_DB_ENTRY; ie_idx++) {
+    if (ptr->ext_db[ext_db_modulo].ie[ie_idx].type == type) (*repeat_id)++;
+
     if (ptr->ext_db[ext_db_modulo].ie[ie_idx].type == 0) {
       ext_db_ptr = &ptr->ext_db[ext_db_modulo].ie[ie_idx];
       break;
