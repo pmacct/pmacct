@@ -598,8 +598,6 @@ void telemetry_daemon(void *t_data_void)
       }
 
       if (!peer) {
-        int fd;
-
         /* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of telemetry peers has been configured by telemetry_max_peers (%d).\n",
                         config.name, t_data->log_str, config.telemetry_max_peers);

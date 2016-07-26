@@ -85,7 +85,7 @@ void telemetry_basic_process_json(telemetry_peer *peer)
   }
 
   if (peer->buf.len >= (peer->msglen + 1)) {
-    peer->buf.base[peer->msglen + 1] = '\0';
+    peer->buf.base[peer->msglen] = '\0';
     peer->msglen++;
   }
 }
