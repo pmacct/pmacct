@@ -626,13 +626,17 @@ languages are very welcome at this stage.
 IX. Running the Kafka plugin
 Apache Kafka is publish-subscribe messaging rethought as a distributed commit log.
 Its qualities being: fast, scalable, durable and distributed by design. pmacct
-Kafka plugin is designed to send aggregated network traffic data, in JSON format,
-through a Kafka broker to 3rd party applications. Requirements to use the plugin
-are:
+Kafka plugin is designed to send aggregated network traffic data, in JSON or
+Avro format, through a Kafka broker to 3rd party applications. Requirements to
+use the plugin are:
 
 * A working Kafka broker (and Zookeper server): http://kafka.apache.org/
 * Librdkafka: https://github.com/edenhill/librdkafka/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
+
+Additionally, the Apache Avro C library (http://avro.apache.org/) needs to be
+installed to be able to send messages packed using Avro (you will also need to
+pass --enable-avro to the configuration script).
 
 Once these elements are installed, pmacct can be configured for compiling. pmacct
 makes use of pkg-config for finding libraries and headers location and checks some
@@ -649,6 +653,12 @@ export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
 export KAFKA_CFLAGS="-I/usr/local/kafka/include"
 ./configure --enable-kafka --enable-jansson
 
+Ditto for the location of the Avro libraries:
+
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
+./configure --enable-kafka --enable-avro
+
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
 on port 9092; look all configurable directives up in the CONFIG-KEYS document):
@@ -657,6 +667,7 @@ on port 9092; look all configurable directives up in the CONFIG-KEYS document):
 plugins: kafka
 !
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+kafka_output: json
 kafka_topic: pmacct.acct
 kafka_refresh_time: 300
 kafka_history: 5m

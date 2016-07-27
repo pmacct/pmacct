@@ -480,6 +480,7 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_multi_values", cfg_key_sql_multi_values},
   {"kafka_num_protos", cfg_key_num_protos},
   {"kafka_markers", cfg_key_print_markers},
+  {"kafka_output", cfg_key_message_broker_output},
   {"nfacctd_proc_name", cfg_key_proc_name},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
