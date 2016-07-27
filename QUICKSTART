@@ -561,12 +561,16 @@ VIII. Running the RabbitMQ/AMQP plugin
 The Advanced Message Queuing Protocol (AMQP) is an open standard for passing business
 messages between applications. RabbitMQ is a messaging broker, an intermediary for
 messaging, which implementes AMQP. pmacct RabbitMQ/AMQP plugin is designed to send
-aggregated network traffic data, in JSON format, through a RabbitMQ server to 3rd
-party applications. Requirements to use the plugin are:
+aggregated network traffic data, in JSON or Avro format, through a RabbitMQ server
+to 3rd party applications. Requirements to use the plugin are:
 
 * A working RabbitMQ server: http://www.rabbitmq.com/
 * RabbitMQ C API, rabbitmq-c: https://github.com/alanxz/rabbitmq-c/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
+
+Additionally, the Apache Avro C library (http://avro.apache.org/) needs to be
+installed to be able to send messages packed using Avro (you will also need to
+pass --enable-avro to the configuration script).
 
 Once these elements are installed, pmacct can be configured for compiling. pmacct
 makes use of pkg-config for finding libraries and headers location and checks some
@@ -583,6 +587,12 @@ export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq"
 export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
 ./configure --enable-rabbitmq --enable-jansson
 
+Ditto for the location of the Avro libraries:
+
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
+./configure --enable-rabbitmq --enable-avro
+
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic RabbitMQ/AMQP plugin configuration (assumes: RabbitMQ server is available
 at localhost; look all configurable directives up in the CONFIG-KEYS document):
@@ -591,6 +601,7 @@ at localhost; look all configurable directives up in the CONFIG-KEYS document):
 plugins: amqp
 !
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+amqp_output: json
 amqp_exchange: pmacct
 amqp_routing_key: acct
 amqp_refresh_time: 300

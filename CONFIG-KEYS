@@ -1370,6 +1370,38 @@ DESC:           Defines the print plugin output separator when print_output is s
 		then 'formatted' output should be the natural choice instead)
 DEFAULT:	','
 
+KEY:		[ message_broker_output | amqp_output ]
+VALUES: 	[ json | avro ]
+DESC:		Defines the output format for messages sent to a message broker. 'json' is to send the messages
+		in the JavaScript Object Notation format. The 'json' format requires compiling the package
+		against the Jansson library (downloadable at the following URL: http://www.digip.org/jansson/).
+		'avro' is to send the messages encoded with the Apache Avro serialization system. The 'avro'
+		format requires compiling the package against the Apache Avro library (downloadable at the
+		following URL: http://avro.apache.org/).
+NOTES:		* This option is only supported for the RabbitMQ message broker (amqp plugin). The messages sent
+		  to the Kafka message broker (kafka plugin) are always encoded with the 'json' format.
+		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
+		  bits are packed as 64 bits signed integers, working around the issue. No work around is
+		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
+DEFAULT:	json
+
+KEY:		avro_buffer_size
+DESC:		When the Avro format is used to encode the messages sent to a message broker, this option defines
+		the size in bytes of the buffer used by the Avro data serialization system. The buffer needs to be
+		large enough to store at least a single Avro record. If the buffer does not have enough capacity to
+		store the number of records defined by the sql_multi_values configuration directive, the current
+		records stored in the buffer will be sent to the message broker and the buffer will be cleared to
+		accomodate subsequent records.
+NOTES:		This option is only supported for the RabbitMQ message broker (amqp plugin).
+DEFAULT:	4096
+
+KEY:		avro_schema_output_file
+DESC:		When the Avro format is used to encode the messages sent to a message broker, this option causes
+		the schema used to encode the messages to be dumped to the file path given. The schema can then
+		be used by the receiving end to decode the messages. Note that the schema will be dynamically built
+		based on the aggregation primitives chosen.
+NOTES:		This option is only supported for the RabbitMQ message broker (amqp plugin).
+
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]
 DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
