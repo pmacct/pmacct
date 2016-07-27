@@ -2381,6 +2381,9 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
   char *pen = NULL, *type = NULL, *endptr;
 
   if (table) {
+    u_int8_t repeat_id;
+    int idx;
+
     if (type = strchr(value, ':')) {
       pen = value;
       *type = '\0';
@@ -2394,6 +2397,13 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid NetFlow v9/IPFIX field type '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
+
+    for (idx = 0, repeat_id = 0; idx < table->num; idx++) {
+      if (table->primitive[idx].field_type == table->primitive[table->num].field_type &&
+	  table->primitive[idx].pen == table->primitive[table->num].pen)
+	repeat_id++;
+    }
+    table->primitive[table->num].repeat_id = repeat_id;
   }
   else {
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);

@@ -3189,7 +3189,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	  }
 	}
 	else {
-	  if (utpl = (*get_ext_db_ie_by_type)(tpl, cpe->pen, cpe->field_type)) {
+	  if (utpl = (*get_ext_db_ie_by_type)(tpl, cpe->pen, cpe->field_type, cpe->repeat_id)) {
 	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
               char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
@@ -3247,7 +3247,7 @@ void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct pack
         memcpy(&pnat->post_nat_src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_SRC_ADDR].len, 4));
         pnat->post_nat_src_ip.family = AF_INET;
       }
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_IPV4_SRC_ADDR)) {
+      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_IPV4_SRC_ADDR, FALSE)) {
         memcpy(&pnat->post_nat_src_ip.address.ipv4, pptrs->f_data+utpl->off, MIN(utpl->len, 4));
         pnat->post_nat_src_ip.family = AF_INET;
       }
@@ -3274,7 +3274,7 @@ void NF_post_nat_dst_host_handler(struct channels_list_entry *chptr, struct pack
         memcpy(&pnat->post_nat_dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_DST_ADDR].len, 4));
         pnat->post_nat_dst_ip.family = AF_INET;
       }
-      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_IPV4_DST_ADDR)) {
+      else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_IPV4_DST_ADDR, FALSE)) {
         memcpy(&pnat->post_nat_dst_ip.address.ipv4, pptrs->f_data+utpl->off, MIN(utpl->len, 4));
         pnat->post_nat_dst_ip.family = AF_INET;
       }
@@ -3302,7 +3302,7 @@ void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct pack
 
     if (tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len)
       memcpy(&pnat->post_nat_src_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_SRC_PORT].len, 2));
-    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_SRC_PORT))
+    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_SRC_PORT, FALSE))
       memcpy(&pnat->post_nat_src_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
 
     pnat->post_nat_src_port = ntohs(pnat->post_nat_src_port);
@@ -3329,7 +3329,7 @@ void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct pack
 
     if (tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len)
       memcpy(&pnat->post_nat_dst_port, pptrs->f_data+tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].off, MIN(tpl->tpl[NF9_POST_NAT_IPV4_DST_PORT].len, 2));
-    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_DST_PORT))
+    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_L4_DST_PORT, FALSE))
       memcpy(&pnat->post_nat_dst_port, pptrs->f_data+utpl->off, MIN(utpl->len, 2)); 
 
     pnat->post_nat_dst_port = ntohs(pnat->post_nat_dst_port);
@@ -3352,7 +3352,7 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   case 9:
     if (tpl->tpl[NF9_NAT_EVENT].len)
       memcpy(&pnat->nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, MIN(tpl->tpl[NF9_NAT_EVENT].len, 1));
-    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT))
+    else if (utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT, FALSE))
       memcpy(&pnat->nat_event, pptrs->f_data+utpl->off, MIN(utpl->len, 1));
     break;
   default:
@@ -3501,7 +3501,7 @@ void NF_cust_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 
   switch(hdr->version) {
   case 10:
-    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG)) {
+    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG, FALSE)) {
       memcpy(&pdata->primitives.tag, pptrs->f_data+utpl->off, MIN(utpl->len, 8));
       pdata->primitives.tag = pm_ntohll(pdata->primitives.tag);
     }
@@ -3520,7 +3520,7 @@ void NF_cust_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
   switch(hdr->version) {
   case 10:
-    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG2)) {
+    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_TAG2, FALSE)) {
       memcpy(&pdata->primitives.tag2, pptrs->f_data+utpl->off, MIN(utpl->len, 8));
       pdata->primitives.tag2 = pm_ntohll(pdata->primitives.tag2);
     }
@@ -3540,7 +3540,7 @@ void NF_cust_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
   switch(hdr->version) {
   case 10:
-    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_LABEL)) {
+    if (utpl = (*get_ext_db_ie_by_type)(tpl, PMACCT_PEN, NF9_CUST_LABEL, FALSE)) {
       return_pipe_buffer_space(chptr, vlen_prims_delete(pvlen, COUNT_INT_LABEL));
       if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + utpl->len)) {
 	vlen_prims_init(pvlen, 0);

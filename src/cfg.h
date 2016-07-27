@@ -49,6 +49,7 @@ struct custom_primitive_entry {
   u_int16_t len;
   u_int16_t alloc_len;
   u_int8_t semantics;
+  u_int8_t repeat_id;
 
   /* generated internally */
   pm_cfgreg_t type;

@@ -797,7 +797,7 @@ EXT void log_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16
 EXT void log_template_footer(u_int16_t, u_int8_t);
 EXT struct template_cache_entry *insert_opt_template(void *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t, u_int16_t, u_int32_t);
 EXT struct template_cache_entry *refresh_opt_template(void *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t, u_int16_t, u_int32_t);
-EXT struct utpl_field *ext_db_get_ie(struct template_cache_entry *, u_int32_t, u_int16_t);
+EXT struct utpl_field *ext_db_get_ie(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 EXT struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *, u_int16_t, u_int8_t *);
 
 EXT void resolve_vlen_template(char *, struct template_cache_entry *);
@@ -809,5 +809,5 @@ EXT u_int8_t get_ipfix_vlen(char *, u_int16_t *);
 #else
 #define EXT
 #endif
-EXT struct utpl_field *(*get_ext_db_ie_by_type)(struct template_cache_entry *, u_int32_t, u_int16_t);
+EXT struct utpl_field *(*get_ext_db_ie_by_type)(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 #undef EXT
