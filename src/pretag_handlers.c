@@ -664,7 +664,9 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
       return TRUE;
     }
   }
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_direction_handler;
+
+  if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_direction_handler;
+  else if (config.acct_type == ACCT_NF) e->func[x] = pretag_direction_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_DIRECTION;
 
   return FALSE;
@@ -2166,6 +2168,18 @@ int SF_pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void 
 
   if (entry->key.sample_type.n == pptrs->sample_type) return (FALSE | entry->key.sample_type.neg);
   else return (TRUE ^ entry->key.sample_type.neg);
+}
+
+int SF_pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if ((sample->inputPort == sample->ds_index && entry->key.direction.n == 0) ||
+      (sample->outputPort == sample->ds_index && entry->key.direction.n == 1)) { 
+    return (FALSE | entry->key.direction.neg);
+  }
+  else return (TRUE ^ entry->key.direction.neg);
 }
 
 int SF_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)

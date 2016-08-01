@@ -99,9 +99,13 @@
 !			traffic data, "event" to denote templates suitable to
 !			flag events and "option" to denote NetFlow/IPFIX option
 !			records data.
-! 'direction'		MATCH: In NetFlow v9 and IPFIX this is compared against
-!			the direction (61) field, which only valid values are 0
-!			(ingress) and 1 (egress) flow.
+! 'direction'		MATCH: expected values are 0 (ingress direction) or 1
+!			(egress direction). In NetFlow v9/IPFIX this is compared
+!			against the direction (61) field; in sFlow v2/v4/v5 this
+!			returns a positive match if: 1) source_id equals to input
+!			interface and this 'direction' key is set to '0' or 2)
+!			source_id equals to output interface and this 'direction'
+!			key is set to '1'.
 ! 'src_as'		MATCH: source Autonomous System Number. In pmacctd, if
 !			the BGP daemon is not enabled it works only against a
 !			Networks map (see 'networks_file' directive); in nfacctd

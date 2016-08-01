@@ -158,6 +158,7 @@ EXT int SF_pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_sample_type_handler(struct packet_ptrs *, void *, void *);
+EXT int SF_pretag_direction_handler(struct packet_ptrs *, void *, void *);
 
 EXT int PM_pretag_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int PM_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
