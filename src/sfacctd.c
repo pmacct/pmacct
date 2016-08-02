@@ -3368,7 +3368,7 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "discards", (json_int_t)m32_3);
+  kv = json_pack("{sI}", "discards", (json_int_t)m32_4);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
