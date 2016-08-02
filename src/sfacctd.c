@@ -3368,7 +3368,7 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "discards", (json_int_t)m32_3);
+  kv = json_pack("{sI}", "discards", (json_int_t)m32_4);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
@@ -3451,6 +3451,7 @@ void sf_cnt_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_file = config.sfacctd_counter_file;
   bms->msglog_amqp_routing_key = config.sfacctd_counter_amqp_routing_key;
   bms->msglog_kafka_topic = config.sfacctd_counter_kafka_topic;
+  bms->peer_str = malloc(strlen("peer_src_ip") + 1);
   strcpy(bms->peer_str, "peer_src_ip");
 
   /* dump not supported */
