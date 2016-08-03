@@ -17,6 +17,10 @@
 !                       in sfacctd this is compared against the AgentId field
 !                       of received sFlow samples. Expected argument are an IP
 !                       address or prefix (ie. XXX.XXX.XXX.XXX/NN)
+! 'in'                  MATCH: Input interface. In NFv9/IPFIX this is compared
+!                       against IE #10 and, if not existing, against IE #252.
+! 'out'                 MATCH: Output interface. In NFv9/IPFIX this is compared
+!                       against IE #14 and, if not existing, against IE #253.
 ! 'filter'              MATCH: incoming data is compared against the supplied
 !			filter expression (expected in libpcap syntax); the
 !			filter needs to be enclosed in quotes ('). In this map
@@ -32,4 +36,9 @@ bgp_ip=1.2.3.4	ip=2.3.4.5
 ! uacctd. 
 !
 ! bgp_ip=4.5.6.7	ip=0.0.0.0/0
+!
+! The following maps flows ingressing a specific interface of the NetFlow/sFlow
+! agent to the specified BGP peer. This is relevant to VPN scenarios. 
+!
+bgp_ip=1.2.3.4  ip=2.3.4.5	in=100
 !

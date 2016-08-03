@@ -199,6 +199,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   char *endptr;
 
   if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
+  if (acct_type == MAP_BGP_TO_XFLOW_AGENT) bta_map_caching = FALSE; 
 
   e->key.input.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
@@ -232,6 +233,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
   char *endptr;
 
   if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
+  if (acct_type == MAP_BGP_TO_XFLOW_AGENT) bta_map_caching = FALSE; 
 
   e->key.output.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
