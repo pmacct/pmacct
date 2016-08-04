@@ -155,7 +155,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   // XXX: isprint check?
 
   len = strlen(value);
-  if (len < MAX_LABEL_LEN && !strchr(value, default_sep)) {
+  if (!strchr(value, default_sep)) {
     if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
     strcpy(e->label.val, value);
     e->label.val[e->label.len] = '\0';
@@ -164,7 +164,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
     e->label.val = NULL;
     e->label.len = 0;
 
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invaild set_label specified.\n", config.name, config.type, filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_label specified.\n", config.name, config.type, filename);
     return TRUE;
   }
 
