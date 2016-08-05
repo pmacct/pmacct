@@ -260,6 +260,7 @@ struct _primitives_matrix_struct {
   u_int8_t sfacctd;
   u_int8_t pmtelemetryd;
   u_int8_t pmbgpd;
+  u_int8_t pmbgmd;
   char desc[PRIMITIVE_DESC_LEN];
 };
 
@@ -343,7 +344,7 @@ int json_object_update_missing(json_t *, json_t *);
 #endif
 
 /* global variables */
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMBGPD_C)
+#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMBGPD_C) && (!defined __PMBMPD_C)
 #define EXT extern
 #else
 #define EXT

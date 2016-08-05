@@ -1,5 +1,5 @@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
-sbin_PROGRAMS = pmacctd nfacctd sfacctd pmtelemetryd pmbgpd
+sbin_PROGRAMS = pmacctd nfacctd sfacctd pmtelemetryd pmbgpd pmbmpd
 bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
 
@@ -90,3 +90,6 @@ pmtelemetryd_LDADD = libdaemons.la
 pmbgpd_SOURCES = pmbgpd.c pmbgpd.h
 pmbgpd_LDFLAGS = $(DEFS)
 pmbgpd_LDADD = libdaemons.la
+pmbmpd_SOURCES = pmbmpd.c pmbmpd.h
+pmbmpd_LDFLAGS = $(DEFS)
+pmbmpd_LDADD = libdaemons.la
