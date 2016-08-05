@@ -152,6 +152,9 @@ struct bgp_peer {
   char *cap_4as;
   u_int8_t cap_add_paths;
   u_int32_t msglen;
+  u_int32_t packets;
+  u_int32_t packet_bytes;
+  u_int32_t msg_bytes;
   struct bgp_peer_buf buf;
   struct bgp_peer_log *log;
 

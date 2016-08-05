@@ -250,6 +250,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   pid_t dumper_pid;
   time_t start;
   u_int64_t dump_elems;
+  u_int32_t packets, packet_bytes, msg_bytes;
 
   telemetry_peer *peer, *saved_peer;
   telemetry_dump_se_ll *tdsell;
@@ -290,11 +291,19 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     start = time(NULL);
     tables_num = 0;
 
+    packets = 0; packet_bytes = 0; msg_bytes = 0;
     for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
       if (telemetry_peers[peers_idx].fd) {
         peer = &telemetry_peers[peers_idx];
         peer->log = &peer_log; /* abusing telemetry_peer a bit, but we are in a child */
         tdsell = peer->bmp_se;
+
+        /* Display peer statistics and accumulate global counts. */
+        Log(LOG_INFO, "INFO (peer %s:%d): Packets %d Packet Bytes %d Msg Bytes %d\n", peer->addr_str, peer->tcp_port, peer->packets, peer->packet_bytes, peer->msg_bytes);
+        packets += peer->packets;
+        packet_bytes += peer->packet_bytes;
+        msg_bytes += peer->msg_bytes;
+
 
         if (config.telemetry_dump_file) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
         if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
@@ -379,6 +388,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     }
 
     duration = time(NULL)-start;
+    Log(LOG_INFO, "INFO ( %s/%s ): Packets %d Packet Bytes %d Msg Bytes %d\n", config.name, t_data->log_str, packets, packet_bytes, msg_bytes);
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ET: %u) ***\n",
                 config.name, t_data->log_str, dumper_pid, tables_num, duration);
 
@@ -395,6 +405,11 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
         tdsell = peer->bmp_se;
 
         if (tdsell && tdsell->start) telemetry_dump_se_ll_destroy(tdsell);
+
+        /* Reset peer statistics. */
+        peer->packets = 0;
+        peer->packet_bytes = 0;
+        peer->msg_bytes = 0;
       }
     }
 
