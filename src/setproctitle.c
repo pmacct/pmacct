@@ -167,6 +167,7 @@ setproctitle(fmt, va_alist)
 	union pstun pst;
 #  endif /* SPT_TYPE == SPT_PSTAT */
 
+	memset(buf, 0, SPT_BUFSIZE);
 	p = buf;
 	va_start(ap, fmt);
 	vsnprintf(p, SPACELEFT(buf), fmt, ap);

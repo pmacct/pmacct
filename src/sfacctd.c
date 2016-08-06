@@ -199,7 +199,8 @@ int main(int argc,char **argv, char **envp)
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_SFACCTD)) != -1)) {
-    cfg_cmdline[rows] = malloc(SRVBUFLEN);
+    if (!cfg_cmdline[rows]) cfg_cmdline[rows] = malloc(SRVBUFLEN);
+    memset(cfg_cmdline[rows], 0, SRVBUFLEN);
     switch (cp) {
     case 'L':
       strlcpy(cfg_cmdline[rows], "sfacctd_ip: ", SRVBUFLEN);
@@ -261,6 +262,8 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'f':
       strlcpy(config_file, optarg, sizeof(config_file));
+      free(cfg_cmdline[rows]);
+      cfg_cmdline[rows] = NULL;
       break;
     case 'F':
       strlcpy(cfg_cmdline[rows], "pidfile: ", SRVBUFLEN);
