@@ -129,6 +129,13 @@ struct bgp_misc_structs {
   int dump_backend_methods;
 };
 
+struct bgp_peer_stats {
+    u_int32_t packets; /* Datagrams received */
+    u_int32_t packet_bytes; /* Bytes read off the socket */
+    u_int32_t msg_bytes; /* Bytes in the decoded messages */
+    u_int32_t msg_errors; /* Errors detected in message content */
+};
+
 struct bgp_peer_buf {
   char *base;
   u_int32_t len;
@@ -152,9 +159,7 @@ struct bgp_peer {
   char *cap_4as;
   u_int8_t cap_add_paths;
   u_int32_t msglen;
-  u_int32_t packets;
-  u_int32_t packet_bytes;
-  u_int32_t msg_bytes;
+  struct bgp_peer_stats stats;
   struct bgp_peer_buf buf;
   struct bgp_peer_log *log;
 

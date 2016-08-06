@@ -71,7 +71,7 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
     }
   }
   if (ret > 0) {
-    peer->packet_bytes += ret;
+    peer->stats.packet_bytes += ret;
     peer->msglen = (ret + peer->buf.truncated_len);
   }
 
@@ -109,28 +109,36 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
 int telemetry_recv_zjson(telemetry_peer *peer, telemetry_peer_z *peer_z, u_int32_t len, int *flags)
 {
-  int ret = 0, idx;
+  int ret = 0;
 
 #if defined (HAVE_ZLIB)
   if (!flags) return ret;
   (*flags) = FALSE;
-  memset(peer_z->inflate_buf, 0, sizeof(peer_z->inflate_buf));
-  peer_z->stm.avail_out = (uInt) sizeof(peer_z->inflate_buf);
-  peer_z->stm.next_out = (Bytef *) peer_z->inflate_buf;
 
   ret = telemetry_recv_generic(peer, len);
 
-  peer_z->stm.avail_in = (uInt) peer->msglen;
-  peer_z->stm.next_in = (Bytef *) peer->buf.base;
 
   if (ret > 0) { 
-    if (inflate(&peer_z->stm, Z_NO_FLUSH) != Z_OK) ret = FALSE;
-    else {
+    int zret;
+
+    memset(peer_z->inflate_buf, 0, sizeof(peer_z->inflate_buf));
+    peer_z->stm.avail_out = (uInt) sizeof(peer_z->inflate_buf);
+    peer_z->stm.next_out = (Bytef *) peer_z->inflate_buf;
+
+    peer_z->stm.avail_in = (uInt) peer->msglen;
+    peer_z->stm.next_in = (Bytef *) peer->buf.base;
+
+    ret = FALSE;
+    zret = inflate(&peer_z->stm, Z_NO_FLUSH);
+    if (zret == Z_OK || zret == Z_STREAM_END) {
       strlcpy(peer->buf.base, peer_z->inflate_buf, peer->buf.len);
       peer->msglen = strlen(peer->buf.base) + 1;
       ret = peer->msglen;
 
       (*flags) = telemetry_basic_validate_json(peer);
+      if (zret == Z_STREAM_END) {
+        inflateReset(&peer_z->stm);
+      }
     }
   }
 #endif
@@ -251,8 +259,10 @@ int telemetry_recv_cisco_gpb_kv(telemetry_peer *peer, int *flags)
 
 int telemetry_basic_validate_json(telemetry_peer *peer)
 {
-  if (peer->buf.base[peer->buf.truncated_len] != '{')
+  if (peer->buf.base[peer->buf.truncated_len] != '{') {
+    peer->stats.msg_errors++;
     return ERR;
+  }
   else
     return FALSE;
 }

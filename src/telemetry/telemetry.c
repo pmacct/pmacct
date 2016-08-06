@@ -699,9 +699,9 @@ void telemetry_daemon(void *t_data_void)
       recalc_fds = TRUE;
     }
     else {
+      peer->stats.packets++;
       if (recv_flags != ERR) {
-        peer->packets++;
-        peer->msg_bytes += ret;
+        peer->stats.msg_bytes += ret;
         telemetry_process_data(peer, t_data, data_decoder);
       }
     }
