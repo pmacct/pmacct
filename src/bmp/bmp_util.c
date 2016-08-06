@@ -200,15 +200,19 @@ void bmp_bmpp_bgp_peers_free(void *a)
 
 void bmp_bmpp_bgp_peers_walk_print(const void *nodep, const VISIT which, const int depth)
 {
+  struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
   char peer_str[INET6_ADDRSTRLEN];
 
   peer = (*(struct bgp_peer **) nodep);
+  bms = bgp_select_misc_db(peer->type);
 
-  if (!peer) Log(LOG_INFO, "INFO ( %s/core/BMP ): bmp_bmpp_bgp_peers_walk_print(): null\n", config.name);
+  if (!bms) return;
+
+  if (!peer) Log(LOG_INFO, "INFO ( %s/%s ): bmp_bmpp_bgp_peers_walk_print(): null\n", config.name, bms->log_str);
   else {
     addr_to_str(peer_str, &peer->addr);
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): bmp_bmpp_bgp_peers_walk_print(): %s\n", config.name, peer_str);
+    Log(LOG_INFO, "INFO ( %s/%s ): bmp_bmpp_bgp_peers_walk_print(): %s\n", config.name, bms->log_str, peer_str);
   }
 }
 

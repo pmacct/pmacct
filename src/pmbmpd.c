@@ -225,6 +225,6 @@ int main(int argc,char **argv, char **envp)
 
   if (!config.nfacctd_bmp_port) config.nfacctd_bmp_port = BMP_TCP_PORT;
 
-  // XXX: bmp_prepare_daemon();
-  // skinny_bmp_daemon();
+  bmp_prepare_daemon();
+  skinny_bmp_daemon();
 }

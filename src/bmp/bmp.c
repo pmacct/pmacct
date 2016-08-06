@@ -589,3 +589,13 @@ void bmp_prepare_thread()
   bmp_misc_db->log_str = malloc(strlen("core/BMP") + 1);
   strcpy(bmp_misc_db->log_str, "core/BMP");
 }
+
+void bmp_prepare_daemon()
+{
+  bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
+  memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
+
+ bmp_misc_db->is_thread = FALSE;
+ bmp_misc_db->log_str = malloc(strlen("core") + 1);
+ strcpy(bmp_misc_db->log_str, "core");
+}

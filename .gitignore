@@ -34,3 +34,4 @@ Makefile
 /src/uacctd
 /src/pmtelemetryd
 /src/pmbgpd
+/src/pmbmpd

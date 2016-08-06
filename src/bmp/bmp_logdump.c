@@ -382,6 +382,7 @@ void bmp_dump_close_peer(struct bgp_peer *peer)
 
 void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *extra, int log_type)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   struct bmp_dump_se_ll *se_ll;
   struct bmp_dump_se_ll_elem *se_ll_elem;
 
@@ -391,7 +392,7 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
 
   se_ll_elem = malloc(sizeof(struct bmp_dump_se_ll_elem));
   if (!se_ll_elem) {
-    Log(LOG_ERR, "ERROR ( %s/core/BMP ): Unable to malloc() se_ll_elem structure. Terminating thread.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() se_ll_elem structure. Terminating thread.\n", config.name, bms->log_str);
     exit_all(1);
   }
 
@@ -510,7 +511,7 @@ void bmp_handle_dump_event()
 #endif
 
     dumper_pid = getpid();
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): *** Dumping BMP tables - START (PID: %u) ***\n", config.name, dumper_pid);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - START (PID: %u) ***\n", config.name, bms->log_str, dumper_pid);
     start = time(NULL);
     tables_num = 0;
 
@@ -545,7 +546,7 @@ void bmp_handle_dump_event()
             peer->log->fd = open_output_file(current_filename, "w", TRUE);
             if (fd_buf) {
               if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
-		Log(LOG_WARNING, "WARN ( %s/core/BMP ): [%s] setvbuf() failed: %s\n", config.name, current_filename, errno);
+		Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, bms->log_str, current_filename, errno);
               else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
             }
           }
@@ -657,13 +658,14 @@ void bmp_handle_dump_event()
     }
 
     duration = time(NULL)-start;
-    Log(LOG_INFO, "INFO ( %s/core/BMP ): *** Dumping BMP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
-                config.name, dumper_pid, tables_num, duration);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
+                config.name, bms->log_str, dumper_pid, tables_num, duration);
 
     exit(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
-      Log(LOG_WARNING, "WARN ( %s/core/BMP ): Unable to fork BMP table dump writer: %s\n", config.name, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BMP table dump writer: %s\n",
+		config.name, bms->log_str, strerror(errno));
     }
 
     /* destroy bmp_se linked-list content after dump event */
