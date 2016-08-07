@@ -1375,20 +1375,24 @@ router isis
 
 
 XVII. Quickstart guide to setup the BMP daemon
-The BMP daemon thread was introduced in pmacct 1.5. The implementation was
-originally based on the draft-ietf-grow-bmp-07 IETF document (whereas the
-current review is against draft-ietf-grow-bmp-17). If unfamiliar with BMP, to
-quote the document: "BMP is intended to provide a more convenient interface for
-obtaining route views for research purpose than the screen-scraping approach in
-common use today. The design goals are to keep BMP simple, useful, easily
-implemented, and minimally service-affecting.". The BMP daemon currently
-supports BMP data, events and stats, ie. initiation, termination, peer up,
-peer down, stats and route monitoring messages. The daemon enables to write BMP
-messages to files, AMQP and Kafka brokers, real-time (msglog) or at regular time
-intervals (dump). Also, route monitoring messages are saved in a RIB structure
-for IP prefix lookup.
+BMP can be run as a stand-alone collector daemon (pmbmpd, from 1.6.1) or as a
+thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
+alone daemon is suitable for consuming BMP data only, real-time or at regular
+intervals; the thread solution is suitable for correlation of BMP with other
+data sources, ie. NetFlow, IPFIX, sFlow, etc.. The implementation was originally
+based on the draft-ietf-grow-bmp-07 IETF document (whereas the current review is
+against draft-ietf-grow-bmp-17). If unfamiliar with BMP, to quote the IETF
+document: "BMP is intended to provide a more convenient interface for obtaining
+route views for research purpose than the screen-scraping approach in common use
+today. The design goals are to keep BMP simple, useful, easily implemented, and
+minimally service-affecting.". The BMP daemon currently supports BMP data,
+events and stats, ie. initiation, termination, peer up, peer down, stats and
+route monitoring messages. The daemon enables to write BMP messages to files,
+AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
+Also, route monitoring messages are saved in a RIB structure for IP prefix
+lookup.
 
-Following a simple example on how to configure nfacctd to enable the BMP daemon
+Following a simple example on how to configure nfacctd to enable the BMP thread
 to a) log, in real-time, BGP stats, events and routes received via BMP to a
 text-file (bmp_daemon_msglog_file) and b) dump the same (ie. BGP stats and
 events received via BMP) to a text-file and at regular time intervals
@@ -1400,6 +1404,9 @@ bmp_daemon_msglog_file: /path/to/bmp-$peer_src_ip.log
 !
 bmp_dump_file: /path/to/bmp-$peer_src_ip-%H%M.dump
 bmp_dump_refresh_time: 60
+
+Setting up the stand-alone BMP collector daemon, pmbmpd, is the exact same as
+the configuration above except the 'bmp_daemon: true' line can be skipped.
 
 Following is an example how a Cisco router running IOS/IOS-XE should be
 configured in order to export BMP data to a collector:
@@ -1436,8 +1443,8 @@ bmp server 1
  stats-reporting-period 300
 !
 
-Any equivalent example using Juniper JunOS and/or any other vendor implementing
-BMP would be much welcome.
+Any equivalent examples using JunOS and/or any other vendor implementing BMP
+would be much welcome.
  
 
 XVIII. Quickstart guide to setup Streaming Network Telemetry collection
