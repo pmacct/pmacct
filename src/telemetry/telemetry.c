@@ -1,4 +1,4 @@
-/*  
+/*
     pmacct (Promiscuous mode IP Accounting package)
     pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
@@ -120,7 +120,7 @@ void telemetry_daemon(void *t_data_void)
   }
   else {
     if (config.telemetry_port_tcp) {
-      port = config.telemetry_port_tcp; 
+      port = config.telemetry_port_tcp;
       srv_proto = malloc(strlen("tcp") + 1);
       strcpy(srv_proto, "tcp");
     }
@@ -517,10 +517,10 @@ void telemetry_daemon(void *t_data_void)
 #endif
     }
 
-    /* 
+    /*
        If select_num == 0 then we got out of select() due to a timeout rather
-       than because we had a message from a peeer to handle. By now we did all
-       routine checks and can happily return to selet() again.
+       than because we had a message from a peer to handle. By now we did all
+       routine checks and can happily return to select() again.
     */
     if (!select_num) goto select_again;
 
@@ -531,7 +531,7 @@ void telemetry_daemon(void *t_data_void)
         if (fd == ERR) goto read_data;
       }
       else if (config.telemetry_port_udp) {
-	char dummy_local_buf[TRUE];	
+	char dummy_local_buf[TRUE];
 
 	ret = recvfrom(config.telemetry_sock, dummy_local_buf, TRUE, MSG_PEEK, (struct sockaddr *) &client, &clen);
 	if (ret <= 0) goto select_again;
@@ -583,7 +583,7 @@ void telemetry_daemon(void *t_data_void)
 
 	  if (peer) {
 	    recalc_fds = TRUE;
-	
+
 	    if (config.telemetry_port_udp) {
 	      tpuc.index = peers_idx;
 	      telemetry_peers_udp_timeout[peers_idx].last_msg = now;
@@ -678,7 +678,7 @@ void telemetry_daemon(void *t_data_void)
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_DECODER_CISCO_GPB:
-      ret = telemetry_recv_cisco_gpb(peer, &recv_flags);
+      ret = telemetry_recv_cisco_gpb(peer);
       data_decoder = TELEMETRY_DATA_DECODER_GPB;
       break;
     case TELEMETRY_DECODER_CISCO_GPB_KV:
@@ -699,12 +699,16 @@ void telemetry_daemon(void *t_data_void)
       recalc_fds = TRUE;
     }
     else {
-      if (recv_flags != ERR) telemetry_process_data(peer, t_data, data_decoder);
+      peer->stats.packets++;
+      if (recv_flags != ERR) {
+        peer->stats.msg_bytes += ret;
+        telemetry_process_data(peer, t_data, data_decoder);
+      }
     }
   }
 }
 
-void telemetry_prepare_thread(struct telemetry_data *t_data) 
+void telemetry_prepare_thread(struct telemetry_data *t_data)
 {
   if (!t_data) return;
 
@@ -714,7 +718,7 @@ void telemetry_prepare_thread(struct telemetry_data *t_data)
   strcpy(t_data->log_str, "core/TELE");
 }
 
-void telemetry_prepare_daemon(struct telemetry_data *t_data)   
+void telemetry_prepare_daemon(struct telemetry_data *t_data)
 {
   if (!t_data) return;
 
