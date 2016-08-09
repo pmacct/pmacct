@@ -299,12 +299,13 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
         tdsell = peer->bmp_se;
 
         /* Display peer statistics and accumulate global counts. */
-        Log(LOG_INFO, "INFO (%s/%s): [%s:%u] Packets %u Packet Bytes %u Msg Bytes %u Msg Errors %u\n", config.name, t_data->log_str, peer->addr_str, peer->tcp_port, peer->stats.packets, peer->stats.packet_bytes, peer->stats.msg_bytes, peer->stats.msg_errors);
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s:%u] Packets: %u Packet_Bytes: %u Msg_Bytes: %u Msg_Errors: %u\n",
+		config.name, t_data->log_str, peer->addr_str, peer->tcp_port, peer->stats.packets,
+		peer->stats.packet_bytes, peer->stats.msg_bytes, peer->stats.msg_errors);
         packets += peer->stats.packets;
         packet_bytes += peer->stats.packet_bytes;
         msg_bytes += peer->stats.msg_bytes;
         msg_errors += peer->stats.msg_errors;
-
 
         if (config.telemetry_dump_file) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
         if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
@@ -389,7 +390,9 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     }
 
     duration = time(NULL)-start;
-    Log(LOG_INFO, "INFO ( %s/%s ): Packets %u Packet Bytes %u Msg Bytes %u Msg Errors %u\n", config.name, t_data->log_str, packets, packet_bytes, msg_bytes, msg_errors);
+    Log(LOG_INFO, "INFO ( %s/%s ): [global] Packets %u Packet_Bytes %u Msg_Bytes %u Msg_Errors %u\n",
+		config.name, t_data->log_str, packets, packet_bytes, msg_bytes, msg_errors);
+
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ET: %u) ***\n",
                 config.name, t_data->log_str, dumper_pid, tables_num, duration);
 

@@ -422,8 +422,8 @@ void skinny_bmp_daemon()
 
     /* 
        If select_num == 0 then we got out of select() due to a timeout rather
-       than because we had a message from a peeer to handle. By now we did all
-       routine checks and can happily return to selet() again.
+       than because we had a message from a peer to handle. By now we did all
+       routine checks and can happily return to select() again.
     */
     if (!select_num) goto select_again;
 
