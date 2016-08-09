@@ -158,3 +158,32 @@ int telemetry_validate_input_output_decoders(int input, int output)
     /* else if (output == PRINT_OUTPUT_GPB) return ERR; */
   }
 }
+
+void telemetry_log_peer_stats(telemetry_peer *peer, struct telemetry_data *t_data)
+{
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s:%u] Packets: %u Packet_Bytes: %u Msg_Bytes: %u Msg_Errors: %u\n",
+	config.name, t_data->log_str, peer->addr_str, peer->tcp_port, peer->stats.packets,
+	peer->stats.packet_bytes, peer->stats.msg_bytes, peer->stats.msg_errors);
+
+  t_data->global_stats.packets += peer->stats.packets;
+  t_data->global_stats.packet_bytes += peer->stats.packet_bytes;
+  t_data->global_stats.msg_bytes += peer->stats.msg_bytes;
+  t_data->global_stats.msg_errors += peer->stats.msg_errors;
+
+  peer->stats.packets = 0;
+  peer->stats.packet_bytes = 0;
+  peer->stats.msg_bytes = 0;
+  peer->stats.msg_errors = 0;
+}
+
+void telemetry_log_global_stats(struct telemetry_data *t_data)
+{
+  Log(LOG_INFO, "INFO ( %s/%s ): Packets: %u Packet_Bytes: %u Msg_Bytes: %u Msg_Errors: %u\n",
+        config.name, t_data->log_str, t_data->global_stats.packets, t_data->global_stats.packet_bytes,
+	t_data->global_stats.msg_bytes, t_data->global_stats.msg_errors);
+
+  t_data->global_stats.packets = 0;
+  t_data->global_stats.packet_bytes = 0;
+  t_data->global_stats.msg_bytes = 0;
+  t_data->global_stats.msg_errors = 0;
+}

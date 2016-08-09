@@ -34,6 +34,7 @@
 #define TELEMETRY_UDP_TIMEOUT_INTERVAL	60
 #define TELEMETRY_UDP_MAXMSG		65535
 #define TELEMETRY_CISCO_HDR_LEN		12
+#define TELEMETRY_LOG_STATS_INTERVAL	120	
 
 #define TELEMETRY_DECODER_UNKNOWN	0
 #define TELEMETRY_DECODER_JSON		1
@@ -57,9 +58,14 @@
 #define TELEMETRY_LOGDUMP_ET_LOG	BGP_LOGDUMP_ET_LOG
 #define TELEMETRY_LOGDUMP_ET_DUMP	BGP_LOGDUMP_ET_DUMP
 
+typedef struct bgp_peer_stats telemetry_stats;
+
 struct telemetry_data {
   int is_thread;
   char *log_str;
+
+  telemetry_stats global_stats;
+  time_t now;
 };
 
 struct _telemetry_peer_z {

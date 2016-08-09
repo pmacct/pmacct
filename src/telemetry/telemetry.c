@@ -69,7 +69,7 @@ void telemetry_daemon(void *t_data_void)
   int decoder = 0, data_decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
-  time_t now, last_udp_timeout_check;
+  time_t last_udp_timeout_check;
 
   telemetry_peer *peer = NULL;
   telemetry_peer_z *peer_z = NULL;
@@ -450,11 +450,11 @@ void telemetry_daemon(void *t_data_void)
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
 
+    t_data->now = time(NULL);
+
     // XXX: UDP case: timeout handling (to be tested)
     if (config.telemetry_port_udp) {
-      now = time(NULL);
-
-      if (now > (last_udp_timeout_check + TELEMETRY_UDP_TIMEOUT_INTERVAL)) {
+      if (t_data->now > (last_udp_timeout_check + TELEMETRY_UDP_TIMEOUT_INTERVAL)) {
 	for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
 	  telemetry_peer_udp_timeout *peer_udp_timeout;
 
@@ -463,7 +463,7 @@ void telemetry_daemon(void *t_data_void)
 	  peer_udp_timeout = &telemetry_peers_udp_timeout[peers_idx];
 
 	  if (peer->fd) {
-	    if (now > (peer_udp_timeout->last_msg + config.telemetry_udp_timeout)) {
+	    if (t_data->now > (peer_udp_timeout->last_msg + config.telemetry_udp_timeout)) {
 	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry UDP peer removed (timeout).\n", config.name, t_data->log_str, peer->addr_str);
 	      telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
 	      if (telemetry_is_zjson(decoder)) telemetry_peer_z_close(peer_z);
@@ -517,6 +517,26 @@ void telemetry_daemon(void *t_data_void)
 #endif
     }
 
+    /* Logging stats */
+    if (!t_data->global_stats.last_check || ((t_data->global_stats.last_check + TELEMETRY_LOG_STATS_INTERVAL) <= t_data->now)) {
+      if (t_data->global_stats.last_check) {
+	telemetry_peer *stats_peer;
+	int peers_idx;
+
+	for (stats_peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
+	  if (telemetry_peers[peers_idx].fd) {
+	    stats_peer = &telemetry_peers[peers_idx];
+	    telemetry_log_peer_stats(stats_peer, t_data);
+	    stats_peer->stats.last_check = t_data->now;
+	  }
+	}
+
+	telemetry_log_global_stats(t_data);
+      }
+
+      t_data->global_stats.last_check = t_data->now;
+    }
+
     /*
        If select_num == 0 then we got out of select() due to a timeout rather
        than because we had a message from a peer to handle. By now we did all
@@ -561,7 +581,7 @@ void telemetry_daemon(void *t_data_void)
 
 	if (tpuc_ret) {
 	  peer = &telemetry_peers[tpuc_ret->index];
-	  telemetry_peers_udp_timeout[tpuc_ret->index].last_msg = now;
+	  telemetry_peers_udp_timeout[tpuc_ret->index].last_msg = t_data->now;
 
 	  goto read_data;
 	}
@@ -586,7 +606,7 @@ void telemetry_daemon(void *t_data_void)
 
 	    if (config.telemetry_port_udp) {
 	      tpuc.index = peers_idx;
-	      telemetry_peers_udp_timeout[peers_idx].last_msg = now;
+	      telemetry_peers_udp_timeout[peers_idx].last_msg = t_data->now;
 
 	      if (!pm_tsearch(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp, sizeof(telemetry_peer_udp_cache)))
 		Log(LOG_WARNING, "WARN ( %s/%s ): tsearch() unable to insert in UDP peers cache.\n", config.name, t_data->log_str);
