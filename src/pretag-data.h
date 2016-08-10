@@ -127,7 +127,7 @@ const struct _map_dictionary_line bta_map_dictionary[] = {
   {"bgp_port", BTA_map_lookup_bgp_port_handler},
   {"ip", PT_map_ip_handler},
   {"in", PT_map_input_handler},
-  {"out", PT_map_input_handler},
+  {"out", PT_map_output_handler},
   {"filter", PT_map_filter_handler},
   {"", NULL}
 };
