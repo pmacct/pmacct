@@ -47,7 +47,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
   peer = &bmpp->self;
   bms = bgp_select_misc_db(peer->type);
 
-  if (!bms) return;
+  if (!bms) return FALSE;
 
   if (len < sizeof(struct bmp_common_hdr)) {
     Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n",
