@@ -2373,6 +2373,7 @@ int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char 
   int idx;
 
   if (table) {
+    lower_string(value);
     for (idx = 0; idx < table->num && strlen(table->primitive[idx].name); idx++) {
       if (!strcmp(table->primitive[idx].name, value)) {
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Duplicate custom aggregate primitive name specified: %s.\n",
