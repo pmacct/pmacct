@@ -134,7 +134,7 @@ struct bgp_peer_stats {
     u_int32_t packet_bytes; /* Bytes read off the socket */
     u_int32_t msg_bytes; /* Bytes in the decoded messages */
     u_int32_t msg_errors; /* Errors detected in message content */
-    time_t last_check; /* Timestamp when stats were last chedked */
+    time_t last_check; /* Timestamp when stats were last checked */
 };
 
 struct bgp_peer_buf {
