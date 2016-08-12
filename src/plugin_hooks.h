@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -44,13 +44,15 @@ struct ring {
 
 struct ch_buf_hdr {
   pid_t core_pid;
+  u_int64_t len;
   u_int32_t seq;
   u_int32_t num;
 };
 
 struct ch_status {
-  u_int8_t wakeup;	/* plugin is polling */ 
+  u_int8_t wakeup;		/* plugin is polling */ 
   u_int32_t backlog;
+  u_int64_t last_buf_off;	/* offset of last committed buffer */
 };
 
 struct sampling {
@@ -95,7 +97,7 @@ struct channels_list_entry {
   pm_cfgreg_t aggregation_2;
   u_int64_t buf;	/* buffer base */
   u_int64_t bufptr;	/* buffer current */
-  u_int64_t bufend;	/* buffer end; max 4Gb */
+  u_int64_t bufend;	/* buffer end */
   struct ring rg;	
   struct ch_buf_hdr hdr;
   struct ch_status *status;
