@@ -41,7 +41,7 @@ void load_plugins(struct plugin_requests *req)
   u_int64_t buf_pipe_ratio_sz = 0, pipe_idx = 0;
   int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0, ret;
 
-  int nfprobe_id = 0, min_sz = 0;
+  int nfprobe_id = 0, min_sz = 0, extra_sz = 0;
   struct plugins_list_entry *list = plugins_list;
   int l = sizeof(list->cfg.pipe_size), offset = 0;
   struct channels_list_entry *chptr = NULL;
@@ -58,6 +58,7 @@ void load_plugins(struct plugin_requests *req)
       }
 
       min_sz = ChBufHdrSz;
+      list->cfg.buffer_immediate = FALSE;
       if (list->cfg.data_type & PIPE_TYPE_METADATA) min_sz += PdataSz; 
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) {
 	if (list->cfg.acct_type == ACCT_PM && list->cfg.snaplen) min_sz += (PpayloadSz+list->cfg.snaplen); 
@@ -69,14 +70,20 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
       if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
-      if (list->cfg.data_type & PIPE_TYPE_VLEN) min_sz += sizeof(struct pkt_vlen_hdr_primitives);
+      if (list->cfg.data_type & PIPE_TYPE_VLEN) {
+	min_sz += sizeof(struct pkt_vlen_hdr_primitives);
+	if (!list->cfg.buffer_size) {
+	  extra_sz = 1024; /* wild shot: 1Kb added for the actual variable-length data */
+	  list->cfg.buffer_immediate = TRUE;
+	}
+      }
 
       /* If nothing is supplied, let's hint some working default values */
       if (!list->cfg.pipe_size || !list->cfg.buffer_size) {
         if (!list->cfg.pipe_size) list->cfg.pipe_size = 4096000; /* 4Mb */
         if (!list->cfg.buffer_size) {
 	  if (list->cfg.pcap_savefile) list->cfg.buffer_size = 10240; /* 10Kb */
-	  else list->cfg.buffer_size = MIN(min_sz, 10240);
+	  else list->cfg.buffer_size = MIN((min_sz + extra_sz), 10240);
 	}
       }
 
@@ -469,8 +476,8 @@ reprocess:
         channels_list[index].bufptr += (fixed_size + channels_list[index].var_size);
       }
 
-      if ((channels_list[index].bufptr+fixed_size) > channels_list[index].bufend ||
-	  channels_list[index].hdr.num == INT_MAX) {
+      if (((channels_list[index].bufptr + fixed_size) > channels_list[index].bufend) ||
+	  (channels_list[index].hdr.num == INT_MAX) || channels_list[index].buffer_immediate) {
 	channels_list[index].hdr.seq++;
 	channels_list[index].hdr.seq %= MAX_SEQNUM;
 
@@ -586,6 +593,7 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->agg_filter.table = cfg->bpfp_a_table;
       chptr->agg_filter.num = (int *) &cfg->bpfp_a_num; 
       chptr->bufsize = cfg->buffer_size;
+      chptr->buffer_immediate = cfg->buffer_immediate;
       chptr->core_pid = getpid();
       chptr->tag = cfg->post_tag;
       chptr->tag2 = cfg->post_tag2;

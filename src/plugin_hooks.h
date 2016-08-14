@@ -105,8 +105,9 @@ struct channels_list_entry {
   u_int8_t request;					/* does the plugin support on-request wakeup ? */
   u_int8_t reprocess;					/* do we need to jump back for packet reprocessing ? */
   int datasize;
-  int bufsize;		
+  u_int64_t bufsize;		
   int var_size;
+  int buffer_immediate;
   int same_aggregate;
   pkt_handler phandler[N_PRIMITIVES];
   int pipe;
