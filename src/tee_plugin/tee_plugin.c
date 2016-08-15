@@ -347,8 +347,9 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
     sa_to_addr((struct sockaddr *)target, &r, &recv_port);
     addr_to_str(recv_addr, &r);
 
-    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow packet from [%s:%u] seqno [%u] to [%s]\n",
-                        config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow packet from [%s:%u] seqno [%u] to [%s:%u]\n",
+                        config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr,
+			recv_port);
   }
 
   if (!config.tee_transparent) {
@@ -363,8 +364,9 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
       sa_to_addr((struct sockaddr *)target, &r, &recv_port);
       addr_to_str(recv_addr, &r);
 
-      Log(LOG_ERR, "ERROR ( %s/%s ): send() from [%s:%u] seqno [%u] to [%s] failed (%s)\n",
-			config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr, strerror(errno));
+      Log(LOG_ERR, "ERROR ( %s/%s ): send() from [%s:%u] seqno [%u] to [%s:%u] failed (%s)\n",
+			config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr,
+			recv_port, strerror(errno));
     }
   }
   else {
@@ -449,8 +451,9 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 	sa_to_addr((struct sockaddr *)target, &r, &recv_port);
 	addr_to_str(recv_addr, &r);
 
-        Log(LOG_ERR, "ERROR ( %s/%s ): raw send() from [%s:%u] seqno [%u] to [%s] failed (%s)\n",
-			config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr, strerror(errno));
+        Log(LOG_ERR, "ERROR ( %s/%s ): raw send() from [%s:%u] seqno [%u] to [%s:%u] failed (%s)\n",
+			config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr,
+			recv_port, strerror(errno));
       }
     }
     else {
