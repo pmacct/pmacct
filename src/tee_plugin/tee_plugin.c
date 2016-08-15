@@ -285,6 +285,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #endif
 
       msg = (struct pkt_msg *) (pipebuf+sizeof(struct ch_buf_hdr));
+      msg->payload = (pipebuf+sizeof(struct ch_buf_hdr)+PmsgSz);
 
       if (config.debug_internal_msg) 
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received cpid=%u len=%llu seq=%u num_entries=%u\n",
@@ -311,8 +312,9 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         ((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
 	  dataptr = (unsigned char *) msg;
-          dataptr += PmsgSz;
+          dataptr += (PmsgSz + msg->len);
 	  msg = (struct pkt_msg *) dataptr;
+	  msg->payload = (dataptr + PmsgSz);
 	}
       }
       }

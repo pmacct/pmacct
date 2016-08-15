@@ -65,7 +65,13 @@ void load_plugins(struct plugin_requests *req)
 	else min_sz += (PpayloadSz+DEFAULT_PLOAD_SIZE); 
       }
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) min_sz += PextrasSz; 
-      if (list->cfg.data_type & PIPE_TYPE_MSG) min_sz += PmsgSz; 
+      if (list->cfg.data_type & PIPE_TYPE_MSG) {
+	min_sz += PmsgSz; 
+        if (!list->cfg.buffer_size) {
+          extra_sz = PKT_MSG_SIZE; 
+          list->cfg.buffer_immediate = TRUE;
+        }
+      }
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += sizeof(struct pkt_bgp_primitives);
       if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
@@ -854,14 +860,14 @@ int check_pipe_buffer_space(struct channels_list_entry *mychptr, struct pkt_vlen
 {
   int buf_space = 0;
 
-  if (!mychptr || !pvlen) return ERR;
+  if (!mychptr) return ERR;
 
   /* init to base of current element */
   buf_space = mychptr->bufend - mychptr->bufptr;
 
   /* subtract fixed part, current variable part and new var part (len) */
   buf_space -= mychptr->datasize;
-  buf_space -= pvlen->tot_len;
+  if (pvlen) buf_space -= pvlen->tot_len;
   buf_space -= len;
 
   /* return virdict. if positive fix sizes. if negative take care of triggering a reprocess */

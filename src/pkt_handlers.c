@@ -1232,13 +1232,17 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
 void tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_msg *pmsg = (struct pkt_msg *) *data;
+  char *ppayload = ((*data) + PmsgSz);
 
   pmsg->seqno = pptrs->seqno;
   pmsg->len = pptrs->f_len;
+  pmsg->payload = NULL;
   memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
-  memcpy(&pmsg->payload, pptrs->f_header, MIN(sizeof(pmsg->payload), pptrs->f_len));
   pmsg->tag = pptrs->tag;
   pmsg->tag2 = pptrs->tag2;
+  if (!check_pipe_buffer_space(chptr, NULL, pptrs->f_len)) {
+    memcpy(ppayload, pptrs->f_header, pptrs->f_len);
+  }
 }
 
 void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
