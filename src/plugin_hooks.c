@@ -387,7 +387,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
   pm_id_t saved_tag = 0, saved_tag2 = 0;
   pt_label_t saved_label;
 
-  int num, ret, fixed_size, already_reprocessed = 0;
+  int num, ret, fixed_size;
   u_int32_t savedptr;
   char *bptr;
   int index, got_tags = FALSE;
@@ -405,6 +405,8 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 
   for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
     struct plugins_list_entry *p = channels_list[index].plugin;
+
+    channels_list[index].already_reprocessed = FALSE;
 
     if (p->cfg.pre_tag_map && find_id_func) {
       if (p->cfg.ptm_global && got_tags) {
@@ -466,13 +468,14 @@ reprocess:
 
       if (channels_list[index].reprocess) {
         /* Let's check if we have an issue with the buffer size */
-        if (already_reprocessed) {
+        if (channels_list[index].already_reprocessed) {
           struct plugins_list_entry *list = channels_list[index].plugin;
 
           Log(LOG_ERR, "ERROR ( %s/%s ): plugin_buffer_size is too short.\n", list->name, list->type.string);
           exit_all(1);
         }
-        already_reprocessed = TRUE;
+
+        channels_list[index].already_reprocessed = TRUE;
 
 	/* Let's cheat the size in order to send out the current buffer */
 	fixed_size = channels_list[index].plugin->cfg.pipe_size;

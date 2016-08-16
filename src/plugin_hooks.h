@@ -104,6 +104,7 @@ struct channels_list_entry {
   ring_cleaner clean_func;
   u_int8_t request;					/* does the plugin support on-request wakeup ? */
   u_int8_t reprocess;					/* do we need to jump back for packet reprocessing ? */
+  u_int8_t already_reprocessed;				/* loop avoidance for packet reprocessing */
   int datasize;
   u_int64_t bufsize;		
   int var_size;
