@@ -21,7 +21,17 @@
 # 'rabbitmqctl trace_on' enables RabbitMQ Firehose tracer
 # 'rabbitmqctl list_queues' lists declared queues
 
-import sys, getopt, pika
+import sys, os, getopt, pika, StringIO
+
+try:
+	import avro.io
+	import avro.schema
+	import avro.datafile
+	avro_available = True
+except ImportError:
+	avro_available = False
+
+avro_schema = None
 
 def usage(tool):
     print ""
@@ -36,13 +46,26 @@ def usage(tool):
     print "Optional Args:"
     print "  -h, --help".ljust(25) + "Print this help"
     print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
+    print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
+            "schema to use for decoding Avro messages"
 
 def callback(ch, method, properties, body):
-        print " [x] Received %r" % (body,)
+	if avro_schema:
+		inputio = StringIO.StringIO(body)
+		decoder = avro.io.BinaryDecoder(inputio)
+		datum_reader = avro.io.DatumReader(avro_schema)
+		avro_data = []
+		while inputio.tell() < len(inputio.getvalue()):
+			x = datum_reader.read(decoder)
+			avro_data.append(str(x))
+		print " [x] Received %r" % (",".join(avro_data),)
+	else:
+		print " [x] Received %r" % (body,)
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:", ["help", "exchange=", "routing_key=", "queue=", "host="])
+		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:d:", ["help", "exchange=",
+				"routing_key=", "queue=", "host=", "decode-with-avro="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -71,7 +94,18 @@ def main():
             		amqp_queue = a
 		elif o in ("-H", "--host"):
             		amqp_host = a
-		else:
+		elif o in ("-d", "--decode-with-avro"):
+			if not avro_available:
+				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
+						"not found\n")
+				sys.exit(1)
+                        if not os.path.isfile(a):
+				sys.stderr.write("ERROR: '%s' does not exist or is not a file\n" % (a,))
+				sys.exit(1)
+			global avro_schema
+			with open(a) as f:
+				avro_schema = avro.schema.parse(f.read())
+	        else:
 			assert False, "unhandled option"
 
 	amqp_type = "direct"

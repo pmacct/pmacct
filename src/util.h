@@ -23,6 +23,10 @@
 #define ADD 0
 #define SUB 1
 
+#ifdef WITH_AVRO
+#include <avro.h>
+#endif
+
 /* prototypes */
 #if (!defined __UTIL_C)
 #define EXT extern
@@ -115,6 +119,16 @@ EXT void *compose_purge_init_json(pid_t);
 EXT void *compose_purge_close_json(pid_t, int, int, int);
 EXT int write_and_free_json_amqp(void *, void *);
 EXT int write_and_free_json_kafka(void *, void *);
+
+#ifdef WITH_AVRO
+EXT avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2);
+EXT avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
+  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
+  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime,
+  struct pkt_stitching *stitch, avro_value_iface_t *iface);
+#endif
+
 EXT void compose_timestamp(char *, int, struct timeval *, int, int);
 
 EXT void print_primitives(int, char *);
