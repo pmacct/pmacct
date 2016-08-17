@@ -2142,7 +2142,7 @@ char *compose_json_str(void *obj)
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
 
-  tmpbuf = json_dumps(obj, 0);
+  tmpbuf = json_dumps(obj, JSON_PRESERVE_ORDER);
   json_decref(obj);
 
   return tmpbuf;
@@ -2158,7 +2158,7 @@ void write_and_free_json(FILE *f, void *obj)
   /* Waiting for jansson issue #256 on GitHub to be solved,
      ie. introduction of trailing newline chars, in order to
      switch to json_dumpf() */
-  tmpbuf = json_dumps(json_obj, 0);
+  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
   json_decref(json_obj);
 
   if (tmpbuf) {
@@ -2221,7 +2221,7 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
 
-  tmpbuf = json_dumps(json_obj, 0);
+  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
   json_decref(json_obj);
 
   if (tmpbuf) {
@@ -2252,7 +2252,7 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
   char *tmpbuf = NULL;
   json_t *json_obj = (json_t *) obj;
 
-  tmpbuf = json_dumps(json_obj, 0);
+  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
   json_decref(json_obj);
 
   if (tmpbuf) {

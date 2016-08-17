@@ -405,7 +405,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       int do_free = FALSE;
 
       if (json_array_size(array) >= config.sql_multi_values) {
-	json_str = json_dumps(array, 0);
+	json_str = json_dumps(array, JSON_PRESERVE_ORDER);
 	json_array_clear(array);
         mv_num_save = mv_num;
         mv_num = 0;
@@ -451,7 +451,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_multi_values && json_array_size(array)) {
     char *json_str;
 
-    json_str = json_dumps(array, 0);
+    json_str = json_dumps(array, JSON_PRESERVE_ORDER);
     json_array_clear(array);
     json_decref(array);
 
