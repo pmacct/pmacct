@@ -824,6 +824,28 @@ AC_ARG_ENABLE(jansson,
 )
 dnl finish: Jansson handling
 
+dnl start: Avro handling
+AC_MSG_CHECKING(whether to enable Avro support)
+AC_ARG_ENABLE(avro,
+  [  --enable-avro                 Enable avro support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([AVRO], [avro-c >= 1.8])
+    USING_AVRO="yes"
+    AC_DEFINE(WITH_AVRO, 1)
+    AC_CHECK_LIB(avro, avro_record_get, [], [])
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: Avro handling
+
 if test x"$USING_DLOPEN" = x"yes"; then
 	AC_DEFINE(HAVE_DLOPEN, 1)
 else
@@ -965,6 +987,7 @@ AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
+AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \

@@ -3,8 +3,8 @@ sbin_PROGRAMS = pmacctd nfacctd sfacctd pmtelemetryd pmbgpd pmbmpd
 bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
 
-AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@
-AM_CFLAGS  = @GEOIP_CFLAGS@ @GEOIPV2_CFLAGS@ @JANSSON_CFLAGS@
+AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@ @AVRO_LIBS@
+AM_CFLAGS  = @GEOIP_CFLAGS@ @GEOIPV2_CFLAGS@ @JANSSON_CFLAGS@ @AVRO_CFLAGS@
 
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
 libcommon_la_SOURCES = strlcpy.c addr.c jansson.c addr.h pmacct.h	\
