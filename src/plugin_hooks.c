@@ -278,8 +278,18 @@ void load_plugins(struct plugin_requests *req)
             ptm_global = FALSE;
         }
 
+	if (list->cfg.type_id == PLUGIN_ID_TEE) {
+	  req->ptm_c.load_ptm_plugin = list->cfg.type_id;
+	  req->ptm_c.load_ptm_res = FALSE;
+	}
+
         load_pre_tag_map(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc,
                          list->cfg.maps_entries, list->cfg.maps_row_len);
+
+	if (list->cfg.type_id == PLUGIN_ID_TEE) {
+	  list->cfg.ptm_complex = req->ptm_c.load_ptm_res;
+	  if (req->ptm_c.load_ptm_res) req->ptm_c.exec_ptm_dissect = TRUE;
+	}
       }
 
       list = list->next;

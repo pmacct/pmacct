@@ -175,6 +175,14 @@
 
 /* structure to pass requests: probably plugin_requests
    name outdated at this point .. */
+
+struct ptm_complex {
+  int load_ptm_plugin;		/* load_pre_tag_map(): input plugin type ID */
+  int load_ptm_res;		/* load_pre_tag_map(): result */
+  int exec_ptm_dissect;		/* exec_plugins(): TRUE if at least one plugin returned load_ptm_res == TRUE */
+  int exec_ptm_res;		/* exec_plugins(): input to be matched against list->cfg.ptm_complex */ 
+};
+
 struct plugin_requests {
   u_int8_t bpf_filter;		/* On-request packet copy for BPF purposes */
 
@@ -183,6 +191,7 @@ struct plugin_requests {
   int line_num;			/* line number being processed */
   int map_entries;		/* number of map entries: wins over global setting */
   int map_row_len;		/* map row length: wins over global setting */
+  struct ptm_complex ptm_c;	/* flags a map that requires parsing of the records (ie. tee plugin) */
 };
 
 typedef struct {
