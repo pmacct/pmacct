@@ -25,6 +25,8 @@
   GEOIPV2_LIBS			linker flags for GEOIPV2, overriding pkg-config
   JANSSON_CFLAGS		C compiler flags for JANSSON, overriding pkg-config
   JANSSON_LIBS			linker flags for JANSSON, overriding pkg-config
+  AVRO_CFLAGS			C compiler flags for AVRO, overriding pkg-config
+  AVRO_LIBS			linker flags for AVRO, overriding pkg-config
   NFLOG_CFLAGS			C compiler flags for NFLOG, overriding pkg-config
   NFLOG_LIBS			linker flags for NFLOG, overriding pkg-config
 

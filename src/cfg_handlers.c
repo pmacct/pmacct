@@ -1474,6 +1474,92 @@ int cfg_key_mongo_insert_batch(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "json")) {
+#ifdef WITH_JANSSON
+    value = PRINT_OUTPUT_JSON;
+#else
+    value = PRINT_OUTPUT_JSON;
+    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else {
+    Log(LOG_WARNING, "WARN: [%s] Invalid 'message_broker_output' value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.message_broker_output = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.message_broker_output = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_avro_buffer_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoull(value_ptr, &endptr, 10);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'avro_buffer_size' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.avro_buffer_size = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.avro_buffer_size = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_avro_schema_output_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.avro_schema_output_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.avro_schema_output_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_amqp_exchange_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2509,6 +2595,14 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
   else if (!strcmp(value_ptr, "event_csv")) {
     value = PRINT_OUTPUT_CSV;
     value |= PRINT_OUTPUT_EVENT;
+  }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
   }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid print output value '%s'\n", filename, value_ptr);
