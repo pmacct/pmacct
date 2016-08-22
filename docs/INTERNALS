@@ -6,7 +6,7 @@ IV.	Processes Vs. threads
 V.	Communications between core process and plugins
 VI.	Memory table plugin
 VII.	SQL issues and *SQL plugins
-XIII.	pmacctd flows counter implementation
+VIII.	pmacctd flows counter implementation
 IX.	Classifier and connection tracking engines
 X.	Jumps and flow diversions in Pre-Tagging infrastructure
 XI.	BGP daemon thread dimensioning
@@ -335,7 +335,7 @@ elements (refresh time and historical timeframe width) with a multiplicative fac
 transient cache aliasing phenomena and in fully exploiting cache benefits.
 
 
-XIII. pmacctd flows counter implementation
+VIII. pmacctd flows counter implementation
 Let's take the definition of IP flows from RFC3954, titled 'Cisco Systems NetFlow Services Export
 Version 9': an IP flow is defined as a set of IP packets passing an observation point in the network
 during a certain time interval. All packets that belong to a particular flow have a set of common
