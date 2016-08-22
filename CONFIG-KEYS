@@ -180,9 +180,10 @@ DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins ar
 		(requires installation of MongoDB API C driver which is shipped separatedly from the
 		main MongoDB package; read more in QUICKSTART in the "noSQL (MongoDB) setup examples"
 		section). print plugin prints output data to flat-files or stdout in JSON, CSV or
-		tab-spaced formats. amqp and kafka plugins allow to output data to RabbitMQ and Kafka
-		brokers respectively. All these plugins, SQL, no-SQL and messaging are good for
-		production solutions and/or larger scenarios. 
+		tab-spaced formats, or encodes it using the Apache Avro serialization system. amqp
+		and kafka plugins allow to output data to RabbitMQ and Kafka brokers respectively. All
+		these plugins, SQL, no-SQL and messaging are good for production solutions and/or
+		larger scenarios.
 		nfprobe acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v1/v5/
 		v9 and IPFIX datagrams to a remote collector. sfprobe acts as a sFlow agent and 
 		exports collected data via sFlow v5 datagrams to a remote collector. Both nfprobe
@@ -1343,7 +1344,7 @@ DESC:		Enables the use of start/end markers each time data is purged to the back
 DEFAULT:	false
 
 KEY:		print_output
-VALUES:		[ formatted | csv | json | event_formatted | event_csv ]
+VALUES:		[ formatted | csv | json | event_formatted | event_csv | avro ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
 		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions of
 		the output strips trailing bytes and packets counters. 'json' is to enable JavaScript Object
@@ -1352,10 +1353,15 @@ DESC:		Defines the print plugin output format. 'formatted' enables tabular outpu
 		cons, JSON serialization introduces some lag due to the extensive string manipulation (as an
 		example: 10M lines may be written to disk in 30 secs as CSV and 150 secs as JSON). The 'json'
 		format requires compiling the package against Jansson library (downloadable at the following
-		URL: http://www.digip.org/jansson/)
-NOTES:		* Jansson library does not seem to have concept of unsigned integers. integers up to 32 bits
-		  are packed as 'I', ie. 64 bits signed integers, working around the issue. No work around is
-		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes). 
+		URL: http://www.digip.org/jansson/). 'avro' enables storing the data using the Apache Avro
+		data serialization system. This format stores the data more compactly than JSON and thus is
+		more appropriate for intensive captures. The 'avro' format requires compiling the package
+		against the Apache Avro library (downloadable at the following URL: http://avro.apache.org/).
+NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
+		  bits are packed as 64 bits signed integers, working around the issue. No work around is
+		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
+		* If the output format is 'avro' and no print_output_file was specified, the Avro-based
+		  representation of the data will be converted to JSON and displayed on the standard output.
 DEFAULT:	formatted
 
 KEY:            print_output_separator
@@ -1363,6 +1369,34 @@ DESC:           Defines the print plugin output separator when print_output is s
 		is expected to be a single character and cannot be a spacing (if spacing separator is wanted
 		then 'formatted' output should be the natural choice instead)
 DEFAULT:	','
+
+KEY:		[ message_broker_output | amqp_output | kafka_output ]
+VALUES: 	[ json | avro ]
+DESC:		Defines the output format for messages sent to a message broker (amqp and kafka plugins).
+		'json' is to send the messages in the JavaScript Object Notation format. The 'json' format
+		requires compiling the package against the Jansson library (downloadable at the following URL
+		: http://www.digip.org/jansson/). 'avro' is to send the messages encoded with the Apache Avro
+		serialization system. The 'avro' format requires compiling the package against the Apache Avro
+		library (downloadable at the following URL: http://avro.apache.org/).
+NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
+		  bits are packed as 64 bits signed integers, working around the issue. No work around is
+		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
+DEFAULT:	json
+
+KEY:		avro_buffer_size
+DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
+		plugins), this option defines the size in bytes of the buffer used by the Avro data serialization
+		system. The buffer needs to be large enough to store at least a single Avro record. If the buffer
+		does not have enough capacity to store the number of records defined by the sql_multi_values
+		configuration directive, the current records stored in the buffer will be sent to the message
+		broker and the buffer will be cleared to accomodate subsequent records.
+DEFAULT:	4096
+
+KEY:		avro_schema_output_file
+DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
+		plugins), this option causes the schema used to encode the messages to be dumped to the file path
+		given. The schema can then be used by the receiving end to decode the messages. Note that the
+		schema will be dynamically built based on the aggregation primitives chosen.
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]

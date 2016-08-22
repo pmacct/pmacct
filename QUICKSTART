@@ -561,12 +561,16 @@ VIII. Running the RabbitMQ/AMQP plugin
 The Advanced Message Queuing Protocol (AMQP) is an open standard for passing business
 messages between applications. RabbitMQ is a messaging broker, an intermediary for
 messaging, which implementes AMQP. pmacct RabbitMQ/AMQP plugin is designed to send
-aggregated network traffic data, in JSON format, through a RabbitMQ server to 3rd
-party applications. Requirements to use the plugin are:
+aggregated network traffic data, in JSON or Avro format, through a RabbitMQ server
+to 3rd party applications. Requirements to use the plugin are:
 
 * A working RabbitMQ server: http://www.rabbitmq.com/
 * RabbitMQ C API, rabbitmq-c: https://github.com/alanxz/rabbitmq-c/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
+
+Additionally, the Apache Avro C library (http://avro.apache.org/) needs to be
+installed to be able to send messages packed using Avro (you will also need to
+pass --enable-avro to the configuration script).
 
 Once these elements are installed, pmacct can be configured for compiling. pmacct
 makes use of pkg-config for finding libraries and headers location and checks some
@@ -583,6 +587,12 @@ export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq"
 export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
 ./configure --enable-rabbitmq --enable-jansson
 
+Ditto for the location of the Avro libraries:
+
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
+./configure --enable-rabbitmq --enable-avro
+
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic RabbitMQ/AMQP plugin configuration (assumes: RabbitMQ server is available
 at localhost; look all configurable directives up in the CONFIG-KEYS document):
@@ -591,6 +601,7 @@ at localhost; look all configurable directives up in the CONFIG-KEYS document):
 plugins: amqp
 !
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+amqp_output: json
 amqp_exchange: pmacct
 amqp_routing_key: acct
 amqp_refresh_time: 300
@@ -615,9 +626,9 @@ languages are very welcome at this stage.
 IX. Running the Kafka plugin
 Apache Kafka is publish-subscribe messaging rethought as a distributed commit log.
 Its qualities being: fast, scalable, durable and distributed by design. pmacct
-Kafka plugin is designed to send aggregated network traffic data, in JSON format,
-through a Kafka broker to 3rd party applications. Requirements to use the plugin
-are:
+Kafka plugin is designed to send aggregated network traffic data, in JSON or
+Avro format, through a Kafka broker to 3rd party applications. Requirements to
+use the plugin are:
 
 * A working Kafka broker (and Zookeper server): http://kafka.apache.org/
 * Librdkafka: https://github.com/edenhill/librdkafka/
@@ -627,6 +638,10 @@ Software combinations that have been tested working are:
 
 * librdkafka 0.9.1, Kafka 0.8.2.2 and Scala 2.9.2
 * librdkafka 0.9.1, Kafka 0.10.0 and Scala 2.11.8
+
+Additionally, the Apache Avro C library (http://avro.apache.org/) needs to be
+installed to be able to send messages packed using Avro (you will also need to
+pass --enable-avro to the configuration script).
 
 Once these elements are installed, pmacct can be configured for compiling. pmacct
 makes use of pkg-config for finding libraries and headers location and checks some
@@ -643,6 +658,12 @@ export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
 export KAFKA_CFLAGS="-I/usr/local/kafka/include"
 ./configure --enable-kafka --enable-jansson
 
+Ditto for the location of the Avro libraries:
+
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
+./configure --enable-kafka --enable-avro
+
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
 on port 9092; look all configurable directives up in the CONFIG-KEYS document):
@@ -651,6 +672,7 @@ on port 9092; look all configurable directives up in the CONFIG-KEYS document):
 plugins: kafka
 !
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+kafka_output: json
 kafka_topic: pmacct.acct
 kafka_refresh_time: 300
 kafka_history: 5m
@@ -1507,10 +1529,11 @@ XIX. Running the print plugin to write to flat-files
 Print plugin was originally conceived to display data on standard output; with
 pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
 allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
-Output is text-based (no binary proprietary format) and can be JSON, CSV or
-formatted ('print_output' directive). Interval between writes can be configured
-via the 'print_refresh_time' directive. An example follows on how to write to
-files on a 15 mins basis in CSV format:
+Output is either text-based using JSON, CSV or formatted outputs, or
+binary-based using the Apache Avro file container ('print_output' directive).
+Interval between writes can be configured via the 'print_refresh_time'
+directive. An example follows on how to write to files on a 15 mins basis in
+CSV format:
 
 print_refresh_time: 900
 print_history: 15m
@@ -1531,6 +1554,13 @@ configured for compilation against the library using the --enable-jansson
 switch. Please refer to the configure script help screen (and/or "Configuring
 pmacct for compilation and installing" section of this document) to supply
 custom locations of Jansson library and/or headers. 
+
+Avro output requires compiling pmacct against Apache Avro library, which can be
+found at the following URL: http://avro.apache.org/ . pmacct can be configured
+for compilation against the library using the --enable-avro switch. Please
+refer to the configure script help screen (and/or "Configuring pmacct for
+compilation and installing" section of this document) to supply custom
+locations of Avro library and/or headers.
 
 Splitting data into time bins is supported via print_history directive. When
 enabled, time-related variable substitutions of dynamic print_output_file names

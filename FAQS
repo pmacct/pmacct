@@ -33,12 +33,13 @@ Q4: What are pmacct main features?
 A: pmacct can collect, replicate and export network data. Collect in memory tables,
    store persistently to RDBMS (MySQL, PostgreSQL, SQLite 3.x), noSQL databases
    (key-value: BerkeleyDB 5.x via SQLite API or document-oriented: MongoDB) and
-   flat-files (csv, formatted, JSON output), publish to message exchanges via AMQP
-   (ie. to insert in ElasticSearch, Cassandra or CouchDB) and Kafka brokers. Export
-   speaking sFlow v5, NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform data
-   aggregation, offering a rich set of primitives to choose from; it can also filter,
-   sample, renormalize, tag and classify at L7. pmacct integrates a BGP daemon join
-   routing visibility and network traffic information.
+   flat-files (csv, formatted, JSON output), data serialization systems (Apache
+   Avro), publish to message exchanges via AMQP (ie. to insert in ElasticSearch,
+   Cassandra or CouchDB) and Kafka brokers. Export speaking sFlow v5, NetFlow
+   v1/v5/v9 and IPFIX. pmacct is able to perform data aggregation, offering a rich
+   set of primitives to choose from; it can also filter, sample, renormalize, tag
+   and classify at L7. pmacct integrates a BGP daemon join routing visibility and
+   network traffic information.
 
 
 Q5: Does any of the pmacct daemons logs to flat files?
