@@ -1253,6 +1253,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 			config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
   }
 
+  req->ptm_c.exec_ptm_res = FALSE;
   exec_plugins(pptrs, req);
 }
 
