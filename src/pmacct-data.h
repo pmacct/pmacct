@@ -434,7 +434,6 @@ static const struct _dictionary_line dictionary[] = {
   {"mongo_preprocess_type", cfg_key_sql_preprocess_type},
   {"mongo_startup_delay", cfg_key_sql_startup_delay},
   {"mongo_num_protos", cfg_key_num_protos},
-  {"message_broker_output", cfg_key_message_broker_output},
   {"avro_buffer_size", cfg_key_avro_buffer_size},
   {"avro_schema_output_file", cfg_key_avro_schema_output_file},
   {"amqp_refresh_time", cfg_key_sql_refresh_time},

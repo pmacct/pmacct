@@ -827,7 +827,7 @@ dnl finish: Jansson handling
 dnl start: Avro handling
 AC_MSG_CHECKING(whether to enable Avro support)
 AC_ARG_ENABLE(avro,
-  [  --enable-avro                 Enable avro support (default: no)],
+  [  --enable-avro                    Enable avro support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
