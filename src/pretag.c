@@ -52,7 +52,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   int v6_num = 0;
 #endif
 
-  if (!map_allocated) return;
+  if (!filename || !map_allocated) return;
 
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
       acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_TO_XFLOW_AGENT ||
