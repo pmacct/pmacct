@@ -160,6 +160,9 @@ struct configuration {
   int timestamps_secs;
   int timestamps_since_epoch;
   int mongo_insert_batch;
+  int message_broker_output;
+  int avro_buffer_size;
+  char *avro_schema_output_file;
   char *amqp_exchange_type;
   int amqp_persistent_msg;
   u_int32_t amqp_frame_max;
@@ -457,6 +460,7 @@ struct configuration {
   struct id_table ptm;
   int ptm_alloc;
   int ptm_global;
+  int ptm_complex;
   pm_id_t post_tag;
   pm_id_t post_tag2;
   int ext_sampling_rate;

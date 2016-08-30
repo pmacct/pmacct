@@ -278,8 +278,18 @@ void load_plugins(struct plugin_requests *req)
             ptm_global = FALSE;
         }
 
+	if (list->cfg.type_id == PLUGIN_ID_TEE) {
+	  req->ptm_c.load_ptm_plugin = list->cfg.type_id;
+	  req->ptm_c.load_ptm_res = FALSE;
+	}
+
         load_pre_tag_map(config.acct_type, list->cfg.pre_tag_map, &list->cfg.ptm, req, &list->cfg.ptm_alloc,
                          list->cfg.maps_entries, list->cfg.maps_row_len);
+
+	if (list->cfg.type_id == PLUGIN_ID_TEE) {
+	  list->cfg.ptm_complex = req->ptm_c.load_ptm_res;
+	  if (req->ptm_c.load_ptm_res) req->ptm_c.exec_ptm_dissect = TRUE;
+	}
       }
 
       list = list->next;
@@ -409,6 +419,11 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
     channels_list[index].already_reprocessed = FALSE;
 
     if (p->cfg.pre_tag_map && find_id_func) {
+      if (p->cfg.type_id == PLUGIN_ID_TEE) {
+	if ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) || (!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex)) 
+	  continue;
+      }
+
       if (p->cfg.ptm_global && got_tags) {
         pptrs->tag = saved_tag;
         pptrs->tag2 = saved_tag2;
@@ -573,12 +588,24 @@ reprocess:
      ensure we reload it for all plugins and prevent any
      timing issues with pointers to labels */
   if (reload_map_exec_plugins) {
+    memset(&req->ptm_c, 0, sizeof(struct ptm_complex)); 
+
     for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
       struct plugins_list_entry *p = channels_list[index].plugin;
 
       if (p->cfg.pre_tag_map && find_id_func) {
+        if (p->cfg.type_id == PLUGIN_ID_TEE) {
+          req->ptm_c.load_ptm_plugin = p->cfg.type_id;
+          req->ptm_c.load_ptm_res = FALSE;
+        }
+
         load_pre_tag_map(config.acct_type, p->cfg.pre_tag_map, &p->cfg.ptm, req, &p->cfg.ptm_alloc,
                          p->cfg.maps_entries, p->cfg.maps_row_len);
+
+        if (p->cfg.type_id == PLUGIN_ID_TEE) {
+          p->cfg.ptm_complex = req->ptm_c.load_ptm_res;
+          if (req->ptm_c.load_ptm_res) req->ptm_c.exec_ptm_dissect = TRUE;
+        }
       }
     }
   }

@@ -2164,6 +2164,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 			config.name, debug_agent_addr, debug_agent_port, nfv, pptrsv->v4.seqno);
   }
 
+  req->ptm_c.exec_ptm_res = FALSE;
   exec_plugins(pptrs, req);
 }
 

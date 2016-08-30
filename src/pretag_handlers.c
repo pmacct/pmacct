@@ -30,6 +30,7 @@
 #include "pretag_handlers.h"
 #include "net_aggr.h"
 #include "bgp/bgp.h"
+#include "pmacct-data.h"
 
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
@@ -200,6 +201,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
 
   if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT) bta_map_caching = FALSE; 
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
 
   e->key.input.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
@@ -234,6 +236,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
 
   if (acct_type == MAP_SAMPLING) sampling_map_caching = FALSE;
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT) bta_map_caching = FALSE; 
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
 
   e->key.output.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
@@ -993,6 +996,8 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
 {
   int x = 0;
 
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
   e->key.src_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (string_etheraddr(value, &e->key.src_mac.a)) {
@@ -1017,6 +1022,8 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
 int PT_map_dst_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
 
   e->key.dst_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 

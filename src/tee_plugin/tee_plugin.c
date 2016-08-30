@@ -192,12 +192,15 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret < 0) goto poll_again;
 
     if (reload_map) {
-      int recvs_allocated = FALSE;
+      if (config.tee_receivers) {
+        int recvs_allocated = FALSE;
 
-      Tee_destroy_recvs();
-      load_id_file(MAP_TEE_RECVS, config.tee_receivers, NULL, &req, &recvs_allocated);
+        Tee_destroy_recvs();
+        load_id_file(MAP_TEE_RECVS, config.tee_receivers, NULL, &req, &recvs_allocated);
 
-      Tee_init_socks();
+        Tee_init_socks();
+      }
+
       reload_map = FALSE;
     }
 

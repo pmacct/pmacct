@@ -623,6 +623,11 @@ are:
 * Librdkafka: https://github.com/edenhill/librdkafka/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
 
+Software combinations that have been tested working are:
+
+* librdkafka 0.9.1, Kafka 0.8.2.2 and Scala 2.9.2
+* librdkafka 0.9.1, Kafka 0.10.0 and Scala 2.11.8
+
 Once these elements are installed, pmacct can be configured for compiling. pmacct
 makes use of pkg-config for finding libraries and headers location and checks some
 "typical" default locations, ie. /usr/local/lib and /usr/local/include. So all

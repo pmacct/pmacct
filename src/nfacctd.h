@@ -518,6 +518,9 @@ struct data_hdr_v9 {
 #define NF9_FIRST_SWITCHED_MSEC		152
 #define NF9_LAST_SWITCHED_MSEC		153
 /* ... */
+#define NF9_FIRST_SWITCHED_DELTA_MICRO	158
+#define NF9_LAST_SWITCHED_DELTA_MICRO	159
+/* ... */
 #define NF9_IPV6_DST_PREFIX		169
 #define NF9_IPV6_SRC_PREFIX		170
 /* ... */
