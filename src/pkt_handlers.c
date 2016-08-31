@@ -2324,6 +2324,14 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 10) {
+      if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
+        memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_SYS_UPTIME_MSEC].off, tpl->tpl[NF9_SYS_UPTIME_MSEC].len);
+        t32 = pm_ntohll(t64)/1000;
+        pdata->time_start.tv_sec = t32+(ntohl(fstime)/1000);
+      }
+    }
     else if (tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_MSEC].off, tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len);
       pdata->time_start.tv_sec = pm_ntohll(t64)/1000;
@@ -2343,8 +2351,28 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
       pdata->time_start.tv_sec = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_DELTA_MICRO].len && hdr->version == 10) {
+      struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
+      u_int32_t t32h = 0, h32h = 0;
+      u_int64_t t64_1 = 0, t64_2 = 0;
+
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_DELTA_MICRO].off, tpl->tpl[NF9_FIRST_SWITCHED_DELTA_MICRO].len);
+      t32h = ntohl(t32);
+
+      h32h = ntohl(hdr_ipfix->unix_secs);
+
+      t64 = h32h;
+      t64 = t64 * 1000 * 1000;
+      t64 -= t32h;
+      t64_1 = (t64 / (1000 * 1000));
+      t64_2 = (t64 % (1000 * 1000));
+
+      pdata->time_start.tv_sec = t64_1;
+      pdata->time_start.tv_usec = t64_2;
+    }
+
     /* fallback to header timestamp if no other time reference is available */
-    else {
+    if (!pdata->time_start.tv_sec) {
       if (hdr->version == 10) {
         struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
 
@@ -2362,6 +2390,14 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
+    else if (tpl->tpl[NF9_LAST_SWITCHED].len && hdr->version == 10) {
+      if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
+        memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_SYS_UPTIME_MSEC].off, tpl->tpl[NF9_SYS_UPTIME_MSEC].len);
+        t32 = pm_ntohll(t64)/1000;
+        pdata->time_end.tv_sec = t32+(ntohl(fstime)/1000);
+      }
+    }
     else if (tpl->tpl[NF9_LAST_SWITCHED_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_MSEC].off, tpl->tpl[NF9_LAST_SWITCHED_MSEC].len);
       pdata->time_end.tv_sec = pm_ntohll(t64)/1000;
@@ -2375,6 +2411,25 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
     else if (tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_SEC].off, tpl->tpl[NF9_LAST_SWITCHED_SEC].len);
       pdata->time_end.tv_sec = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_LAST_SWITCHED_DELTA_MICRO].len && hdr->version == 10) {
+      struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
+      u_int32_t t32h = 0, h32h = 0;
+      u_int64_t t64_1 = 0, t64_2 = 0;
+
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_DELTA_MICRO].off, tpl->tpl[NF9_LAST_SWITCHED_DELTA_MICRO].len);
+      t32h = ntohl(t32);
+
+      h32h = ntohl(hdr_ipfix->unix_secs);
+
+      t64 = h32h;
+      t64 = t64 * 1000 * 1000;
+      t64 -= t32h;
+      t64_1 = (t64 / (1000 * 1000));
+      t64_2 = (t64 % (1000 * 1000));
+
+      pdata->time_end.tv_sec = t64_1;
+      pdata->time_end.tv_usec = t64_2;
     }
     
     break;
@@ -2994,6 +3049,14 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
       pnat->timestamp_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 10) {
+      if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
+        memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_SYS_UPTIME_MSEC].off, tpl->tpl[NF9_SYS_UPTIME_MSEC].len);
+	t32 = pm_ntohll(t64)/1000;
+        pnat->timestamp_start.tv_sec = t32+(ntohl(fstime)/1000); 
+      }
+    }
     else if (tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_MSEC].off, tpl->tpl[NF9_FIRST_SWITCHED_MSEC].len);
       pnat->timestamp_start.tv_sec = pm_ntohll(t64)/1000;
@@ -3032,8 +3095,9 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
       pnat->timestamp_start.tv_sec = t64_1;
       pnat->timestamp_start.tv_usec = t64_2;
     }
+
     /* fallback to header timestamp if no other time reference is available */
-    else {
+    if (!pnat->timestamp_start.tv_sec) {
       if (hdr->version == 10) {
         struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
 
@@ -3045,6 +3109,7 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
         pnat->timestamp_start.tv_sec = ntohl(hdr_v9->unix_secs);
       }
     }
+
     break;
   case 8:
     switch(hdr->aggregation) {
@@ -3092,6 +3157,14 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
       pnat->timestamp_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+    }
+    else if (tpl->tpl[NF9_LAST_SWITCHED].len && hdr->version == 10) {
+      if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
+        memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_SYS_UPTIME_MSEC].off, tpl->tpl[NF9_SYS_UPTIME_MSEC].len);
+        t32 = pm_ntohll(t64)/1000;
+        pnat->timestamp_end.tv_sec = t32+(ntohl(fstime)/1000);
+      }
     }
     else if (tpl->tpl[NF9_LAST_SWITCHED_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_MSEC].off, tpl->tpl[NF9_LAST_SWITCHED_MSEC].len);
