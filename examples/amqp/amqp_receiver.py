@@ -34,20 +34,21 @@ except ImportError:
 avro_schema = None
 
 def usage(tool):
-    print ""
-    print "Usage: %s [Args]" % tool
-    print ""
+	print ""
+	print "Usage: %s [Args]" % tool
+	print ""
 
-    print "Mandatory Args:"
-    print "  -e, --exchange".ljust(25) + "Define the exchange to bind to"
-    print "  -k, --routing_key".ljust(25) + "Define the routing key to use"
-    print "  -q, --queue".ljust(25) + "Specify the queue to declare"
-    print ""
-    print "Optional Args:"
-    print "  -h, --help".ljust(25) + "Print this help"
-    print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
-    print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
-            "schema to use for decoding Avro messages"
+	print "Mandatory Args:"
+	print "  -e, --exchange".ljust(25) + "Define the exchange to bind to"
+	print "  -k, --routing_key".ljust(25) + "Define the routing key to use"
+	print "  -q, --queue".ljust(25) + "Specify the queue to declare"
+	print ""
+	print "Optional Args:"
+	print "  -h, --help".ljust(25) + "Print this help"
+	print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
+	if avro_available:
+		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
+		      "schema to use for decoding Avro messages"
 
 def callback(ch, method, properties, body):
 	if avro_schema:
@@ -99,10 +100,13 @@ def main():
 				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
 						"not found\n")
 				sys.exit(1)
+
                         if not os.path.isfile(a):
 				sys.stderr.write("ERROR: '%s' does not exist or is not a file\n" % (a,))
 				sys.exit(1)
+
 			global avro_schema
+
 			with open(a) as f:
 				avro_schema = avro.schema.parse(f.read())
 	        else:
