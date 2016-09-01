@@ -34,9 +34,8 @@
 #ifdef WITH_AVRO
 #include <avro.h>
 
-static avro_schema_t acct_schema;
+static avro_schema_t avro_acct_schema;
 #endif
-
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -95,8 +94,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_AVRO
   if (config.print_output & PRINT_OUTPUT_AVRO) {
-    Log(LOG_INFO, "INFO ( %s/%s ): Building avro schema\n", config.name, config.type);
-    acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
+    Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building schema.\n", config.name, config.type);
+    avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
   }
 #endif
 
@@ -390,7 +389,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   struct pkt_data dummy_data, elem_dummy_data;
   pid_t writer_pid = getpid();
 #ifdef WITH_AVRO
-  avro_file_writer_t writer;
+  avro_file_writer_t avro_writer;
 #endif
 
   if (!index) {
@@ -448,18 +447,21 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     }
 
     if (config.print_output & PRINT_OUTPUT_AVRO) {
+      int file_is_empty, ret;
 #ifdef WITH_AVRO
       f = open_output_file(current_table, "ab", TRUE);
+
       fseek(f, 0, SEEK_END);
-      int file_is_empty = ftell(f) == 0;
+      file_is_empty = ftell(f) == 0;
       close_output_file(f);
-      int ret;
+
       if (config.print_output_file_append && !file_is_empty)
-        ret = avro_file_writer_open(current_table, &writer);
+        ret = avro_file_writer_open(current_table, &avro_writer);
       else
-        ret = avro_file_writer_create(current_table, acct_schema, &writer);
+        ret = avro_file_writer_create(current_table, avro_acct_schema, &avro_writer);
+
       if (ret) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): There was an error opening %s: %s\n",
+        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed opening %s: %s\n",
             config.name, config.type, current_table, avro_strerror());
         exit_plugin(EXIT_FAILURE);
       }
@@ -1293,30 +1295,35 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       }
       else if (f && config.print_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-        avro_value_iface_t *iface = avro_generic_class_from_schema(acct_schema);
-        avro_value_t value = compose_avro(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
+        avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
+
+        avro_value_t avro_value = compose_avro(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
                          &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
                          queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
-                         queue[j]->stitch, iface);
+                         queue[j]->stitch, avro_iface);
+
         if (config.sql_table) {
-          if (avro_file_writer_append_value(writer, &value)) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): There was an error writing the value: %s\n",
+          if (avro_file_writer_append_value(avro_writer, &avro_value)) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed writing the value: %s\n",
                 config.name, config.type, avro_strerror());
             exit_plugin(EXIT_FAILURE);
           }
         }
         else {
           char *json_str;
-          if (avro_value_to_json(&value, TRUE, &json_str)) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): There was an error converting avro value to json: %s\n",
+
+          if (avro_value_to_json(&avro_value, TRUE, &json_str)) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to value to JSON: %s\n",
                 config.name, config.type, avro_strerror());
             exit_plugin(EXIT_FAILURE);
           }
+
           fprintf(f, "%s\n", json_str);
           free(json_str);
         }
-        avro_value_iface_decref(iface);
-        avro_value_decref(&value);
+
+        avro_value_iface_decref(avro_iface);
+        avro_value_decref(&avro_value);
 #else
         if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
@@ -1338,6 +1345,11 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   }
     
   if (config.sql_table) {
+#ifdef WITH_AVRO
+    if (config.print_output & PRINT_OUTPUT_AVRO)
+      avro_file_writer_flush(avro_writer);
+#endif
+
     if (config.print_latest_file) {
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
       handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs);
@@ -1346,13 +1358,12 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_AVRO
     if (config.print_output & PRINT_OUTPUT_AVRO) {
-      avro_file_writer_flush(writer);
-      avro_file_writer_close(writer);
+      avro_file_writer_close(avro_writer);
     }
 #endif
-
-    if (f)
-      close_output_file(f);
+    else {
+      if (f) close_output_file(f);
+    }
   }
   else {
     /* writing to stdout: releasing lock */
