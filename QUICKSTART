@@ -665,6 +665,10 @@ can read on the following page how to get it installed:
 
 http://kafka-python.readthedocs.org/
 
+This is a pointer to the quick start guide to Kafka (0.10.0):
+
+http://kafka.apache.org/0100/quickstart.html
+
 
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
@@ -1122,7 +1126,7 @@ protocols bgp {
     }
 }
 
-XIVe. A working configuration example writing to a MySQL database
+XIVe. Example: writing flows augmented by BGP to a MySQL database
 The following setup is a realistic example for collecting an external traffic
 matrix to the ASN level (ie. no IP prefixes collected) for a MPLS-enabled IP
 carrier network. Samples are aggregated in a way which is suitable to get an
@@ -1214,7 +1218,7 @@ Although table names are fixed in this example, ie. acct_bgp_5mins, it can be
 highly adviceable in real-life to run dynamic SQL tables, ie. table names that
 include time-related variables (see sql_table, sql_table_schema in CONFIG-KEYS). 
 
-XIVf. Exporting routing tables and/or BGP messaging to files.
+XIVf. Example: exporting BGP tables or messaging to files or AMQP/Kafka brokers.
 Both the stand-alone BGP collector daemon (pmbgpd) and the BGP thread within one
 of the traffic accounting daemons can: a) export/dump routing tables for all BGP
 peers at regular time intervals and b) log BGP messaging, real-time, with each
@@ -1250,6 +1254,24 @@ A basic log of BGP messaging in near real-time to a plain-text file (which can
 be rotated by an external tool/script) is configured as follows:
 
 bgp_daemon_msglog_file: /path/to/spool/bgp/bgp-$peer_src_ip.log
+
+A basic dump of BGP tables at regular intervals (60 secs) to a Kafka broker,
+listening on the localost and default port, is configured as follows:
+
+bgp_table_dump_kafka_topic: pmacct.bgp
+bgp_table_dump_refresh_time: 60
+
+The equivalent bgp_table_dump_amqp_routing_key config directive can be used to
+make the above example work against a RabbitMQ broker.
+
+A basic log of BGP messaging in near real-time to a Kafka broker, listening on
+the localhost and default port, is configured as follows:
+
+bgp_daemon_msglog_kafka_topic: pmacct.bgp
+
+The equivalent bgp_daemon_msglog_amqp_routing_key config directive can be used
+to make the above example work against a RabbitMQ broker.
+
 
 XIVg. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
@@ -1409,6 +1431,23 @@ bmp_daemon_msglog_file: /path/to/bmp-$peer_src_ip.log
 !
 bmp_dump_file: /path/to/bmp-$peer_src_ip-%H%M.dump
 bmp_dump_refresh_time: 60
+
+Following a simple example on how to configure nfacctd to enable the BMP thread
+to a) log, in real-time, BGP stats, events and routes received via BMP to a
+Kafka broker (bmp_daemon_msglog_kafka_topic) and b) dump the same (ie. BGP stats
+and events received via BMP) to a text-file and at regular time intervals
+(bmp_dump_refresh_time, bmp_dump_kafka_topic):
+
+bmp_daemon: true
+!
+bmp_daemon_msglog_kafka_topic: pmacct.bmp-msglog
+!
+bmp_dump_kafka_topic: pmacct.bmp-dump
+bmp_dump_refresh_time: 60
+
+The equivalent bmp_daemon_msglog_amqp_routing_key and bmp_dump_amqp_routing_key
+config directives can be used to make the above example work against a RabbitMQ
+broker.
 
 Setting up the stand-alone BMP collector daemon, pmbmpd, is the exact same as
 the configuration above except the 'bmp_daemon: true' line can be skipped.
