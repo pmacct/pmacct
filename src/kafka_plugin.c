@@ -342,6 +342,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
+  int avro_buffer_full = FALSE;
 #endif
 
   p_kafka_init_host(&kafkap_kafka_host);
@@ -412,8 +413,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
     avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
   }
 #endif
-
-  int avro_buffer_full = FALSE;
 
   for (j = 0; j < index; j++) {
     void *json_obj;
