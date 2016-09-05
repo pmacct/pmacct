@@ -543,7 +543,10 @@ AC_ARG_ENABLE(pgsql,
 		AC_MSG_RESULT([found in /usr/local/pgsql/lib])
 	else
 		AC_MSG_RESULT([not found])
+		_save_LIBS="$LIBS"
+		LIBS="$LIBS $PGSQL_LIBS"
 		AC_CHECK_LIB([pq], [PQconnectdb], [], [AC_MSG_ERROR([ERROR: missing PQ library. Refer to: http://www.postgresql.org/])])
+		LIBS="$_save_LIBS"
 	fi
 
 	AC_MSG_CHECKING([default locations for libpq-fe.h])
@@ -561,7 +564,10 @@ AC_ARG_ENABLE(pgsql,
 		AC_MSG_RESULT([found in /usr/local/pgsql/include])
 	else
 		AC_MSG_RESULT([not found])
+		_save_CFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS $PGSQL_CFLAGS"
 		AC_CHECK_HEADER([libpq-fe.h], [], [AC_MSG_ERROR(ERROR: missing PostgreSQL headers)])
+		CFLAGS="$_save_CFLAGS"
 	fi
     ])
     PLUGINS="${PLUGINS} pgsql"
@@ -599,9 +605,12 @@ AC_ARG_ENABLE(mongodb,
 		AC_MSG_RESULT([found in /usr/local/lib])
 	else
 		AC_MSG_RESULT([not found])
+                _save_LIBS="$LIBS"
+                LIBS="$LIBS $MONGODB_LIBS"
 		AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
 			ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
 		])])
+                LIBS="$_save_LIBS"
 	fi
 
 	AC_MSG_CHECKING([default locations for mongo.h])
@@ -613,7 +622,10 @@ AC_ARG_ENABLE(mongodb,
 		AC_MSG_RESULT([found in /usr/local/include])
 	else
 		AC_MSG_RESULT([not found])
+                _save_CFLAGS="$CFLAGS"
+                CFLAGS="$CFLAGS $MONGODB_CFLAGS"
 		AC_CHECK_HEADER([mongo.h], [], [AC_MSG_ERROR(ERROR: missing MongoDB headers)])
+                CFLAGS="$_save_CFLAGS"
 	fi
     ])
     PLUGINS="${PLUGINS} mongodb"
@@ -697,9 +709,12 @@ AC_ARG_ENABLE(kafka,
 		AC_MSG_RESULT([found in /usr/local/lib])
 	else
 		AC_MSG_RESULT([not found])
+                _save_LIBS="$LIBS"
+                LIBS="$LIBS $KAFKA_LIBS"
 		AC_CHECK_LIB([rdkafka], [rd_kafka_new], [], [AC_MSG_ERROR([
 			ERROR: missing Kafka library. Refer to: https://github.com/edenhill/librdkafka/
 		])])
+                LIBS="$_save_LIBS"
 	fi
 
 	AC_MSG_CHECKING([default locations for rdkafka.h])
@@ -711,7 +726,10 @@ AC_ARG_ENABLE(kafka,
 		AC_MSG_RESULT([found in /usr/local/include])
 	else
 		AC_MSG_RESULT([not found])
+                _save_CFLAGS="$CFLAGS"
+                CFLAGS="$CFLAGS $KAFKA_CFLAGS"
 		AC_CHECK_HEADER([rdkafka.h], [], [AC_MSG_ERROR(ERROR: missing Kafka headers)])
+                CFLAGS="$_save_CFLAGS"
 	fi
     ])
     PLUGINS="${PLUGINS} kafka"
@@ -769,9 +787,12 @@ AC_ARG_ENABLE(geoipv2,
 		AC_MSG_RESULT([found in /usr/local/lib])
 	else
 		AC_MSG_RESULT([not found])
+                _save_LIBS="$LIBS"
+                LIBS="$LIBS $GEOIPV2_LIBS"
 		AC_CHECK_LIB([maxminddb], [MMDB_open], [], [AC_MSG_ERROR([
 			ERROR: missing Maxmind libmaxminddb library. Refer to: http://www.maxmind.com/download/geoip/api/c/
 		])])
+                LIBS="$_save_LIBS"
 	fi
 
 	AC_MSG_CHECKING([default locations for maxminddb.h])
@@ -783,7 +804,10 @@ AC_ARG_ENABLE(geoipv2,
 		AC_MSG_RESULT([found in /usr/local/include])
 	else
 		AC_MSG_RESULT([not found])
+                _save_CFLAGS="$CFLAGS"
+                CFLAGS="$CFLAGS $GEOIPV2_CFLAGS"
 		AC_CHECK_HEADER([maxminddb.h], [], [AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb headers)])
+                CFLAGS="$_save_CFLAGS"
 	fi
     ])
     PLUGINS="${PLUGINS} geoipv2"
@@ -812,7 +836,11 @@ AC_ARG_ENABLE(jansson,
     PLUGINS="${PLUGINS} jansson"
     USING_JANSSON="yes"
     AC_DEFINE(WITH_JANSSON, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $JANSSON_LIBS"
     AC_CHECK_LIB(jansson, json_object, [], [])
+    AC_CHECK_FUNCS([json_object_update_missing])
+    LIBS="$_save_LIBS"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -834,7 +862,10 @@ AC_ARG_ENABLE(avro,
     PKG_CHECK_MODULES([AVRO], [avro-c >= 1.8])
     USING_AVRO="yes"
     AC_DEFINE(WITH_AVRO, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $AVRO_LIBS"
     AC_CHECK_LIB(avro, avro_record_get, [], [])
+    LIBS="$_save_LIBS"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -952,7 +983,7 @@ AC_MSG_RESULT(no))
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
-AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt json_object_update_missing tdestroy])
+AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt tdestroy])
 
 dnl final checks
 dnl trivial solution to portability issue 
