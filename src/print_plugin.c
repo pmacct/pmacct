@@ -33,8 +33,6 @@
 
 #ifdef WITH_AVRO
 #include <avro.h>
-
-static avro_schema_t avro_acct_schema;
 #endif
 
 /* Functions */

@@ -30,12 +30,8 @@
 #ifndef WITH_JANSSON
 #error "--enable-kafka requires --enable-jansson"
 #endif
-
 #ifdef WITH_AVRO
 #include <avro.h>
-
-static char *avro_buf = NULL;
-static avro_schema_t avro_acct_schema;
 #endif
 
 /* Functions */

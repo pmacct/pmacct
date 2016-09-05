@@ -42,4 +42,8 @@ EXT void P_fprintf_csv_label(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgreg
 #define EXT
 #endif
 EXT int print_output_stdout_header;
+
+#ifdef WITH_AVRO
+EXT avro_schema_t avro_acct_schema;
+#endif
 #undef EXT

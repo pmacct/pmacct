@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -47,4 +47,9 @@ EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit;
 EXT time_t refresh_deadline;
 
 EXT struct timeval sbasetime;
+
+#ifdef WITH_AVRO
+EXT char *avro_buf;
+EXT avro_schema_t avro_acct_schema;
+#endif
 #undef EXT
