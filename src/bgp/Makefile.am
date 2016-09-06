@@ -5,4 +5,4 @@ libbgp_la_SOURCES = bgp.c bgp_aspath.c bgp_community.c			\
 	bgp_community.h bgp_ecommunity.h bgp.h bgp_hash.h		\
 	bgp_logdump.h bgp_lookup.h bgp_msg.h bgp_packet.h		\
 	bgp_prefix.h bgp_table.h bgp_util.h
-libbgp_la_CFLAGS = -I$(srcdir)/..
+libbgp_la_CFLAGS = -I$(srcdir)/.. $(AM_CFLAGS)
