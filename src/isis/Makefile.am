@@ -1,3 +1,5 @@
+AM_CFLAGS = $(PMACCT_CFLAGS)
+
 noinst_LTLIBRARIES = libisis.la
 libisis_la_SOURCES = isis.c checksum.c dict.c table.c prefix.c		\
 	sockunion.c hash.c stream.c thread.c linklist.c			\

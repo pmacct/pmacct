@@ -1,3 +1,5 @@
+AM_CFLAGS = $(PMACCT_CFLAGS)
+
 noinst_LTLIBRARIES = libbgp.la
 libbgp_la_SOURCES = bgp.c bgp_aspath.c bgp_community.c			\
 	bgp_ecommunity.c bgp_hash.c bgp_prefix.c bgp_table.c		\
