@@ -381,6 +381,7 @@ void skinny_bgp_daemon()
 	load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
 	if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5); // process load
       }
+
       reload_map_bgp_thread = FALSE;
     }
 
@@ -393,6 +394,8 @@ void skinny_bgp_daemon()
 	}
 	else break;
       }
+
+      reload_log_bgp_thread = FALSE;
     }
 
     if (bgp_misc_db->msglog_backend_methods || bgp_misc_db->dump_backend_methods) {

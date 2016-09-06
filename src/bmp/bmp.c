@@ -386,6 +386,8 @@ void skinny_bmp_daemon()
         }
         else break;
       }
+
+      reload_log_bmp_thread = FALSE;
     }
 
     if (bmp_misc_db->msglog_backend_methods || bmp_misc_db->dump_backend_methods) {

@@ -483,6 +483,8 @@ void telemetry_daemon(void *t_data_void)
         }
         else break;
       }
+
+      reload_log_telemetry_thread = FALSE;
     }
 
     if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods) {
