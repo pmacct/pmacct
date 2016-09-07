@@ -79,10 +79,16 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
       bgp_peer_log_seq_increment(&tms->log_seq);
     }
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &tms->log_tstamp, TRUE, config.timestamps_since_epoch);
-    kv = json_pack("{ss}", "timestamp", tstamp_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      kv = json_pack("{ss}", "timestamp", tms->log_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      kv = json_pack("{ss}", "timestamp", tms->dump_tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
+    }
 
     kv = json_pack("{ss}", "telemetry_node", peer->addr_str);
     json_object_update_missing(obj, kv);

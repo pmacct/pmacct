@@ -404,6 +404,10 @@ void skinny_bgp_daemon()
 
       if (bgp_misc_db->dump_backend_methods) {
 	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
+	  bgp_misc_db->dump_tstamp.tv_sec = dump_refresh_deadline;
+	  bgp_misc_db->dump_tstamp.tv_usec = 0;
+	  compose_timestamp(bgp_misc_db->dump_tstamp_str, SRVBUFLEN, &bgp_misc_db->dump_tstamp, TRUE, config.timestamps_since_epoch);
+
 	  bgp_handle_dump_event();
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
 	}
