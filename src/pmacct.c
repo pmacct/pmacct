@@ -96,7 +96,7 @@ void usage_client(char *prog)
   printf("  -U\tShow custom primitives table\n");
   printf("  -D\tShow packet length distribution table\n");
   printf("  -p\t<file> \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
-  printf("  -O\tSet output < formatted | csv | json | event_formatted | event_csv > (applies to -M and -s)\n");
+  printf("  -O\tSet output < formatted | csv | json | avro | event_formatted | event_csv > (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -I\tSet timestamps in 'since Epoch' format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");

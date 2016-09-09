@@ -1344,7 +1344,7 @@ DESC:		Enables the use of start/end markers each time data is purged to the back
 DEFAULT:	false
 
 KEY:		print_output
-VALUES:		[ formatted | csv | json | event_formatted | event_csv | avro ]
+VALUES:		[ formatted | csv | json | avro | event_formatted | event_csv ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
 		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions of
 		the output strips trailing bytes and packets counters. 'json' is to enable JavaScript Object
@@ -1370,7 +1370,7 @@ DESC:           Defines the print plugin output separator when print_output is s
 		then 'formatted' output should be the natural choice instead)
 DEFAULT:	','
 
-KEY:		[ message_broker_output | amqp_output | kafka_output ]
+KEY:		[ amqp_output | kafka_output ]
 VALUES: 	[ json | avro ]
 DESC:		Defines the output format for messages sent to a message broker (amqp and kafka plugins).
 		'json' is to send the messages in the JavaScript Object Notation format. The 'json' format
@@ -1386,10 +1386,11 @@ DEFAULT:	json
 KEY:		avro_buffer_size
 DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
 		plugins), this option defines the size in bytes of the buffer used by the Avro data serialization
-		system. The buffer needs to be large enough to store at least a single Avro record. If the buffer
-		does not have enough capacity to store the number of records defined by the sql_multi_values
-		configuration directive, the current records stored in the buffer will be sent to the message
-		broker and the buffer will be cleared to accomodate subsequent records.
+		system. The buffer needs to be large enough to store at least a single Avro record. If the
+		buffer does not have enough capacity to store the number of records defined by the
+		[amqp, kafka]_multi_values configuration directive, the current records stored in the buffer
+		will be sent to the message broker and the buffer will be cleared to accomodate subsequent
+		records.
 DEFAULT:	4096
 
 KEY:		avro_schema_output_file

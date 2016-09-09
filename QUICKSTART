@@ -587,7 +587,7 @@ export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq"
 export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
 ./configure --enable-rabbitmq --enable-jansson
 
-Ditto for the location of the Avro libraries:
+Ditto for the location of the Avro libraries, if using Avro encoding:
 
 export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 export AVRO_CFLAGS="-I/usr/local/avro/include"
@@ -658,7 +658,7 @@ export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
 export KAFKA_CFLAGS="-I/usr/local/kafka/include"
 ./configure --enable-kafka --enable-jansson
 
-Ditto for the location of the Avro libraries:
+Ditto for the location of the Avro libraries, if using Avro encoding:
 
 export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 export AVRO_CFLAGS="-I/usr/local/avro/include"
