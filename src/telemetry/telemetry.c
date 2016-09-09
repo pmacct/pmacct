@@ -495,7 +495,7 @@ void telemetry_daemon(void *t_data_void)
         while (telemetry_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
           telemetry_misc_db->dump_tstamp.tv_sec = dump_refresh_deadline;
           telemetry_misc_db->dump_tstamp.tv_usec = 0;
-          compose_timestamp(telemetry_misc_db->dump_tstamp_str, SRVBUFLEN, &telemetry_misc_db->dump_tstamp, TRUE, config.timestamps_since_epoch);
+          compose_timestamp(telemetry_misc_db->dump_tstamp_str, SRVBUFLEN, &telemetry_misc_db->dump_tstamp, FALSE, config.timestamps_since_epoch);
 
           telemetry_handle_dump_event(t_data);
           dump_refresh_deadline += config.telemetry_dump_refresh_time;
