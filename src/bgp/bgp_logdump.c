@@ -104,7 +104,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
       json_decref(kv);
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      kv = json_pack("{ss}", "timestamp", bms->dump_tstamp_str);
+      kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
@@ -487,7 +487,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
-    kv = json_pack("{ss}", "timestamp", bms->dump_tstamp_str);
+    kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -497,6 +497,10 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     json_decref(kv);
 
     kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "dump_period", (json_int_t)bms->dump.period);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -545,7 +549,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
-    kv = json_pack("{ss}", "timestamp", bms->dump_tstamp_str);
+    kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -658,7 +662,7 @@ void bgp_handle_dump_event()
 	if (config.bgp_table_dump_kafka_topic)
 	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
 
-	strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump_tstamp.tv_sec);
+	strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec);
 
 	/*
 	   we close last_filename and open current_filename in case they differ;

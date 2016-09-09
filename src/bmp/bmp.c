@@ -396,9 +396,10 @@ void skinny_bmp_daemon()
 
       if (bmp_misc_db->dump_backend_methods) {
         while (bmp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
-          bmp_misc_db->dump_tstamp.tv_sec = dump_refresh_deadline;
-          bmp_misc_db->dump_tstamp.tv_usec = 0;
-          compose_timestamp(bmp_misc_db->dump_tstamp_str, SRVBUFLEN, &bmp_misc_db->dump_tstamp, FALSE, config.timestamps_since_epoch);
+          bmp_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
+          bmp_misc_db->dump.tstamp.tv_usec = 0;
+          compose_timestamp(bmp_misc_db->dump.tstamp_str, SRVBUFLEN, &bmp_misc_db->dump.tstamp, FALSE, config.timestamps_since_epoch);
+	  bmp_misc_db->dump.period = config.bmp_dump_refresh_time;
 
           bmp_handle_dump_event();
           dump_refresh_deadline += config.bmp_dump_refresh_time;

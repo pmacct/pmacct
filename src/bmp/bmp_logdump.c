@@ -80,7 +80,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
       json_decref(kv);
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      kv = json_pack("{ss}", "timestamp", bms->dump_tstamp_str);
+      kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
     }
@@ -533,7 +533,7 @@ void bmp_handle_dump_event()
         if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
         if (config.bmp_dump_kafka_topic) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
 
-        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump_tstamp.tv_sec);
+        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec);
 
         /*
 	  we close last_filename and open current_filename in case they differ;

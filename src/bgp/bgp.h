@@ -78,6 +78,12 @@
 #define MAX_BGP_COMM_PATTERNS 16
 
 /* structures */
+struct bgp_dump_event {
+  struct timeval tstamp;
+  char tstamp_str[SRVBUFLEN];
+  int period;
+};
+
 struct bgp_rt_structs {
   struct hash *attrhash;
   struct hash *ashash;
@@ -91,8 +97,7 @@ struct bgp_misc_structs {
   u_int64_t log_seq;
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
-  struct timeval dump_tstamp;
-  char dump_tstamp_str[SRVBUFLEN];
+  struct bgp_dump_event dump;
   char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
   char *log_str; /* BGP, BMP, thread, daemon, etc. */
   int is_thread;
