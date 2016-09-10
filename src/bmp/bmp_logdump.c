@@ -83,6 +83,11 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
       kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
+
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.timestamps_since_epoch);
+      kv = json_pack("{ss}", "event_timestamp", tstamp_str);
+      json_object_update_missing(obj, kv);
+      json_decref(kv);
     }
 
     kv = json_pack("{ss}", "bmp_router", peer->addr_str);
