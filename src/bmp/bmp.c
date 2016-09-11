@@ -156,6 +156,9 @@ void skinny_bmp_daemon()
     }
   }
 
+  if (bmp_misc_db->msglog_backend_methods || bmp_misc_db->dump_backend_methods)
+    bgp_peer_log_seq_init(&bmp_misc_db->log_seq);
+
   if (bmp_misc_db->msglog_backend_methods) {
     bmp_misc_db->peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
     if (!bmp_misc_db->peers_log) {
@@ -163,7 +166,6 @@ void skinny_bmp_daemon()
       exit_all(1);
     }
     memset(bmp_misc_db->peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
-    bgp_peer_log_seq_init(&bmp_misc_db->log_seq);
 
     if (config.nfacctd_bmp_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ

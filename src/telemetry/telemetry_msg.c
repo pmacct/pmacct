@@ -47,7 +47,7 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     char event_type[] = "log";
 
     if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_msglog_output)) {
-      telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, event_type, config.telemetry_msglog_output);
+      telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder, tms->log_seq, event_type, config.telemetry_msglog_output);
     }
   }
 
@@ -56,6 +56,9 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
       telemetry_dump_se_ll_append(peer, t_data, data_decoder);
     }
   }
+
+  if (tms->msglog_backend_methods || tms->dump_backend_methods)
+    telemetry_log_seq_increment(&tms->log_seq);
 }
 
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)

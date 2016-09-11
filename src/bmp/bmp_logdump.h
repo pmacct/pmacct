@@ -62,6 +62,7 @@ struct bmp_log_peer_down {
 
 struct bmp_dump_se {
   struct bmp_data bdata;
+  u_int64_t seq;
   int se_type;
   union {
     struct bmp_log_stats stats;
@@ -93,7 +94,7 @@ EXT void bmp_dump_init_amqp_host();
 EXT void bmp_dump_init_peer(struct bgp_peer *);
 EXT void bmp_dump_close_peer(struct bgp_peer *);
 
-EXT int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, char *, int, int);
+EXT int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, u_int64_t, char *, int, int);
 EXT int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct bmp_log_stats *, char *, int, void *);
 EXT int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_init *, char *, int, void *);
 EXT int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term *, char *, int, void *);

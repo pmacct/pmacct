@@ -248,6 +248,9 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
+  if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods)
+    telemetry_log_seq_init(&telemetry_misc_db->log_seq);
+
   if (telemetry_misc_db->msglog_backend_methods) {
     telemetry_misc_db->peers_log = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_log));
     if (!telemetry_misc_db->peers_log) {
@@ -255,7 +258,6 @@ void telemetry_daemon(void *t_data_void)
       exit_all(1);
     }
     memset(telemetry_misc_db->peers_log, 0, config.telemetry_max_peers*sizeof(telemetry_peer_log));
-    telemetry_peer_log_seq_init(&telemetry_misc_db->log_seq);
 
     if (config.telemetry_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ

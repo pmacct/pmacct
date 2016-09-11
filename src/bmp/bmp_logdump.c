@@ -34,7 +34,7 @@
 #include "kafka_common.h"
 #endif
 
-int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, char *event_type, int output, int log_type)
+int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
@@ -65,13 +65,9 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, c
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    /* no need for seq for "dump" event_type */
-    if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-      bgp_peer_log_seq_increment(&bms->log_seq);
-    }
+    kv = json_pack("{sI}", "seq", (json_int_t)log_seq);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.timestamps_since_epoch);
@@ -433,6 +429,7 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
     }
   }
 
+  se_ll_elem->rec.seq = bms->log_seq;;
   se_ll_elem->rec.se_type = log_type;
   se_ll_elem->next = NULL; /* pedantic */
 
@@ -626,19 +623,19 @@ void bmp_handle_dump_event()
 	  for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	    switch (se_ll_elem->rec.se_type) {
 	    case BMP_LOG_TYPE_STATS:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.stats, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.stats, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
 	      break;
 	    case BMP_LOG_TYPE_INIT:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.init, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.init, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
 	      break;
 	    case BMP_LOG_TYPE_TERM:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.term, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.term, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
 	      break;
 	    case BMP_LOG_TYPE_PEER_UP:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_up, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_up, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
 	      break;
 	    case BMP_LOG_TYPE_PEER_DOWN:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_down, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_down, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
 	      break;
 	    default:
 	      break;

@@ -33,7 +33,8 @@
 #endif
 
 /* Functions */
-int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void *log_data, u_int32_t log_data_len, int data_decoder, char *event_type, int output)
+int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void *log_data, u_int32_t log_data_len,
+			int data_decoder, u_int64_t log_seq, char *event_type, int output)
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
@@ -71,13 +72,9 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    /* no need for seq for "dump" event_type */
-    if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", (json_int_t)tms->log_seq);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-      bgp_peer_log_seq_increment(&tms->log_seq);
-    }
+    kv = json_pack("{sI}", "seq", (json_int_t)log_seq);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
       kv = json_pack("{ss}", "timestamp", tms->log_tstamp_str);
@@ -156,10 +153,15 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 
 void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_data, int data_decoder)
 {
+  telemetry_misc_structs *tms;
   telemetry_dump_se_ll *se_ll;
   telemetry_dump_se_ll_elem *se_ll_elem;
 
   if (!peer) return;
+
+  tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
+
+  if (!tms) return;
 
   assert(peer->bmp_se);
 
@@ -179,6 +181,7 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   memcpy(se_ll_elem->rec.data, peer->buf.base, peer->msglen); 
   se_ll_elem->rec.len = peer->msglen;
   se_ll_elem->rec.decoder = data_decoder;
+  se_ll_elem->rec.seq = tms->log_seq;
 
   se_ll = (telemetry_dump_se_ll *) peer->bmp_se;
 
@@ -198,9 +201,14 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   }
 }
 
-void telemetry_peer_log_seq_init(u_int64_t *seq)
+void telemetry_log_seq_init(u_int64_t *seq)
 {
   bgp_peer_log_seq_init(seq);
+}
+
+void telemetry_log_seq_increment(u_int64_t *seq)
+{
+  bgp_peer_log_seq_increment(seq);
 }
 
 int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
@@ -260,6 +268,8 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   telemetry_peer *peer, *saved_peer;
   telemetry_dump_se_ll *tdsell;
   telemetry_peer_log peer_log;
+
+  if (!tms) return;
 
   /* pre-flight check */
   if (!tms->dump_backend_methods || !config.telemetry_dump_refresh_time)
@@ -358,7 +368,8 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
           char event_type[] = "dump";
 
 	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
-	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder, event_type, config.telemetry_dump_output);
+	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder,
+				se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
 	  }
 	}
 

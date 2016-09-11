@@ -87,6 +87,7 @@ struct _telemetry_peer_udp_timeout {
 struct _telemetry_dump_se {
   int decoder;
   u_int32_t len;
+  u_int64_t seq;
   void *data;
 };
 

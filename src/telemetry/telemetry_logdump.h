@@ -29,7 +29,8 @@
 #else
 #define EXT
 #endif
-EXT void telemetry_peer_log_seq_init(u_int64_t *);
+EXT void telemetry_log_seq_init(u_int64_t *);
+EXT void telemetry_log_seq_increment(u_int64_t *);
 EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
 EXT void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
 EXT int telemetry_peer_dump_init(telemetry_peer *, int, int);
@@ -37,7 +38,7 @@ EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
 EXT void telemetry_dump_init_peer(telemetry_peer *);
 EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
 EXT void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int);
-EXT int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_int32_t, int, char *, int);
+EXT int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_int32_t, int, u_int64_t, char *, int);
 EXT void telemetry_handle_dump_event(struct telemetry_data *);
 EXT void telemetry_daemon_msglog_init_amqp_host();
 EXT void telemetry_dump_init_amqp_host();
