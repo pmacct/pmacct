@@ -1294,6 +1294,9 @@ bgp_daemon_msglog_kafka_topic: pmacct.bgp
 The equivalent bgp_daemon_msglog_amqp_routing_key config directive can be used
 to make the above example work against a RabbitMQ broker.
 
+A sample of both the BGP msglog and dump formats are captured in the following
+document: docs/MSGLOG_DUMP_FORMATS
+
 
 XIVg. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
@@ -1471,6 +1474,9 @@ The equivalent bmp_daemon_msglog_amqp_routing_key and bmp_dump_amqp_routing_key
 config directives can be used to make the above example work against a RabbitMQ
 broker.
 
+A sample of both the BMP msglog and dump formats are captured in the following
+document: docs/MSGLOG_DUMP_FORMATS
+
 Setting up the stand-alone BMP collector daemon, pmbmpd, is the exact same as
 the configuration above except the 'bmp_daemon: true' line can be skipped.
 
@@ -1562,6 +1568,9 @@ telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
 ! telemetry_dump_kafka_topic: telemetry-dump
 !
 telemetry_dump_refresh_time: 60
+
+A sample of both the Streaming Telemetry msglog and dump formats are captured in
+the following document: docs/MSGLOG_DUMP_FORMATS
 
 
 XIX. Running the print plugin to write to flat-files

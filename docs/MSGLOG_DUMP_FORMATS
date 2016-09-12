@@ -1,0 +1,81 @@
+Following are documented the up-to-date BGP, BMP and Streaming Telemetry msglog
+(real-time logging) and dump (snapshot at regular, configurable, time intervals)
+formats. When upgrading from an earlier version, you may want to check out the
+UPGRADE document to verify if any impacting changes to the message formats were
+introduced.
+
+BGP msglog format:
+* log_init message:
+  {"seq": <seq>, "timestamp": <timestamp>, "peer_ip_src": <IP address>, \
+   "event_type": "log_init"}
+
+* log message:
+  {"seq": <seq>, "timestamp": <timestamp>, "peer_ip_src": <IP address>, \
+   "event_type": "log", "log_type": <update, "withdraw", "delete">, \
+   <BGP NLRI, attributes, ..>}
+
+* log_close message:
+  {"seq": <int>, "timestamp": <timestamp>, "peer_ip_src": <IP address>, \
+   "event_type": "log_close"}
+
+
+BGP dump format:
+* dump_init message:
+  {"timestamp": <dump event timestamp>, "peer_ip_src": <IP address>, \
+   "event_type": "dump_init", "dump_period": <bgp_table_dump_refresh_time>}
+
+* dump message:
+  {"timestamp": <dump event timestamp>, "peer_ip_src": <IP address>, \
+   "event_type": "dump", <BGP NLRI, attributes, ..>}
+
+* dump_close message:
+  {"timestamp": <dump event timestamp>, "peer_ip_src": <IP address>, \
+   "event_type": "dump_close"}
+
+
+BMP msglog format:
+* log_init message:
+  {"seq": <int>, "timestamp": <timestamp>, "bmp_router": <IP address>, \
+   "event_type": "log_init"}
+
+* log routes message:
+  {"seq": <int>, "timestamp": <BMP timestamp>, "bmp_router": <IP address>, \
+   "event_type": "log", "bmp_msg_type": "route_monitor", "log_type": <"update", \
+   "withdraw", "delete">, "peer_ip": <IP address>, <BGP NLRI, attributes, ..>}
+
+* log events message:
+  {"seq": <int>, "timestamp": <BMP timestamp>, "bmp_router": <IP address>, \
+   "event_type": "log", "bmp_msg_type": <"init", "term", "peer_up", "stats", \
+   "peer_down">, "peer_ip": <IP address>, <BMP message data>}
+
+* log_close message:
+  {"seq": <int>, "timestamp": <timestamp>, "bmp_router": <IP address>, \
+   "event_type": "log_close"}
+
+
+BMP dump format:
+* dump_init message:
+  {"timestamp": <dump event timestamp>, "bmp_router": <IP address>, \
+   "event_type": "dump_init", "dump_period": <bmp_dump_refresh_time>}
+
+* dump routes message:
+  {"timestamp": <dump event timestamp>, "bmp_router": <IP address>, \
+   "bmp_msg_type": "route_monitor", "event_type": "dump", \
+   "peer_ip": <IP address>, <BGP NLRI, attributes, ..>}
+
+* dump events message:
+  {"seq": <int>, "timestamp": <dump event timestamp>, "bmp_router": <IP address>, \
+   "event_type": "dump", "event_timestamp": <BMP timestamp>, "bmp_msg_type": \
+   <"init", "term", "peer_up", "stats", "peer_down">, "peer_ip": <IP address>, \
+   <BMP message data>}
+
+* dump_close message:
+  {"timestamp": <dump event timestamp>, "bmp_router": <IP address>, \
+   "event_type": "dump_close"}
+
+
+Streaming Telemetry msglog format:
+XXX
+
+Streaming Telemetry dump format:
+XXX
