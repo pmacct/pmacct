@@ -2406,6 +2406,14 @@ DESC:		Writes IP prefixes, src_net and dst_net primitives, to a own/distinct fie
 		of this directive to false. In the next major release this directive will be removed.
 DEFAULT:        true
 
+KEY:		tmp_asa_bi_flow
+VALUES:		[ true | false ]
+DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and
+		reverse directions. This hack (ab)uses the packets field in order to store the extra
+		bytes counter. The patch specifically targets NetFlow v9/IPFIX field types #231 and
+		#232 and has been tested against a Cisco ASA export.
+DEFAULT:	false
+
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
 		bytes. A value of 0, default, leaves the stack size to the system default or pmacct

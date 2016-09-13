@@ -505,6 +505,7 @@ struct configuration {
   u_int16_t pkt_len_distrib_bins_lookup[ETHER_JUMBO_MTU+1];
   int use_ip_next_hop;
   int tmp_net_own_field;
+  int tmp_asa_bi_flow;
   size_t thread_stack;
 };
 

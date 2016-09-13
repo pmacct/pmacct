@@ -2293,6 +2293,12 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
       pdata->pkt_len = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_INITIATOR_OCTETS].len == 4) {
+      if (config.tmp_asa_bi_flow) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_INITIATOR_OCTETS].off, 4);
+        pdata->pkt_len = ntohl(t32);
+      }
+    }
 
     if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
@@ -2317,6 +2323,12 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
     else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
       pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_RESPONDER_OCTETS].len == 4) {
+      if (config.tmp_asa_bi_flow) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 4);
+        pdata->pkt_num = ntohl(t32);
+      }
     }
 
     if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 9) {
@@ -2522,6 +2534,12 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
       pdata->pkt_len = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_INITIATOR_OCTETS].len == 4) {
+      if (config.tmp_asa_bi_flow) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_INITIATOR_OCTETS].off, 4);
+        pdata->pkt_len = ntohl(t32);
+      }
+    }
 
     if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
@@ -2538,6 +2556,20 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
     else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
       pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_RESPONDER_OCTETS].len == 4) {
+      if (config.tmp_asa_bi_flow) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 4);
+        pdata->pkt_num = ntohl(t32);
+      }
     }
 
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
@@ -2636,6 +2668,12 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
       pdata->pkt_len = pm_ntohll(t64);
     }
+    else if (tpl->tpl[NF9_INITIATOR_OCTETS].len == 4) {
+      if (config.tmp_asa_bi_flow) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_INITIATOR_OCTETS].off, 4);
+        pdata->pkt_len = ntohl(t32);
+      }
+    }
 
     if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
@@ -2652,6 +2690,20 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
     else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
       pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
+      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
+      pdata->pkt_num = ntohl(t32);
+    }
+    else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
+      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
+      pdata->pkt_num = pm_ntohll(t64);
+    }
+    else if (tpl->tpl[NF9_RESPONDER_OCTETS].len == 4) {
+      if (config.tmp_asa_bi_flow) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 4);
+        pdata->pkt_num = ntohl(t32);
+      }
     }
 
     pdata->time_start.tv_sec = 0;

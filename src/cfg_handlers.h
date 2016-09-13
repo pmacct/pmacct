@@ -412,6 +412,7 @@ EXT int cfg_key_uacctd_threshold(char *, char *, char *);
 EXT int cfg_key_tunnel_0(char *, char *, char *);
 EXT int cfg_key_pkt_len_distrib_bins(char *, char *, char *);
 EXT int cfg_key_tmp_net_own_field(char *, char *, char *);
+EXT int cfg_key_tmp_asa_bi_flow(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 EXT void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);
