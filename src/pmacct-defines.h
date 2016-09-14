@@ -341,6 +341,7 @@
 #define PIPE_TYPE_NAT		0x00000020
 #define PIPE_TYPE_MPLS		0x00000040
 #define PIPE_TYPE_VLEN		0x00000080
+#define PIPE_TYPE_LBGP		0x00000100
 
 #define CHLD_WARNING		0x00000001
 #define CHLD_ALERT		0x00000002
@@ -381,6 +382,9 @@
 #define FUNC_TYPE_TELEMETRY		4
 #define FUNC_TYPE_MAX			5
 
+#define PM_MSG_BIN_COPY			0
+#define PM_MSG_STR_COPY			1
+
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
 typedef u_int64_t pm_cfgreg_t;
@@ -393,7 +397,7 @@ typedef struct {
 } pm_country_t;
 
 typedef struct {
-  pm_cfgreg_t type;
+  pm_cfgreg_t type; /* XXX: type2 needed */
   u_int32_t len;
 } pm_label_t;
 

@@ -654,18 +654,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%-22u   ", 0);
         }
   
-        if (config.what_to_count & COUNT_AS_PATH) {
-          as_path = pbgp->as_path;
-          while (as_path) {
-  	    as_path = strchr(pbgp->as_path, ' ');
-  	    if (as_path) *as_path = '_';
-          }
-          if (strlen(pbgp->as_path))
-  	  fprintf(f, "%-22s   ", pbgp->as_path);
-          else
-  	  fprintf(f, "%-22s   ", empty_aspath);
-        }
-
         if (config.what_to_count & COUNT_SRC_AS_PATH) {
           as_path = pbgp->src_as_path;
           while (as_path) {
@@ -981,7 +969,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       else if (f && config.print_output & PRINT_OUTPUT_CSV) {
         if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag);
         if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag2);
-	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_label(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
+	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_string(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
         if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
@@ -1051,18 +1039,21 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
         }
   
-        if (config.what_to_count & COUNT_AS_PATH) {
-          as_path = pbgp->as_path;
-          while (as_path) {
-  	    as_path = strchr(pbgp->as_path, ' ');
-  	    if (as_path) *as_path = '_';
-          }
+	if (config.what_to_count & COUNT_AS_PATH) {
+	  char *str_ptr = NULL;
 
-	  if (strlen(pbgp->as_path))
-            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->as_path);
-	  else
-	    fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
-        }
+	  vlen_prims_get(pvlen, COUNT_INT_AS_PATH, &str_ptr);
+	  if (str_ptr) {
+	    as_path = str_ptr;
+            while (as_path) {
+              as_path = strchr(str_ptr, ' ');
+              if (as_path) *as_path = '_';
+	    }
+
+	  }
+
+	  P_fprintf_csv_string(f, pvlen, COUNT_INT_AS_PATH, write_sep(sep, &count), empty_string);
+	}
 
         if (config.what_to_count & COUNT_SRC_AS_PATH) {
           as_path = pbgp->src_as_path;
@@ -1396,7 +1387,6 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS      ");
   if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "COMMS                    ");
   if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "SRC_COMMS                ");
-  if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "AS_PATH                  ");
   if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "SRC_AS_PATH              ");
   if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF     ");
   if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "SRC_PREF ");
@@ -1588,11 +1578,11 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   else fprintf(f, "\n");
 }
 
-void P_fprintf_csv_label(FILE *f, struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char *sep, char *empty_string)
+void P_fprintf_csv_string(FILE *f, struct pkt_vlen_hdr_primitives *pvlen, pm_cfgreg_t wtc, char *sep, char *empty_string)
 {
-  char *label_ptr = NULL;
+  char *string_ptr = NULL;
 
-  vlen_prims_get(pvlen, wtc, &label_ptr);
-  if (!label_ptr) label_ptr = empty_string;
-  fprintf(f, "%s%s", sep, label_ptr);
+  vlen_prims_get(pvlen, wtc, &string_ptr);
+  if (!string_ptr) string_ptr = empty_string;
+  fprintf(f, "%s%s", sep, string_ptr);
 }

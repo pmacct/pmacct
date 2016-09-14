@@ -507,6 +507,7 @@ struct pkt_stitching {
 
 struct extra_primitives {
   u_int16_t off_pkt_bgp_primitives;
+  u_int16_t off_pkt_lbgp_primitives;
   u_int16_t off_pkt_nat_primitives;
   u_int16_t off_pkt_mpls_primitives;
   u_int16_t off_custom_primitives;
@@ -517,6 +518,7 @@ struct extra_primitives {
 struct primitives_ptrs {
   struct pkt_data *data;
   struct pkt_bgp_primitives *pbgp;
+  struct pkt_legacy_bgp_primitives *plbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;
@@ -535,7 +537,6 @@ struct pkt_bgp_primitives {
   struct host_addr peer_dst_ip;
   char std_comms[MAX_BGP_STD_COMMS];
   char ext_comms[MAX_BGP_EXT_COMMS];
-  char as_path[MAX_BGP_ASPATH];
   u_int32_t local_pref;
   u_int32_t med;
   char src_std_comms[MAX_BGP_STD_COMMS];
@@ -544,6 +545,10 @@ struct pkt_bgp_primitives {
   u_int32_t src_local_pref;
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
+};
+
+struct pkt_legacy_bgp_primitives {
+  char as_path[MAX_BGP_ASPATH];
 };
 
 struct pkt_nat_primitives {
@@ -571,7 +576,6 @@ struct cache_bgp_primitives {
   struct host_addr peer_dst_ip;
   char *std_comms;
   char *ext_comms;
-  char *as_path;
   u_int32_t local_pref;
   u_int32_t med;
   char *src_std_comms;
@@ -580,6 +584,10 @@ struct cache_bgp_primitives {
   u_int32_t src_local_pref;
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
+};
+
+struct cache_legacy_bgp_primitives {
+  char *as_path;
 };
 /* END: BGP section */
 

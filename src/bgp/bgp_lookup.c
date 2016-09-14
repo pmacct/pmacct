@@ -601,19 +601,6 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
 	c->ext_comms = NULL;
       }
     }
-    if (what_to_count & COUNT_AS_PATH) {
-      if (!c->as_path) {
-	c->as_path = malloc(MAX_BGP_ASPATH);
-	if (!c->as_path) goto malloc_failed;
-      }
-      memcpy(c->as_path, p->as_path, MAX_BGP_ASPATH);
-    }
-    else {
-      if (c->as_path) {
-	free(c->as_path);
-	c->as_path = NULL;
-      }
-    }
     c->local_pref = p->local_pref;
     c->med = p->med;
     if (what_to_count & COUNT_SRC_STD_COMM) {
@@ -677,7 +664,6 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     memcpy(&p->peer_dst_ip, &c->peer_dst_ip, HostAddrSz);
     if (c->std_comms) memcpy(p->std_comms, c->std_comms, MAX_BGP_STD_COMMS);
     if (c->ext_comms) memcpy(p->ext_comms, c->ext_comms, MAX_BGP_EXT_COMMS);
-    if (c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
     p->local_pref = c->local_pref;
     p->med = c->med;
     if (c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
@@ -696,12 +682,57 @@ void free_cache_bgp_primitives(struct cache_bgp_primitives **c)
   if (c && *c) {
     if (cbgp->std_comms) free(cbgp->std_comms);
     if (cbgp->ext_comms) free(cbgp->ext_comms);
-    if (cbgp->as_path) free(cbgp->as_path);
     if (cbgp->src_std_comms) free(cbgp->src_std_comms);
     if (cbgp->src_ext_comms) free(cbgp->src_ext_comms);
     if (cbgp->src_as_path) free(cbgp->src_as_path);
 
     memset(cbgp, 0, sizeof(struct cache_bgp_primitives));
+    free(*c);
+    *c = NULL;
+  }
+}
+
+void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, struct pkt_legacy_bgp_primitives *p, pm_cfgreg_t what_to_count)
+{
+  if (c && p) {
+    if (what_to_count & COUNT_AS_PATH) {
+      if (!c->as_path) {
+        c->as_path = malloc(MAX_BGP_ASPATH);
+        if (!c->as_path) goto malloc_failed;
+      }
+      memcpy(c->as_path, p->as_path, MAX_BGP_ASPATH);
+    }
+    else {
+      if (c->as_path) {
+        free(c->as_path);
+        c->as_path = NULL;
+      }
+    }
+
+    return;
+
+    malloc_failed:
+    Log(LOG_WARNING, "WARN ( %s/%s ): malloc() failed (pkt_to_cache_legacy_bgp_primitives).\n", config.name, config.type);
+  }
+}
+
+void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *p, struct cache_legacy_bgp_primitives *c)
+{
+  if (c && p) {
+    memset(p, 0, PlbgpSz);
+
+    if (c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
+  }
+}
+
+void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **c)
+{
+  struct cache_legacy_bgp_primitives *clbgp = *c;
+
+  if (c && *c) {
+    if (clbgp->as_path) free(clbgp->as_path);
+
+    memset(clbgp, 0, sizeof(struct cache_legacy_bgp_primitives));
     free(*c);
     *c = NULL;
   }

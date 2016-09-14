@@ -658,6 +658,7 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 
+	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);
 
 	list->cfg.what_to_count |= COUNT_COUNTERS;

@@ -523,8 +523,13 @@ void count_ext_comm_handler(const struct db_cache *cache_elem, struct insert_dat
 
 void count_as_path_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->as_path);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->as_path);
+  char *as_path_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_AS_PATH, &as_path_ptr);
+  if (!as_path_ptr) as_path_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, as_path_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, as_path_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

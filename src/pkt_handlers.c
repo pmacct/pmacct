@@ -1358,7 +1358,7 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
                       vlen_prims_init(pvlen, 0);
                       return;
                     }
-                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr);
+                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr, PM_MSG_STR_COPY);
 		  }
 		}
 	      }
@@ -2770,7 +2770,7 @@ void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, pptrs->label.val);
+  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, pptrs->label.val, PM_MSG_STR_COPY);
 }
 
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3369,7 +3369,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 		  vlen_prims_init(pvlen, 0);
 		  return;
 		}
-		else vlen_prims_insert(pvlen, cpe->type, hexbuflen, hexbuf);
+		else vlen_prims_insert(pvlen, cpe->type, hexbuflen, hexbuf, PM_MSG_BIN_COPY);
               }
 	      else memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
 	
@@ -3384,7 +3384,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 		    vlen_prims_init(pvlen, 0);
 		    return;
 		  }
-		  else vlen_prims_insert(pvlen, cpe->type, utpl->len, pptrs->f_data+utpl->off);
+		  else vlen_prims_insert(pvlen, cpe->type, utpl->len, pptrs->f_data+utpl->off, PM_MSG_STR_COPY);
 		}
 	      }
             }
@@ -3713,7 +3713,7 @@ void NF_cust_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
 	vlen_prims_init(pvlen, 0);
 	return;
       }
-      else vlen_prims_insert(pvlen, COUNT_INT_LABEL, utpl->len, pptrs->f_data+utpl->off);
+      else vlen_prims_insert(pvlen, COUNT_INT_LABEL, utpl->len, pptrs->f_data+utpl->off, PM_MSG_STR_COPY);
     }
     break;
   default:
@@ -3864,10 +3864,16 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+  struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src; 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info = NULL;
+
+  /* variables for vlen primitives */
+  char *ptr; 
+  int len;
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
@@ -3964,13 +3970,29 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	}
       }
       if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
-        strlcpy(pbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
-	if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH) {
-	  pbgp->as_path[MAX_BGP_ASPATH-2] = '+';
-	  pbgp->as_path[MAX_BGP_ASPATH-1] = '\0';
+	if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+	  len = strlen(info->attr->aspath->str) + 1;
+
+	  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+	    vlen_prims_init(pvlen, 0);
+	    return;
+	  }
+	  else {
+	    ptr = vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, info->attr->aspath->str, PM_MSG_STR_COPY);
+	    if (config.nfacctd_bgp_aspath_radius)
+              evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
+	  }
 	}
-	if (config.nfacctd_bgp_aspath_radius)
-	  evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+	/* fallback to legacy fixed length behaviour */
+	else {
+	  strlcpy(plbgp->as_path, info->attr->aspath->str, MAX_BGP_ASPATH);
+	  if (strlen(info->attr->aspath->str) >= MAX_BGP_ASPATH) {
+	    plbgp->as_path[MAX_BGP_ASPATH-2] = '+';
+	    plbgp->as_path[MAX_BGP_ASPATH-1] = '\0';
+	  }
+	  if (config.nfacctd_bgp_aspath_radius)
+	    evaluate_bgp_aspath_radius(plbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+	}
       }
       if (config.nfacctd_as & NF_AS_BGP) {
         if (chptr->aggregation & COUNT_DST_AS && info->attr->aspath) {
@@ -4408,16 +4430,33 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+  struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
-  if (sample->dst_as_path_len) {
-    strlcpy(pbgp->as_path, sample->dst_as_path, MAX_BGP_ASPATH);
+  if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + sample->dst_as_path_len)) {
+      vlen_prims_init(pvlen, 0);
+      return;
+    }
+    else {
+      char *ptr = NULL;
 
-    if (config.nfacctd_bgp_aspath_radius)
-      evaluate_bgp_aspath_radius(pbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+      ptr = vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, sample->dst_as_path_len, sample->dst_as_path, PM_MSG_STR_COPY);
+      if (config.nfacctd_bgp_aspath_radius)
+        evaluate_bgp_aspath_radius(ptr, sample->dst_as_path_len, config.nfacctd_bgp_aspath_radius);
+    }
+  }
+  /* fallback to legacy fixed length behaviour */
+  else {
+    if (sample->dst_as_path_len) {
+      strlcpy(plbgp->as_path, sample->dst_as_path, MAX_BGP_ASPATH);
+
+      if (config.nfacctd_bgp_aspath_radius)
+        evaluate_bgp_aspath_radius(plbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
+    }
   }
 }
 

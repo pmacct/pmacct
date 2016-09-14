@@ -46,9 +46,10 @@ char *pmc_extract_token(char **, int);
 int pmc_bgp_rd2str(char *, rd_t *);
 int pmc_bgp_str2rd(rd_t *, char *);
 char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
-			struct pkt_bgp_primitives *, struct pkt_nat_primitives *,
-			struct pkt_mpls_primitives *, char *, struct pkt_vlen_hdr_primitives *,
-			pm_counter_t, pm_counter_t, pm_counter_t, u_int32_t, struct timeval *);
+			struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
+			struct pkt_nat_primitives *, struct pkt_mpls_primitives *, char *,
+			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
+			pm_counter_t, u_int32_t, struct timeval *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
 void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
@@ -635,11 +636,13 @@ int main(int argc,char **argv)
   struct query_header q; 
   struct pkt_primitives empty_addr;
   struct pkt_bgp_primitives empty_pbgp;
+  struct pkt_legacy_bgp_primitives empty_plbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   struct pkt_vlen_hdr_primitives empty_pvlen;
   struct query_entry request;
   struct pkt_bgp_primitives *pbgp = NULL;
+  struct pkt_legacy_bgp_primitives *plbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
@@ -682,6 +685,7 @@ int main(int argc,char **argv)
   memset(&q, 0, sizeof(struct query_header));
   memset(&empty_addr, 0, sizeof(struct pkt_primitives));
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
+  memset(&empty_plbgp, 0, sizeof(struct pkt_legacy_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(&empty_pvlen, 0, sizeof(struct pkt_vlen_hdr_primitives));
@@ -1705,12 +1709,12 @@ int main(int argc,char **argv)
         }
         else if (!strcmp(count_token[match_string_index], "as_path")) {
 	  if (!strcmp(match_string_token, "^$"))
-	    memset(request.pbgp.as_path, 0, MAX_BGP_ASPATH);
+	    memset(request.plbgp.as_path, 0, MAX_BGP_ASPATH);
 	  else {
-            strlcpy(request.pbgp.as_path, match_string_token, MAX_BGP_ASPATH);
-            as_path = request.pbgp.as_path;
+            strlcpy(request.plbgp.as_path, match_string_token, MAX_BGP_ASPATH);
+            as_path = request.plbgp.as_path;
             while (as_path) {
-              as_path = strchr(request.pbgp.as_path, '_');
+              as_path = strchr(request.plbgp.as_path, '_');
               if (as_path) *as_path = ' ';
             }
 	  }
@@ -2026,6 +2030,9 @@ int main(int argc,char **argv)
       if (extras.off_pkt_bgp_primitives) pbgp = (struct pkt_bgp_primitives *) ((u_char *)elem + extras.off_pkt_bgp_primitives);
       else pbgp = &empty_pbgp;
 
+      if (extras.off_pkt_lbgp_primitives) plbgp = (struct pkt_legacy_bgp_primitives *) ((u_char *)elem + extras.off_pkt_lbgp_primitives);
+      else plbgp = &empty_plbgp;
+
       if (extras.off_pkt_nat_primitives) pnat = (struct pkt_nat_primitives *) ((u_char *)elem + extras.off_pkt_nat_primitives);
       else pnat = &empty_pnat;
 
@@ -2040,6 +2047,7 @@ int main(int argc,char **argv)
 
       if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0 ||
+	  memcmp(plbgp, &empty_plbgp, sizeof(struct pkt_legacy_bgp_primitives)) != 0 ||
 	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
 	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0 ||
 	  pmc_custom_primitives_registry.len ||
@@ -2180,18 +2188,18 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count & COUNT_AS_PATH)) {
-	  as_path = pbgp->as_path;
+	  as_path = plbgp->as_path;
 	  while (as_path) {
-	    as_path = strchr(pbgp->as_path, ' ');
+	    as_path = strchr(plbgp->as_path, ' ');
 	    if (as_path) *as_path = '_';
 	  }
-          if (strlen(pbgp->as_path)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", pbgp->as_path);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->as_path);
+          if (strlen(plbgp->as_path)) {
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", plbgp->as_path);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), plbgp->as_path);
 	  }
 	  else {
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", empty_aspath); 
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->as_path); 
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), plbgp->as_path); 
 	  }
         }
 
@@ -2629,7 +2637,7 @@ int main(int argc,char **argv)
 	  char *json_str;
 
 	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
-				      &acc_elem->primitives, pbgp, pnat, pmpls, pcust, pvlen, acc_elem->pkt_len,
+				      &acc_elem->primitives, pbgp, plbgp, pnat, pmpls, pcust, pvlen, acc_elem->pkt_len,
 				      acc_elem->pkt_num, acc_elem->flo_num, acc_elem->tcp_flags, NULL);
 
 	  if (json_str) {
@@ -3120,7 +3128,8 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
 
 #ifdef WITH_JANSSON 
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-		  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+		  struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
+		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
 		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
 {
@@ -3237,13 +3246,13 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_AS_PATH) {
-    as_path = pbgp->as_path;
+    as_path = plbgp->as_path;
     while (as_path) {
-      as_path = strchr(pbgp->as_path, ' ');
+      as_path = strchr(plbgp->as_path, ' ');
       if (as_path) *as_path = '_';
     }
-    if (strlen(pbgp->as_path))
-      kv = json_pack("{ss}", "as_path", pbgp->as_path);
+    if (strlen(plbgp->as_path))
+      kv = json_pack("{ss}", "as_path", plbgp->as_path);
     else
       kv = json_pack("{ss}", "as_path", empty_string);
 
@@ -3631,7 +3640,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 }
 #else
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-                  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
+                  struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
+		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
 		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
 {

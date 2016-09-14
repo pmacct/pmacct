@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -44,7 +44,7 @@ EXT void mongodb_plugin(int, struct configuration *, void *);
 EXT void MongoDB_cache_purge(struct chained_cache *[], int);
 EXT void MongoDB_create_indexes(mongo *, const char *);
 EXT int MongoDB_get_database(char *, int, char *);
-EXT void MongoDB_append_label(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
+EXT void MongoDB_append_string(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 EXT int MongoDB_oid_fuzz();
 
 /* global vars */

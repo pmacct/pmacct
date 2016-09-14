@@ -1610,7 +1610,7 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 		  struct pkt_stitching *stitch)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *label_ptr;
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;
   char tstamp_str[SRVBUFLEN];
   json_t *obj = json_object(), *kv;
 
@@ -1627,10 +1627,10 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc_2 & COUNT_LABEL) {
-    vlen_prims_get(pvlen, COUNT_INT_LABEL, &label_ptr);
-    if (!label_ptr) label_ptr = empty_string;
+    vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
+    if (!str_ptr) str_ptr = empty_string;
 
-    kv = json_pack("{ss}", "label", label_ptr);
+    kv = json_pack("{ss}", "label", str_ptr);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -1721,16 +1721,17 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_AS_PATH) {
-    as_path = pbgp->as_path;
-    while (as_path) {
-      as_path = strchr(pbgp->as_path, ' ');
-      if (as_path) *as_path = '_';
+    vlen_prims_get(pvlen, COUNT_INT_AS_PATH, &str_ptr);
+    if (str_ptr) {
+      as_path = str_ptr;
+      while (as_path) {
+	as_path = strchr(str_ptr, ' ');
+	if (as_path) *as_path = '_';
+      }
     }
-    if (strlen(pbgp->as_path))
-      kv = json_pack("{ss}", "as_path", pbgp->as_path);
-    else
-      kv = json_pack("{ss}", "as_path", empty_string);
+    else str_ptr = empty_string;
 
+    kv = json_pack("{ss}", "as_path", str_ptr);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -2542,7 +2543,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   struct pkt_stitching *stitch, avro_value_iface_t *iface)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *label_ptr;
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;
   char tstamp_str[SRVBUFLEN];
 
   avro_value_t value;
@@ -2561,10 +2562,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc_2 & COUNT_LABEL) {
-    vlen_prims_get(pvlen, COUNT_INT_LABEL, &label_ptr);
-    if (!label_ptr) label_ptr = empty_string;
+    vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
+    if (!str_ptr) str_ptr = empty_string;
+
     check_i(avro_value_get_by_name(&value, "label", &field, NULL));
-    check_i(avro_value_set_string(&field, label_ptr));
+    check_i(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_CLASS) {
@@ -2639,16 +2641,18 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc & COUNT_AS_PATH) {
-    as_path = pbgp->as_path;
-    while (as_path) {
-      as_path = strchr(pbgp->as_path, ' ');
-      if (as_path) *as_path = '_';
+    vlen_prims_get(pvlen, COUNT_INT_AS_PATH, &str_ptr);
+    if (str_ptr) {
+      as_path = str_ptr;
+      while (as_path) {
+	as_path = strchr(str_ptr, ' ');
+	if (as_path) *as_path = '_';
+      }
     }
+    else str_ptr = empty_string;
+
     check_i(avro_value_get_by_name(&value, "as_path", &field, NULL));
-    if (strlen(pbgp->as_path))
-      check_i(avro_value_set_string(&field, pbgp->as_path));
-    else
-      check_i(avro_value_set_string(&field, empty_string));
+    check_i(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_LOCAL_PREF) {
@@ -3088,6 +3092,11 @@ void set_primptrs_funcs(struct extra_primitives *extras)
     idx++;
   }
 
+  if (extras->off_pkt_lbgp_primitives) {
+    primptrs_funcs[idx] = primptrs_set_lbgp;
+    idx++;
+  }
+
   if (extras->off_pkt_nat_primitives) { 
     primptrs_funcs[idx] = primptrs_set_nat;
     idx++;
@@ -3117,6 +3126,12 @@ void set_primptrs_funcs(struct extra_primitives *extras)
 void primptrs_set_bgp(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pbgp = (struct pkt_bgp_primitives *) (base + extras->off_pkt_bgp_primitives);
+  prim_ptrs->vlen_next_off = 0;
+}
+
+void primptrs_set_lbgp(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->plbgp = (struct pkt_legacy_bgp_primitives *) (base + extras->off_pkt_lbgp_primitives);
   prim_ptrs->vlen_next_off = 0;
 }
 
@@ -3521,7 +3536,7 @@ void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
   }
 }
 
-void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val /*, optional realloc */)
+char *vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val, int copy_type /*, optional realloc */)
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
@@ -3532,10 +3547,14 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
   label_ptr->len = len;
 
   ptr += PmLabelTSz;
-  memcpy(ptr, val, len);
+
+  if (PM_MSG_BIN_COPY) memcpy(ptr, val, len);
+  else if (PM_MSG_STR_COPY) strlcpy(ptr, val, len);
 
   hdr->num++;
   hdr->tot_len += (PmLabelTSz + len);
+
+  return ptr;
 }
 
 int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, optional realloc */)

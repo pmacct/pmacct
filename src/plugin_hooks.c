@@ -73,6 +73,7 @@ void load_plugins(struct plugin_requests *req)
         }
       }
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += sizeof(struct pkt_bgp_primitives);
+      if (list->cfg.data_type & PIPE_TYPE_LBGP) min_sz += sizeof(struct pkt_legacy_bgp_primitives);
       if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
       if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
@@ -187,6 +188,11 @@ void load_plugins(struct plugin_requests *req)
 	offset += sizeof(struct pkt_bgp_primitives);
       }
       else chptr->extras.off_pkt_bgp_primitives = 0; 
+      if (list->cfg.data_type & PIPE_TYPE_LBGP) {
+        chptr->extras.off_pkt_lbgp_primitives = offset;
+        offset += sizeof(struct pkt_legacy_bgp_primitives);
+      }
+      else chptr->extras.off_pkt_lbgp_primitives = 0;
       if (list->cfg.data_type & PIPE_TYPE_NAT) {
         chptr->extras.off_pkt_nat_primitives = offset;
         offset += sizeof(struct pkt_nat_primitives);

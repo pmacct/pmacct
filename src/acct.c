@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /*
@@ -32,6 +32,7 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_primitives *addr = &data->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  struct pkt_legacy_bgp_primitives *plbgp = prim_ptrs->plbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
@@ -40,12 +41,14 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives); 
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
+  unsigned int plb_size = sizeof(struct pkt_legacy_bgp_primitives);
   unsigned int pn_size = sizeof(struct pkt_nat_primitives);
   unsigned int pm_size = sizeof(struct pkt_mpls_primitives);
   unsigned int pc_size = config.cpptrs.len;
 
   hash = cache_crc32((unsigned char *)addr, pp_size);
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
+  if (plbgp) hash ^= cache_crc32((unsigned char *)plbgp, plb_size);
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
@@ -72,12 +75,13 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   struct pkt_data *pdata = prim_ptrs->data;
   struct pkt_primitives *data = &pdata->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  struct pkt_legacy_bgp_primitives *plbgp = prim_ptrs->plbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_cust = TRUE; 
-  int res_vlen = TRUE;
+  int res_vlen = TRUE, res_lbgp = TRUE;
 
   res_data = memcmp(&elem->primitives, data, sizeof(struct pkt_primitives));
 
@@ -91,6 +95,16 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   }
   else res_bgp = FALSE;
 
+  if (plbgp) {
+    if (elem->clbgp) {
+      struct pkt_legacy_bgp_primitives tmp_plbgp;
+
+      cache_to_pkt_legacy_bgp_primitives(&tmp_plbgp, elem->clbgp, config.what_to_count);
+      res_lbgp = memcmp(&tmp_plbgp, plbgp, sizeof(struct pkt_legacy_bgp_primitives));
+    }
+  }
+  else res_lbgp = FALSE;
+
   if (pnat && elem->pnat) res_nat = memcmp(elem->pnat, pnat, sizeof(struct pkt_nat_primitives));
   else res_nat = FALSE;
 
@@ -103,7 +117,7 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   if (pvlen && elem->pvlen) res_vlen = vlen_prims_cmp(elem->pvlen, pvlen);
   else res_vlen = FALSE;
 
-  return res_data | res_bgp | res_nat | res_mpls | res_cust | res_vlen;
+  return res_data | res_bgp | res_lbgp | res_nat | res_mpls | res_cust | res_vlen;
 }
 
 void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
@@ -111,6 +125,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_primitives *addr = &data->primitives;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
+  struct pkt_legacy_bgp_primitives *plbgp = prim_ptrs->plbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   char *pcust = prim_ptrs->pcust;
@@ -121,10 +136,12 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives);
   unsigned int pb_size = sizeof(struct pkt_bgp_primitives);
+  unsigned int plb_size = sizeof(struct pkt_legacy_bgp_primitives);
   unsigned int pn_size = sizeof(struct pkt_nat_primitives);
   unsigned int pm_size = sizeof(struct pkt_mpls_primitives);
   unsigned int pc_size = config.cpptrs.len;
   unsigned int cb_size = sizeof(struct cache_bgp_primitives);
+  unsigned int clb_size = sizeof(struct cache_legacy_bgp_primitives);
 
   /* We are classifing packets. We have a non-zero bytes accumulator (ba)
      and a non-zero class. Before accounting ba to this class, we have to
@@ -157,6 +174,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 
   hash = cache_crc32((unsigned char *)addr, pp_size);
   if (pbgp) hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
+  if (plbgp) hash ^= cache_crc32((unsigned char *)plbgp, plb_size);
   if (pnat) hash ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
   if (pcust && pc_size) hash ^= cache_crc32((unsigned char *)pcust, pc_size);
@@ -226,6 +244,20 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
       else free_cache_bgp_primitives(&elem_acc->cbgp);
+
+      if (plbgp) {
+        if (!elem_acc->clbgp) {
+          elem_acc->clbgp = (struct cache_legacy_bgp_primitives *) malloc(clb_size);
+          if (!elem_acc->clbgp) {
+            Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
+            exit_plugin(1);
+          }
+        }
+
+        memset(elem_acc->clbgp, 0, clb_size);
+        pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count);
+      }
+      else free_cache_legacy_bgp_primitives(&elem_acc->clbgp);
 
       if (pnat) {
 	if (!elem_acc->pnat) {
@@ -350,6 +382,17 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         pkt_to_cache_bgp_primitives(elem_acc->cbgp, pbgp, config.what_to_count);
       }
       else elem_acc->cbgp = NULL;
+
+      if (plbgp) {
+        elem_acc->clbgp = (struct cache_legacy_bgp_primitives *) malloc(clb_size);
+        if (!elem_acc->clbgp) {
+          Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
+          exit_plugin(1);
+        }
+        memset(elem_acc->clbgp, 0, clb_size);
+        pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count);
+      }
+      else elem_acc->clbgp = NULL;
 
       if (pnat) {
         elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);

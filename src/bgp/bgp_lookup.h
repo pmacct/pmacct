@@ -36,5 +36,8 @@ EXT int bgp_lookup_node_match_cmp_bgp(struct bgp_info *, struct node_match_cmp_t
 EXT void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *, struct cache_bgp_primitives *);
 EXT void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *, struct pkt_bgp_primitives *, pm_cfgreg_t);
 EXT void free_cache_bgp_primitives(struct cache_bgp_primitives **);
+EXT void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *, struct pkt_legacy_bgp_primitives *, pm_cfgreg_t);
+EXT void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *, struct cache_legacy_bgp_primitives *);
+EXT void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **);
 #undef EXT
 #endif 

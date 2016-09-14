@@ -487,6 +487,7 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 
+	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);
 
 	data_plugins++;
@@ -1267,6 +1268,7 @@ void compute_once()
   PmsgSz = sizeof(struct pkt_msg);
   PextrasSz = sizeof(struct pkt_extras);
   PbgpSz = sizeof(struct pkt_bgp_primitives);
+  PlbgpSz = sizeof(struct pkt_legacy_bgp_primitives);
   PnatSz = sizeof(struct pkt_nat_primitives);
   PmplsSz = sizeof(struct pkt_mpls_primitives);
   PvhdrSz = sizeof(struct pkt_vlen_hdr_primitives);
