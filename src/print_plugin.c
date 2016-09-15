@@ -602,32 +602,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "%-10u  ", data->src_as); 
         if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%-10u  ", data->dst_as); 
   
-        if (config.what_to_count & COUNT_STD_COMM) { 
-          bgp_comm = pbgp->std_comms;
-          while (bgp_comm) {
-            bgp_comm = strchr(pbgp->std_comms, ' ');
-            if (bgp_comm) *bgp_comm = '_';
-          }
-  
-          if (strlen(pbgp->std_comms)) 
-            fprintf(f, "%-22s   ", pbgp->std_comms);
-          else
-  	  fprintf(f, "%-22u   ", 0);
-        }
-
-        if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
-          bgp_comm = pbgp->ext_comms;
-          while (bgp_comm) {
-            bgp_comm = strchr(pbgp->ext_comms, ' ');
-            if (bgp_comm) *bgp_comm = '_';
-          }
-
-          if (strlen(pbgp->ext_comms))
-            fprintf(f, "%-22s   ", pbgp->ext_comms);
-          else
-          fprintf(f, "%-22u   ", 0);
-        }
-
         if (config.what_to_count & COUNT_SRC_STD_COMM) {
           bgp_comm = pbgp->src_std_comms;
           while (bgp_comm) {
@@ -988,29 +962,35 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%s%u", write_sep(sep, &count), data->dst_as); 
   
         if (config.what_to_count & COUNT_STD_COMM) {
-          bgp_comm = pbgp->std_comms;
-          while (bgp_comm) {
-            bgp_comm = strchr(pbgp->std_comms, ' ');
-            if (bgp_comm) *bgp_comm = '_';
+          char *str_ptr = NULL;
+
+          vlen_prims_get(pvlen, COUNT_INT_STD_COMM, &str_ptr);
+          if (str_ptr) {
+            bgp_comm = str_ptr;
+            while (bgp_comm) {
+              bgp_comm = strchr(str_ptr, ' ');
+              if (bgp_comm) *bgp_comm = '_';
+            }
+
           }
-  
-          if (strlen(pbgp->std_comms)) 
-            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->std_comms);
-          else
-            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_STD_COMM, write_sep(sep, &count), empty_string);
         }
 
         if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
-          bgp_comm = pbgp->ext_comms;
-          while (bgp_comm) {
-            bgp_comm = strchr(pbgp->ext_comms, ' ');
-            if (bgp_comm) *bgp_comm = '_';
+          char *str_ptr = NULL;
+
+          vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
+          if (str_ptr) {
+            bgp_comm = str_ptr;
+            while (bgp_comm) {
+              bgp_comm = strchr(str_ptr, ' ');
+              if (bgp_comm) *bgp_comm = '_';
+            }
+
           }
 
-          if (strlen(pbgp->ext_comms))
-            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->ext_comms);
-          else
-            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_EXT_COMM, write_sep(sep, &count), empty_string);
         }
 
         if (config.what_to_count & COUNT_SRC_STD_COMM) {
@@ -1385,7 +1365,6 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 #endif
   if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "SRC_AS      ");
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS      ");
-  if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "COMMS                    ");
   if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "SRC_COMMS                ");
   if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "SRC_AS_PATH              ");
   if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF     ");

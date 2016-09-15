@@ -784,13 +784,12 @@ void write_neighbors_file(char *filename, int type)
 
 void bgp_config_checks(struct configuration *c)
 {
-  if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
-			  COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|
-			  COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH|COUNT_SRC_MED|
-			  COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)) {
+  if (c->what_to_count & (COUNT_LOCAL_PREF|COUNT_MED|COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|
+			  COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|
+			  COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)) {
     /* Sanitizing the aggregation method */
-    if ( ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) ||
-         ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) ) {
+    /* XXX: to be removed */
+      if ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) {
       printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
       exit(1);
     }
@@ -815,7 +814,14 @@ void bgp_config_checks(struct configuration *c)
     c->data_type |= PIPE_TYPE_BGP;
   }
 
-  if (c->what_to_count & (COUNT_AS_PATH)) {
+  if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_AS_PATH)) {
+    /* Sanitizing the aggregation method */
+    /* XXX: to be removed */
+    if ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) {
+      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+      exit(1);
+    }
+
     if (c->type_id == PLUGIN_ID_MEMORY) c->data_type |= PIPE_TYPE_LBGP;
     else c->data_type |= PIPE_TYPE_VLEN;
   }

@@ -3948,26 +3948,72 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->attr) {
       if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
-	if (config.nfacctd_bgp_stdcomm_pattern)
-	  evaluate_comm_patterns(pbgp->std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
+        if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+          len = strlen(info->attr->community->str) + 1;
+
+          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+            vlen_prims_init(pvlen, 0);
+            return;
+          }
+          else {
+	    if (config.nfacctd_bgp_stdcomm_pattern) {
+	      char *ptr = malloc(len);
+
+	      if (ptr) {
+	        evaluate_comm_patterns(ptr, info->attr->community->str, std_comm_patterns, len);
+	        vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+		free(ptr);
+	      }
+	    }
+	    else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, info->attr->community->str, PM_MSG_STR_COPY);
+	  }
+        }
+        /* fallback to legacy fixed length behaviour */
 	else {
-          strlcpy(pbgp->std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS) {
-	    pbgp->std_comms[MAX_BGP_STD_COMMS-2] = '+';
-	    pbgp->std_comms[MAX_BGP_STD_COMMS-1] = '\0';
+	  if (config.nfacctd_bgp_stdcomm_pattern)
+	    evaluate_comm_patterns(plbgp->std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
+	  else {
+            strlcpy(plbgp->std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+	    if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS) {
+	      plbgp->std_comms[MAX_BGP_STD_COMMS-2] = '+';
+	      plbgp->std_comms[MAX_BGP_STD_COMMS-1] = '\0';
+	    }
 	  }
 	}
       }
       if (chptr->aggregation & COUNT_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
-	if (config.nfacctd_bgp_extcomm_pattern)
-	  evaluate_comm_patterns(pbgp->ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
-	else {
-          strlcpy(pbgp->ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-	  if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS) {
-	    pbgp->ext_comms[MAX_BGP_EXT_COMMS-2] = '+';
-	    pbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '\0';
+        if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+          len = strlen(info->attr->ecommunity->str) + 1;
+          
+          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+            vlen_prims_init(pvlen, 0);
+            return;
+          } 
+          else {
+            if (config.nfacctd_bgp_extcomm_pattern) {
+              char *ptr = malloc(len);
+
+              if (ptr) {
+                evaluate_comm_patterns(ptr, info->attr->ecommunity->str, ext_comm_patterns, len);
+                vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+                free(ptr);
+              }
+            }
+            else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, info->attr->ecommunity->str, PM_MSG_STR_COPY);
+          }
+        }
+        /* fallback to legacy fixed length behaviour */
+        else {
+	  if (config.nfacctd_bgp_extcomm_pattern)
+	    evaluate_comm_patterns(plbgp->ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
+	  else {
+            strlcpy(plbgp->ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+	    if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS) {
+	      plbgp->ext_comms[MAX_BGP_EXT_COMMS-2] = '+';
+	      plbgp->ext_comms[MAX_BGP_EXT_COMMS-1] = '\0';
+	    }
 	  }
-	}
+        }
       }
       if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
 	if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
@@ -4500,12 +4546,34 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+  struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
-  if (sample->communities_len) strlcpy(pbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS); 
+  if (sample->communities_len) {
+    if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + sample->communities_len)) {
+        vlen_prims_init(pvlen, 0);
+        return;
+      }
+      else {
+        if (config.nfacctd_bgp_stdcomm_pattern) {
+          char *ptr = malloc(sample->communities_len);
+
+          if (ptr) {
+            evaluate_comm_patterns(ptr, sample->comms, std_comm_patterns, sample->communities_len);
+            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, sample->communities_len, ptr, PM_MSG_STR_COPY);
+            free(ptr);
+          }
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, sample->communities_len, sample->comms, PM_MSG_STR_COPY);
+      }
+    }
+    /* fallback to legacy fixed length behaviour */
+    else strlcpy(plbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS);
+  }
 }
 
 void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

@@ -477,29 +477,29 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       if (config.what_to_count & COUNT_DST_AS) bson_append_int(bson_elem, "as_dst", data->dst_as);
   
       if (config.what_to_count & COUNT_STD_COMM) {
-        bgp_comm = pbgp->std_comms;
-        while (bgp_comm) {
-          bgp_comm = strchr(pbgp->std_comms, ' ');
-          if (bgp_comm) *bgp_comm = '_';
+        vlen_prims_get(pvlen, COUNT_INT_STD_COMM, &str_ptr);
+        if (str_ptr) {
+          bgp_comm = str_ptr;
+          while (bgp_comm) {
+            bgp_comm = strchr(str_ptr, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
         }
-  
-        if (strlen(pbgp->std_comms)) 
-          bson_append_string(bson_elem, "comms", pbgp->std_comms);
-        else
-          bson_append_null(bson_elem, "comms");
+
+        MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_STD_COMM);
       }
 
       if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
-        bgp_comm = pbgp->ext_comms;
-        while (bgp_comm) {
-          bgp_comm = strchr(pbgp->ext_comms, ' ');
-          if (bgp_comm) *bgp_comm = '_';
+        vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
+        if (str_ptr) {
+          bgp_comm = str_ptr;
+          while (bgp_comm) {
+            bgp_comm = strchr(str_ptr, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
         }
 
-        if (strlen(pbgp->ext_comms))
-          bson_append_string(bson_elem, "comms", pbgp->ext_comms);
-        else
-          bson_append_null(bson_elem, "comms");
+        MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_EXT_COMM);
       }
   
       if (config.what_to_count & COUNT_AS_PATH) {

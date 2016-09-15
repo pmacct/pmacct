@@ -1661,12 +1661,12 @@ int main(int argc,char **argv)
 	}
         else if (!strcmp(count_token[match_string_index], "std_comm")) {
 	  if (!strcmp(match_string_token, "0"))
-	    memset(request.pbgp.std_comms, 0, MAX_BGP_STD_COMMS);
+	    memset(request.plbgp.std_comms, 0, MAX_BGP_STD_COMMS);
 	  else {
-            strlcpy(request.pbgp.std_comms, match_string_token, MAX_BGP_STD_COMMS);
-	    bgp_comm = request.pbgp.std_comms;
+            strlcpy(request.plbgp.std_comms, match_string_token, MAX_BGP_STD_COMMS);
+	    bgp_comm = request.plbgp.std_comms;
 	    while (bgp_comm) {
-	      bgp_comm = strchr(request.pbgp.std_comms, '_');
+	      bgp_comm = strchr(request.plbgp.std_comms, '_');
 	      if (bgp_comm) *bgp_comm = ' ';
 	    }
 	  }
@@ -1685,12 +1685,12 @@ int main(int argc,char **argv)
         }
         else if (!strcmp(count_token[match_string_index], "ext_comm")) {
           if (!strcmp(match_string_token, "0"))
-            memset(request.pbgp.ext_comms, 0, MAX_BGP_EXT_COMMS);
+            memset(request.plbgp.ext_comms, 0, MAX_BGP_EXT_COMMS);
           else {
-            strlcpy(request.pbgp.ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
-            bgp_comm = request.pbgp.ext_comms;
+            strlcpy(request.plbgp.ext_comms, match_string_token, MAX_BGP_EXT_COMMS);
+            bgp_comm = request.plbgp.ext_comms;
             while (bgp_comm) {
-              bgp_comm = strchr(request.pbgp.ext_comms, '_');
+              bgp_comm = strchr(request.plbgp.ext_comms, '_');
               if (bgp_comm) *bgp_comm = ' ';
             }
 	  }
@@ -2124,14 +2124,14 @@ int main(int argc,char **argv)
 	/* Slightly special "!have_wtc" handling due to standard and
 	   extended BGP communities being mutual exclusive */
 	if ((!have_wtc && !(what_to_count & COUNT_EXT_COMM)) || (what_to_count & COUNT_STD_COMM)) {
-	  bgp_comm = pbgp->std_comms;
+	  bgp_comm = plbgp->std_comms;
 	  while (bgp_comm) {
-	    bgp_comm = strchr(pbgp->std_comms, ' ');
+	    bgp_comm = strchr(plbgp->std_comms, ' ');
 	    if (bgp_comm) *bgp_comm = '_';
 	  }
-          if (strlen(pbgp->std_comms)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", pbgp->std_comms);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->std_comms);
+          if (strlen(plbgp->std_comms)) {
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", plbgp->std_comms);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), plbgp->std_comms);
 	  }
 	  else {
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22u   ", 0);
@@ -2156,14 +2156,14 @@ int main(int argc,char **argv)
         }
 
         if (what_to_count & COUNT_EXT_COMM) {
-          bgp_comm = pbgp->ext_comms;
+          bgp_comm = plbgp->ext_comms;
           while (bgp_comm) {
-            bgp_comm = strchr(pbgp->ext_comms, ' ');
+            bgp_comm = strchr(plbgp->ext_comms, ' ');
             if (bgp_comm) *bgp_comm = '_';
           }
-          if (strlen(pbgp->ext_comms)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", pbgp->ext_comms);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->ext_comms);
+          if (strlen(plbgp->ext_comms)) {
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", plbgp->ext_comms);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), plbgp->ext_comms);
 	  }
 	  else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22u   ", 0);
@@ -3214,14 +3214,14 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_STD_COMM) {
-    bgp_comm = pbgp->std_comms;
+    bgp_comm = plbgp->std_comms;
     while (bgp_comm) {
-      bgp_comm = strchr(pbgp->std_comms, ' ');
+      bgp_comm = strchr(plbgp->std_comms, ' ');
       if (bgp_comm) *bgp_comm = '_';
     }
 
-    if (strlen(pbgp->std_comms))
-      kv = json_pack("{ss}", "comms", pbgp->std_comms);
+    if (strlen(plbgp->std_comms))
+      kv = json_pack("{ss}", "comms", plbgp->std_comms);
     else
       kv = json_pack("{ss}", "comms", empty_string);
 
@@ -3230,14 +3230,14 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_EXT_COMM && !(wtc & COUNT_STD_COMM)) {
-    bgp_comm = pbgp->ext_comms;
+    bgp_comm = plbgp->ext_comms;
     while (bgp_comm) {
-      bgp_comm = strchr(pbgp->ext_comms, ' ');
+      bgp_comm = strchr(plbgp->ext_comms, ' ');
       if (bgp_comm) *bgp_comm = '_';
     }
 
-    if (strlen(pbgp->ext_comms))
-      kv = json_pack("{ss}", "comms", pbgp->ext_comms);
+    if (strlen(plbgp->ext_comms))
+      kv = json_pack("{ss}", "comms", plbgp->ext_comms);
     else
       kv = json_pack("{ss}", "comms", empty_string);
 
