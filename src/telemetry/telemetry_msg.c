@@ -64,6 +64,16 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
+  sigset_t mask, oldmask;
+
+  sigemptyset(&mask);
+  sigemptyset(&oldmask);
+
+  /* Block SIGCHLD so it doesn't kick us out of recv. */
+  sigaddset(&mask, SIGCHLD);
+  if (sigprocmask(SIG_BLOCK, &mask, &oldmask) < 0) {
+      return ret;
+  }
 
   if (!len) {
     ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
@@ -77,6 +87,9 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
     peer->stats.packet_bytes += ret;
     peer->msglen = (ret + peer->buf.truncated_len);
   }
+
+  /* Restore the original procmask. */
+  sigprocmask(SIG_SETMASK, &oldmask, NULL);
 
   return ret;
 }
