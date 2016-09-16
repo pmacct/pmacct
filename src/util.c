@@ -1704,7 +1704,7 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
-  if (wtc & COUNT_EXT_COMM && !(wtc & COUNT_STD_COMM)) {
+  if (wtc & COUNT_EXT_COMM) {
     vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
     if (str_ptr) {
       bgp_comm = str_ptr;
@@ -1715,7 +1715,11 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     }
     else str_ptr = empty_string;
 
-    kv = json_pack("{ss}", "comms", str_ptr);
+    if (!config.tmp_comms_same_field)
+      kv = json_pack("{ss}", "ecomms", str_ptr);
+    else
+      kv = json_pack("{ss}", "comms", str_ptr);
+
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -2378,8 +2382,15 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_DST_AS)
     avro_schema_record_field_append(schema, "as_dst", avro_schema_long());
 
-  if ((wtc & COUNT_STD_COMM) || (wtc & COUNT_EXT_COMM))
+  if (wtc & COUNT_STD_COMM)
     avro_schema_record_field_append(schema, "comms", avro_schema_string());
+
+  if (wtc & COUNT_EXT_COMM) {
+    if (!config.tmp_comms_same_field)
+      avro_schema_record_field_append(schema, "ecomms", avro_schema_string());
+    else
+      avro_schema_record_field_append(schema, "comms", avro_schema_string());
+  }
 
   if (wtc & COUNT_AS_PATH)
     avro_schema_record_field_append(schema, "as_path", avro_schema_string());
@@ -2628,7 +2639,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
-  else if (wtc & COUNT_EXT_COMM && !(wtc & COUNT_STD_COMM)) {
+  else if (wtc & COUNT_EXT_COMM) {
     vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
     if (str_ptr) {
       bgp_comm = str_ptr;
@@ -2639,7 +2650,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
+    if (!config.tmp_comms_same_field)
+      check_i(avro_value_get_by_name(&value, "ecomms", &field, NULL));
+    else 
+      check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
+
     check_i(avro_value_set_string(&field, str_ptr));
   }
 

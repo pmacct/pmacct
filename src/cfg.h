@@ -506,6 +506,7 @@ struct configuration {
   int use_ip_next_hop;
   int tmp_net_own_field;
   int tmp_asa_bi_flow;
+  int tmp_comms_same_field;
   size_t thread_stack;
 };
 

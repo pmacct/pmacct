@@ -977,7 +977,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           P_fprintf_csv_string(f, pvlen, COUNT_INT_STD_COMM, write_sep(sep, &count), empty_string);
         }
 
-        if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
+        if (config.what_to_count & COUNT_EXT_COMM) {
           char *str_ptr = NULL;
 
           vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
@@ -987,7 +987,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
               bgp_comm = strchr(str_ptr, ' ');
               if (bgp_comm) *bgp_comm = '_';
             }
-
           }
 
           P_fprintf_csv_string(f, pvlen, COUNT_INT_EXT_COMM, write_sep(sep, &count), empty_string);
@@ -1481,7 +1480,13 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 #endif
   if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "%sSRC_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%sDST_AS", write_sep(sep, &count));
-  if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
+  if (!config.tmp_comms_same_field) {
+    if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "%sCOMMS", write_sep(sep, &count));
+    if (config.what_to_count & COUNT_EXT_COMM) fprintf(f, "%sECOMMS", write_sep(sep, &count));
+  }
+  else {
+    if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
+  }
   if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "%sAS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "%sSRC_AS_PATH", write_sep(sep, &count));

@@ -788,10 +788,11 @@ void bgp_config_checks(struct configuration *c)
 			  COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|
 			  COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)) {
     /* Sanitizing the aggregation method */
-    /* XXX: to be removed */
+    if (config.tmp_comms_same_field) {
       if ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) {
-      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
-      exit(1);
+        printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+        exit(1);
+      }
     }
 
     if ( (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
@@ -816,10 +817,11 @@ void bgp_config_checks(struct configuration *c)
 
   if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_AS_PATH)) {
     /* Sanitizing the aggregation method */
-    /* XXX: to be removed */
-    if ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) {
-      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
-      exit(1);
+    if (config.tmp_comms_same_field) {
+      if ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) {
+        printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
+        exit(1);
+      }
     }
 
     if (c->type_id == PLUGIN_ID_MEMORY) c->data_type |= PIPE_TYPE_LBGP;

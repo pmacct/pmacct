@@ -1644,7 +1644,7 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
-  if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) {
+  if (what_to_count & COUNT_STD_COMM) {
     int count_it = FALSE;
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
@@ -1662,14 +1662,40 @@ int sql_evaluate_primitives(int primitive)
       strncat(insert_clause, "comms", SPACELEFT(insert_clause));
       strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, "comms=\'%s\'", SPACELEFT(where[primitive].string));
-      if (what_to_count & COUNT_STD_COMM) {
-        values[primitive].type = where[primitive].type = COUNT_INT_STD_COMM;
-        values[primitive].handler = where[primitive].handler = count_std_comm_handler;
+      values[primitive].type = where[primitive].type = COUNT_INT_STD_COMM;
+      values[primitive].handler = where[primitive].handler = count_std_comm_handler;
+      primitive++;
+    }
+  }
+
+  if (what_to_count & COUNT_EXT_COMM) {
+    int count_it = FALSE;
+
+    if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+    else count_it = TRUE;
+
+    if (count_it) {
+      if (primitive) {
+        strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+        strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
-      else if (what_to_count & COUNT_EXT_COMM) {
-        values[primitive].type = where[primitive].type = COUNT_INT_EXT_COMM;
-        values[primitive].handler = where[primitive].handler = count_ext_comm_handler;
+
+      if (!config.tmp_comms_same_field) {
+        strncat(insert_clause, "ecomms", SPACELEFT(insert_clause));
+        strncat(where[primitive].string, "ecomms=\'%s\'", SPACELEFT(where[primitive].string));
       }
+      else {
+        strncat(insert_clause, "comms", SPACELEFT(insert_clause));
+        strncat(where[primitive].string, "comms=\'%s\'", SPACELEFT(where[primitive].string));
+      }
+
+      strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_INT_EXT_COMM;
+      values[primitive].handler = where[primitive].handler = count_ext_comm_handler;
       primitive++;
     }
   }

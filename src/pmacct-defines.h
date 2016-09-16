@@ -27,7 +27,7 @@
 #define ARGS_PMTELEMETRYD "hVL:l:f:dDS:F:"
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:"
 #define ARGS_PMBMPD "hVL:l:f:dDS:F:"
-#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDVUoiI"
+#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDVUoiIx"
 #define N_PRIMITIVES 57
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32

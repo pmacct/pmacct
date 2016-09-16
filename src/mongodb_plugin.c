@@ -489,7 +489,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_STD_COMM);
       }
 
-      if (config.what_to_count & COUNT_EXT_COMM && !(config.what_to_count & COUNT_STD_COMM)) {
+      if (config.what_to_count & COUNT_EXT_COMM) {
         vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
         if (str_ptr) {
           bgp_comm = str_ptr;
@@ -499,7 +499,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
           }
         }
 
-        MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_EXT_COMM);
+        if (!config.tmp_comms_same_field)
+	  MongoDB_append_string(bson_elem, "ecomms", pvlen, COUNT_INT_EXT_COMM);
+        else
+	  MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_EXT_COMM);
       }
   
       if (config.what_to_count & COUNT_AS_PATH) {

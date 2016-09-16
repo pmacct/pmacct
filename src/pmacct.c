@@ -61,7 +61,7 @@ void pmc_lower_string(char *);
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
 char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
-int want_ipproto_num, tmp_net_own_field, want_tstamp_since_epoch;
+int want_ipproto_num, tmp_net_own_field, tmp_comms_same_field, want_tstamp_since_epoch;
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -97,11 +97,12 @@ void usage_client(char *prog)
   printf("  -U\tShow custom primitives table\n");
   printf("  -D\tShow packet length distribution table\n");
   printf("  -p\t<file> \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
-  printf("  -O\tSet output < formatted | csv | json | avro | event_formatted | event_csv > (applies to -M and -s)\n");
+  printf("  -O\tSet output < formatted | csv | json | event_formatted | event_csv > (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -I\tSet timestamps in 'since Epoch' format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
   printf("  -o\tPrint IP prefixes in the same field as IP addresses (temporary, 1.5 compatible)\n");
+  printf("  -x\tPrint BGP communities (standard, extended) in the same field (temporary, 1.5 and 1.6.0 compatible)\n");
   printf("  -V\tPrint version and exit\n");
   printf("\n");
   printf("  See QUICKSTART file in the distribution for examples\n");
@@ -268,8 +269,14 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS      ");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS      "); 
-    if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
-      printf("COMMS                   ");
+    if (!tmp_comms_same_field) {
+      if (what_to_count & COUNT_STD_COMM) printf("COMMS                   ");
+      if (what_to_count & COUNT_EXT_COMM) printf("ECOMMS                  ");
+    }
+    else {
+      if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
+	printf("COMMS                   ");
+    }
     if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
       printf("SRC_COMMS               ");
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
@@ -494,8 +501,14 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("%sSRC_AS", write_sep(sep, &count));
     if (what_to_count & COUNT_DST_AS) printf("%sDST_AS", write_sep(sep, &count)); 
-    if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
-      printf("%sCOMMS", write_sep(sep, &count));
+    if (!tmp_comms_same_field) {
+      if (what_to_count & COUNT_STD_COMM) printf("%sCOMMS", write_sep(sep, &count));
+      if (what_to_count & COUNT_EXT_COMM) printf("%sECOMMS", write_sep(sep, &count));
+    }
+    else {
+      if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
+        printf("%sCOMMS", write_sep(sep, &count));
+    }
     if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
       printf("%sSRC_COMMS", write_sep(sep, &count));
     if (what_to_count & COUNT_AS_PATH) printf("%sAS_PATH", write_sep(sep, &count));
@@ -717,6 +730,7 @@ int main(int argc,char **argv)
   topN_counter = FALSE;
   topN_howmany = FALSE;
   tmp_net_own_field = TRUE;
+  tmp_comms_same_field = FALSE;
   sum_counters = FALSE;
   num_counters = FALSE;
   fetch_from_file = FALSE;
@@ -1107,6 +1121,9 @@ int main(int argc,char **argv)
     case 'o':
       tmp_net_own_field = FALSE;
       break;
+    case 'x':
+      tmp_comms_same_field = TRUE;
+      break;
     case 'r':
       q.type |= WANT_RESET;
       want_reset = TRUE;
@@ -1276,7 +1293,7 @@ int main(int argc,char **argv)
 
   /* Sanitizing the aggregation method */ 
   if (what_to_count || what_to_count_2) {
-    if (what_to_count & COUNT_STD_COMM && what_to_count & COUNT_EXT_COMM) {
+    if (tmp_comms_same_field && what_to_count & COUNT_STD_COMM && what_to_count & COUNT_EXT_COMM) {
       printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
       exit(1);
     }
@@ -2121,9 +2138,7 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.dst_as);
         }
 
-	/* Slightly special "!have_wtc" handling due to standard and
-	   extended BGP communities being mutual exclusive */
-	if ((!have_wtc && !(what_to_count & COUNT_EXT_COMM)) || (what_to_count & COUNT_STD_COMM)) {
+	if (!have_wtc || (what_to_count & COUNT_STD_COMM)) {
 	  bgp_comm = plbgp->std_comms;
 	  while (bgp_comm) {
 	    bgp_comm = strchr(plbgp->std_comms, ' ');
@@ -3229,17 +3244,25 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_decref(kv);
   }
 
-  if (wtc & COUNT_EXT_COMM && !(wtc & COUNT_STD_COMM)) {
+  if (wtc & COUNT_EXT_COMM) {
     bgp_comm = plbgp->ext_comms;
     while (bgp_comm) {
       bgp_comm = strchr(plbgp->ext_comms, ' ');
       if (bgp_comm) *bgp_comm = '_';
     }
 
-    if (strlen(plbgp->ext_comms))
-      kv = json_pack("{ss}", "comms", plbgp->ext_comms);
-    else
-      kv = json_pack("{ss}", "comms", empty_string);
+    if (!tmp_comms_same_field) {
+      if (strlen(plbgp->ext_comms))
+	kv = json_pack("{ss}", "ecomms", plbgp->ext_comms);
+      else
+	kv = json_pack("{ss}", "ecomms", empty_string);
+    }
+    else {
+      if (strlen(plbgp->ext_comms))
+	kv = json_pack("{ss}", "comms", plbgp->ext_comms);
+      else
+	kv = json_pack("{ss}", "comms", empty_string);
+    }
 
     json_object_update_missing(obj, kv);
     json_decref(kv);

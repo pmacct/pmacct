@@ -6282,6 +6282,28 @@ int cfg_key_tmp_asa_bi_flow(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_tmp_comms_same_field(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tmp_comms_same_field = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tmp_comms_same_field = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_thread_stack(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
