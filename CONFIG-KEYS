@@ -2414,6 +2414,13 @@ DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in f
 		#232 and has been tested against a Cisco ASA export.
 DEFAULT:	false
 
+KEY:		tmp_comms_same_field
+VALUES:		[ true | false ]
+DESC:		Writes BGP extended communities to a own/distinct field than the one used for BGP
+		standard communities. This config directive is meant for pmacct 1.6 only in order to
+		ease backward compatibility. In the next major release this directive will be removed.
+DEFAULT:	false
+
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
 		bytes. A value of 0, default, leaves the stack size to the system default or pmacct
