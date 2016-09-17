@@ -274,11 +274,17 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
       if (what_to_count & COUNT_EXT_COMM) printf("ECOMMS                  ");
     }
     else {
-      if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
+      if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
 	printf("COMMS                   ");
     }
-    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
-      printf("SRC_COMMS               ");
+    if (!tmp_comms_same_field) {
+      if (what_to_count & COUNT_SRC_STD_COMM) printf("SRC_COMMS               ");
+      if (what_to_count & COUNT_SRC_EXT_COMM) printf("SRC_ECOMMS              ");
+    }
+    else {
+      if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
+	printf("SRC_COMMS               ");
+    }
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
     if (what_to_count & COUNT_SRC_AS_PATH) printf("SRC_AS_PATH              ");
     if (what_to_count & COUNT_LOCAL_PREF) printf("PREF     ");
@@ -509,8 +515,14 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
       if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
         printf("%sCOMMS", write_sep(sep, &count));
     }
-    if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
-      printf("%sSRC_COMMS", write_sep(sep, &count));
+    if (!tmp_comms_same_field) {
+      if (what_to_count & COUNT_SRC_STD_COMM) printf("%sSRC_COMMS", write_sep(sep, &count));
+      if (what_to_count & COUNT_SRC_EXT_COMM) printf("%sSRC_ECOMMS", write_sep(sep, &count));
+    }
+    else {
+      if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
+        printf("%sSRC_COMMS", write_sep(sep, &count));
+    }
     if (what_to_count & COUNT_AS_PATH) printf("%sAS_PATH", write_sep(sep, &count));
     if (what_to_count & COUNT_SRC_AS_PATH) printf("%sSRC_AS_PATH", write_sep(sep, &count));
     if (what_to_count & COUNT_LOCAL_PREF) printf("%sPREF", write_sep(sep, &count));
@@ -1297,7 +1309,7 @@ int main(int argc,char **argv)
       printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
       exit(1);
     }
-    if (what_to_count & COUNT_SRC_STD_COMM && what_to_count & COUNT_SRC_EXT_COMM) {
+    if (tmp_comms_same_field && what_to_count & COUNT_SRC_STD_COMM && what_to_count & COUNT_SRC_EXT_COMM) {
       printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
       exit(1);
     }
@@ -2154,7 +2166,7 @@ int main(int argc,char **argv)
 	  }
         }
 
-	if ((!have_wtc && !(what_to_count & COUNT_SRC_EXT_COMM)) || (what_to_count & COUNT_SRC_STD_COMM)) {
+	if (!have_wtc || (what_to_count & COUNT_SRC_STD_COMM)) {
 	  bgp_comm = pbgp->src_std_comms;
 	  while (bgp_comm) {
 	    bgp_comm = strchr(pbgp->src_std_comms, ' ');
@@ -3337,17 +3349,25 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_decref(kv);
   }
 
-  if (wtc & COUNT_SRC_EXT_COMM && !(wtc & COUNT_SRC_STD_COMM)) {
+  if (wtc & COUNT_SRC_EXT_COMM) {
     bgp_comm = pbgp->src_ext_comms;
     while (bgp_comm) {
       bgp_comm = strchr(pbgp->src_ext_comms, ' ');
       if (bgp_comm) *bgp_comm = '_';
     }
 
-    if (strlen(pbgp->src_ext_comms))
-      kv = json_pack("{ss}", "src_comms", pbgp->src_ext_comms);
-    else
-      kv = json_pack("{ss}", "src_comms", empty_string);
+    if (!tmp_comms_same_field) {
+      if (strlen(pbgp->src_ext_comms))
+        kv = json_pack("{ss}", "src_ecomms", pbgp->src_ext_comms);
+      else
+        kv = json_pack("{ss}", "src_ecomms", empty_string);
+    }
+    else {
+      if (strlen(pbgp->src_ext_comms))
+        kv = json_pack("{ss}", "src_comms", pbgp->src_ext_comms);
+      else
+        kv = json_pack("{ss}", "src_comms", empty_string);
+    }
 
     json_object_update_missing(obj, kv);
     json_decref(kv);

@@ -1005,7 +1005,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
             fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
         }
 
-        if (config.what_to_count & COUNT_SRC_EXT_COMM && !(config.what_to_count & COUNT_SRC_STD_COMM)) {
+        if (config.what_to_count & COUNT_SRC_EXT_COMM) {
           bgp_comm = pbgp->src_ext_comms;
           while (bgp_comm) {
             bgp_comm = strchr(pbgp->src_ext_comms, ' ');
@@ -1487,7 +1487,13 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   else {
     if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
   }
-  if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
+  if (!config.tmp_comms_same_field) {
+    if (config.what_to_count & COUNT_SRC_STD_COMM) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
+    if (config.what_to_count & COUNT_SRC_EXT_COMM) fprintf(f, "%sSRC_ECOMMS", write_sep(sep, &count));
+  }
+  else {
+    if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
+  }
   if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "%sAS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "%sSRC_AS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%sPREF", write_sep(sep, &count));

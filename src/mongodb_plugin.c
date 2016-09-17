@@ -545,17 +545,25 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
           bson_append_null(bson_elem, "src_comms");
       }
 
-      if (config.what_to_count & COUNT_SRC_EXT_COMM && !(config.what_to_count & COUNT_SRC_STD_COMM)) {
+      if (config.what_to_count & COUNT_SRC_EXT_COMM) {
         bgp_comm = pbgp->src_ext_comms;
         while (bgp_comm) {
           bgp_comm = strchr(pbgp->src_ext_comms, ' ');
           if (bgp_comm) *bgp_comm = '_';
         }
 
-        if (strlen(pbgp->src_ext_comms))
-          bson_append_string(bson_elem, "src_comms", pbgp->src_ext_comms);
-        else
-          bson_append_null(bson_elem, "src_comms");
+	if (!config.tmp_comms_same_field) {
+          if (strlen(pbgp->src_ext_comms))
+            bson_append_string(bson_elem, "src_ecomms", pbgp->src_ext_comms);
+          else
+            bson_append_null(bson_elem, "src_ecomms");
+	}
+	else {
+          if (strlen(pbgp->src_ext_comms))
+            bson_append_string(bson_elem, "src_comms", pbgp->src_ext_comms);
+          else
+            bson_append_null(bson_elem, "src_comms");
+	}
       }
 
       if (config.what_to_count & COUNT_SRC_AS_PATH) {
