@@ -4479,20 +4479,24 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
+  /* variables for vlen primitives */
+  char *ptr;
+  int len;
+
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
-    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + sample->dst_as_path_len)) {
+    len = strlen(sample->dst_as_path) + 1;
+
+    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
       vlen_prims_init(pvlen, 0);
       return;
     }
     else {
-      char *ptr = NULL;
-
-      ptr = vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, sample->dst_as_path_len, sample->dst_as_path, PM_MSG_STR_COPY);
+      ptr = vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, sample->dst_as_path, PM_MSG_STR_COPY);
       if (config.nfacctd_bgp_aspath_radius)
-        evaluate_bgp_aspath_radius(ptr, sample->dst_as_path_len, config.nfacctd_bgp_aspath_radius);
+	evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
     }
   }
   /* fallback to legacy fixed length behaviour */
