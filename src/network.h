@@ -474,7 +474,7 @@ struct pkt_payload {
 struct pkt_vlen_hdr_primitives {
   u_int16_t tot_len;
   u_int16_t num;
-};
+} __attribute__ ((packed));
 
 // XXX: eventually deprecate pkt_extras
 struct pkt_extras {

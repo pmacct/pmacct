@@ -399,7 +399,7 @@ typedef struct {
 typedef struct {
   pm_cfgreg_t type; /* XXX: type2 needed */
   u_int32_t len;
-} pm_label_t;
+} __attribute__ ((packed)) pm_label_t;
 
 /* one-off: pt_ structures should all be defined in pretag.h */
 typedef struct {
