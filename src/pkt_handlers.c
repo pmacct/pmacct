@@ -3872,7 +3872,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct bgp_info *info = NULL;
 
   /* variables for vlen primitives */
-  char *ptr; 
+  char *ptr, empty_str = '\0'; 
   int len;
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
@@ -4017,17 +4017,22 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       }
       if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
 	if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
-	  len = strlen(info->attr->aspath->str) + 1;
+          len = strlen(info->attr->aspath->str);
+          
+          if (config.nfacctd_bgp_aspath_radius) {
+            ptr = strndup(info->attr->aspath->str, len);
+            evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
+            len = strlen(ptr);
+          }
+          else ptr = info->attr->aspath->str;
 
-	  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-	    vlen_prims_init(pvlen, 0);
-	    return;
-	  }
-	  else {
-	    ptr = vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, info->attr->aspath->str, PM_MSG_STR_COPY);
-	    if (config.nfacctd_bgp_aspath_radius)
-              evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
-	  }
+          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+            vlen_prims_init(pvlen, 0);
+            return;
+          }
+          else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+
+          if (config.nfacctd_bgp_aspath_radius && ptr) free(ptr);
 	}
 	/* fallback to legacy fixed length behaviour */
 	else {
@@ -4072,11 +4077,19 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         }
       }
     }
-/*
-    if (info && info->extra) {
-      if (chptr->aggregation & COUNT_MPLS_VPN_RD) memcpy(&pbgp->mpls_vpn_rd, &info->extra->rd, sizeof(rd_t)); 
+  }
+  /* take care of vlen primitives */
+  else {
+    if (chptr->aggregation & COUNT_AS_PATH) {
+      ptr = &empty_str;
+      len = strlen(ptr);
+
+      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+        vlen_prims_init(pvlen, 0);
+        return;
+      }
+      else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
     }
-*/
   }
 }
 
@@ -4487,17 +4500,22 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
   if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
-    len = strlen(sample->dst_as_path) + 1;
+    len = strlen(sample->dst_as_path);
+
+    if (config.nfacctd_bgp_aspath_radius) {
+      ptr = strndup(sample->dst_as_path, len);
+      evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
+      len = strlen(ptr);
+    }
+    else ptr = sample->dst_as_path;
 
     if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
       vlen_prims_init(pvlen, 0);
       return;
     }
-    else {
-      ptr = vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, sample->dst_as_path, PM_MSG_STR_COPY);
-      if (config.nfacctd_bgp_aspath_radius)
-	evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
-    }
+    else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+
+    if (config.nfacctd_bgp_aspath_radius && ptr) free(ptr);
   }
   /* fallback to legacy fixed length behaviour */
   else {
