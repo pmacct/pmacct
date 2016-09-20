@@ -3574,7 +3574,7 @@ void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
   }
 }
 
-char *vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val, int copy_type /*, optional realloc */)
+void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val, int copy_type /*, optional realloc */)
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
@@ -3586,13 +3586,13 @@ char *vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, in
 
   ptr += PmLabelTSz;
 
-  if (PM_MSG_BIN_COPY) memcpy(ptr, val, len);
-  else if (PM_MSG_STR_COPY) strlcpy(ptr, val, len);
+  if (len) {
+    if (PM_MSG_BIN_COPY) memcpy(ptr, val, len);
+    else if (PM_MSG_STR_COPY) strlcpy(ptr, val, len);
+  }
 
   hdr->num++;
   hdr->tot_len += (PmLabelTSz + len);
-
-  return ptr;
 }
 
 int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, optional realloc */)

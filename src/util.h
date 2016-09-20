@@ -157,7 +157,7 @@ EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
 EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 EXT void vlen_prims_debug(struct pkt_vlen_hdr_primitives *);
-EXT char *vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, char *, int);
+EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, char *, int);
 EXT int vlen_prims_delete(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 
 EXT void hash_init_key(pm_hash_key_t *);
