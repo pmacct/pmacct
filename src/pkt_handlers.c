@@ -3949,24 +3949,30 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
     if (info && info->attr) {
       if (chptr->aggregation & COUNT_STD_COMM && info->attr->community && info->attr->community->str) {
         if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
-          len = strlen(info->attr->community->str) + 1;
+          len = strlen(info->attr->community->str);
+            
+          if (len) { 
+            if (config.nfacctd_bgp_stdcomm_pattern) {
+              ptr = malloc(len);
 
+              if (ptr) {
+                evaluate_comm_patterns(ptr, info->attr->community->str, std_comm_patterns, len);
+                len = strlen(ptr);
+              }
+              else len = 0;
+            }
+            else ptr = info->attr->community->str; 
+          }
+          else ptr = &empty_str;
+        
           if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
             vlen_prims_init(pvlen, 0);
             return;
           }
           else {
-	    if (config.nfacctd_bgp_stdcomm_pattern) {
-	      char *ptr = malloc(len);
-
-	      if (ptr) {
-	        evaluate_comm_patterns(ptr, info->attr->community->str, std_comm_patterns, len);
-	        vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
-		free(ptr);
-	      }
-	    }
-	    else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, info->attr->community->str, PM_MSG_STR_COPY);
-	  }
+            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+            if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
+          }
         }
         /* fallback to legacy fixed length behaviour */
 	else {
@@ -3983,23 +3989,29 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       }
       if (chptr->aggregation & COUNT_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
         if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
-          len = strlen(info->attr->ecommunity->str) + 1;
-          
-          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-            vlen_prims_init(pvlen, 0);
-            return;
-          } 
-          else {
+          len = strlen(info->attr->ecommunity->str);
+
+          if (len) {
             if (config.nfacctd_bgp_extcomm_pattern) {
-              char *ptr = malloc(len);
+              ptr = malloc(len);
 
               if (ptr) {
                 evaluate_comm_patterns(ptr, info->attr->ecommunity->str, ext_comm_patterns, len);
-                vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
-                free(ptr);
+                len = strlen(ptr);
               }
+              else len = 0;
             }
-            else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, info->attr->ecommunity->str, PM_MSG_STR_COPY);
+            else ptr = info->attr->ecommunity->str;
+          }
+          else ptr = &empty_str;
+
+          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+            vlen_prims_init(pvlen, 0);
+            return;
+          }
+          else {
+            vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+            if (config.nfacctd_bgp_extcomm_pattern && ptr && len) free(ptr);
           }
         }
         /* fallback to legacy fixed length behaviour */
@@ -4018,13 +4030,20 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       if (chptr->aggregation & COUNT_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
 	if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
           len = strlen(info->attr->aspath->str);
-          
-          if (config.nfacctd_bgp_aspath_radius) {
-            ptr = strndup(info->attr->aspath->str, len);
-            evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
-            len = strlen(ptr);
+
+          if (len) {
+            if (config.nfacctd_bgp_aspath_radius) {
+              ptr = strndup(info->attr->aspath->str, len);
+
+              if (ptr) {
+                evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
+                len = strlen(ptr);
+              }
+              else len = 0;
+            }
+            else ptr = info->attr->aspath->str;
           }
-          else ptr = info->attr->aspath->str;
+          else ptr = &empty_str;
 
           if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
             vlen_prims_init(pvlen, 0);
@@ -4089,6 +4108,28 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         return;
       }
       else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+    }
+
+    if (chptr->aggregation & COUNT_STD_COMM) {
+      ptr = &empty_str;
+      len = strlen(ptr);
+
+      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+        vlen_prims_init(pvlen, 0);
+        return;
+      }
+      else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+    }
+
+    if (chptr->aggregation & COUNT_EXT_COMM) {
+      ptr = &empty_str;
+      len = strlen(ptr);
+
+      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+        vlen_prims_init(pvlen, 0);
+        return;
+      }
+      else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
     }
   }
 }
@@ -4492,8 +4533,7 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
-  /* variables for vlen primitives */
-  char *ptr;
+  char empty_str = '\0', *ptr = &empty_str;
   int len;
 
   /* check network-related primitives against fallback scenarios */
@@ -4502,12 +4542,18 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
     len = strlen(sample->dst_as_path);
 
-    if (config.nfacctd_bgp_aspath_radius) {
-      ptr = strndup(sample->dst_as_path, len);
-      evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
-      len = strlen(ptr);
+    if (len) {
+      if (config.nfacctd_bgp_aspath_radius) {
+        ptr = strndup(sample->dst_as_path, len);
+
+        if (ptr) {
+          evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
+          len = strlen(ptr);
+        }
+        else len = 0;
+      }
+      else ptr = sample->dst_as_path;
     }
-    else ptr = sample->dst_as_path;
 
     if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
       vlen_prims_init(pvlen, 0);
@@ -4515,7 +4561,7 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     }
     else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
 
-    if (config.nfacctd_bgp_aspath_radius && ptr) free(ptr);
+    if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
   }
   /* fallback to legacy fixed length behaviour */
   else {
@@ -4572,35 +4618,40 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
   /* variables for vlen primitives */
-  char *ptr;
+  char empty_str = '\0', *ptr = &empty_str;
   int len;
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_KEEP)) return;
 
-  if (sample->communities_len) {
-    if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
-      len = strlen(sample->comms) + 1;
+  if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+    len = strlen(sample->comms);
 
-      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-        vlen_prims_init(pvlen, 0);
-        return;
-      }
-      else {
-        if (config.nfacctd_bgp_stdcomm_pattern) {
-          char *ptr = malloc(len);
+    if (len) {
+      if (config.nfacctd_bgp_stdcomm_pattern) {
+        ptr = malloc(len);
 
-          if (ptr) {
-            evaluate_comm_patterns(ptr, sample->comms, std_comm_patterns, len);
-            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
-            free(ptr);
-          }
+        if (ptr) {
+          evaluate_comm_patterns(ptr, sample->comms, std_comm_patterns, len);
+          len = strlen(ptr);
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, sample->comms, PM_MSG_STR_COPY);
+        else len = 0;
       }
+      else ptr = sample->comms;
     }
-    /* fallback to legacy fixed length behaviour */
-    else strlcpy(plbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS);
+
+    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+      vlen_prims_init(pvlen, 0);
+      return;
+    }
+    else {
+      vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+      if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
+    }
+  }
+  /* fallback to legacy fixed length behaviour */
+  else {
+    if (sample->communities_len) strlcpy(plbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS);
   }
 }
 
