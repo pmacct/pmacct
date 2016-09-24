@@ -3588,7 +3588,7 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
 
   if (len) {
     if (PM_MSG_BIN_COPY) memcpy(ptr, val, len);
-    else if (PM_MSG_STR_COPY) strlcpy(ptr, val, len);
+    else if (PM_MSG_STR_COPY) strncpy(ptr, val, len);
   }
 
   hdr->num++;
