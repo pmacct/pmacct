@@ -83,8 +83,6 @@ EXT void handle_dynname_internal_strings(char *, int, char *, struct primitives_
 EXT void handle_dynname_internal_strings_same(char *, int, char *, struct primitives_ptrs *);
 EXT void escape_ip_uscores(char *);
 EXT int sql_history_to_secs(int, int);
-EXT void evaluate_bgp_aspath_radius(char *, int, int);
-EXT void copy_stdcomm_to_asn(char *, as_t *, int);
 EXT void *pm_malloc(size_t);
 EXT void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
 EXT void *pm_tfind(const void *, void *const *, int (*compar)(const void *, const void *));

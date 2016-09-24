@@ -726,6 +726,37 @@ as_t evaluate_first_asn(char *src)
   return asn;
 }
 
+void evaluate_bgp_aspath_radius(char *path, int len, int radius)
+{
+  int count, idx;
+
+  for (idx = 0, count = 0; idx < len; idx++) {
+    if (path[idx] == ' ') count++;
+    if (count == radius) {
+      path[idx] = '\0';
+      break;
+    }
+  }
+}
+
+void copy_stdcomm_to_asn(char *stdcomm, as_t *asn, int is_origin)
+{
+  char *delim, *delim2;
+  char *p1, *p2;
+
+  if (!stdcomm || !strlen(stdcomm) || (delim = strchr(stdcomm, ':')) == NULL) return;
+  if (validate_truefalse(is_origin)) return;
+
+  delim2 = strchr(stdcomm, ',');
+  *delim = '\0';
+  if (delim2) *delim2 = '\0';
+  p1 = stdcomm;
+  p2 = delim+1;
+
+  if (is_origin) *asn = atoi(p2);
+  else *asn = atoi(p1);
+}
+
 /* XXX: currently only BGP is supported due to use of peers struct */
 void write_neighbors_file(char *filename, int type)
 {
