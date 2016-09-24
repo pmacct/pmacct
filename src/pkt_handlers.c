@@ -3952,12 +3952,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           len = strlen(info->attr->community->str);
             
           if (len) { 
+	    len++;
+
             if (config.nfacctd_bgp_stdcomm_pattern) {
               ptr = malloc(len);
 
               if (ptr) {
                 evaluate_comm_patterns(ptr, info->attr->community->str, std_comm_patterns, len);
                 len = strlen(ptr);
+		len++;
               }
               else len = 0;
             }
@@ -3992,12 +3995,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           len = strlen(info->attr->ecommunity->str);
 
           if (len) {
+	    len++;
+
             if (config.nfacctd_bgp_extcomm_pattern) {
               ptr = malloc(len);
 
               if (ptr) {
                 evaluate_comm_patterns(ptr, info->attr->ecommunity->str, ext_comm_patterns, len);
                 len = strlen(ptr);
+		len++;
               }
               else len = 0;
             }
@@ -4032,12 +4038,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           len = strlen(info->attr->aspath->str);
 
           if (len) {
+	    len++;
+
             if (config.nfacctd_bgp_aspath_radius) {
               ptr = strndup(info->attr->aspath->str, len);
 
               if (ptr) {
                 evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
                 len = strlen(ptr);
+		len++;
               }
               else len = 0;
             }
@@ -4543,12 +4552,15 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     len = strlen(sample->dst_as_path);
 
     if (len) {
+      len++;
+       
       if (config.nfacctd_bgp_aspath_radius) {
         ptr = strndup(sample->dst_as_path, len);
 
         if (ptr) {
           evaluate_bgp_aspath_radius(ptr, len, config.nfacctd_bgp_aspath_radius);
           len = strlen(ptr);
+	  len++;
         }
         else len = 0;
       }
@@ -4628,12 +4640,15 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     len = strlen(sample->comms);
 
     if (len) {
+      len++;
+
       if (config.nfacctd_bgp_stdcomm_pattern) {
         ptr = malloc(len);
 
         if (ptr) {
           evaluate_comm_patterns(ptr, sample->comms, std_comm_patterns, len);
           len = strlen(ptr);
+	  len++;
         }
         else len = 0;
       }
