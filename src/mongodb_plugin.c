@@ -567,15 +567,16 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
       }
 
       if (config.what_to_count & COUNT_SRC_AS_PATH) {
-        as_path = pbgp->src_as_path;
-        while (as_path) {
-          as_path = strchr(pbgp->src_as_path, ' ');
-          if (as_path) *as_path = '_';
+        vlen_prims_get(pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
+        if (str_ptr) {
+          as_path = str_ptr;
+          while (as_path) {
+            as_path = strchr(str_ptr, ' ');
+            if (as_path) *as_path = '_';
+          }
         }
-        if (strlen(pbgp->src_as_path))
-          bson_append_string(bson_elem, "src_as_path", pbgp->src_as_path);
-        else
-          bson_append_null(bson_elem, "src_as_path");
+
+        MongoDB_append_string(bson_elem, "src_as_path", pvlen, COUNT_INT_SRC_AS_PATH);
       }
 
       if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "src_local_pref", pbgp->src_local_pref);

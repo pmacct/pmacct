@@ -628,18 +628,6 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           fprintf(f, "%-22u   ", 0);
         }
   
-        if (config.what_to_count & COUNT_SRC_AS_PATH) {
-          as_path = pbgp->src_as_path;
-          while (as_path) {
-            as_path = strchr(pbgp->src_as_path, ' ');
-            if (as_path) *as_path = '_';
-          }
-          if (strlen(pbgp->src_as_path))
-          fprintf(f, "%-22s   ", pbgp->src_as_path);
-          else
-          fprintf(f, "%-22s   ", empty_aspath);
-        }
-  
         if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%-7u  ", pbgp->local_pref);
         if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%-7u  ", pbgp->src_local_pref);
         if (config.what_to_count & COUNT_MED) fprintf(f, "%-6u  ", pbgp->med);
@@ -1035,18 +1023,21 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	}
 
         if (config.what_to_count & COUNT_SRC_AS_PATH) {
-          as_path = pbgp->src_as_path;
-          while (as_path) {
-            as_path = strchr(pbgp->src_as_path, ' ');
-            if (as_path) *as_path = '_';
+          char *str_ptr = NULL;
+
+          vlen_prims_get(pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
+          if (str_ptr) {
+            as_path = str_ptr;
+            while (as_path) {
+              as_path = strchr(str_ptr, ' ');
+              if (as_path) *as_path = '_';
+            }
+
           }
 
-          if (strlen(pbgp->src_as_path))
-            fprintf(f, "%s%s", write_sep(sep, &count), pbgp->src_as_path);
-          else
-            fprintf(f, "%s%s", write_sep(sep, &count), empty_string);
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_SRC_AS_PATH, write_sep(sep, &count), empty_string);
         }
-  
+
         if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->local_pref);
         if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->src_local_pref);
         if (config.what_to_count & COUNT_MED) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->med);
@@ -1365,7 +1356,6 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "SRC_AS      ");
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "DST_AS      ");
   if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "SRC_COMMS                ");
-  if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "SRC_AS_PATH              ");
   if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "PREF     ");
   if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "SRC_PREF ");
   if (config.what_to_count & COUNT_MED) fprintf(f, "MED     ");

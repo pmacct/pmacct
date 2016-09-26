@@ -816,7 +816,7 @@ void bgp_config_checks(struct configuration *c)
 {
   if (c->what_to_count & (COUNT_LOCAL_PREF|COUNT_MED|COUNT_PEER_SRC_AS|COUNT_PEER_DST_AS|
 			  COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM|
-			  COUNT_SRC_AS_PATH|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)) {
+			  COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_MPLS_VPN_RD)) {
     /* Sanitizing the aggregation method */
     if (config.tmp_comms_same_field) {
       if ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM)) {
@@ -827,14 +827,12 @@ void bgp_config_checks(struct configuration *c)
 
     if ( (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
 	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
-	 (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type ) ||
 	 (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->nfacctd_bgp_src_local_pref_type ) ||
 	 (c->what_to_count & COUNT_SRC_MED && !c->nfacctd_bgp_src_med_type ) ||
 	 (c->what_to_count & COUNT_PEER_SRC_AS && !c->nfacctd_bgp_peer_as_src_type &&
 	  (config.acct_type != ACCT_SF && config.acct_type != ACCT_NF)) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
-      printf("       src_as_path     =>  bgp_src_as_path_type\n");
       printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
       printf("       src_ext_comm    =>  bgp_src_ext_comm_type\n");
       printf("       src_local_pref  =>  bgp_src_local_pref_type\n");
@@ -845,13 +843,19 @@ void bgp_config_checks(struct configuration *c)
     c->data_type |= PIPE_TYPE_BGP;
   }
 
-  if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_AS_PATH)) {
+  if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_AS_PATH|COUNT_SRC_AS_PATH)) {
     /* Sanitizing the aggregation method */
     if (config.tmp_comms_same_field) {
       if ((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) {
         printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
         exit(1);
       }
+    }
+
+    if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type ) ) {
+      printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
+      printf("       src_as_path     =>  bgp_src_as_path_type\n");
+      exit(1);
     }
 
     if (c->type_id == PLUGIN_ID_MEMORY) c->data_type |= PIPE_TYPE_LBGP;

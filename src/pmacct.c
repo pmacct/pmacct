@@ -1750,12 +1750,12 @@ int main(int argc,char **argv)
 	}
         else if (!strcmp(count_token[match_string_index], "src_as_path")) {
           if (!strcmp(match_string_token, "^$"))
-            memset(request.pbgp.src_as_path, 0, MAX_BGP_ASPATH);
+            memset(request.plbgp.src_as_path, 0, MAX_BGP_ASPATH);
           else {
-            strlcpy(request.pbgp.src_as_path, match_string_token, MAX_BGP_ASPATH);
-            as_path = request.pbgp.src_as_path;
+            strlcpy(request.plbgp.src_as_path, match_string_token, MAX_BGP_ASPATH);
+            as_path = request.plbgp.src_as_path;
             while (as_path) {
-              as_path = strchr(request.pbgp.src_as_path, '_');
+              as_path = strchr(request.plbgp.src_as_path, '_');
               if (as_path) *as_path = ' ';
             }
           }
@@ -2231,18 +2231,18 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count & COUNT_SRC_AS_PATH)) {
-	  as_path = pbgp->src_as_path;
+	  as_path = plbgp->src_as_path;
 	  while (as_path) {
-	    as_path = strchr(pbgp->src_as_path, ' ');
+	    as_path = strchr(plbgp->src_as_path, ' ');
 	    if (as_path) *as_path = '_';
 	  }
-          if (strlen(pbgp->src_as_path)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", pbgp->src_as_path);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->src_as_path);
+          if (strlen(plbgp->src_as_path)) {
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", plbgp->src_as_path);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), plbgp->src_as_path);
 	  }
           else {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-22s   ", empty_aspath);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->src_as_path);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), plbgp->src_as_path);
           }
         }
 
@@ -3374,13 +3374,13 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_SRC_AS_PATH) {
-    as_path = pbgp->src_as_path;
+    as_path = plbgp->src_as_path;
     while (as_path) {
-      as_path = strchr(pbgp->src_as_path, ' ');
+      as_path = strchr(plbgp->src_as_path, ' ');
       if (as_path) *as_path = '_';
     }
-    if (strlen(pbgp->src_as_path))
-      kv = json_pack("{ss}", "src_as_path", pbgp->src_as_path);
+    if (strlen(plbgp->src_as_path))
+      kv = json_pack("{ss}", "src_as_path", plbgp->src_as_path);
     else
       kv = json_pack("{ss}", "src_as_path", empty_string);
 

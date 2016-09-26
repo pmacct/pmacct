@@ -1787,16 +1787,17 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_SRC_AS_PATH) {
-    as_path = pbgp->src_as_path;
-    while (as_path) {
-      as_path = strchr(pbgp->src_as_path, ' ');
-      if (as_path) *as_path = '_';
+    vlen_prims_get(pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
+    if (str_ptr) {
+      as_path = str_ptr;
+      while (as_path) {
+        as_path = strchr(str_ptr, ' ');
+        if (as_path) *as_path = '_';
+      }
     }
-    if (strlen(pbgp->src_as_path))
-      kv = json_pack("{ss}", "src_as_path", pbgp->src_as_path);
-    else
-      kv = json_pack("{ss}", "src_as_path", empty_string);
+    else str_ptr = empty_string;
 
+    kv = json_pack("{ss}", "src_as_path", str_ptr);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
@@ -2719,16 +2720,18 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc & COUNT_SRC_AS_PATH) {
-    as_path = pbgp->src_as_path;
-    while (as_path) {
-      as_path = strchr(pbgp->src_as_path, ' ');
-      if (as_path) *as_path = '_';
+    vlen_prims_get(pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
+    if (str_ptr) {
+      as_path = str_ptr;
+      while (as_path) {
+        as_path = strchr(str_ptr, ' ');
+        if (as_path) *as_path = '_';
+      }
     }
+    else str_ptr = empty_string;
+
     check_i(avro_value_get_by_name(&value, "src_as_path", &field, NULL));
-    if (strlen(pbgp->src_as_path))
-      check_i(avro_value_set_string(&field, pbgp->src_as_path));
-    else
-      check_i(avro_value_set_string(&field, empty_string));
+    check_i(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_SRC_LOCAL_PREF) {
