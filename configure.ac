@@ -1011,11 +1011,14 @@ PLUGINS ...... : ${PLUGINS}
 
 Now type 'make' to compile the source code.
 
-Are you willing to get in touch with other pmacct users?
-Join the pmacct mailing-list by sending a message to pmacct-discussion-subscribe@pmacct.net
+Wanting to get in touch with other pmacct users?
+Join the pmacct mailing-list with an email to pmacct-discussion-subscribe@pmacct.net
 
 Need for documentation and examples?
-Read the README file or go to http://wiki.pmacct.net/
+Start by reading the README.md file
+
+Star, watch or contribute to the project on GitHub:
+https://github.com/pmacct/pmacct
 
 "
 
