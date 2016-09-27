@@ -193,7 +193,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
   if (prevptr) prevptr->next = ptr;
   else tpl_cache.c[modulo] = ptr;
 
-  log_template_footer(ptr->len, version);
+  log_template_footer(ptr, ptr->len, version);
 
   return ptr;
 }
@@ -301,7 +301,7 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
     field++;
   }
 
-  log_template_footer(tpl->len, version);
+  log_template_footer(tpl, tpl->len, version);
 
   return tpl;
 }
@@ -320,12 +320,12 @@ void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *p
   Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u template ID   : %u\n", config.name, version, ntohs(tpl->template_id));
 
   if ( tpl->template_type == 0 || tpl->template_type == 2 ) {
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): -----------------------------------------------------\n", config.name);
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): |    pen     |     field type     | offset |  size  |\n", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): -------------------------------------------------------------\n", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): |    pen     |         field type         | offset |  size  |\n", config.name);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): ----------------------------------------\n", config.name);
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): |     field type     | offset |  size  |\n", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): ------------------------------------------------\n", config.name);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): |         field type         | offset |  size  |\n", config.name);
   }
 }
 
@@ -334,36 +334,40 @@ void log_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t
   if (!pen) {
     if (type <= MAX_TPL_DESC_LIST && strlen(tpl_desc_list[type])) { 
       if (!off && vlen)
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s | %6s | %6u |\n", config.name, 0, tpl_desc_list[type], "tbd", len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s [%-5u] | %6s | %6u |\n", config.name, 0, tpl_desc_list[type], type, "tbd", len);
       else
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s | %6u | %6u |\n", config.name, 0, tpl_desc_list[type], off, len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s [%-5u] | %6u | %6u |\n", config.name, 0, tpl_desc_list[type], type, off, len);
     }
     else {
       if (!off && vlen)
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6s | %6u |\n", config.name, 0, type, "tbd", len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u [%-5u] | %6s | %6u |\n", config.name, 0, type, type, "tbd", len);
       else
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6u | %6u |\n", config.name, 0, type, off, len);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u [%-5u] | %6u | %6u |\n", config.name, 0, type, type, off, len);
     }
   }
   else {
     if (!off && vlen) 
-      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6s | %6u |\n", config.name, ntohl(*pen), type, "tbd", len);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u [%-5u] | %6s | %6u |\n", config.name, ntohl(*pen), type, type, "tbd", len);
     else 
-      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u | %6u | %6u |\n", config.name, ntohl(*pen), type, off, len);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u [%-5u] | %6u | %6u |\n", config.name, ntohl(*pen), type, type, off, len);
   }
 }
 
 void log_opt_template_field(u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
 {
   if (type <= MAX_OPT_TPL_DESC_LIST && strlen(opt_tpl_desc_list[type]))
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18s | %6u | %6u |\n", config.name, opt_tpl_desc_list[type], off, len);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18s [%-5u] | %6u | %6u |\n", config.name, opt_tpl_desc_list[type], type, off, len);
   else
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18u | %6u | %6u |\n", config.name, type, off, len);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18u [%-5u] | %6u | %6u |\n", config.name, type, type, off, len);
 }
 
-void log_template_footer(u_int16_t size, u_int8_t version)
+void log_template_footer(struct template_cache_entry *tpl, u_int16_t size, u_int8_t version)
 {
-  Log(LOG_DEBUG, "DEBUG ( %s/core ): -----------------------------------------------------\n", config.name);
+  if ( tpl->template_type == 0 || tpl->template_type == 2 )
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): -------------------------------------------------------------\n", config.name);
+  else 
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): ------------------------------------------------\n", config.name);
+
   if (!size)
     Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %s\n", config.name, "tbd");
   else 
@@ -451,7 +455,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
   if (prevptr) prevptr->next = ptr;
   else tpl_cache.c[modulo] = ptr;
 
-  log_template_footer(ptr->len, version);
+  log_template_footer(ptr, ptr->len, version);
 
   return ptr;
 }
@@ -521,7 +525,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
     off += NfTplFieldV9Sz;
   }
 
-  log_template_footer(tpl->len, version);
+  log_template_footer(tpl, tpl->len, version);
 
   return tpl;
 }
