@@ -1793,11 +1793,21 @@ plan, the current format is sparse notes.
 a) In case of crashes of an any process, regardless if predictable or not, the
 advice is to run the daemon with "ulimit -c unlimited" so to generate a core
 dump. The file is placed in the directory where the daemon is started so it
-is good to take care of that. The core file along with the crashing executable
-and configuration should be made available to pmacct developers for further
-inspection. Optionally, ie. if the issue can be easily reproduced, the daemon
-can be re-configured for compiling with the --debug flag so to produce extra
-info suitable for troubleshooting.
+is good to take care of that. pmacct developers will then ask for one or both
+of the following: 1) the core file along with the crashing executable and its
+configuration be made available for further inspection and/or 2) a backtrace
+in GDB obtained via the following two steps:
+
+shell> gdb /path/to/executable /path/to/core
+
+Then once in the gdb console the backtrace output can be obtained with the
+following command:
+
+gdb> bt
+
+Optionally, especially if the issue can be easily reproduced, the daemon can
+be re-configured for compiling with the --debug flag so to produce extra info
+suitable for troubleshooting. 
 
 b) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
 with "./configure --debug <any other flags already in use>"; --debug sets as

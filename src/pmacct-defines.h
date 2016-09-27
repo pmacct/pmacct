@@ -397,7 +397,7 @@ typedef struct {
 } pm_country_t;
 
 typedef struct {
-  pm_cfgreg_t type; /* XXX: type2 needed */
+  pm_cfgreg_t type;
   u_int32_t len;
 } __attribute__ ((packed)) pm_label_t;
 
