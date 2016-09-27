@@ -577,34 +577,10 @@ void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_
     memcpy(&c->peer_dst_ip, &p->peer_dst_ip, HostAddrSz);
     c->local_pref = p->local_pref;
     c->med = p->med;
-    if (what_to_count & COUNT_SRC_STD_COMM) {
-      if (!c->src_std_comms) {
-	c->src_std_comms = malloc(MAX_BGP_STD_COMMS);
-	if (!c->src_std_comms) goto malloc_failed;
-      }
-      memcpy(c->src_std_comms, p->src_std_comms, MAX_BGP_STD_COMMS);
-    }
-    else {
-      if (c->src_std_comms) {
-	free(c->src_std_comms);
-	c->src_std_comms = NULL;
-      }
-    }
-    if (what_to_count & COUNT_SRC_EXT_COMM) {
-      if (!c->src_ext_comms) {
-	c->src_ext_comms = malloc(MAX_BGP_EXT_COMMS);
-	if (!c->src_ext_comms) goto malloc_failed;
-      }
-      memcpy(c->src_ext_comms, p->src_ext_comms, MAX_BGP_EXT_COMMS);
-    }
-    else {
-      if (c->src_ext_comms) {
-	free(c->src_ext_comms);
-	c->src_ext_comms = NULL;
-      }
-    }
+
     c->src_local_pref = p->src_local_pref;
     c->src_med = p->src_med;
+
     memcpy(&c->mpls_vpn_rd, &p->mpls_vpn_rd, sizeof(rd_t));
 
     return;
@@ -625,10 +601,10 @@ void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_
     memcpy(&p->peer_dst_ip, &c->peer_dst_ip, HostAddrSz);
     p->local_pref = c->local_pref;
     p->med = c->med;
-    if (c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
-    if (c->src_ext_comms) memcpy(p->src_ext_comms, c->src_ext_comms, MAX_BGP_EXT_COMMS);
+
     p->src_local_pref = c->src_local_pref;
     p->src_med = c->src_med;
+
     memcpy(&p->mpls_vpn_rd, &c->mpls_vpn_rd, sizeof(rd_t));
   }
 }
@@ -638,9 +614,6 @@ void free_cache_bgp_primitives(struct cache_bgp_primitives **c)
   struct cache_bgp_primitives *cbgp = *c;
 
   if (c && *c) {
-    if (cbgp->src_std_comms) free(cbgp->src_std_comms);
-    if (cbgp->src_ext_comms) free(cbgp->src_ext_comms);
-
     memset(cbgp, 0, sizeof(struct cache_bgp_primitives));
     free(*c);
     *c = NULL;
@@ -692,6 +665,34 @@ void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, s
       }
     }
 
+    if (what_to_count & COUNT_SRC_STD_COMM) {
+      if (!c->src_std_comms) {
+        c->src_std_comms = malloc(MAX_BGP_STD_COMMS);
+        if (!c->src_std_comms) goto malloc_failed;
+      }
+      memcpy(c->src_std_comms, p->src_std_comms, MAX_BGP_STD_COMMS);
+    }
+    else {
+      if (c->src_std_comms) {
+        free(c->src_std_comms);
+        c->src_std_comms = NULL;
+      }
+    }
+
+    if (what_to_count & COUNT_SRC_EXT_COMM) {
+      if (!c->src_ext_comms) {
+        c->src_ext_comms = malloc(MAX_BGP_EXT_COMMS);
+        if (!c->src_ext_comms) goto malloc_failed;
+      }
+      memcpy(c->src_ext_comms, p->src_ext_comms, MAX_BGP_EXT_COMMS);
+    }
+    else {
+      if (c->src_ext_comms) {
+        free(c->src_ext_comms);
+        c->src_ext_comms = NULL;
+      }
+    }
+
     if (what_to_count & COUNT_SRC_AS_PATH) {
       if (!c->src_as_path) {
         c->src_as_path = malloc(MAX_BGP_ASPATH);
@@ -721,6 +722,9 @@ void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *p, str
     if (c->std_comms) memcpy(p->std_comms, c->std_comms, MAX_BGP_STD_COMMS);
     if (c->ext_comms) memcpy(p->ext_comms, c->ext_comms, MAX_BGP_EXT_COMMS);
     if (c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
+
+    if (c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
+    if (c->src_ext_comms) memcpy(p->src_ext_comms, c->src_ext_comms, MAX_BGP_EXT_COMMS);
     if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
   }
 }
@@ -733,6 +737,9 @@ void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **c)
     if (clbgp->std_comms) free(clbgp->std_comms);
     if (clbgp->ext_comms) free(clbgp->ext_comms);
     if (clbgp->as_path) free(clbgp->as_path);
+
+    if (clbgp->src_std_comms) free(clbgp->src_std_comms);
+    if (clbgp->src_ext_comms) free(clbgp->src_ext_comms);
     if (clbgp->src_as_path) free(clbgp->src_as_path);
 
     memset(clbgp, 0, sizeof(struct cache_legacy_bgp_primitives));

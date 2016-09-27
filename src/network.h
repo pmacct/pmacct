@@ -537,8 +537,6 @@ struct pkt_bgp_primitives {
   struct host_addr peer_dst_ip;
   u_int32_t local_pref;
   u_int32_t med;
-  char src_std_comms[MAX_BGP_STD_COMMS];
-  char src_ext_comms[MAX_BGP_EXT_COMMS];
   u_int32_t src_local_pref;
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
@@ -548,6 +546,8 @@ struct pkt_legacy_bgp_primitives {
   char std_comms[MAX_BGP_STD_COMMS];
   char ext_comms[MAX_BGP_EXT_COMMS];
   char as_path[MAX_BGP_ASPATH];
+  char src_std_comms[MAX_BGP_STD_COMMS];
+  char src_ext_comms[MAX_BGP_EXT_COMMS];
   char src_as_path[MAX_BGP_ASPATH];
 };
 
@@ -576,8 +576,6 @@ struct cache_bgp_primitives {
   struct host_addr peer_dst_ip;
   u_int32_t local_pref;
   u_int32_t med;
-  char *src_std_comms;
-  char *src_ext_comms;
   u_int32_t src_local_pref;
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
@@ -587,6 +585,8 @@ struct cache_legacy_bgp_primitives {
   char *std_comms;
   char *ext_comms;
   char *as_path;
+  char *src_std_comms;
+  char *src_ext_comms;
   char *src_as_path;
 };
 /* END: BGP section */

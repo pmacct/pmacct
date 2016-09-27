@@ -3932,26 +3932,90 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             evaluate_bgp_aspath_radius(plbgp->src_as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
         }
       }
-      if (chptr->aggregation & COUNT_SRC_STD_COMM && config.nfacctd_bgp_src_std_comm_type & BGP_SRC_PRIMITIVES_BGP && info->attr->community && info->attr->community->str) {
-	if (config.nfacctd_bgp_stdcomm_pattern)
-	  evaluate_comm_patterns(pbgp->src_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
-	else {
-	  strlcpy(pbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
-	  if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS) {
-	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-2] = '+';
-	    pbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '\0';
-	  }
-	}
-      }
-      if (chptr->aggregation & COUNT_SRC_EXT_COMM && config.nfacctd_bgp_src_ext_comm_type & BGP_SRC_PRIMITIVES_BGP && info->attr->ecommunity && info->attr->ecommunity->str) {
-        if (config.nfacctd_bgp_extcomm_pattern)
-          evaluate_comm_patterns(pbgp->src_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
+      if (chptr->aggregation & COUNT_SRC_STD_COMM && info->attr->community && info->attr->community->str) {
+        if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+          len = strlen(info->attr->community->str);
+
+          if (len) {
+            len++;
+
+            if (config.nfacctd_bgp_stdcomm_pattern) {
+              ptr = malloc(len);
+
+              if (ptr) {
+                evaluate_comm_patterns(ptr, info->attr->community->str, std_comm_patterns, len);
+                len = strlen(ptr);
+                len++;
+              }
+              else len = 0;
+            }
+            else ptr = info->attr->community->str;
+          }
+          else ptr = &empty_str;
+
+          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+            vlen_prims_init(pvlen, 0);
+            return;
+          }
+          else {
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+            if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
+          }
+        }
+        /* fallback to legacy fixed length behaviour */
         else {
-          strlcpy(pbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
-          if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS) {
-            pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-2] = '+';
-            pbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '\0';
-	  }
+          if (config.nfacctd_bgp_stdcomm_pattern)
+            evaluate_comm_patterns(plbgp->src_std_comms, info->attr->community->str, std_comm_patterns, MAX_BGP_STD_COMMS);
+          else {
+            strlcpy(plbgp->src_std_comms, info->attr->community->str, MAX_BGP_STD_COMMS);
+            if (strlen(info->attr->community->str) >= MAX_BGP_STD_COMMS) {
+              plbgp->src_std_comms[MAX_BGP_STD_COMMS-2] = '+';
+              plbgp->src_std_comms[MAX_BGP_STD_COMMS-1] = '\0';
+            }
+          }
+        }
+      }
+      if (chptr->aggregation & COUNT_SRC_EXT_COMM && info->attr->ecommunity && info->attr->ecommunity->str) {
+        if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+          len = strlen(info->attr->ecommunity->str);
+
+          if (len) {
+            len++;
+
+            if (config.nfacctd_bgp_extcomm_pattern) {
+              ptr = malloc(len);
+
+              if (ptr) {
+                evaluate_comm_patterns(ptr, info->attr->ecommunity->str, ext_comm_patterns, len);
+                len = strlen(ptr);
+                len++;
+              }
+              else len = 0;
+            }
+            else ptr = info->attr->ecommunity->str;
+          }
+          else ptr = &empty_str;
+
+          if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+            vlen_prims_init(pvlen, 0);
+            return;
+          }
+          else {
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+            if (config.nfacctd_bgp_extcomm_pattern && ptr && len) free(ptr);
+          }
+        }
+        /* fallback to legacy fixed length behaviour */
+        else {
+          if (config.nfacctd_bgp_extcomm_pattern)
+            evaluate_comm_patterns(plbgp->src_ext_comms, info->attr->ecommunity->str, ext_comm_patterns, MAX_BGP_EXT_COMMS);
+          else {
+            strlcpy(plbgp->src_ext_comms, info->attr->ecommunity->str, MAX_BGP_EXT_COMMS);
+            if (strlen(info->attr->ecommunity->str) >= MAX_BGP_EXT_COMMS) {
+              plbgp->src_ext_comms[MAX_BGP_EXT_COMMS-2] = '+';
+              plbgp->src_ext_comms[MAX_BGP_EXT_COMMS-1] = '\0';
+            }
+          }
         }
       }
       if (chptr->aggregation & COUNT_SRC_LOCAL_PREF && config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP)

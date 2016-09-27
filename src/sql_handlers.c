@@ -546,16 +546,26 @@ void count_as_path_handler(const struct db_cache *cache_elem, struct insert_data
 
 void count_src_std_comm_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_std_comms);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_std_comms);
+  char *bgp_comm_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_SRC_STD_COMM, &bgp_comm_ptr);
+  if (!bgp_comm_ptr) bgp_comm_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, bgp_comm_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, bgp_comm_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
 
 void count_src_ext_comm_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->cbgp->src_ext_comms);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->cbgp->src_ext_comms);
+  char *bgp_comm_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_SRC_EXT_COMM, &bgp_comm_ptr);
+  if (!bgp_comm_ptr) bgp_comm_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, bgp_comm_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, bgp_comm_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

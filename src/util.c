@@ -1747,40 +1747,36 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
   }
 
   if (wtc & COUNT_SRC_STD_COMM) {
-    bgp_comm = pbgp->src_std_comms;
-    while (bgp_comm) {
-      bgp_comm = strchr(pbgp->src_std_comms, ' ');
-      if (bgp_comm) *bgp_comm = '_';
+    vlen_prims_get(pvlen, COUNT_INT_SRC_STD_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
     }
+    else str_ptr = empty_string;
 
-    if (strlen(pbgp->src_std_comms))
-      kv = json_pack("{ss}", "src_comms", pbgp->src_std_comms);
-    else
-      kv = json_pack("{ss}", "src_comms", empty_string);
-
+    kv = json_pack("{ss}", "src_comms", str_ptr);
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
 
   if (wtc & COUNT_SRC_EXT_COMM) {
-    bgp_comm = pbgp->src_ext_comms;
-    while (bgp_comm) {
-      bgp_comm = strchr(pbgp->src_ext_comms, ' ');
-      if (bgp_comm) *bgp_comm = '_';
+    vlen_prims_get(pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
     }
+    else str_ptr = empty_string;
 
-    if (!config.tmp_comms_same_field) {
-      if (strlen(pbgp->src_ext_comms))
-        kv = json_pack("{ss}", "src_ecomms", pbgp->src_ext_comms);
-      else
-        kv = json_pack("{ss}", "src_ecomms", empty_string);
-    }
-    else {
-      if (strlen(pbgp->src_ext_comms))
-        kv = json_pack("{ss}", "src_comms", pbgp->src_ext_comms);
-      else
-        kv = json_pack("{ss}", "src_comms", empty_string);
-    }
+    if (!config.tmp_comms_same_field)
+      kv = json_pack("{ss}", "src_ecomms", str_ptr);
+    else
+      kv = json_pack("{ss}", "src_comms", str_ptr);
 
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -2689,34 +2685,37 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_set_string(&field, ip_address));
   }
 
-  if (wtc & COUNT_SRC_STD_COMM) {
-    bgp_comm = pbgp->src_std_comms;
-    while (bgp_comm) {
-      bgp_comm = strchr(pbgp->src_std_comms, ' ');
-      if (bgp_comm) *bgp_comm = '_';
+  if (wtc & COUNT_STD_COMM) {
+    vlen_prims_get(pvlen, COUNT_INT_SRC_STD_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
     }
+    else str_ptr = empty_string;
+
     check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
-    if (strlen(pbgp->src_std_comms))
-      check_i(avro_value_set_string(&field, pbgp->src_std_comms));
-    else
-      check_i(avro_value_set_string(&field, empty_string));
+    check_i(avro_value_set_string(&field, str_ptr));
   }
   else if (wtc & COUNT_SRC_EXT_COMM) {
-    bgp_comm = pbgp->src_ext_comms;
-    while (bgp_comm) {
-      bgp_comm = strchr(pbgp->src_ext_comms, ' ');
-      if (bgp_comm) *bgp_comm = '_';
+    vlen_prims_get(pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
     }
+    else str_ptr = empty_string;
 
     if (!config.tmp_comms_same_field)
       check_i(avro_value_get_by_name(&value, "src_ecomms", &field, NULL));
-    else 
+    else
       check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
 
-    if (strlen(pbgp->src_ext_comms))
-      check_i(avro_value_set_string(&field, pbgp->src_ext_comms));
-    else
-      check_i(avro_value_set_string(&field, empty_string));
+    check_i(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_SRC_AS_PATH) {
