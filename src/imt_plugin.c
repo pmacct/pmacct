@@ -577,7 +577,11 @@ void free_extra_allocs()
 
   for (idx = 0; idx < config.buckets; idx++) {
     if (!following_chain) acc_elem = (struct acc *) elem;
-    if (acc_elem->cbgp) free_cache_bgp_primitives(&acc_elem->cbgp);
+    if (acc_elem->pbgp) {
+      free(acc_elem->pbgp);
+      acc_elem->pbgp = NULL;
+    }
+    if (acc_elem->clbgp) free_cache_legacy_bgp_primitives(&acc_elem->clbgp);
     if (acc_elem->pnat) {
       free(acc_elem->pnat);
       acc_elem->pnat = NULL;

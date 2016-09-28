@@ -124,7 +124,7 @@ struct db_cache {
   u_int32_t tcp_flags;
   u_int8_t tentatives;	/* support to classifiers: tentatives remaining */
   time_t basetime;
-  struct cache_bgp_primitives *cbgp;
+  struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   char *pcust;

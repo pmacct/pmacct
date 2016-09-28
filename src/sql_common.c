@@ -426,7 +426,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             Cursor->lru_next = NULL;
 
 	    /* unlinking pointers from PendingElem to prevent free-up (linked by Cursor) */
-	    PendingElem->cbgp = NULL;
+	    PendingElem->pbgp = NULL;
 	    PendingElem->pnat = NULL;
 	    PendingElem->pmpls = NULL;
 	    PendingElem->pcust = NULL;
@@ -437,7 +437,7 @@ int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_d
             queue[j] = Cursor;
 
 	    /* freeing stale allocations */
-	    if (SavedCursor.cbgp) free_cache_bgp_primitives(&SavedCursor.cbgp);
+	    if (SavedCursor.pbgp) free(SavedCursor.pbgp);
 	    if (SavedCursor.pnat) free(SavedCursor.pnat);
 	    if (SavedCursor.pmpls) free(SavedCursor.pmpls);
 	    if (SavedCursor.pcust) free(SavedCursor.pcust);
@@ -547,13 +547,9 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
     if (Cursor->valid == SQL_CACHE_INUSE) {
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, data, sizeof(struct pkt_primitives));
-      if (pbgp) {
-	if (Cursor->cbgp) {
-	  struct pkt_bgp_primitives tmp_pbgp;
 
-	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
-	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
-	}
+      if (pbgp && Cursor->pbgp) {
+        res_bgp = memcmp(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
       }
       else res_bgp = FALSE;
 
@@ -601,7 +597,6 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   time_t basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;
   struct db_cache *Cursor, *newElem, *SafePtr = NULL, *staleElem = NULL;
-  unsigned int cb_size = sizeof(struct cache_bgp_primitives);
   int ret, insert_status;
 
   /* pro_rating vars */
@@ -731,13 +726,8 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
       /* checks: pkt_primitives and pkt_bgp_primitives */
       res_data = memcmp(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
 
-      if (pbgp) {
-        if (Cursor->cbgp) {
-	  struct pkt_bgp_primitives tmp_pbgp;
-
-	  cache_to_pkt_bgp_primitives(&tmp_pbgp, Cursor->cbgp);
-	  res_bgp = memcmp(&tmp_pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
-	}
+      if (pbgp && Cursor->pbgp) {
+        res_bgp = memcmp(Cursor->pbgp, pbgp, sizeof(struct pkt_bgp_primitives));
       }
       else res_bgp = FALSE;
 
@@ -786,19 +776,17 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     memcpy(&Cursor->primitives, srcdst, sizeof(struct pkt_primitives));
   
     if (pbgp) {
-      /* releasing stale information and starting from scratch */
-      if (!Cursor->cbgp) {
-        Cursor->cbgp = (struct cache_bgp_primitives *) malloc(cb_size);
-        if (!Cursor->cbgp) goto safe_action;
-        memset(Cursor->cbgp, 0, cb_size);
+      if (!Cursor->pbgp) {
+        Cursor->pbgp = (struct pkt_bgp_primitives *) malloc(pb_size);
+        if (!Cursor->pbgp) goto safe_action;
       }
-  
-      pkt_to_cache_bgp_primitives(Cursor->cbgp, pbgp, config.what_to_count);
+      memcpy(Cursor->pbgp, pbgp, pb_size);
     }
     else {
-      if (Cursor->cbgp) free_cache_bgp_primitives(&Cursor->cbgp);
+      if (Cursor->pbgp) free(Cursor->pbgp);
+      Cursor->pbgp = NULL;
     }
-  
+
     if (pnat) {
       if (!Cursor->pnat) {
         Cursor->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
@@ -3199,7 +3187,7 @@ void primptrs_set_all_from_db_cache(struct primitives_ptrs *prim_ptrs, struct db
   if (prim_ptrs && data && entry) {
     memset(data, 0, PdataSz);
     data->primitives = entry->primitives;
-    prim_ptrs->pbgp = (struct pkt_bgp_primitives *) entry->cbgp;
+    prim_ptrs->pbgp = entry->pbgp;
     prim_ptrs->pnat = entry->pnat;
     prim_ptrs->pmpls = entry->pmpls;
     prim_ptrs->pcust = entry->pcust;

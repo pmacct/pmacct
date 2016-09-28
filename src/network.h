@@ -568,19 +568,7 @@ struct pkt_mpls_primitives {
   u_int8_t mpls_stack_depth;
 };
 
-/* same as above but pointers in place of strings */
-struct cache_bgp_primitives {
-  as_t peer_src_as;
-  as_t peer_dst_as;
-  struct host_addr peer_src_ip;
-  struct host_addr peer_dst_ip;
-  u_int32_t local_pref;
-  u_int32_t med;
-  u_int32_t src_local_pref;
-  u_int32_t src_med;
-  rd_t mpls_vpn_rd;
-};
-
+/* same as pkt_legacy_bgp_primitives but pointers in place of strings */
 struct cache_legacy_bgp_primitives {
   char *std_comms;
   char *ext_comms;

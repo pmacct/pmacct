@@ -165,14 +165,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
       if (!test_zero_elem(acc_elem)) {
 	enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize);
 
-	if (extras->off_pkt_bgp_primitives) {
-	  if (acc_elem->cbgp) {
-	    struct pkt_bgp_primitives tmp_pbgp;
-
-	    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
-	    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
-	  }
-	}
+        if (extras->off_pkt_bgp_primitives && acc_elem->pbgp) {
+          enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+        }
 
         if (extras->off_pkt_lbgp_primitives) {
           if (acc_elem->clbgp) {
@@ -261,14 +256,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	  if (!test_zero_elem(acc_elem)) {
 	    enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize);
 
-	    if (extras->off_pkt_bgp_primitives) {
-	      if (acc_elem->cbgp) {
-		struct pkt_bgp_primitives tmp_pbgp;
-
-		cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
-		enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
-	      }
-	    }
+            if (extras->off_pkt_bgp_primitives && acc_elem->pbgp) {
+              enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+            }
 
             if (extras->off_pkt_lbgp_primitives) {
               if (acc_elem->clbgp) {
@@ -373,14 +363,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	      else {
 		enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize); /* q->type == WANT_MATCH */
 
-		if (extras->off_pkt_bgp_primitives) {
-		  if (acc_elem->cbgp) {
-		    struct pkt_bgp_primitives tmp_pbgp;
-
-		    cache_to_pkt_bgp_primitives(&tmp_pbgp, acc_elem->cbgp);
-		    enQueue_elem(sd, &rb, &tmp_pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
-		  }
-		}
+                if (extras->off_pkt_bgp_primitives && acc_elem->pbgp) {
+                  enQueue_elem(sd, &rb, acc_elem->pbgp, PbgpSz, datasize - extras->off_pkt_bgp_primitives);
+                }
 
                 if (extras->off_pkt_lbgp_primitives) {
                   if (acc_elem->clbgp) {
@@ -499,14 +484,12 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 		pm_cfgreg_t w2, struct extra_primitives *extras)
 {
   struct pkt_primitives *s1 = &src->primitives;
-  struct pkt_bgp_primitives tmp_pbgp;
-  struct pkt_bgp_primitives *s2 = &tmp_pbgp;
+  struct pkt_bgp_primitives *s2 = src->pbgp;
   struct pkt_legacy_bgp_primitives tmp_plbgp;
   struct pkt_legacy_bgp_primitives *s5 = &tmp_plbgp;
   struct pkt_nat_primitives *s3 = src->pnat;
   struct pkt_mpls_primitives *s4 = src->pmpls;
 
-  cache_to_pkt_bgp_primitives(s2, src->cbgp);
   cache_to_pkt_legacy_bgp_primitives(s5, src->clbgp);
 
   memset(d1, 0, sizeof(struct pkt_primitives));

@@ -568,58 +568,6 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
   return TRUE;
 }
 
-void pkt_to_cache_bgp_primitives(struct cache_bgp_primitives *c, struct pkt_bgp_primitives *p, pm_cfgreg_t what_to_count)
-{
-  if (c && p) {
-    c->peer_src_as = p->peer_src_as;
-    c->peer_dst_as = p->peer_dst_as;
-    memcpy(&c->peer_src_ip, &p->peer_src_ip, HostAddrSz);
-    memcpy(&c->peer_dst_ip, &p->peer_dst_ip, HostAddrSz);
-    c->local_pref = p->local_pref;
-    c->med = p->med;
-
-    c->src_local_pref = p->src_local_pref;
-    c->src_med = p->src_med;
-
-    memcpy(&c->mpls_vpn_rd, &p->mpls_vpn_rd, sizeof(rd_t));
-
-    return;
-
-    malloc_failed:
-    Log(LOG_WARNING, "WARN ( %s/%s ): malloc() failed (pkt_to_cache_bgp_primitives).\n", config.name, config.type);
-  }
-}
-
-void cache_to_pkt_bgp_primitives(struct pkt_bgp_primitives *p, struct cache_bgp_primitives *c)
-{
-  if (c && p) {
-    memset(p, 0, PbgpSz);
-
-    p->peer_src_as = c->peer_src_as;
-    p->peer_dst_as = c->peer_dst_as;
-    memcpy(&p->peer_src_ip, &c->peer_src_ip, HostAddrSz);
-    memcpy(&p->peer_dst_ip, &c->peer_dst_ip, HostAddrSz);
-    p->local_pref = c->local_pref;
-    p->med = c->med;
-
-    p->src_local_pref = c->src_local_pref;
-    p->src_med = c->src_med;
-
-    memcpy(&p->mpls_vpn_rd, &c->mpls_vpn_rd, sizeof(rd_t));
-  }
-}
-
-void free_cache_bgp_primitives(struct cache_bgp_primitives **c)
-{
-  struct cache_bgp_primitives *cbgp = *c;
-
-  if (c && *c) {
-    memset(cbgp, 0, sizeof(struct cache_bgp_primitives));
-    free(*c);
-    *c = NULL;
-  }
-}
-
 void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, struct pkt_legacy_bgp_primitives *p, pm_cfgreg_t what_to_count)
 {
   if (c && p) {

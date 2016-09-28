@@ -38,7 +38,7 @@ struct acc {
   unsigned int signature;
   u_int8_t reset_flag;
   struct timeval rstamp;	/* classifiers: reset timestamp */
-  struct cache_bgp_primitives *cbgp;
+  struct pkt_bgp_primitives *pbgp;
   struct cache_legacy_bgp_primitives *clbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
