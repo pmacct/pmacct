@@ -164,7 +164,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.print_output_separator) config.print_output_separator = default_separator;
 
   if (extras.off_pkt_vlen_hdr_primitives && config.print_output & PRINT_OUTPUT_FORMATTED) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label, are not supported in print plugin with formatted output. Exiting ..\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label as_path std_comm etc., are not supported in print plugin with formatted output.\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Please switch to one of the other supported output formats (ie. csv, json, avro). Exiting ..\n", config.name, config.type);
     exit_plugin(1);
   }
 

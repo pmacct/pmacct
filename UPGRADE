@@ -10,7 +10,21 @@ been (and will be) very limited through the development process.
         
 TO:	>= 1.6.1
 FROM:	<= 1.6.0
-TOPIC:	BGP extended communities (ext_comms, src_ext_comms primitives)
+TOPIC:	BGP communities and AS-PATH
+DESC:	In pmacct 1.6.1 BGP communities and AS-PATH primitives (ie. std_comm,
+	ext_comm, as_path, etc.) were moved from being fixed length to the
+	variable-length framework, allowing for very long lists of communities
+	or paths to be integrally represented. The IMT plugin is excluded from
+	this work and these primitives will still be fixed length. Also, these
+	primitives are not going to be supported anymore in the formatted output
+	(but they will be no problem in the CSV, JSON and Avro output formats)
+	of the print plugin. Btw, the formatted output support for the print
+	plugin will be eventually discontinued in future so it is good to move
+	away from it.
+
+TO:	>= 1.6.1
+FROM:	<= 1.6.0
+TOPIC:	BGP extended communities (ext_comm, src_ext_comm primitives)
 DESC:	Some legacy decision (..) made BGP standard and extended communities be
 	written to the same field, mutual excluding each other. This behaviour
 	has now been changed with each community type being written to the own
