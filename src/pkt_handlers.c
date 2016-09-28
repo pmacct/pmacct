@@ -4038,6 +4038,43 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       }
     }
   }
+  /* take care of vlen primitives */
+  else {
+    if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+      if (chptr->aggregation & COUNT_SRC_AS_PATH) {
+        ptr = &empty_str;
+        len = strlen(ptr);
+
+        if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+          vlen_prims_init(pvlen, 0);
+          return;
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+      }
+
+      if (chptr->aggregation & COUNT_SRC_STD_COMM) {
+        ptr = &empty_str;
+        len = strlen(ptr);
+
+        if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+          vlen_prims_init(pvlen, 0);
+          return;
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+      }
+
+      if (chptr->aggregation & COUNT_SRC_EXT_COMM) {
+        ptr = &empty_str;
+        len = strlen(ptr);
+
+        if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+          vlen_prims_init(pvlen, 0);
+          return;
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+      }
+    }
+  }
 
   if (dst_ret && evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
@@ -4203,48 +4240,39 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   }
   /* take care of vlen primitives */
   else {
-    if (chptr->aggregation & COUNT_SRC_AS_PATH) {
-      ptr = &empty_str;
-      len = strlen(ptr);
+    if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
+      if (chptr->aggregation & COUNT_AS_PATH) {
+        ptr = &empty_str;
+        len = strlen(ptr);
 
-      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-        vlen_prims_init(pvlen, 0);
-        return;
+        if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+          vlen_prims_init(pvlen, 0);
+          return;
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
       }
-      else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
-    }
 
-    if (chptr->aggregation & COUNT_AS_PATH) {
-      ptr = &empty_str;
-      len = strlen(ptr);
+      if (chptr->aggregation & COUNT_STD_COMM) {
+        ptr = &empty_str;
+        len = strlen(ptr);
 
-      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-        vlen_prims_init(pvlen, 0);
-        return;
+        if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+          vlen_prims_init(pvlen, 0);
+          return;
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
       }
-      else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
-    }
 
-    if (chptr->aggregation & COUNT_STD_COMM) {
-      ptr = &empty_str;
-      len = strlen(ptr);
+      if (chptr->aggregation & COUNT_EXT_COMM) {
+        ptr = &empty_str;
+        len = strlen(ptr);
 
-      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-        vlen_prims_init(pvlen, 0);
-        return;
+        if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
+          vlen_prims_init(pvlen, 0);
+          return;
+        }
+        else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
       }
-      else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
-    }
-
-    if (chptr->aggregation & COUNT_EXT_COMM) {
-      ptr = &empty_str;
-      len = strlen(ptr);
-
-      if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + len)) {
-        vlen_prims_init(pvlen, 0);
-        return;
-      }
-      else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
     }
   }
 }
