@@ -171,5 +171,11 @@ EXT u_int16_t hash_key_get_len(pm_hash_key_t *);
 EXT char *hash_key_get_val(pm_hash_key_t *);
 EXT int hash_key_cmp(pm_hash_key_t *, pm_hash_key_t *);
 
+EXT void dump_writers_init();
+EXT void dump_writers_count();
+EXT u_int32_t dump_writers_get_flags();
+EXT u_int16_t dump_writers_get_active();
+EXT int dump_writers_add(pid_t);
+
 EXT void replace_string(char *, int, char *, char *);
 #undef EXT

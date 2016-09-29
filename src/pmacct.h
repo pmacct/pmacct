@@ -291,6 +291,13 @@ struct child_ctl {
   u_int32_t flags;
 };
 
+struct child_ctl2 {
+  pid_t *list;
+  u_int16_t active;
+  u_int16_t max;
+  u_int32_t flags;
+};
+
 #define INIT_BUF(x) \
 	memset(x.base, 0, sizeof(x.base)); \
 	x.end = x.base+sizeof(x.base); \
@@ -365,6 +372,7 @@ EXT int reload_log_sf_cnt, reload_log_telemetry_thread;
 EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
 EXT struct child_ctl sql_writers;
+EXT struct child_ctl2 dump_writers;
 EXT int debug;
 EXT struct configuration config; /* global configuration structure */
 EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */

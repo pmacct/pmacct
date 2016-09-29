@@ -3769,3 +3769,56 @@ int hash_key_cmp(pm_hash_key_t *a, pm_hash_key_t *b)
 
   return memcmp(a->val, b->val, b->len);
 }
+
+void dump_writers_init()
+{
+  dump_writers.active = 0;
+  dump_writers.max = config.sql_max_writers;
+  if (dump_writers.list) memset(dump_writers.list, 0, (dump_writers.max * sizeof(pid_t)));
+  dump_writers.flags = FALSE;
+}
+
+void dump_writers_count()
+{
+  u_int16_t idx, count;
+
+  for (idx = 0, count = 0; idx < dump_writers.max; idx++) {
+    if (dump_writers.list[idx]) {
+      if (kill(dump_writers.list[idx], 0) != -1) count++;
+      else dump_writers.list[idx] = 0;
+    }
+  }
+
+  dump_writers.active = count;
+  if (dump_writers.active == dump_writers.max) dump_writers.flags = CHLD_ALERT;
+  else dump_writers.flags = FALSE;
+}
+
+u_int32_t dump_writers_get_flags()
+{
+  return dump_writers.flags;
+}
+
+u_int16_t dump_writers_get_active()
+{
+  return dump_writers.active;
+}
+
+int dump_writers_add(pid_t pid)
+{
+  u_int16_t idx;
+  int ret = FALSE;
+
+  if (dump_writers.flags != CHLD_ALERT) {
+    for (idx = 0; idx < dump_writers.max; idx++) {
+      if (!dump_writers.list[idx]) {
+	dump_writers.list[idx] = pid; 
+	break;
+      }
+    }
+
+    ret = TRUE;
+  }
+
+  return ret;
+}

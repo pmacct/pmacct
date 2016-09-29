@@ -37,7 +37,7 @@ void P_set_signals()
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps);
   signal(SIGPIPE, SIG_IGN);
-  signal(SIGCHLD, ignore_falling_child);
+  signal(SIGCHLD, SIG_IGN);
 }
  
 void P_init_default_values()
@@ -69,6 +69,9 @@ void P_init_default_values()
   if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES;
   if (!config.sql_max_writers) config.sql_max_writers = DEFAULT_PLUGIN_COMMON_WRITERS_NO;
 
+  dump_writers.list = malloc(config.sql_max_writers * sizeof(pid_t));
+  dump_writers_init();
+
   pp_size = sizeof(struct pkt_primitives);
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
@@ -96,7 +99,6 @@ void P_init_default_values()
   memset(pending_queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
-  memset(&sql_writers, 0, sizeof(sql_writers));
 
   /* handling purge preprocessor */
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_PRINT);
@@ -475,7 +477,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
 
   safe_action:
   {
-    int ret;
+    pid_t ret;
 
     Log(LOG_INFO, "INFO ( %s/%s ): Finished cache entries (ie. print_cache_entries). Purging.\n", config.name, config.type);
 
@@ -485,20 +487,20 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
 
     /* Writing out to replenish cache space */
-    if (sql_writers.flags != CHLD_ALERT) {
+    dump_writers_count();
+    if (dump_writers_get_flags() != CHLD_ALERT) {
       switch (ret = fork()) {
       case 0: /* Child */
         (*purge_func)(queries_queue, qq_ptr);
         exit(0);
       default: /* Parent */
-        if (ret == -1) {
-	  Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-	  sql_writers.active--;
-	}
+        if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+        else dump_writers_add(ret);
 
 	break;
       }
     }
+    else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
     P_cache_flush(queries_queue, qq_ptr);
     qq_ptr = FALSE;
@@ -578,25 +580,25 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
 
 void P_cache_handle_flush_event(struct ports_table *pt)
 {
-  int ret;
+  pid_t ret;
 
   if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, FALSE);
 
-  if (sql_writers.flags != CHLD_ALERT) {
+  dump_writers_count();
+  if (dump_writers_get_flags() != CHLD_ALERT) {
     switch (ret = fork()) {
     case 0: /* Child */
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer", config.name);
       (*purge_func)(queries_queue, qq_ptr);
       exit(0);
     default: /* Parent */
-      if (ret == -1) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
-        sql_writers.active--;
-      }
+      if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
+      else dump_writers_add(ret);
 
       break;
     }
   }
+  else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
   P_cache_flush(queries_queue, qq_ptr);
 
@@ -620,7 +622,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
 void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
 {
   struct timeval commit_basetime;
-  int j, local_retired = sql_writers.retired, delay = 0;
+  int j, delay = 0;
 
   memset(&commit_basetime, 0, sizeof(commit_basetime));
 
@@ -665,19 +667,6 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
   else {
     for (j = 0, pqq_ptr = 0; j < index; j++)
       queue[j]->valid = PRINT_CACHE_COMMITTED;
-  }
-
-  /* Imposing maximum number of writers */
-  sql_writers.active -= MIN(sql_writers.active, local_retired);
-  sql_writers.retired -= local_retired;
-
-  if (sql_writers.active < config.sql_max_writers) {
-    sql_writers.flags = 0;
-    sql_writers.active++;
-  }
-  else {
-    Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, sql_writers.active);
-    sql_writers.flags = CHLD_ALERT;
   }
 }
 
@@ -757,7 +746,10 @@ void P_sum_mac_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 void P_exit_now(int signum)
 {
   if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, TRUE);
-  if (sql_writers.flags != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
+
+  dump_writers_count();
+  if (dump_writers_get_flags() != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
+  else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
   wait(NULL);
   exit_plugin(0);
