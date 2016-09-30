@@ -609,9 +609,7 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
   if (!src || !dst || !dstlen) return;
 
   srclen = strlen(src);
-
-  if (dstlen < srclen) return;
-  else memset(dst, 0, dstlen);
+  memset(dst, 0, dstlen);
 
   for (idx = 0, j = 0; patterns[idx]; idx++) {
     haystack = src;
@@ -655,6 +653,13 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
       } 
 
       haystack = &ptr[i];
+    }
+
+    /* If we don't have space anymore, let's finish it here */
+    if (j >= dstlen) {
+      dst[dstlen-2] = '+';
+      dst[dstlen-1] = '\0';
+      break;
     }
 
     /* Trick to find multiple occurrences */ 

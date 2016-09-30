@@ -4713,6 +4713,10 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   else {
     if (sample->dst_as_path_len) {
       strlcpy(plbgp->as_path, sample->dst_as_path, MAX_BGP_ASPATH);
+      if (strlen(sample->dst_as_path)) {
+	plbgp->as_path[MAX_BGP_ASPATH-2] = '+';
+	plbgp->as_path[MAX_BGP_ASPATH-1] = '\0';
+      }
 
       if (config.nfacctd_bgp_aspath_radius)
         evaluate_bgp_aspath_radius(plbgp->as_path, MAX_BGP_ASPATH, config.nfacctd_bgp_aspath_radius);
@@ -4800,7 +4804,17 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   }
   /* fallback to legacy fixed length behaviour */
   else {
-    if (sample->communities_len) strlcpy(plbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS);
+    if (sample->communities_len) {
+      if (config.nfacctd_bgp_stdcomm_pattern)
+	evaluate_comm_patterns(plbgp->std_comms, sample->comms, std_comm_patterns, MAX_BGP_STD_COMMS);
+      else {
+	strlcpy(plbgp->std_comms, sample->comms, MAX_BGP_STD_COMMS);
+	if (strlen(sample->comms)) {
+	  plbgp->std_comms[MAX_BGP_STD_COMMS-2] = '+';
+	  plbgp->std_comms[MAX_BGP_STD_COMMS-1] = '\0';
+	}
+      }
+    }
   }
 }
 
