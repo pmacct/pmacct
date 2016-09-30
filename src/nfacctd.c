@@ -385,6 +385,9 @@ int main(int argc,char **argv, char **envp)
     else Log(LOG_INFO, "INFO ( %s/core ): proc_priority set to %d\n", config.name, getpriority(PRIO_PROCESS, 0));
   }
 
+  Log(LOG_INFO, "INFO ( %s/core ): %s (%s)\n", config.name, NFACCTD_USAGE_HEADER, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
+
   if (strlen(config_file)) {
     char canonical_path[PATH_MAX], *canonical_path_ptr;
 
