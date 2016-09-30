@@ -156,13 +156,13 @@ typedef struct _SFSample {
   u_int32_t src_peer_as;
 
   u_int32_t dst_as_path_len;
-  char dst_as_path[MAX_BGP_ASPATH];
+  char dst_as_path[LARGEBUFLEN];
 
   u_int32_t dst_peer_as;
   u_int32_t dst_as;
 
   u_int32_t communities_len;
-  char comms[MAX_BGP_STD_COMMS];
+  char comms[LARGEBUFLEN];
   u_int32_t localpref;
 
   /* user id */

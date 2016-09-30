@@ -1745,12 +1745,12 @@ void readExtendedGateway(SFSample *sample)
         len_asn = strlen(asn_str);
 	len_tot = strlen(sample->dst_as_path);
 
-        if ((len_tot+len_asn) < MAX_BGP_ASPATH) {
+        if ((len_tot+len_asn) < LARGEBUFLEN) {
           strncat(sample->dst_as_path, asn_str, len_asn);
         }
         else {
-          sample->dst_as_path[MAX_BGP_ASPATH-2] = '+';
-          sample->dst_as_path[MAX_BGP_ASPATH-1] = '\0';
+          sample->dst_as_path[LARGEBUFLEN-2] = '+';
+          sample->dst_as_path[LARGEBUFLEN-1] = '\0';
         }
 
 	/* mark the first one as the dst_peer_as */
@@ -1759,12 +1759,13 @@ void readExtendedGateway(SFSample *sample)
 	/* mark the last one as the dst_as */
 	if (idx == (sample->dst_as_path_len - 1) && i == (seg_len - 1)) sample->dst_as = asNumber;
         else {
-          if (strlen(sample->dst_as_path) < (MAX_BGP_ASPATH-1))
+          if (strlen(sample->dst_as_path) < (LARGEBUFLEN-1))
             strncat(sample->dst_as_path, space, 1);
         }
       }
     }
   }
+  else sample->dst_as_path[0] = '\0';
 
   sample->communities_len = getData32(sample);
   /* just point at the communities array */
@@ -1795,20 +1796,21 @@ void readExtendedGateway(SFSample *sample)
       len_comm = strlen(comm_str);
       len_tot = strlen(sample->comms);
 
-      if ((len_tot+len_comm) < MAX_BGP_STD_COMMS) {
+      if ((len_tot+len_comm) < LARGEBUFLEN) {
         strncat(sample->comms, comm_str, len_comm);
       }
       else {
-        sample->comms[MAX_BGP_STD_COMMS-2] = '+';
-        sample->comms[MAX_BGP_STD_COMMS-1] = '\0';
+        sample->comms[LARGEBUFLEN-2] = '+';
+        sample->comms[LARGEBUFLEN-1] = '\0';
       }
 
       if (idx < (sample->communities_len - 1)) {
-        if (strlen(sample->comms) < (MAX_BGP_STD_COMMS-1))
+        if (strlen(sample->comms) < (LARGEBUFLEN-1))
           strncat(sample->comms, space, 1);
       }
     }
   }
+  else sample->comms[0] = '\0';
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
   sample->localpref = getData32(sample);
