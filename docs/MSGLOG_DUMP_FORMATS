@@ -11,11 +11,11 @@ BGP msglog format:
 
 * log message:
   {"seq": <seq>, "timestamp": <timestamp>, "peer_ip_src": <IP address>, \
-   "event_type": "log", "log_type": <update, "withdraw", "delete">, \
+   "event_type": "log", "log_type": <"update", "withdraw", "delete">, \
    <BGP NLRI, attributes, ..>}
 
 * log_close message:
-  {"seq": <int>, "timestamp": <timestamp>, "peer_ip_src": <IP address>, \
+  {"seq": <seq>, "timestamp": <timestamp>, "peer_ip_src": <IP address>, \
    "event_type": "log_close"}
 
 
@@ -35,21 +35,21 @@ BGP dump format:
 
 BMP msglog format:
 * log_init message:
-  {"seq": <int>, "timestamp": <timestamp>, "bmp_router": <IP address>, \
+  {"seq": <seq>, "timestamp": <timestamp>, "bmp_router": <IP address>, \
    "event_type": "log_init"}
 
 * log routes message:
-  {"seq": <int>, "timestamp": <BMP timestamp>, "bmp_router": <IP address>, \
+  {"seq": <seq>, "timestamp": <BMP timestamp>, "bmp_router": <IP address>, \
    "event_type": "log", "bmp_msg_type": "route_monitor", "log_type": <"update", \
    "withdraw", "delete">, "peer_ip": <IP address>, <BGP NLRI, attributes, ..>}
 
 * log events message:
-  {"seq": <int>, "timestamp": <BMP timestamp>, "bmp_router": <IP address>, \
+  {"seq": <seq>, "timestamp": <BMP timestamp>, "bmp_router": <IP address>, \
    "event_type": "log", "bmp_msg_type": <"init", "term", "peer_up", "stats", \
    "peer_down">, "peer_ip": <IP address>, <BMP message data>}
 
 * log_close message:
-  {"seq": <int>, "timestamp": <timestamp>, "bmp_router": <IP address>, \
+  {"seq": <seq>, "timestamp": <timestamp>, "bmp_router": <IP address>, \
    "event_type": "log_close"}
 
 
@@ -64,7 +64,7 @@ BMP dump format:
    "peer_ip": <IP address>, <BGP NLRI, attributes, ..>}
 
 * dump events message:
-  {"seq": <int>, "timestamp": <dump event timestamp>, "bmp_router": <IP address>, \
+  {"seq": <seq>, "timestamp": <dump event timestamp>, "bmp_router": <IP address>, \
    "event_type": "dump", "event_timestamp": <BMP timestamp>, "bmp_msg_type": \
    <"init", "term", "peer_up", "stats", "peer_down">, "peer_ip": <IP address>, \
    <BMP message data>}
@@ -75,7 +75,30 @@ BMP dump format:
 
 
 Streaming Telemetry msglog format:
-XXX
+* log_init message:
+  {"seq": <seq>, "timestamp": <timestamp>, "telemetry_node": <IP address>, \
+   "event_type": "log_init"}
+
+* log message:
+  {"seq": <seq>, "timestamp": <timestamp>, "telemetry_node": <IP address>, \
+   "event_type": "log", "telemetry_port": <TCP/UDP port>, "serialization": \
+   <"json" | "gpb">, "telemetry_data": <JSON or base64'd GPB telemetry data>}
+
+* log_close message:
+  {"seq": <seq>, "timestamp": <timestamp>, "telemetry_node": <IP address>, \
+   "event_type": "log_close"}
 
 Streaming Telemetry dump format:
-XXX
+* dump_init message:
+  {"timestamp": <dump event timestamp>, "telemetry_node": <IP address>, \
+   "event_type": "dump_init", "dump_period": <bmp_dump_refresh_time>}
+
+* dump message:
+  {"seq": <seq>, "timestamp": <dump event timestamp>, "telemetry_node": \
+   <IP address>, "event_type": "dump", "telemetry_port": <TCP/UDP port>, \
+   "serialization": <"json" | "gpb">, "telemetry_data": <JSON or base64'd \
+   GPB telemetry data>}
+
+* dump_close message:
+  {"timestamp": <dump event timestamp>, "telemetry_node": <IP address>, \
+   "event_type": "dump_close"}
