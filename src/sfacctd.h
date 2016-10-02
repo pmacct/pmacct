@@ -249,6 +249,16 @@ struct SF_icmphdr
   /* ignore the rest */
 };
 
+struct SF_dissect {
+  char *hdrBasePtr;
+  char *hdrEndPtr;
+  u_int32_t hdrLen;
+  char *flowBasePtr;
+  char *flowEndPtr;
+  u_int32_t flowLen;
+  char *samplesInPkt;
+};
+
 #if (!defined __SFACCTD_C)
 #define EXT extern
 #else
@@ -263,6 +273,7 @@ EXT void reset_ip6(struct packet_ptrs *);
 EXT void SF_notify_malf_packet(short int, char *, struct sockaddr *);
 EXT int SF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
+EXT char *getPointer(SFSample *);
 EXT u_int32_t getData32(SFSample *);
 EXT u_int32_t getData32_nobswap(SFSample *);
 EXT u_int64_t getData64(SFSample *);

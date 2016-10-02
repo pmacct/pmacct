@@ -957,7 +957,6 @@ int main(int argc,char **argv, char **envp)
 
   /* Main loop */
   for (;;) {
-    // memset(&spp, 0, sizeof(spp));
     ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     spp.rawSample = pptrs.v4.f_header = sflow_packet;
     spp.rawSampleLen = pptrs.v4.f_len = ret;
@@ -1225,17 +1224,18 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
                                 struct plugin_requests *req, struct sockaddr *agent)
 {
   struct packet_ptrs *pptrs = &pptrsv->v4;
+  u_int32_t agentSubId;
 
-  switch(spp->datagramVersion = getData32(spp)) {
+  switch (spp->datagramVersion = getData32(spp)) {
   case 5:
     getAddress(spp, &spp->agent_addr);
-    spp->agentSubId = getData32(spp);
+    spp->agentSubId = agentSubId = getData32(spp);
     pptrs->seqno = getData32(spp);
     break;
   case 4:
   case 2:
     getAddress(spp, &spp->agent_addr);
-    spp->agentSubId = 0; /* not supported */
+    spp->agentSubId = agentSubId = 0; /* not supported */
     pptrs->seqno = getData32(spp);
     break;
   default:
@@ -1254,11 +1254,60 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
     addr_to_str(agent_addr, &a);
 
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n", 
-			config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Received sFlow packet from [%s:%u] version [%u] seqno [%u]\n",
+                        config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
   }
 
+  if (req->ptm_c.exec_ptm_dissect) {
+    u_int32_t samplesInPacket, sampleType, idx;
+    struct SF_dissect dissect;
+
+    memset(&dissect, 0, sizeof(dissect));
+    pptrs->tee_dissect = (char *) &dissect;
+    req->ptm_c.exec_ptm_res = TRUE;
+
+    dissect.hdrBasePtr = spp->rawSample;
+    skipBytes(spp, 4); /* sysUpTime */
+    dissect.samplesInPkt = getPointer(spp);
+    samplesInPacket = getData32(spp);
+    dissect.hdrEndPtr = getPointer(spp);
+    dissect.hdrLen = (dissect.hdrEndPtr - dissect.hdrBasePtr);
+
+    for (idx = 0; idx < samplesInPacket; idx++) {
+      InterSampleCleanup(spp);
+      set_vector_sample_type(pptrsv, 0);
+      spp->agentSubId = agentSubId;
+
+      sampleType = getData32(spp);
+      set_vector_sample_type(pptrsv, sampleType);
+
+      switch (sampleType) {
+      case SFLFLOW_SAMPLE:
+	// XXX: neglecting v2v4 case for now, ie. no flow sample length available
+        dissect.flowBasePtr = getPointer(spp);
+	dissect.flowLen = getData32(spp);
+	dissect.flowEndPtr = (dissect.flowBasePtr + dissect.flowLen);
+	skipBytes(spp, (dissect.flowLen - 8));
+	// XXX: readv2v4FlowSample(spp, pptrsv, req);
+	// XXX: readv5FlowSample(spp, FALSE, pptrsv, req);
+	break;
+      default:
+	continue;
+      }
+
+      /* if something is wrong with the pointers, let's stop here but still
+         we take a moment to send the full packet over */
+      if ((u_char *) spp->datap > spp->endp) break;
+
+      // XXX: exec_plugins(pptrs, req);
+    }
+  }
+
+  /* even if dissecting, we always send the full packet in case multiple tee
+     plugins are instantiated and any of them does not require dissection */
+  pptrs->tee_dissect = NULL;
   req->ptm_c.exec_ptm_res = FALSE;
+
   exec_plugins(pptrs, req);
 }
 
@@ -1598,6 +1647,12 @@ void decodeIPV6(SFSample *sample)
   _________________   read data fns           __________________
   -----------------___________________________------------------
 */
+
+char *getPointer(SFSample *sample)
+{
+  if ((u_char *)sample->datap > sample->endp) return NULL;
+  return (char *)sample->datap;
+}
 
 u_int32_t getData32(SFSample *sample) 
 {
