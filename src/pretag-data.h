@@ -106,6 +106,7 @@ const struct _map_dictionary_line tag_map_tee_dictionary[] = {
   {"out", PT_map_output_handler},
   {"src_mac", PT_map_src_mac_handler},
   {"dst_mac", PT_map_dst_mac_handler},
+  {"vlan", PT_map_vlan_id_handler},
   {"label", PT_map_entry_label_handler},
   {"jeq", PT_map_jeq_handler},
   {"return", PT_map_return_handler},

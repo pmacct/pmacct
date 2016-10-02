@@ -1050,6 +1050,8 @@ int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, stru
 {
   int tmp, x = 0;
 
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
   e->key.vlan_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = atoi(value);
