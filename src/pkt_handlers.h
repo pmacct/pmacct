@@ -65,7 +65,6 @@ EXT void timestamp_start_handler(struct channels_list_entry *, struct packet_ptr
 EXT void timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void sfprobe_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_extras_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void mpls_vpn_rd_frommap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
@@ -117,6 +116,7 @@ EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struc
 EXT void NF_cust_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_cust_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_cust_label_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -171,6 +171,7 @@ EXT void SF_peer_src_as_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void SF_peer_dst_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_local_pref_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_std_comms_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void pre_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void pre_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

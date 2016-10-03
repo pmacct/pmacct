@@ -814,8 +814,8 @@ void evaluate_packet_handlers()
     /* tee plugin: struct pkt_msg handling */
     if (channels_list[index].aggregation & COUNT_NONE) {
       if (channels_list[index].plugin->type.id == PLUGIN_ID_TEE) {
-        if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = tee_payload_handler;
-        if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = tee_payload_handler;
+        if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tee_payload_handler;
+        if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_tee_payload_handler;
         else primitives--; /* This case is filtered out at startup: getting out silently */
       }
       primitives++;
@@ -1229,7 +1229,7 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   }
 }
 
-void tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_msg *pmsg = (struct pkt_msg *) *data;
   char *ppayload = ((*data) + PmsgSz);
@@ -1242,6 +1242,38 @@ void tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   pmsg->tag2 = pptrs->tag2;
   if (!check_pipe_buffer_space(chptr, NULL, pptrs->f_len)) {
     memcpy(ppayload, pptrs->f_header, pptrs->f_len);
+  }
+}
+
+void SF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_msg *pmsg = (struct pkt_msg *) *data;
+  char *ppayload = ((*data) + PmsgSz);
+
+  if (!pptrs->tee_dissect) {
+    pmsg->seqno = pptrs->seqno;
+    pmsg->len = pptrs->f_len;
+    pmsg->payload = NULL;
+    memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
+    pmsg->tag = pptrs->tag;
+    pmsg->tag2 = pptrs->tag2;
+    if (!check_pipe_buffer_space(chptr, NULL, pptrs->f_len)) {
+      memcpy(ppayload, pptrs->f_header, pptrs->f_len);
+    }
+  }
+  else {
+    struct SF_dissect *dissect = (struct SF_dissect *) pptrs->tee_dissect;
+
+    pmsg->seqno = pptrs->seqno;
+    pmsg->len = (dissect->hdrLen + dissect->flowLen); 
+    pmsg->payload = NULL;
+    memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
+    pmsg->tag = pptrs->tag;
+    pmsg->tag2 = pptrs->tag2;
+    if (!check_pipe_buffer_space(chptr, NULL, pmsg->len)) {
+      memcpy(ppayload, dissect->hdrBasePtr, dissect->hdrLen);
+      memcpy((ppayload + dissect->hdrLen), dissect->flowBasePtr, dissect->flowLen);
+    }
   }
 }
 

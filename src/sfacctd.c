@@ -1258,7 +1258,8 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
                         config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
   }
 
-  if (req->ptm_c.exec_ptm_dissect) {
+  /* Dissectingi is not supported for sFlow v2-v4 due to lack of length fields */
+  if (req->ptm_c.exec_ptm_dissect && spp->datagramVersion == 5) {
     u_int32_t samplesInPacket, sampleType, idx;
     struct SF_dissect dissect;
 
@@ -1268,38 +1269,50 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
     dissect.hdrBasePtr = spp->rawSample;
     skipBytes(spp, 4); /* sysUpTime */
-    dissect.samplesInPkt = getPointer(spp);
+    dissect.samplesInPkt = (u_int32_t *) getPointer(spp);
     samplesInPacket = getData32(spp);
     dissect.hdrEndPtr = getPointer(spp);
     dissect.hdrLen = (dissect.hdrEndPtr - dissect.hdrBasePtr);
+    (*dissect.samplesInPkt) = htonl(1);
 
     for (idx = 0; idx < samplesInPacket; idx++) {
       InterSampleCleanup(spp);
       set_vector_sample_type(pptrsv, 0);
       spp->agentSubId = agentSubId;
 
+      dissect.flowBasePtr = getPointer(spp);
       sampleType = getData32(spp);
       set_vector_sample_type(pptrsv, sampleType);
+      dissect.flowLen = (getData32(spp) + 8 /* sample type + sample length */);
+      dissect.flowEndPtr = (dissect.flowBasePtr + dissect.flowLen);
+      skipBytes(spp, (dissect.flowLen - 8));
 
       switch (sampleType) {
       case SFLFLOW_SAMPLE:
-	// XXX: neglecting v2v4 case for now, ie. no flow sample length available
-        dissect.flowBasePtr = getPointer(spp);
-	dissect.flowLen = getData32(spp);
-	dissect.flowEndPtr = (dissect.flowBasePtr + dissect.flowLen);
-	skipBytes(spp, (dissect.flowLen - 8));
-	// XXX: readv2v4FlowSample(spp, pptrsv, req);
 	// XXX: readv5FlowSample(spp, FALSE, pptrsv, req);
 	break;
       default:
+	/* we just trash counter samples and all when dissecting */
 	continue;
+      }
+
+      if (config.debug) {
+	struct host_addr a;
+	u_char agent_addr[50];
+	u_int16_t agent_port;
+
+	sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
+	addr_to_str(agent_addr, &a);
+
+	Log(LOG_DEBUG, "DEBUG ( %s/core ): Split sFlow Flow Sample from [%s:%u] version [%u] seqno [%u] [%u/%u]\n",
+		config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno, (idx+1), samplesInPacket);
       }
 
       /* if something is wrong with the pointers, let's stop here but still
          we take a moment to send the full packet over */
       if ((u_char *) spp->datap > spp->endp) break;
 
-      // XXX: exec_plugins(pptrs, req);
+      exec_plugins(pptrs, req);
     }
   }
 

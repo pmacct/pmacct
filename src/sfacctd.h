@@ -256,7 +256,7 @@ struct SF_dissect {
   char *flowBasePtr;
   char *flowEndPtr;
   u_int32_t flowLen;
-  char *samplesInPkt;
+  u_int32_t *samplesInPkt;
 };
 
 #if (!defined __SFACCTD_C)
