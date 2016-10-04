@@ -426,7 +426,8 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 
     if (p->cfg.pre_tag_map && find_id_func) {
       if (p->cfg.type_id == PLUGIN_ID_TEE) {
-	if ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) || (!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex)) 
+	if ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) ||
+	    ((!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex) && !p->cfg.tee_dissect_send_full_pkt)) 
 	  continue;
       }
 

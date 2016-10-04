@@ -2390,6 +2390,13 @@ DESC:           Tee receivers list is organized in pools (for present and future
 		allocated and cannot be changed at runtime.
 DEFAULT:	32
 
+KEY:		tee_dissect_send_full_pkt
+VALUES:         [ true | false ]
+DESC:		When replicating and dissecting flow samples, send onto the tee plugin also the full
+		packet. This is useful in scenarios where, say, dissected flows are tagged while the
+		full packet is left untagged. By default this is left to false for security reasons. 
+DEFAULT:	false
+
 KEY:		pkt_len_distrib_bins
 DESC:		Defines a list of packet length distributions, comma-separated, which is then used to
 		populate values for the 'pkt_len_ditrib' aggregation primitive. Values can be ranges or

@@ -496,6 +496,7 @@ struct configuration {
   int tee_max_receiver_pools;
   char *tee_receivers;
   int tee_pipe_size;
+  int tee_dissect_send_full_pkt;
   int uacctd_group;
   int uacctd_nl_size;
   int uacctd_threshold;

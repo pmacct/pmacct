@@ -5241,6 +5241,28 @@ int cfg_key_tee_pipe_size(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_tee_dissect_send_full_pkt(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tee_dissect_send_full_pkt = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tee_dissect_send_full_pkt = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 void parse_time(char *filename, char *value, int *mu, int *howmany)
 {
   int k, j, len;
