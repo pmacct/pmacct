@@ -1194,13 +1194,13 @@ SFv5_read_sampleType:
 
     switch (sampleType) {
     case SFLFLOW_SAMPLE:
-      readv5FlowSample(spp, FALSE, pptrsv, req);
+      readv5FlowSample(spp, FALSE, pptrsv, req, TRUE);
       break;
     case SFLCOUNTERS_SAMPLE:
       readv5CountersSample(spp, FALSE, pptrsv, req);
       break;
     case SFLFLOW_SAMPLE_EXPANDED:
-      readv5FlowSample(spp, TRUE, pptrsv, req);
+      readv5FlowSample(spp, TRUE, pptrsv, req, TRUE);
       break;
     case SFLCOUNTERS_SAMPLE_EXPANDED:
       readv5CountersSample(spp, TRUE, pptrsv, req);
@@ -1258,9 +1258,9 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
                         config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
   }
 
-  /* Dissectingi is not supported for sFlow v2-v4 due to lack of length fields */
+  /* Dissecting is not supported for sFlow v2-v4 due to lack of length fields */
   if (req->ptm_c.exec_ptm_dissect && spp->datagramVersion == 5) {
-    u_int32_t samplesInPacket, sampleType, idx;
+    u_int32_t samplesInPacket, sampleType, idx, *flowLenPtr;
     struct SF_dissect dissect;
 
     memset(&dissect, 0, sizeof(dissect));
@@ -1283,16 +1283,22 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
       dissect.flowBasePtr = getPointer(spp);
       sampleType = getData32(spp);
       set_vector_sample_type(pptrsv, sampleType);
-      dissect.flowLen = (getData32(spp) + 8 /* sample type + sample length */);
+      sfv5_modules_db_init();
+
+      flowLenPtr = (u_int32_t *) getPointer(spp);
+      dissect.flowLen = (ntohl(*flowLenPtr) + 8 /* add sample type + sample length */);
       dissect.flowEndPtr = (dissect.flowBasePtr + dissect.flowLen);
-      skipBytes(spp, (dissect.flowLen - 8));
 
       switch (sampleType) {
       case SFLFLOW_SAMPLE:
-	// XXX: readv5FlowSample(spp, FALSE, pptrsv, req);
-	break;
+        readv5FlowSample(spp, FALSE, pptrsv, req, FALSE);
+        break;
+      case SFLFLOW_SAMPLE_EXPANDED:
+        readv5FlowSample(spp, TRUE, pptrsv, req, FALSE);
+        break;
       default:
 	/* we just trash counter samples and all when dissecting */
+        skipBytes(spp, (dissect.flowLen - 4 /* subtract sample type */));
 	continue;
       }
 
@@ -1314,6 +1320,8 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
       exec_plugins(pptrs, req);
     }
+
+    (*dissect.samplesInPkt) = htonl(samplesInPacket);
   }
 
   /* even if dissecting, we always send the full packet in case multiple tee
@@ -2353,7 +2361,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
   -----------------___________________________------------------
 */
 
-void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
+void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req, int finalize)
 {
   struct sfv5_modules_db_field *db_field = NULL;
   u_int32_t num_elements, sampleLength, actualSampleLength;
@@ -2442,7 +2450,7 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
 
   if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
 
-  finalizeSample(sample, pptrsv, req);
+  if (finalize) finalizeSample(sample, pptrsv, req);
 }
 
 void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)

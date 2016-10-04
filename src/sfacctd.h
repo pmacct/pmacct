@@ -285,7 +285,7 @@ EXT void process_SFv2v4_packet(SFSample *, struct packet_ptrs_vector *, struct p
 EXT void process_SFv5_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
 EXT void process_SF_raw_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
 EXT void readv2v4FlowSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
-EXT void readv5FlowSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *);
+EXT void readv5FlowSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *, int);
 EXT void readv2v4CountersSample(SFSample *);
 EXT void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void finalizeSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
