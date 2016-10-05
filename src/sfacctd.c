@@ -1258,73 +1258,81 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
                         config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno);
   }
 
-  /* Dissecting is not supported for sFlow v2-v4 due to lack of length fields */
-  if (req->ptm_c.exec_ptm_dissect && spp->datagramVersion == 5) {
-    u_int32_t samplesInPacket, sampleType, idx, *flowLenPtr;
-    struct SF_dissect dissect;
+  if (req->ptm_c.exec_ptm_dissect) {
+    /* Dissecting is not supported for sFlow v2-v4 due to lack of length fields */
+    if (spp->datagramVersion == 5) {
+      u_int32_t samplesInPacket, sampleType, idx, *flowLenPtr;
+      struct SF_dissect dissect;
 
-    memset(&dissect, 0, sizeof(dissect));
-    pptrs->tee_dissect = (char *) &dissect;
-    req->ptm_c.exec_ptm_res = TRUE;
+      memset(&dissect, 0, sizeof(dissect));
+      pptrs->tee_dissect = (char *) &dissect;
+      req->ptm_c.exec_ptm_res = TRUE;
 
-    dissect.hdrBasePtr = spp->rawSample;
-    skipBytes(spp, 4); /* sysUpTime */
-    dissect.samplesInPkt = (u_int32_t *) getPointer(spp);
-    samplesInPacket = getData32(spp);
-    dissect.hdrEndPtr = getPointer(spp);
-    dissect.hdrLen = (dissect.hdrEndPtr - dissect.hdrBasePtr);
-    (*dissect.samplesInPkt) = htonl(1);
+      dissect.hdrBasePtr = spp->rawSample;
+      skipBytes(spp, 4); /* sysUpTime */
+      dissect.samplesInPkt = (u_int32_t *) getPointer(spp);
+      samplesInPacket = getData32(spp);
+      dissect.hdrEndPtr = getPointer(spp);
+      dissect.hdrLen = (dissect.hdrEndPtr - dissect.hdrBasePtr);
+      (*dissect.samplesInPkt) = htonl(1);
 
-    for (idx = 0; idx < samplesInPacket; idx++) {
+      for (idx = 0; idx < samplesInPacket; idx++) {
+        InterSampleCleanup(spp);
+        set_vector_sample_type(pptrsv, 0);
+        spp->agentSubId = agentSubId;
+
+        dissect.flowBasePtr = getPointer(spp);
+        sampleType = getData32(spp);
+        set_vector_sample_type(pptrsv, sampleType);
+        sfv5_modules_db_init();
+
+        flowLenPtr = (u_int32_t *) getPointer(spp);
+        dissect.flowLen = (ntohl(*flowLenPtr) + 8 /* add sample type + sample length */);
+        dissect.flowEndPtr = (dissect.flowBasePtr + dissect.flowLen);
+
+        switch (sampleType) {
+        case SFLFLOW_SAMPLE:
+          readv5FlowSample(spp, FALSE, pptrsv, req, FALSE);
+          break;
+        case SFLFLOW_SAMPLE_EXPANDED:
+          readv5FlowSample(spp, TRUE, pptrsv, req, FALSE);
+          break;
+        default:
+	  /* we just trash counter samples and all when dissecting */
+          skipBytes(spp, (dissect.flowLen - 4 /* subtract sample type */));
+	  continue;
+        }
+
+        if (config.debug) {
+	  struct host_addr a;
+	  u_char agent_addr[50];
+	  u_int16_t agent_port;
+
+	  sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
+	  addr_to_str(agent_addr, &a);
+
+	  Log(LOG_DEBUG, "DEBUG ( %s/core ): Split sFlow Flow Sample from [%s:%u] version [%u] seqno [%u] [%u/%u]\n",
+		config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno, (idx+1), samplesInPacket);
+        }
+
+        /* if something is wrong with the pointers, let's stop here but still
+           we take a moment to send the full packet over */
+        if ((u_char *) spp->datap > spp->endp) break;
+
+        exec_plugins(pptrs, req);
+      }
+
+      /* preps to possibly send over the full packet next */
       InterSampleCleanup(spp);
       set_vector_sample_type(pptrsv, 0);
       spp->agentSubId = agentSubId;
-
-      dissect.flowBasePtr = getPointer(spp);
-      sampleType = getData32(spp);
-      set_vector_sample_type(pptrsv, sampleType);
-      sfv5_modules_db_init();
-
-      flowLenPtr = (u_int32_t *) getPointer(spp);
-      dissect.flowLen = (ntohl(*flowLenPtr) + 8 /* add sample type + sample length */);
-      dissect.flowEndPtr = (dissect.flowBasePtr + dissect.flowLen);
-
-      switch (sampleType) {
-      case SFLFLOW_SAMPLE:
-        readv5FlowSample(spp, FALSE, pptrsv, req, FALSE);
-        break;
-      case SFLFLOW_SAMPLE_EXPANDED:
-        readv5FlowSample(spp, TRUE, pptrsv, req, FALSE);
-        break;
-      default:
-	/* we just trash counter samples and all when dissecting */
-        skipBytes(spp, (dissect.flowLen - 4 /* subtract sample type */));
-	continue;
-      }
-
-      if (config.debug) {
-	struct host_addr a;
-	u_char agent_addr[50];
-	u_int16_t agent_port;
-
-	sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
-	addr_to_str(agent_addr, &a);
-
-	Log(LOG_DEBUG, "DEBUG ( %s/core ): Split sFlow Flow Sample from [%s:%u] version [%u] seqno [%u] [%u/%u]\n",
-		config.name, agent_addr, agent_port, spp->datagramVersion, pptrs->seqno, (idx+1), samplesInPacket);
-      }
-
-      /* if something is wrong with the pointers, let's stop here but still
-         we take a moment to send the full packet over */
-      if ((u_char *) spp->datap > spp->endp) break;
-
-      exec_plugins(pptrs, req);
+      (*dissect.samplesInPkt) = htonl(samplesInPacket);
     }
-
-    (*dissect.samplesInPkt) = htonl(samplesInPacket);
+    else Log(LOG_DEBUG, "DEBUG ( %s/core ): sFlow packet version (%u) not supported for dissection\n",
+		config.name, spp->datagramVersion); 
   }
 
-  /* even if dissecting, we always send the full packet in case multiple tee
+  /* If dissecting, we may also send the full packet in case multiple tee
      plugins are instantiated and any of them does not require dissection */
   pptrs->tee_dissect = NULL;
   req->ptm_c.exec_ptm_res = FALSE;
