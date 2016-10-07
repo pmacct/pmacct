@@ -1317,8 +1317,9 @@ to remote collectors. The plugin can also act transparently by preserving the
 original IP address of the datagrams. Setting up a replicator is very easy. All
 is needed is where to listen to for incoming packets, where to replicate them
 to and optionally a filtering layer, if required. Filtering bases on the
-standard pre_tag_map infrastructure; only coarse-grained filtering against
-original source IP address is possible. 
+standard pre_tag_map infrastructure; here is presented only coarse-grained
+filtering against the NetFlow/sFlow source IP address (see next section for
+finer-grained filtering). 
 
 nfacctd_port: 2100
 nfacctd_ip: X.X.X.X
@@ -1368,6 +1369,62 @@ Concluding note: 'tee' plugin is not compatible with different plugins - within
 the same daemon instance. So if in the need of using pmacct for both collecting
 and replicating data, two separate instances must be used (intuitively with the
 replicator instance feeding the collector one).
+
+XVa. Splitting and dissecting sFlow flow samples
+Starting with pmacct 1.6.2, it is possible to perform finer-grained filtering,
+ie. against flow-specific primitives, when replicating. For example: replicate
+flows from or to MAC address X1, X2 .. Xn to receiver Y or replicate flows in
+VLAN W to receiver Z. The feature works by inspecting the original packet and
+dissecting it as needed, the most popular use-case being IXPs replicating flows
+back to the members originating and/or receiving them. The primitives supported
+are: source and destination MAC addresses, input and output interfaces ifindex,
+input or output VLAN.
+
+The feature is configured just like selective teeing shown in the previous
+section. Incoming packets are tagged with a pre_tag_map and then matched to a
+receiver in tee_receivers. Also, setting tee_dissect_send_full_pkt to true (by
+default false) the original full frame is sent over to the tee plugin. For
+example: replicate flows from/to MAC address XX:XX:XX:XX:XX:XX to receiver Y,
+replicate flows from/to MAC address WW:WW:WW:WW:WW:WW to receiver Z, replicate
+any remaining flows plus original frames to receiver J.
+
+This is the pre_tag_map map:
+
+set_tag=100     ip=0.0.0.0/0	src_mac=XX:XX:XX:XX:XX:XX
+set_tag=100     ip=0.0.0.0/0	dst_mac=XX:XX:XX:XX:XX:XX
+set_tag=200	ip=0.0.0.0/0	src_mac=WW:WW:WW:WW:WW:WW
+set_tag=200	ip=0.0.0.0/0	dst_mac=WW:WW:WW:WW:WW:WW
+set_tag=999	ip=0.0.0.0/0
+
+This is the tee_receivers map:
+
+id=100	ip=Y.Y.Y.Y:2100	tag=100
+id=200	ip=Z.Z.Z.Z:2100	tag=200
+id=999	ip=J.J.J.J:2100	tag=999
+
+This is the relevant section from sfacctd.conf:
+
+[ .. ]
+!
+tee_transparent: true
+maps_index: true
+!
+plugins: tee[a]
+!
+tee_receivers[a]: /path/to/tee_receivers.lst
+pre_tag_map[a]: /path/to/pretag.map
+tee_dissect_send_full_pkt[a]: true
+
+There are a few restrictions to the feature: 1) only sFlow v5 is supported, ie.
+no NetFlow/IPFIX and no sFlow v2-v4; 2) only sFlow flow samples are supported,
+ie. no counter samples. There are also a few known limitations all boiling down
+to non-contextual replication: 1) once split, flows are not muxed back together,
+ie. in case multiple samples part of the same packet are to be replicated to the
+same receiver; 2) sequence numbers are untouched: the most obvious cases being
+receivers may detect non-contiguous sequencing progressions or false duplicates.
+If you are negatively affected by any of these restrictions or limitations or
+you need other primitives to be supported by this feature, please do get in
+touch.
 
 
 XVI. Quickstart guide to setup the IS-IS daemon
