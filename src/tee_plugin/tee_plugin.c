@@ -111,7 +111,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* Setting up receivers per pool */
   if (!config.tee_max_receivers) config.tee_max_receivers = MAX_TEE_RECEIVERS;
 
-  for (pool_idx = 0; pool_idx < MAX_TEE_POOLS; pool_idx++) { 
+  for (pool_idx = 0; pool_idx < config.tee_max_receiver_pools; pool_idx++) { 
     receivers.pools[pool_idx].receivers = malloc(config.tee_max_receivers*sizeof(struct tee_receivers));
     if (!receivers.pools[pool_idx].receivers) {
       Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receivers for pool #%u. Exiting ...\n", config.name, config.type, pool_idx);

@@ -71,7 +71,7 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
   int pool_idx, recv_idx;
   char *str_ptr, *token;
 
-  if (table && table->pools && table->pools && table->pools[table->num].receivers) {
+  if (table && table->pools && table->pools[table->num].receivers) {
     str_ptr = value;
     recv_idx = 0;
 
