@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "bgp.h"
 #include "../bmp/bmp.h"
 #if defined WITH_RABBITMQ

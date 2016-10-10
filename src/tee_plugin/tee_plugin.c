@@ -21,7 +21,8 @@
 
 #define __TEE_PLUGIN_C
 
-#include "../pmacct.h"
+#include "pmacct.h"
+#include "addr.h"
 #include "tee_plugin.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"

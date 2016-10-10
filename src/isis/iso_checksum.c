@@ -25,6 +25,7 @@
 
 #include "pmacct.h"
 #include "isis.h"
+#include "checksum.h"
 #include "iso_checksum.h"
 
 /*

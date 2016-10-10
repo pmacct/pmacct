@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "nfacctd.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
@@ -34,6 +35,10 @@
 #include "net_aggr.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
+#include "isis/isis.h"
+#include "bmp/bmp.h"
+#include "nfv8_handlers.h"
+#include "telemetry/telemetry.h"
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */

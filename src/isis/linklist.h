@@ -77,6 +77,10 @@ EXT struct listnode *isis_listnode_lookup (struct list *, void *);
 EXT void *isis_listnode_head (struct list *);
 EXT void isis_list_delete (struct list *);
 EXT void isis_list_delete_all_node (struct list *);
+EXT void isis_list_delete_node (struct list *, struct listnode *);
+EXT void isis_list_add_node_prev (struct list *, struct listnode *, void *);
+EXT void isis_list_add_node_next (struct list *, struct listnode *, void *);
+EXT void isis_list_add_list (struct list *, struct list *);
 #undef EXT
 
 /* List iteration macro. 

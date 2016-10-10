@@ -23,6 +23,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
@@ -30,6 +31,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "crc32.h"
+#include "bgp/bgp.h"
 
 #ifdef WITH_AVRO
 #include <avro.h>

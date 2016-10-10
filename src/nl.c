@@ -33,6 +33,9 @@
 #include "ip_flow.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
+#include "isis/isis.h"
+#include "bgp/bgp.h"
+#include "bmp/bmp.h"
 
 void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {

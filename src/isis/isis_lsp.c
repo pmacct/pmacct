@@ -32,6 +32,7 @@
 #include "prefix.h"
 #include "hash.h"
 
+#include "checksum.h"
 #include "dict.h"
 #include "isis_constants.h"
 #include "isis_common.h"

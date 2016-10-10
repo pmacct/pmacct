@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "nfacctd.h"
 #include "pretag_handlers.h"
 #include "pretag-data.h"
@@ -32,6 +33,7 @@
 #include "isis/isis.h"
 #include "isis/isis-data.h"
 #include "crc32.h"
+#include "pmacct-data.h"
 
 /*
    XXX: load_id_file() interface cleanup pending:

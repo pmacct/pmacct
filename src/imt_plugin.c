@@ -27,6 +27,7 @@
 #include "imt_plugin.h"
 #include "net_aggr.h"
 #include "ports_aggr.h"
+#include "bgp/bgp.h"
 
 /* Functions */
 void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

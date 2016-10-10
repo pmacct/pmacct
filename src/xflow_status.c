@@ -23,6 +23,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 
 /* functions */
 u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)

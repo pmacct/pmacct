@@ -171,6 +171,7 @@ EXT void isis_circuit_if_add (struct isis_circuit *, struct interface *);
 EXT void isis_circuit_if_del (struct isis_circuit *);
 EXT void circuit_update_nlpids (struct isis_circuit *);
 EXT void isis_circuit_update_params (struct isis_circuit *, struct interface *);
+EXT void isis_circuit_down (struct isis_circuit *circuit);
 #undef EXT
 
 #endif /* _ISIS_CIRCUIT_H_ */
