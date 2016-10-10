@@ -349,8 +349,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len) 
 		   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
-                else if (!err && tmp.e[tmp.num].key.agent_ip.a.family) {
+                else if (!err) {
                   int j, z;
+
+		  if (!tmp.e[tmp.num].key.agent_ip.a.family) {
+		    /* XXX: AF_INET is rather arbitrary. Should recirculate for IPv6 */
+		    memset(&tmp.e[tmp.num].key.agent_ip, 0, sizeof(pt_hostaddr_t));
+		    memset(&tmp.e[tmp.num].key.agent_mask, 0, sizeof(pt_hostmask_t));
+		    tmp.e[tmp.num].key.agent_ip.a.family = AF_INET;
+		    tmp.e[tmp.num].key.agent_mask.family = AF_INET;
+		  }
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
 		  for (z = 0; tmp.e[tmp.num].set_func[z]; z++, j++) {
@@ -366,9 +374,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                 }
 	        /* if any required field is missing and other errors have been signalled
 	           before we will trap an error message */
-	        else if (!err && !tmp.e[tmp.num].key.agent_ip.a.family)
-	          Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required key is: 'ip'. Line ignored.\n",
-			config.name, config.type, filename, tot_lines); 
 	      }
 	      else if (acct_type == ACCT_PM) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len)
@@ -844,11 +849,6 @@ pt_bitmap_t pretag_index_build_bitmap(struct id_entry *ptr, int acct_type)
   if (idx_bmap & PRETAG_SET_TAG) idx_bmap ^= PRETAG_SET_TAG;
   if (idx_bmap & PRETAG_SET_TAG2) idx_bmap ^= PRETAG_SET_TAG2;
   if (idx_bmap & PRETAG_SET_LABEL) idx_bmap ^= PRETAG_SET_LABEL;
-
-  /* 3) add 'ip' to bitmap, if mandated by the map type */
-  if (acct_type == ACCT_NF || acct_type == ACCT_SF ||
-      acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD)
-    idx_bmap |= PRETAG_IP;
 
   return idx_bmap;
 }

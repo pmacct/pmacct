@@ -112,6 +112,7 @@ EXT int custom_primitives_map_semantics_handler(char *, struct id_entry *, char 
 EXT void custom_primitives_map_initialize();
 EXT void custom_primitives_map_validate(char *, struct plugin_requests *);
 
+EXT int pretag_dummy_ip_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_id2_handler(struct packet_ptrs *, void *, void *);

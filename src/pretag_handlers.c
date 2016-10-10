@@ -186,10 +186,22 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
 
 int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
+  int x = 0;
+
   if (!str_to_addr_mask(value, &e->key.agent_ip.a, &e->key.agent_mask)) {
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad IP address or prefix '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IP) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'ip' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  e->func[x] = pretag_dummy_ip_handler; 
+  if (e->func[x]) e->func_type[x] = PRETAG_IP;
 
   return FALSE;
 }
@@ -1202,6 +1214,11 @@ int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct
   else if (!strncmp(value, "or", 2)) e->stack.func = PT_stack_logical_or;
   else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown STACK operator: '%c'. Ignoring.\n", config.name, config.type, filename, value);
 
+  return FALSE;
+}
+
+int pretag_dummy_ip_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
   return FALSE;
 }
 

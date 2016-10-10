@@ -10,17 +10,16 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg,
-! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan;
-! mandatory keys for each rule: ip.
+! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
-! dst_mac, vlan; mandatory keys for each rule: ip.
+! dst_mac, vlan.
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label and filter.
 !
 ! sfacctd, nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label,
-! ip; mandatory keys for each rule: ip.
+! ip, in_iface, out_iface, src_mac, dst_mac, vlan.
 !
 ! BGP-related keys are independent of the collection method in use, hence apply
 ! to all daemons (BGP daemon must be enabled): src_as, dst_as, src_comms, comms,
