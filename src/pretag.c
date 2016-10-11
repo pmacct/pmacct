@@ -350,14 +350,33 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
                 else if (!err) {
-                  int j, z;
+                  int j, z, recirculate;
+		  struct id_entry recirc_e;
+
+		  recirculate = FALSE;
+		  recirculate_ipv6:
 
 		  if (!tmp.e[tmp.num].key.agent_ip.a.family) {
-		    /* XXX: AF_INET is rather arbitrary. Should recirculate for IPv6 */
-		    memset(&tmp.e[tmp.num].key.agent_ip, 0, sizeof(pt_hostaddr_t));
-		    memset(&tmp.e[tmp.num].key.agent_mask, 0, sizeof(pt_hostmask_t));
-		    tmp.e[tmp.num].key.agent_ip.a.family = AF_INET;
-		    tmp.e[tmp.num].key.agent_mask.family = AF_INET;
+		    if (!recirculate) {
+		      memset(&tmp.e[tmp.num].key.agent_ip, 0, sizeof(pt_hostaddr_t));
+		      memset(&tmp.e[tmp.num].key.agent_mask, 0, sizeof(pt_hostmask_t));
+		      tmp.e[tmp.num].key.agent_ip.a.family = AF_INET;
+		      tmp.e[tmp.num].key.agent_mask.family = AF_INET;
+
+#if defined ENABLE_IPV6
+		      memcpy(&recirc_e, &tmp.e[tmp.num], sizeof(struct id_entry));
+		      recirculate = TRUE;
+#endif
+		    }
+#if defined ENABLE_IPV6
+		    else {
+		      memcpy(&tmp.e[tmp.num], &recirc_e, sizeof(struct id_entry));
+                      tmp.e[tmp.num].key.agent_ip.a.family = AF_INET6;
+                      tmp.e[tmp.num].key.agent_mask.family = AF_INET6;
+
+		      recirculate = FALSE;
+		    }
+#endif
 		  }
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
@@ -371,6 +390,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	          else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
 #endif
                   tmp.num++;
+
+		  if (recirculate) {
+		    if (tmp.num < map_entries) goto recirculate_ipv6;
+		  }
                 }
 	        /* if any required field is missing and other errors have been signalled
 	           before we will trap an error message */
