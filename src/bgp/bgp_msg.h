@@ -37,6 +37,7 @@ EXT int bgp_write_open_msg(char *, char *, int, struct bgp_peer *);
 EXT int bgp_attr_parse(struct bgp_peer *, struct bgp_attr *, char *, int, struct bgp_nlri *, struct bgp_nlri *);
 EXT int bgp_attr_parse_community(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_ecommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
+EXT int bgp_attr_parse_lcommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_aspath(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_as4path(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t, struct aspath **);
 EXT int bgp_attr_parse_nexthop(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);

@@ -595,7 +595,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	t->index_num = MAX_ID_TABLE_INDEXES;
 
 #if defined ENABLE_IPV6
-        // XXX: for (ptr = t->ipv4_base, x = 0; x < MAX(t->ipv4_num, t->ipv6_num); ptr++, x++) {
         for (ptr = t->ipv4_base, x = 0; x < (t->ipv4_num + t->ipv6_num); ptr++, x++) {
 #else
         for (ptr = t->ipv4_base, x = 0; x < t->ipv4_num; ptr++, x++) {
@@ -618,7 +617,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         pretag_index_allocate(t);
 
 #if defined ENABLE_IPV6
-        // XXX: for (ptr = t->ipv4_base, x = 0; x < MAX(t->ipv4_num, t->ipv6_num); ptr++, x++) {
         for (ptr = t->ipv4_base, x = 0; x < (t->ipv4_num + t->ipv6_num); ptr++, x++) {
 #else
         for (ptr = t->ipv4_base, x = 0; x < t->ipv4_num; ptr++, x++) {

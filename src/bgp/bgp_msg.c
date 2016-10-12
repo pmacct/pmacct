@@ -574,6 +574,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
     case BGP_ATTR_EXT_COMMUNITIES:
       ret = bgp_attr_parse_ecommunity(peer, attr_len, attr, ptr, flag);
       break;
+    case BGP_ATTR_LARGE_COMMUNITIES:
+      ret = bgp_attr_parse_lcommunity(peer, attr_len, attr, ptr, flag);
+      break;
     case BGP_ATTR_MULTI_EXIT_DISC:
       ret = bgp_attr_parse_med(peer, attr_len, attr, ptr, flag);
       break;
@@ -658,6 +661,16 @@ int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 {
   if (len == 0) attr->ecommunity = NULL;
   else attr->ecommunity = (struct ecommunity *) ecommunity_parse(peer, ptr, len);
+
+  return SUCCESS;
+}
+
+int bgp_attr_parse_lcommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
+{
+/* XXX:
+  if (len == 0) attr->lcommunity = NULL;
+  else attr->lcommunity = (struct lcommunity *) lcommunity_parse(peer, ptr, len);
+*/
 
   return SUCCESS;
 }

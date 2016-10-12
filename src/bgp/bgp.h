@@ -61,6 +61,7 @@
 #define BGP_ATTR_AS4_PATH                       17
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
+#define BGP_ATTR_LARGE_COMMUNITIES		30 /* draft-ietf-idr-large-community-03 */
 
 /* BGP Attribute flags. */
 #define BGP_ATTR_FLAG_OPTIONAL  0x80    /* Attribute is optional. */
@@ -182,6 +183,7 @@ struct bgp_peer {
 #include "bgp_aspath.h"
 #include "bgp_community.h"
 #include "bgp_ecommunity.h"
+#include "bgp_lcommunity.h"
 /* this include requires definition of bgp_peer */
 #include "bgp_hash.h"
 
@@ -203,6 +205,7 @@ struct bgp_attr {
   struct aspath *aspath;
   struct community *community;
   struct ecommunity *ecommunity;
+  struct lcommunity *lcommunity;
   unsigned long refcnt;
   u_int32_t flag;
   struct in_addr nexthop;
