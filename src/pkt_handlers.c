@@ -671,6 +671,12 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_TCP_RETRANSMISSION) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tcp_retransmission_handler;
+      else primitives--;
+      primitives++;
+    }
+
     /* if cpptrs.num > 0 one or multiple custom primitives are defined */
     if (channels_list[index].plugin->cfg.cpptrs.num) {
       if (config.acct_type == ACCT_PM) {
@@ -1085,6 +1091,13 @@ void tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l4_proto == IPPROTO_TCP) pdata->tcp_flags = pptrs->tcp_flags;
+}
+
+void tcp_retransmission_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  if (pptrs->l4_proto == IPPROTO_TCP) pdata->primitives.tcp_retransmission = pptrs->tcp_retransmission;
 }
 
 void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

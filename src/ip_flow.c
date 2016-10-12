@@ -98,6 +98,30 @@ void evaluate_tcp_flags(struct timeval *now, struct packet_ptrs *pptrs, struct i
   unsigned int rev = idx ? 0 : 1;
 
   if (fp->proto == IPPROTO_TCP) {
+    /* check tcp retransmission */
+    u_int8_t tcphdrlen = ((struct my_tcphdr *)pptrs->tlh_ptr)->th_off;
+    u_int16_t tcp_payload_len = 0;
+    u_int8_t tcp_flags = ((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags;
+    u_int32_t seq = ntohl(((struct my_tcphdr *)pptrs->tlh_ptr)->th_seq);
+    u_int32_t ack = ntohl(((struct my_tcphdr *)pptrs->tlh_ptr)->th_ack);
+    tcphdrlen <<= 2;
+    tcp_payload_len = pptrs->l3_payload_len - tcphdrlen;
+
+    if ((tcp_payload_len > 0 || tcp_flags & (TH_SYN | TH_FIN))) {
+      if (fp->next_tcp_seq[idx] && ((int64_t)seq - (int64_t)fp->next_tcp_seq[idx]) < 0) {
+        /* this packet is tcp retransmission */
+        pptrs->tcp_retransmission = 1;
+      }
+      else {
+        u_int32_t nextseq = seq + tcp_payload_len;
+        pptrs->tcp_retransmission = 0;
+        if (tcp_flags & (TH_SYN | TH_FIN)) {
+          nextseq += 1;
+        }
+        fp->next_tcp_seq[idx] = nextseq;
+      }
+    }
+
     /* evaluating the transition to the ESTABLISHED state: we need to be as much
        precise as possible as the lifetime for an established flow is quite high.
        We check that we have a) SYN flag on a forward direction, b) SYN+ACK on the

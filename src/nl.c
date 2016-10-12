@@ -108,12 +108,16 @@ int ip_handler(register struct packet_ptrs *pptrs)
   register unsigned char *ptr;
   register u_int16_t off = pptrs->iph_ptr-pptrs->packet_ptr, off_l4;
   int ret = TRUE, num, is_fragment = 0;
+  u_int16_t dgram_len = 0;
 
   /* len: number of 32bit words forming the header */
   len = IP_HL(((struct my_iphdr *) pptrs->iph_ptr));
   len <<= 2;
   ptr = pptrs->iph_ptr+len;
   off += len;
+
+  dgram_len = ntohs(((struct my_iphdr *) pptrs->iph_ptr)->ip_len);
+  pptrs->l3_payload_len = dgram_len - len;
 
   /* check len */
   if (off > caplen) return FALSE; /* IP packet truncated */
@@ -166,21 +170,33 @@ int ip_handler(register struct packet_ptrs *pptrs)
     }
 
     if (config.handle_flows) {
-      pptrs->tcp_flags = FALSE;
-
-      if (pptrs->l4_proto == IPPROTO_TCP) {
-        if (off_l4+TCPFlagOff+1 > caplen) {
-          Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/flows). Snaplen issue ?\n",
-			config.name, caplen, off_l4+TCPFlagOff+1);
-          return FALSE;
+      u_int8_t do_flow_handler = 0;
+      if (config.tunnel0 || pptrs->tun_stack) {
+        if (pptrs->tunnel_level) {
+          do_flow_handler = 1;
         }
-        if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_SYN) pptrs->tcp_flags |= TH_SYN;
-        if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_FIN) pptrs->tcp_flags |= TH_FIN;
-        if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_RST) pptrs->tcp_flags |= TH_RST;
-        if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
+      }
+      else {
+        do_flow_handler = 1;
       }
 
-      ip_flow_handler(pptrs);
+      if (do_flow_handler) {
+        pptrs->tcp_flags = FALSE;
+
+        if (pptrs->l4_proto == IPPROTO_TCP) {
+          if (off_l4+TCPFlagOff+1 > caplen) {
+            Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/flows). Snaplen issue ?\n",
+          		config.name, caplen, off_l4+TCPFlagOff+1);
+            return FALSE;
+          }
+          if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_SYN) pptrs->tcp_flags |= TH_SYN;
+          if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_FIN) pptrs->tcp_flags |= TH_FIN;
+          if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_RST) pptrs->tcp_flags |= TH_RST;
+          if (((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
+        }
+
+        ip_flow_handler(pptrs);
+      }
     }
 
     /* XXX: optimize/short circuit here! */
@@ -194,6 +210,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
         if (tunnel_registry[0][num].proto == pptrs->l4_proto) {
 	  if (!tunnel_registry[0][num].port || (pptrs->tlh_ptr && tunnel_registry[0][num].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
 	    pptrs->tun_stack = num;
+	    pptrs->tunnel_level++;
 	    ret = (*tunnel_registry[0][num].tf)(pptrs);
 	  }
         }
@@ -202,6 +219,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
     else if (pptrs->tun_stack) { 
       if (tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].proto == pptrs->l4_proto) {
         if (!tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port || (pptrs->tlh_ptr && tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
+	  pptrs->tunnel_level++;
           ret = (*tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].tf)(pptrs);
         }
       }

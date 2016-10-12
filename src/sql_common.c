@@ -1236,6 +1236,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) what_to_count_2 |= COUNT_EXPORT_PROTO_SEQNO;
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) what_to_count_2 |= COUNT_EXPORT_PROTO_VERSION;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
+    if (config.what_to_count_2 & COUNT_TCP_RETRANSMISSION) what_to_count_2 |= COUNT_TCP_RETRANSMISSION;
   }
 
   /* sorting out delimiter */
@@ -2606,6 +2607,34 @@ int sql_evaluate_primitives(int primitive)
     values[primitive].handler = where[primitive].handler = count_export_proto_version_handler;
     values[primitive].type = where[primitive].type = COUNT_INT_EXPORT_PROTO_VERSION;
     primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_TCP_RETRANSMISSION) {
+    int count_it = FALSE;
+
+    if ((config.sql_table_version < 3 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
+      if (config.what_to_count_2 & COUNT_TCP_RETRANSMISSION) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): TCP Retransmission accounting not supported for selected sql_table_version/_type."
+            " Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
+        exit_plugin(1);
+      }
+      else what_to_count_2 ^= COUNT_TCP_RETRANSMISSION;
+    }
+    else count_it = TRUE;
+
+    if (count_it) {
+      if (primitive) {
+        strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+        strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+        strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+      }
+      strncat(insert_clause, "tcp_retransmission", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, "tcp_retransmission=%u", SPACELEFT(where[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_INT_TCP_RETRANSMISSION;
+      values[primitive].handler = where[primitive].handler = count_tcp_retransmission_handler;
+      primitive++;
+    }
   }
 
   /* all custom primitives printed here */

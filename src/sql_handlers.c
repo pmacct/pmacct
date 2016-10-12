@@ -475,6 +475,14 @@ void count_export_proto_version_handler(const struct db_cache *cache_elem, struc
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_tcp_retransmission_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.tcp_retransmission);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.tcp_retransmission);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_custom_primitives_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   struct custom_primitive_ptrs *cp_entry;
