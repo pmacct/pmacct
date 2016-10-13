@@ -1920,11 +1920,3 @@ counter was increasing, verify it does not increase anymore). As suggested
 in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
 any lift in the buffering must be also supported by the kernel, adjusting
 /proc/sys/net/core/rmem_max.
-
-f) If changes are needed to the building system (configure script, Makefiles,
-etc.) please note that ancient versions of autotools are currently in use.
-These are: automake 1.4p6 and autoconf 2.13. While stale, buggy and have to
-be downloaded and compiled, these versions serve to their purpose without
-producing massive scripts like their more recent counterparts. The building
-system is currently under review and possibly newer versions of autotools may
-be adopted soon - at which point this note will disappear. 
