@@ -268,6 +268,7 @@ void bgp_attr_init(int buckets, struct bgp_rt_structs *inter_domain_routing_db)
   attrhash_init(buckets, &inter_domain_routing_db->attrhash);
   community_init(buckets, &inter_domain_routing_db->comhash);
   ecommunity_init(buckets, &inter_domain_routing_db->ecomhash);
+  lcommunity_init(buckets, &inter_domain_routing_db->lcomhash);
 }
 
 unsigned int attrhash_key_make(void *p)

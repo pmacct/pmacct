@@ -667,10 +667,8 @@ int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
 int bgp_attr_parse_lcommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
-/* XXX:
   if (len == 0) attr->lcommunity = NULL;
   else attr->lcommunity = (struct lcommunity *) lcommunity_parse(peer, ptr, len);
-*/
 
   return SUCCESS;
 }

@@ -22,7 +22,9 @@
 #ifndef _BGP_LCOMMUNITY_H_
 #define _BGP_LCOMMUNITY_H_
 
-#define LCOMMUNITY_SIZE	12
+#define LCOMMUNITY_SIZE			12
+#define LCOMMUNITY_PART_SIZE 		4
+#define LCOMMUNITY_STR_DEFAULT_LEN	32
 
 /* Large Communities attribute */
 struct lcommunity
@@ -53,8 +55,15 @@ struct lcommunity_val
 #else
 #define EXT
 #endif
-
-/* XXX */
+EXT void lcommunity_init (int, struct hash **);
+EXT void lcommunity_free (struct lcommunity *);
+EXT struct lcommunity *lcommunity_new (struct bgp_peer *);
+EXT struct lcommunity *lcommunity_parse (struct bgp_peer *, u_int8_t *, u_short);
+EXT struct lcommunity *lcommunity_intern (struct bgp_peer *, struct lcommunity *);
+EXT int lcommunity_cmp (const void *, const void *);
+EXT void lcommunity_unintern (struct bgp_peer *, struct lcommunity *);
+EXT unsigned int lcommunity_hash_make (void *);
+EXT char *lcommunity_lcom2str (struct bgp_peer *, struct lcommunity *);
 
 #undef EXT
 #endif

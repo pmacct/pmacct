@@ -90,6 +90,7 @@ struct bgp_rt_structs {
   struct hash *ashash;
   struct hash *comhash;
   struct hash *ecomhash;
+  struct hash *lcomhash;
   struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 };
 
