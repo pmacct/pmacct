@@ -159,6 +159,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
         json_decref(kv);
       }
 
+      if (attr->lcommunity) {
+        kv = json_pack("{ss}", "lcomms", attr->lcommunity->str);
+        json_object_update_missing(obj, kv);
+        json_decref(kv);
+      }
+
       kv = json_pack("{sI}", "origin", (json_int_t)attr->origin);
       json_object_update_missing(obj, kv);
       json_decref(kv);

@@ -527,6 +527,8 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
     community_unintern(peer, attr.community);
   if (attr.ecommunity)
     ecommunity_unintern(peer, attr.ecommunity);
+  if (attr.lcommunity)
+    lcommunity_unintern(peer, attr.lcommunity);
 
   ret = ntohs(bhdr.bgpo_len);
   return ret;

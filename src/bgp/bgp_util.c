@@ -291,6 +291,8 @@ unsigned int attrhash_key_make(void *p)
     key += community_hash_make(attr->community);
   if (attr->ecommunity)
     key += ecommunity_hash_make(attr->ecommunity);
+  if (attr->lcommunity)
+    key += lcommunity_hash_make(attr->lcommunity);
 
   /* XXX: add mp_nexthop to key */
 
@@ -308,6 +310,7 @@ int attrhash_cmp(const void *p1, const void *p2)
       && attr1->aspath == attr2->aspath
       && attr1->community == attr2->community
       && attr1->ecommunity == attr2->ecommunity
+      && attr1->lcommunity == attr2->lcommunity
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
       && attr1->pathlimit.ttl == attr2->pathlimit.ttl
@@ -364,6 +367,12 @@ struct bgp_attr *bgp_attr_intern(struct bgp_peer *peer, struct bgp_attr *attr)
   else
     attr->ecommunity->refcnt++;
   }
+  if (attr->lcommunity) {
+    if (!attr->lcommunity->refcnt)
+      attr->lcommunity = lcommunity_intern(peer, attr->lcommunity);
+  else
+    attr->lcommunity->refcnt++;
+  }
  
   find = (struct bgp_attr *) hash_get(peer, inter_domain_routing_db->attrhash, attr, bgp_attr_hash_alloc);
   find->refcnt++;
@@ -380,6 +389,7 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
   struct aspath *aspath;
   struct community *community;
   struct ecommunity *ecommunity = NULL;
+  struct lcommunity *lcommunity = NULL;
 
   if (!peer) return;
 
@@ -393,6 +403,7 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
   aspath = attr->aspath;
   community = attr->community;
   ecommunity = attr->ecommunity;
+  lcommunity = attr->lcommunity;
 
   /* If reference becomes zero then free attribute object. */
   if (attr->refcnt == 0) {
@@ -409,6 +420,8 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
     community_unintern(peer, community);
   if (ecommunity)
     ecommunity_unintern(peer, ecommunity);
+  if (lcommunity)
+    lcommunity_unintern(peer, lcommunity);
 }
 
 void *bgp_attr_hash_alloc(void *p)
