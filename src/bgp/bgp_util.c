@@ -577,14 +577,17 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   return SUCCESS;
 }
 
-void load_comm_patterns(char **stdcomm, char **extcomm, char **stdcomm_to_asn)
+void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **stdcomm_to_asn)
 {
   int idx;
   char *token;
 
   memset(std_comm_patterns, 0, sizeof(std_comm_patterns));
   memset(ext_comm_patterns, 0, sizeof(ext_comm_patterns));
+  memset(lrg_comm_patterns, 0, sizeof(lrg_comm_patterns));
   memset(std_comm_patterns_to_asn, 0, sizeof(std_comm_patterns_to_asn));
+
+  // XXX: more Large Communities stuff here
 
   if (*stdcomm) {
     idx = 0;
@@ -864,11 +867,13 @@ void bgp_config_checks(struct configuration *c)
 
     if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type) ||
          (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
-	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ) {
+	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
+	 (c->what_to_count & COUNT_SRC_LRG_COMM && !c->nfacctd_bgp_src_lrg_comm_type) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       src_as_path     =>  bgp_src_as_path_type\n");
       printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
       printf("       src_ext_comm    =>  bgp_src_ext_comm_type\n");
+      printf("       src_lrg_comm    =>  bgp_src_lrg_comm_type\n");
       exit(1);
     }
 

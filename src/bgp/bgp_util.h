@@ -31,7 +31,7 @@
 EXT int bgp_afi2family(int);
 EXT int bgp_rd2str(char *, rd_t *);
 EXT int bgp_str2rd(rd_t *, char *);
-EXT void load_comm_patterns(char **, char **, char **);
+EXT void load_comm_patterns(char **, char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
 EXT as_t evaluate_last_asn(struct aspath *);

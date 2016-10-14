@@ -504,6 +504,7 @@ struct pkt_stitching {
 /* START: BGP section */
 #define MAX_BGP_STD_COMMS       96
 #define MAX_BGP_EXT_COMMS       96
+#define MAX_BGP_LRG_COMMS       96
 #define MAX_BGP_ASPATH          128
 
 struct extra_primitives {
@@ -546,9 +547,11 @@ struct pkt_bgp_primitives {
 struct pkt_legacy_bgp_primitives {
   char std_comms[MAX_BGP_STD_COMMS];
   char ext_comms[MAX_BGP_EXT_COMMS];
+  char lrg_comms[MAX_BGP_LRG_COMMS];
   char as_path[MAX_BGP_ASPATH];
   char src_std_comms[MAX_BGP_STD_COMMS];
   char src_ext_comms[MAX_BGP_EXT_COMMS];
+  char src_lrg_comms[MAX_BGP_LRG_COMMS];
   char src_as_path[MAX_BGP_ASPATH];
 };
 
@@ -573,9 +576,11 @@ struct pkt_mpls_primitives {
 struct cache_legacy_bgp_primitives {
   char *std_comms;
   char *ext_comms;
+  char *lrg_comms;
   char *as_path;
   char *src_std_comms;
   char *src_ext_comms;
+  char *src_lrg_comms;
   char *src_as_path;
 };
 /* END: BGP section */
