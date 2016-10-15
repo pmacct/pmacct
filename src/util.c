@@ -2619,7 +2619,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
-  else if (wtc & COUNT_EXT_COMM) {
+
+  if (wtc & COUNT_EXT_COMM) {
     vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
     if (str_ptr) {
       bgp_comm = str_ptr;
@@ -2699,7 +2700,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
-  else if (wtc & COUNT_SRC_EXT_COMM) {
+
+  if (wtc & COUNT_SRC_EXT_COMM) {
     vlen_prims_get(pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
     if (str_ptr) {
       bgp_comm = str_ptr;
