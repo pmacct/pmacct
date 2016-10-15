@@ -248,7 +248,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         }
 
         memset(elem_acc->clbgp, 0, clb_size);
-        pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count);
+        pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count, config.what_to_count_2);
       }
       else free_cache_legacy_bgp_primitives(&elem_acc->clbgp);
 
@@ -382,7 +382,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
           exit_plugin(1);
         }
         memset(elem_acc->clbgp, 0, clb_size);
-        pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count);
+        pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count, config.what_to_count_2);
       }
       else elem_acc->clbgp = NULL;
 

@@ -568,7 +568,8 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
   return TRUE;
 }
 
-void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, struct pkt_legacy_bgp_primitives *p, pm_cfgreg_t what_to_count)
+void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, struct pkt_legacy_bgp_primitives *p,
+					pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2)
 {
   if (c && p) {
     if (what_to_count & COUNT_STD_COMM) {
@@ -596,6 +597,20 @@ void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, s
       if (c->ext_comms) {
         free(c->ext_comms);
         c->ext_comms = NULL;
+      }
+    }
+
+    if (what_to_count_2 & COUNT_LRG_COMM) {
+      if (!c->lrg_comms) {
+        c->lrg_comms = malloc(MAX_BGP_LRG_COMMS);
+        if (!c->lrg_comms) goto malloc_failed;
+      }
+      memcpy(c->lrg_comms, p->lrg_comms, MAX_BGP_LRG_COMMS);
+    }
+    else {
+      if (c->lrg_comms) {
+        free(c->lrg_comms);
+        c->lrg_comms = NULL;
       }
     }
 
@@ -641,6 +656,20 @@ void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, s
       }
     }
 
+    if (what_to_count_2 & COUNT_SRC_LRG_COMM) {
+      if (!c->src_lrg_comms) {
+        c->src_lrg_comms = malloc(MAX_BGP_LRG_COMMS);
+        if (!c->src_lrg_comms) goto malloc_failed;
+      }
+      memcpy(c->src_lrg_comms, p->src_lrg_comms, MAX_BGP_LRG_COMMS);
+    }
+    else {
+      if (c->src_lrg_comms) {
+        free(c->src_lrg_comms);
+        c->src_lrg_comms = NULL;
+      }
+    }
+
     if (what_to_count & COUNT_SRC_AS_PATH) {
       if (!c->src_as_path) {
         c->src_as_path = malloc(MAX_BGP_ASPATH);
@@ -669,10 +698,12 @@ void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *p, str
 
     if (c->std_comms) memcpy(p->std_comms, c->std_comms, MAX_BGP_STD_COMMS);
     if (c->ext_comms) memcpy(p->ext_comms, c->ext_comms, MAX_BGP_EXT_COMMS);
+    if (c->lrg_comms) memcpy(p->lrg_comms, c->lrg_comms, MAX_BGP_LRG_COMMS);
     if (c->as_path) memcpy(p->as_path, c->as_path, MAX_BGP_ASPATH);
 
     if (c->src_std_comms) memcpy(p->src_std_comms, c->src_std_comms, MAX_BGP_STD_COMMS);
     if (c->src_ext_comms) memcpy(p->src_ext_comms, c->src_ext_comms, MAX_BGP_EXT_COMMS);
+    if (c->src_lrg_comms) memcpy(p->src_lrg_comms, c->src_lrg_comms, MAX_BGP_LRG_COMMS);
     if (c->src_as_path) memcpy(p->src_as_path, c->src_as_path, MAX_BGP_ASPATH);
   }
 }
@@ -684,10 +715,12 @@ void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **c)
   if (c && *c) {
     if (clbgp->std_comms) free(clbgp->std_comms);
     if (clbgp->ext_comms) free(clbgp->ext_comms);
+    if (clbgp->lrg_comms) free(clbgp->lrg_comms);
     if (clbgp->as_path) free(clbgp->as_path);
 
     if (clbgp->src_std_comms) free(clbgp->src_std_comms);
     if (clbgp->src_ext_comms) free(clbgp->src_ext_comms);
+    if (clbgp->src_lrg_comms) free(clbgp->src_lrg_comms);
     if (clbgp->src_as_path) free(clbgp->src_as_path);
 
     memset(clbgp, 0, sizeof(struct cache_legacy_bgp_primitives));

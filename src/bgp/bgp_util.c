@@ -587,8 +587,6 @@ void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **s
   memset(lrg_comm_patterns, 0, sizeof(lrg_comm_patterns));
   memset(std_comm_patterns_to_asn, 0, sizeof(std_comm_patterns_to_asn));
 
-  // XXX: more Large Communities stuff here
-
   if (*stdcomm) {
     idx = 0;
     while ( (token = extract_token(stdcomm, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
@@ -603,6 +601,15 @@ void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **s
     while ( (token = extract_token(extcomm, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
       ext_comm_patterns[idx] = token;
       trim_spaces(ext_comm_patterns[idx]);
+      idx++;
+    }
+  }
+
+  if (*lrgcomm) {
+    idx = 0;
+    while ( (token = extract_token(lrgcomm, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+      lrg_comm_patterns[idx] = token;
+      trim_spaces(lrg_comm_patterns[idx]);
       idx++;
     }
   }
@@ -868,7 +875,7 @@ void bgp_config_checks(struct configuration *c)
     if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type) ||
          (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
 	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
-	 (c->what_to_count & COUNT_SRC_LRG_COMM && !c->nfacctd_bgp_src_lrg_comm_type) ) {
+	 (c->what_to_count_2 & COUNT_SRC_LRG_COMM && !c->nfacctd_bgp_src_lrg_comm_type) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       src_as_path     =>  bgp_src_as_path_type\n");
       printf("       src_std_comm    =>  bgp_src_std_comm_type\n");

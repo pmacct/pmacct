@@ -379,10 +379,11 @@ void evaluate_packet_handlers()
       }
     }
 
-    if (channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LRG_COMM|COUNT_LOCAL_PREF|COUNT_MED|
+    if ((channels_list[index].aggregation & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_LOCAL_PREF|COUNT_MED|
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
-                                            COUNT_SRC_EXT_COMM|COUNT_SRC_LRG_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
-					    COUNT_SRC_AS|COUNT_DST_AS|COUNT_PEER_SRC_AS) &&
+                                            COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
+					    COUNT_DST_AS|COUNT_PEER_SRC_AS) ||
+	channels_list[index].aggregation_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM)) &&
         channels_list[index].plugin->cfg.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && config.nfacctd_bgp) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
@@ -4050,7 +4051,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           }
         }
       }
-      if (chptr->aggregation & COUNT_SRC_LRG_COMM && info->attr->lcommunity && info->attr->lcommunity->str) {
+      if (chptr->aggregation_2 & COUNT_SRC_LRG_COMM && info->attr->lcommunity && info->attr->lcommunity->str) {
         if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
           len = strlen(info->attr->lcommunity->str);
 
@@ -4148,7 +4149,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         else vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
       }
 
-      if (chptr->aggregation & COUNT_SRC_LRG_COMM) {
+      if (chptr->aggregation_2 & COUNT_SRC_LRG_COMM) {
         ptr = &empty_str;
         len = strlen(ptr);
 
@@ -4250,7 +4251,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	  }
         }
       }
-      if (chptr->aggregation & COUNT_LRG_COMM && info->attr->lcommunity && info->attr->lcommunity->str) {
+      if (chptr->aggregation_2 & COUNT_LRG_COMM && info->attr->lcommunity && info->attr->lcommunity->str) {
         if (chptr->plugin->type.id != PLUGIN_ID_MEMORY) {
           len = strlen(info->attr->lcommunity->str);
 
@@ -4402,7 +4403,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
       }
 
-      if (chptr->aggregation & COUNT_LRG_COMM) {
+      if (chptr->aggregation_2 & COUNT_LRG_COMM) {
         ptr = &empty_str;
         len = strlen(ptr);
 
