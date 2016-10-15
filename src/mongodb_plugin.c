@@ -504,6 +504,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
         else
 	  MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_EXT_COMM);
       }
+
+      if (config.what_to_count_2 & COUNT_LRG_COMM) {
+        vlen_prims_get(pvlen, COUNT_INT_LRG_COMM, &str_ptr);
+        if (str_ptr) {
+          bgp_comm = str_ptr;
+          while (bgp_comm) {
+            bgp_comm = strchr(str_ptr, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+        }
+
+        MongoDB_append_string(bson_elem, "lcomms", pvlen, COUNT_INT_LRG_COMM);
+      }
   
       if (config.what_to_count & COUNT_AS_PATH) {
 	vlen_prims_get(pvlen, COUNT_INT_AS_PATH, &str_ptr);
@@ -559,6 +572,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index)
           MongoDB_append_string(bson_elem, "src_ecomms", pvlen, COUNT_INT_SRC_EXT_COMM);
         else
           MongoDB_append_string(bson_elem, "src_comms", pvlen, COUNT_INT_SRC_EXT_COMM);
+      }
+
+      if (config.what_to_count_2 & COUNT_SRC_LRG_COMM) {
+        vlen_prims_get(pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
+        if (str_ptr) {
+          bgp_comm = str_ptr;
+          while (bgp_comm) {
+            bgp_comm = strchr(str_ptr, ' ');
+            if (bgp_comm) *bgp_comm = '_';
+          }
+        }
+
+        MongoDB_append_string(bson_elem, "src_lcomms", pvlen, COUNT_INT_SRC_LRG_COMM);
       }
 
       if (config.what_to_count & COUNT_SRC_AS_PATH) {

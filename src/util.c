@@ -1693,6 +1693,23 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_decref(kv);
   }
 
+  if (wtc_2 & COUNT_LRG_COMM) {
+    vlen_prims_get(pvlen, COUNT_INT_LRG_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
+    }
+    else str_ptr = empty_string;
+
+    kv = json_pack("{ss}", "lcomms", str_ptr);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
   if (wtc & COUNT_AS_PATH) {
     vlen_prims_get(pvlen, COUNT_INT_AS_PATH, &str_ptr);
     if (str_ptr) {
@@ -1778,6 +1795,23 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
       kv = json_pack("{ss}", "src_ecomms", str_ptr);
     else
       kv = json_pack("{ss}", "src_comms", str_ptr);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_SRC_LRG_COMM) {
+    vlen_prims_get(pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
+    }
+    else str_ptr = empty_string;
+
+    kv = json_pack("{ss}", "src_lcomms", str_ptr);
 
     json_object_update_missing(obj, kv);
     json_decref(kv);
@@ -2366,6 +2400,9 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
       avro_schema_record_field_append(schema, "comms", avro_schema_string());
   }
 
+  if (wtc_2 & COUNT_LRG_COMM)
+    avro_schema_record_field_append(schema, "lcomms", avro_schema_string());
+
   if (wtc & COUNT_AS_PATH)
     avro_schema_record_field_append(schema, "as_path", avro_schema_string());
 
@@ -2397,8 +2434,11 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
       avro_schema_record_field_append(schema, "src_comms", avro_schema_string());
   }
 
+  if (wtc_2 & COUNT_SRC_LRG_COMM)
+    avro_schema_record_field_append(schema, "src_lcomms", avro_schema_string());
+
   if (wtc & COUNT_SRC_AS_PATH)
-     avro_schema_record_field_append(schema, "src_as_path", avro_schema_string());
+    avro_schema_record_field_append(schema, "src_as_path", avro_schema_string());
 
   if (wtc & COUNT_SRC_LOCAL_PREF)
     avro_schema_record_field_append(schema, "src_local_pref", avro_schema_long());
@@ -2620,7 +2660,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
-  else if (wtc & COUNT_EXT_COMM) {
+
+  if (wtc & COUNT_EXT_COMM) {
     vlen_prims_get(pvlen, COUNT_INT_EXT_COMM, &str_ptr);
     if (str_ptr) {
       bgp_comm = str_ptr;
@@ -2636,6 +2677,21 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     else 
       check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
 
+    check_i(avro_value_set_string(&field, str_ptr));
+  }
+
+  if (wtc_2 & COUNT_LRG_COMM) {
+    vlen_prims_get(pvlen, COUNT_INT_LRG_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
+    }
+    else str_ptr = empty_string;
+
+    check_i(avro_value_get_by_name(&value, "lcomms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
@@ -2700,7 +2756,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
-  else if (wtc & COUNT_SRC_EXT_COMM) {
+
+  if (wtc & COUNT_SRC_EXT_COMM) {
     vlen_prims_get(pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
     if (str_ptr) {
       bgp_comm = str_ptr;
@@ -2716,6 +2773,21 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     else
       check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
 
+    check_i(avro_value_set_string(&field, str_ptr));
+  }
+
+  if (wtc_2 & COUNT_SRC_LRG_COMM) {
+    vlen_prims_get(pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
+    if (str_ptr) {
+      bgp_comm = str_ptr;
+      while (bgp_comm) {
+        bgp_comm = strchr(str_ptr, ' ');
+        if (bgp_comm) *bgp_comm = '_';
+      }
+    }
+    else str_ptr = empty_string;
+
+    check_i(avro_value_get_by_name(&value, "src_lcomms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
