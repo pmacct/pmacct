@@ -1717,8 +1717,8 @@ int sql_evaluate_primitives(int primitive)
       strncat(where[primitive].string, "comms_src=\'%s\'", SPACELEFT(where[primitive].string));
     }
     strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_INT_SRC_STD_COMM;
-    values[primitive].handler = where[primitive].handler = count_src_std_comm_handler;
+    values[primitive].type = where[primitive].type = COUNT_INT_SRC_EXT_COMM;
+    values[primitive].handler = where[primitive].handler = count_src_ext_comm_handler;
     primitive++;
   }
 
