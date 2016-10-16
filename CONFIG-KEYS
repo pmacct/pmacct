@@ -46,14 +46,14 @@ KEY:		aggregate (-c)
 VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_net,
 		 src_mask, dst_mask, src_as, dst_as, src_port, dst_port, tos, proto, none,
 		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, label,
-		 class, tcpflags, in_iface, out_iface, std_comm, ext_comm, as_path,
-		 peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref, med,
-		 src_std_comm, src_ext_comm, src_as_path, src_local_pref, src_med, mpls_vpn_rd,
-		 mpls_label_top, mpls_label_bottom, mpls_stack_depth, sampling_rate,
-		 src_host_country, dst_host_country, pkt_len_distrib, nat_event, fw_event,
-		 post_nat_src_host, post_nat_dst_host, post_nat_src_port, post_nat_dst_port,
-		 timestamp_start, timestamp_end, timestamp_arrival, export_proto_seqno,
-		 export_proto_version ]
+		 class, tcpflags, in_iface, out_iface, std_comm, ext_comm, lrg_comm,
+		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
+		 med, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path, src_local_pref,
+		 src_med, mpls_vpn_rd, mpls_label_top, mpls_label_bottom, mpls_stack_depth,
+		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib, nat_event,
+		 fw_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
+		 post_nat_dst_port, timestamp_start, timestamp_end, timestamp_arrival,
+		 export_proto_seqno, export_proto_version ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -84,15 +84,16 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  enabled this field will report a value of one (1); otherwise it will report
 		  the rate that is passed by the protocol or sampling_map. A value of zero (0)
 		  means 'unknown' and hence no rate is applied to original counter values.
-		* src_std_comm, src_ext_comm, src_as_path are based on reverse BGP lookups;
-		  peer_src_as, src_local_pref and src_med are by default based on reverse BGP
-		  lookups but can be alternatively based on other methods, for example maps
-		  (ie. bgp_peer_src_as_type). Internet traffic is by nature asymmetric hence
-		  reverse BGP lookups must be used with caution (ie. against own prefixes).
-		* Communities (ie. std_comm, ext_comm) and AS-PATHs (ie. as_path) are fixed
-		  size (96 and 128 chars respectively at time of writing). Directives like
-		  bgp_stdcomm_pattern and bgp_aspath_radius are aimed to keep length of these
-		  strings under control but sometimes this is not enough. While the longer
+		* src_std_comm, src_ext_comm, src_lrg_comm, src_as_path are based on reverse
+		  BGP lookups; peer_src_as, src_local_pref and src_med are by default based on
+		  reverse BGP lookups but can be alternatively based on other methods, for
+		  example maps (ie. bgp_peer_src_as_type). Internet traffic is by nature
+		  asymmetric hence reverse BGP lookups must be used with caution (ie. against
+		  own prefixes).
+		* Communities (ie. std_comm, ext_comm, lrg_comm) and AS-PATHs (ie. as_path)
+		  are fixed size (96 and 128 chars respectively at time of writing). Directives
+		  like bgp_stdcomm_pattern and bgp_aspath_radius are aimed to keep length of
+		  these strings under control but sometimes this is not enough. While the longer
 		  term approach will be to define these primitives as varchar, the short-term
 		  approach is to re-define default size, ie. MAX_BGP_STD_COMMS MAX_BGP_ASPATH
 		  in network.h, to the desired size (blowing extra memory). This will require
@@ -2068,6 +2069,13 @@ DESC:           Defines the method to use to map incoming traffic to a set of ex
                 native BGP RIB lookups are currently supported. BGP lookups assume traffic is symmetric,
                 which is often not the case, affecting their accuracy.
 DEFAULT:	none
+
+KEY:            bgp_src_lrg_comm_type [GLOBAL]
+VALUES:         [ bgp ]
+DESC:           Defines the method to use to map incoming traffic to a set of large communities. Only
+                native BGP RIB lookups are currently supported. BGP lookups assume traffic is symmetric,
+                which is often not the case, affecting their accuracy.
+DEFAULT:        none
 
 KEY:            bgp_src_as_path_type [GLOBAL]
 VALUES:         [ bgp ]

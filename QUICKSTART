@@ -1078,10 +1078,11 @@ NOTES:
   (or egress sFlow) as it mainly relies on either the input interface index
   (ifIndex), the source MAC address, a reverse BGP next-hop lookup or a combination
   of these.
-* "Source" MED, local preference, communities and AS-PATH have all been dedicated an
+* "Source" MED, local preference, communities and AS-PATH have all been allocated
   aggregation primitives. Each carries its own peculiarities but the general concepts
-  highlighed in this paragraph apply to these aswell. Check CONFIG-KEYS out for the
-  src_[med|local_pref|as_path|std_comm|ext_comm]_[type|map] configuration directives.
+  highlighed in this chapter apply to these aswell. Check CONFIG-KEYS out for the
+  src_[med|local_pref|as_path|std_comm|ext_comm|lrg_comm]_[type|map] configuration
+  directives.
 
 XIVc. Tracking entities on the own IP address space
 It might happen that not all entities attached to the service provider network are
