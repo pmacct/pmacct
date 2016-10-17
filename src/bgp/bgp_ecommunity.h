@@ -85,8 +85,6 @@ EXT int ecommunity_cmp (const void *, const void *);
 EXT void ecommunity_unintern (struct bgp_peer *, struct ecommunity *);
 EXT unsigned int ecommunity_hash_make (void *);
 EXT char *ecommunity_ecom2str (struct bgp_peer *, struct ecommunity *, int);
-EXT int ecommunity_match (const struct ecommunity *, const struct ecommunity *);
-EXT char *ecommunity_str (struct bgp_peer *, struct ecommunity *);
 
 #undef EXT
 #endif

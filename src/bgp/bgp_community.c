@@ -29,9 +29,6 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "pmacct.h"
 #include "bgp.h"
 
-/* Hash of community attribute. */
-// struct hash *comhash;
-
 /* Allocate a new communities value.  */
 static struct community *
 community_new (struct bgp_peer *peer)
@@ -413,18 +410,6 @@ community_parse (struct bgp_peer *peer, u_int32_t *pnt, u_short length)
   return community_intern (peer, new);
 }
 
-/* Retrun string representation of communities attribute. */
-char *
-community_str (struct bgp_peer *peer, struct community *com)
-{
-  if (!com)
-    return NULL;
-  
-  if (! com->str)
-    com->str = community_com2str (peer, com);
-  return com->str;
-}
-
 /* Make hash value of community attribute. This function is used by
    hash package.*/
 unsigned int
@@ -443,35 +428,6 @@ community_hash_make (struct community *com)
   return key;
 }
 
-int
-community_match (const struct community *com1, const struct community *com2)
-{
-  int i = 0;
-  int j = 0;
-
-  if (com1 == NULL && com2 == NULL)
-    return 1;
-
-  if (com1 == NULL || com2 == NULL)
-    return 0;
-
-  if (com1->size < com2->size)
-    return 0;
-
-  /* Every community on com2 needs to be on com1 for this to match */
-  while (i < com1->size && j < com2->size)
-    {
-      if (memcmp (com1->val + i, com2->val + j, sizeof (u_int32_t)) == 0)
-	j++;
-      i++;
-    }
-
-  if (j == com2->size)
-    return 1;
-  else
-    return 0;
-}
-
 /* If two aspath have same value then return 1 else return 0. This
    function is used by hash package. */
 int
@@ -486,114 +442,6 @@ community_cmp (const struct community *com1, const struct community *com2)
     if (memcmp (com1->val, com2->val, com1->size * 4) == 0)
       return 1;
   return 0;
-}
-
-/* Community token enum. */
-enum community_token
-{
-  community_token_val,
-  community_token_no_export,
-  community_token_no_advertise,
-  community_token_local_as,
-  community_token_unknown
-};
-
-/* Get next community token from string. */
-static const char *
-community_gettoken (const char *buf, enum community_token *token, 
-                    u_int32_t *val)
-{
-  const char *p = buf;
-
-  /* Skip white space. */
-  while (isspace ((int) *p))
-    p++;
-
-  /* Check the end of the line. */
-  if (*p == '\0')
-    return NULL;
-
-  /* Well known community string check. */
-  if (isalpha ((int) *p)) 
-    {
-      if (strncmp (p, "internet", strlen ("internet")) == 0)
-	{
-	  *val = COMMUNITY_INTERNET;
-	  *token = community_token_no_export;
-	  p += strlen ("internet");
-	  return p;
-	}
-      if (strncmp (p, "no-export", strlen ("no-export")) == 0)
-	{
-	  *val = COMMUNITY_NO_EXPORT;
-	  *token = community_token_no_export;
-	  p += strlen ("no-export");
-	  return p;
-	}
-      if (strncmp (p, "no-advertise", strlen ("no-advertise")) == 0)
-	{
-	  *val = COMMUNITY_NO_ADVERTISE;
-	  *token = community_token_no_advertise;
-	  p += strlen ("no-advertise");
-	  return p;
-	}
-      if (strncmp (p, "local-AS", strlen ("local-AS")) == 0)
-	{
-	  *val = COMMUNITY_LOCAL_AS;
-	  *token = community_token_local_as;
-	  p += strlen ("local-AS");
-	  return p;
-	}
-
-      /* Unknown string. */
-      *token = community_token_unknown;
-      return NULL;
-    }
-
-  /* Community value. */
-  if (isdigit ((int) *p)) 
-    {
-      int separator = 0;
-      int digit = 0;
-      u_int32_t community_low = 0;
-      u_int32_t community_high = 0;
-
-      while (isdigit ((int) *p) || *p == ':') 
-	{
-	  if (*p == ':') 
-	    {
-	      if (separator)
-		{
-		  *token = community_token_unknown;
-		  return NULL;
-		}
-	      else
-		{
-		  separator = 1;
-		  digit = 0;
-		  community_high = community_low << 16;
-		  community_low = 0;
-		}
-	    }
-	  else 
-	    {
-	      digit = 1;
-	      community_low *= 10;
-	      community_low += (*p - '0');
-	    }
-	  p++;
-	}
-      if (! digit)
-	{
-	  *token = community_token_unknown;
-	  return NULL;
-	}
-      *val = community_high + community_low;
-      *token = community_token_val;
-      return p;
-    }
-  *token = community_token_unknown;
-  return NULL;
 }
 
 /* Initialize comminity related hash. */
