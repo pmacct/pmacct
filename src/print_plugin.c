@@ -955,6 +955,21 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           P_fprintf_csv_string(f, pvlen, COUNT_INT_EXT_COMM, write_sep(sep, &count), empty_string);
         }
 
+        if (config.what_to_count_2 & COUNT_LRG_COMM) {
+          char *str_ptr = NULL;
+
+          vlen_prims_get(pvlen, COUNT_INT_LRG_COMM, &str_ptr);
+          if (str_ptr) {
+            bgp_comm = str_ptr;
+            while (bgp_comm) {
+              bgp_comm = strchr(str_ptr, ' ');
+              if (bgp_comm) *bgp_comm = '_';
+            }
+          }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_LRG_COMM, write_sep(sep, &count), empty_string);
+        }
+
         if (config.what_to_count & COUNT_SRC_STD_COMM) {
           char *str_ptr = NULL;
 
@@ -984,6 +999,21 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           }
 
           P_fprintf_csv_string(f, pvlen, COUNT_INT_SRC_EXT_COMM, write_sep(sep, &count), empty_string);
+        }
+
+        if (config.what_to_count_2 & COUNT_SRC_LRG_COMM) {
+          char *str_ptr = NULL;
+
+          vlen_prims_get(pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
+          if (str_ptr) {
+            bgp_comm = str_ptr;
+            while (bgp_comm) {
+              bgp_comm = strchr(str_ptr, ' ');
+              if (bgp_comm) *bgp_comm = '_';
+            }
+          }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_SRC_LRG_COMM, write_sep(sep, &count), empty_string);
         }
   
 	if (config.what_to_count & COUNT_AS_PATH) {
@@ -1456,6 +1486,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   else {
     if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
   }
+  if (config.what_to_count_2 & COUNT_LRG_COMM) fprintf(f, "%sLCOMMS", write_sep(sep, &count));
   if (!config.tmp_comms_same_field) {
     if (config.what_to_count & COUNT_SRC_STD_COMM) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
     if (config.what_to_count & COUNT_SRC_EXT_COMM) fprintf(f, "%sSRC_ECOMMS", write_sep(sep, &count));
@@ -1463,6 +1494,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   else {
     if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
   }
+  if (config.what_to_count_2 & COUNT_SRC_LRG_COMM) fprintf(f, "%sSRC_LCOMMS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "%sAS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "%sSRC_AS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%sPREF", write_sep(sep, &count));
