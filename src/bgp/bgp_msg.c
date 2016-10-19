@@ -1053,10 +1053,6 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
     goto log_update;
   }
 
-  /* XXX: Impose a maximum number of prefixes allowed */
-  // if (bgp_maximum_prefix_overflow(peer, afi, safi, 0))
-  // return ERR;
-
   return SUCCESS;
 
 log_update:

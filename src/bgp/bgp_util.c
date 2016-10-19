@@ -861,8 +861,9 @@ void bgp_config_checks(struct configuration *c)
     c->data_type |= PIPE_TYPE_BGP;
   }
 
-  if (c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_AS_PATH|COUNT_SRC_STD_COMM|
-			  COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH)) {
+  if ((c->what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM|COUNT_AS_PATH|COUNT_SRC_STD_COMM|
+			  COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH)) ||
+      (c->what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
     /* Sanitizing the aggregation method */
     if (config.tmp_comms_same_field) {
       if (((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) ||
