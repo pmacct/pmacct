@@ -79,7 +79,6 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
       if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
       if (list->cfg.data_type & PIPE_TYPE_VLEN) {
-	printf("CI PASSO\n");
 	min_sz += sizeof(struct pkt_vlen_hdr_primitives);
 	if (!list->cfg.buffer_size) {
 	  extra_sz = 1024; /* wild shot: 1Kb added for the actual variable-length data */
