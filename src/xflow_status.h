@@ -105,4 +105,5 @@ EXT u_int32_t xflow_tot_bad_datagrams;
 EXT u_int8_t smp_entry_status_table_memerr, class_entry_status_table_memerr;
 EXT void set_vector_f_status(struct packet_ptrs_vector *);
 EXT void set_vector_f_status_g(struct packet_ptrs_vector *);
+EXT void update_status_table(struct xflow_status_entry *, u_int32_t);
 #undef EXT

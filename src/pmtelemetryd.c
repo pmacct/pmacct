@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "bgp/bgp.h"
 #include "telemetry/telemetry.h"
 #include "pmtelemetryd.h"
 #include "pretag_handlers.h"

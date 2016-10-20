@@ -23,11 +23,13 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
 #include "plugin_hooks.h"
 #include <search.h>
+#include <sys/file.h>
 
 /* functions */
 void setnonblocking(int sock)

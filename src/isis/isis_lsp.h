@@ -99,6 +99,8 @@ EXT struct isis_lsp *lsp_search (u_char *, dict_t *);
 EXT void lsp_build_list (u_char *, u_char *, struct list *, dict_t *);
 EXT void lsp_build_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
 EXT void lsp_build_list_ssn (struct isis_circuit *, struct list *, dict_t *);
+EXT void lsp_build_isis_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
+EXT void lsp_build_isis_list_ssn (struct isis_circuit *, struct list *, dict_t *);
 EXT void lsp_search_and_destroy (u_char *, dict_t *);
 EXT void lsp_purge_dr (u_char *, struct isis_circuit *, int);
 EXT void lsp_purge_non_exist (struct isis_link_state_hdr *, struct isis_area *);

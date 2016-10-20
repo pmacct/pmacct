@@ -51,6 +51,7 @@
  */
 
 #include "common.h"
+#include "addr.h"
 #include "sys-tree.h"
 #include "convtime.h"
 #include "../nfacctd.h"

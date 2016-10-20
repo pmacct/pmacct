@@ -31,6 +31,7 @@
 #include "hash.h"
 #include "prefix.h"
 
+#include "checksum.h"
 #include "dict.h"
 #include "thread.h"
 #include "iso.h"
@@ -49,6 +50,7 @@
 #include "iso_checksum.h"
 #include "isis_csm.h"
 #include "isis_events.h"
+#include "isis_lsp.h"
 
 extern struct thread_master *master;
 extern struct isis *isis;

@@ -165,11 +165,13 @@ EXT int hash_dup_key(pm_hash_key_t *, pm_hash_key_t *);
 EXT void hash_destroy_key(pm_hash_key_t *);
 EXT void hash_destroy_serial(pm_hash_serial_t *);
 EXT void hash_serial_set_off(pm_hash_serial_t *, u_int16_t);
+EXT void hash_serial_append(pm_hash_serial_t *, char *, u_int16_t, int);
 EXT pm_hash_key_t *hash_serial_get_key(pm_hash_serial_t *);
 EXT u_int16_t hash_serial_get_off(pm_hash_serial_t *);
 EXT u_int16_t hash_key_get_len(pm_hash_key_t *);
 EXT char *hash_key_get_val(pm_hash_key_t *);
 EXT int hash_key_cmp(pm_hash_key_t *, pm_hash_key_t *);
+EXT char *hash_key_get_val(pm_hash_key_t *);
 
 EXT void dump_writers_init();
 EXT void dump_writers_count();

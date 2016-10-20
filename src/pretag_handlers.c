@@ -22,6 +22,7 @@
 #define __PRETAG_HANDLERS_C
 
 #include "pmacct.h"
+#include "addr.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
 #include "nfacctd.h"
@@ -31,6 +32,9 @@
 #include "net_aggr.h"
 #include "bgp/bgp.h"
 #include "pmacct-data.h"
+#include "plugin_hooks.h"
+#include "pkt_handlers.h"
+#include "util.h"
 
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {

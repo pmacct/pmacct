@@ -24,6 +24,10 @@
 
 /* includes */
 #include "pmacct.h"
+#include "plugin_hooks.h"
+#include "pmacct-data.h"
+#include "pkt_handlers.h"
+#include "addr.h"
 #include "bgp.h"
 
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)

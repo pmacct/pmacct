@@ -29,6 +29,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "sflow.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
@@ -42,6 +43,8 @@
 #include "classifier.h"
 #include "net_aggr.h"
 #include "crc32.h"
+#include "isis/isis.h"
+#include "bmp/bmp.h"
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */

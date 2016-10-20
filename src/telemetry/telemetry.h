@@ -19,12 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* includes */
-#include "../bgp/bgp.h"
-#include "../bmp/bmp.h"
-#if defined (HAVE_ZLIB)
-#include <zlib.h>
-#endif
 
 /* defines */
 #define TELEMETRY_TCP_PORT		1620

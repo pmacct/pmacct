@@ -26,6 +26,7 @@
 #include "pmacct-data.h"
 #include "thread_pool.h"
 #include "plugin_hooks.h"
+#include "plugin_common.h"
 #include "pkt_handlers.h"
 
 /* functions */

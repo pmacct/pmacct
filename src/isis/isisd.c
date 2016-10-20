@@ -57,7 +57,6 @@ void isis_new(unsigned long);
 struct isis_area *isis_area_create(void);
 int isis_area_get(const char *);
 int isis_area_destroy(const char *);
-int area_net_title(struct isis_area *, const u_char *);
 int area_clear_net_title(struct isis_area *, const u_char *);
 
 void

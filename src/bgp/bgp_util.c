@@ -25,6 +25,7 @@
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
+#include "addr.h"
 #include "bgp.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
