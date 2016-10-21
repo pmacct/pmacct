@@ -277,7 +277,7 @@ void skinny_bmp_daemon()
     struct host_addr srv_addr;
     u_int16_t srv_port;
 
-    sa_to_addr(&server, &srv_addr, &srv_port);
+    sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on %s:%u\n", config.name, bmp_misc_db->log_str, srv_string, srv_port);
   }

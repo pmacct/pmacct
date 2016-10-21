@@ -365,7 +365,7 @@ void telemetry_daemon(void *t_data_void)
     struct host_addr srv_addr;
     u_int16_t srv_port;
 
-    sa_to_addr(&server, &srv_addr, &srv_port);
+    sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
   }
@@ -587,7 +587,7 @@ void telemetry_daemon(void *t_data_void)
 	telemetry_peer_udp_cache *tpuc_ret;
 	u_int16_t client_port;
 
-        sa_to_addr(&client, &tpuc.addr, &client_port);
+        sa_to_addr((struct sockaddr *)&client, &tpuc.addr, &client_port);
 	tpuc_ret = pm_tfind(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp);
 
 	if (tpuc_ret) {

@@ -65,7 +65,7 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
       if (!entry) goto error;
       else {
 	memset(entry, 0, sizeof(struct xflow_status_entry));
-	sa_to_addr(sa, &entry->agent_addr, &port);
+	sa_to_addr((struct sockaddr *)sa, &entry->agent_addr, &port);
 	entry->aux1 = aux1;
 	entry->aux2 = aux2;
 	entry->seqno = 0;

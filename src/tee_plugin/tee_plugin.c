@@ -524,7 +524,7 @@ void Tee_init_socks()
         u_char recv_addr_str[INET6_ADDRSTRLEN];
 	u_int16_t recv_port;
 
-	sa_to_addr(&target->dest, &recv_addr, &recv_port); 
+	sa_to_addr((struct sockaddr *)&target->dest, &recv_addr, &recv_port); 
         addr_to_str(recv_addr_str, &recv_addr);
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): pool ID: %u :: receiver: %s :: fd: %d.\n",
                 config.name, config.type, receivers.pools[pool_idx].id, recv_addr_str, target->fd);

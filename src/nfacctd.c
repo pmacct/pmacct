@@ -904,7 +904,7 @@ int main(int argc,char **argv, char **envp)
     struct host_addr srv_addr;
     u_int16_t srv_port;
 
-    sa_to_addr(&server, &srv_addr, &srv_port); 
+    sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port); 
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
@@ -2296,7 +2296,7 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa, u_i
   u_char agent_addr[50] /* able to fit an IPv6 string aswell */, any[]="0.0.0.0";
   u_int16_t agent_port;
 
-  sa_to_addr(sa, &a, &agent_port);
+  sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
   addr_to_str(agent_addr, &a);
   if (!config.nfacctd_ip) config.nfacctd_ip = any;
 

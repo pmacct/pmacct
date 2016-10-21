@@ -105,7 +105,7 @@ typedef struct host_mask pt_hostmask_t;
 
 typedef struct {
   u_int8_t neg;
-  u_char a[ETH_ADDR_LEN]; 
+  char a[ETH_ADDR_LEN]; 
 } pt_etheraddr_t;
 
 typedef struct {

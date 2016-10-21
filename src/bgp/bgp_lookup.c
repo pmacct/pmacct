@@ -106,8 +106,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       
       /* note: call to [NF|SF]_peer_dst_ip_handler for the purpose of
 	 code re-use effectively is defeating the concept of libbgp */
-      if (config.acct_type == ACCT_NF) NF_peer_dst_ip_handler(NULL, pptrs, &pbgp_ptr);
-      else if (config.acct_type == ACCT_SF) SF_peer_dst_ip_handler(NULL, pptrs, &pbgp_ptr);
+      if (config.acct_type == ACCT_NF) NF_peer_dst_ip_handler(NULL, pptrs, (char **)&pbgp_ptr);
+      else if (config.acct_type == ACCT_SF) SF_peer_dst_ip_handler(NULL, pptrs, (char **)&pbgp_ptr);
 
       memcpy(&peer_dst_ip, &pbgp.peer_dst_ip, sizeof(struct host_addr));
     }
