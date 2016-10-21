@@ -20,7 +20,7 @@ XIV.	Quickstart guide to setup the BGP daemon
 XV.	Quickstart guide to setup a NetFlow/sFlow replicator
 XVI.	Quickstart guide to setup the IS-IS daemon
 XVII.	Quickstart guide to setup the BMP daemon
-XVIII.	Quickstart guide to setup Streaming Network Telemetry collection 
+XVIII.	Quickstart guide to setup Streaming Telemetry collection 
 XIX.	Running the print plugin to write to flat-files
 XX.	Quickstart guide to setup GeoIP lookups
 XXI.	Using pmacct as traffic/event logger
@@ -1577,7 +1577,7 @@ Any equivalent examples using JunOS and/or any other vendor implementing BMP
 would be much welcome.
  
 
-XVIII. Quickstart guide to setup Streaming Network Telemetry collection
+XVIII. Quickstart guide to setup Streaming Telemetry collection
 Quoting Cisco IOS-XR Telemetry Configuration Guide at the time of this writing:
 "Streaming telemetry lets users direct data to a configured receiver. This data
 can be used for analysis and troubleshooting purposes to maintain the health of

@@ -432,9 +432,9 @@ DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker us
 		directives refer to the broker used by the BMP thread to dump data out at regular time
 		intervals; sfacctd_counter_amqp_* directives refer to the broker used by sfacctd to
 		stream sFlow counter data out; telemetry_daemon_msglog_amqp_* directives refer to the
-		broker used by the streaming network telemetry thread/daemon to stream data out; 
-		telemetry_dump_amqp_* directives refer to the broker used by the streaming network
-		telemetry thread/daemon to dump data out at regular time intervals.
+		broker used by the Streaming Telemetry thread/daemon to stream data out;
+		telemetry_dump_amqp_* directives refer to the broker used by the Streaming Telemetry
+		thread/daemon to dump data out at regular time intervals.
 DEFAULT:	See amqp_host	
 
 KEY:            [ amqp_vhost | plugin_pipe_amqp_vhost ]
@@ -1988,9 +1988,9 @@ DESC:		To prevent all BGP/BMP peers to contend resources, this defines the numbe
 DEFAULT: 	0
 
 KEY:            [ bgp_daemon_msglog_file | bmp_daemon_msglog_file | telemetry_daemon_msglog_file ] [GLOBAL]
-DESC:		Enables streamed logging of BGP tables/BMP events/streaming network telemetry data. Each log
-		entry features a time reference, peer/exporter IP address, event type and a sequence number
-		(to order events when time reference is not granular enough). BGP UPDATE messages also contain
+DESC:		Enables streamed logging of BGP tables/BMP events/Streaming Telemetry data. Each log entry
+		features a time reference, peer/exporter IP address, event type and a sequence number (to
+		order events when time reference is not granular enough). BGP UPDATE messages also contain
 		full prefix and BGP attributes information. The list of supported filename variables follows:
 
                 $peer_src_ip    BGP/BMP peer IP address.
@@ -2002,8 +2002,8 @@ KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output | telemetry_daemon_m
 		[GLOBAL]
 VALUES:         [ json ]
 DESC:		Defines output format for the streamed logging of BGP/BMP messages and events/streaming
-		network telemetry. Only JSON format is currently supported and requires compiling against
-		Jansson library (--enable-jansson when configuring for compiling).
+		telemetry. Only JSON format is currently supported and requires compiling against Jansson
+		library (--enable-jansson when configuring for compiling).
 DEFAULT:	json
 
 KEY:		bgp_aspath_radius [GLOBAL]
@@ -2228,11 +2228,11 @@ DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to
 DEFAULT:	path_id
 
 KEY:            [ bgp_table_dump_file | bmp_dump_file | telemetry_dump_file ] [GLOBAL] 
-DESC:           Enables dump of BGP tables/BMP events/streaming network telemetry data at regular time
+DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data at regular time
 		intervals (as defined by, for example, bgp_table_dump_refresh_time) into files.
 		Each dump event features a time reference and peer/exporter IP address along with the
-		rest of BGP/BMP/streaming network telemetry data. The list of supported filename
-		variables follows:
+		rest of BGP/BMP/Streaming Telemetry data. The list of supported filename variables
+		follows:
 
                 %d              The day of the month as a decimal number (range 01 to 31).
 
@@ -2252,21 +2252,21 @@ DESC:           Enables dump of BGP tables/BMP events/streaming network telemetr
 
                 %Y              The year as a decimal number including the century.
 
-                $peer_src_ip    BGP or BMP peer/streaming network telemetry exporter IP address.
+                $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
 DEFAULT:	none
 
 KEY:            [ bgp_table_dump_output | bmp_dump_output | telemetry_dump_output ] [GLOBAL]
 VALUES:         [ json ]
-DESC:           Defines output format for the dump of BGP tables/BMP events/streaming network
-		telemetry data. Only JSON format is currently supported and requires compiling
-		against Jansson library (--enable-jansson when configuring for compiling).
+DESC:           Defines output format for the dump of BGP tables/BMP events/Streaming Telemetry data.
+		Only JSON format is currently supported and requires compiling against Jansson library
+		(--enable-jansson when configuring for compiling).
 DEFAULT:	json
 
 KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
 		[GLOBAL]
 VALUES:		[ 60 .. 86400 ]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP
-		tables/BMP events/streaming network telemetry data to files.
+		tables/BMP events/Streaming Telemetry data to files.
 DEFAULT:	0
 
 KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_refresh_time ]
@@ -2445,7 +2445,7 @@ DEFAULT:	0
 
 KEY:		telemetry_daemon [GLOBAL]
 VALUES:         [ true | false ]
-DESC:		Enables the streaming telemetry thread in all daemons except pmtelemetryd (which does
+DESC:		Enables the Streaming Telemetry thread in all daemons except pmtelemetryd (which does
 		collect telemetry as part of its core functionalities). Quoting Cisco IOS-XR Telemetry
 		Configuration Guide at the time of this writing: "Streaming telemetry lets users direct
 		data to a configured receiver. This data can be used for analysis and troubleshooting
@@ -2457,29 +2457,29 @@ DESC:		Enables the streaming telemetry thread in all daemons except pmtelemetryd
 DEFAULT:        false
 
 KEY:		telemetry_daemon_port_tcp [GLOBAL]
-DESC:		Makes the streaming network telemetry daemon, pmtelemetryd, or the streaming network
-		telemetry thread listen on the specified TCP port.	
+DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
+		listen on the specified TCP port.	
 DEFAULT:	none
 
 KEY:            telemetry_daemon_port_udp [GLOBAL]
-DESC:           Makes the streaming network telemetry daemon, pmtelemetryd, or the streaming network
-		telemetry thread listen on the specified UDP port. 
+DESC:           Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
+		listen on the specified UDP port. 
 DEFAULT:        none
 
 KEY:		telemetry_daemon_ip [GLOBAL]
-DESC:		Binds the streaming network telemetry daemon to a specific interface. Expects as value
-		an IPv4/IPv6 address.
+DESC:		Binds the Streaming Telemetry daemon to a specific interface. Expects as value an IPv4/
+		IPv6 address.
 DEFAULT:        0.0.0.0
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
-VALUES:		[ json | zjson | cisco_json | cisco_zjson ]
-DESC:		Sets the streaming network telemetry data decoder to the specified type. Cisco versions
-		of json and zjson prepend a 12 bytes proprietary header.
+VALUES:		[ json | zjson | cisco | cisco_json | cisco_zjson | cisco_gpb | cisco_gpb_kv ]
+DESC:		Sets the Streaming Telemetry data decoder to the specified type. Cisco versions of json,
+		gpb, etc. all prepend a 12 bytes proprietary header.
 DEFAULT:	none
 
 KEY:            telemetry_daemon_max_peers [GLOBAL]
-DESC:           Sets the maximum number of exporters the streaming network telemetry daemon can receive
-		data from. Upon reaching of such limit, no more exporters can send data to the daemon.
+DESC:           Sets the maximum number of exporters the Streaming Telemetry daemon can receive data from.
+		Upon reaching of such limit, no more exporters can send data to the daemon.
 DEFAULT:        100
 
 KEY:		telemetry_daemon_udp_timeout [GLOBAL]
@@ -2494,11 +2494,11 @@ DESC:           Full pathname to a file containing the list of IPv4/IPv6 address
 DEFAULT:        none (ie. allow all)
 
 KEY:		telemetry_daemon_pipe_size [GLOBAL]
-DESC:           Defines the size of the kernel socket used for streaming network telemetry datagrams
-		(see also bgp_daemon_pipe_size for more info).
+DESC:           Defines the size of the kernel socket used for Streaming Telemetry datagrams (see also
+		bgp_daemon_pipe_size for more info).
 DEFAULT:        Operating System default
 
 KEY:		telemetry_daemon_ipprec [GLOBAL]
-DESC:           Marks self-originated streaming network telemetry messages with the supplied IP
-		precedence value. Applies to TCP sessions only.
+DESC:           Marks self-originated Streaming Telemetry messages with the supplied IP precedence value.
+		Applies to TCP sessions only.
 DEFAULT:        0

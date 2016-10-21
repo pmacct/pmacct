@@ -12,13 +12,13 @@ A: 'pmacct' is intended to be the name of the project; 'pmacctd' is the name of 
    (versions supported NetFlow v1 to v9) and IPFIX accounting daemon; 'sfacctd' is
    the name of the sFlow v2/v4/v5 accounting daemon; 'uacctd' is the name of the
    Linux Netlink NFLOG-based accounting daemon (historically, it was using ULOG,
-   hence its name); 'pmtelemetryd' is the name of the streaming network telemetry
-   collector daemon, where quoting Cisco IOS-XR Telemetry Configuration Guide at the
-   time of this writing "Streaming telemetry [ .. ] data can be used for analysis
-   and troubleshooting purposes to maintain the health of the network. This is
-   achieved by leveraging the capabilities of machine-to-machine communication.
-   [ .. ]"; 'pmbgpd' is the name of the pmacct BGP collector daemon; 'pmbmpd' is
-   the name of the pmacct BMP collector daemon. 
+   hence its name); 'pmtelemetryd' is the name of the Streaming Telemetry collector
+   daemon, where quoting Cisco IOS-XR Telemetry Configuration Guide at the time of
+   this writing "Streaming telemetry [ .. ] data can be used for analysis and
+   troubleshooting purposes to maintain the health of the network. This is achieved
+   by leveraging the capabilities of machine-to-machine communication. [ .. ]";
+   'pmbgpd' is the name of the pmacct BGP collector daemon; 'pmbmpd' is the name of
+   the pmacct BMP collector daemon. 
 
 
 Q3: Does pmacct stand for Promiscuous mode IP Accounting package ?
