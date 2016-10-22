@@ -691,6 +691,16 @@ This is a pointer to the quick start guide to Kafka (0.10.0):
 
 http://kafka.apache.org/0100/quickstart.html
 
+NOTE: some users have reported troubles getting messages delivered via Kafka with
+the following error messages:
+
+ERROR ( default/kafka ): Connection failed to Kafka: p_kafka_check_outq_len()
+ERROR ( default/kafka ): Connection failed to Kafka: p_kafka_close()
+
+It appears these were not related specifically to pmacct but rather to the broader
+enviornment in which Kafka was run. A summary of the conversation, some findings and
+potential leads are captured here online: https://github.com/pmacct/pmacct/issues/34 .
+
 
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
