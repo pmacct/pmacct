@@ -1493,7 +1493,7 @@ int main(int argc,char **argv)
           request.data.cos = atoi(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "etype")) {
-	  sscanf(match_string_token, "%x", &request.data.etype);
+	  sscanf(match_string_token, "%hx", &request.data.etype);
         }
 #endif
 
@@ -2119,13 +2119,13 @@ int main(int argc,char **argv)
 	  pmc_custom_primitives_registry.len ||
 	  memcmp(pvlen, &empty_pvlen, sizeof(struct pkt_vlen_hdr_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_TAG)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10lu  ", acc_elem->primitives.tag);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->primitives.tag);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_TAG2)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag2);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag2);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10lu  ", acc_elem->primitives.tag2);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->primitives.tag2);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_CLASS)) {
@@ -2704,16 +2704,16 @@ int main(int argc,char **argv)
 
 	if (!(want_output & PRINT_OUTPUT_EVENT)) {
 #if defined HAVE_64BIT_COUNTERS
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20llu  ", acc_elem->pkt_num);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->pkt_num);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20lu  ", acc_elem->pkt_num);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->pkt_num);
 
 	  if (!have_wtc || (what_to_count & COUNT_FLOWS)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20llu  ", acc_elem->flo_num);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->flo_num);
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20lu  ", acc_elem->flo_num);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->flo_num);
 	  }
 
 	  if (want_output & (PRINT_OUTPUT_FORMATTED|PRINT_OUTPUT_CSV))
-	    printf("%s%llu\n", write_sep(sep_ptr, &count), acc_elem->pkt_len);
+	    printf("%s%lu\n", write_sep(sep_ptr, &count), acc_elem->pkt_len);
 #else
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10lu  ", acc_elem->pkt_num); 
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->pkt_num); 
@@ -2758,7 +2758,7 @@ int main(int argc,char **argv)
 
     if (unpacked == (sizeof(struct query_header) + sizeof(struct timeval))) {
       memcpy(&table_reset_stamp, (largebuf + sizeof(struct query_header)), sizeof(struct timeval));
-      if (table_reset_stamp.tv_sec) printf("%u\n", cycle_stamp.tv_sec - table_reset_stamp.tv_sec);
+      if (table_reset_stamp.tv_sec) printf("%lu\n", cycle_stamp.tv_sec - table_reset_stamp.tv_sec);
       else printf("never\n");
     }
   }
@@ -2816,13 +2816,13 @@ int main(int argc,char **argv)
       else {
 #if defined HAVE_64BIT_COUNTERS
 	/* print bytes */
-        if (which_counter == 0) printf("%llu\n", acc_elem->pkt_len); 
+        if (which_counter == 0) printf("%lu\n", acc_elem->pkt_len); 
 	/* print packets */
-	else if (which_counter == 1) printf("%llu\n", acc_elem->pkt_num); 
+	else if (which_counter == 1) printf("%lu\n", acc_elem->pkt_num); 
 	/* print packets+bytes+flows+num */
-	else if (which_counter == 2) printf("%llu %llu %llu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec);
+	else if (which_counter == 2) printf("%lu %lu %lu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec);
 	/* print flows */
-	else if (which_counter == 3) printf("%llu\n", acc_elem->flo_num);
+	else if (which_counter == 3) printf("%lu\n", acc_elem->flo_num);
 #else
         if (which_counter == 0) printf("%lu\n", acc_elem->pkt_len); 
         else if (which_counter == 1) printf("%lu\n", acc_elem->pkt_num); 
@@ -2834,10 +2834,10 @@ int main(int argc,char **argv)
       
     if (sum_counters) {
 #if defined HAVE_64BIT_COUNTERS
-      if (which_counter == 0) printf("%llu\n", bcnt); /* print bytes */
-      else if (which_counter == 1) printf("%llu\n", pcnt); /* print packets */
-      else if (which_counter == 2) printf("%llu %llu %llu %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
-      else if (which_counter == 3) printf("%llu\n", fcnt); /* print flows */
+      if (which_counter == 0) printf("%lu\n", bcnt); /* print bytes */
+      else if (which_counter == 1) printf("%lu\n", pcnt); /* print packets */
+      else if (which_counter == 2) printf("%lu %lu %lu %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
+      else if (which_counter == 3) printf("%lu\n", fcnt); /* print flows */
 #else
       if (which_counter == 0) printf("%lu\n", bcnt); 
       else if (which_counter == 1) printf("%lu\n", pcnt); 
@@ -2971,14 +2971,14 @@ int Recv(int sd, unsigned char **buf)
 int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
 {
   if (qh->cnt_sz != sizeof(acc_elem->pkt_len)) {
-    printf("ERROR: Counter sizes mismatch: daemon: %d  client: %d\n", qh->cnt_sz*8, sizeof(acc_elem->pkt_len)*8);
+    printf("ERROR: Counter sizes mismatch: daemon: %d  client: %lu\n", qh->cnt_sz*8, sizeof(acc_elem->pkt_len)*8);
     printf("ERROR: It's very likely that a 64bit package has been mixed with a 32bit one.\n\n");
     printf("ERROR: Please fix the issue before trying again.\n");
     return (qh->cnt_sz-sizeof(acc_elem->pkt_len));
   }
 
   if (qh->ip_sz != sizeof(acc_elem->primitives.src_ip)) {
-    printf("ERROR: IP address sizes mismatch. daemon: %d  client: %d\n", qh->ip_sz, sizeof(acc_elem->primitives.src_ip));
+    printf("ERROR: IP address sizes mismatch. daemon: %d  client: %lu\n", qh->ip_sz, sizeof(acc_elem->primitives.src_ip));
     printf("ERROR: It's very likely that an IPv6-enabled package has been mixed with a IPv4-only one.\n\n");
     printf("ERROR: Please fix the issue before trying again.\n");
     return (qh->ip_sz-sizeof(acc_elem->primitives.src_ip));
@@ -3800,15 +3800,15 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
   struct tm *time2;
 
   if (since_epoch) {
-    if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
-    else snprintf(buf, buflen, "%u.0", tv->tv_sec);
+    if (usec) snprintf(buf, buflen, "%li.%li", tv->tv_sec, tv->tv_usec);
+    else snprintf(buf, buflen, "%li.0", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
     time2 = localtime(&time1);
     strftime(tmpbuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
 
-    if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
+    if (usec) snprintf(buf, buflen, "%s.%li", tmpbuf, tv->tv_usec);
     else snprintf(buf, buflen, "%s.0", tmpbuf);
   }
 }
@@ -3823,7 +3823,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
     if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
         cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
-	snprintf(format, SRVBUFLEN, "%%-%u", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : strlen(cp_entry->name));
+	snprintf(format, SRVBUFLEN, "%%-%lu", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : strlen(cp_entry->name));
 	strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3831,7 +3831,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
-	snprintf(format, SRVBUFLEN, "%%-%u", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name));
+	snprintf(format, SRVBUFLEN, "%%-%lu", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name));
 	strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3845,7 +3845,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
 #endif
       	
       if (formatted) {
-        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
+        snprintf(format, SRVBUFLEN, "%%-%lu", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
         strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3854,7 +3854,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       int len = ETHER_ADDRSTRLEN;
 
       if (formatted) {
-        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
+        snprintf(format, SRVBUFLEN, "%%-%lu", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
         strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3874,7 +3874,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
     if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
 	cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : strlen(cp_entry->name), 
+        snprintf(format, SRVBUFLEN, "%%-%lu%s", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : strlen(cp_entry->name), 
 			cps_type[cp_entry->semantics]); 
       else
         snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]); 
@@ -3910,7 +3910,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted)
-	snprintf(format, SRVBUFLEN, "%%-%u%s", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name),
+	snprintf(format, SRVBUFLEN, "%%-%lu%s", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name),
 			cps_type[cp_entry->semantics]); 
       else
 	snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]); 
@@ -3943,7 +3943,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
 
       addr_to_str(ip_str, &ip_addr);
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
+        snprintf(format, SRVBUFLEN, "%%-%lu%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
                         cps_type[cp_entry->semantics]);
       else
         snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]);
@@ -3958,7 +3958,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
       etheraddr_string(in+cp_entry->off, eth_str);
 
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
+        snprintf(format, SRVBUFLEN, "%%-%lu%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
                         cps_type[cp_entry->semantics]);
       else
         snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]);

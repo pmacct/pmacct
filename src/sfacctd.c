@@ -1742,7 +1742,7 @@ u_int32_t getAddress(SFSample *sample, SFLAddress *address)
 
 char *printTag(u_int32_t tag, char *buf, int bufLen) {
   // should really be: snprintf(buf, buflen,...) but snprintf() is not always available
-  sprintf(buf, "%lu:%lu", (tag >> 12), (tag & 0x00000FFF));
+  sprintf(buf, "%u:%u", (tag >> 12), (tag & 0x00000FFF));
   return buf;
 }
 

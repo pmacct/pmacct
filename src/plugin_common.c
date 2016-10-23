@@ -967,7 +967,7 @@ void P_handle_table_dyn_strings(char *new, int newlen, char *old, struct chained
     ptr_end += ptr_len;
     len -= ptr_len;
 
-    snprintf(buf, newlen, "%u", config.post_tag);
+    snprintf(buf, newlen, "%lu", config.post_tag);
     strncat(buf, ptr_end, len);
 
     len = strlen(buf);
@@ -987,7 +987,7 @@ void P_handle_table_dyn_strings(char *new, int newlen, char *old, struct chained
     ptr_end += ptr_len;
     len -= ptr_len;
 
-    snprintf(buf, newlen, "%u", elem->primitives.tag);
+    snprintf(buf, newlen, "%lu", elem->primitives.tag);
     strncat(buf, ptr_end, len);
 
     len = strlen(buf);

@@ -207,9 +207,9 @@ format_flow(struct FLOW *flow)
 	snprintf(stime, sizeof(ftime), "%s", format_time(flow->flow_start.tv_sec));
 	snprintf(ftime, sizeof(ftime), "%s", format_time(flow->flow_last.tv_sec));
 
-	snprintf(buf, sizeof(buf),  "seq:%llu [%s]:%u <> [%s]:%u proto:%u "
-	    "octets>:%llu packets>:%llu octets<:%llu packets<:%llu "
-	    "start:%s.%03u finish:%s.%03u tcp>:%02x tcp<:%02x "
+	snprintf(buf, sizeof(buf),  "seq:%lu [%s]:%u <> [%s]:%u proto:%u "
+	    "octets>:%lu packets>:%lu octets<:%lu packets<:%lu "
+	    "start:%s.%03lu finish:%s.%03lu tcp>:%02x tcp<:%02x "
 	    "flowlabel>:%08x flowlabel<:%08x ",
 	    flow->flow_seq,
 	    addr1, ntohs(flow->port[0]), addr2, ntohs(flow->port[1]),
@@ -235,7 +235,7 @@ format_flow_brief(struct FLOW *flow)
 	inet_ntop(flow->af, &flow->addr[1], addr2, sizeof(addr2));
 
 	snprintf(buf, sizeof(buf), 
-	    "seq:%llu [%s]:%hu <> [%s]:%hu proto:%u",
+	    "seq:%lu [%s]:%hu <> [%s]:%hu proto:%u",
 	    flow->flow_seq,
 	    addr1, ntohs(flow->port[0]), addr2, ntohs(flow->port[1]),
 	    (int)flow->protocol);

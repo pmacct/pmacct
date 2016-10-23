@@ -580,8 +580,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
       if (f && config.print_output & PRINT_OUTPUT_FORMATTED) {
-        if (config.what_to_count & COUNT_TAG) fprintf(f, "%-10llu  ", data->tag);
-        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10llu  ", data->tag2);
+        if (config.what_to_count & COUNT_TAG) fprintf(f, "%-10lu  ", data->tag);
+        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10lu  ", data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
         if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
@@ -792,13 +792,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
   
           if (config.timestamps_since_epoch) {
-	    snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
+	    snprintf(buf2, SRVBUFLEN, "%lu.%lu", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
 	  }
 	  else {
             time1 = pnat->timestamp_start.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, pnat->timestamp_start.tv_usec);
 	  }
 
           fprintf(f, "%-30s ", buf2);
@@ -810,13 +810,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
         
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
           }
           else {
             time1 = pnat->timestamp_end.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, pnat->timestamp_end.tv_usec);
 	  }
 
           fprintf(f, "%-30s ", buf2);
@@ -828,13 +828,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
 
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
           }
           else {
             time1 = pnat->timestamp_arrival.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_arrival.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, pnat->timestamp_arrival.tv_usec);
           }
 
           fprintf(f, "%-30s ", buf2);
@@ -846,23 +846,23 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
 
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
             fprintf(f, "%-30s ", buf2);
 
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_max.tv_sec, queue[j]->stitch->timestamp_max.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", queue[j]->stitch->timestamp_max.tv_sec, queue[j]->stitch->timestamp_max.tv_usec);
             fprintf(f, "%-30s ", buf2);
           }
           else {
 	    time1 = queue[j]->stitch->timestamp_min.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_min.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, queue[j]->stitch->timestamp_min.tv_usec);
             fprintf(f, "%-30s ", buf2);
 
             time1 = queue[j]->stitch->timestamp_max.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_max.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, queue[j]->stitch->timestamp_max.tv_usec);
             fprintf(f, "%-30s ", buf2);
 	  }
         }
@@ -894,9 +894,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 
         if (!is_event) {
   #if defined HAVE_64BIT_COUNTERS
-          fprintf(f, "%-20llu  ", queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20llu  ", queue[j]->flow_counter);
-          fprintf(f, "%llu\n", queue[j]->bytes_counter);
+          fprintf(f, "%-20lu  ", queue[j]->packet_counter);
+          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20lu  ", queue[j]->flow_counter);
+          fprintf(f, "%lu\n", queue[j]->bytes_counter);
   #else
           fprintf(f, "%-10lu  ", queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-10lu  ", queue[j]->flow_counter);
@@ -906,8 +906,8 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         else fprintf(f, "\n");
       }
       else if (f && config.print_output & PRINT_OUTPUT_CSV) {
-        if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag);
-        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag2);
+        if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%lu", write_sep(sep, &count), data->tag);
+        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%lu", write_sep(sep, &count), data->tag2);
 	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_string(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (HAVE_L2)
@@ -1142,13 +1142,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
  
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
           }
           else {
             time1 = pnat->timestamp_start.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, pnat->timestamp_start.tv_usec);
 	  }
 
           fprintf(f, "%s%s", write_sep(sep, &count), buf2);
@@ -1160,13 +1160,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
   
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
           }
           else {
             time1 = pnat->timestamp_end.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, pnat->timestamp_end.tv_usec);
 	  }
 
           fprintf(f, "%s%s", write_sep(sep, &count), buf2);
@@ -1178,13 +1178,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
 
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
           }
           else {
             time1 = pnat->timestamp_arrival.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_arrival.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, pnat->timestamp_arrival.tv_usec);
           }
 
           fprintf(f, "%s%s", write_sep(sep, &count), buf2);
@@ -1196,23 +1196,23 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           struct tm *time2;
 
           if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
 	    fprintf(f, "%s%s", write_sep(sep, &count), buf2);
 
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_max.tv_sec, queue[j]->stitch->timestamp_max.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%lu.%lu", queue[j]->stitch->timestamp_max.tv_sec, queue[j]->stitch->timestamp_max.tv_usec);
 	    fprintf(f, "%s%s", write_sep(sep, &count), buf2);
           }
 	  else {
             time1 = queue[j]->stitch->timestamp_min.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_min.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, queue[j]->stitch->timestamp_min.tv_usec);
             fprintf(f, "%s%s", write_sep(sep, &count), buf2);
 
             time1 = queue[j]->stitch->timestamp_max.tv_sec;
             time2 = localtime(&time1);
             strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_max.tv_usec);
+            snprintf(buf2, SRVBUFLEN, "%s.%lu", buf1, queue[j]->stitch->timestamp_max.tv_usec);
             fprintf(f, "%s%s", write_sep(sep, &count), buf2);
 	  }
         }
@@ -1243,9 +1243,9 @@ void P_cache_purge(struct chained_cache *queue[], int index)
   
         if (!is_event) {
   #if defined HAVE_64BIT_COUNTERS
-          fprintf(f, "%s%llu", write_sep(sep, &count), queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%llu", write_sep(sep, &count), queue[j]->flow_counter);
-          fprintf(f, "%s%llu\n", write_sep(sep, &count), queue[j]->bytes_counter);
+          fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->packet_counter);
+          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->flow_counter);
+          fprintf(f, "%s%lu\n", write_sep(sep, &count), queue[j]->bytes_counter);
   #else
           fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->flow_counter);
