@@ -177,6 +177,7 @@ EXT void dump_writers_init();
 EXT void dump_writers_count();
 EXT u_int32_t dump_writers_get_flags();
 EXT u_int16_t dump_writers_get_active();
+EXT u_int16_t dump_writers_get_max();
 EXT int dump_writers_add(pid_t);
 
 EXT void replace_string(char *, int, char *, char *);

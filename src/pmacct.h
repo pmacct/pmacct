@@ -290,12 +290,6 @@ struct largebuf {
   u_char *ptr;
 };
 
-struct child_ctl {
-  u_int16_t active;
-  u_int16_t retired;
-  u_int32_t flags;
-};
-
 struct child_ctl2 {
   pid_t *list;
   u_int16_t active;
@@ -387,7 +381,6 @@ EXT int reload_map_bgp_thread, reload_log_bgp_thread, reload_log_bmp_thread;
 EXT int reload_log_sf_cnt, reload_log_telemetry_thread;
 EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
-EXT struct child_ctl sql_writers;
 EXT struct child_ctl2 dump_writers;
 EXT int debug;
 EXT struct configuration config; /* global configuration structure */

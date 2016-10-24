@@ -213,7 +213,7 @@ Inline void SQL_SetENV()
 
     strncat(envbuf.ptr, "SQL_MAX_WRITERS=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
-    snprintf(tmpptr, envbuf.end-tmpptr, "%d", config.sql_max_writers);
+    snprintf(tmpptr, envbuf.end-tmpptr, "%d", dump_writers_get_max());
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;
@@ -325,7 +325,7 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
 
     strncat(envbuf.ptr, "SQL_ACTIVE_WRITERS=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
-    snprintf(tmpptr, envbuf.end-tmpptr, "%d", sql_writers.active);
+    snprintf(tmpptr, envbuf.end-tmpptr, "%d", dump_writers_get_active());
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;

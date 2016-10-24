@@ -1044,22 +1044,22 @@ int cfg_key_sql_recovery_backup_host(char *filename, char *name, char *value_ptr
   return changes;
 }
 
-int cfg_key_sql_max_writers(char *filename, char *name, char *value_ptr)
+int cfg_key_dump_max_writers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
   if (value < 1 || value >= 100) {
-    Log(LOG_WARNING, "WARN: [%s] invalid 'sql_max_writers' value). Allowed values are: 1 <= sql_max_writers < 100.\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] invalid 'dump_max_writers' value). Allowed values are: 1 <= dump_max_writers < 100.\n", filename);
     return ERR;
   }
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_max_writers = value;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.dump_max_writers = value;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.sql_max_writers = value;
+        list->cfg.dump_max_writers = value;
         changes++;
         break;
       }

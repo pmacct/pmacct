@@ -3848,7 +3848,7 @@ int hash_key_cmp(pm_hash_key_t *a, pm_hash_key_t *b)
 void dump_writers_init()
 {
   dump_writers.active = 0;
-  dump_writers.max = config.sql_max_writers;
+  dump_writers.max = config.dump_max_writers;
   if (dump_writers.list) memset(dump_writers.list, 0, (dump_writers.max * sizeof(pid_t)));
   dump_writers.flags = FALSE;
 }
@@ -3877,6 +3877,11 @@ u_int32_t dump_writers_get_flags()
 u_int16_t dump_writers_get_active()
 {
   return dump_writers.active;
+}
+
+u_int16_t dump_writers_get_max()
+{
+  return dump_writers.max;
 }
 
 int dump_writers_add(pid_t pid)

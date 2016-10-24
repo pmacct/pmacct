@@ -129,7 +129,10 @@ void sql_init_default_values(struct extra_primitives *extras)
   if (!config.sql_refresh_time) config.sql_refresh_time = DEFAULT_DB_REFRESH_TIME;
   if (!config.sql_table_version) config.sql_table_version = DEFAULT_SQL_TABLE_VERSION;
   if (!config.sql_cache_entries) config.sql_cache_entries = CACHE_ENTRIES;
-  if (!config.sql_max_writers) config.sql_max_writers = DEFAULT_SQL_WRITERS_NO;
+  if (!config.dump_max_writers) config.dump_max_writers = DEFAULT_SQL_WRITERS_NO;
+
+  dump_writers.list = malloc(config.dump_max_writers * sizeof(pid_t));
+  dump_writers_init();
 
   if (config.sql_aggressive_classification) {
     if (config.acct_type == ACCT_PM && config.what_to_count & COUNT_CLASS);
@@ -172,8 +175,6 @@ void sql_init_default_values(struct extra_primitives *extras)
   pm_size = sizeof(struct pkt_mpls_primitives);
   pc_size = config.cpptrs.len;
   dbc_size = sizeof(struct db_cache);
-
-  memset(&sql_writers, 0, sizeof(sql_writers));
 
   /* handling purge preprocessor */
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_SQL);
@@ -306,7 +307,7 @@ void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
 int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *idata, int exiting)
 {
-  int j, tmp_retired = sql_writers.retired, delay = 0, new_basetime = FALSE;
+  int j, delay = 0, new_basetime = FALSE;
   struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
 
   /* We are seeking how many time-bins data has to be delayed by; residual
@@ -365,29 +366,6 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   else {
     for (j = 0; j < index; j++) queue[j]->valid = SQL_CACHE_COMMITTED; 
   } 
-
-  /* Imposing maximum number of writers */
-  sql_writers.active -= MIN(sql_writers.active, tmp_retired);
-  sql_writers.retired -= tmp_retired;
-
-  if (sql_writers.active < config.sql_max_writers) {
-    /* If we are very near to our maximum writers threshold, let's resort to any configured
-       recovery mechanism - SQL_CACHE_COMMITTED => SQL_CACHE_ERROR; otherwise, will proceed
-       as usual */
-    if ((sql_writers.active == config.sql_max_writers-1) && config.sql_backup_host) {
-      for (j = 0; j < index; j++) {
-	if (queue[j]->valid == SQL_CACHE_COMMITTED) queue[j]->valid = SQL_CACHE_ERROR;
-      }
-      sql_writers.flags = CHLD_WARNING;
-    }
-    else sql_writers.flags = 0; /* everything is just fine */
-
-    sql_writers.active++;
-  }
-  else {
-    Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of SQL writer processes reached (%d).\n", config.name, config.type, sql_writers.active);
-    sql_writers.flags = CHLD_ALERT;
-  }
 
   return index;
 }
@@ -456,7 +434,8 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
 {
   int ret;
 
-  if (sql_writers.flags != CHLD_ALERT) { 
+  dump_writers_count();
+  if (dump_writers_get_flags() != CHLD_ALERT) { 
     switch (ret = fork()) {
     case 0: /* Child */
       /* we have to ignore signals to avoid loops: because we are already forked */
@@ -465,7 +444,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- DB Writer", config.name);
 
       if (qq_ptr) {
-        if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
+        if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
         if (!strcmp(config.type, "mysql"))
           (*sqlfunc_cbr.connect)(&p, config.sql_host);
         else
@@ -483,14 +462,13 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
 
       exit(0);
     default: /* Parent */
-      if (ret == -1) { /* Something went wrong */
-        Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
-        sql_writers.active--;
-      }
+      if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
+      else dump_writers_add(ret);
 
       break;
     }
   }
+  else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
   if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, idata);
   gettimeofday(&idata->flushtime, NULL);
@@ -929,7 +907,8 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   
     if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
 
-    if (sql_writers.flags != CHLD_ALERT) {
+    dump_writers_count();
+    if (dump_writers_get_flags() != CHLD_ALERT) {
       switch (ret = fork()) {
       case 0: /* Child */
         signal(SIGINT, SIG_IGN);
@@ -937,7 +916,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         pm_setproctitle("%s [%s]", "SQL Plugin -- DB Writer (urgent)", config.name);
   
         if (qq_ptr) {
-          if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
+          if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
           (*sqlfunc_cbr.connect)(&p, config.sql_host);
           (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
           (*sqlfunc_cbr.close)(&bed);
@@ -945,14 +924,13 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   
         exit(0);
       default: /* Parent */
-        if (ret == -1) { /* Something went wrong */
-          Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer (urgent): %s\n", config.name, config.type, strerror(errno));
-          sql_writers.active--;
-        }
+        if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer (urgent): %s\n", config.name, config.type, strerror(errno));
+	else dump_writers_add(ret);
 
         break;
       }
     }
+    else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
   
     qq_ptr = pqq_ptr;
     memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
@@ -1081,12 +1059,15 @@ void sql_exit_gracefully(int signum)
   if (config.sql_locking_style) idata.locks = sql_select_locking_style(config.sql_locking_style);
 
   sql_cache_flush(queries_queue, qq_ptr, &idata, TRUE);
-  if (sql_writers.flags != CHLD_ALERT) {
-    if (sql_writers.flags == CHLD_WARNING) sql_db_fail(&p);
+
+  dump_writers_count();
+  if (dump_writers_get_flags() != CHLD_ALERT) {
+    if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
     (*sqlfunc_cbr.connect)(&p, config.sql_host);
     (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, &idata);
     (*sqlfunc_cbr.close)(&bed);
   }
+  else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
   exit_plugin(0);
 }

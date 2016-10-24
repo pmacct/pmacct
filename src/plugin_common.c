@@ -68,9 +68,9 @@ void P_init_default_values()
 
   if (!config.sql_refresh_time) config.sql_refresh_time = DEFAULT_PLUGIN_COMMON_REFRESH_TIME;
   if (!config.print_cache_entries) config.print_cache_entries = PRINT_CACHE_ENTRIES;
-  if (!config.sql_max_writers) config.sql_max_writers = DEFAULT_PLUGIN_COMMON_WRITERS_NO;
+  if (!config.dump_max_writers) config.dump_max_writers = DEFAULT_PLUGIN_COMMON_WRITERS_NO;
 
-  dump_writers.list = malloc(config.sql_max_writers * sizeof(pid_t));
+  dump_writers.list = malloc(config.dump_max_writers * sizeof(pid_t));
   dump_writers_init();
 
   pp_size = sizeof(struct pkt_primitives);

@@ -101,7 +101,7 @@ void ignore_falling_child()
 
   while ((cpid = waitpid(-1, &status, WNOHANG)) > 0) {
     if (!WIFEXITED(status)) Log(LOG_WARNING, "WARN ( %s/%s ): Abnormal exit status detected for child PID %u\n", config.name, config.type, cpid);
-    sql_writers.retired++;
+    // sql_writers.retired++;
   }
 
   signal(SIGCHLD, ignore_falling_child);

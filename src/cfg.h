@@ -145,7 +145,6 @@ struct configuration {
   int sql_cache_entries;
   int sql_dont_try_update;
   char *sql_history_roundoff;
-  int sql_max_writers;
   int sql_trigger_time;
   int sql_trigger_time_howmany; /* internal */
   char *sql_trigger_exec;
@@ -507,6 +506,7 @@ struct configuration {
   char *pkt_len_distrib_bins[MAX_PKT_LEN_DISTRIB_BINS];
   u_int16_t pkt_len_distrib_bins_lookup[ETHER_JUMBO_MTU+1];
   int use_ip_next_hop;
+  int dump_max_writers;
   int tmp_net_own_field;
   int tmp_asa_bi_flow;
   int tmp_comms_same_field;
