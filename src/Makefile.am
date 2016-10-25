@@ -74,7 +74,7 @@ pmacctd_SOURCES = pmacctd.c
 pmacctd_LDADD = libdaemons.la
 nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_template.c
 nfacctd_LDADD = libdaemons.la
-sfacctd_SOURCES = sfacctd.c sfacctd.h sfv5_module.c sfv5_module.h
+sfacctd_SOURCES = sfacctd.c sflow.c sfacctd.h sfv5_module.c sfv5_module.h
 sfacctd_LDADD = libdaemons.la
 if WITH_NFLOG
 sbin_PROGRAMS += uacctd
