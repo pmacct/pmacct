@@ -31,20 +31,11 @@
 #include "pmacct.h"
 #include "addr.h"
 #include "sflow.h"
-#include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
 #include "sfacctd.h"
 #include "sfv5_module.h"
-#include "pretag_handlers.h"
 #include "pmacct-data.h"
-#include "plugin_hooks.h"
-#include "pkt_handlers.h"
-#include "ip_flow.h"
-#include "classifier.h"
-#include "net_aggr.h"
 #include "crc32.h"
-#include "isis/isis.h"
-#include "bmp/bmp.h"
 
 /*_________________---------------------------__________________
   _________________    lengthCheck            __________________
