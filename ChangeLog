@@ -2,6 +2,69 @@ pmacct (Promiscuous mode IP Accounting package) v1.6.2
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
 1.6.1 -- XX-10-2016
+  + Introduced pmbgpd daemon: a stand-alone BGP collector daemon; acts as a
+    passive neighbor and maintains per-peer RIBs; can log real-time and/or
+    dump at regular time-intervals BGP data to configured backends.
+  + Introduced pmbmpd daemon: a stand-alone BMP collector daemon; can log
+    real-time and/or dump at regular time-intervals BMP and BGP data to
+    configured backends.
+  + nfacctd: added support for repeated NetFlow v9/IPFIX field types. Also
+    flowStartDeltaMicroseconds (IE #158) and flowEndDeltaMicroseconds (#159)
+    are now supported for timestamping. 
+  + kafka plugin: it is now possible to specify -1 (RD_KAFKA_RTITION_UA) as
+    part of the kafka_partition config directive. Also, introduced support
+    for Kafka partition keys via kafka_partition_key and equivalent config
+    directives.
+  + kafka plugin: kafka_broker_host directive now allows to specify multiple
+    brokers, ie. "broker1:10000,broker2". The feature relies on capabilities
+    of underlying rd_kafka_brokers_add().
+  + tee, nfprobe, sfprobe plugins: introduced Kafka support for internal
+    pipe and buffering, ie. plugin_pipe_kafka. This is in addition to the
+    existing support for homegrown internal buffering and RabbitMQ.
+  + tee plugin: introduced support for variable-length buffers which reduces
+    CPU utilization.
+  + bgp_follow_nexthop_external: introduced feature to return, when true, the
+    next-hop from the routing table of the last node part of the supplied IP
+    prefix(es) as value for the 'peer_ip_dst' primitive. When false, default,
+    it returns the IP address of the last node part of the bgp_follow_nexthop 
+    config key.
+  + pmtelemetryd: added initial support for GPB. Input GPB data is currently
+    base64'd in the telemetry_data field of the daemon output JSON object. 
+  + pmtelemetryd: Added telemetry statistics. For each peer, track the number
+    of packets received, how many bytes are pulled off the wire, and the
+    resulting message payload. Dump these counts in logdump. Patch is courtesy
+    by Tim LaBerge
+  + added start/end markers feature (amqp_markers, kafka_markers) same as for
+    the print plugin (print_markers).
+  + pre_tag_map: 'direction' keyword now applies to sFlow too: it does expect
+    values 0 (ingress direction) or 1 (egress direction), just like before.
+    In sFlow v2/v4/v5 this returns a positive match if: 1) source_id equals
+    to input interface and this 'direction' key is set to '0' or 2) source_id
+    equals to output interface and this 'direction' key is set to '1'.
+  + bgp_agent_map: introduced support for input and output interfaces. This
+    is relevant to VPN scenarios.
+  ! fix, Jansson: added JSON_PRESERVE_ORDER flag to json_dumps() to give
+    output consistency across runs.
+  ! fix, kafka_common.c: added rd_kafka_message_destroy() to p_kafka_consume_
+    _data() to prevent memory leaks. Thanks to Paul Mabey for his support
+    solving the issue.
+  ! fix, kafka_common.c: p_kafka_set_topic() now gives it some time for the
+    topic to get (auto) created, if needed.
+  ! fix, print plugin: improved check for when to print table title (csv,
+    formatted). Either 1) print_output_file_append is set to false or 2)
+    print_output_file_append is set to true and file is to be created.
+  ! fix, print_markers: start marker is now printed also in the case where
+    print_output_file_append is set to true. Also, markers are now printed as
+    a JSON object, if output is set to JSON.
+  ! fix, pkt_handlers.c: removed l3_proto checks from NF_peer_dst_ip_handler()
+    for cases where a v6 flows has a v4 BGP next-hop (ie. vpnv6)
+  ! fix, pre_tag_map: removed 32 chars length limit from set_label statement.
+  ! fix, custom primitives: names are now correctly case-insensitive. Patch is
+    courtesy by Corentin Neau.
+  ! fix, pmtelemetryd: avoiding un-necessary spawn of a default plugin if none
+    is defined.
+  ! fix, compiler warnings: ongoing effort to suppress warning messages when
+    compiling. Thanks to Tim LaBerge, Matin Mitchell for their contributions.
 
 1.6.0 -- 07-06-2016
   + Streaming telemetry daemon: quoting Cisco IOS-XR Telemetry Configuration
