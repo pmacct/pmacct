@@ -1,13 +1,25 @@
 pmacct (Promiscuous mode IP Accounting package) v1.6.2
 pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 
-1.6.1 -- XX-10-2016
+1.6.1 -- 31-10-2016
   + Introduced pmbgpd daemon: a stand-alone BGP collector daemon; acts as a
     passive neighbor and maintains per-peer RIBs; can log real-time and/or
     dump at regular time-intervals BGP data to configured backends.
   + Introduced pmbmpd daemon: a stand-alone BMP collector daemon; can log
     real-time and/or dump at regular time-intervals BMP and BGP data to
     configured backends.
+  + Introduced Apache Avro as part of print, AMQP and Kafka output: Apache
+    Avro is a data serialization system providing rich data structures, a
+    compact, fast, binary data format, a container file to store persistent
+    data, remote procedure call (RPC) and simple integration with dynamic
+    languages. The implementation is courtesy by Codethink Ltd.
+  + as_path, std_comm and ext_comm primitives: along with their src counter
+    parts, ie. src_as_path etc., have been re-worked to a variagle-length
+    internal representation which will lead, when using BGP primitives, to
+    memory savings of up to 50% compared to previous releases. 
+  + std_comm, ext_comm primitives: primitives are de-coupled so that they
+    are not multiplexed anymore in the same field, on output. Added a
+    tmp_comms_same_field config directive for backward compatibility.
   + nfacctd: added support for repeated NetFlow v9/IPFIX field types. Also
     flowStartDeltaMicroseconds (IE #158) and flowEndDeltaMicroseconds (#159)
     are now supported for timestamping. 
@@ -23,6 +35,10 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
     existing support for homegrown internal buffering and RabbitMQ.
   + tee plugin: introduced support for variable-length buffers which reduces
     CPU utilization.
+  + print, MongoDB, AMQP and Kafka plugins: re-worked max_writers feature to
+    not rely anymore on waitpid() inside signal handlers as it was failing on
+    some OS versions (and could not be reproduced on others). Thanks to
+    Janet Sullivan for her support.
   + bgp_follow_nexthop_external: introduced feature to return, when true, the
     next-hop from the routing table of the last node part of the supplied IP
     prefix(es) as value for the 'peer_ip_dst' primitive. When false, default,
@@ -33,9 +49,9 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
   + pmtelemetryd: Added telemetry statistics. For each peer, track the number
     of packets received, how many bytes are pulled off the wire, and the
     resulting message payload. Dump these counts in logdump. Patch is courtesy
-    by Tim LaBerge
-  + added start/end markers feature (amqp_markers, kafka_markers) same as for
-    the print plugin (print_markers).
+    by Tim LaBerge.
+  + amqp_markers, kafka_markers: added start/end markers feature to AMQP and
+    Kafka plugins output same as for the print plugin (print_markers).
   + pre_tag_map: 'direction' keyword now applies to sFlow too: it does expect
     values 0 (ingress direction) or 1 (egress direction), just like before.
     In sFlow v2/v4/v5 this returns a positive match if: 1) source_id equals
@@ -43,6 +59,12 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
     equals to output interface and this 'direction' key is set to '1'.
   + bgp_agent_map: introduced support for input and output interfaces. This
     is relevant to VPN scenarios.
+  + tmp_asa_bi_flow hack: bi-flows use two counters to report counters, ie.
+    bytes and packets, in forward and reverse directions. This hack (ab)uses
+    the packets field in order to store the extra bytes counter.
+  ! fix, nfacctd: debugging NetFlow v9/IPFIX templates, added original field
+    type number to the output when the field is known and its description is
+    presented.
   ! fix, Jansson: added JSON_PRESERVE_ORDER flag to json_dumps() to give
     output consistency across runs.
   ! fix, kafka_common.c: added rd_kafka_message_destroy() to p_kafka_consume_
@@ -59,10 +81,25 @@ pmacct is Copyright (C) 2003-2016 by Paolo Lucente
   ! fix, pkt_handlers.c: removed l3_proto checks from NF_peer_dst_ip_handler()
     for cases where a v6 flows has a v4 BGP next-hop (ie. vpnv6)
   ! fix, pre_tag_map: removed 32 chars length limit from set_label statement.
-  ! fix, custom primitives: names are now correctly case-insensitive. Patch is
-    courtesy by Corentin Neau.
+  ! fix, custom primitives: names are now interpreted as case-insensitive.
+    Patch is courtesy by Corentin Neau.
+  ! fix, BGP, BMP and Streaming Telemetry: if reopening [bgp, bmp, telemetry]_
+    daemon_msglog_file via SIGHUP, reset reload flag.
+  ! fix, BGP, BMP and Streaming Telemetry: removed gettimeofday() from bgp_
+    peer_dump_init() and bgp_peer_dump_close() in order to maintain a single
+    timestamp for a full dump event. Thanks to Tim LaBerge for his support.
+  ! fix, BGP, BMP and Streaming Telemetry: output log and dump messages went
+    through a general review to improve information consistency and usability.
+    Message formats are now documented in docs/MSGLOG_DUMP_FORMATS so to more
+    easily track future changes. 
   ! fix, pmtelemetryd: avoiding un-necessary spawn of a default plugin if none
     is defined.
+  ! fix, pmtelemetryd: Mask SIGCHLD during socket IO. If we happen to be
+    blocked in recv() while a log dump happens, recv() will fail with EINTR.
+    This is to mask SIGCHLD during socket IO and restores the original mask
+    after the IO completes. Patch is courtesy by Tim LaBerge.
+  ! fix, build system: misc improvements made to the build system introduced
+    in 1.6.0. Thanks to Vincent Bernat for his support in this area.
   ! fix, compiler warnings: ongoing effort to suppress warning messages when
     compiling. Thanks to Tim LaBerge, Matin Mitchell for their contributions.
 
