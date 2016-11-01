@@ -112,9 +112,7 @@ void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
       Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'kafka_broker_host' or 'kafka_broker_port' specified (%s).\n",
 	  config.name, config.type, kafka_host->broker);
     }
-    else {
-      if (multiple_brokers) Log(LOG_INFO, "INFO ( %s/%s ): %u brokers successfully added.\n", config.name, config.type, ret); 
-    }
+    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %u broker(s) successfully added.\n", config.name, config.type, ret); 
   }
 }
 

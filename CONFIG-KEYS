@@ -651,7 +651,10 @@ DESC:           Defines one or multiple, comma-separated, Kafka brokers. If only
 		if not left to default 9092, is expected as part of this directive, for example:
 		"broker1:10000,broker2". kafka_* directives refer to the broker used by a kafka
 		plugin to purge data out; plugin_pipe_kafka_* directives refer to the broker used
-		by the core process to send data to plugins.
+		by the core process to send data to plugins. When defining multiple brokers, if the
+		host is IPv4, the value is expected as 'address:port'. If IPv6, it is expected as
+		'[address]:port'. When defining a single broker, this is not needed as the IPv6
+		address is detected and wrapped-around '[' ']' symbols. 
 DEFAULT:        127.0.0.1
 
 KEY:            [ kafka_broker_port | plugin_pipe_broker_port ]
@@ -1834,7 +1837,7 @@ DEFAULT:	8192
 
 KEY:		nfprobe_receiver
 DESC:		Defines the remote IP address/hostname and port to which NetFlow dagagrams are to be exported.
-		The value is expected to be in the usual form 'address:port'.
+		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
 
 KEY:            nfprobe_source_ip
