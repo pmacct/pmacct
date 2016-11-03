@@ -31,9 +31,6 @@
 #define MAX_IGP_MAP_ELEM 64
 #define MAX_IGP_MAP_NODES 4096
 
-typedef u_int16_t afi_t;
-typedef u_int8_t safi_t;
-
 /* Flag manipulation macros. */
 #define CHECK_FLAG(V,F)      ((V) & (F))
 #define SET_FLAG(V,F)        (V) |= (F)

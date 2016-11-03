@@ -259,6 +259,8 @@ struct my_gtphdr_v1 {
 /* typedefs */
 typedef u_int32_t as_t;
 typedef u_int16_t as16_t;
+typedef u_int16_t afi_t;
+typedef u_int8_t safi_t;
 
 #define RD_LEN		8
 #define RD_TYPE_AS      0

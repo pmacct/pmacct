@@ -29,10 +29,6 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define DEFAULT_BGP_INFO_HASH 13
 #define DEFAULT_BGP_INFO_PER_PEER_HASH 1
 
-/* AFI and SAFI type. */
-typedef u_int16_t afi_t;
-typedef u_int8_t safi_t;
-
 struct bgp_table
 {
   /* afi/safi of this table */
