@@ -192,6 +192,8 @@ EXT void src_host_geoipv2_lookup_handler(struct channels_list_entry *, struct pa
 EXT void dst_host_geoipv2_lookup_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void src_host_country_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void dst_host_country_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void src_host_pocode_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void dst_host_pocode_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 #endif
 
 EXT int evaluate_lm_method(struct packet_ptrs *, u_int8_t, u_int32_t, u_int32_t);

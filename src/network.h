@@ -430,6 +430,8 @@ struct pkt_primitives {
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
   pm_country_t src_ip_country;
   pm_country_t dst_ip_country;
+  pm_pocode_t src_ip_pocode;
+  pm_pocode_t dst_ip_pocode;
 #endif
   pm_id_t tag;
   pm_id_t tag2;
