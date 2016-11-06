@@ -290,6 +290,10 @@ EXT void fake_host_aton_handler(const struct db_cache *, struct insert_data *, i
 EXT void count_src_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_dst_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 #endif
+#if defined (WITH_GEOIPV2)
+EXT void count_src_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_dst_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+#endif
 
 EXT void count_counters_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_flows_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

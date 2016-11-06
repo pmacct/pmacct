@@ -1961,6 +1961,26 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
     json_object_update_missing(obj, kv);
     json_decref(kv);
   }
+
+  if (wtc_2 & COUNT_SRC_HOST_POCODE) {
+    if (strlen(pbase->src_ip_pocode.str))
+      kv = json_pack("{ss}", "pocode_ip_src", pbase->src_ip_pocode.str);
+    else
+      kv = json_pack("{ss}", "pocode_ip_src", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_POCODE) {
+    if (strlen(pbase->dst_ip_pocode.str))
+      kv = json_pack("{ss}", "pocode_ip_dst", pbase->dst_ip_pocode.str);
+    else
+      kv = json_pack("{ss}", "pocode_ip_dst", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
@@ -2483,12 +2503,20 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_DST_PORT)
     avro_schema_record_field_append(schema, "port_dst", avro_schema_long());
 
-#if defined (WITH_GEOIP) || (WITH_GEOIPV2)
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY)
     avro_schema_record_field_append(schema, "country_ip_src", avro_schema_string());
 
   if (wtc_2 & COUNT_DST_HOST_COUNTRY)
     avro_schema_record_field_append(schema, "country_ip_dst", avro_schema_string());
+#endif
+
+#if defined (WITH_GEOIPV2)
+  if (wtc_2 & COUNT_SRC_HOST_POCODE)
+    avro_schema_record_field_append(schema, "pocode_ip_src", avro_schema_string());
+
+  if (wtc_2 & COUNT_DST_HOST_POCODE)
+    avro_schema_record_field_append(schema, "pocode_ip_dst", avro_schema_string());
 #endif
 
   if (wtc & COUNT_TCPFLAGS)
@@ -2920,6 +2948,22 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_get_by_name(&value, "country_ip_dst", &field, NULL));
     if (strlen(pbase->dst_ip_country.str))
       check_i(avro_value_set_string(&field, pbase->dst_ip_country.str));
+    else
+      check_i(avro_value_set_string(&field, empty_string));
+  }
+
+  if (wtc_2 & COUNT_SRC_HOST_POCODE) {
+    check_i(avro_value_get_by_name(&value, "pocode_ip_src", &field, NULL));
+    if (strlen(pbase->src_ip_pocode.str))
+      check_i(avro_value_set_string(&field, pbase->src_ip_pocode.str));
+    else
+      check_i(avro_value_set_string(&field, empty_string));
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_POCODE) {
+    check_i(avro_value_get_by_name(&value, "pocode_ip_dst", &field, NULL));
+    if (strlen(pbase->dst_ip_pocode.str))
+      check_i(avro_value_set_string(&field, pbase->dst_ip_pocode.str));
     else
       check_i(avro_value_set_string(&field, empty_string));
   }

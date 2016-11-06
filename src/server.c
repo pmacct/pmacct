@@ -528,6 +528,8 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
   if (w2 & COUNT_SRC_HOST_COUNTRY) memcpy(&d1->src_ip_country, &s1->src_ip_country, sizeof(d1->src_ip_country)); 
   if (w2 & COUNT_DST_HOST_COUNTRY) memcpy(&d1->dst_ip_country, &s1->dst_ip_country, sizeof(d1->dst_ip_country)); 
+  if (w2 & COUNT_SRC_HOST_POCODE) memcpy(&d1->src_ip_pocode, &s1->src_ip_pocode, sizeof(d1->src_ip_pocode)); 
+  if (w2 & COUNT_DST_HOST_POCODE) memcpy(&d1->dst_ip_pocode, &s1->dst_ip_pocode, sizeof(d1->dst_ip_pocode)); 
 #endif
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
   if (w2 & COUNT_PKT_LEN_DISTRIB) d1->pkt_len_distrib = s1->pkt_len_distrib; 

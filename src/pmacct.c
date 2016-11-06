@@ -208,6 +208,10 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SH_COUNTRY  ");
     printf("DH_COUNTRY  "); 
 #endif
+#if defined (WITH_GEOIPV2)
+    printf("SH_POCODE     ");
+    printf("DH_POCODE     "); 
+#endif
     printf("SAMPLING_RATE ");
     printf("PKT_LEN_DISTRIB ");
 
@@ -340,6 +344,10 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("SH_COUNTRY  ");
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY  "); 
 #endif
+#if defined (WITH_GEOIPV2)
+    if (what_to_count_2 & COUNT_SRC_HOST_POCODE) printf("SH_POCODE     ");
+    if (what_to_count_2 & COUNT_DST_HOST_POCODE) printf("DH_POCODE     "); 
+#endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
     if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("PKT_LEN_DISTRIB ");
 
@@ -456,6 +464,10 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sSH_COUNTRY", write_sep(sep, &count));
     printf("%sDH_COUNTRY", write_sep(sep, &count));
 #endif
+#if defined (WITH_GEOIPV2)
+    printf("%sSH_POCODE", write_sep(sep, &count));
+    printf("%sDH_POCODE", write_sep(sep, &count));
+#endif
     printf("%sSAMPLING_RATE", write_sep(sep, &count));
     printf("%sPKT_LEN_DISTRIB", write_sep(sep, &count));
     printf("%sPOST_NAT_SRC_IP", write_sep(sep, &count));
@@ -566,6 +578,10 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
     if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("%sSH_COUNTRY", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("%sDH_COUNTRY", write_sep(sep, &count));
+#endif
+#if defined (WITH_GEOIPV2)
+    if (what_to_count_2 & COUNT_SRC_HOST_POCODE) printf("%sSH_POCODE", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_DST_HOST_POCODE) printf("%sDH_POCODE", write_sep(sep, &count));
 #endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("%sSAMPLING_RATE", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("%sPKT_LEN_DISTRIB", write_sep(sep, &count));
@@ -855,6 +871,16 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "dst_host_country")) {
           count_token_int[count_index] = COUNT_INT_DST_HOST_COUNTRY;
           what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
+        }
+#endif
+#if defined (WITH_GEOIPV2)
+        else if (!strcmp(count_token[count_index], "src_host_pocode")) {
+          count_token_int[count_index] = COUNT_INT_SRC_HOST_POCODE;
+          what_to_count_2 |= COUNT_SRC_HOST_POCODE;
+        }
+        else if (!strcmp(count_token[count_index], "dst_host_pocode")) {
+          count_token_int[count_index] = COUNT_INT_DST_HOST_POCODE;
+          what_to_count_2 |= COUNT_DST_HOST_POCODE;
         }
 #endif
         else if (!strcmp(count_token[count_index], "sampling_rate")) {
@@ -1548,6 +1574,12 @@ int main(int argc,char **argv)
         }
         else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
           strlcpy(request.data.dst_ip_country.str, match_string_token, PM_COUNTRY_T_STRLEN);
+        }
+        else if (!strcmp(count_token[match_string_index], "src_host_pocode")) {
+          strlcpy(request.data.src_ip_pocode.str, match_string_token, PM_POCODE_T_STRLEN);
+        }
+        else if (!strcmp(count_token[match_string_index], "dst_host_pocode")) {
+          strlcpy(request.data.dst_ip_pocode.str, match_string_token, PM_POCODE_T_STRLEN);
         }
 #endif
 	else if (!strcmp(count_token[match_string_index], "sampling_rate")) {
@@ -2557,6 +2589,16 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", acc_elem->primitives.dst_ip_country.str);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), acc_elem->primitives.dst_ip_country.str);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_POCODE)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-12s  ", acc_elem->primitives.src_ip_pocode.str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), acc_elem->primitives.src_ip_pocode.str);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_POCODE)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-12s  ", acc_elem->primitives.dst_ip_pocode.str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), acc_elem->primitives.dst_ip_pocode.str);
         }
 #endif
 
@@ -3611,6 +3653,26 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
       kv = json_pack("{ss}", "country_ip_dst", pbase->dst_ip_country.str);
     else
       kv = json_pack("{ss}", "country_ip_dst", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_SRC_HOST_POCODE) {
+    if (strlen(pbase->src_ip_pocode.str))
+      kv = json_pack("{ss}", "pocode_ip_src", pbase->src_ip_pocode.str);
+    else
+      kv = json_pack("{ss}", "pocode_ip_src", empty_string);
+
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_POCODE) {
+    if (strlen(pbase->dst_ip_pocode.str))
+      kv = json_pack("{ss}", "pocode_ip_dst", pbase->dst_ip_pocode.str);
+    else
+      kv = json_pack("{ss}", "pocode_ip_dst", empty_string);
 
     json_object_update_missing(obj, kv);
     json_decref(kv);

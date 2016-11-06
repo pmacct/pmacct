@@ -1200,9 +1200,13 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_SRC_NMASK) what_to_count |= COUNT_SRC_NMASK;
     if (config.what_to_count & COUNT_DST_NMASK) what_to_count |= COUNT_DST_NMASK;
 
-#if defined (WITH_GEOIP) || (WITH_GEOIPV2)
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
     if (config.what_to_count_2 & COUNT_SRC_HOST_COUNTRY) what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
     if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
+#endif
+#if defined (WITH_GEOIPV2)
+    if (config.what_to_count_2 & COUNT_SRC_HOST_POCODE) what_to_count_2 |= COUNT_SRC_HOST_POCODE;
+    if (config.what_to_count_2 & COUNT_DST_HOST_POCODE) what_to_count_2 |= COUNT_DST_HOST_POCODE;
 #endif
     if (config.what_to_count_2 & COUNT_SAMPLING_RATE) what_to_count_2 |= COUNT_SAMPLING_RATE;
     if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) what_to_count_2 |= COUNT_PKT_LEN_DISTRIB;
@@ -2144,7 +2148,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-#if defined (WITH_GEOIP) || (WITH_GEOIPV2)
+#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
   if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
@@ -2170,6 +2174,36 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "country_ip_dst=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_COUNTRY;
     values[primitive].handler = where[primitive].handler = count_dst_host_country_handler;
+    primitive++;
+  }
+#endif
+
+#if defined (WITH_GEOIPV2)
+  if (what_to_count_2 & COUNT_SRC_HOST_POCODE) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "pocode_ip_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "pocode_ip_src=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_SRC_HOST_POCODE;
+    values[primitive].handler = where[primitive].handler = count_src_host_pocode_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_DST_HOST_POCODE) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "pocode_ip_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "pocode_ip_dst=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_POCODE;
+    values[primitive].handler = where[primitive].handler = count_dst_host_pocode_handler;
     primitive++;
   }
 #endif
