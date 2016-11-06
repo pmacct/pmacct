@@ -50,10 +50,10 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
 		 med, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path, src_local_pref,
 		 src_med, mpls_vpn_rd, mpls_label_top, mpls_label_bottom, mpls_stack_depth,
-		 sampling_rate, src_host_country, dst_host_country, pkt_len_distrib, nat_event,
-		 fw_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
-		 post_nat_dst_port, timestamp_start, timestamp_end, timestamp_arrival,
-		 export_proto_seqno, export_proto_version ]
+		 sampling_rate, src_host_country, dst_host_country, src_host_pocode,
+		 dst_host_pocode, pkt_len_distrib, nat_event, fw_event, post_nat_src_host,
+		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, timestamp_start,
+		 timestamp_end, timestamp_arrival, export_proto_seqno, export_proto_version ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -2329,9 +2329,10 @@ DEFAULT:	none
 
 KEY:            geoipv2_file [GLOBAL]
 DESC:           If pmacct is compiled with --enable-geoipv2, this defines full pathname to a Maxmind GeoIP
-		database v2 (libmaxminddb, ie. https://dev.maxmind.com/geoip/geoip2/geolite2/ ). Only the
-		binary database format is supported (ie. it is not possible to load distinct CSVs for IPv4
-		and IPv6 addresses). The use of --enable-geoip is mutually exclusive with --enable-geoipv2. 
+		database v2 (libmaxminddb, ie. https://dev.maxmind.com/geoip/geoip2/geolite2/ ). It does
+		allow to resolve GeoIP-related primitives like countries and pocodes. Only the binary
+		database format is supported (ie. it is not possible to load distinct CSVs for IPv4 and
+		IPv6 addresses). The use of --enable-geoip is mutually exclusive with --enable-geoipv2. 
 		Files can be reloaded at runtime by sending the daemon a SIGUSR signal (ie. "killall -USR2
 		nfacctd").
 

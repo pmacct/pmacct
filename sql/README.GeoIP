@@ -1,8 +1,8 @@
 This document doesn't replace documentation relevant to the database software you are
 using, ie. README.mysql, README.pgsql or README.sqlite3.
 
-The 'country_ip_src' and 'country_ip_dst' fields.
-Such fields are being introduced to natively support source/destination IP Geo lookup
+The 'country_ip_src' and 'country_ip_dst', 'pocode_ip_src', 'pocode_ip_dst' fields.
+Such fields are being introduced to natively support source/destination GeoIP lookups
 against a defined database or map. The guidelines below (typically in MySQL format)
 are to add such primitives to the SQL schema:
 
@@ -13,6 +13,14 @@ are to add such primitives to the SQL schema:
 * country_ip_dst field:
   - "country_ip_dst CHAR(2) NOT NULL," to declare the field itself
   - "PRIMARY KEY (..., country_ip_dst, ...)" to put it in the primary key 
+
+* pocode_ip_src field:
+  - "country_ip_src CHAR(12) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., pocode_ip_src, ...)" to put it in the primary key
+
+* pocode_ip_dst field:
+  - "country_ip_dst CHAR(12) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., pocode_ip_dst, ...)" to put it in the primary key
 
 The primitives are not declared as part of any default table version; yet will not
 fail version checks which are enabled when 'sql_optimize_clauses' feature is disabled.
