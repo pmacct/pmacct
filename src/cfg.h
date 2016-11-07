@@ -168,10 +168,14 @@ struct configuration {
   u_int32_t amqp_heartbeat_interval;
   char *amqp_vhost;
   int amqp_routing_key_rr;
+  char *amqp_avro_schema_routing_key;
+  int amqp_avro_schema_timeout;
   int kafka_broker_port;
   int kafka_partition;
   char *kafka_partition_key;
   int kafka_partition_keylen;
+  char *kafka_avro_schema_topic;
+  int kafka_avro_schema_timeout;
   int print_cache_entries;
   int print_markers;
   int print_output;

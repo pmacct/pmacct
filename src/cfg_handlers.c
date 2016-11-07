@@ -1698,6 +1698,50 @@ int cfg_key_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_amqp_avro_schema_routing_key(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.amqp_avro_schema_routing_key = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.amqp_avro_schema_routing_key = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_amqp_avro_schema_timeout(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'amqp_avro_schema_timeout' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.amqp_avro_schema_timeout = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.amqp_avro_schema_timeout = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_kafka_broker_port(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -1764,6 +1808,50 @@ int cfg_key_kafka_partition_key(char *filename, char *name, char *value_ptr)
       if (!strcmp(name, list->name)) {
         list->cfg.kafka_partition_key = value_ptr;
         list->cfg.kafka_partition_keylen = value_len;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_kafka_avro_schema_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_avro_schema_topic = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.kafka_avro_schema_topic = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_kafka_avro_schema_timeout(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'kakfa_avro_schema_timeout' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_avro_schema_timeout = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.kafka_avro_schema_timeout = value;
         changes++;
         break;
       }
