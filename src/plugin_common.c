@@ -812,14 +812,14 @@ void P_init_historical_acct(time_t now)
   memset(&new_basetime, 0, sizeof(new_basetime));
 }
 
-void P_init_refresh_deadline(time_t *rd)
+void P_init_refresh_deadline(time_t *now, int refresh_time, int startup_delay, char *roundoff)
 {
   time_t t;
 
-  t = roundoff_time(*rd, config.sql_history_roundoff);
-  while ((t+config.sql_refresh_time) < *rd) t += config.sql_refresh_time;
-  *rd = t;
-  *rd += (config.sql_refresh_time+config.sql_startup_delay); /* it's a deadline not a basetime */
+  t = roundoff_time((*now), roundoff);
+  while ((t + refresh_time) < (*now)) t += refresh_time;
+  *now = t;
+  *now += (refresh_time + startup_delay); /* it's a deadline not a basetime */
 }
 
 void P_eval_historical_acct(struct timeval *stamp, struct timeval *basetime, time_t timeslot)

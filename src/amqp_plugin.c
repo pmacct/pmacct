@@ -42,8 +42,9 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  time_t t;
-  int timeout, refresh_timeout, amqp_timeout, ret, num; 
+  time_t t, avro_schema_deadline = 0;
+  int timeout, refresh_timeout, amqp_timeout = 0, avro_schema_timeout = 0;
+  int ret, num; 
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -105,6 +106,19 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
       exit_plugin(EXIT_FAILURE);
     }
+
+    if (config.amqp_avro_schema_routing_key) {
+      if (!config.amqp_avro_schema_refresh_time)
+        config.amqp_avro_schema_refresh_time = DEFAULT_AVRO_SCHEMA_REFRESH_TIME;
+
+      avro_schema_deadline = time(NULL);
+      P_init_refresh_deadline(&avro_schema_deadline, config.amqp_avro_schema_refresh_time, 0, "m");
+    }
+    else {
+      config.amqp_avro_schema_refresh_time = 0;
+      avro_schema_deadline = 0;
+      avro_schema_timeout = 0;
+    }
 #endif
   }
 
@@ -164,7 +178,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* print_refresh time init: deadline */
   refresh_deadline = idata.now; 
-  P_init_refresh_deadline(&refresh_deadline);
+  P_init_refresh_deadline(&refresh_deadline, config.sql_refresh_time, config.sql_startup_delay, config.sql_history_roundoff);
 
   if (config.sql_history) {
     basetime_init = P_init_historical_acct;
@@ -182,10 +196,12 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_again:
     status->wakeup = TRUE;
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
+    if (config.kafka_avro_schema_topic) calc_refresh_timeout(avro_schema_deadline, idata.now, &avro_schema_timeout);
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
     timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
+    timeout = MIN(timeout, (avro_schema_timeout ? avro_schema_timeout : INT_MAX));
     ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
 
     if (ret <= 0) {
@@ -215,6 +231,12 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       else amqp_timeout = plugin_pipe_calc_retry_timeout_diff(&amqp_host->btimers, idata.now);
     }
+
+#ifdef WITH_AVRO
+    if (idata.now > avro_schema_deadline) {
+      // XXX
+    }
+#endif
 
     switch (ret) {
     case 0: /* timeout */
