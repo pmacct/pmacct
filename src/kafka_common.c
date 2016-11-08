@@ -39,6 +39,8 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host)
       rd_kafka_conf_set_error_cb(kafka_host->cfg, p_kafka_msg_error);
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
+      char errstr[512];
+      rd_kafka_conf_set(kafka_host->cfg, "broker.version.fallback",kafka_version,errstr,sizeof(errstr));
     }
   }
 }
