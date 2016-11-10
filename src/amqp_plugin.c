@@ -92,19 +92,10 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (avro_schema_to_json(avro_acct_schema, avro_schema_writer)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n",
             config.name, config.type, avro_strerror());
-        exit_plugin(EXIT_FAILURE);
+        exit_plugin(1);
       }
 
       close_output_file(avro_fp);
-    }
-
-    if (!config.avro_buffer_size) config.avro_buffer_size = 4096;
-
-    avro_buf = malloc(config.avro_buffer_size);
-
-    if (!avro_buf) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-      exit_plugin(EXIT_FAILURE);
     }
 
     if (config.amqp_avro_schema_routing_key) {
@@ -196,7 +187,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_again:
     status->wakeup = TRUE;
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
-    if (config.kafka_avro_schema_topic) calc_refresh_timeout(avro_schema_deadline, idata.now, &avro_schema_timeout);
+    if (config.amqp_avro_schema_routing_key) calc_refresh_timeout(avro_schema_deadline, idata.now, &avro_schema_timeout);
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
@@ -234,13 +225,14 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_AVRO
     if (idata.now > avro_schema_deadline) {
-      // XXX
+      amqp_avro_schema_purge();
+      avro_schema_deadline += config.amqp_avro_schema_refresh_time;
     }
 #endif
 
     switch (ret) {
     case 0: /* timeout */
-      P_cache_handle_flush_event(&pt);
+      if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
@@ -358,6 +350,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
+  char *avro_buf = NULL;
   int avro_buffer_full = FALSE;
 #endif
 
@@ -437,6 +430,15 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_AVRO
   if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
+
+    avro_buf = malloc(config.avro_buffer_size);
+
+    if (!avro_buf) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
+      exit_plugin(1);
+    }
+
     avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
   }
 #endif
@@ -489,16 +491,15 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
             config.name, config.type, config.avro_buffer_size);
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
             config.name, config.type);
-        exit_plugin(EXIT_FAILURE);
+        exit_plugin(1);
       }
       else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
         avro_buffer_full = TRUE;
         j--;
       }
       else if (avro_value_write(avro_writer, &avro_value)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): ARVO: unable to write value: %s\n",
-            config.name, config.type, avro_strerror());
-        exit_plugin(EXIT_FAILURE);
+        Log(LOG_ERR, "ERROR ( %s/%s ): ARVO: unable to write value: %s\n", config.name, config.type, avro_strerror());
+        exit_plugin(1);
       }
       else {
         mv_num++;
@@ -647,4 +648,66 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 
   if (empty_pcust) free(empty_pcust);
+
+#ifdef WITH_AVRO
+  free(avro_buf);
+#endif
 }
+
+#ifdef WITH_AVRO
+void amqp_avro_schema_purge()
+{
+  struct p_amqp_host amqp_avro_schema_host;
+  avro_writer_t avro_writer;
+  char *avro_buf;
+  int ret;
+
+  /* setting some defaults */
+  if (!config.amqp_avro_schema_routing_key) return;
+
+  if (!config.sql_host) config.sql_host = default_amqp_host;
+  if (!config.sql_db) config.sql_db = default_amqp_exchange;
+  if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.amqp_vhost) config.amqp_vhost = default_amqp_vhost;
+
+  p_amqp_init_host(&amqp_avro_schema_host);
+  p_amqp_set_user(&amqp_avro_schema_host, config.sql_user);
+  p_amqp_set_passwd(&amqp_avro_schema_host, config.sql_passwd);
+  p_amqp_set_exchange(&amqp_avro_schema_host, config.sql_db);
+  p_amqp_set_routing_key(&amqp_avro_schema_host, config.amqp_avro_schema_routing_key);
+  p_amqp_set_exchange_type(&amqp_avro_schema_host, config.amqp_exchange_type);
+  p_amqp_set_host(&amqp_avro_schema_host, config.sql_host);
+  p_amqp_set_vhost(&amqp_avro_schema_host, config.amqp_vhost);
+  p_amqp_set_persistent_msg(&amqp_avro_schema_host, config.amqp_persistent_msg);
+  p_amqp_set_frame_max(&amqp_avro_schema_host, config.amqp_frame_max);
+  p_amqp_set_content_type_json(&amqp_avro_schema_host);
+
+  ret = p_amqp_connect_to_publish(&amqp_avro_schema_host);
+  if (ret) return;
+
+  if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
+
+  avro_buf = malloc(config.avro_buffer_size);
+
+  if (!avro_buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+
+  if (avro_schema_to_json(avro_acct_schema, avro_writer)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
+    exit_plugin(1);
+  }
+
+  if (avro_writer_tell(avro_writer)) {
+    ret = p_amqp_publish_string(&amqp_avro_schema_host, avro_buf);
+    avro_writer_free(avro_writer);
+  }
+
+  p_amqp_close(&amqp_avro_schema_host, FALSE);
+
+  free(avro_buf);
+}
+#endif

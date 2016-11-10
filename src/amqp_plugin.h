@@ -36,6 +36,9 @@
 #endif
 EXT void amqp_plugin(int, struct configuration *, void *);
 EXT void amqp_cache_purge(struct chained_cache *[], int);
+#ifdef WITH_AVRO
+EXT void amqp_avro_schema_purge();
+#endif
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
@@ -50,7 +53,6 @@ EXT time_t refresh_deadline;
 EXT struct timeval sbasetime;
 
 #ifdef WITH_AVRO
-EXT char *avro_buf;
 EXT avro_schema_t avro_acct_schema;
 #endif
 #undef EXT
