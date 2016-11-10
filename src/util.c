@@ -1389,13 +1389,15 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 
 void calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
 {
-  *timeout = ((deadline-now)+1)*1000;
+  if (deadline >= now) *timeout = ((deadline-now)+1)*1000;
+  else *timeout = 0;
 }
 
 /* secs version of calc_refresh_timeout() */
 void calc_refresh_timeout_sec(time_t deadline, time_t now, int *timeout)
 {
-  *timeout = ((deadline-now)+1);
+  if (deadline >= now) *timeout = ((deadline-now)+1);
+  else *timeout = 0;
 }
 
 int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
