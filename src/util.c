@@ -2363,7 +2363,7 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
   do { \
     if ((call) != 0) { \
       Log(LOG_ERR, "Error: %s\n", avro_strerror()); \
-      exit_plugin(EXIT_FAILURE); \
+      exit_plugin(1); \
     } \
 } while (0)
 

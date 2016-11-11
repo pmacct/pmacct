@@ -464,7 +464,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       if (ret) {
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed opening %s: %s\n",
             config.name, config.type, current_table, avro_strerror());
-        exit_plugin(EXIT_FAILURE);
+        exit_plugin(1);
       }
 #endif
     }
@@ -1281,7 +1281,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           if (avro_file_writer_append_value(avro_writer, &avro_value)) {
             Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed writing the value: %s\n",
                 config.name, config.type, avro_strerror());
-            exit_plugin(EXIT_FAILURE);
+            exit_plugin(1);
           }
         }
         else {
@@ -1290,7 +1290,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
           if (avro_value_to_json(&avro_value, TRUE, &json_str)) {
             Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to value to JSON: %s\n",
                 config.name, config.type, avro_strerror());
-            exit_plugin(EXIT_FAILURE);
+            exit_plugin(1);
           }
 
           fprintf(f, "%s\n", json_str);
