@@ -92,19 +92,10 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (avro_schema_to_json(avro_acct_schema, avro_schema_writer)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n",
             config.name, config.type, avro_strerror());
-        exit_plugin(EXIT_FAILURE);
+        exit_plugin(1);
       }
 
       close_output_file(avro_fp);
-    }
-
-    if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
-
-    avro_buf = malloc(config.avro_buffer_size);
-
-    if (!avro_buf) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-      exit_plugin(EXIT_FAILURE);
     }
 
     if (config.kafka_avro_schema_topic) {
@@ -234,13 +225,14 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_AVRO
     if (idata.now > avro_schema_deadline) {
-      // XXX
+      kafka_avro_schema_purge();
+      avro_schema_deadline += config.kafka_avro_schema_refresh_time;
     }
 #endif
 
     switch (ret) {
     case 0: /* timeout */
-      P_cache_handle_flush_event(&pt);
+      if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
@@ -360,6 +352,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
+  char *avro_buf = NULL;
   int avro_buffer_full = FALSE;
 #endif
 
@@ -434,6 +427,15 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
 #ifdef WITH_AVRO
   if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
+
+    avro_buf = malloc(config.avro_buffer_size);
+
+    if (!avro_buf) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
+      exit_plugin(1);
+    }
+
     avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
   }
 #endif
@@ -486,7 +488,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
             config.name, config.type, config.avro_buffer_size);
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
             config.name, config.type);
-        exit_plugin(EXIT_FAILURE);
+        exit_plugin(1);
       }
       else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
         avro_buffer_full = TRUE;
@@ -495,7 +497,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
       else if (avro_value_write(avro_writer, &avro_value)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n",
             config.name, config.type, avro_strerror());
-        exit_plugin(EXIT_FAILURE);
+        exit_plugin(1);
       }
       else {
         mv_num++;
@@ -646,4 +648,57 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 
   if (empty_pcust) free(empty_pcust);
+
+#ifdef WITH_AVRO
+  if (avro_buf) free(avro_buf);
+#endif
 }
+
+#ifdef WITH_AVRO
+void kafka_avro_schema_purge()
+{
+  struct p_kafka_host kafka_avro_schema_host;
+  avro_writer_t avro_writer;
+  char *avro_buf = NULL;
+  int ret;
+
+  /* setting some defaults */
+  if (!config.kafka_avro_schema_topic) return;
+
+  if (!config.sql_host) config.sql_host = default_kafka_broker_host;
+  if (!config.kafka_broker_port) config.kafka_broker_port = default_kafka_broker_port;
+
+  p_kafka_init_host(&kafka_avro_schema_host);
+  p_kafka_connect_to_produce(&kafka_avro_schema_host);
+  p_kafka_set_broker(&kafka_avro_schema_host, config.sql_host, config.kafka_broker_port);
+  p_kafka_set_topic(&kafka_avro_schema_host, config.kafka_avro_schema_topic);
+  p_kafka_set_partition(&kafka_avro_schema_host, config.kafka_partition);
+  p_kafka_set_key(&kafka_avro_schema_host, config.kafka_partition_key, config.kafka_partition_keylen);
+  p_kafka_set_content_type(&kafka_avro_schema_host, PM_KAFKA_CNT_TYPE_STR);
+
+  if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
+
+  avro_buf = malloc(config.avro_buffer_size);
+
+  if (!avro_buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+
+  if (avro_schema_to_json(avro_acct_schema, avro_writer)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
+    exit_plugin(1);
+  }
+
+  if (avro_writer_tell(avro_writer)) {
+    ret = p_kafka_produce_data(&kafka_avro_schema_host, avro_buf, strlen(avro_buf));
+    avro_writer_free(avro_writer);
+  }
+
+  p_kafka_close(&kafka_avro_schema_host, FALSE);
+
+  if (avro_buf) free(avro_buf);
+}
+#endif

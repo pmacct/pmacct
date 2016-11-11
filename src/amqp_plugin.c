@@ -650,7 +650,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
   if (empty_pcust) free(empty_pcust);
 
 #ifdef WITH_AVRO
-  free(avro_buf);
+  if (avro_buf) free(avro_buf);
 #endif
 }
 
@@ -659,7 +659,7 @@ void amqp_avro_schema_purge()
 {
   struct p_amqp_host amqp_avro_schema_host;
   avro_writer_t avro_writer;
-  char *avro_buf;
+  char *avro_buf = NULL;
   int ret;
 
   /* setting some defaults */
@@ -708,6 +708,6 @@ void amqp_avro_schema_purge()
 
   p_amqp_close(&amqp_avro_schema_host, FALSE);
 
-  free(avro_buf);
+  if (avro_buf) free(avro_buf);
 }
 #endif
