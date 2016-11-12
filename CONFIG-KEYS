@@ -1395,13 +1395,27 @@ DESC:		When the Avro format is used to encode the messages sent to a message bro
 		[amqp, kafka]_multi_values configuration directive, the current records stored in the buffer
 		will be sent to the message broker and the buffer will be cleared to accomodate subsequent
 		records.
-DEFAULT:	4096
+DEFAULT:	8192
 
 KEY:		avro_schema_output_file
 DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
 		plugins), this option causes the schema used to encode the messages to be dumped to the file path
 		given. The schema can then be used by the receiving end to decode the messages. Note that the
 		schema will be dynamically built based on the aggregation primitives chosen.
+
+KEY:		[ amqp_avro_schema_routing_key | kafka_avro_schema_topic ]
+DESC:		AMQP routing key or Kafka topic on which the generated Avro schema is sent over at regular
+		time intervals by AMQP and Kafka plugins. The schema can then be used by the receiving end
+		to decode the messages. All other parameters to connect to the broker, ie. host, port, etc.
+		are shared with the main plugin routing key or topic. The regular time intervals are set
+		via amqp_avro_schema_refresh_time and kafka_avro_schema_refresh_time.  
+DEFAULT:	none
+		 
+
+KEY:		[ amqp_avro_schema_refresh_time | kafka_avro_schema_refresh_time ]
+DESC:		Time interval, in seconds, at which the generated Avro schema is sent over the configured
+		AMQP routing key (amqp_avro_schema_routing_key) or Kafka topic (kafka_avro_schema_topic).
+DEFAULT:	60
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]
