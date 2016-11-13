@@ -1399,9 +1399,11 @@ DEFAULT:	8192
 
 KEY:		avro_schema_output_file
 DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
-		plugins), this option causes the schema used to encode the messages to be dumped to the file path
-		given. The schema can then be used by the receiving end to decode the messages. Note that the
-		schema will be dynamically built based on the aggregation primitives chosen.
+		plugins), this option causes the schema used to encode the messages to be dumped to the file
+		path given. The schema can then be used by the receiving end to decode the messages. Note
+		that the schema will be dynamically built based on the aggregation primitives chosen. This
+		has also effect in the print plugin but in this case the schema is also always included in
+		the print_output_file as mandated by Avro specification. 
 
 KEY:		[ amqp_avro_schema_routing_key | kafka_avro_schema_topic ]
 DESC:		AMQP routing key or Kafka topic on which the generated Avro schema is sent over at regular
