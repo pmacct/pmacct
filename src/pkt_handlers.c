@@ -3915,7 +3915,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   struct bgp_info *info = NULL;
 
   /* variables for vlen primitives */
-  char *ptr, empty_str = '\0'; 
+  char empty_str = '\0', *ptr = &empty_str; 
   int len;
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
@@ -3962,7 +3962,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           }
           else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
 
-          if (config.nfacctd_bgp_aspath_radius && ptr) free(ptr);
+          if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
         }
         /* fallback to legacy fixed length behaviour */
         else {
@@ -4343,7 +4343,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           }
           else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
 
-          if (config.nfacctd_bgp_aspath_radius && ptr) free(ptr);
+          if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
 	}
 	/* fallback to legacy fixed length behaviour */
 	else {
@@ -4838,6 +4838,7 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
+  /* variables for vlen primitives */
   char empty_str = '\0', *ptr = &empty_str;
   int len;
 
