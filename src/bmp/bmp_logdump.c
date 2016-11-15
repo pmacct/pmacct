@@ -118,6 +118,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 #ifdef WITH_RABBITMQ
     if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_core_name_writer_id_json(obj);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -126,6 +127,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 #ifdef WITH_KAFKA
     if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_core_name_writer_id_json(obj);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }

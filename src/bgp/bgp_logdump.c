@@ -197,6 +197,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
 #ifdef WITH_RABBITMQ
     if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_core_name_writer_id_json(obj);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -205,6 +206,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, safi_t safi, c
 #ifdef WITH_KAFKA
     if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
         (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_core_name_writer_id_json(obj);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -313,6 +315,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
       if (bms->msglog_amqp_routing_key) {
+	add_core_name_writer_id_json(obj);
 	amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj); 
 	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
@@ -320,6 +323,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
       if (bms->msglog_kafka_topic) {
+	add_core_name_writer_id_json(obj);
         kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
         p_kafka_unset_topic(peer->log->kafka_host);
       }
@@ -387,6 +391,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
     if (bms->msglog_amqp_routing_key) {
+      add_core_name_writer_id_json(obj);
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
@@ -394,6 +399,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
+      add_core_name_writer_id_json(obj);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
       p_kafka_unset_topic(kafka_log_ptr);
     }
@@ -516,6 +522,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
+      add_core_name_writer_id_json(obj);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -523,6 +530,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
+      add_core_name_writer_id_json(obj);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -584,6 +592,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
+      add_core_name_writer_id_json(obj);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -591,6 +600,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
+      add_core_name_writer_id_json(obj);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
