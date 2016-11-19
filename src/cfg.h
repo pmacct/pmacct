@@ -111,6 +111,7 @@ struct configuration {
   int pipe_kafka_partition_keylen;
   int pipe_kafka_broker_port;
   int pipe_kafka_retry;
+  char *pipe_kafka_fallback;
   int files_umask;
   int files_uid;
   int files_gid;
@@ -174,6 +175,7 @@ struct configuration {
   int kafka_partition;
   char *kafka_partition_key;
   int kafka_partition_keylen;
+  char *kafka_fallback;
   char *kafka_avro_schema_topic;
   int kafka_avro_schema_refresh_time;
   int print_cache_entries;
@@ -216,6 +218,7 @@ struct configuration {
   int sfacctd_counter_kafka_partition_keylen;
   int sfacctd_counter_kafka_broker_port;
   int sfacctd_counter_kafka_retry;
+  char *sfacctd_counter_kafka_fallback;
   int nfacctd_disable_checks;
   int telemetry_daemon;
   int telemetry_sock;
@@ -265,6 +268,7 @@ struct configuration {
   char *telemetry_msglog_kafka_partition_key;
   int telemetry_msglog_kafka_partition_keylen;
   int telemetry_msglog_kafka_retry;
+  char *telemetry_msglog_kafka_fallback;
   char *telemetry_dump_kafka_broker_host;
   int telemetry_dump_kafka_broker_port;
   char *telemetry_dump_kafka_topic;
@@ -272,6 +276,7 @@ struct configuration {
   int telemetry_dump_kafka_partition;
   char *telemetry_dump_kafka_partition_key;
   int telemetry_dump_kafka_partition_keylen;
+  char *telemetry_dump_kafka_fallback;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;
   char *nfacctd_bgp_msglog_file;
@@ -295,6 +300,7 @@ struct configuration {
   int nfacctd_bgp_msglog_kafka_partition_keylen;
   int nfacctd_bgp_msglog_kafka_broker_port;
   int nfacctd_bgp_msglog_kafka_retry;
+  char *nfacctd_bgp_msglog_kafka_fallback;
   char *nfacctd_bgp_ip;
   char *nfacctd_bgp_id;
   int nfacctd_bgp_port;
@@ -353,6 +359,7 @@ struct configuration {
   char *bgp_table_dump_kafka_partition_key;
   int bgp_table_dump_kafka_partition_keylen;
   int bgp_table_dump_kafka_broker_port;
+  char *bgp_table_dump_kafka_fallback;
   int bmp_sock;
   int nfacctd_bmp;
   char *nfacctd_bmp_ip;
@@ -385,6 +392,7 @@ struct configuration {
   int nfacctd_bmp_msglog_kafka_partition_keylen;
   int nfacctd_bmp_msglog_kafka_broker_port;
   int nfacctd_bmp_msglog_kafka_retry;
+  char *nfacctd_bmp_msglog_kafka_fallback;
   int bmp_table_peer_buckets;
   int bmp_table_per_peer_buckets;
   int bmp_table_attr_hash_buckets;
@@ -411,6 +419,7 @@ struct configuration {
   char *bmp_dump_kafka_partition_key;
   int bmp_dump_kafka_partition_keylen;
   int bmp_dump_kafka_broker_port;
+  char *bmp_dump_kafka_fallback;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;

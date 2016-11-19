@@ -1817,6 +1817,25 @@ int cfg_key_kafka_partition_key(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_fallback = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.kafka_fallback = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_kafka_avro_schema_topic(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2337,6 +2356,25 @@ int cfg_key_plugin_pipe_kafka_retry(char *filename, char *name, char *value_ptr)
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.pipe_kafka_retry = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_plugin_pipe_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pipe_kafka_fallback = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pipe_kafka_fallback = value_ptr;
         changes++;
         break;
       }
@@ -4725,6 +4763,17 @@ int cfg_key_sfacctd_counter_kafka_retry(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_sfacctd_counter_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'sfacctd_counter_kafka_fallback'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -6076,6 +6125,17 @@ int cfg_key_nfacctd_bgp_msglog_kafka_retry(char *filename, char *name, char *val
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_msglog_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_fallback'. Globalized.\n", filename);
+  
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_table_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -6171,6 +6231,17 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_partition_key(char *filename, char *nam
     }
   }
 
+  return changes;
+}
+
+int cfg_key_nfacctd_bgp_table_dump_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_table_dump_kafka_fallback'. Globalized.\n", filename);
+  
   return changes;
 }
 
@@ -6289,6 +6360,17 @@ int cfg_key_nfacctd_bmp_msglog_kafka_retry(char *filename, char *name, char *val
   return changes;
 }
 
+int cfg_key_nfacctd_bmp_msglog_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_msglog_kafka_fallback'. Globalized.\n", filename);
+  
+  return changes;
+}
+
 int cfg_key_nfacctd_bmp_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -6384,6 +6466,17 @@ int cfg_key_nfacctd_bmp_dump_kafka_partition_key(char *filename, char *name, cha
     }
   }
 
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_dump_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.bmp_dump_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_kafka_fallback'. Globalized.\n", filename);
+  
   return changes;
 }
 
@@ -7131,6 +7224,17 @@ int cfg_key_telemetry_msglog_kafka_retry(char *filename, char *name, char *value
   return changes;
 }
 
+int cfg_key_telemetry_msglog_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_fallback'. Globalized.\n", filename);
+  
+  return changes;
+}
+
 int cfg_key_telemetry_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -7226,5 +7330,16 @@ int cfg_key_telemetry_dump_kafka_partition_key(char *filename, char *name, char 
     }
   }
 
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_fallback(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_fallback = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_fallback'. Globalized.\n", filename);
+  
   return changes;
 }
