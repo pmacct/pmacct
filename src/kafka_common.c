@@ -152,7 +152,19 @@ char *p_kafka_get_key(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) return kafka_host->key;
 
-  return FALSE;
+  return NULL;
+}
+
+void p_kafka_set_fallback(struct p_kafka_host *kafka_host, char *fallback)
+{
+  if (kafka_host) kafka_host->fallback = fallback;
+}
+
+char *p_kafka_get_fallback(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) return kafka_host->fallback;
+
+  return NULL;
 }
 
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)

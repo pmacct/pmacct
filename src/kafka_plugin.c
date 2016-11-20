@@ -394,6 +394,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
   p_kafka_set_partition(&kafkap_kafka_host, config.kafka_partition);
   p_kafka_set_key(&kafkap_kafka_host, config.kafka_partition_key, config.kafka_partition_keylen);
+  p_kafka_set_fallback(&kafkap_kafka_host, config.kafka_fallback);
 
   if (config.message_broker_output & PRINT_OUTPUT_JSON) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   else if (config.message_broker_output & PRINT_OUTPUT_AVRO) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
@@ -674,6 +675,7 @@ void kafka_avro_schema_purge()
   p_kafka_set_topic(&kafka_avro_schema_host, config.kafka_avro_schema_topic);
   p_kafka_set_partition(&kafka_avro_schema_host, config.kafka_partition);
   p_kafka_set_key(&kafka_avro_schema_host, config.kafka_partition_key, config.kafka_partition_keylen);
+  p_kafka_set_fallback(&kafkap_kafka_host, config.kafka_fallback);
   p_kafka_set_content_type(&kafka_avro_schema_host, PM_KAFKA_CNT_TYPE_STR);
 
   if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
