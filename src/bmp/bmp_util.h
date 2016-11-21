@@ -36,9 +36,4 @@ EXT void bmp_link_misc_structs(struct bgp_misc_structs *);
 EXT struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *, struct bgp_peer *);
 EXT int bmp_peer_init(struct bmp_peer *, int);
 EXT void bmp_peer_close(struct bmp_peer *, int);
-EXT int bmp_bmpp_bgp_peers_cmp(const void *, const void *);
-EXT int bmp_bmpp_bgp_peer_host_addr_cmp(const void *, const void *);
-EXT void bmp_bmpp_bgp_peers_free(void *);
-EXT void bmp_bmpp_bgp_peers_walk_print(const void *, const VISIT, const int);
-EXT void bmp_bmpp_bgp_peers_walk_delete(const void *, const VISIT, const int);
 #undef EXT

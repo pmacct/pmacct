@@ -1041,3 +1041,57 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->bgp_lookup_find_peer = bgp_lookup_find_bgp_peer;
   bms->bgp_lookup_node_match_cmp = bgp_lookup_node_match_cmp_bgp;
 }
+
+int bgp_peer_cmp(const void *a, const void *b)
+{
+  return memcmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
+}
+
+int bgp_peer_host_addr_cmp(const void *a, const void *b)
+{
+  return memcmp(a, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
+}
+
+void bgp_peer_free(void *a)
+{
+}
+
+void bgp_peers_bintree_walk_print(const void *nodep, const VISIT which, const int depth)
+{
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer;
+  char peer_str[INET6_ADDRSTRLEN];
+
+  peer = (*(struct bgp_peer **) nodep);
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
+  if (!peer) Log(LOG_INFO, "INFO ( %s/%s ): bgp_peers_bintree_walk_print(): null\n", config.name, bms->log_str);
+  else {
+    addr_to_str(peer_str, &peer->addr);
+    Log(LOG_INFO, "INFO ( %s/%s ): bgp_peers_bintree_walk_print(): %s\n", config.name, bms->log_str, peer_str);
+  }
+}
+
+void bgp_peers_bintree_walk_delete(const void *nodep, const VISIT which, const int depth)
+{
+  struct bgp_misc_structs *bms;
+  char peer_str[] = "peer_ip", *saved_peer_str;
+  struct bgp_peer *peer;
+
+  peer = (*(struct bgp_peer **) nodep);
+
+  if (!peer) return;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
+  saved_peer_str = bms->peer_str;
+  bms->peer_str = peer_str;
+  bgp_peer_info_delete(peer);
+  bms->peer_str = saved_peer_str;
+
+  // XXX: count tree elements to index and free() later
+}

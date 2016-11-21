@@ -73,6 +73,12 @@ EXT void bgp_batch_increase_counter(struct bgp_peer_batch *);
 EXT void bgp_batch_decrease_counter(struct bgp_peer_batch *);
 EXT void bgp_batch_rollback(struct bgp_peer_batch *);
 
+EXT int bgp_peer_cmp(const void *, const void *);
+EXT int bgp_peer_host_addr_cmp(const void *, const void *);
+EXT void bgp_peer_free(void *);
+EXT void bgp_peers_bintree_walk_print(const void *, const VISIT, const int);
+EXT void bgp_peers_bintree_walk_delete(const void *, const VISIT, const int);
+
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
 EXT void attrhash_init(int, struct hash **);

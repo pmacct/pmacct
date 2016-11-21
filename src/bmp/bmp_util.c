@@ -175,66 +175,12 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
   if (!bms) return;
 
-  pm_twalk(bmpp->bgp_peers, bmp_bmpp_bgp_peers_walk_delete);
+  pm_twalk(bmpp->bgp_peers, bgp_peers_bintree_walk_delete);
 
-  pm_tdestroy(&bmpp->bgp_peers, bmp_bmpp_bgp_peers_free);
+  pm_tdestroy(&bmpp->bgp_peers, bgp_peer_free);
 
   if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
     bmp_dump_close_peer(peer);
 
   bgp_peer_close(peer, type);
-}
-
-int bmp_bmpp_bgp_peers_cmp(const void *a, const void *b)
-{
-  return memcmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
-}
-
-int bmp_bmpp_bgp_peer_host_addr_cmp(const void *a, const void *b)
-{
-  return memcmp(a, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
-}
-
-void bmp_bmpp_bgp_peers_free(void *a)
-{
-}
-
-void bmp_bmpp_bgp_peers_walk_print(const void *nodep, const VISIT which, const int depth)
-{
-  struct bgp_misc_structs *bms;
-  struct bgp_peer *peer;
-  char peer_str[INET6_ADDRSTRLEN];
-
-  peer = (*(struct bgp_peer **) nodep);
-  bms = bgp_select_misc_db(peer->type);
-
-  if (!bms) return;
-
-  if (!peer) Log(LOG_INFO, "INFO ( %s/%s ): bmp_bmpp_bgp_peers_walk_print(): null\n", config.name, bms->log_str);
-  else {
-    addr_to_str(peer_str, &peer->addr);
-    Log(LOG_INFO, "INFO ( %s/%s ): bmp_bmpp_bgp_peers_walk_print(): %s\n", config.name, bms->log_str, peer_str);
-  }
-}
-
-void bmp_bmpp_bgp_peers_walk_delete(const void *nodep, const VISIT which, const int depth)
-{
-  struct bgp_misc_structs *bms;
-  char peer_str[] = "peer_ip", *saved_peer_str;
-  struct bgp_peer *peer;
-
-  peer = (*(struct bgp_peer **) nodep);
-
-  if (!peer) return;
-
-  bms = bgp_select_misc_db(peer->type);
-
-  if (!bms) return;
-
-  saved_peer_str = bms->peer_str;
-  bms->peer_str = peer_str;
-  bgp_peer_info_delete(peer);
-  bms->peer_str = saved_peer_str;
-
-  // XXX: count tree elements to index and free() later
 }
