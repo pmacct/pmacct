@@ -157,14 +157,20 @@ char *p_kafka_get_key(struct p_kafka_host *kafka_host)
 
 void p_kafka_set_fallback(struct p_kafka_host *kafka_host, char *fallback)
 {
-  if (kafka_host) kafka_host->fallback = fallback;
-}
+  int res;
+  char errstr[SRVBUFLEN];
 
-char *p_kafka_get_fallback(struct p_kafka_host *kafka_host)
-{
-  if (kafka_host) return kafka_host->fallback;
+  if (kafka_host && kafka_host->cfg && fallback) {
+    res = rd_kafka_conf_set(kafka_host->cfg, "api.version.request", "false", errstr, sizeof(errstr));
+    if (res != RD_KAFKA_CONF_OK)
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_set_fallback(): api.version.request=false failed: %s\n",
+	  config.name, config.type, errstr);
 
-  return NULL;
+    res = rd_kafka_conf_set(kafka_host->cfg, "broker.version.fallback", fallback, errstr, sizeof(errstr));
+    if (res != RD_KAFKA_CONF_OK)
+      Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_set_fallback(): broker.version.fallback=%s failed: %s\n",
+	  config.name, config.type, fallback, errstr);
+  }
 }
 
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)

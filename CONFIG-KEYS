@@ -670,6 +670,12 @@ DEFAULT:	0
 KEY:            kafka_partition_key
 DESC:           Defines the Kafka broker topic partition key. A string of printable characters is
 		expected as value.
+DEFAULT:	none
+
+KEY:		[ kafka_fallback | plugin_pipe_kafka_fallback ]
+DESC:		Defines the Kafka version to fallback to in order to preserve backward compatibility
+		as in https://github.com/edenhill/librdkafka/wiki/Broker-version-compatibility .
+DEFAULT:	none
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |
                   bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host |
@@ -708,12 +714,19 @@ DEFAULT:        See kafka_partition
 
 KEY:            [ bgp_daemon_msglog_kafka_partition_key |
 		  bgp_table_dump_kafka_partition_key |
-                  bmp_daemon_msglog_kafka_partition_key | bmp_dump_kafka_partition |
+                  bmp_daemon_msglog_kafka_partition_key | bmp_dump_kafka_partition_key |
                   sfacctd_counter_kafka_partition_key |
 		  telemetry_daemon_msglog_kafka_partition_key |
                   telemetry_dump_kafka_partition_key ] [GLOBAL]
 DESC:           See kafka_partition_key
 DEFAULT:        See kafka_partition_key
+
+KEY:		[ bgp_daemon_msglog_kafka_fallback | bgp_table_dump_kafka_fallback |
+		  bmp_daemon_msglog_kafka_fallback | bmp_dump_kafka_fallback |
+		  sfacctd_counter_kafka_fallback | telemetry_daemon_msglog_kafka_fallback | 
+		  telemetry_dump_kafka_fallback ] [GLOBAL]
+DESC:           See kafka_fallback
+DEFAULT:        See kafka_fallback
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
 		  sfacctd_counter_kafka_retry | telemetry_daemon_msglog_kafka_retry ] [GLOBAL]
