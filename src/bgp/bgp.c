@@ -57,6 +57,14 @@ void nfacctd_bgp_wrapper()
 
 void skinny_bgp_daemon()
 {
+  if (config.nfacctd_bgp == BGP_DAEMON_ONLINE)
+    skinny_bgp_daemon_online();
+  else if (config.nfacctd_bgp == BGP_DAEMON_OFFLINE)
+    skinny_bgp_daemon_offline();
+}
+
+void skinny_bgp_daemon_online()
+{
   int slen, ret, rc, peers_idx, allowed;
   int peers_idx_rr = 0, max_peers_idx = 0;
   struct host_addr addr;
@@ -602,6 +610,66 @@ void skinny_bgp_daemon()
       }
     }
   }
+}
+
+void skinny_bgp_daemon_offline()
+{
+  afi_t afi;
+  safi_t safi;
+
+  /* initial cleanups */
+  reload_map_bgp_thread = FALSE;
+  reload_log_bgp_thread = FALSE;
+
+  bgp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP];
+  memset(bgp_routing_db, 0, sizeof(struct bgp_rt_structs));
+
+  if (!config.bgp_table_attr_hash_buckets) config.bgp_table_attr_hash_buckets = HASHTABSIZE;
+  bgp_attr_init(config.bgp_table_attr_hash_buckets, bgp_routing_db);
+
+  if (!config.nfacctd_bgp_max_peers) config.nfacctd_bgp_max_peers = MAX_BGP_PEERS_DEFAULT;
+  Log(LOG_INFO, "INFO ( %s/%s ): maximum BGP peers allowed: %d\n", config.name, bgp_misc_db->log_str, config.nfacctd_bgp_max_peers);
+
+  peers = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
+  if (!peers) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+    exit_all(1);
+  }
+  memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
+
+  /* XXX: msglog and dump setup skipped when offline */ 
+
+  if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
+  if (!config.bgp_table_per_peer_buckets) config.bgp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
+
+  if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
+    bgp_route_info_modulo = bgp_route_info_modulo_pathid;
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unknown 'bgp_table_per_peer_hash' value. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+    exit_all(1);
+  }
+
+  /* XXX:
+
+  Log(LOG_INFO, "INFO ( %s/%s ): waiting for BGP data on XXX\n", config.name, bgp_misc_db->log_str, XXX);
+
+  */
+
+  /* Let's initialize clean shared RIB */
+  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+      bgp_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
+    }
+  }
+
+  bgp_link_misc_structs(bgp_misc_db);
+
+  /* XXX:
+
+  for (;;) {
+  }
+
+  */
 }
 
 void bgp_prepare_thread()

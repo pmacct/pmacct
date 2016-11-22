@@ -78,6 +78,11 @@
    nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
 #define MAX_BGP_COMM_PATTERNS 16
 
+#define BGP_DAEMON_NONE		0
+#define BGP_DAEMON_TRUE		1
+#define BGP_DAEMON_ONLINE	1
+#define BGP_DAEMON_OFFLINE	2
+
 /* structures */
 struct bgp_dump_event {
   struct timeval tstamp;
@@ -237,6 +242,8 @@ struct bgp_comm_range {
 #endif
 EXT void nfacctd_bgp_wrapper();
 EXT void skinny_bgp_daemon();
+EXT void skinny_bgp_daemon_online();
+EXT void skinny_bgp_daemon_offline();
 EXT void bgp_prepare_thread();
 EXT void bgp_prepare_daemon();
 #undef EXT

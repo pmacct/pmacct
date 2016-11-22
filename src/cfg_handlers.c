@@ -28,6 +28,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "cfg_handlers.h"
+#include "bgp/bgp.h"
 
 int parse_truefalse(char *value_ptr)
 {
@@ -3129,8 +3130,18 @@ int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
+  lower_string(value_ptr);
+
+  if (!strcmp(value_ptr, "false"))
+    value = BGP_DAEMON_NONE;
+  else if (!strcmp(value_ptr, "true") || !strcmp(value_ptr, "online"))
+    value = BGP_DAEMON_ONLINE;
+  else if (!strcmp(value_ptr, "offline")) 
+    value = BGP_DAEMON_OFFLINE;
+  else {
+    Log(LOG_ERR, "WARN: [%s] Invalid 'bgp_daemon' value '%s'\n", filename, value_ptr);
+    return ERR;
+  }
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon'. Globalized.\n", filename);
