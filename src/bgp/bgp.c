@@ -614,6 +614,9 @@ void skinny_bgp_daemon_online()
 
 void skinny_bgp_daemon_offline()
 {
+  time_t now, dump_refresh_deadline;
+  struct timeval dump_refresh_timeout, *drt_ptr;
+
   afi_t afi;
   safi_t safi;
 
@@ -637,7 +640,14 @@ void skinny_bgp_daemon_offline()
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
-  /* XXX: msglog and dump setup skipped when offline */ 
+  if (config.nfacctd_bgp_offline_file_spool /* XXX: AMQP and Kafka to be added here */) {
+    if (config.nfacctd_bgp_offline_file_spool) bgp_misc_db->dump_input_backend_methods++;
+
+    if (bgp_misc_db->dump_input_backend_methods > 1) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_offline_file_spool are mutually exclusive. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+      exit_all(1);
+    }
+  }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
   if (!config.bgp_table_per_peer_buckets) config.bgp_table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
@@ -649,17 +659,45 @@ void skinny_bgp_daemon_offline()
     exit_all(1);
   }
 
-  /* XXX:
-
-  Log(LOG_INFO, "INFO ( %s/%s ): waiting for BGP data on XXX\n", config.name, bgp_misc_db->log_str, XXX);
-
-  */
+  if (config.nfacctd_bgp_offline_file_spool) 
+    Log(LOG_INFO, "INFO ( %s/%s ): waiting for BGP data on %s\n", config.name, bgp_misc_db->log_str, config.nfacctd_bgp_offline_file_spool);
 
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
       bgp_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
     }
+  }
+
+  if (bgp_misc_db->dump_input_backend_methods) {
+#ifdef WITH_JANSSON
+    if (!config.nfacctd_bgp_offline_input) config.nfacctd_bgp_offline_input = PRINT_OUTPUT_JSON;
+#else
+    Log(LOG_WARNING, "WARN ( %s/%s ): bgp_daemon_offline_input set to json but will consume no input (missing --enable-jansson).\n", config.name, bgp_misc_db->log_str);
+#endif
+  }
+
+  if (bgp_misc_db->dump_input_backend_methods) {
+    char dump_roundoff[] = "m";
+    time_t tmp_time;
+
+    if (config.nfacctd_bgp_offline_file_refresh_time) {
+      gettimeofday(&bgp_misc_db->log_tstamp, NULL);
+      dump_refresh_deadline = bgp_misc_db->log_tstamp.tv_sec;
+      tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
+      while ((tmp_time + config.nfacctd_bgp_offline_file_refresh_time) < dump_refresh_deadline) {
+        tmp_time += config.nfacctd_bgp_offline_file_refresh_time;
+      }
+      dump_refresh_deadline = tmp_time;
+      dump_refresh_deadline += config.nfacctd_bgp_offline_file_refresh_time; /* it's a deadline not a basetime */
+    }
+    else {
+      config.nfacctd_bgp_offline_file_spool = NULL;
+      bgp_misc_db->dump_input_backend_methods = FALSE;
+      Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'bgp_daemon_offline_file_refresh_time'.\n", config.name, bgp_misc_db->log_str);
+    }
+
+    /* XXX: init AMQP and Kafka to be added here */
   }
 
   bgp_link_misc_structs(bgp_misc_db);

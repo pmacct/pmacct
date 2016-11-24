@@ -141,6 +141,7 @@ struct bgp_misc_structs {
 
   int msglog_backend_methods;
   int dump_backend_methods;
+  int dump_input_backend_methods;
 };
 
 struct bgp_peer_stats {
