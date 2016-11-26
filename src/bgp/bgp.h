@@ -19,6 +19,8 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* includes */
+#include <sys/poll.h>
 #include "bgp_prefix.h"
 #include "bgp_packet.h"
 #include "bgp_table.h"

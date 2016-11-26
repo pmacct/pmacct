@@ -614,8 +614,9 @@ void skinny_bgp_daemon_online()
 
 void skinny_bgp_daemon_offline()
 {
-  time_t now, dump_refresh_deadline;
-  struct timeval dump_refresh_timeout, *drt_ptr;
+  int timeout, ret, nfacctd_bgp_offline_file_spool_pipe[2];
+  time_t now, file_spool_refresh_deadline;
+  struct pollfd pfd;
 
   afi_t afi;
   safi_t safi;
@@ -623,6 +624,9 @@ void skinny_bgp_daemon_offline()
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
   reload_log_bgp_thread = FALSE;
+
+  file_spool_refresh_deadline = FALSE;
+  now = time(NULL);
 
   bgp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP];
   memset(bgp_routing_db, 0, sizeof(struct bgp_rt_structs));
@@ -647,6 +651,13 @@ void skinny_bgp_daemon_offline()
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_offline_file_spool are mutually exclusive. Terminating thread.\n", config.name, bgp_misc_db->log_str);
       exit_all(1);
     }
+
+    if (config.nfacctd_bgp_offline_file_spool) {
+      /* creating a 'fake' fd so to be able to poll() against it later */
+      socketpair(AF_UNIX, SOCK_DGRAM, 0, nfacctd_bgp_offline_file_spool_pipe);
+    }
+
+    /* XXX: init AMQP and Kafka to be added here */
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -670,44 +681,51 @@ void skinny_bgp_daemon_offline()
   }
 
   if (bgp_misc_db->dump_input_backend_methods) {
+    char dump_roundoff[] = "m";
+    time_t tmp_time;
+
 #ifdef WITH_JANSSON
     if (!config.nfacctd_bgp_offline_input) config.nfacctd_bgp_offline_input = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bgp_daemon_offline_input set to json but will consume no input (missing --enable-jansson).\n", config.name, bgp_misc_db->log_str);
 #endif
-  }
 
-  if (bgp_misc_db->dump_input_backend_methods) {
-    char dump_roundoff[] = "m";
-    time_t tmp_time;
-
-    if (config.nfacctd_bgp_offline_file_refresh_time) {
-      gettimeofday(&bgp_misc_db->log_tstamp, NULL);
-      dump_refresh_deadline = bgp_misc_db->log_tstamp.tv_sec;
-      tmp_time = roundoff_time(dump_refresh_deadline, dump_roundoff);
-      while ((tmp_time + config.nfacctd_bgp_offline_file_refresh_time) < dump_refresh_deadline) {
-        tmp_time += config.nfacctd_bgp_offline_file_refresh_time;
+    if (config.nfacctd_bgp_offline_file_spool) {
+      if (config.nfacctd_bgp_offline_file_refresh_time) {
+        gettimeofday(&bgp_misc_db->log_tstamp, NULL);
+        file_spool_refresh_deadline = bgp_misc_db->log_tstamp.tv_sec;
+        tmp_time = roundoff_time(file_spool_refresh_deadline, dump_roundoff);
+        while ((tmp_time + config.nfacctd_bgp_offline_file_refresh_time) < file_spool_refresh_deadline) {
+          tmp_time += config.nfacctd_bgp_offline_file_refresh_time;
+        }
+        file_spool_refresh_deadline = tmp_time;
+        file_spool_refresh_deadline += config.nfacctd_bgp_offline_file_refresh_time; /* it's a deadline not a basetime */
       }
-      dump_refresh_deadline = tmp_time;
-      dump_refresh_deadline += config.nfacctd_bgp_offline_file_refresh_time; /* it's a deadline not a basetime */
+      else {
+        Log(LOG_ERR, "ERROR ( %s/%s ): Invalid 'bgp_daemon_offline_file_refresh_time'.\n", config.name, bgp_misc_db->log_str);
+	exit_all(1);
+      }
     }
-    else {
-      config.nfacctd_bgp_offline_file_spool = NULL;
-      bgp_misc_db->dump_input_backend_methods = FALSE;
-      Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'bgp_daemon_offline_file_refresh_time'.\n", config.name, bgp_misc_db->log_str);
-    }
-
-    /* XXX: init AMQP and Kafka to be added here */
   }
 
   bgp_link_misc_structs(bgp_misc_db);
 
-  /* XXX:
-
   for (;;) {
-  }
+    poll_again:
 
-  */
+    if (config.nfacctd_bgp_offline_file_spool) {
+      calc_refresh_timeout(file_spool_refresh_deadline, now, &timeout);
+      pfd.fd = nfacctd_bgp_offline_file_spool_pipe[1];
+      pfd.events = POLLIN;
+
+      ret = poll(&pfd, 1, timeout);
+
+      now = time(NULL);
+      file_spool_refresh_deadline += config.nfacctd_bgp_offline_file_refresh_time;
+
+      // XXX
+    }
+  }
 }
 
 void bgp_prepare_thread()
