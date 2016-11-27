@@ -7,6 +7,15 @@ over the time.
 However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
+
+TO:	>= 1.6.2
+FROM:	<= 1.6.1
+TOPIC:	sFlow probe (sfprobe plugin) and tags and class primitives
+DESC:	Historically enterprise #8800 was squatted for the purpose of encoding
+	pmacct-specific fields in sFlow, ie. tags and class. This never got
+	changed when pmacct was assigned its own enterprise number (#43874) by
+	IANA. In 1.6.2, these primitives are moved from #8800 to #43874 making
+	older exports not compatible anymore. 
         
 TO:	>= 1.6.1
 FROM:	<= 1.6.0
