@@ -615,7 +615,7 @@ void skinny_bgp_daemon_online()
 void skinny_bgp_daemon_offline()
 {
   int timeout, ret, nfacctd_bgp_offline_file_spool_pipe[2];
-  time_t now, file_spool_refresh_deadline;
+  time_t now, file_spool_refresh_deadline, saved_file_spool_refresh_deadline;
   struct pollfd pfd;
 
   afi_t afi;
@@ -626,6 +626,7 @@ void skinny_bgp_daemon_offline()
   reload_log_bgp_thread = FALSE;
 
   file_spool_refresh_deadline = FALSE;
+  saved_file_spool_refresh_deadline = FALSE;
   now = time(NULL);
 
   bgp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP];
@@ -714,17 +715,19 @@ void skinny_bgp_daemon_offline()
     poll_again:
 
     if (config.nfacctd_bgp_offline_file_spool) {
+      now = time(NULL);
       calc_refresh_timeout(file_spool_refresh_deadline, now, &timeout);
       pfd.fd = nfacctd_bgp_offline_file_spool_pipe[1];
       pfd.events = POLLIN;
 
       ret = poll(&pfd, 1, timeout);
 
-      now = time(NULL);
+      bgp_offline_file_spool_read(config.nfacctd_bgp_offline_file_spool);
+      saved_file_spool_refresh_deadline = file_spool_refresh_deadline;
       file_spool_refresh_deadline += config.nfacctd_bgp_offline_file_refresh_time;
-
-      // XXX
     }
+
+    // XXX: RabbitMQ and Kafka polling here 
   }
 }
 
@@ -746,4 +749,23 @@ void bgp_prepare_daemon()
   bgp_misc_db->is_thread = FALSE;
   bgp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bgp_misc_db->log_str, "core");
+}
+
+void bgp_offline_file_spool_read(char *path)
+{
+  struct dirent **namelist;
+  int entries = 0, idx = 0;
+
+  entries = pm_scandir(path, &namelist, NULL, NULL);
+
+  if (entries > 0) {
+    while (idx < entries) {
+
+      // XXX
+
+      idx++;
+    }
+  }
+
+  pm_scandir_free(&namelist, entries);
 }

@@ -249,6 +249,7 @@ EXT void skinny_bgp_daemon_online();
 EXT void skinny_bgp_daemon_offline();
 EXT void bgp_prepare_thread();
 EXT void bgp_prepare_daemon();
+EXT void bgp_offline_file_spool_read(char *);
 #undef EXT
 
 /* global variables */

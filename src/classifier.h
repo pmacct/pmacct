@@ -19,7 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include <dirent.h>
 #include "regexp.h"
 #include "conntrack.h"
 
@@ -71,8 +70,6 @@ EXT int dot_pat(char *);
 EXT int dot_so(char *);
 EXT void init_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
 EXT void handle_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-EXT int pm_scandir(const char *, struct dirent ***, int (*select)(const struct dirent *), int (*compar)(const void *, const void *));
-EXT int pm_alphasort(const void *, const void *);
 EXT void link_conntrack_helper(struct pkt_classifier *);
 
 EXT void *search_context_chain(struct ip_flow_common *, unsigned int, char *);

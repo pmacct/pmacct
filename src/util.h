@@ -182,5 +182,9 @@ EXT u_int16_t dump_writers_get_active();
 EXT u_int16_t dump_writers_get_max();
 EXT int dump_writers_add(pid_t);
 
+EXT int pm_scandir(const char *, struct dirent ***, int (*select)(const struct dirent *), int (*compar)(const void *, const void *));
+EXT void pm_scandir_free(struct dirent ***, int);
+EXT int pm_alphasort(const void *, const void *);
+
 EXT void replace_string(char *, int, char *, char *);
 #undef EXT

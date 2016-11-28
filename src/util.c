@@ -3976,3 +3976,65 @@ int dump_writers_add(pid_t pid)
 
   return ret;
 }
+
+int pm_scandir(const char *dir, struct dirent ***namelist,
+            int (*select)(const struct dirent *),
+            int (*compar)(const void *, const void *))
+{
+  DIR *d;
+  struct dirent *entry;
+  size_t entry_sz;
+  int idx = 0;
+
+  *namelist = NULL;
+
+  if ((d = opendir(dir)) == NULL) return ERR;
+
+  while ((entry = readdir(d))) {
+    if (!select || (select && (*select)(entry))) {
+      *namelist = (struct dirent **) realloc((void *)(*namelist), (size_t)((idx + 1) * sizeof(struct dirent *)));
+
+      if (*namelist == NULL) {
+         closedir(d);
+         return ERR;
+      }
+
+      entry_sz = sizeof(struct dirent) - sizeof(entry->d_name) + strlen(entry->d_name) + 1;
+      (*namelist)[idx] = (struct dirent *) malloc(entry_sz);
+
+      if ((*namelist)[idx] == NULL) {
+        closedir(d);
+        return ERR;
+      }
+
+      memcpy((*namelist)[idx], entry, entry_sz);
+      idx++;
+    }
+  }
+
+  if (closedir(d)) return ERR;
+  if (idx && (compar != NULL))
+    qsort((void *)(*namelist), (size_t) idx, sizeof(struct dirent *), compar);
+
+  return idx;
+}
+
+void pm_scandir_free(struct dirent ***namelist, int num)
+{
+  int idx;
+
+  if (*namelist) {
+    for (idx = 0; idx < num; idx++) free((*namelist)[idx]);
+
+    free((*namelist));
+    *namelist = NULL;
+  }
+}
+
+int pm_alphasort(const void *a, const void *b)
+{
+  const struct dirent *dira = a;
+  const struct dirent *dirb = b;
+
+  return(strcmp(dira->d_name, dirb->d_name));
+}
