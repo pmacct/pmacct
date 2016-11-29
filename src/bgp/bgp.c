@@ -722,7 +722,7 @@ void skinny_bgp_daemon_offline()
 
       ret = poll(&pfd, 1, timeout);
 
-      bgp_offline_file_spool_read(config.nfacctd_bgp_offline_file_spool);
+      bgp_offline_file_spool_read(config.nfacctd_bgp_offline_file_spool, saved_file_spool_refresh_deadline);
       saved_file_spool_refresh_deadline = file_spool_refresh_deadline;
       file_spool_refresh_deadline += config.nfacctd_bgp_offline_file_refresh_time;
     }
@@ -751,21 +751,56 @@ void bgp_prepare_daemon()
   strcpy(bgp_misc_db->log_str, "core");
 }
 
-void bgp_offline_file_spool_read(char *path)
+void bgp_offline_file_spool_read(char *path, time_t last_read)
 {
   struct dirent **namelist;
-  int entries = 0, idx = 0;
+  struct stat entry_stat;
+  char entry_pathname[SRVBUFLEN], *tmpbuf;
+  int entries = 0, idx = 0, ret;
+
+  tmpbuf = malloc(LARGEBUFLEN);
+  if (!tmpbuf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bgp_offline_file_spool_read(): unable to malloc() tmpbuf. Terminating thread.\n",
+	config.name, bgp_misc_db->log_str);
+    exit_all(1);
+  }
 
   entries = pm_scandir(path, &namelist, NULL, NULL);
 
   if (entries > 0) {
     while (idx < entries) {
+      snprintf(entry_pathname, sizeof(entry_pathname), "%s/%s", path, namelist[idx]->d_name);
+      ret = stat(entry_pathname, &entry_stat);
 
-      // XXX
+      if (ret < 0) Log(LOG_WARNING, "WARN ( %s/%s ): bgp_offline_file_spool_read(): unable to stat(): '%s'. File skipped.\n",
+	   	       config.name, bgp_misc_db->log_str, entry_pathname);
+      else {
+	if (S_ISREG(entry_stat.st_mode) && entry_stat.st_mtime > last_read) {
+	  FILE *fp = fopen(entry_pathname, "r");
+	  
+	  if (!fp) Log(LOG_WARNING, "WARN ( %s/%s ): bgp_offline_file_spool_read(): unable to fopen(): '%s'. File skipped.\n",
+		       config.name, bgp_misc_db->log_str, entry_pathname);
+	  else {
+	    if (config.nfacctd_bgp_offline_input == PRINT_OUTPUT_JSON) {
+	      while (fgets(tmpbuf, LARGEBUFLEN, fp)) {
+	        // XXX
+	      }
+	    }
+
+	    // XXX: Reading Avro here 
+
+	    Log(LOG_DEBUG, "DEBUG ( %s/%s ): bgp_offline_file_spool_read(): read '%s'.\n",
+	        config.name, bgp_misc_db->log_str, entry_pathname);
+
+	    fclose(fp);
+	  }
+	}
+      }
 
       idx++;
     }
   }
 
   pm_scandir_free(&namelist, entries);
+  free(tmpbuf);
 }
