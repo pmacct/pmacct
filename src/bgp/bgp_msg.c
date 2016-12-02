@@ -899,9 +899,8 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 	break;
       case RD_TYPE_IP: 
 	rdi = (struct rd_ip *) &rd;
-	memcpy(&tmp32, pnt+5, 4);
+	memcpy(&rdi->ip.s_addr, pnt+5, 4);
 	memcpy(&tmp16, pnt+9, 2);
-	rdi->ip.s_addr = ntohl(tmp32);
 	rdi->val = ntohs(tmp16);
 	break;
       case RD_TYPE_AS4: 

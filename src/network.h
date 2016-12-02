@@ -273,21 +273,21 @@ struct rd_as
   u_int16_t type;
   u_int16_t as;
   u_int32_t val;
-};
+} __attribute__ ((packed));
 
 struct rd_ip
 {
   u_int16_t type;
   struct in_addr ip;
   u_int16_t val;
-};
+} __attribute__ ((packed));
 
 struct rd_as4
 {
   u_int16_t type;
   as_t as;
   u_int32_t val;
-};
+} __attribute__ ((packed));
 
 /* Picking one of the three structures as rd_t for simplicity */
 typedef struct rd_as rd_t;
