@@ -486,8 +486,9 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   int x, link_type;
 
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
-    if (strncmp(value, "ip", 2) && strncmp(value, "ip6", 3)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_agent_map filter supports only 'ip' and 'ip6' keywords\n", config.name, config.type, filename);
+    if (strncmp(value, "ip", 2) && strncmp(value, "ip6", 3) && strncmp(value, "vlan and ip", 11) && strncmp(value, "vlan and ip6", 12)) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_agent_map filter supports only 'ip', 'ip6', 'vlan and ip' and 'vlan and ip6' keywords\n",
+	  config.name, config.type, filename);
       return TRUE;
     }
   }

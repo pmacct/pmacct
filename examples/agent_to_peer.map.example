@@ -24,8 +24,8 @@
 ! 'filter'              MATCH: incoming data is compared against the supplied
 !			filter expression (expected in libpcap syntax); the
 !			filter needs to be enclosed in quotes ('). In this map
-!			this is meant to discriminate among IPv4 ('ip') and
-!			IPv6 ('ip6') traffic. 
+!			this is meant to discriminate among IPv4 ('ip', 'vlan
+!			and ip') and IPv6 ('ip6', 'vlan and ip6') traffic. 
 !
 ! A couple of straightforward examples follow.  
 !
