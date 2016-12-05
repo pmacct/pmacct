@@ -539,7 +539,11 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
         struct bgp_info *ri;
         struct bgp_info *ri_next;
 
-        for (peer_buckets = 0; peer_buckets < bms->table_per_peer_buckets; peer_buckets++) {
+	if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
+	u_int32_t per_peer_buckets = bms->table_per_peer_buckets;
+	if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
+
+        for (peer_buckets = 0; peer_buckets < per_peer_buckets; peer_buckets++) {
           for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
             if (ri->peer == peer) {
 	      if (bms->msglog_backend_methods) {

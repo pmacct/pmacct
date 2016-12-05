@@ -124,6 +124,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	nmct2.rd = &rd;
 	nmct2.peer_dst_ip = NULL;
 
+	if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
 	saved_table_per_peer_buckets = bms->table_per_peer_buckets; 
 	bms->table_per_peer_buckets = 1;
 	saved_cap_add_paths = peer->cap_add_paths;
@@ -138,6 +139,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 
 	bms->table_per_peer_buckets = saved_table_per_peer_buckets;
 	peer->cap_add_paths = saved_cap_add_paths;
+	if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
       }
 
       if (!pptrs->bgp_src_info && result) {
@@ -180,6 +182,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         nmct2.rd = &rd;
         nmct2.peer_dst_ip = NULL;
 
+	if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
         saved_table_per_peer_buckets = bms->table_per_peer_buckets;
         bms->table_per_peer_buckets = 1;
         saved_cap_add_paths = peer->cap_add_paths;
@@ -191,6 +194,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 		            bgp_route_info_modulo_pathid,
 		            bms->bgp_lookup_node_match_cmp, &nmct2,
 		            &result, &info);
+	if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
       }
 
       if (!pptrs->bgp_src_info && result) {
@@ -356,9 +360,13 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
   if (nh_peer) {
     modulo = bms->route_info_modulo(nh_peer, NULL);
 
-    // XXX: to be optimized 
+    // XXX: to be optimized
+    if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
+
     if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
     else modulo_max = 1;
+
+    if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
 
     memset(&ch, 0, sizeof(ch));
     ch.family = AF_INET;
@@ -740,7 +748,13 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
 
   if (path_id && *path_id) local_path_id = *path_id;
 
-  return (((peer->fd * bms->table_per_peer_buckets) +
-          ((local_path_id - 1) % bms->table_per_peer_buckets)) %
-          (bms->table_peer_buckets * bms->table_per_peer_buckets));
+  if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
+
+  u_int32_t ret = (((peer->fd * bms->table_per_peer_buckets) +
+		    ((local_path_id - 1) % bms->table_per_peer_buckets)) %
+		   (bms->table_peer_buckets * bms->table_per_peer_buckets));
+
+  if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
+
+  return ret;
 }

@@ -20,6 +20,7 @@
 */
 
 /* includes */
+#include <pthread.h>
 #include <sys/poll.h>
 #include "bgp_prefix.h"
 #include "bgp_packet.h"
@@ -133,6 +134,7 @@ struct bgp_misc_structs {
   int msglog_kafka_topic_rr;
   void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, void *);
 
+  pthread_mutex_t table_mutex;
   int table_peer_buckets;
   int table_per_peer_buckets;
   int table_attr_hash_buckets;

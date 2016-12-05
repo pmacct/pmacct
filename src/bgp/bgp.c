@@ -736,6 +736,12 @@ void bgp_prepare_thread()
   bgp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BGP];
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&bgp_misc_db->table_mutex, &attr);
+  pthread_mutexattr_destroy(&attr);
+
   bgp_misc_db->is_thread = TRUE;
   bgp_misc_db->log_str = malloc(strlen("core/BGP") + 1);
   strcpy(bgp_misc_db->log_str, "core/BGP");
