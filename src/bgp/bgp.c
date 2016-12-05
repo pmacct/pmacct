@@ -772,19 +772,44 @@ void bgp_offline_file_spool_read(char *path, time_t last_read)
       snprintf(entry_pathname, sizeof(entry_pathname), "%s/%s", path, namelist[idx]->d_name);
       ret = stat(entry_pathname, &entry_stat);
 
-      if (ret < 0) Log(LOG_WARNING, "WARN ( %s/%s ): bgp_offline_file_spool_read(): unable to stat(): '%s'. File skipped.\n",
+      if (ret < 0) Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_offline_file_spool_read(): unable to stat(). File skipped.\n",
 	   	       config.name, bgp_misc_db->log_str, entry_pathname);
       else {
 	if (S_ISREG(entry_stat.st_mode) && entry_stat.st_mtime > last_read) {
 	  FILE *fp = fopen(entry_pathname, "r");
 	  
-	  if (!fp) Log(LOG_WARNING, "WARN ( %s/%s ): bgp_offline_file_spool_read(): unable to fopen(): '%s'. File skipped.\n",
+	  if (!fp) Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_offline_file_spool_read(): unable to fopen(). File skipped.\n",
 		       config.name, bgp_misc_db->log_str, entry_pathname);
 	  else {
+	    int line = 1;
+
 	    if (config.nfacctd_bgp_offline_input == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+	      json_t *json_obj;
+	      json_error_t json_err;
+
 	      while (fgets(tmpbuf, LARGEBUFLEN, fp)) {
-	        // XXX
+		json_obj = json_loads(tmpbuf, 0, &json_err);
+
+		if (!json_obj) {
+		  Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] bgp_offline_file_spool_read(): json_loads() error: %s. Line skipped.\n",
+		      config.name, bgp_misc_db->log_str, entry_pathname, line, json_err.text); 
+		}
+		else {
+		  if (!json_is_object(json_obj)) {
+		    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] bgp_offline_file_spool_read(): json_is_object() failed. Line skipped.\n",
+			config.name, bgp_misc_db->log_str, entry_pathname, line);
+		  }
+		  else {
+	            // XXX
+		  }
+
+		  json_decref(json_obj);
+		}
+
+		line++;
 	      }
+#endif
 	    }
 
 	    // XXX: Reading Avro here 
