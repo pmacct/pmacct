@@ -45,7 +45,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 
     /* BGP buffer segmentation + reassembly */
     if (peer->msglen < BGP_HEADER_SIZE ||
-	(char*)(&bhdr->bgpo_len) > peer->buf.base + peer->buf.len ||
+	(char*)(&bhdr->bgpo_len) + sizeof(bhdr->bgpo_len) > peer->buf.base + peer->buf.len ||
 	peer->msglen < (bgp_len = ntohs(bhdr->bgpo_len))) {
 
       memcpy(tmp_packet, bgp_packet_ptr, peer->msglen);
