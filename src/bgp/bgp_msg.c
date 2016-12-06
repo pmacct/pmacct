@@ -515,6 +515,14 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
 	  && mp_withdraw.afi == AFI_IP6
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL))
     bgp_nlri_parse(peer, NULL, &mp_withdraw);
+
+  if (mp_update.length
+          && mp_update.afi == AFI_IP6 && mp_update.safi == SAFI_MPLS_VPN)
+    bgp_nlri_parse(peer, &attr, &mp_update);
+
+  if (mp_withdraw.length
+          && mp_withdraw.afi == AFI_IP6 && mp_withdraw.safi == SAFI_MPLS_VPN)
+    bgp_nlri_parse(peer, NULL, &mp_withdraw);
 #endif
 
   /* Receipt of End-of-RIB can be processed here; being a silent
