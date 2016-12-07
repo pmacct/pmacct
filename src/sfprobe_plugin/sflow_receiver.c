@@ -385,8 +385,8 @@ inline static void putClass(SFLReceiver *receiver, SFLExtended_classification *c
 
 inline static void putTag(SFLReceiver *receiver, SFLExtended_tag *tag_elem)
 {
-  putNet32(receiver, tag_elem->tag);
-  putNet32(receiver, tag_elem->tag2);
+  putNet64(receiver, tag_elem->tag);
+  putNet64(receiver, tag_elem->tag2);
 }
 
 inline static void putGenericCounters(SFLReceiver *receiver, SFLIf_counters *counters)
@@ -456,7 +456,7 @@ static int computeFlowSampleSize(SFLReceiver *receiver, SFL_FLOW_SAMPLE_TYPE *fs
     case SFLFLOW_EX_MPLS_LDP_FEC: elemSiz = mplsLdpFecEncodingLength(&elem->flowType.mpls_ldp_fec); break;
     case SFLFLOW_EX_VLAN_TUNNEL: elemSiz = vlanTunnelEncodingLength(&elem->flowType.vlan_tunnel); break;
     case SFLFLOW_EX_CLASS: elemSiz = MAX_PROTOCOL_LEN; break;
-    case SFLFLOW_EX_TAG: elemSiz = 8; break;
+    case SFLFLOW_EX_TAG: elemSiz = 16; /* (sizeof(pm_id_t) * 2) */ break;
     default:
       sflError(receiver, "unexpected packet_data_tag");
       return -1;

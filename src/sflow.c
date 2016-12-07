@@ -751,8 +751,8 @@ void readExtendedClass(SFSample *sample)
 
 void readExtendedTag(SFSample *sample)
 {
-  sample->tag = getData32(sample);
-  sample->tag2 = getData32(sample);
+  sample->tag = getData64(sample);
+  sample->tag2 = getData64(sample);
 }
 
 void decodeMpls(SFSample *sample)
