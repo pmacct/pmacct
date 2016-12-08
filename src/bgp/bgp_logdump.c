@@ -279,7 +279,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic)
-      p_kafka_set_topic(peer->log->amqp_host, peer->log->filename);
+      p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
 
     if (bms->msglog_kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
       p_kafka_init_topic_rr(peer->log->kafka_host);
