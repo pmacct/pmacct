@@ -21,6 +21,8 @@ BGP msglog format:
     "timestamp": <timestamp>,
     "peer_ip_src": <IP address>,
     "event_type": "log",
+    "afi": <afi>,
+    "safi": <safi>,
     "log_type": <"update", "withdraw", "delete">,
     <BGP NLRI, attributes, ..>
   }
@@ -51,6 +53,8 @@ BGP dump format:
     "timestamp": <dump event timestamp>,
     "peer_ip_src": <IP address>,
     "event_type": "dump",
+    "afi": <afi>,
+    "safi": <safi>,
     <BGP NLRI, attributes, ..>
   }
 
@@ -80,6 +84,8 @@ BMP msglog format:
     "timestamp": <BMP timestamp>,
     "bmp_router": <IP address>,
     "event_type": "log",
+    "afi": <afi>,
+    "safi": <safi>,
     "bmp_msg_type": "route_monitor", "log_type": <"update", "withdraw", "delete">,
     "peer_ip": <IP address>,
     <BGP NLRI, attributes, ..>
@@ -124,6 +130,8 @@ BMP dump format:
     "bmp_router": <IP address>,
     "bmp_msg_type": "route_monitor",
     "event_type": "dump",
+    "afi": <afi>,
+    "safi": <safi>,
     "peer_ip": <IP address>,
     <BGP NLRI, attributes, ..>
   }
