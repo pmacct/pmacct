@@ -837,11 +837,11 @@ int bgp_offline_read_json(char *buf, char *errbuf, int errlen, void **offline_pe
     }
     else {
       struct bgp_peer peer_in, *peer;
-      json_t *peer_src_ip;
+      json_t *peer_src_ip_str;
 
-      peer_src_ip = json_object_get(json_obj, "peer_ip_src");
+      peer_src_ip_str = json_object_get(json_obj, "peer_ip_src");
 
-      if (!json_is_string(peer_src_ip)) {
+      if (!json_is_string(peer_src_ip_str)) {
         snprintf(errbuf, errlen, "bgp_offline_read_json(): json_object_get() 'peer_ip_src' failed. Line skipped.\n");
         ret = ERR;
       }
@@ -850,23 +850,92 @@ int bgp_offline_read_json(char *buf, char *errbuf, int errlen, void **offline_pe
 
 	memset(&peer_in, 0, sizeof(struct bgp_peer));
 
-	str_to_addr(json_string_value(peer_src_ip), &peer_in.addr);	
-	memcpy(&peer_in.id, &peer_in.addr, sizeof(struct host_addr));
-	peer_in.type = FUNC_TYPE_BGP;
+	str_to_addr(json_string_value(peer_src_ip_str), &peer_in.addr);	
+	if (peer_in.addr.family) {
+	  memcpy(&peer_in.id, &peer_in.addr, sizeof(struct host_addr));
+	  peer_in.type = FUNC_TYPE_BGP;
 
-	bin_obj = pm_tsearch(&peer_in, offline_peers, bgp_peer_cmp, sizeof(struct bgp_peer));
-	if (!bin_obj) {
-	  snprintf(errbuf, errlen, "bgp_offline_read_json(): pm_tsearch() failed. Line skipped.\n");
-	  ret = ERR;
+	  bin_obj = pm_tsearch(&peer_in, offline_peers, bgp_peer_cmp, sizeof(struct bgp_peer));
+  	  if (!bin_obj) {
+	    snprintf(errbuf, errlen, "bgp_offline_read_json(): pm_tsearch() failed. Line skipped.\n");
+	    ret = ERR;
+	  }
+	  else {
+	    json_t *afi_int, *safi_int;
+	    afi_t afi;
+	    safi_t safi;
+
+	    peer = (*(struct bgp_peer **) bin_obj);
+
+	    afi_int = json_object_get(json_obj, "afi");
+	    safi_int = json_object_get(json_obj, "safi");
+
+	    if (!json_is_integer(afi_int) || !json_is_integer(safi_int)) {
+	      snprintf(errbuf, errlen, "bgp_offline_read_json(): json_object_get() 'afi' or 'safi' failed. Line skipped.\n");
+	      ret = ERR;
+	    }
+	    else {
+	      afi = json_integer_value(afi_int);
+	      safi = json_integer_value(safi_int);
+
+              /* aligned with cases supported by bgp_parse_update_msg() in bgp_msg.c */
+	      if (afi == AFI_IP) {
+		// XXX
+
+	        switch (safi) {
+	        case SAFI_UNICAST:
+		  // XXX
+		  break;
+	        case SAFI_MPLS_LABEL:
+		  // XXX
+		  break;
+	        case SAFI_MPLS_VPN:
+		  // XXX
+		  break;
+	        default:
+		  snprintf(errbuf, errlen, "bgp_offline_read_json(): invalid IPv4 SAFI. Line skipped.\n");
+		  ret = ERR;
+		  break;
+	        }
+	      }
+#if defined ENABLE_IPV6
+	      else if (afi == AFI_IP6) {
+		//XXX 
+
+	        switch (safi) {
+	        case SAFI_UNICAST:
+		  // XXX
+		  break;
+	        case SAFI_MPLS_LABEL:
+		  // XXX
+		  break;
+	        case SAFI_MPLS_VPN:
+		  // XXX
+		  break;
+	        default:
+		  snprintf(errbuf, errlen, "bgp_offline_read_json(): invalid IPv6 SAFI. Line skipped.\n");
+		  ret = ERR;
+		  break;
+	        }
+	      }
+#endif
+	      else {
+	        snprintf(errbuf, errlen, "bgp_offline_read_json(): invalid AFI. Line skipped.\n");
+	        ret = ERR;
+	      }
+	    }
+
+	    json_decref(afi_int);
+	    json_decref(safi_int);
+	  }
 	}
 	else {
-	  peer = (*(struct bgp_peer **) bin_obj);
-
-          // XXX
+	  snprintf(errbuf, errlen, "bgp_offline_read_json(): invalid peer_ip_src value. Line skipped.\n");
+	  ret = ERR;
 	}
       }
 
-      json_decref(peer_src_ip);
+      json_decref(peer_src_ip_str);
     }
 
     json_decref(json_obj);
