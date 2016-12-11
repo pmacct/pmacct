@@ -1987,6 +1987,13 @@ DESC:		Defines the BGP Router-ID to the supplied value. Expected value is an IPv
 		to "1.2.3.4".
 DEFAULT:	1.2.3.4
 
+KEY:            bgp_daemon_as [GLOBAL]
+DESC:           Defines the BGP Local AS to the supplied value. By default, no value supplied, the session
+		will be setup as iBGP with the Local AS received from the remote peer being copied back in
+		the BGP OPEN reply. This allows to explicitely set a Local AS which could be different from
+		the remote peer one hence establishing an eBGP session.
+DEFAULT:        none
+
 KEY:		[ bgp_daemon_port | bmp_daemon_port ] [GLOBAL] 
 DESC:		Binds the BGP/BMP daemon to a port different from the standard port. Default port for BGP is
 		179/tcp; default port for BMP is 1790.

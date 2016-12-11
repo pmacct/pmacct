@@ -301,8 +301,9 @@ struct configuration {
   int nfacctd_bgp_msglog_kafka_broker_port;
   int nfacctd_bgp_msglog_kafka_retry;
   char *nfacctd_bgp_msglog_kafka_fallback;
-  char *nfacctd_bgp_ip;
   char *nfacctd_bgp_id;
+  char *nfacctd_bgp_ip;
+  as_t nfacctd_bgp_as;
   int nfacctd_bgp_port;
   int nfacctd_bgp_pipe_size;
   int nfacctd_bgp_ipprec;

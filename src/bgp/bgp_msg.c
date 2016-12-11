@@ -281,15 +281,16 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	}
       }
 
-      if (online)
-        Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_OPEN: Asn: %u HoldTime: %u\n", config.name,
-		bms->log_str, bgp_peer_print(peer), peer->as, peer->ht);
-
       if (online) {
         bgp_reply_pkt_ptr = bgp_reply_pkt;
 
         /* Replying to OPEN message */
-        peer->myas = peer->as;
+	if (!config.nfacctd_bgp_as) peer->myas = peer->as;
+	else peer->myas = config.nfacctd_bgp_as;
+
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_OPEN: Local AS: %u Remote AS: %u HoldTime: %u\n", config.name,
+		bms->log_str, bgp_peer_print(peer), peer->myas, peer->as, peer->ht);
+
         ret = bgp_write_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
         if (ret > 0) bgp_reply_pkt_ptr += ret;
         else {

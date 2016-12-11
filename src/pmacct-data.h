@@ -669,6 +669,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon", cfg_key_nfacctd_bgp},
   {"bgp_daemon_ip", cfg_key_nfacctd_bgp_ip},
   {"bgp_daemon_id", cfg_key_nfacctd_bgp_id},
+  {"bgp_daemon_as", cfg_key_nfacctd_bgp_as},
   {"bgp_daemon_port", cfg_key_nfacctd_bgp_port},
   {"bgp_daemon_pipe_size", cfg_key_nfacctd_bgp_pipe_size},
   {"bgp_daemon_max_peers", cfg_key_nfacctd_bgp_max_peers},
