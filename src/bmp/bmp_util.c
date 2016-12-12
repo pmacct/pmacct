@@ -182,5 +182,5 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
   if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
     bmp_dump_close_peer(peer);
 
-  bgp_peer_close(peer, type);
+  bgp_peer_close(peer, type, FALSE, NULL);
 }

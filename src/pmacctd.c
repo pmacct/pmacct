@@ -858,7 +858,7 @@ int main(int argc,char **argv, char **envp)
   pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
   if (config.pidfile) write_pid_file(config.pidfile);  
 
-  /* signals to be handled only by pmacctd;
+  /* signals to be handled only by the core process;
      we set proper handlers after plugin creation */
   signal(SIGINT, my_sigint_handler);
   signal(SIGTERM, my_sigint_handler);

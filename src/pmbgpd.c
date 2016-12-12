@@ -221,6 +221,8 @@ int main(int argc,char **argv, char **envp)
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
+  signal(SIGINT, my_sigint_handler);
+  signal(SIGTERM, my_sigint_handler);
 
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 

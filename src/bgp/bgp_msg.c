@@ -426,24 +426,24 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
     bn_reply->bgpn_type = BGP_NOTIFICATION; 
     bn_reply->bgpn_major = BGP_NOTIFY_CEASE;
     bn_reply->bgpn_minor = BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN;
+    ret += BGP_MIN_NOTIFICATION_MSG_SIZE;
 
     /* draft-ietf-idr-shutdown-01 */
     /* XXX: todo: conversion of shutdown_msg to utf8 */
     shutdown_msglen = strlen(shutdown_msg) + 1;
 
     if (shutdown_msg && (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN)) {
-      if (msglen >= (BGP_MIN_NOTIFICATION_MSG_SIZE + BGP_NOTIFY_CEASE_SM_LEN)) {
+      if (msglen >= (BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen)) {
         reply_msg_ptr = (char *) (msg + BGP_MIN_NOTIFICATION_MSG_SIZE);
-        memset(reply_msg_ptr, 0, BGP_NOTIFY_CEASE_SM_LEN);
+        memset(reply_msg_ptr, 0, shutdown_msglen);
         bnsm_reply = (struct bgp_notification_shutdown_msg *) reply_msg_ptr;
 
         bnsm_reply->bgpnsm_len = shutdown_msglen;
         strncpy(bnsm_reply->bgpnsm_data, shutdown_msg, shutdown_msglen);
-	bn_reply->bgpn_len = ntohs(BGP_MIN_NOTIFICATION_MSG_SIZE + BGP_NOTIFY_CEASE_SM_LEN);
+	bn_reply->bgpn_len = htons(BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen + 1 /* bgpnsm_len */);
+        ret += (shutdown_msglen + 1 /* bgpnsm_len */);
       }
     }
-
-    ret = ntohs(bn_reply->bgpn_len);
   }
 
   return ret;

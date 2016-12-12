@@ -26,6 +26,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
+#include "bgp/bgp.h"
 
 /* extern */
 extern struct plugins_list_entry *plugin_list;
@@ -110,6 +111,14 @@ void ignore_falling_child()
 void my_sigint_handler(int signum)
 {
   struct plugins_list_entry *list = plugins_list;
+
+  if (config.acct_type == ACCT_PMBGP || config.nfacctd_bgp == BGP_DAEMON_ONLINE) {
+    int idx;
+
+    for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
+      if (peers[idx].fd) bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, "pmacct received SIGINT - shutting down");
+    }
+  }
 
   if (config.syslog) closelog();
 

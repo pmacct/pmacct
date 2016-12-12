@@ -59,7 +59,7 @@ EXT void *bgp_attr_hash_alloc (void *);
 EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspath *);
 
 EXT int bgp_peer_init(struct bgp_peer *, int);
-EXT void bgp_peer_close(struct bgp_peer *, int);
+EXT void bgp_peer_close(struct bgp_peer *, int, int, char *);
 EXT char *bgp_peer_print(struct bgp_peer *);
 EXT void bgp_peer_info_delete(struct bgp_peer *);
 
