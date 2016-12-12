@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
 */
 
 /* 
@@ -86,6 +86,29 @@ struct bgp_open {
 };
 
 /* BGP NOTIFICATION message */
+/* BGP notify message codes.  */
+#define BGP_NOTIFY_HEADER_ERR			1
+#define BGP_NOTIFY_OPEN_ERR			2
+#define BGP_NOTIFY_UPDATE_ERR			3
+#define BGP_NOTIFY_HOLD_ERR			4
+#define BGP_NOTIFY_FSM_ERR			5
+#define BGP_NOTIFY_CEASE			6
+#define BGP_NOTIFY_CAPABILITY_ERR		7
+#define BGP_NOTIFY_MAX				8
+
+#define BGP_NOTIFY_SUBCODE_UNSPECIFIC		0
+
+/* BGP_NOTIFY_CEASE sub codes (RFC 4486).  */
+#define BGP_NOTIFY_CEASE_MAX_PREFIX		1
+#define BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN		2
+#define BGP_NOTIFY_CEASE_PEER_UNCONFIG		3
+#define BGP_NOTIFY_CEASE_ADMIN_RESET		4
+#define BGP_NOTIFY_CEASE_CONNECT_REJECT		5
+#define BGP_NOTIFY_CEASE_CONFIG_CHANGE		6
+#define BGP_NOTIFY_CEASE_COLLISION_RESOLUTION	7
+#define BGP_NOTIFY_CEASE_OUT_OF_RESOURCE	8
+#define BGP_NOTIFY_CEASE_MAX			9 
+
 struct bgp_notification {
     u_int8_t bgpn_marker[BGP_MARKER_SIZE];
     u_int16_t bgpn_len;
@@ -93,6 +116,14 @@ struct bgp_notification {
     u_int8_t bgpn_major;
     u_int8_t bgpn_minor;
     /* data should follow */
+};
+
+/* based on: draft-ietf-idr-shutdown-01 */
+#define BGP_NOTIFY_CEASE_SM_LEN			128
+
+struct bgp_notification_shutdown_msg {
+    u_int8_t bgpnsm_len;
+    u_int8_t bgpnsm_data[BGP_NOTIFY_CEASE_SM_LEN];
 };
 
 /* BGP ROUTE-REFRESH message */
