@@ -224,6 +224,7 @@ int main(int argc,char **argv, char **envp)
   signal(SIGINT, my_sigint_handler);
   signal(SIGTERM, my_sigint_handler);
 
+  if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 
   bgp_prepare_daemon();
