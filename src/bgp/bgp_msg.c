@@ -430,12 +430,12 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
 
     /* draft-ietf-idr-shutdown-01 */
     /* XXX: todo: conversion of shutdown_msg to utf8 */
-    shutdown_msglen = strlen(shutdown_msg) + 1;
+    shutdown_msglen = strlen(shutdown_msg);
 
     if (shutdown_msg && (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN)) {
       if (msglen >= (BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen)) {
         reply_msg_ptr = (char *) (msg + BGP_MIN_NOTIFICATION_MSG_SIZE);
-        memset(reply_msg_ptr, 0, shutdown_msglen);
+        memset(reply_msg_ptr, 0, msglen);
         bnsm_reply = (struct bgp_notification_shutdown_msg *) reply_msg_ptr;
 
         bnsm_reply->bgpnsm_len = shutdown_msglen;
