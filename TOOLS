@@ -26,9 +26,10 @@ uacctd		Linux Netlink NFLOG accounting daemon; it captures packets by
 pmtelemetryd	Streaming network telemetry collector daemon; it listens for
 		telemetry data binding to a TCP or UDP port and logs real-time
 		and/or dumps at regular time-intervals to configured backends.
-pmbgpd		Stand-alone BGP collector daemon; acts as a passive neighbor
-		and maintains per-peer RIBs; can log real-time and/or dump at
-		regular time-intervals BGP data to configured backends.
+pmbgpd		Stand-alone BGP collector daemon; acts as a passive iBGP or
+		eBGP neighbor and maintains per-peer RIBs; can log real-time
+		and/or dump at regular time-intervals BGP data to configured
+		backends.
 pmbmpd          Stand-alone BMP collector daemon; can log real-time and/or dump
 		at regular time-intervals BMP/BGP data to configured backends.
 pmacct  	commandline pmacct client; it allows to retrieve data from a

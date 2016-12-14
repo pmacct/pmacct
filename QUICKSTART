@@ -1009,13 +1009,14 @@ shell> ./configure
 The following configuration snippet shows how to set up a BGP thread (ie. part
 of the NetFlow/IPFIX collector, nfacctd) which will bind to an IP address and
 will support up to a maximum number of 100 peers. Once PE routers start sending
-telemetry data and peer up, it should be possible to see the BGP-related fields,
-ie. as_path, peer_as_dst, local_pref, med, etc., correctly populated while
-querying the memory table:
+flow telemetry data and peer up, it should be possible to see the BGP-related
+fields, ie. as_path, peer_as_dst, local_pref, med, etc., correctly populated
+while querying the memory table:
 
 bgp_daemon: true
 bgp_daemon_ip: X.X.X.X
 bgp_daemon_max_peers: 100
+! bgp_daemon_as: 65555
 nfacctd_as: bgp
 [ ... ]
 plugins: memory
@@ -1026,6 +1027,7 @@ at all from the configuration above:
 
 bgp_daemon_ip: X.X.X.X
 bgp_daemon_max_peers: 100
+! bgp_daemon_as: 65555
 bgp_table_dump_file: /path/to/spool/bgp-$peer_src_ip-%H%M.log
 bgp_table_dump_refresh_time: 300
 
@@ -1034,12 +1036,15 @@ to instantiate plugins. On the other hand, the BGP daemon is instructed to dump
 BGP tables to disk every 300 secs with file names embedding the BGP peer info
 ($peer_src_ip) and time reference (%H%M).
 
-The BGP implementation reads the remote ASN upon receipt of a BGP OPEN message
-and dynamically presents itself as part of the same Autonomous System - to
-ensure an iBGP relationship is established all the times. Also, it acts as a
-passive BGP neighbor and hence will never try to re-establish a fallen peering
-session. For debugging purposes related to the BGP feed(s), bgp_daemon_msglog_*
-configuration directives can be enabled in order to log BGP messaging.
+The BGP implementation, by default, reads the remote ASN upon receipt of a BGP
+OPEN message and dynamically presents itself as part of the same ASN - this is
+to ensure an iBGP relationship is established even in multi ASN scenarios. As
+of 1.6.2, it is possible to put pmacct in a specific ASN of choice by using the
+bgp_daemon_as configuration directive, for example, to establish an eBGP kind
+of relationship. Also, the daemon acts as a passive BGP neighbor and hence will
+never try to re-establish a fallen peering session. For debugging purposes
+related to the BGP feed(s), bgp_daemon_msglog_* configuration directives can be
+enabled in order to log BGP messaging.
 
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can by nature get easily long, when represented as strings.
