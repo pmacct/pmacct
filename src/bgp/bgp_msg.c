@@ -212,12 +212,13 @@ int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, 
 	    		config.name, bms->log_str, bgp_peer_print(peer), cap_type, ntohl(cap_data.as4));
 		  memcpy(&as4_ptr, cap_ptr, 4);
 		  remote_as4 = ntohl(as4_ptr);
-		  peer->cap_4as = bgp_open_cap_ptr+4;
 
 		  if (online) {
 		    memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
+		    peer->cap_4as = bgp_open_cap_reply_ptr+4;
 		    bgp_open_cap_reply_ptr += opt_len+2;
 		  }
+		  else peer->cap_4as = bgp_open_cap_ptr+4;
 		}
 		else {
 		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (malformed AS4 option).\n",
