@@ -48,7 +48,6 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                           struct nflog_data *nfa, void *p)
 {
   static char jumbo_container[10000];
-  struct timeval tv = {};
   struct pcap_pkthdr hdr;
   char *pkt = NULL;
   ssize_t pkt_len = nflog_get_payload(nfa, &pkt);
@@ -66,8 +65,9 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
 
   if (pkt_len == -1)
     return -1;
-  nflog_get_timestamp(nfa, &tv);
-  hdr.ts = tv;
+  if (nflog_get_timestamp(nfa, &hdr.ts) < 0) {
+    gettimeofday(&hdr.ts, NULL);
+  }
   hdr.caplen = MIN(pkt_len, config.snaplen);
   hdr.len = pkt_len;
 
