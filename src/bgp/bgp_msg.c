@@ -42,10 +42,12 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 
   for (bgp_packet_ptr = peer->buf.base; peer->msglen > 0; peer->msglen -= bgp_len, bgp_packet_ptr += bgp_len) {
     bhdr = (struct bgp_header *) bgp_packet_ptr;
-    bgp_len = ntohs(bhdr->bgpo_len);
 
     /* BGP buffer segmentation + reassembly */
-    if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < bgp_len) {
+    if (peer->msglen < BGP_HEADER_SIZE ||
+	(char*)(&bhdr->bgpo_len) + sizeof(bhdr->bgpo_len) > peer->buf.base + peer->buf.len ||
+	peer->msglen < (bgp_len = ntohs(bhdr->bgpo_len))) {
+
       memcpy(tmp_packet, bgp_packet_ptr, peer->msglen);
       memcpy(peer->buf.base, tmp_packet, peer->msglen);
 
