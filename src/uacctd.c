@@ -71,13 +71,23 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
   hdr.caplen = MIN(pkt_len, config.snaplen);
   hdr.len = pkt_len;
 
-  cb_data->ifindex_in = nflog_get_physindev(nfa);
-  if (cb_data->ifindex_in == 0)
-    cb_data->ifindex_in = nflog_get_indev(nfa);
+/*
+set interface always to 1
+set interface direction depending on iptables rule
+append --nflog-prefix <in|out> to the NFLOG target of the rule.
+*/	
+char *direction = nflog_get_prefix(nfa);
+if (strcmp(direction, "in") == 0)
+    {
+           cb_data->ifindex_in = 1;
+           cb_data->ifindex_out = 0;
+    }
+if (strcmp(direction, "out") == 0)
+    {
+           cb_data->ifindex_in = 0;
+           cb_data->ifindex_out = 1;
+    }
 
-  cb_data->ifindex_out = nflog_get_physoutdev(nfa);
-  if (cb_data->ifindex_out == 0)
-    cb_data->ifindex_out = nflog_get_outdev(nfa);
 
 #if defined (HAVE_L2)
   if (mac_len) {
