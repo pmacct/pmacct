@@ -438,7 +438,7 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
     if (shutdown_msg && (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN)) {
       if (msglen >= (BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen)) {
         reply_msg_ptr = (char *) (msg + BGP_MIN_NOTIFICATION_MSG_SIZE);
-        memset(reply_msg_ptr, 0, msglen);
+        memset(reply_msg_ptr, 0, (msglen - BGP_MIN_NOTIFICATION_MSG_SIZE));
         bnsm_reply = (struct bgp_notification_shutdown_msg *) reply_msg_ptr;
 
         bnsm_reply->bgpnsm_len = shutdown_msglen;
