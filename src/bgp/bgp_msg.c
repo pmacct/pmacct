@@ -1116,13 +1116,20 @@ log_update:
 int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
 			 rd_t *rd, path_id_t *path_id, char *label)
 {
-  struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
-  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_misc_structs *bms;
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
-  u_int32_t modulo = bms->route_info_modulo(peer, path_id);
+  u_int32_t modulo;
 
-  if (!inter_domain_routing_db) return ERR;
+  if (!peer) return ERR;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!inter_domain_routing_db || !bms) return ERR;
+
+  modulo = bms->route_info_modulo(peer, path_id);
 
   /* Lookup node. */
   route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
