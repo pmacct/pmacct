@@ -1553,7 +1553,6 @@ sort_version:
   }
 
   for(;;) {
-poll_again:
     status->wakeup = TRUE;
 
     pfd.fd = pipe_fd;
@@ -1570,7 +1569,14 @@ poll_again:
     }
 #endif
 
-    if (ret < 0) goto poll_again;
+    /* Flags set by signal handlers or control socket */
+    if (graceful_shutdown_request) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
+      check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id);
+      goto exit_lane;
+    }
+
+    if (ret < 0) continue;
 
     /* Fatal error from per-packet functions */
     if (cb_ctxt.fatal) {
@@ -1742,13 +1748,6 @@ expiry_check:
 	force_expire(&flowtrack, flowtrack.num_flows - max_flows);
 	goto expiry_check;
       }
-    }
-    
-    /* Flags set by signal handlers or control socket */
-    if (graceful_shutdown_request) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
-      check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id);
-      goto exit_lane;
     }
   }
 		
