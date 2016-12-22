@@ -367,13 +367,10 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
     if (strchr(config.sql_table, '$')) {
       is_topic_dyn = TRUE;
       orig_kafka_topic = config.sql_table;
-      config.sql_table = dyn_kafka_topic;
     }
   }
-  if (config.amqp_routing_key_rr) {
-    orig_kafka_topic = config.sql_table;
-    config.sql_table = dyn_kafka_topic;
-  }
+
+  if (config.amqp_routing_key_rr) orig_kafka_topic = config.sql_table;
 
   p_kafka_init_topic_rr(&kafkap_kafka_host);
   p_kafka_set_topic_rr(&kafkap_kafka_host, config.amqp_routing_key_rr);
@@ -391,7 +388,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
   p_kafka_connect_to_produce(&kafkap_kafka_host);
   p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
-  p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
+  if (!is_topic_dyn && !config.amqp_routing_key_rr) p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
   p_kafka_set_partition(&kafkap_kafka_host, config.kafka_partition);
   p_kafka_set_key(&kafkap_kafka_host, config.kafka_partition_key, config.kafka_partition_keylen);
   p_kafka_set_fallback(&kafkap_kafka_host, config.kafka_fallback);
