@@ -2204,32 +2204,34 @@ void write_and_free_json(FILE *f, void *obj)
   }
 }
 
-void *compose_purge_init_json(pid_t writer_pid)
+void *compose_purge_init_json(char *writer_name, pid_t writer_pid)
 {
-  char event_type[] = "purge_init";
+  char event_type[] = "purge_init", wid[SHORTSHORTBUFLEN];
   json_t *obj = json_object(), *kv;
 
   kv = json_pack("{ss}", "event_type", event_type);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "writer_pid", (json_int_t)writer_pid);
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);  
+  kv = json_pack("{ss}", "writer_id", wid);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
   return obj;
 }
 
-void *compose_purge_close_json(pid_t writer_pid, int purged_entries, int total_entries, int duration)
+void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_entries, int total_entries, int duration)
 {
-  char event_type[] = "purge_close";
+  char event_type[] = "purge_close", wid[SHORTSHORTBUFLEN];
   json_t *obj = json_object(), *kv;
 
   kv = json_pack("{ss}", "event_type", event_type);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
-  kv = json_pack("{sI}", "writer_pid", (json_int_t)writer_pid);
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);
+  kv = json_pack("{ss}", "writer_id", wid);
   json_object_update_missing(obj, kv);
   json_decref(kv);
 
@@ -2317,11 +2319,13 @@ void add_core_name_writer_id_json(void *obj)
   json_decref(kv);
 }
 
-void add_plugin_name_writer_id_json(void *obj)
+void add_plugin_name_writer_id_json(void *obj, char *plugin_name, pid_t writer_pid)
 {
+  char wid[SHORTSHORTBUFLEN]; 
   json_t *kv, *json_obj = (json_t *) obj;
 
-  kv = json_pack("{ss}", "writer_id", config.name);
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", plugin_name, writer_pid);
+  kv = json_pack("{ss}", "writer_id", wid);
   json_object_update_missing(json_obj, kv);
   json_decref(kv);
 }
@@ -2349,12 +2353,12 @@ void write_and_free_json(FILE *f, void *obj)
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
-void *compose_purge_init_json(pid_t writer_pid)
+void *compose_purge_init_json(char *writer_name, pid_t writer_pid)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_purge_init_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
-void *compose_purge_close_json(pid_t writer_pid, int purged_entries, int total_entries, int duration)
+void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_entries, int total_entries, int duration)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_purge_close_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }

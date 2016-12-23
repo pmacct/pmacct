@@ -113,12 +113,12 @@ EXT void *compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 		      struct pkt_stitching *);
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
-EXT void *compose_purge_init_json(pid_t);
-EXT void *compose_purge_close_json(pid_t, int, int, int);
+EXT void *compose_purge_init_json(char *, pid_t);
+EXT void *compose_purge_close_json(char *, pid_t, int, int, int);
 EXT int write_and_free_json_amqp(void *, void *);
 EXT int write_and_free_json_kafka(void *, void *);
 EXT void add_core_name_writer_id_json(void *);
-EXT void add_plugin_name_writer_id_json(void *);
+EXT void add_plugin_name_writer_id_json(void *, char *, pid_t);
 
 #ifdef WITH_AVRO
 EXT avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2);

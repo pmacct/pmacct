@@ -502,7 +502,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
 	else if (config.print_output & PRINT_OUTPUT_JSON) {
           void *json_obj;
 
-	  json_obj = compose_purge_init_json(writer_pid);
+	  json_obj = compose_purge_init_json(config.name, writer_pid);
           if (json_obj) write_and_free_json(f, json_obj);
 	}
       }
@@ -530,7 +530,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
       else if (config.print_output & PRINT_OUTPUT_JSON) {
         void *json_obj;
 
-        json_obj = compose_purge_init_json(writer_pid);
+        json_obj = compose_purge_init_json(config.name, writer_pid);
         if (json_obj) write_and_free_json(stdout, json_obj);
       }
     }
@@ -1326,7 +1326,7 @@ void P_cache_purge(struct chained_cache *queue[], int index)
     else if (config.print_output & PRINT_OUTPUT_JSON) {
       void *json_obj;
 
-      json_obj = compose_purge_close_json(writer_pid, qn, saved_index, duration);
+      json_obj = compose_purge_close_json(config.name, writer_pid, qn, saved_index, duration);
       if (json_obj) write_and_free_json(f, json_obj);
     }
   }

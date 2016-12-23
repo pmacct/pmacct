@@ -411,7 +411,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
       void *json_obj;
       char *json_str;
 
-      json_obj = compose_purge_init_json(writer_pid);
+      json_obj = compose_purge_init_json(config.name, writer_pid);
+
       if (json_obj) json_str = compose_json_str(json_obj);
       if (json_str) {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
@@ -467,6 +468,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
                            &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
                            queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
                            &queue[j]->basetime, queue[j]->stitch);
+      add_plugin_name_writer_id_json(json_obj, config.name, writer_pid);
 
       json_str = compose_json_str(json_obj);
     }
@@ -626,7 +628,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
       void *json_obj;
       char *json_str;
 
-      json_obj = compose_purge_close_json(writer_pid, qn, saved_index, duration);
+      json_obj = compose_purge_close_json(config.name, writer_pid, qn, saved_index, duration);
+
       if (json_obj) json_str = compose_json_str(json_obj);
       if (json_str) {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
