@@ -62,10 +62,6 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
     if (kafka_host->rk && kafka_host->topic_cfg) {
       kafka_host->topic = rd_kafka_topic_new(kafka_host->rk, topic, kafka_host->topic_cfg);
       kafka_host->topic_cfg = NULL; /* rd_kafka_topic_new() destroys conf as per rdkafka.h */
-
-      /* give it some time for the topic to get created, if needed */
-      sleep(1);
-      rd_kafka_poll(kafka_host->rk, 100);
     }
   }
 }

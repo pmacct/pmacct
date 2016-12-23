@@ -2279,7 +2279,6 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
 #endif
 
 #ifdef WITH_KAFKA
-/* XXX: impact of frequent p_kafka_set_topic() to be verified */ 
 int write_and_free_json_kafka(void *kafka_log, void *obj)
 {
   char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];

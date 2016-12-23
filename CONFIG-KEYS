@@ -508,6 +508,11 @@ DESC:           Performs round-robin load-balancing over a set of AMQP routing k
 		the feature is disabled, meaning all messages are sent to the base AMQP routing key
 		or Kafka topic (or the default one, if no amqp_routing_key or kafka_topic is being
 		specified).
+		For Kafka it is adviced to create topics in advance with a tool like kafka-topics.sh
+		(ie. "kafka-topics.sh --zookeepeer <zookeeper URL> --topic <topic> --create") even
+		if auto.create.topics.enable is set to true (default) on the broker. This is because
+		topic creation, especially on distributed systems, may take time and lead to data
+		loss.  
 DEFAULT:        0
 
 KEY:		[ bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_rr |
@@ -623,7 +628,13 @@ DESC:           Name of the Kafka topic to attach to published data. Dynamic nam
 
                 $post_tag2      Configured value of post_tag2.
 
-DEFAULT:        kafka_topic: 'pmacct.acct'
+		It is adviced to create topics in advance with a tool like kafka-topics.sh (ie.
+		"kafka-topics.sh --zookeepeer <zookeeper URL> --topic <topic> --create") even if
+		auto.create.topics.enable is set to true (default) on the broker. This is because
+		topic creation, especially on distributed systems, may take time and lead to data
+		loss.
+
+DEFAULT:        'pmacct.acct'
 
 KEY:            plugin_pipe_kafka_topic
 DESC:           Name of the Kafka topic to use to send data to a plugin. Currently each plugin must
