@@ -468,7 +468,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
                            &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
                            queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
                            &queue[j]->basetime, queue[j]->stitch);
-      add_plugin_name_writer_id_json(json_obj, config.name, writer_pid);
+      add_writer_name_and_pid_json(json_obj, config.name, writer_pid);
 
       json_str = compose_json_str(json_obj);
     }

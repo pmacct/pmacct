@@ -40,6 +40,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
+  pid_t writer_pid = getpid();
 
   char *base64_tdata = NULL;
   size_t base64_tdata_len = 0;
@@ -135,7 +136,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 #ifdef WITH_RABBITMQ
     if ((config.telemetry_msglog_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_DUMP)) {
-      add_core_name_writer_id_json(obj);
+      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -144,7 +145,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 #ifdef WITH_KAFKA
     if ((config.telemetry_msglog_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_DUMP)) {
-      add_core_name_writer_id_json(obj);
+      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }

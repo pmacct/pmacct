@@ -2310,21 +2310,12 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
 }
 #endif
 
-void add_core_name_writer_id_json(void *obj)
-{
-  json_t *kv, *json_obj = (json_t *) obj;
-
-  kv = json_pack("{ss}", "writer_id", config.proc_name);
-  json_object_update_missing(json_obj, kv);
-  json_decref(kv);
-}
-
-void add_plugin_name_writer_id_json(void *obj, char *plugin_name, pid_t writer_pid)
+void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
 {
   char wid[SHORTSHORTBUFLEN]; 
   json_t *kv, *json_obj = (json_t *) obj;
 
-  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", plugin_name, writer_pid);
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", name, writer_pid);
   kv = json_pack("{ss}", "writer_id", wid);
   json_object_update_missing(json_obj, kv);
   json_decref(kv);
@@ -2377,14 +2368,9 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
   return 0;
 }
 
-void add_core_name_writer_id_json(void *obj)
+void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
 {
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_core_name_writer_id_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-}
-
-void add_plugin_name_writer_id_json(void *obj)
-{
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_plugin_name_writer_id_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 #endif
 

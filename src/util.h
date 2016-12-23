@@ -117,8 +117,7 @@ EXT void *compose_purge_init_json(char *, pid_t);
 EXT void *compose_purge_close_json(char *, pid_t, int, int, int);
 EXT int write_and_free_json_amqp(void *, void *);
 EXT int write_and_free_json_kafka(void *, void *);
-EXT void add_core_name_writer_id_json(void *);
-EXT void add_plugin_name_writer_id_json(void *, char *, pid_t);
+EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
 
 #ifdef WITH_AVRO
 EXT avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2);
