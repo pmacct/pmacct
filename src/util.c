@@ -1584,8 +1584,12 @@ void *compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pk
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;
-  char tstamp_str[SRVBUFLEN];
+  char event_type[] = "purge", tstamp_str[SRVBUFLEN];
   json_t *obj = json_object(), *kv;
+
+  kv = json_pack("{ss}", "event_type", event_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
 
   if (wtc & COUNT_TAG) {
     kv = json_pack("{sI}", "tag", (json_int_t)pbase->tag);
