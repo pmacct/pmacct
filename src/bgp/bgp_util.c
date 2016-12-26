@@ -159,6 +159,22 @@ int bgp_str2rd(rd_t *output, char *value)
   return TRUE;
 }
 
+int bgp_label2str(char *str, u_char *label)
+{
+  unsigned long int tmp;
+  char *endp;
+
+  snprintf(str, 8, "0x%x%x%x",
+	(unsigned)(unsigned char)label[0],
+	(unsigned)(unsigned char)label[1],
+	(unsigned)(unsigned char)(label[2] >> 4));
+  
+  tmp = strtoul(str, &endp, 16);
+  snprintf(str, 8, "%u", tmp);
+
+  return TRUE;
+}
+
 /* Allocate bgp_info_extra */
 struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
 {
