@@ -676,7 +676,7 @@ KEY:		[ kafka_partition | plugin_pipe_kafka_partition ]
 DESC:		Defines the Kafka broker topic partition ID. RD_KAFKA_PARTITION_UA or ((int32_t)-1)
 		is to define the configured or default partitioner (slower than sending to a fixed
 		partition). See also kafka_broker_host. 
-DEFAULT:	0
+DEFAULT:	-1
 
 KEY:            kafka_partition_key
 DESC:           Defines the Kafka broker topic partition key. A string of printable characters is

@@ -126,7 +126,11 @@ int p_kafka_get_content_type(struct p_kafka_host *kafka_host)
 
 void p_kafka_set_partition(struct p_kafka_host *kafka_host, int partition)
 {
-  if (kafka_host) kafka_host->partition = partition;
+  if (kafka_host) {
+    if (!partition) kafka_host->partition = RD_KAFKA_PARTITION_UA; 
+    else if (partition == FALSE_NONZERO) kafka_host->partition = 0;
+    else kafka_host->partition = partition;
+  }
 }
 
 int p_kafka_get_partition(struct p_kafka_host *kafka_host)

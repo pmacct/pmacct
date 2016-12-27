@@ -62,6 +62,9 @@
 #ifndef INT_MAX
 #define INT_MAX (2147483647U)
 #endif
+#ifndef INT_MIN
+#define INT_MIN (-2147483648)
+#endif
 
 #define LONGLONG_RETRY INT_MAX
 
@@ -101,7 +104,7 @@
 #define FALSE 0
 #endif
 #ifndef FALSE_NONZERO
-#define FALSE_NONZERO 2
+#define FALSE_NONZERO INT_MIN
 #endif
 #ifndef ERR
 #define ERR -1

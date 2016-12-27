@@ -1779,6 +1779,8 @@ int cfg_key_kafka_partition(char *filename, char *name, char *value_ptr)
     return ERR;
   }
 
+  if (!value) value = FALSE_NONZERO; 
+
   if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_partition = value;
   else {
     for (; list; list = list->next) {
@@ -2326,6 +2328,8 @@ int cfg_key_plugin_pipe_kafka_partition(char *filename, char *name, char *value_
     Log(LOG_ERR, "WARN: [%s] 'plugin_pipe_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
+
+  if (!value) value = FALSE_NONZERO;
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.pipe_kafka_partition = value;
   else {
@@ -4794,6 +4798,8 @@ int cfg_key_sfacctd_counter_kafka_partition(char *filename, char *name, char *va
     return ERR;
   }
 
+  if (!value) value = FALSE_NONZERO;
+
   for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'sfacctd_counter_kafka_partition'. Globalized.\n", filename);
 
@@ -6147,6 +6153,8 @@ int cfg_key_nfacctd_bgp_msglog_kafka_partition(char *filename, char *name, char 
     return ERR;
   }
 
+  if (!value) value = FALSE_NONZERO;
+
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_partition'. Globalized.\n", filename);
 
@@ -6264,6 +6272,8 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_partition(char *filename, char *name, c
     return ERR;
   }
 
+  if (!value) value = FALSE_NONZERO;
+
   for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_table_dump_kafka_partition'. Globalized.\n", filename);
 
@@ -6363,6 +6373,8 @@ int cfg_key_nfacctd_bmp_msglog_kafka_partition(char *filename, char *name, char 
     Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
+
+  if (!value) value = FALSE_NONZERO;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_msglog_kafka_partition'. Globalized.\n", filename);
@@ -6480,6 +6492,8 @@ int cfg_key_nfacctd_bmp_dump_kafka_partition(char *filename, char *name, char *v
     Log(LOG_ERR, "WARN: [%s] 'bmp_dump_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
+
+  if (!value) value = FALSE_NONZERO;
 
   for (; list; list = list->next, changes++) list->cfg.bmp_dump_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_kafka_partition'. Globalized.\n", filename);
@@ -7210,6 +7224,8 @@ int cfg_key_telemetry_msglog_kafka_partition(char *filename, char *name, char *v
     return ERR;
   }
 
+  if (!value) value = FALSE_NONZERO;
+
   for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_partition'. Globalized.\n", filename);
 
@@ -7326,6 +7342,8 @@ int cfg_key_telemetry_dump_kafka_partition(char *filename, char *name, char *val
     Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_kafka_partition' has to be >= -1.\n", filename);
     return ERR;
   }
+
+  if (!value) value = FALSE_NONZERO;
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_partition'. Globalized.\n", filename);
