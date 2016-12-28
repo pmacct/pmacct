@@ -198,7 +198,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
-      bgp_label2str(label_str, &ri->extra->label);
+      bgp_label2str(label_str, ri->extra->label);
       kv = json_pack("{ss}", "label", label_str);
       json_object_update_missing(obj, kv);
       json_decref(kv);
