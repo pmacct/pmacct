@@ -1945,6 +1945,8 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct bgp_info *info;
   int ret = -1;
 
+  /* XXX: no src_ret lookup? */
+
   if (dst_ret) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
     if (info && info->extra) {
@@ -3273,11 +3275,35 @@ int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_t 
 int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
+  struct bgp_info *info;
+
+  /* if bitr is populate we infer non-zero config.nfacctd_flow_to_rd_map */
+  if (pptrs->bitr) memcpy(&e->key.mpls_vpn_rd.rd, &pptrs->bitr, sizeof(rd_t));
+  else {
+    /* XXX: no src_ret lookup? */
+
+    if (dst_ret) {
+      info = (struct bgp_info *) pptrs->bgp_dst_info;
+      if (info && info->extra) memcpy(&e->key.mpls_vpn_rd.rd, &info->extra->rd, sizeof(rd_t));
+    }
+  }
+
+  hash_serial_append(hash_serializer, (char *)&e->key.mpls_vpn_rd.rd, sizeof(rd_t), FALSE);
+
+  return FALSE;
+}
+
+/*
+int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* if bitr is populate we infer non-zero config.nfacctd_flow_to_rd_map */
+  // if bitr is populate we infer non-zero config.nfacctd_flow_to_rd_map
   if (pptrs->bitr) memcpy(&e->key.mpls_vpn_rd.rd, &pptrs->bitr, sizeof(rd_t));
 
   if (config.acct_type == ACCT_NF) {
@@ -3308,6 +3334,7 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
 
   return FALSE;
 }
+*/
 
 int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {

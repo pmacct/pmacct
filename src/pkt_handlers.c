@@ -412,8 +412,9 @@ void evaluate_packet_handlers()
         channels_list[index].phandler[primitives] = mpls_vpn_rd_frommap_handler;
         primitives++;
       } 
+
       if (config.acct_type == ACCT_NF) {
-        channels_list[index].phandler[primitives] = NF_mpls_vpn_rd_handler;
+        channels_list[index].phandler[primitives] = NF_mpls_vpn_id_handler;
         primitives++;
       }
     }
@@ -3641,7 +3642,7 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
   }
 }
 
-void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;

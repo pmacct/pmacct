@@ -104,7 +104,7 @@ EXT void NF_nat_event_handler(struct channels_list_entry *, struct packet_ptrs *
 EXT void NF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
