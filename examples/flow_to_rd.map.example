@@ -22,6 +22,8 @@
 !                       MPLS-enabled networks this can be also matched against
 !			top label address where available (ie. egress NetFlow
 !			v9/IPFIX exports).
+! 'mpls_vpn_id'		MATCH: MPLS VPN ID. In NetFlow/IPFIX this is compared
+!			against field types #234 and #235.
 ! 'mpls_label_bottom'	MATCH: MPLS bottom label value.
 !
 ! A couple of straightforward examples follow.  

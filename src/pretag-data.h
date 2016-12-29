@@ -70,6 +70,7 @@ const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_PEER_SRC_AS, PT_map_index_entries_peer_src_as_handler},
   {PRETAG_PEER_DST_AS, PT_map_index_entries_peer_dst_as_handler},
   {PRETAG_MPLS_LABEL_BOTTOM, PT_map_index_entries_mpls_label_bottom_handler},
+  {PRETAG_MPLS_VPN_ID, PT_map_index_entries_mpls_vpn_id_handler},
   {PRETAG_MPLS_VPN_RD, PT_map_index_entries_mpls_vpn_rd_handler},
   {PRETAG_SRC_MAC, PT_map_index_entries_src_mac_handler},
   {PRETAG_DST_MAC, PT_map_index_entries_dst_mac_handler},
@@ -88,6 +89,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_PEER_SRC_AS, PT_map_index_fdata_peer_src_as_handler},
   {PRETAG_PEER_DST_AS, PT_map_index_fdata_peer_dst_as_handler},
   {PRETAG_MPLS_LABEL_BOTTOM, PT_map_index_fdata_mpls_label_bottom_handler},
+  {PRETAG_MPLS_VPN_ID, PT_map_index_entries_mpls_vpn_id_handler},
   {PRETAG_MPLS_VPN_RD, PT_map_index_fdata_mpls_vpn_rd_handler},
   {PRETAG_SRC_MAC, PT_map_index_fdata_src_mac_handler},
   {PRETAG_DST_MAC, PT_map_index_fdata_dst_mac_handler},
@@ -151,6 +153,7 @@ const struct _map_dictionary_line bitr_map_dictionary[] = {
   {"in", PT_map_input_handler},
   {"out", PT_map_output_handler},
   {"bgp_nexthop", PT_map_bgp_nexthop_handler},
+  {"mpls_vpn_id", BITR_map_mpls_vpn_id_handler}, 
   {"mpls_label_bottom", BITR_map_mpls_label_bottom_handler},
   {"", NULL}
 };
