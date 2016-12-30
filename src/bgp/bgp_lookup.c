@@ -63,8 +63,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   pptrs->bgp_peer = NULL;
   pptrs->bgp_nexthop_info = NULL;
   compare_bgp_port = FALSE;
-
-  /* XXX: add SAFI_MPLS_LABEL case */
   safi = SAFI_UNICAST;
 
   memset(&rd, 0, sizeof(rd));
@@ -92,7 +90,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 #endif
   }
 
-  start_again:
+  start_again_follow_default:
 
   peer = bms->bgp_lookup_find_peer(sa, xs_entry, pptrs->l3_proto, compare_bgp_port);
   pptrs->bgp_peer = (char *) peer;
@@ -118,6 +116,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       safi = SAFI_MPLS_VPN;
       memcpy(&rd, &pptrs->bitr, sizeof(rd));
     }
+
+    /* XXX: can be further optimized for the case of no SAFI_UNICAST rib */
+    start_again_mpls_label:
 
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
@@ -229,6 +230,19 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     }
 #endif
 
+    if (!pptrs->bgp_src && !pptrs->bgp_dst && safi != SAFI_MPLS_LABEL) {
+      if (pptrs->l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
+        safi = SAFI_MPLS_LABEL;
+        goto start_again_mpls_label;
+      }
+#if defined ENABLE_IPV6
+      else if (pptrs->l3_proto == ETHERTYPE_IPV6 && inter_domain_routing_db->rib[AFI_IP6][SAFI_MPLS_LABEL]) {
+        safi = SAFI_MPLS_LABEL;
+        goto start_again_mpls_label;
+      }
+#endif
+    }
+
     if (follow_default && safi != SAFI_MPLS_VPN) {
       default_node = NULL;
 
@@ -282,7 +296,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
               memset(sa, 0, sizeof(struct sockaddr));
               sa->sa_family = AF_INET;
               memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->mp_nexthop.address.ipv4, 4);
-	      goto start_again;
+	      goto start_again_follow_default;
             }
 #if defined ENABLE_IPV6
             else if (info->attr->mp_nexthop.family == AF_INET6) {
@@ -290,7 +304,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
               memset(sa, 0, sizeof(struct sockaddr));
               sa->sa_family = AF_INET6;
               ip6_addr_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6);
-              goto start_again;
+              goto start_again_follow_default;
             }
 #endif
             else {
@@ -298,7 +312,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
               memset(sa, 0, sizeof(struct sockaddr));
               sa->sa_family = AF_INET;
               memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->nexthop, 4);
-              goto start_again;
+              goto start_again_follow_default;
 	    }
 	  }
         }
@@ -371,7 +385,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
       struct host_addr peer_dst_ip;
       rd_t rd;
 
-      // XXX: rd and peer_dst_ip (add_paths capability) not supported
+      /* XXX: SAFI_MPLS_LABEL, SAFI_MPLS_VPN and peer_dst_ip (add_paths capability) not supported */
       memset(&peer_dst_ip, 0, sizeof(peer_dst_ip));
       memset(&rd, 0, sizeof(rd));
       memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
