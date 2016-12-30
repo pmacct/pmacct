@@ -522,46 +522,33 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
     update.length = update_len;
   }
 
-  if (withdraw.length) bgp_nlri_parse(peer, NULL, &withdraw);
-
   /* NLRI parsing */
+  if (withdraw.length) bgp_nlri_parse(peer, NULL, &withdraw);
   if (update.length)  bgp_nlri_parse(peer, &attr, &update);
 	
   if (mp_update.length
 	  && mp_update.afi == AFI_IP
-	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL))
+	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
+	      mp_update.safi == SAFI_MPLS_VPN))
     bgp_nlri_parse(peer, &attr, &mp_update);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP
-	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL))
+	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
+	      mp_withdraw.safi == SAFI_MPLS_VPN))
     bgp_nlri_parse (peer, NULL, &mp_withdraw);
-
-  if (mp_update.length
-          && mp_update.afi == AFI_IP && mp_update.safi == SAFI_MPLS_VPN)
-    bgp_nlri_parse(peer, &attr, &mp_update);
-
-  if (mp_withdraw.length
-          && mp_withdraw.afi == AFI_IP && mp_withdraw.safi == SAFI_MPLS_VPN)
-    bgp_nlri_parse(peer, NULL, &mp_withdraw);
 
 #if defined ENABLE_IPV6
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
-	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL))
+	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
+	      mp_update.safi == SAFI_MPLS_VPN))
     bgp_nlri_parse(peer, &attr, &mp_update);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP6
-	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL))
-    bgp_nlri_parse(peer, NULL, &mp_withdraw);
-
-  if (mp_update.length
-          && mp_update.afi == AFI_IP6 && mp_update.safi == SAFI_MPLS_VPN)
-    bgp_nlri_parse(peer, &attr, &mp_update);
-
-  if (mp_withdraw.length
-          && mp_withdraw.afi == AFI_IP6 && mp_withdraw.safi == SAFI_MPLS_VPN)
+	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
+	      mp_withdraw.safi == SAFI_MPLS_VPN))
     bgp_nlri_parse(peer, NULL, &mp_withdraw);
 #endif
 
@@ -919,12 +906,10 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
       psize = ((p.prefixlen+7)/8);
       if (psize > end) return ERR;
 
-      /* Fetch prefix from NLRI packet, drop the 3 bytes label. */
+      /* Fetch label (3) and prefix from NLRI packet */
+      memcpy(label, pnt, 3);
       memcpy(&p.u.prefix, pnt+3, (psize-3));
       p.prefixlen -= 24;
-
-      /* As we trash the label anyway, let's rewrite the SAFI as plain unicast */
-      safi = SAFI_UNICAST;
     }
     else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
       if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return ERR;
@@ -932,7 +917,7 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
       psize = ((p.prefixlen+7)/8);
       if (psize > end) return ERR;
 
-          /* Fetch label (3), RD (8) and prefix (4) from NLRI packet */
+      /* Fetch label (3), RD (8) and prefix from NLRI packet */
       memcpy(label, pnt, 3);
 
       memcpy(&rd.type, pnt+3, 2);
@@ -1041,11 +1026,11 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
       ri->attr = attr_new;
 
       /* Install/update MPLS stuff if required */
-      if (safi == SAFI_MPLS_VPN) {
+      if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
 	if (!rie) rie = bgp_info_extra_get(ri);
 
 	if (rie) {
-	  memcpy(&rie->rd, rd, sizeof(rd_t));
+	  if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
 	  memcpy(&rie->label, label, 3);
 	}
       }
@@ -1073,11 +1058,11 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
     new->peer = peer;
     new->attr = attr_new;
 
-    if (safi == SAFI_MPLS_VPN) {
+    if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
       if (!rie) rie = bgp_info_extra_get(new);
 
       if (rie) {
-        memcpy(&rie->rd, rd, sizeof(rd_t));
+        if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
         memcpy(&rie->label, label, 3);
       }
     }

@@ -63,6 +63,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   pptrs->bgp_peer = NULL;
   pptrs->bgp_nexthop_info = NULL;
   compare_bgp_port = FALSE;
+
+  /* XXX: add SAFI_MPLS_LABEL case */
   safi = SAFI_UNICAST;
 
   memset(&rd, 0, sizeof(rd));
