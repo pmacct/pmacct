@@ -454,7 +454,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 #endif
                   tmp.num++;
                 }
-                else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
+                else if (((!tmp.e[tmp.num].id && !tmp.e[tmp.num].id2) || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
                         config.name, config.type, filename, tot_lines);
               }
