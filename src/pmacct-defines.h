@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -63,7 +63,7 @@
 #define INT_MAX (2147483647U)
 #endif
 #ifndef INT_MIN
-#define INT_MIN (-2147483648)
+#define INT_MIN (-2147483647 - 1)
 #endif
 
 #define LONGLONG_RETRY INT_MAX

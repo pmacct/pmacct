@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -67,6 +67,7 @@
 #include <sys/resource.h>
 #include <search.h>
 #include <dirent.h>
+#include <limits.h>
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)
