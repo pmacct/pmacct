@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -1055,7 +1055,10 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
+  bms->peer_port_str = malloc(strlen("peer_ip_src_port") + 1);
+  strcpy(bms->peer_port_str, "peer_ip_src_port");
   bms->bgp_peer_log_msg_extras = NULL;
+  bms->bgp_peer_logdump_initclose_extras = NULL;
 
   bms->table_peer_buckets = config.bgp_table_peer_buckets;
   bms->table_per_peer_buckets = config.bgp_table_per_peer_buckets;

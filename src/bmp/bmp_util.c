@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -98,7 +98,33 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
+    kv = json_pack("{sI}", "bmp_router_port", (json_int_t)peer->tcp_port);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
     kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+#endif
+  }
+}
+
+void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *peer, int output, void *void_obj)
+{
+  struct bgp_misc_structs *bms;
+  struct bmp_peer *bmpp;
+
+  if (!peer || !void_obj) return;
+
+  bms = bgp_select_misc_db(peer->type);
+  bmpp = peer->bmp_se;
+  if (!bms || !bmpp) return;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj, *kv;
+
+    kv = json_pack("{sI}", "bmp_router_port", (json_int_t)peer->tcp_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 #endif
@@ -127,7 +153,10 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("bmp_router") + 1);
   strcpy(bms->peer_str, "bmp_router");
+  bms->peer_str = malloc(strlen("bmp_router_port") + 1);
+  strcpy(bms->peer_port_str, "bmp_router_port");
   bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
+  bms->bgp_peer_logdump_initclose_extras = bgp_peer_logdump_initclose_extras_bmp;
 
   bms->table_peer_buckets = config.bmp_table_peer_buckets;
   bms->table_per_peer_buckets = config.bmp_table_per_peer_buckets;

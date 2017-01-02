@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -108,6 +108,7 @@ struct bgp_misc_structs {
   char log_tstamp_str[SRVBUFLEN];
   struct bgp_dump_event dump;
   char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
+  char *peer_port_str; /* "bmp_router_port", "peer_src_ip_port", etc. */
   char *log_str; /* BGP, BMP, thread, daemon, etc. */
   int is_thread;
 
@@ -132,6 +133,7 @@ struct bgp_misc_structs {
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
   void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, void *);
+  void (*bgp_peer_logdump_initclose_extras)(struct bgp_peer *, int, void *);
 
   int table_peer_buckets;
   int table_per_peer_buckets;

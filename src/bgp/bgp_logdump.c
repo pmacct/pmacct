@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -320,6 +320,9 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       json_object_update_missing(obj, kv);
       json_decref(kv);
 
+      if (bms->bgp_peer_logdump_initclose_extras)
+	bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
+
       addr_to_str(ip_address, &peer->addr);
       kv = json_pack("{ss}", bms->peer_str, ip_address);
       json_object_update_missing(obj, kv);
@@ -328,6 +331,8 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       kv = json_pack("{ss}", "event_type", event_type);
       json_object_update_missing(obj, kv);
       json_decref(kv);
+
+      if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
       if (bms->msglog_file)
 	write_and_free_json(peer->log->fd, obj);
@@ -396,6 +401,9 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     kv = json_pack("{ss}", "timestamp", bms->log_tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
+
+    if (bms->bgp_peer_logdump_initclose_extras)
+      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", bms->peer_str, ip_address);
@@ -525,6 +533,9 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
+    if (bms->bgp_peer_logdump_initclose_extras)
+      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
+
     addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", bms->peer_str, ip_address);
     json_object_update_missing(obj, kv);
@@ -589,6 +600,9 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
     json_object_update_missing(obj, kv);
     json_decref(kv);
+
+    if (bms->bgp_peer_logdump_initclose_extras)
+      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
     kv = json_pack("{ss}", bms->peer_str, ip_address);

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -89,6 +89,10 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     }
 
     kv = json_pack("{ss}", "bmp_router", peer->addr_str);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{sI}", "bmp_router_port", (json_int_t)peer->tcp_port);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
