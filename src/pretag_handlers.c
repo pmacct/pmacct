@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -417,6 +417,11 @@ int BITR_map_mpls_vpn_id_handler(char *filename, struct id_entry *e, char *value
 
   e->key.mpls_vpn_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   e->key.mpls_vpn_id.n = strtoul(value, &endptr, 10);
+
+  if (!e->key.mpls_vpn_id.n) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad MPLS VPN ID value '%u'.\n", config.name, config.type, filename, e->key.mpls_vpn_id.n);
+    return TRUE;
+  }
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_MPLS_VPN_ID) {
@@ -2427,17 +2432,24 @@ int BITR_mpls_vpn_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0, label = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
     if (tpl->tpl[NF9_INGRESS_VRFID].len) {
-      if (!memcmp(&entry->key.mpls_vpn_id.n, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4)))
+      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+      label = ntohl(tmp32);
+
+      if (!memcmp(&entry->key.mpls_vpn_id.n, &label, 4))
         return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
     if (tpl->tpl[NF9_EGRESS_VRFID].len) {
-      if (!memcmp(&entry->key.mpls_vpn_id.n, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4)))
+      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+      label = ntohl(tmp32);
+
+      if (!memcmp(&entry->key.mpls_vpn_id.n, &label, 4))
         return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
