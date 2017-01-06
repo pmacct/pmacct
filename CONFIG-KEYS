@@ -665,7 +665,8 @@ DESC:           Defines one or multiple, comma-separated, Kafka brokers. If only
 		by the core process to send data to plugins. When defining multiple brokers, if the
 		host is IPv4, the value is expected as 'address:port'. If IPv6, it is expected as
 		'[address]:port'. When defining a single broker, this is not needed as the IPv6
-		address is detected and wrapped-around '[' ']' symbols. 
+		address is detected and wrapped-around '[' ']' symbols. FQDNs are also accepted.
+		SSL connections can be configured as "ssl://broker3:9000,ssl://broker2". 
 DEFAULT:        127.0.0.1
 
 KEY:            [ kafka_broker_port | plugin_pipe_broker_port ]
