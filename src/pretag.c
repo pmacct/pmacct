@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -437,7 +437,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 			config.name, config.type, filename, tot_lines);
 	      }
               else if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
-                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].key.agent_ip.a.family) {
+                if (!err && (tmp.e[tmp.num].id || tmp.e[tmp.num].id2) && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j, z;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);

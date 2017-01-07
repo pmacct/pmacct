@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -67,7 +67,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 
   memset(&rd, 0, sizeof(rd));
 
-  if (pptrs->bta) {
+  if (pptrs->bta || pptrs->bta2) {
     sa = &sa_local;
     if (pptrs->bta_af == ETHERTYPE_IP) {
       sa->sa_family = AF_INET;
