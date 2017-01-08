@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -531,15 +531,13 @@ void skinny_bmp_daemon()
       if (bmp_misc_db->dump_backend_methods)
 	bmp_dump_init_peer(peer);
 
-      /* Check: only one TCP connection is allowed per peer */
+      /* Check: multiple TCP connections per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].self.addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].self.addr))) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Refusing new connection from existing peer.\n",
+	  if (bmp_misc_db->is_thread && !config.nfacctd_bgp_to_agent_map) {
+            Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple connections from peer and no bgp_agent_map defined.\n",
                                 config.name, bmp_misc_db->log_str, bmp_peers[peers_check_idx].self.addr_str);
-          FD_CLR(peer->fd, &bkp_read_descs);
-          bmp_peer_close(bmpp, FUNC_TYPE_BMP);
-	  recalc_fds = TRUE;
-          goto read_data;
+	  }
         }
         else {
           if (bmp_peers[peers_check_idx].self.fd) peers_num++;

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -534,6 +534,7 @@ void skinny_bgp_daemon_online()
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
 
       /* Check: only one TCP connection is allowed per peer */
+      /* XXX: fixme for NAT traversal scenarios */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
 	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
