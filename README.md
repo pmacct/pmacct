@@ -4,8 +4,8 @@ DOCUMENTATION
 =============
 
 - Online:
-  * pmacct wiki: http://wiki.pmacct.net/
-  * GitHub: https://github.com/pmacct/pmacct/
+  * GitHub Wiki Pages: https://github.com/pmacct/pmacct/wiki
+  * GitHub master code: https://github.com/pmacct/pmacct/
 
 - Distribution tarball:
   * ChangeLog: History of features version by version 
