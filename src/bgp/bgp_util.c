@@ -214,6 +214,30 @@ struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
   return ri->extra;
 }
 
+struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi,
+		  			      path_id_t *path_id, rd_t *rd, char *label)
+{
+  struct bgp_info_extra *rie = NULL;
+
+  /* Install/update MPLS stuff if required */
+  if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
+    if (!rie) rie = bgp_info_extra_get(ri);
+
+    if (rie) {
+      if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
+      memcpy(&rie->label, label, 3);
+    }
+  }
+
+  /* Install/update BGP ADD-PATHs stuff if required */
+  if (peer->cap_add_paths && path_id && *path_id) {
+    if (!rie) rie = bgp_info_extra_get(ri);
+    if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
+  }
+
+  return rie;
+}
+
 /* Allocate new bgp info structure. */
 struct bgp_info *bgp_info_new(struct bgp_peer *peer)
 {
@@ -1067,6 +1091,8 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->route_info_modulo = bgp_route_info_modulo;
   bms->bgp_lookup_find_peer = bgp_lookup_find_bgp_peer;
   bms->bgp_lookup_node_match_cmp = bgp_lookup_node_match_cmp_bgp;
+
+  if (!bms->is_thread && !bms->dump_backend_methods) bms->skip_rib = TRUE;
 }
 
 int bgp_peer_cmp(const void *a, const void *b)

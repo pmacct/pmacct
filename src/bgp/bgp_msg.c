@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -967,8 +967,8 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 {
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_misc_structs *bms;
-  struct bgp_node *route = NULL;
-  struct bgp_info *ri = NULL, *new = NULL;
+  struct bgp_node *route = NULL, route_local;
+  struct bgp_info *ri = NULL, *new = NULL, ri_local;
   struct bgp_attr *attr_new = NULL;
   u_int32_t modulo;
 
@@ -979,111 +979,100 @@ int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_
 
   if (!inter_domain_routing_db || !bms) return ERR;
 
-  modulo = bms->route_info_modulo(peer, path_id);
-  route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
+  if (!bms->skip_rib) { 
+    modulo = bms->route_info_modulo(peer, path_id);
+    route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
 
-  /* Check previously received route. */
-  for (ri = route->info[modulo]; ri; ri = ri->next) {
-    if (ri->peer == peer) { 
-      if (safi == SAFI_MPLS_VPN) {
-	if (ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)));
-	else continue;
-      }
-
-      if (peer->cap_add_paths) {
-	if (path_id && *path_id) {
-	  if (ri->extra && *path_id == ri->extra->path_id);
+    /* Check previously received route. */
+    for (ri = route->info[modulo]; ri; ri = ri->next) {
+      if (ri->peer == peer) { 
+        if (safi == SAFI_MPLS_VPN) {
+	  if (ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)));
 	  else continue;
-	}
-	else {
-	  if (!ri->extra || (ri->extra && !ri->extra->path_id));
-	  else continue;
-	}
+        }
+
+        if (peer->cap_add_paths) {
+	  if (path_id && *path_id) {
+	    if (ri->extra && *path_id == ri->extra->path_id);
+	    else continue;
+	  }
+	  else {
+	    if (!ri->extra || (ri->extra && !ri->extra->path_id));
+	    else continue;
+	  }
+        }
+
+        break;
       }
-
-      break;
     }
-  }
 
-  attr_new = bgp_attr_intern(peer, attr);
+    attr_new = bgp_attr_intern(peer, attr);
 
-  if (ri) {
-    /* Received same information */
-    if (attrhash_cmp(ri->attr, attr_new)) {
-      bgp_unlock_node(peer, route);
-      bgp_attr_unintern(peer, attr_new);
+    if (ri) {
+      /* Received same information */
+      if (attrhash_cmp(ri->attr, attr_new)) {
+        bgp_unlock_node(peer, route);
+        bgp_attr_unintern(peer, attr_new);
 
-      if (bms->msglog_backend_methods)
-	goto log_update;
+        if (bms->msglog_backend_methods)
+	  goto log_update;
 
-      return SUCCESS;
+        return SUCCESS;
+      }
+      else {
+        struct bgp_info_extra *rie = NULL;
+
+        /* Update to new attribute.  */
+        bgp_attr_unintern(peer, ri->attr);
+        ri->attr = attr_new;
+        rie = bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
+
+        bgp_unlock_node (peer, route);
+
+        if (bms->msglog_backend_methods)
+	  goto log_update;
+
+        return SUCCESS;
+      }
     }
-    else {
+
+    /* Make new BGP info. */
+    new = bgp_info_new(peer);
+    if (new) {
       struct bgp_info_extra *rie = NULL;
 
-      /* Update to new attribute.  */
-      bgp_attr_unintern(peer, ri->attr);
-      ri->attr = attr_new;
+      new->peer = peer;
+      new->attr = attr_new;
+      rie = bgp_info_extra_process(peer, new, safi, path_id, rd, label);
+    }
+    else return ERR;
 
-      /* Install/update MPLS stuff if required */
-      if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
-	if (!rie) rie = bgp_info_extra_get(ri);
+    /* Register new BGP information. */
+    bgp_info_add(peer, route, new, modulo);
 
-	if (rie) {
-	  if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
-	  memcpy(&rie->label, label, 3);
-	}
-      }
+    /* route_node_get lock */
+    bgp_unlock_node(peer, route);
 
-      /* Install/update BGP ADD-PATHs stuff if required */
-      if (peer->cap_add_paths && path_id && *path_id) {
-	if (!rie) rie = bgp_info_extra_get(ri);
-	if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
-      }
-
-      bgp_unlock_node (peer, route);
-
-      if (bms->msglog_backend_methods)
-	goto log_update;
-
-      return SUCCESS;
+    if (bms->msglog_backend_methods) {
+      ri = new;
+      goto log_update;
     }
   }
+  else {
+    if (bms->msglog_backend_methods) {
+      route = &route_local;
+      memset(&route_local, 0, sizeof(struct bgp_node));
+      memcpy(&route_local.p, p, sizeof(struct prefix)); 
 
-  /* Make new BGP info. */
-  new = bgp_info_new(peer);
-  if (new) {
-    struct bgp_info_extra *rie = NULL;
+      ri = &ri_local;
+      memset(&ri_local, 0, sizeof(struct bgp_info));
 
-    new->peer = peer;
-    new->attr = attr_new;
+      ri->peer = peer;
+      ri->attr = bgp_attr_intern(peer, attr);
+      bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
 
-    if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
-      if (!rie) rie = bgp_info_extra_get(new);
-
-      if (rie) {
-        if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
-        memcpy(&rie->label, label, 3);
-      }
+      goto log_update;
     }
-
-    if (peer->cap_add_paths && path_id && *path_id) {
-      if (!rie) rie = bgp_info_extra_get(new);
-
-      if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
-    }
-  }
-  else return ERR;
-
-  /* Register new BGP information. */
-  bgp_info_add(peer, route, new, modulo);
-
-  /* route_node_get lock */
-  bgp_unlock_node(peer, route);
-
-  if (bms->msglog_backend_methods) {
-    ri = new;
-    goto log_update;
   }
 
   return SUCCESS;
@@ -1095,6 +1084,11 @@ log_update:
     bgp_peer_log_msg(route, ri, afi, safi, event_type, bms->msglog_output, BGP_LOG_TYPE_UPDATE);
   }
 
+  if (bms->skip_rib) {
+    if (ri->extra) bgp_info_extra_free(&ri->extra);
+    bgp_attr_unintern(peer, ri->attr);
+  }
+
   return SUCCESS;
 }
 
@@ -1103,8 +1097,8 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 {
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_misc_structs *bms;
-  struct bgp_node *route = NULL;
-  struct bgp_info *ri = NULL;
+  struct bgp_node *route = NULL, route_local;
+  struct bgp_info *ri = NULL, ri_local;
   u_int32_t modulo;
 
   if (!peer) return ERR;
@@ -1114,31 +1108,47 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
 
   if (!inter_domain_routing_db || !bms) return ERR;
 
-  modulo = bms->route_info_modulo(peer, path_id);
+  if (!bms->skip_rib) {
+    modulo = bms->route_info_modulo(peer, path_id);
 
-  /* Lookup node. */
-  route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
+    /* Lookup node. */
+    route = bgp_node_get(peer, inter_domain_routing_db->rib[afi][safi], p);
 
-  /* Check previously received route. */
-  for (ri = route->info[modulo]; ri; ri = ri->next) {
-    if (ri->peer == peer) {
-      if (safi == SAFI_MPLS_VPN) {
-        if (ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)));
-        else continue;
-      }
-
-      if (peer->cap_add_paths) {
-        if (path_id && *path_id) {
-          if (ri->extra && *path_id == ri->extra->path_id);
+    /* Check previously received route. */
+    for (ri = route->info[modulo]; ri; ri = ri->next) {
+      if (ri->peer == peer) {
+        if (safi == SAFI_MPLS_VPN) {
+          if (ri->extra && !memcmp(&ri->extra->rd, rd, sizeof(rd_t)));
           else continue;
         }
-        else {
-          if (!ri->extra || (ri->extra && !ri->extra->path_id));
-          else continue;
-        }
-      }
 
-      break;
+        if (peer->cap_add_paths) {
+          if (path_id && *path_id) {
+            if (ri->extra && *path_id == ri->extra->path_id);
+            else continue;
+          }
+          else {
+            if (!ri->extra || (ri->extra && !ri->extra->path_id));
+            else continue;
+          }
+        }
+
+        break;
+      }
+    }
+  }
+  else {
+    if (bms->msglog_backend_methods) {
+      route = &route_local;
+      memset(&route_local, 0, sizeof(struct bgp_node));
+      memcpy(&route_local.p, p, sizeof(struct prefix));
+
+      ri = &ri_local;
+      memset(&ri_local, 0, sizeof(struct bgp_info));
+
+      ri->peer = peer;
+      ri->attr = bgp_attr_intern(peer, attr);
+      bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
     }
   }
 
@@ -1148,11 +1158,19 @@ int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, af
     bgp_peer_log_msg(route, ri, afi, safi, event_type, bms->msglog_output, BGP_LOG_TYPE_WITHDRAW);
   }
 
-  /* Withdraw specified route from routing table. */
-  if (ri) bgp_info_delete(peer, route, ri, modulo); 
+  if (!bms->skip_rib) {
+    /* Withdraw specified route from routing table. */
+    if (ri) bgp_info_delete(peer, route, ri, modulo); 
 
-  /* Unlock bgp_node_get() lock. */
-  bgp_unlock_node(peer, route);
+    /* Unlock bgp_node_get() lock. */
+    bgp_unlock_node(peer, route);
+  }
+  else {
+    if (bms->msglog_backend_methods) {
+      if (ri->extra) bgp_info_extra_free(&ri->extra);
+      bgp_attr_unintern(peer, ri->attr);
+    }
+  }
 
   return SUCCESS;
 }
