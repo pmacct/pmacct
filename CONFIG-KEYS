@@ -413,7 +413,9 @@ DESC:		Enables syslog logging, using the specified facility.
 DEFAULT:	none (logging to stderr)
 
 KEY:		logfile 
-DESC:           Enables logging to a file (bypassing syslog); expected value is a pathname
+DESC:           Enables logging to a file (bypassing syslog); expected value is a pathname. The target
+		file can be re-opened by sending a SIGHUP to the daemon so that, for example, logs can
+		be rotated. 
 DEFAULT:	none (logging to stderr)
 
 KEY:		[ amqp_host | plugin_pipe_amqp_host ]

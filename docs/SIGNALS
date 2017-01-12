@@ -1,6 +1,7 @@
 SIGNALS:
-Here follows a list of supported signals and their meaning; note: pmacct core
-process says goodbye when its last child dies or is terminated.
+Here follows a list of supported signals and their meaning. If a signal is
+not being properly delivered to the daemon, and this is on a system running
+SELinux, check for SELinux interferences.
 
 
 Core process:
