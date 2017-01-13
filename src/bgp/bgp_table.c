@@ -74,8 +74,12 @@ bgp_node_create (struct bgp_peer *peer)
   if (rn) {
     memset (rn, 0, sizeof (struct bgp_node));
 
-    rn->info = (void **) malloc(sizeof(struct bgp_info *) * (bms->table_peer_buckets * bms->table_per_peer_buckets));
-    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * (bms->table_peer_buckets * bms->table_per_peer_buckets));
+    if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
+    u_int32_t info_count = (bms->table_peer_buckets * bms->table_per_peer_buckets);
+    rn->info = (void **) malloc(sizeof(struct bgp_info *) * info_count);
+    if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
+
+    if (rn->info) memset (rn->info, 0, sizeof(struct bgp_info *) * info_count);
     else goto malloc_failed;
   }
   else goto malloc_failed;
@@ -224,8 +228,10 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   if (!bms) return;
 
   modulo = modulo_func(peer, NULL);
+  if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
   if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
   else modulo_max = 1;
+  if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
 
   matched_node = NULL;
   matched_info = NULL;
@@ -362,7 +368,11 @@ bgp_node_delete (struct bgp_peer *peer, struct bgp_node *node)
 
   assert (node->lock == 0);
 
-  for (ri_idx = 0; ri_idx < (bms->table_peer_buckets * bms->table_per_peer_buckets); ri_idx++)
+  if (bms->is_thread) pthread_mutex_lock(&bms->table_mutex);
+  u_int32_t idx_max = (bms->table_peer_buckets * bms->table_per_peer_buckets);
+  if (bms->is_thread) pthread_mutex_unlock(&bms->table_mutex);
+
+  for (ri_idx = 0; ri_idx < idx_max; ri_idx++)
     assert (node->info[ri_idx] == NULL);
 
   if (node->l_left && node->l_right)
