@@ -47,7 +47,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 #if defined ENABLE_IPV6
   struct in6_addr pref6;
 #endif
-  int saved_table_per_peer_buckets, saved_cap_add_paths;
   safi_t safi;
   rd_t rd;
 
@@ -127,20 +126,12 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	nmct2.rd = &rd;
 	nmct2.peer_dst_ip = NULL;
 
-	saved_table_per_peer_buckets = bms->table_per_peer_buckets; 
-	bms->table_per_peer_buckets = 1;
-	saved_cap_add_paths = peer->cap_add_paths;
-	peer->cap_add_paths = FALSE;
-
         memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
 	bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
 			    &pref4, (struct bgp_peer *) pptrs->bgp_peer,
 		     	    bgp_route_info_modulo_pathid,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
-
-	bms->table_per_peer_buckets = saved_table_per_peer_buckets;
-	peer->cap_add_paths = saved_cap_add_paths;
       }
 
       if (!pptrs->bgp_src_info && result) {
@@ -182,11 +173,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
         nmct2.rd = &rd;
         nmct2.peer_dst_ip = NULL;
-
-        saved_table_per_peer_buckets = bms->table_per_peer_buckets;
-        bms->table_per_peer_buckets = 1;
-        saved_cap_add_paths = peer->cap_add_paths;
-        peer->cap_add_paths = FALSE;
 
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
 	bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
@@ -370,7 +356,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
   }
 
   if (nh_peer) {
-    modulo = bms->route_info_modulo(nh_peer, NULL);
+    modulo = bms->route_info_modulo(nh_peer, NULL, bms->table_per_peer_buckets);
 
     // XXX: to be optimized 
     if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
@@ -749,14 +735,14 @@ void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **c)
   }
 }
 
-u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)
+u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id, int per_peer_buckets)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   path_id_t local_path_id = 1;
 
   if (path_id && *path_id) local_path_id = *path_id;
 
-  return (((peer->fd * bms->table_per_peer_buckets) +
-          ((local_path_id - 1) % bms->table_per_peer_buckets)) %
-          (bms->table_peer_buckets * bms->table_per_peer_buckets));
+  return (((peer->fd * per_peer_buckets) +
+          ((local_path_id - 1) % per_peer_buckets)) %
+          (bms->table_peer_buckets * per_peer_buckets));
 }

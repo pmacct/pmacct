@@ -599,7 +599,7 @@ void bmp_handle_dump_event()
             node = bgp_table_top(peer, table);
 
             while (node) {
-              u_int32_t modulo = bms->route_info_modulo(peer, NULL);
+              u_int32_t modulo = bms->route_info_modulo(peer, NULL, bms->table_per_peer_buckets);
               u_int32_t peer_buckets;
               struct bgp_info *ri;
 

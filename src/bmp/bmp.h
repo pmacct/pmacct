@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -191,7 +191,7 @@ EXT void bmp_prepare_daemon();
 #define EXT
 #endif
 EXT struct bmp_peer *bmp_peers;
-EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *);
+EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 
 EXT struct bgp_rt_structs *bmp_routing_db;
 EXT struct bgp_misc_structs *bmp_misc_db;

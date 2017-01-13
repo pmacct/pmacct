@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -75,7 +75,7 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
   return peer;
 }
 
-u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id)
+u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id, int per_peer_buckets)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bmp_peer *bmpp = peer->bmp_se;
@@ -89,9 +89,9 @@ u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
     if (bmpp && bmpp->self.fd) fd = bmpp->self.fd;
   }
 
-  return (((fd * bms->table_per_peer_buckets) +
-          ((local_path_id - 1) % bms->table_per_peer_buckets)) %
-          (bms->table_peer_buckets * bms->table_per_peer_buckets));
+  return (((fd * per_peer_buckets) +
+          ((local_path_id - 1) % per_peer_buckets)) %
+          (bms->table_peer_buckets * per_peer_buckets));
 }
 
 int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
