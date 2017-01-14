@@ -216,7 +216,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     }
 #endif
 
-    if (!pptrs->bgp_src && !pptrs->bgp_dst && safi != SAFI_MPLS_LABEL) {
+    if ((!pptrs->bgp_src || !pptrs->bgp_dst) && safi != SAFI_MPLS_LABEL) {
       if (pptrs->l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
         safi = SAFI_MPLS_LABEL;
         goto start_again_mpls_label;
