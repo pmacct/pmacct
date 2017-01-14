@@ -1,5 +1,5 @@
 pmacct (Promiscuous mode IP Accounting package)
-pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 
 
 TABLE OF CONTENTS:
@@ -7,17 +7,17 @@ I.	Plugins included with pmacct distribution
 II.	Configuring pmacct for compilation and installing
 III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) and noSQL (MongoDB) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
-V.	Running the NetFlow and sFlow daemons (nfacctd/sfacctd)
+V.	Running the NetFlow/IPFIX and sFlow daemons (nfacctd/sfacctd)
 VI.	Running the NFLOG-based daemon (uacctd)
 VII.	Running the pmacct client (pmacct)
 VIII.	Running the RabbitMQ/AMQP plugin
 IX.	Running the Kafka plugin
 X.	Internal buffering and queueing
 XI.	Quickstart guide to packet/stream classifiers
-XII.	Quickstart guide to setup a NetFlow agent/probe 
+XII.	Quickstart guide to setup a NetFlow/IPFIX agent/probe 
 XIII.	Quickstart guide to setup a sFlow agent/probe 
 XIV.	Quickstart guide to setup the BGP daemon
-XV.	Quickstart guide to setup a NetFlow/sFlow replicator
+XV.	Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
 XVI.	Quickstart guide to setup the IS-IS daemon
 XVII.	Quickstart guide to setup the BMP daemon
 XVIII.	Quickstart guide to setup Streaming Telemetry collection 
@@ -391,7 +391,7 @@ shell> pmacctd -c src_host,dst_host -S local2
 NOTE: superuser privileges are needed to execute pmacctd correctly. 
 
 
-V. Running the NetFlow and sFlow daemons (nfacctd/sfacctd) 
+V. Running the NetFlow/IPFIX and sFlow daemons (nfacctd/sfacctd) 
 All examples about pmacctd are also valid for nfacctd and sfacctd with the exception
 of directives that apply exclusively to libpcap. If you've skipped examples in section
 'IV', please read them before continuing. All configuration keys available are in the
@@ -759,12 +759,11 @@ plugin_pipe_kafka_retry[blabla]: 60
 
 
 XI. Quickstart guide to packet classifiers
-pmacct 0.10.0 sees the introduction of a packet classification feature. The approach
-is fully extensible: classification patterns are based over regular expressions (RE),
-must be placed into a common directory and have a .pat file extension. Patterns for
-well-known protocols are available and are just a click away. Furthermore, you can
-write your own patterns (and share them with the active L7-filter project's community).
-Below the quickstarter guide:
+The current approach for a packet classification engine is fully extensible: patterns
+are based on regular expressions (RE), must be placed into a common directory and have
+a .pat file extension. Patterns for well-known protocols are available and are just a
+click away. Furthermore, you can write your own patterns (and share them with the
+L7-filter project's community). Below the quickstarter guide:
 
 a) download pmacct
 shell> wget http://www.pmacct.net/pmacct-x.y.z.tar.gz 
@@ -825,11 +824,11 @@ e) Ok, we are done! Fire the pmacct collector daemon:
    values; get the time to take a read about them in the CONFIG-KEYS document.
 
 
-XII. Quickstart guide to setup a NetFlow agent/probe
-pmacct 0.11.0 sees the introduction of traffic data export capabilities, through both
-NetFlow and sFlow protocols. While NetFlow v5 is fixed by nature, v9 adds flexibility
-by allowing to transport custom informations (for example, L7-classification tags to a
-remote collector). Below the quickstarter guide:
+XII. Quickstart guide to setup a NetFlow/IPFIX agent/probe
+pmacct is able to export traffic data through both NetFlow and sFlow protocols. This
+section covers NetFlow/IPFIX and next one covers sFlow. While NetFlow v5 is fixed by
+nature, v9 adds flexibility allowing to transport custom informations (for example,
+classification information or custom tags to remote collectors). Below the guide:
 
 a) usual initial steps: download pmacct, unpack it, compile it.
 
@@ -851,9 +850,8 @@ nfprobe_version: 9
 
    1) generate ASNs by using a networks_file pointing to a valid Networks File (see
    examples/ directory) and adding src_as, dst_as primitives to the 'aggregate'
-   directive; alternatively, as of release 0.12.0rc2, it's possible to generate ASNs
-   from the pmacctd BGP thread. The following fragment can be added to the config
-   above:
+   directive; alternatively, it is possible to generate ASNs from the pmacctd BGP
+   thread. The following fragment can be added to the config above:
 
 pmacctd_as: bgp
 bgp_daemon: true
@@ -963,13 +961,14 @@ d) Ok, we are done ! Now fire both daemons:
 
 
 XIII. Quickstart guide to setup a sFlow agent/probe
-pmacct 0.11.0 sees the introduction of traffic data export capabilities via sFlow; such
-protocol is quite different from NetFlow: in short, it works by exporting portions of
-sampled packets rather than building uni-directional flows as it happens in NetFlow;
-this less-stateful approach makes sFlow a light export protocol well-tailored for high-
-speed networks. Further, sFlow v5 can be extended much like NetFlow v9: meaning, ie.,
-L7 classification or basic Extended Gateway information (ie. src_as, dst_as) can be
-embedded in the record structure being exported. Below the quickstarter guide:
+pmacct can export traffic data via sFlow; such protocol is different from NetFlow/
+IPFIX: in short, it works by exporting portions of sampled packets rather than
+caching and building uni-directional flows as it happens in NetFlow; this not
+stateful approach makes sFlow a light export protocol well-tailored for high-
+speed networks. Furthermore, sFlow v5 can be extended much like NetFlow v9: meaning
+classification information, tags or basic Extended Gateway information (ie. src_as,
+dst_as) can be easily included in the record structure being exported. Below the
+quickstarter guide:
 
 b) build sFlow probe configuration, using pmacctd:
 !
@@ -1327,7 +1326,7 @@ TCP MD5 signature for BGP messages is also supported. For a review of all knobs
 and features see the CONFIG-KEYS document. 
 
 
-XV. Quickstart guide to setup a NetFlow/sFlow replicator
+XV. Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
 A 'tee' plugin which is meant, in basic terms, to replicate NetFlow/sFlow data
 to remote collectors. The plugin can also act transparently by preserving the
 original IP address of the datagrams. Setting up a replicator is very easy. All
@@ -1444,13 +1443,13 @@ touch.
 
 
 XVI. Quickstart guide to setup the IS-IS daemon
-pmacct 0.14.0 integrates an IS-IS daemon into the IP accounting collectors part
-of the toolset. Such daemon is run as a thread within the collector core process.
-The idea is to receive data-plane information, ie. via NetFlow, sFlow, etc., and
-control-plane information via IS-IS. Currently a single L2 P2P neighborship, ie.
-over a GRE tunnel, is supported. The daemon is currently used for the purpose of
-route resolution. A sample scenario could be that more specific internal routes
-might be configured to get summarized in BGP while crossing cluster boundaries.  
+pmacct integrates an IS-IS daemon as part of the IP accounting collectors. Such
+daemon is run as a thread within the collector core process. The idea is to
+receive data-plane information, ie. via NetFlow, sFlow, etc., and control-plane
+information via IS-IS. Currently a single L2 P2P neighborship, ie. over a GRE
+tunnel, is supported. The daemon is currently used for the purpose of route
+resolution. A sample scenario could be that more specific internal routes might
+be configured to get summarized in BGP while crossing cluster boundaries.  
 
 Pre-requisite for the use of the IS-IS daemon is that the pmacct package has to
 be configured for compilation with threads, this line will do it:
@@ -1647,10 +1646,8 @@ the following document: docs/MSGLOG_DUMP_FORMATS
 
 
 XIX. Running the print plugin to write to flat-files
-Print plugin was originally conceived to display data on standard output; with
-pmacct 0.14 a new 'print_output_file' configuration directive is introduced to
-allow the plugin to write to flat-files aswell. Dynamic filenames are supported.
-Output is either text-based using JSON, CSV or formatted outputs, or
+pmacct can also output to files via its 'print' plugin. Dynamic filenames are
+supported. Output is either text-based using JSON, CSV or formatted outputs, or
 binary-based using the Apache Avro file container ('print_output' directive).
 Interval between writes can be configured via the 'print_refresh_time'
 directive. An example follows on how to write to files on a 15 mins basis in
@@ -1701,15 +1698,14 @@ print_output_file_append: true
 
 
 XX. Quickstart guide to setup GeoIP lookups
-From pmacct 0.14.2 it is possible to perform GeoIP country lookups against a
-Maxmind database v1 (--enable-geoip) and from 1.5.2 against a Maxmind database
-v2 (--enable-geoipv2). A v1 database enables resolution of src_host_country and
-dst_host_country primitives only. A v2 database enables resolution of presently
-supported GeoIP-related primitives, ie. src_host_country, src_host_pocode,
-dst_host_country, dst_host_pocode.
-Pre-requisite for the feature to work are: a) a working installed Maxmind GeoIP
-library and headers and b) a Maxmind GeoIP database (freely available). Two
-steps to quickly start with GeoIP lookups in pmacct:
+pmacct can perform GeoIP country lookups against a Maxmind DB v1 (--enable-geoip)
+and against a Maxmind DB v2 (--enable-geoipv2). A v1 database enables resolution
+of src_host_country and dst_host_country primitives only. A v2 database enables
+resolution of presently supported GeoIP-related primitives, ie. src_host_country,
+src_host_pocode, dst_host_country, dst_host_pocode. Pre-requisite for the feature
+to work are: a) a working installed Maxmind GeoIP library and headers and b) a
+Maxmind GeoIP database (freely available). Two steps to quickly start with GeoIP
+lookups in pmacct:
  
 GeoIP v1 (libGeoIP):
 * Have libGeoIP library and headers available to compile against; have a GeoIP
@@ -1768,9 +1764,9 @@ you be interested into any of these, please get in touch.
 
 
 XXI. Using pmacct as traffic/event logger
-pmacct was originally conceived as a traffic aggregator. From pmacct 0.14.3 
-it is now possible to use pmacct as a traffic/event logger, such development
-being fostered particularly by the use of NetFlow/IPFIX as generic transport,
+pmacct was originally conceived as a traffic aggregator. It is now possible
+to use pmacct as a traffic/event logger as well, such development had been 
+fostered particularly by the use of NetFlow/IPFIX as generic transport,
 see for example Cisco NEL and Cisco NSEL. Key to logging are time-stamping
 primitives, timestamp_start and timestamp_end: the former records the likes
 of libpcap packet timestamp, sFlow sample arrival time, NetFlow observation
