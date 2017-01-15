@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -1166,7 +1166,7 @@ int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_
   if (kafka_host && list && !validate_truefalse(is_prod)) {
     char *topic = plugin_pipe_compose_default_string(list, "pmacct.$core_proc_name-$plugin_name-$plugin_type");
 
-    p_kafka_init_host(kafka_host);
+    p_kafka_init_host(kafka_host, NULL);
 
     if (is_prod) ret = p_kafka_connect_to_produce(kafka_host);
     else ret = p_kafka_connect_to_consume(kafka_host);

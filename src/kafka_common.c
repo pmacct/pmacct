@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -27,11 +27,12 @@
 #include "kafka_common.h"
 
 /* Functions */
-void p_kafka_init_host(struct p_kafka_host *kafka_host)
+void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
 {
   if (kafka_host) {
     memset(kafka_host, 0, sizeof(struct p_kafka_host));
     P_broker_timers_set_retry_interval(&kafka_host->btimers, PM_KAFKA_DEFAULT_RETRY);
+    p_kafka_set_config_file(kafka_host, config_file);
 
     kafka_host->cfg = rd_kafka_conf_new();
     if (kafka_host->cfg) {
@@ -55,6 +56,7 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
 {
   if (kafka_host) {
     kafka_host->topic_cfg = rd_kafka_topic_conf_new();
+    p_kafka_apply_topic_config(kafka_host);
 
     /* destroy current allocation before making a new one */
     if (kafka_host->topic) p_kafka_unset_topic(kafka_host);
@@ -171,6 +173,23 @@ void p_kafka_set_fallback(struct p_kafka_host *kafka_host, char *fallback)
       Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_set_fallback(): broker.version.fallback=%s failed: %s\n",
 	  config.name, config.type, fallback, errstr);
   }
+}
+
+void p_kafka_set_config_file(struct p_kafka_host *kafka_host, char *config_file)
+{
+  if (kafka_host) {
+    kafka_host->config_file = config_file;
+  }
+}
+
+void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
+{
+  // XXX
+}
+
+void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
+{
+  // XXX
 }
 
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)

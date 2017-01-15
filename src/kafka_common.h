@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -43,6 +43,7 @@ struct p_kafka_host {
   rd_kafka_conf_t *cfg;
   rd_kafka_topic_t *topic;
   rd_kafka_topic_conf_t *topic_cfg;
+  char *config_file;
   int partition;
   char *key;
   int key_len;
@@ -57,7 +58,7 @@ struct p_kafka_host {
 #else
 #define EXT
 #endif
-EXT void p_kafka_init_host(struct p_kafka_host *);
+EXT void p_kafka_init_host(struct p_kafka_host *, char *);
 EXT void p_kafka_init_topic_rr(struct p_kafka_host *);
 
 EXT void p_kafka_set_broker(struct p_kafka_host *, char *, int);
@@ -67,6 +68,7 @@ EXT void p_kafka_set_content_type(struct p_kafka_host *, int);
 EXT void p_kafka_set_partition(struct p_kafka_host *, int);
 EXT void p_kafka_set_key(struct p_kafka_host *, char *, int);
 EXT void p_kafka_set_fallback(struct p_kafka_host *, char *);
+EXT void p_kafka_set_config_file(struct p_kafka_host *, char *);
 
 EXT char *p_kafka_get_topic(struct p_kafka_host *);
 EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
@@ -75,6 +77,9 @@ EXT int p_kafka_get_partition(struct p_kafka_host *);
 EXT char *p_kafka_get_key(struct p_kafka_host *);
 
 EXT void p_kafka_unset_topic(struct p_kafka_host *);
+
+EXT void p_kafka_apply_global_config(struct p_kafka_host *);
+EXT void p_kafka_apply_topic_config(struct p_kafka_host *);
 
 EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
 EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);

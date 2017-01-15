@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -356,7 +356,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   int avro_buffer_full = FALSE;
 #endif
 
-  p_kafka_init_host(&kafkap_kafka_host);
+  p_kafka_init_host(&kafkap_kafka_host, config.kafka_config_file);
 
   /* setting some defaults */
   if (!config.sql_host) config.sql_host = default_kafka_broker_host;
@@ -669,7 +669,7 @@ void kafka_avro_schema_purge()
   if (!config.sql_host) config.sql_host = default_kafka_broker_host;
   if (!config.kafka_broker_port) config.kafka_broker_port = default_kafka_broker_port;
 
-  p_kafka_init_host(&kafka_avro_schema_host);
+  p_kafka_init_host(&kafka_avro_schema_host, config.kafka_config_file);
   p_kafka_connect_to_produce(&kafka_avro_schema_host);
   p_kafka_set_broker(&kafka_avro_schema_host, config.sql_host, config.kafka_broker_port);
   p_kafka_set_topic(&kafka_avro_schema_host, config.kafka_avro_schema_topic);

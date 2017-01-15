@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -490,6 +490,7 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_fallback", cfg_key_kafka_fallback},
   {"kafka_avro_schema_topic", cfg_key_kafka_avro_schema_topic},
   {"kafka_avro_schema_refresh_time", cfg_key_kafka_avro_schema_refresh_time},
+  {"kafka_config_file", cfg_key_kafka_config_file},
   {"nfacctd_proc_name", cfg_key_proc_name},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},

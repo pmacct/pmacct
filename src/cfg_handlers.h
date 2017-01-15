@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -105,6 +105,7 @@ EXT int cfg_key_kafka_partition_key(char *, char *, char *);
 EXT int cfg_key_kafka_fallback(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_topic(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_refresh_time(char *, char *, char *);
+EXT int cfg_key_kafka_config_file(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_check_core_pid(char *, char *, char *);

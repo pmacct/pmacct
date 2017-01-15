@@ -893,7 +893,7 @@ int bgp_daemon_msglog_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&bgp_daemon_msglog_kafka_host);
+  p_kafka_init_host(&bgp_daemon_msglog_kafka_host, NULL);
   ret = p_kafka_connect_to_produce(&bgp_daemon_msglog_kafka_host);
 
   if (!config.nfacctd_bgp_msglog_kafka_broker_host) config.nfacctd_bgp_msglog_kafka_broker_host = default_kafka_broker_host;
@@ -922,7 +922,7 @@ int bgp_table_dump_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&bgp_table_dump_kafka_host);
+  p_kafka_init_host(&bgp_table_dump_kafka_host, NULL);
   ret = p_kafka_connect_to_produce(&bgp_table_dump_kafka_host);
 
   if (!config.bgp_table_dump_kafka_broker_host) config.bgp_table_dump_kafka_broker_host = default_kafka_broker_host;

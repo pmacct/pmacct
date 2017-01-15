@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -178,6 +178,7 @@ struct configuration {
   char *kafka_fallback;
   char *kafka_avro_schema_topic;
   int kafka_avro_schema_refresh_time;
+  char *kafka_config_file;
   int print_cache_entries;
   int print_markers;
   int print_output;
