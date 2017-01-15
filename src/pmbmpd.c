@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -215,6 +215,7 @@ int main(int argc,char **argv, char **envp)
   else Log(LOG_INFO, "INFO ( %s/core ): Reading configuration from cmdline.\n", config.name);
 
   pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
+  if (config.pidfile) write_pid_file(config.pidfile);
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
