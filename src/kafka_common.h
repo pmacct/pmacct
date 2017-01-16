@@ -78,6 +78,7 @@ EXT char *p_kafka_get_key(struct p_kafka_host *);
 
 EXT void p_kafka_unset_topic(struct p_kafka_host *);
 
+EXT int p_kafka_parse_config_entry(char *, char *, char **, char **);
 EXT void p_kafka_apply_global_config(struct p_kafka_host *);
 EXT void p_kafka_apply_topic_config(struct p_kafka_host *);
 

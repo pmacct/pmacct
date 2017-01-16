@@ -40,6 +40,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
       rd_kafka_conf_set_error_cb(kafka_host->cfg, p_kafka_msg_error);
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
+      p_kafka_apply_global_config(kafka_host);
     }
   }
 }
@@ -182,14 +183,112 @@ void p_kafka_set_config_file(struct p_kafka_host *kafka_host, char *config_file)
   }
 }
 
+int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
+{
+  char *value_ptr, *token;
+  int index, type_match = FALSE;
+
+  if (buf && type && key && value) {
+    value_ptr = buf;
+    (*key) = NULL;
+    (*value) = NULL;
+    index = 0;
+
+    while (token = extract_token(&value_ptr, ';')) {
+      index++;
+      trim_spaces(token);
+
+      if (index == 1) {
+	lower_string(token);
+	if (!strcmp(token, type)) type_match = TRUE;
+	else break;
+      }
+      else if (index == 2) (*key) = token;
+      else if (index == 3) {
+	(*value) = token;
+	break;
+      }
+    }
+
+    if (type_match && index != 3) return ERR;
+  }
+  else return ERR;
+
+  return type_match;
+}
+
 void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
 {
-  // XXX
+  FILE *file;
+  char buf[SRVBUFLEN], errstr[SRVBUFLEN], *key, *value;
+  int lineno = 1, ret;
+
+  if (kafka_host && kafka_host->config_file && kafka_host->cfg) {
+    if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. Kafka global configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
+      return;
+    }
+    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading Kafka global configuration.\n", config.name, config.type, kafka_host->config_file);
+
+    while (!feof(file)) {
+      if (fgets(buf, SRVBUFLEN, file)) {
+	if ((ret = p_kafka_parse_config_entry(buf, "global", &key, &value)) > 0) {
+	  ret = rd_kafka_conf_set(kafka_host->cfg, key, value, errstr, sizeof(errstr));
+	  if (ret != RD_KAFKA_CONF_OK) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] key=%s value=%s failed: %s\n",
+		config.name, config.type, kafka_host->config_file, lineno, key, value, errstr);
+	  }
+        }
+	else {
+	  if (ret == ERR) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line malformed. Ignored.", config.name, config.type, kafka_host->config_file, lineno);
+	    continue;
+	  }
+	}
+      }
+
+      lineno++;
+    }
+
+    fclose(file);
+  }
 }
 
 void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
 {
-  // XXX
+  FILE *file;
+  char buf[SRVBUFLEN], errstr[SRVBUFLEN], *key, *value;
+  int lineno = 1, ret;
+
+  if (kafka_host && kafka_host->config_file && kafka_host->topic_cfg) {
+    if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. Kafka topic configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
+      return;
+    }
+    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading Kafka topic configuration.\n", config.name, config.type, kafka_host->config_file);
+
+    while (!feof(file)) {
+      if (fgets(buf, SRVBUFLEN, file)) {
+        if ((ret = p_kafka_parse_config_entry(buf, "topic", &key, &value)) > 0) {
+          ret = rd_kafka_topic_conf_set(kafka_host->topic_cfg, key, value, errstr, sizeof(errstr));
+          if (ret != RD_KAFKA_CONF_OK) {
+            Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] key=%s value=%s failed: %s\n",
+                config.name, config.type, kafka_host->config_file, lineno, key, value, errstr);
+          }
+        }
+        else {
+          if (ret == ERR) {
+            Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line malformed. Ignored.", config.name, config.type, kafka_host->config_file, lineno);
+            continue;
+          }
+        }
+      }
+
+      lineno++;
+    }
+
+    fclose(file);
+  }
 }
 
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
