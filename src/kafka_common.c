@@ -194,7 +194,7 @@ int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
     (*value) = NULL;
     index = 0;
 
-    while (token = extract_token(&value_ptr, ';')) {
+    while (token = extract_token(&value_ptr, ',')) {
       index++;
       trim_spaces(token);
 
@@ -203,11 +203,16 @@ int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
 	if (!strcmp(token, type)) type_match = TRUE;
 	else break;
       }
-      else if (index == 2) (*key) = token;
-      else if (index == 3) {
-	(*value) = token;
+      else if (index == 2) {
+	(*key) = token;
 	break;
       }
+    }
+
+    if (strlen(value_ptr)) {
+      trim_spaces(value_ptr);
+      (*value) = value_ptr;
+      index++;
     }
 
     if (type_match && index != 3) return ERR;
@@ -225,10 +230,10 @@ void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
 
   if (kafka_host && kafka_host->config_file && kafka_host->cfg) {
     if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. Kafka global configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka global configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
       return;
     }
-    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading Kafka global configuration.\n", config.name, config.type, kafka_host->config_file);
+    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading librdkafka global configuration.\n", config.name, config.type, kafka_host->config_file);
 
     while (!feof(file)) {
       if (fgets(buf, SRVBUFLEN, file)) {
@@ -262,10 +267,10 @@ void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
 
   if (kafka_host && kafka_host->config_file && kafka_host->topic_cfg) {
     if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. Kafka topic configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka topic configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
       return;
     }
-    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading Kafka topic configuration.\n", config.name, config.type, kafka_host->config_file);
+    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading librdkafka topic configuration.\n", config.name, config.type, kafka_host->config_file);
 
     while (!feof(file)) {
       if (fgets(buf, SRVBUFLEN, file)) {

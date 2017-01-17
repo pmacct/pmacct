@@ -638,6 +638,23 @@ DESC:           Name of the Kafka topic to attach to published data. Dynamic nam
 
 DEFAULT:        'pmacct.acct'
 
+KEY:		kafka_config_file
+DESC:		Full pathname to a file containing directives to configure librdkafka. This is to
+		support all knobs that are not implemented natively (as opposed to kafka_fallback
+		for example) and whose values are string, integer, boolean, CSV. Pointer values,
+		ie. for setting callbacks, are currently not supported through this infrastructure.
+		The syntax of the file is CSV and expected in the format: <type, key, value> where
+		'type' is one of 'global' or 'topic' and 'key' and 'value' are set according to
+		librdkafka doc https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
+		Both 'key' and 'value' are passed onto librdkafka without any validation being
+		performed; the 'value' field can also contain commas no problem as it is also not
+		parsed. Examples are:
+
+		topic, compression.codec, snappy
+		global, socket.keepalive.enable, true
+
+DEFAULT:	none
+
 KEY:            plugin_pipe_kafka_topic
 DESC:           Name of the Kafka topic to use to send data to a plugin. Currently each plugin must
 		bind to a different routing key in order to avoid duplications. Dynamic names are
