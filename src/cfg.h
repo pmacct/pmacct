@@ -220,6 +220,7 @@ struct configuration {
   int sfacctd_counter_kafka_broker_port;
   int sfacctd_counter_kafka_retry;
   char *sfacctd_counter_kafka_fallback;
+  char *sfacctd_counter_kafka_config_file;
   int nfacctd_disable_checks;
   int telemetry_daemon;
   int telemetry_sock;
@@ -270,6 +271,7 @@ struct configuration {
   int telemetry_msglog_kafka_partition_keylen;
   int telemetry_msglog_kafka_retry;
   char *telemetry_msglog_kafka_fallback;
+  char *telemetry_msglog_kafka_config_file;
   char *telemetry_dump_kafka_broker_host;
   int telemetry_dump_kafka_broker_port;
   char *telemetry_dump_kafka_topic;
@@ -278,6 +280,7 @@ struct configuration {
   char *telemetry_dump_kafka_partition_key;
   int telemetry_dump_kafka_partition_keylen;
   char *telemetry_dump_kafka_fallback;
+  char *telemetry_dump_kafka_config_file;
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;
   char *nfacctd_bgp_msglog_file;

@@ -490,7 +490,7 @@ int telemetry_daemon_msglog_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&telemetry_daemon_msglog_kafka_host, NULL);
+  p_kafka_init_host(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_config_file);
   ret = p_kafka_connect_to_produce(&telemetry_daemon_msglog_kafka_host);
 
   if (!config.telemetry_msglog_kafka_broker_host) config.telemetry_msglog_kafka_broker_host = default_kafka_broker_host;
@@ -519,7 +519,7 @@ int telemetry_dump_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&telemetry_dump_kafka_host, NULL);
+  p_kafka_init_host(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_config_file);
   ret = p_kafka_connect_to_produce(&telemetry_dump_kafka_host);
 
   if (!config.telemetry_dump_kafka_broker_host) config.telemetry_dump_kafka_broker_host = default_kafka_broker_host;

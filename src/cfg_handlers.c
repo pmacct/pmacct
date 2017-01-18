@@ -4869,6 +4869,17 @@ int cfg_key_sfacctd_counter_kafka_fallback(char *filename, char *name, char *val
   return changes;
 }
 
+int cfg_key_sfacctd_counter_kafka_config_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_kafka_config_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'sfacctd_counter_kafka_config_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -7295,6 +7306,17 @@ int cfg_key_telemetry_msglog_kafka_fallback(char *filename, char *name, char *va
   return changes;
 }
 
+int cfg_key_telemetry_msglog_kafka_config_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_kafka_config_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_kafka_config_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_telemetry_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -7394,5 +7416,16 @@ int cfg_key_telemetry_dump_kafka_fallback(char *filename, char *name, char *valu
   for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_fallback = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_fallback'. Globalized.\n", filename);
   
+  return changes;
+}
+
+int cfg_key_telemetry_dump_kafka_config_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_config_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_config_file'. Globalized.\n", filename);
+
   return changes;
 }

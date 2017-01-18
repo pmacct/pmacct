@@ -2353,7 +2353,7 @@ int sfacctd_counter_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&sfacctd_counter_kafka_host, NULL);
+  p_kafka_init_host(&sfacctd_counter_kafka_host, config.sfacctd_counter_kafka_config_file);
   ret = p_kafka_connect_to_produce(&sfacctd_counter_kafka_host);
 
   if (!config.sfacctd_counter_kafka_broker_host) config.sfacctd_counter_kafka_broker_host = default_kafka_broker_host;

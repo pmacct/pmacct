@@ -565,6 +565,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_daemon_msglog_kafka_partition_key", cfg_key_telemetry_msglog_kafka_partition_key},
   {"telemetry_daemon_msglog_kafka_retry", cfg_key_telemetry_msglog_kafka_retry},
   {"telemetry_daemon_msglog_kafka_fallback", cfg_key_telemetry_msglog_kafka_fallback},
+  {"telemetry_daemon_msglog_kafka_config_file", cfg_key_telemetry_msglog_kafka_config_file},
   {"telemetry_dump_output", cfg_key_telemetry_dump_output},
   {"telemetry_dump_file", cfg_key_telemetry_dump_file},
   {"telemetry_dump_latest_file", cfg_key_telemetry_dump_latest_file},
@@ -587,6 +588,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_dump_kafka_partition", cfg_key_telemetry_dump_kafka_partition},
   {"telemetry_dump_kafka_partition_key", cfg_key_telemetry_dump_kafka_partition_key},
   {"telemetry_dump_kafka_fallback", cfg_key_telemetry_dump_kafka_fallback},
+  {"telemetry_dump_kafka_config_file", cfg_key_telemetry_dump_kafka_config_file},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"refresh_maps", cfg_key_maps_refresh}, // legacy
   {"maps_refresh", cfg_key_maps_refresh},
@@ -636,6 +638,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_counter_kafka_partition_key", cfg_key_sfacctd_counter_kafka_partition_key},
   {"sfacctd_counter_kafka_retry", cfg_key_sfacctd_counter_kafka_retry},
   {"sfacctd_counter_kafka_fallback", cfg_key_sfacctd_counter_kafka_fallback},
+  {"sfacctd_counter_kafka_config_file", cfg_key_sfacctd_counter_kafka_config_file},
   {"classifiers", cfg_key_classifiers},
   {"classifier_tentatives", cfg_key_classifier_tentatives},
   {"classifier_table_num", cfg_key_classifier_table_num},
