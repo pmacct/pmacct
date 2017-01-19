@@ -41,6 +41,17 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
       p_kafka_apply_global_config(kafka_host);
+
+      if (config.debug) {
+	const char **res;
+	size_t res_len, idx;
+
+	res = rd_kafka_conf_dump(kafka_host->cfg, &res_len);
+	for (idx = 0; idx < res_len; idx += 2)
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): librdkafka global config: %s = %s\n", config.name, config.type, res[idx], res[idx + 1]);
+
+	rd_kafka_conf_dump_free(res, res_len);
+      }
     }
   }
 }
@@ -58,6 +69,17 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
   if (kafka_host) {
     kafka_host->topic_cfg = rd_kafka_topic_conf_new();
     p_kafka_apply_topic_config(kafka_host);
+
+    if (config.debug) {
+      const char **res;
+      size_t res_len, idx;
+
+      res = rd_kafka_topic_conf_dump(kafka_host->topic_cfg, &res_len);
+      for (idx = 0; idx < res_len; idx += 2)
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): librdkafka '%s' topic config: %s = %s\n", config.name, config.type, topic, res[idx], res[idx + 1]);
+
+      rd_kafka_conf_dump_free(res, res_len);
+    }
 
     /* destroy current allocation before making a new one */
     if (kafka_host->topic) p_kafka_unset_topic(kafka_host);
@@ -230,10 +252,10 @@ void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
 
   if (kafka_host && kafka_host->config_file && kafka_host->cfg) {
     if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka global configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka global config not loaded.\n", config.name, config.type, kafka_host->config_file);
       return;
     }
-    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading librdkafka global configuration.\n", config.name, config.type, kafka_host->config_file);
+    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading librdkafka global config.\n", config.name, config.type, kafka_host->config_file);
 
     while (!feof(file)) {
       if (fgets(buf, SRVBUFLEN, file)) {
