@@ -765,7 +765,7 @@ int bmp_daemon_msglog_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&bmp_daemon_msglog_kafka_host, NULL);
+  p_kafka_init_host(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_config_file);
   ret = p_kafka_connect_to_produce(&bmp_daemon_msglog_kafka_host);
 
   if (!config.nfacctd_bmp_msglog_kafka_broker_host) config.nfacctd_bmp_msglog_kafka_broker_host = default_kafka_broker_host;
@@ -794,7 +794,7 @@ int bmp_dump_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&bmp_dump_kafka_host, NULL);
+  p_kafka_init_host(&bmp_dump_kafka_host, config.bmp_dump_kafka_config_file);
   ret = p_kafka_connect_to_produce(&bmp_dump_kafka_host);
 
   if (!config.bmp_dump_kafka_broker_host) config.bmp_dump_kafka_broker_host = default_kafka_broker_host;
