@@ -501,7 +501,6 @@ int telemetry_daemon_msglog_init_kafka_host()
   p_kafka_set_topic(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_topic);
   p_kafka_set_partition(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_partition);
   p_kafka_set_key(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_partition_key, config.telemetry_msglog_kafka_partition_keylen);
-  p_kafka_set_fallback(&telemetry_daemon_msglog_kafka_host, config.telemetry_msglog_kafka_fallback);
   p_kafka_set_content_type(&telemetry_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   P_broker_timers_set_retry_interval(&telemetry_daemon_msglog_kafka_host.btimers, config.telemetry_msglog_kafka_retry);
 
@@ -529,7 +528,6 @@ int telemetry_dump_init_kafka_host()
   p_kafka_set_topic(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_topic);
   p_kafka_set_partition(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition);
   p_kafka_set_key(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition_key, config.telemetry_dump_kafka_partition_keylen);
-  p_kafka_set_fallback(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_fallback);
   p_kafka_set_content_type(&telemetry_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   return ret;
