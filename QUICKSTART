@@ -1861,6 +1861,15 @@ This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
 
+When reporting a bug: please report in all cases the pmacct version that you
+are experiencing your issue against; the CLI option -V of the daemon you are
+using returns all the info needed (daemon, version, specific release and
+options compiled in). Do realise that if using a pre-packaged version from
+your OS and/or old code (ie. not master code on GitHub or latest official
+release), you may be very possibly asked to try one of these first. Finally,
+please refrain to open issues on GitHub if not using master code (use the
+pmacct-discussion mailing list or unicast email instead). 
+
 a) In case of crashes of an any process, regardless if predictable or not, the
 advice is to run the daemon with "ulimit -c unlimited" so to generate a core
 dump. The file is placed in the directory where the daemon is started so it
