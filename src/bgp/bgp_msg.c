@@ -69,8 +69,19 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       if (ret < 0) return ret;
       break;
     case BGP_NOTIFICATION:
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_NOTIFICATION received\n", config.name, bms->log_str, bgp_peer_print(peer));
-      return ERR;
+      {
+	u_int8_t res_maj = 0, res_min = 0, shutdown_msglen = (BGP_NOTIFY_CEASE_SM_LEN + 1);
+        char shutdown_msg[shutdown_msglen];
+
+	memset(shutdown_msg, 0, shutdown_msglen);
+        bgp_parse_notification_msg(peer, bgp_packet_ptr, &res_maj, &res_min, shutdown_msg, shutdown_msglen);
+
+	/* XXX: improve printing for utf-8 encoded shutdown msgs */
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_NOTIFICATION received (%u, %u). Shutdown Message: '%s'\n",
+	    config.name, bms->log_str, bgp_peer_print(peer), res_maj, res_min, shutdown_msg);
+
+        return ERR;
+      }
     case BGP_KEEPALIVE:
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] BGP_KEEPALIVE received\n", config.name, bms->log_str, bgp_peer_print(peer));
       if (peer->status >= OpenSent) {
@@ -431,8 +442,7 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
     bn_reply->bgpn_minor = BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN;
     ret += BGP_MIN_NOTIFICATION_MSG_SIZE;
 
-    /* draft-ietf-idr-shutdown-01 */
-    /* XXX: todo: conversion of shutdown_msg to utf8 */
+    /* draft-ietf-idr-shutdown-03 */
     shutdown_msglen = strlen(shutdown_msg);
 
     if (shutdown_msg && (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN)) {
@@ -445,6 +455,42 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
         strncpy(bnsm_reply->bgpnsm_data, shutdown_msg, shutdown_msglen);
 	bn_reply->bgpn_len = htons(BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen + 1 /* bgpnsm_len */);
         ret += (shutdown_msglen + 1 /* bgpnsm_len */);
+      }
+    }
+  }
+
+  return ret;
+}
+
+int bgp_parse_notification_msg(struct bgp_peer *peer, char *pkt, u_int8_t *res_maj, u_int8_t *res_min, char *shutdown_msg, u_int8_t shutdown_msglen)
+{
+  struct bgp_notification *bn = (struct bgp_notification *) pkt;
+  struct bgp_notification_shutdown_msg *bnsm;
+  char *pkt_ptr = pkt;
+  u_int32_t rem_len;
+  int ret = 0;
+
+  if (!peer || !pkt || !shutdown_msg || peer->msglen < BGP_MIN_NOTIFICATION_MSG_SIZE) return ERR;
+
+  rem_len = peer->msglen;
+  ret += BGP_MIN_NOTIFICATION_MSG_SIZE;
+  rem_len -= BGP_MIN_NOTIFICATION_MSG_SIZE;
+  (*res_maj) = bn->bgpn_major;
+  (*res_min) = bn->bgpn_minor;
+
+  /* draft-ietf-idr-shutdown-03 */
+  if (bn->bgpn_major == BGP_NOTIFY_CEASE && bn->bgpn_minor == BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN) {
+    if (rem_len) {
+      pkt_ptr = (pkt + BGP_MIN_NOTIFICATION_MSG_SIZE);
+      bnsm = (struct bgp_notification_shutdown_msg *) pkt_ptr;
+
+      if (bnsm->bgpnsm_len <= rem_len && bnsm->bgpnsm_len <= BGP_NOTIFY_CEASE_SM_LEN &&
+	  bnsm->bgpnsm_len < shutdown_msglen) {
+	memcpy(shutdown_msg, bnsm->bgpnsm_data, bnsm->bgpnsm_len);
+	shutdown_msg[bnsm->bgpnsm_len] = '\0';
+	
+	ret += (bnsm->bgpnsm_len + 1);
+	rem_len -= (bnsm->bgpnsm_len + 1);
       }
     }
   }
