@@ -76,7 +76,6 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 	memset(shutdown_msg, 0, shutdown_msglen);
         bgp_parse_notification_msg(peer, bgp_packet_ptr, &res_maj, &res_min, shutdown_msg, shutdown_msglen);
 
-	/* XXX: improve printing for utf-8 encoded shutdown msgs */
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_NOTIFICATION received (%u, %u). Shutdown Message: '%s'\n",
 	    config.name, bms->log_str, bgp_peer_print(peer), res_maj, res_min, shutdown_msg);
 
