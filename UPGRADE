@@ -8,6 +8,13 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:     >= 1.6.2
+FROM:   <= 1.6.1
+TOPIC:	print_time_roundoff configuration directive suppressed
+DESC:	The directive was renamed print_history_roundoff for consistency with
+	other plugins. print_time_roundoff was already removed from documents
+	for the past 3+ years. 
+
 TO:	>= 1.6.2
 FROM:	<= 1.6.1
 TOPIC:	sFlow probe (sfprobe plugin) and tags and class primitives
