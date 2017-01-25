@@ -153,7 +153,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
   bms->peer_str = malloc(strlen("bmp_router") + 1);
   strcpy(bms->peer_str, "bmp_router");
-  bms->peer_str = malloc(strlen("bmp_router_port") + 1);
+  bms->peer_port_str = malloc(strlen("bmp_router_port") + 1);
   strcpy(bms->peer_port_str, "bmp_router_port");
   bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
   bms->bgp_peer_logdump_initclose_extras = bgp_peer_logdump_initclose_extras_bmp;
