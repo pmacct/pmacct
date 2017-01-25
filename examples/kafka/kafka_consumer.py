@@ -36,6 +36,7 @@ def usage(tool):
 	print ""
 	print "Optional Args:"
 	print "  -h, --help".ljust(25) + "Print this help"
+	print "  -e, --earliest".ljust(25) + "Set topic offset to 'earliest' [default: 'latest']"
 	print "  -H, --host".ljust(25) + "Define Kafka broker host [default: '127.0.0.1:9092']"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
@@ -43,8 +44,8 @@ def usage(tool):
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:g:H:d:", ["help", "topic=",
-				"group_id=", "host=", "decode-with-avro="])
+		opts, args = getopt.getopt(sys.argv[1:], "ht:g:H:d:e", ["help", "topic=",
+				"group_id=", "host=", "decode-with-avro=", "earliest="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -54,6 +55,7 @@ def main():
 	kafka_topic = None
 	kafka_group_id = None
 	kafka_host = "127.0.0.1:9092"
+	topic_offset = "latest"
  	
 	required_cl = 0
 
@@ -69,6 +71,8 @@ def main():
             		kafka_group_id = a
 		elif o in ("-H", "--host"):
             		kafka_host = a
+		elif o in ("-e", "--earliest"):
+			topic_offset = "earliest"
                 elif o in ("-d", "--decode-with-avro"):
 			if not avro_available:
 				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
@@ -91,7 +95,7 @@ def main():
 		usage(sys.argv[0])
 		sys.exit(1)
 
-	consumer = KafkaConsumer(kafka_topic, group_id=kafka_group_id, bootstrap_servers=[kafka_host])
+	consumer = KafkaConsumer(kafka_topic, group_id=kafka_group_id, bootstrap_servers=[kafka_host], auto_offset_reset=topic_offset)
 
 	for message in consumer:
 		if avro_schema:
