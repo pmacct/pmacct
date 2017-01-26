@@ -92,24 +92,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   refresh_timeout = config.sql_refresh_time*1000;
 
-#ifdef WITH_AVRO
   if (config.print_output & PRINT_OUTPUT_AVRO) {
-    Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building schema.\n", config.name, config.type);
+#ifdef WITH_AVRO
     avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
-
-    if (config.avro_schema_output_file) {
-      FILE *avro_fp = open_output_file(config.avro_schema_output_file, "w", TRUE);
-      avro_writer_t avro_schema_writer = avro_writer_file(avro_fp);
-
-      if (avro_schema_to_json(avro_acct_schema, avro_schema_writer)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
-        exit_plugin(1);
-      }
-
-      close_output_file(avro_fp);
-    }
-  }
+    if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
 #endif
+  }
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))

@@ -82,21 +82,8 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-    Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building schema.\n", config.name, config.type);
     avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
-
-    if (config.avro_schema_output_file) {
-      FILE *avro_fp = open_output_file(config.avro_schema_output_file, "w", TRUE);
-      avro_writer_t avro_schema_writer = avro_writer_file(avro_fp);
-
-      if (avro_schema_to_json(avro_acct_schema, avro_schema_writer)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n",
-            config.name, config.type, avro_strerror());
-        exit_plugin(1);
-      }
-
-      close_output_file(avro_fp);
-    }
+    if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
 
     if (config.kafka_avro_schema_topic) {
       if (!config.kafka_avro_schema_refresh_time)
@@ -406,7 +393,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   start = time(NULL);
 
   if (config.print_markers) {
-    if (config.message_broker_output & PRINT_OUTPUT_JSON) {
+    if (config.message_broker_output & PRINT_OUTPUT_JSON || config.message_broker_output & PRINT_OUTPUT_AVRO) {
       void *json_obj;
       char *json_str;
 
@@ -623,7 +610,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   duration = time(NULL)-start;
 
   if (config.print_markers) {
-    if (config.message_broker_output & PRINT_OUTPUT_JSON) {
+    if (config.message_broker_output & PRINT_OUTPUT_JSON || config.message_broker_output & PRINT_OUTPUT_AVRO) {
       void *json_obj;
       char *json_str;
 
@@ -693,7 +680,18 @@ void kafka_avro_schema_purge()
   }
 
   if (avro_writer_tell(avro_writer)) {
-    ret = p_kafka_produce_data(&kafka_avro_schema_host, avro_buf, strlen(avro_buf));
+    void *json_obj;
+    char *json_str;
+
+    json_obj = compose_avro_purge_schema(config.name, avro_buf);
+
+    if (json_obj) json_str = compose_json_str(json_obj);
+    if (json_str) {
+      ret = p_kafka_produce_data(&kafka_avro_schema_host, json_str, strlen(json_str));
+      free(json_str);
+      json_str = NULL;
+    }
+
     avro_writer_free(avro_writer);
   }
 

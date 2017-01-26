@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -121,6 +121,8 @@ EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
 
 #ifdef WITH_AVRO
 EXT avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2);
+EXT void write_avro_schema_to_file(char *, avro_schema_t);
+EXT void *compose_avro_purge_schema(char *, char *);
 EXT avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -2388,15 +2388,19 @@ void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
     } \
 } while (0)
 
+
+
 avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
 {
   avro_schema_t schema = avro_schema_record("acct", NULL);
-
   avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+
+  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building schema.\n", config.name, config.type);
+
   avro_schema_union_append(optlong_s, avro_schema_null());
   avro_schema_union_append(optlong_s, avro_schema_long());
 
-  avro_schema_t optstr_s = avro_schema_union();
   avro_schema_union_append(optstr_s, avro_schema_null());
   avro_schema_union_append(optstr_s, avro_schema_string());
 
@@ -2619,6 +2623,40 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   avro_schema_decref(optstr_s);
 
   return schema;
+}
+
+void write_avro_schema_to_file(char *filename, avro_schema_t schema)
+{
+  FILE *avro_fp = open_output_file(filename, "w", TRUE);
+  avro_writer_t avro_schema_writer = avro_writer_file(avro_fp);
+
+  if (avro_schema_to_json(schema, avro_schema_writer)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
+    exit(1);
+  }
+
+  close_output_file(avro_fp);
+}
+
+void *compose_avro_purge_schema(char *writer_name, char *avro_schema)
+{
+  char event_type[] = "purge_schema", wid[SHORTSHORTBUFLEN];
+  json_t *obj = json_object(), *kv;
+
+  kv = json_pack("{ss}", "event_type", event_type);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, 0);
+  kv = json_pack("{ss}", "writer_id", wid);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  kv = json_pack("{ss}", "schema", avro_schema);
+  json_object_update_missing(obj, kv);
+  json_decref(kv);
+
+  return obj;
 }
 
 avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
