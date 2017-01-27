@@ -3,6 +3,9 @@
 # If missing 'kafka' read how to download it at: 
 # http://kafka-python.readthedocs.org/
 #
+# If missing 'avro' read how to download it at: 
+# https://avro.apache.org/docs/1.8.1/gettingstartedpython.html
+#
 # Binding to the topic specified by kafka_topic (by default 'acct') allows to
 # receive messages published by a 'kafka' plugin, in JSON format. Similarly for
 # BGP daemon bgp_*_topic and BMP daemon bmp_*_topic.

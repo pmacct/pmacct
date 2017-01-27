@@ -3,6 +3,9 @@
 # If missing 'pika' read how to download it at: 
 # http://www.rabbitmq.com/tutorials/tutorial-one-python.html
 #
+# If missing 'avro' read how to download it at: 
+# https://avro.apache.org/docs/1.8.1/gettingstartedpython.html
+#
 # Binding to the routing key specified by amqp_routing_key (by default 'acct')
 # allows to receive messages published by an 'amqp' plugin, in JSON format.
 # Similarly for BGP daemon bgp_*_routing_key and BMP daemon bmp_*_routing_key.
