@@ -2638,25 +2638,53 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
   close_output_file(avro_fp);
 }
 
-void *compose_avro_purge_schema(char *writer_name, char *avro_schema)
+char *compose_avro_schema(avro_schema_t avro_schema, char *writer_name)
 {
-  char event_type[] = "purge_schema", wid[SHORTSHORTBUFLEN];
-  json_t *obj = json_object(), *kv;
+  avro_writer_t avro_writer;
+  char *avro_buf = NULL, *json_str = NULL;
 
-  kv = json_pack("{ss}", "event_type", event_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
 
-  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, 0);
-  kv = json_pack("{ss}", "writer_id", wid);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  avro_buf = malloc(config.avro_buffer_size);
 
-  kv = json_pack("{ss}", "schema", avro_schema);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  if (!avro_buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+  else memset(avro_buf, 0, config.avro_buffer_size);
 
-  return obj;
+  avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+
+  if (avro_schema_to_json(avro_schema, avro_writer)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
+    exit_plugin(1);
+  }
+
+  if (avro_writer_tell(avro_writer)) {
+    char event_type[] = "purge_schema", wid[SHORTSHORTBUFLEN];
+    json_t *obj = json_object(), *kv;
+
+    kv = json_pack("{ss}", "event_type", event_type);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, 0);
+    kv = json_pack("{ss}", "writer_id", wid);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+    kv = json_pack("{ss}", "schema", avro_schema);
+    json_object_update_missing(obj, kv);
+    json_decref(kv);
+
+
+    avro_writer_free(avro_writer);
+    free(avro_buf);
+
+    json_str = compose_json_str(obj);
+  }
+
+  return json_str;
 }
 
 avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,

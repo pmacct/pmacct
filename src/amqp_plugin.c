@@ -61,6 +61,10 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
+#ifdef WITH_AVRO
+  char *avro_acct_schema_str;
+#endif
+
   struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -91,11 +95,13 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       avro_schema_deadline = time(NULL);
       P_init_refresh_deadline(&avro_schema_deadline, config.amqp_avro_schema_refresh_time, 0, "m");
+      avro_acct_schema_str = compose_avro_schema(avro_acct_schema, config.name);
     }
     else {
       config.amqp_avro_schema_refresh_time = 0;
       avro_schema_deadline = 0;
       avro_schema_timeout = 0;
+      avro_acct_schema_str = NULL;
     }
 #endif
   }
@@ -212,7 +218,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_AVRO
     if (idata.now > avro_schema_deadline) {
-      amqp_avro_schema_purge();
+      amqp_avro_schema_purge(avro_acct_schema_str);
       avro_schema_deadline += config.amqp_avro_schema_refresh_time;
     }
 #endif
@@ -645,16 +651,14 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 }
 
 #ifdef WITH_AVRO
-void amqp_avro_schema_purge()
+void amqp_avro_schema_purge(char *avro_schema_str)
 {
   struct p_amqp_host amqp_avro_schema_host;
-  avro_writer_t avro_writer;
-  char *avro_buf = NULL;
   int ret;
 
-  /* setting some defaults */
-  if (!config.amqp_avro_schema_routing_key) return;
+  if (!avro_schema_str || !config.amqp_avro_schema_routing_key) return;
 
+  /* setting some defaults */
   if (!config.sql_host) config.sql_host = default_amqp_host;
   if (!config.sql_db) config.sql_db = default_amqp_exchange;
   if (!config.amqp_exchange_type) config.amqp_exchange_type = default_amqp_exchange_type;
@@ -675,40 +679,8 @@ void amqp_avro_schema_purge()
   ret = p_amqp_connect_to_publish(&amqp_avro_schema_host);
   if (ret) return;
 
-  if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
-
-  avro_buf = malloc(config.avro_buffer_size);
-
-  if (!avro_buf) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
-  }
-
-  avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
-
-  if (avro_schema_to_json(avro_acct_schema, avro_writer)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
-    exit_plugin(1);
-  }
-
-  if (avro_writer_tell(avro_writer)) {
-    void *json_obj;
-    char *json_str;
-
-    json_obj = compose_avro_purge_schema(config.name, avro_buf);
-
-    if (json_obj) json_str = compose_json_str(json_obj);
-    if (json_str) {
-      ret = p_amqp_publish_string(&amqp_avro_schema_host, json_str);
-      free(json_str);
-      json_str = NULL;
-    }
-
-    avro_writer_free(avro_writer);
-  }
+  ret = p_amqp_publish_string(&amqp_avro_schema_host, avro_schema_str);
 
   p_amqp_close(&amqp_avro_schema_host, FALSE);
-
-  if (avro_buf) free(avro_buf);
 }
 #endif
