@@ -48,8 +48,8 @@ def main():
 
 	# Data read round 
 	reader = DataFileReader(open(avro_file, "r"), DatumReader())
-	for user in reader:
-		print user
+	for datum in reader:
+		print datum
 	reader.close()
 
 if __name__ == "__main__":

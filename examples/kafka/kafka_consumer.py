@@ -35,10 +35,10 @@ def usage(tool):
 
 	print "Mandatory Args:"
 	print "  -t, --topic".ljust(25) + "Define the topic to use"
-	print "  -g, --group_id".ljust(25) + "Specify the Group ID to declare"
 	print ""
 	print "Optional Args:"
 	print "  -h, --help".ljust(25) + "Print this help"
+	print "  -g, --group_id".ljust(25) + "Specify the Group ID to declare"
 	print "  -e, --earliest".ljust(25) + "Set topic offset to 'earliest' [default: 'latest']"
 	print "  -H, --host".ljust(25) + "Define Kafka broker host [default: '127.0.0.1:9092']"
 	if avro_available:
@@ -70,7 +70,6 @@ def main():
 			required_cl += 1
             		kafka_topic = a
 		elif o in ("-g", "--group_id"):
-			required_cl += 1
             		kafka_group_id = a
 		elif o in ("-H", "--host"):
             		kafka_host = a
@@ -93,7 +92,7 @@ def main():
 		else:
 			assert False, "unhandled option"
 
-	if (required_cl < 2): 
+	if (required_cl < 1): 
 		print "ERROR: Missing required arguments"
 		usage(sys.argv[0])
 		sys.exit(1)
