@@ -478,7 +478,8 @@ int bgp_parse_notification_msg(struct bgp_peer *peer, char *pkt, u_int8_t *res_m
   (*res_min) = bn->bgpn_minor;
 
   /* draft-ietf-idr-shutdown-03 */
-  if (bn->bgpn_major == BGP_NOTIFY_CEASE && bn->bgpn_minor == BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN) {
+  if (bn->bgpn_major == BGP_NOTIFY_CEASE &&
+      (bn->bgpn_minor == BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN || bn->bgpn_minor == BGP_NOTIFY_CEASE_ADMIN_RESET)) {
     if (rem_len) {
       pkt_ptr = (pkt + BGP_MIN_NOTIFICATION_MSG_SIZE);
       bnsm = (struct bgp_notification_shutdown_msg *) pkt_ptr;
