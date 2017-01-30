@@ -1383,7 +1383,8 @@ KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
 DESC:		Enables the use of start/end markers each time data is purged to the backend. Both start
 		and end markers return additional information, ie. writer PID, number of entries purged,
-		elapsed time, etc.
+		elapsed time, etc. When plugin output is in JSON or Avro plugin outputs, markers are
+		encoded in JSON format and event_type is set to purge_init and purge_close respectively. 
 DEFAULT:	false
 
 KEY:		print_output
@@ -1446,10 +1447,12 @@ DESC:		When the Avro format is used to encode the messages sent to a message bro
 
 KEY:		[ amqp_avro_schema_routing_key | kafka_avro_schema_topic ]
 DESC:		AMQP routing key or Kafka topic on which the generated Avro schema is sent over at regular
-		time intervals by AMQP and Kafka plugins. The schema can then be used by the receiving end
-		to decode the messages. All other parameters to connect to the broker, ie. host, port, etc.
-		are shared with the main plugin routing key or topic. The regular time intervals are set
-		via amqp_avro_schema_refresh_time and kafka_avro_schema_refresh_time.  
+		time intervals by AMQP and Kafka plugins (it can potentially be the same as kafka_topic or
+		amqp_routing_key). The schema can then be used by the receiving end to decode the messages.
+		All other parameters to connect to the broker, ie. host, port, etc. are shared with the main
+		plugin routing key or topic. The time intervals are set via amqp_avro_schema_refresh_time
+		and kafka_avro_schema_refresh_time. Schemas are carried as part of the 'schema' field in
+		an envelope JSON message with 'event_type' set to purge_schema. 
 DEFAULT:	none
 		 
 

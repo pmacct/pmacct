@@ -441,7 +441,7 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
     bn_reply->bgpn_minor = BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN;
     ret += BGP_MIN_NOTIFICATION_MSG_SIZE;
 
-    /* draft-ietf-idr-shutdown-03 */
+    /* draft-ietf-idr-shutdown-04 */
     shutdown_msglen = strlen(shutdown_msg);
 
     if (shutdown_msg && (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN)) {
@@ -477,7 +477,7 @@ int bgp_parse_notification_msg(struct bgp_peer *peer, char *pkt, u_int8_t *res_m
   (*res_maj) = bn->bgpn_major;
   (*res_min) = bn->bgpn_minor;
 
-  /* draft-ietf-idr-shutdown-03 */
+  /* draft-ietf-idr-shutdown-04 */
   if (bn->bgpn_major == BGP_NOTIFY_CEASE &&
       (bn->bgpn_minor == BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN || bn->bgpn_minor == BGP_NOTIFY_CEASE_ADMIN_RESET)) {
     if (rem_len) {
