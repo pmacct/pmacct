@@ -95,6 +95,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.print_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
     avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
+    avro_schema_add_writer_id(avro_acct_schema); // XXX
     if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
 #endif
   }

@@ -2625,6 +2625,11 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   return schema;
 }
 
+void avro_schema_add_writer_id(avro_schema_t schema)
+{
+  avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+}
+
 void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 {
   FILE *avro_fp = open_output_file(filename, "w", TRUE);
@@ -2638,7 +2643,7 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
   close_output_file(avro_fp);
 }
 
-char *compose_avro_schema(avro_schema_t avro_schema, char *writer_name)
+char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
 {
   avro_writer_t avro_writer;
   char *avro_buf = NULL, *json_str = NULL;
@@ -2673,7 +2678,7 @@ char *compose_avro_schema(avro_schema_t avro_schema, char *writer_name)
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
-    kv = json_pack("{ss}", "schema", avro_schema);
+    kv = json_pack("{ss}", "schema", avro_buf);
     json_object_update_missing(obj, kv);
     json_decref(kv);
 
@@ -3256,6 +3261,16 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   return value;
+}
+
+void add_writer_name_and_pid_avro(avro_value_t value, char *name, pid_t writer_pid)
+{
+  char wid[SHORTSHORTBUFLEN];
+  avro_value_t field;
+
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", name, writer_pid);
+  check_i(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  check_i(avro_value_set_string(&field, wid));
 }
 #endif
 

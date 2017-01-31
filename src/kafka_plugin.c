@@ -87,6 +87,8 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
     avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
+    avro_schema_add_writer_id(avro_acct_schema);
+
     if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
 
     if (config.kafka_avro_schema_topic) {
@@ -95,7 +97,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       avro_schema_deadline = time(NULL);
       P_init_refresh_deadline(&avro_schema_deadline, config.kafka_avro_schema_refresh_time, 0, "m");
-      avro_acct_schema_str = compose_avro_schema(avro_acct_schema, config.name);
+      avro_acct_schema_str = compose_avro_purge_schema(avro_acct_schema, config.name);
     }
     else {
       config.kafka_avro_schema_refresh_time = 0;
@@ -473,6 +475,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
                            &queue[j]->basetime, queue[j]->stitch, avro_iface);
       size_t avro_value_size;
 
+      add_writer_name_and_pid_avro(avro_value, config.name, writer_pid);
       avro_value_sizeof(&avro_value, &avro_value_size);
 
       if (avro_value_size > config.avro_buffer_size) {
