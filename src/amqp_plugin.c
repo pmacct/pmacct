@@ -540,7 +540,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 	  mv_num++;
 
 	  string_add_newline(json_buf);
-	  json_buf_off++;
+	  json_buf_off = strlen(json_buf);
 
 	  free(json_str);
 	  json_str = NULL;
@@ -569,7 +569,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
 	  mv_num = 1;
 
 	  string_add_newline(json_buf);
-	  json_buf_off++;
+	  json_buf_off = strlen(json_buf);
         }
 
         free(json_str);
