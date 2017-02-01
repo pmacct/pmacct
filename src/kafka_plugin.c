@@ -341,9 +341,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   time_t start, duration;
   pid_t writer_pid = getpid();
 
-#ifdef WITH_JANSSON
-  json_t *array = json_array();
-#endif
+  char *json_buf = NULL;
+  int json_buf_off = 0;
 
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
@@ -418,8 +417,19 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
     }
   }
 
+  if (config.message_broker_output & PRINT_OUTPUT_JSON) {
+    if (config.sql_multi_values) {
+      json_buf = malloc(config.sql_multi_values);
+
+      if (!json_buf) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (json_buf). Exiting ..\n", config.name, config.type);
+	exit_plugin(1);
+      }
+      else memset(json_buf, 0, config.sql_multi_values);
+    }
+  }
+  else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-  if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
     if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
 
     avro_buf = malloc(config.avro_buffer_size);
@@ -428,10 +438,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
       exit_plugin(1);
     }
+    else memset(avro_buf, 0, config.avro_buffer_size);
 
     avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
-  }
 #endif
+  }
 
   for (j = 0; j < index; j++) {
     void *json_obj;
@@ -506,30 +517,31 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
     }
 
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-#ifdef WITH_JANSSON
+      char *tmp_str = NULL;
+
       if (json_str && config.sql_multi_values) {
-        json_t *elem = NULL;
-        char *tmp_str = json_str;
-        int do_free = FALSE;
+        int json_strlen = (strlen(json_str) ? (strlen(json_str) + 1) : 0);
 
-        if (json_array_size(array) >= config.sql_multi_values) {
-          json_str = json_dumps(array, JSON_PRESERVE_ORDER);
-          json_array_clear(array);
-          mv_num_save = mv_num;
-          mv_num = 0;
-        }
-        else do_free = TRUE;
+	if (json_strlen >= (config.sql_multi_values - json_buf_off)) {
+	  if (json_strlen >= config.sql_multi_values) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_multi_values not large enough to store JSON elements. Exiting ..\n", config.name, config.type); 
+	    exit(1);
+	  }
 
-        elem = json_loads(tmp_str, 0, NULL);
-        json_array_append_new(array, elem);
-        mv_num++;
+	  tmp_str = json_str;
+	  json_str = json_buf;
+	}
+	else {
+	  strcat(json_buf, json_str);
+	  mv_num++;
 
-        if (do_free) {
-          free(json_str);
-          json_str = NULL;
-        }
+	  string_add_newline(json_buf);
+	  json_buf_off++;
+
+	  free(json_str);
+	  json_str = NULL;
+	}
       }
-#endif
 
       if (json_str) {
         if (is_topic_dyn) {
@@ -544,6 +556,17 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
         ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
+
+	if (config.sql_multi_values) {
+	  json_str = tmp_str;
+	  strcpy(json_buf, json_str);
+
+	  mv_num_save = mv_num;
+	  mv_num = 1;
+
+          string_add_newline(json_buf);
+          json_buf_off++;
+        }
 
         free(json_str);
         json_str = NULL;
@@ -583,26 +606,13 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
   if (config.sql_multi_values) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-#ifdef WITH_JANSSON
-      if (json_array_size(array)) {
-	char *json_str;
+      if (json_buf && json_buf_off) {
+	/* no handling of dyn routing keys here: not compatible */
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_buf);
+	ret = p_kafka_produce_data(&kafkap_kafka_host, json_buf, strlen(json_buf));
 
-	json_str = json_dumps(array, JSON_PRESERVE_ORDER);
-	json_array_clear(array);
-	json_decref(array);
-
-	if (json_str) {
-	  /* no handling of dyn routing keys here: not compatible */
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
-	  ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
-
-	  free(json_str);
-	  json_str = NULL;
-
-	  if (!ret) qn += mv_num;
-	}
+	if (!ret) qn += mv_num;
       }
-#endif
     }
     else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
@@ -644,6 +654,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 
   if (empty_pcust) free(empty_pcust);
+
+  if (json_buf) free(json_buf);
 
 #ifdef WITH_AVRO
   if (avro_buf) free(avro_buf);

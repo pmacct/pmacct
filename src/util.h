@@ -42,6 +42,7 @@ EXT char *extract_plugin_name(char **);
 EXT void trim_spaces(char *);
 EXT void trim_all_spaces(char *);
 EXT void strip_quotes(char *);
+EXT void string_add_newline(char *);
 EXT int isblankline(char *);
 EXT int iscomment(char *);
 EXT int check_not_valid_char(char *, char *, int);

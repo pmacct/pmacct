@@ -297,6 +297,15 @@ int iscomment(char *line)
   return FALSE;
 }
 
+void string_add_newline(char *buf)
+{
+  int len = strlen(buf);
+
+  buf[len] = '\n';
+  len++;
+  buf[len] = '\0';
+}
+
 time_t roundoff_time(time_t t, char *value)
 {
   // char *value = config.sql_history_roundoff;
