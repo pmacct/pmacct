@@ -637,6 +637,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
       if (json_obj) json_str = compose_json_str(json_obj);
       if (json_str) {
+	sleep(1); /* Let's give a small delay to facilitate purge_close being
+		     the last message in batch in case of partitioned topics */
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
         ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
 
