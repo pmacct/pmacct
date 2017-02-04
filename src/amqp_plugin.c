@@ -84,7 +84,11 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.sql_passwd) config.sql_passwd = rabbitmq_pwd;
   if (!config.message_broker_output) config.message_broker_output = PRINT_OUTPUT_JSON;
 
-  if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+  
+  if (config.message_broker_output & PRINT_OUTPUT_JSON) {
+    compose_json(config.what_to_count, config.what_to_count_2);
+  }
+  else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
     avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
     avro_schema_add_writer_id(avro_acct_schema);
@@ -474,13 +478,15 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
     if (queue[j]->valid == PRINT_CACHE_FREE) continue;
 
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-      json_obj = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                           &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
-                           queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
-                           &queue[j]->basetime, queue[j]->stitch);
+#ifdef WITH_JANSSON
+      json_t *json_obj = json_object();
+      int idx;
+
+      for (idx = 0; idx < N_PRIMITIVES && cjhandler[idx]; idx++) cjhandler[idx](json_obj, queue[j]);
       add_writer_name_and_pid_json(json_obj, config.name, writer_pid);
 
       json_str = compose_json_str(json_obj);
+#endif
     }
     else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO

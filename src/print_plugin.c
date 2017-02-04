@@ -92,10 +92,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   refresh_timeout = config.sql_refresh_time*1000;
 
-  if (config.print_output & PRINT_OUTPUT_AVRO) {
+  if (config.print_output & PRINT_OUTPUT_JSON) {
+    compose_json(config.what_to_count, config.what_to_count_2);
+  }
+  else if (config.print_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
     avro_acct_schema = build_avro_schema(config.what_to_count, config.what_to_count_2);
-    avro_schema_add_writer_id(avro_acct_schema); // XXX
     if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
 #endif
   }
@@ -1260,14 +1262,13 @@ void P_cache_purge(struct chained_cache *queue[], int index)
         else fprintf(f, "\n");
       }
       else if (f && config.print_output & PRINT_OUTPUT_JSON) {
-        void *json_obj;
-  
-        json_obj = compose_json(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, pmpls, pcust, pvlen, queue[j]->bytes_counter,
-                         queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
-                         queue[j]->stitch);
-  
+#ifdef WITH_JANSSON
+	json_t *json_obj = json_object();
+	int idx;
+
+	for (idx = 0; idx < N_PRIMITIVES && cjhandler[idx]; idx++) cjhandler[idx](json_obj, queue[j]);
         if (json_obj) write_and_free_json(f, json_obj);
+#endif
       }
       else if (f && config.print_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
