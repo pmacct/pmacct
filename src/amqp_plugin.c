@@ -26,6 +26,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
+#include "plugin_cmn_json.h"
 #include "amqp_plugin.h"
 #ifndef WITH_JANSSON
 #error "--enable-rabbitmq requires --enable-jansson"

@@ -21,7 +21,8 @@ libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         regmagic.h regsub.c conntrack.c conntrack.h xflow_status.c	\
         xflow_status.h plugin_common.c plugin_common.h preprocess.c	\
         preprocess-data.h preprocess.h ll.c nl.c jhash.h pmacct-dlt.h	\
-        sflow.h crc32.h base64.c base64.h
+        sflow.h crc32.h base64.c base64.h plugin_cmn_json.c		\
+	plugin_cmn_json.h
 # Builtin plugins
 libdaemons_la_LIBADD  = nfprobe_plugin/libnfprobe_plugin.la
 libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la

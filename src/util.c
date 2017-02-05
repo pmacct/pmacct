@@ -1615,36 +1615,6 @@ void write_and_free_json(FILE *f, void *obj)
   }
 }
 
-void *compose_purge_init_json(char *writer_name, pid_t writer_pid)
-{
-  char event_type[] = "purge_init", wid[SHORTSHORTBUFLEN];
-  json_t *obj = json_object();
-
-  json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
-
-  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);  
-  json_object_set_new_nocheck(obj, "writer_id", json_string(wid));
-
-  return obj;
-}
-
-void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_entries, int total_entries, int duration)
-{
-  char event_type[] = "purge_close", wid[SHORTSHORTBUFLEN];
-  json_t *obj = json_object();
-
-  json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
-
-  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);
-  json_object_set_new_nocheck(obj, "writer_id", json_string(wid));
-
-  json_object_set_new_nocheck(obj, "purged_entries", json_integer((json_int_t)purged_entries));
-  json_object_set_new_nocheck(obj, "total_entries", json_integer((json_int_t)total_entries));
-  json_object_set_new_nocheck(obj, "duration", json_integer((json_int_t)duration));
-
-  return obj;
-}
-
 #ifdef WITH_RABBITMQ
 int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
@@ -1724,16 +1694,6 @@ char *compose_json_str(void *obj)
 void write_and_free_json(FILE *f, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-}
-
-void *compose_purge_init_json(char *writer_name, pid_t writer_pid)
-{
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_purge_init_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-}
-
-void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_entries, int total_entries, int duration)
-{
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_purge_close_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
 int write_and_free_json_amqp(void *amqp_log, void *obj)

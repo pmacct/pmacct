@@ -99,11 +99,6 @@ struct p_broker_timers {
 
 #include "preprocess.h"
 
-/* typedefs */
-#ifdef WITH_JANSSON
-typedef void (*compose_json_handler)(json_t *, struct chained_cache *);
-#endif
-
 /* prototypes */
 #if (!defined __PLUGIN_COMMON_C)
 #define EXT extern
@@ -162,86 +157,5 @@ EXT int (*basetime_cmp)(struct timeval *, struct timeval *);
 EXT struct timeval basetime, ibasetime, new_basetime;
 EXT time_t timeslot;
 EXT int dyn_table;
-
-#ifdef WITH_JANSSON
-EXT compose_json_handler cjhandler[N_PRIMITIVES];
-#endif
-
-/* JSON-related prototypes */
-EXT void compose_json(u_int64_t, u_int64_t);
-#ifdef WITH_JANSSON
-EXT void compose_json_event_type(json_t *, struct chained_cache *);
-EXT void compose_json_tag(json_t *, struct chained_cache *);
-EXT void compose_json_tag2(json_t *, struct chained_cache *);
-EXT void compose_json_label(json_t *, struct chained_cache *);
-EXT void compose_json_class(json_t *, struct chained_cache *);
-EXT void compose_json_src_mac(json_t *, struct chained_cache *);
-EXT void compose_json_dst_mac(json_t *, struct chained_cache *);
-EXT void compose_json_vlan(json_t *, struct chained_cache *);
-EXT void compose_json_cos(json_t *, struct chained_cache *);
-EXT void compose_json_etype(json_t *, struct chained_cache *);
-EXT void compose_json_src_as(json_t *, struct chained_cache *);
-EXT void compose_json_dst_as(json_t *, struct chained_cache *);
-EXT void compose_json_std_comm(json_t *, struct chained_cache *);
-EXT void compose_json_ext_comm(json_t *, struct chained_cache *);
-EXT void compose_json_lrg_comm(json_t *, struct chained_cache *);
-EXT void compose_json_as_path(json_t *, struct chained_cache *);
-EXT void compose_json_local_pref(json_t *, struct chained_cache *);
-EXT void compose_json_med(json_t *, struct chained_cache *);
-EXT void compose_json_peer_src_as(json_t *, struct chained_cache *);
-EXT void compose_json_peer_dst_as(json_t *, struct chained_cache *);
-EXT void compose_json_peer_src_ip(json_t *, struct chained_cache *);
-EXT void compose_json_peer_dst_ip(json_t *, struct chained_cache *);
-EXT void compose_json_src_std_comm(json_t *, struct chained_cache *);
-EXT void compose_json_src_ext_comm(json_t *, struct chained_cache *);
-EXT void compose_json_src_lrg_comm(json_t *, struct chained_cache *);
-EXT void compose_json_src_as_path(json_t *, struct chained_cache *);
-EXT void compose_json_src_local_pref(json_t *, struct chained_cache *);
-EXT void compose_json_src_med(json_t *, struct chained_cache *);
-EXT void compose_json_in_iface(json_t *, struct chained_cache *);
-EXT void compose_json_out_iface(json_t *, struct chained_cache *);
-EXT void compose_json_mpls_vpn_rd(json_t *, struct chained_cache *);
-EXT void compose_json_src_host(json_t *, struct chained_cache *);
-EXT void compose_json_src_net(json_t *, struct chained_cache *);
-EXT void compose_json_dst_host(json_t *, struct chained_cache *);
-EXT void compose_json_dst_net(json_t *, struct chained_cache *);
-EXT void compose_json_src_mask(json_t *, struct chained_cache *);
-EXT void compose_json_dst_mask(json_t *, struct chained_cache *);
-EXT void compose_json_src_port(json_t *, struct chained_cache *);
-EXT void compose_json_dst_port(json_t *, struct chained_cache *);
-#if defined (WITH_GEOIP)
-EXT void compose_json_src_host_country(json_t *, struct chained_cache *);
-EXT void compose_json_dst_host_country(json_t *, struct chained_cache *);
-#endif
-#if defined (WITH_GEOIPV2)
-EXT void compose_json_src_host_country(json_t *, struct chained_cache *);
-EXT void compose_json_dst_host_country(json_t *, struct chained_cache *);
-EXT void compose_json_src_host_pocode(json_t *, struct chained_cache *);
-EXT void compose_json_dst_host_pocode(json_t *, struct chained_cache *);
-#endif
-EXT void compose_json_tcp_flags(json_t *, struct chained_cache *);
-EXT void compose_json_proto(json_t *, struct chained_cache *);
-EXT void compose_json_tos(json_t *, struct chained_cache *);
-EXT void compose_json_sampling_rate(json_t *, struct chained_cache *);
-EXT void compose_json_pkt_len_distrib(json_t *, struct chained_cache *);
-EXT void compose_json_post_nat_src_host(json_t *, struct chained_cache *);
-EXT void compose_json_post_nat_dst_host(json_t *, struct chained_cache *);
-EXT void compose_json_post_nat_src_port(json_t *, struct chained_cache *);
-EXT void compose_json_post_nat_dst_port(json_t *, struct chained_cache *);
-EXT void compose_json_nat_event(json_t *, struct chained_cache *);
-EXT void compose_json_mpls_label_top(json_t *, struct chained_cache *);
-EXT void compose_json_mpls_label_bottom(json_t *, struct chained_cache *);
-EXT void compose_json_mpls_stack_depth(json_t *, struct chained_cache *);
-EXT void compose_json_timestamp_start(json_t *, struct chained_cache *);
-EXT void compose_json_timestamp_end(json_t *, struct chained_cache *);
-EXT void compose_json_timestamp_arrival(json_t *, struct chained_cache *);
-EXT void compose_json_timestamp_stitching(json_t *, struct chained_cache *);
-EXT void compose_json_export_proto_seqno(json_t *, struct chained_cache *);
-EXT void compose_json_export_proto_version(json_t *, struct chained_cache *);
-EXT void compose_json_custom_primitives(json_t *, struct chained_cache *);
-EXT void compose_json_history(json_t *, struct chained_cache *);
-EXT void compose_json_flows(json_t *, struct chained_cache *);
-EXT void compose_json_counters(json_t *, struct chained_cache *);
-#endif
 #undef EXT
 #endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */

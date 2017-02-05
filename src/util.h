@@ -109,8 +109,6 @@ EXT void set_truefalse_nonzero(int *);
 
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
-EXT void *compose_purge_init_json(char *, pid_t);
-EXT void *compose_purge_close_json(char *, pid_t, int, int, int);
 EXT int write_and_free_json_amqp(void *, void *);
 EXT int write_and_free_json_kafka(void *, void *);
 EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
