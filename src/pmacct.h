@@ -211,6 +211,14 @@ typedef struct {
   u_int16_t off;
 } pm_hash_serial_t;
 
+#if (defined WITH_JANSSON)
+#include <jansson.h>
+#endif
+
+#if (defined WITH_AVRO)
+#include <avro.h>
+#endif
+
 #include "pmacct-defines.h"
 #include "network.h"
 #include "pretag.h"
@@ -354,7 +362,6 @@ size_t strlcpy(char *, const char *, size_t);
 #endif
 
 #if (defined WITH_JANSSON)
-#include <jansson.h>
 #if (!defined HAVE_JSON_OBJECT_UPDATE_MISSING)
 int json_object_update_missing(json_t *, json_t *);
 #endif

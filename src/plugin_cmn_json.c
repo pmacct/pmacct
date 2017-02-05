@@ -990,8 +990,6 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
 void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-
-  return NULL;
 }
 
 void *compose_purge_init_json(char *writer_name, pid_t writer_pid)

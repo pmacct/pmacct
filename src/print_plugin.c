@@ -28,15 +28,12 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "plugin_cmn_json.h"
+#include "plugin_cmn_avro.h"
 #include "print_plugin.h"
 #include "ip_flow.h"
 #include "classifier.h"
 #include "crc32.h"
 #include "bgp/bgp.h"
-
-#ifdef WITH_AVRO
-#include <avro.h>
-#endif
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

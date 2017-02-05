@@ -27,12 +27,10 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "plugin_cmn_json.h"
+#include "plugin_cmn_avro.h"
 #include "kafka_plugin.h"
 #ifndef WITH_JANSSON
 #error "--enable-kafka requires --enable-jansson"
-#endif
-#ifdef WITH_AVRO
-#include <avro.h>
 #endif
 
 /* Functions */

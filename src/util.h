@@ -24,7 +24,13 @@
 #define SUB 1
 
 #ifdef WITH_AVRO
-#include <avro.h>
+#define check_i(call) \
+  do { \
+    if ((call) != 0) { \
+      Log(LOG_ERR, "Error: %s\n", avro_strerror()); \
+      exit_plugin(1); \
+    } \
+} while (0)
 #endif
 
 /* prototypes */
@@ -114,16 +120,8 @@ EXT int write_and_free_json_kafka(void *, void *);
 EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
 
 #ifdef WITH_AVRO
-EXT avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2);
-EXT void avro_schema_add_writer_id(avro_schema_t);
 EXT void write_avro_schema_to_file(char *, avro_schema_t);
 EXT char *compose_avro_purge_schema(avro_schema_t, char *);
-EXT avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
-  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime,
-  struct pkt_stitching *stitch, avro_value_iface_t *iface);
-EXT void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 #endif
 
 EXT void compose_timestamp(char *, int, struct timeval *, int, int);
