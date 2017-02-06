@@ -91,20 +91,14 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
-    json_t *obj = void_obj, *kv;
+    json_t *obj = void_obj;
 
     addr_to_str(ip_address, &bmpp->self.addr);
-    kv = json_pack("{ss}", "bmp_router", ip_address);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_router", json_string(ip_address));
 
-    kv = json_pack("{sI}", "bmp_router_port", (json_int_t)peer->tcp_port);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
 
-    kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 #endif
   }
 }
@@ -122,11 +116,9 @@ void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *peer, int output, vo
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    json_t *obj = void_obj, *kv;
+    json_t *obj = void_obj;
 
-    kv = json_pack("{sI}", "bmp_router_port", (json_int_t)peer->tcp_port);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
 #endif
   }
 }

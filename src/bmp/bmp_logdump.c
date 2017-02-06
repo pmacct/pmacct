@@ -60,41 +60,27 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    json_t *obj = json_object(), *kv;
+    json_t *obj = json_object();
     char tstamp_str[SRVBUFLEN];
 
-    kv = json_pack("{ss}", "event_type", event_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    kv = json_pack("{sI}", "seq", (json_int_t)log_seq);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.timestamps_since_epoch);
-      kv = json_pack("{ss}", "timestamp", tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "timestamp", json_string(tstamp_str));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.timestamps_since_epoch);
-      kv = json_pack("{ss}", "event_timestamp", tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "event_timestamp", json_string(tstamp_str));
     }
 
-    kv = json_pack("{ss}", "bmp_router", peer->addr_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_router", json_string(peer->addr_str));
 
-    kv = json_pack("{sI}", "bmp_router_port", (json_int_t)peer->tcp_port);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
 
     switch (log_type) {
     case BMP_LOG_TYPE_STATS:
@@ -149,47 +135,27 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
   int ret = 0;
 #ifdef WITH_JANSSON
   char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   if (!peer || !bdata || !blstats || !vobj) return ERR;
 
-  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
   addr_to_str(ip_address, &bdata->peer_ip);
-  kv = json_pack("{ss}", "peer_ip", ip_address);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
-  kv = json_pack("{sI}", "peer_asn", (json_int_t)bdata->peer_asn);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
 
-  kv = json_pack("{sI}", "peer_type", (json_int_t)bdata->peer_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->peer_type));
 
-  kv = json_pack("{sI}", "counter_type", (json_int_t)blstats->cnt_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "counter_type", json_integer((json_int_t)blstats->cnt_type));
 
-  if (blstats->cnt_type <= BMP_STATS_MAX) {
-    kv = json_pack("{ss}", "counter_type_str", bmp_stats_cnt_types[blstats->cnt_type]);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-  }
-  else {
-    kv = json_pack("{ss}", "counter_type_str", "Unknown");
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-  }
+  if (blstats->cnt_type <= BMP_STATS_MAX)
+    json_object_set_new_nocheck(obj, "counter_type_str", json_string(bmp_stats_cnt_types[blstats->cnt_type]));
+  else
+    json_object_set_new_nocheck(obj, "counter_type_str", json_string("Unknown"));
 
-  if (blstats->got_data) {
-    kv = json_pack("{sI}", "counter_value", (json_int_t)blstats->cnt_data);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-  }
+  if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
 #endif
 
   return ret;
@@ -200,28 +166,19 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   char bmp_msg_type[] = "init";
   int ret = 0;
 #ifdef WITH_JANSSON
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   if (!peer || !vobj) return ERR;
 
-  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
   if (blinit) {
-    kv = json_pack("{sI}", "bmp_init_data_type", (json_int_t)blinit->type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_init_data_type", json_integer((json_int_t)blinit->type));
 
-    kv = json_pack("{sI}", "bmp_init_data_len", (json_int_t)blinit->len);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_init_data_len", json_integer((json_int_t)blinit->len));
 
-    if (blinit->type == BMP_INIT_INFO_STRING || blinit->type == BMP_INIT_INFO_SYSDESCR || blinit->type == BMP_INIT_INFO_SYSNAME) {
-      kv = json_pack("{ss}", "bmp_init_data_val", blinit->val);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+    if (blinit->type == BMP_INIT_INFO_STRING || blinit->type == BMP_INIT_INFO_SYSDESCR || blinit->type == BMP_INIT_INFO_SYSNAME)
+      json_object_set_new_nocheck(obj, "bmp_init_data_val", json_string(blinit->val));
   }
 #endif
 
@@ -233,38 +190,24 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   char bmp_msg_type[] = "term";
   int ret = 0;
 #ifdef WITH_JANSSON
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   if (!peer || !vobj) return ERR;
 
-  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
   if (blterm) {
-    kv = json_pack("{sI}", "bmp_term_data_type", (json_int_t)blterm->type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_term_data_type", json_integer((json_int_t)blterm->type));
 
-    kv = json_pack("{sI}", "bmp_term_data_len", (json_int_t)blterm->len);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "bmp_term_data_len", json_integer((json_int_t)blterm->len));
 
-    if (blterm->type == BMP_TERM_INFO_STRING) {
-      kv = json_pack("{ss}", "bmp_term_data_val_str", blterm->val);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+    if (blterm->type == BMP_TERM_INFO_STRING)
+      json_object_set_new_nocheck(obj, "bmp_term_data_val_str", json_string(blterm->val));
     else if (blterm->type == BMP_TERM_INFO_REASON) {
-      kv = json_pack("{sI}", "bmp_term_data_val_reas_type", (json_int_t)blterm->reas_type);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "bmp_term_data_val_reas_type", json_integer((json_int_t)blterm->reas_type));
 
-      if (blterm->reas_type <= BMP_TERM_REASON_MAX) {
-        kv = json_pack("{ss}", "bmp_term_data_val_reas_str", bmp_term_reason_types[blterm->reas_type]);
-        json_object_update_missing(obj, kv);
-        json_decref(kv);
-      }
+      if (blterm->reas_type <= BMP_TERM_REASON_MAX)
+	json_object_set_new_nocheck(obj, "bmp_term_data_val_reas_str", json_string(bmp_term_reason_types[blterm->reas_type]));
     }
   }
 #endif
@@ -278,43 +221,27 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   int ret = 0;
 #ifdef WITH_JANSSON
   char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   if (!peer || !bdata || !blpu || !vobj) return ERR;
 
-  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
   addr_to_str(ip_address, &bdata->peer_ip);
-  kv = json_pack("{ss}", "peer_ip", ip_address);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
-  kv = json_pack("{sI}", "peer_asn", (json_int_t)bdata->peer_asn);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
 
-  kv = json_pack("{sI}", "peer_type", (json_int_t)bdata->peer_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->peer_type));
 
-  kv = json_pack("{ss}", "bgp_id", inet_ntoa(bdata->bgp_id.address.ipv4));
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
 
-  kv = json_pack("{sI}", "local_port", (json_int_t)blpu->loc_port);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "local_port", json_integer((json_int_t)blpu->loc_port));
 
-  kv = json_pack("{sI}", "remote_port", (json_int_t)blpu->rem_port);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "remote_port", json_integer((json_int_t)blpu->rem_port));
 
   addr_to_str(ip_address, &blpu->local_ip);
-  kv = json_pack("{ss}", "local_ip", ip_address);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
 #endif
 
   return ret;
@@ -326,36 +253,23 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   int ret = 0;
 #ifdef WITH_JANSSON
   char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   if (!peer || !bdata || !blpd || !vobj) return ERR;
 
-  kv = json_pack("{ss}", "bmp_msg_type", bmp_msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
   addr_to_str(ip_address, &bdata->peer_ip);
-  kv = json_pack("{ss}", "peer_ip", ip_address);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
-  kv = json_pack("{sI}", "peer_asn", (json_int_t)bdata->peer_asn);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
 
-  kv = json_pack("{sI}", "peer_type", (json_int_t)bdata->peer_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->peer_type));
 
-  kv = json_pack("{sI}", "reason_type", (json_int_t)blpd->reason);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
 
-  if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
-    kv = json_pack("{sI}", "reason_loc_code", (json_int_t)blpd->loc_code);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
-  }
+  if (blpd->reason == BMP_PEER_DOWN_LOC_CODE)
+    json_object_set_new_nocheck(obj, "reason_loc_code", json_integer((json_int_t)blpd->loc_code));
 #endif
 
   return ret;
