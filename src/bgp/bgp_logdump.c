@@ -69,7 +69,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
-    json_t *obj = json_object(), *kv;
+    json_t *obj = json_object();
 
     char empty[] = "";
     char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
@@ -77,117 +77,74 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     /* no need for seq for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
       bgp_peer_log_seq_increment(&bms->log_seq);
 
       switch (log_type) {
       case BGP_LOG_TYPE_UPDATE:
-	kv = json_pack("{ss}", "log_type", "update");
+	json_object_set_new_nocheck(obj, "log_type", json_string("update"));
 	break;
       case BGP_LOG_TYPE_WITHDRAW:
-	kv = json_pack("{ss}", "log_type", "withdraw");
+	json_object_set_new_nocheck(obj, "log_type", json_string("withdraw"));
 	break;
       case BGP_LOG_TYPE_DELETE:
-	kv = json_pack("{ss}", "log_type", "delete");
+	json_object_set_new_nocheck(obj, "log_type", json_string("delete"));
 	break;
       default:
-	kv = json_pack("{sI}", "log_type", (json_int_t)log_type);
+        json_object_set_new_nocheck(obj, "log_type", json_integer((json_int_t)log_type));
 	break;
       }
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
     }
 
-    if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{ss}", "timestamp", bms->log_tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
-    else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+    if (etype == BGP_LOGDUMP_ET_LOG)
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
+    else if (etype == BGP_LOGDUMP_ET_DUMP)
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
-    kv = json_pack("{ss}", bms->peer_str, ip_address);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-    kv = json_pack("{ss}", "event_type", event_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    kv = json_pack("{sI}", "afi", (json_int_t) afi);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)afi));
 
-    kv = json_pack("{sI}", "safi", (json_int_t) safi);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)safi));
 
     if (route) {
       memset(prefix_str, 0, INET6_ADDRSTRLEN);
       prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
-      kv = json_pack("{ss}", "ip_prefix", prefix_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
-    if (ri && ri->extra && ri->extra->path_id) {
-      kv = json_pack("{sI}", "as_path_id", (json_int_t)ri->extra->path_id);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
-    }
+    if (ri && ri->extra && ri->extra->path_id)
+      json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->extra->path_id));
 
     if (attr) {
       memset(nexthop_str, 0, INET6_ADDRSTRLEN);
       if (attr->mp_nexthop.family) addr_to_str(nexthop_str, &attr->mp_nexthop);
       else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
-      kv = json_pack("{ss}", "bgp_nexthop", nexthop_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "bgp_nexthop", json_string(nexthop_str));
 
       aspath = attr->aspath ? attr->aspath->str : empty;
-      kv = json_pack("{ss}", "as_path", aspath);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "as_path", json_string(aspath));
 
-      if (attr->community) {
-        kv = json_pack("{ss}", "comms", attr->community->str);
-        json_object_update_missing(obj, kv);
-        json_decref(kv);
-      }
+      if (attr->community)
+	json_object_set_new_nocheck(obj, "comms", json_string(attr->community->str));
 
-      if (attr->ecommunity) {
-        kv = json_pack("{ss}", "ecomms", attr->ecommunity->str);
-        json_object_update_missing(obj, kv);
-        json_decref(kv);
-      }
+      if (attr->ecommunity)
+	json_object_set_new_nocheck(obj, "ecomms", json_string(attr->ecommunity->str));
 
-      if (attr->lcommunity) {
-        kv = json_pack("{ss}", "lcomms", attr->lcommunity->str);
-        json_object_update_missing(obj, kv);
-        json_decref(kv);
-      }
+      if (attr->lcommunity)
+	json_object_set_new_nocheck(obj, "lcomms", json_string(attr->lcommunity->str));
 
-      kv = json_pack("{sI}", "origin", (json_int_t)attr->origin);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "origin", json_integer((json_int_t)attr->origin));
 
-      kv = json_pack("{sI}", "local_pref", (json_int_t)attr->local_pref);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "local_pref", json_integer((json_int_t)attr->local_pref));
 
-      if (attr->med) {
-        kv = json_pack("{sI}", "med", (json_int_t)attr->med);
-        json_object_update_missing(obj, kv);
-        json_decref(kv);
-      }
+      if (attr->med)
+	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
     }
 
     if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
@@ -197,15 +154,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         u_char rd_str[SHORTSHORTBUFLEN];
 
         bgp_rd2str(rd_str, &ri->extra->rd);
-        kv = json_pack("{ss}", "rd", rd_str);
-        json_object_update_missing(obj, kv);
-        json_decref(kv);
+	json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
       }
 
       bgp_label2str(label_str, ri->extra->label);
-      kv = json_pack("{ss}", "label", label_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "label", json_string(label_str));
     }
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
@@ -309,28 +262,20 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
       char ip_address[INET6_ADDRSTRLEN];
-      json_t *obj = json_object(), *kv;
+      json_t *obj = json_object();
 
-      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
       bgp_peer_log_seq_increment(&bms->log_seq);
 
-      kv = json_pack("{ss}", "timestamp", bms->log_tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
 
       if (bms->bgp_peer_logdump_initclose_extras)
 	bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
       addr_to_str(ip_address, &peer->addr);
-      kv = json_pack("{ss}", bms->peer_str, ip_address);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-      kv = json_pack("{ss}", "event_type", event_type);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
       if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
@@ -391,28 +336,20 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
-    json_t *obj = json_object(), *kv;
+    json_t *obj = json_object();
 
-    kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
     bgp_peer_log_seq_increment(&bms->log_seq);
 
-    kv = json_pack("{ss}", "timestamp", bms->log_tstamp_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
 
     if (bms->bgp_peer_logdump_initclose_extras)
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
-    kv = json_pack("{ss}", bms->peer_str, ip_address);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-    kv = json_pack("{ss}", "event_type", event_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
     if (bms->msglog_file)
       write_and_free_json(log_ptr->fd, obj);
@@ -527,27 +464,19 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
-    json_t *obj = json_object(), *kv;
+    json_t *obj = json_object();
 
-    kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
     if (bms->bgp_peer_logdump_initclose_extras)
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
-    kv = json_pack("{ss}", bms->peer_str, ip_address);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-    kv = json_pack("{ss}", "event_type", event_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    kv = json_pack("{sI}", "dump_period", (json_int_t)bms->dump.period);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "dump_period", json_integer((json_int_t)bms->dump.period));
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
@@ -597,30 +526,20 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
-    kv = json_pack("{ss}", "timestamp", bms->dump.tstamp_str);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "timestamp", json_integer((json_int_t)bms->dump.tstamp_str));
 
     if (bms->bgp_peer_logdump_initclose_extras)
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
-    kv = json_pack("{ss}", bms->peer_str, ip_address);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-    kv = json_pack("{ss}", "event_type", event_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
     if (bds) {
-      kv = json_pack("{sI}", "entries", (json_int_t)bds->entries);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "entries", json_integer((json_int_t)bds->entries));
 
-      kv = json_pack("{sI}", "tables", (json_int_t)bds->tables);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "tables", json_integer((json_int_t)bds->tables));
     }
 
     if (bms->dump_file)
