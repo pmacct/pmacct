@@ -1986,40 +1986,26 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
-    json_t *obj = json_object(), *kv;
+    json_t *obj = json_object();
 
     /* no need for seq and timestamp for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      kv = json_pack("{sI}", "seq", (json_int_t)bms->log_seq);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
       bgp_peer_log_seq_increment(&bms->log_seq);
 
-      kv = json_pack("{ss}", "timestamp", bms->log_tstamp_str);
-      json_object_update_missing(obj, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
     }
 
     addr_to_str(ip_address, &peer->addr);
-    kv = json_pack("{ss}", "peer_ip_src", ip_address);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "peer_ip_src", json_string(ip_address));
 
-    kv = json_pack("{ss}", "event_type", event_type);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    kv = json_pack("{sI}", "source_id_index", (json_int_t)sample->ds_index);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "source_id_index", json_integer((json_int_t)sample->ds_index));
 
-    kv = json_pack("{sI}", "sflow_seq", (json_int_t)sample->sequenceNo);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "sflow_seq", json_integer((json_int_t)sample->sequenceNo));
 
-    kv = json_pack("{sI}", "sflow_cnt_seq", (json_int_t)sample->cntSequenceNo);
-    json_object_update_missing(obj, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(obj, "sflow_cnt_seq", json_integer((json_int_t)sample->cntSequenceNo));
 
     switch (tag) {
     case SFLCOUNTERS_GENERIC:
@@ -2091,85 +2077,45 @@ int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_ty
 
   if (!peer || !sample || !vobj) return ret;
 
-  kv = json_pack("{ss}", "sf_cnt_type", msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "sf_cnt_type", json_string(msg_type));
 
-  kv = json_pack("{sI}", "ifIndex", (json_int_t)sample->ifCounters.ifIndex);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifIndex", json_integer((json_int_t)sample->ifCounters.ifIndex));
 
-  kv = json_pack("{sI}", "ifType", (json_int_t)sample->ifCounters.ifType);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifType", json_integer((json_int_t)sample->ifCounters.ifType));
 
-  kv = json_pack("{sI}", "ifSpeed", (json_int_t)sample->ifCounters.ifSpeed);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifSpeed", json_integer((json_int_t)sample->ifCounters.ifSpeed));
 
-  kv = json_pack("{sI}", "ifDirection", (json_int_t)sample->ifCounters.ifDirection);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifDirection", json_integer((json_int_t)sample->ifCounters.ifDirection));
 
-  kv = json_pack("{sI}", "ifStatus", (json_int_t)sample->ifCounters.ifStatus);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifStatus", json_integer((json_int_t)sample->ifCounters.ifStatus));
 
-  kv = json_pack("{sI}", "ifInOctets", (json_int_t)sample->ifCounters.ifInOctets);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInOctets", json_integer((json_int_t)sample->ifCounters.ifInOctets));
 
-  kv = json_pack("{sI}", "ifInUcastPkts", (json_int_t)sample->ifCounters.ifInUcastPkts);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInUcastPkts", json_integer((json_int_t)sample->ifCounters.ifInUcastPkts));
 
-  kv = json_pack("{sI}", "ifInMulticastPkts", (json_int_t)sample->ifCounters.ifInMulticastPkts);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInMulticastPkts", json_integer((json_int_t)sample->ifCounters.ifInMulticastPkts));
 
-  kv = json_pack("{sI}", "ifInBroadcastPkts", (json_int_t)sample->ifCounters.ifInBroadcastPkts);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInBroadcastPkts", json_integer((json_int_t)sample->ifCounters.ifInBroadcastPkts));
 
-  kv = json_pack("{sI}", "ifInDiscards", (json_int_t)sample->ifCounters.ifInDiscards);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInDiscards", json_integer((json_int_t)sample->ifCounters.ifInDiscards));
 
-  kv = json_pack("{sI}", "ifInErrors", (json_int_t)sample->ifCounters.ifInErrors);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInErrors", json_integer((json_int_t)sample->ifCounters.ifInErrors));
 
-  kv = json_pack("{sI}", "ifInUnknownProtos", (json_int_t)sample->ifCounters.ifInUnknownProtos);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifInUnknownProtos", json_integer((json_int_t)sample->ifCounters.ifInUnknownProtos));
 
-  kv = json_pack("{sI}", "ifOutOctets", (json_int_t)sample->ifCounters.ifOutOctets);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifOutOctets", json_integer((json_int_t)sample->ifCounters.ifOutOctets));
 
-  kv = json_pack("{sI}", "ifOutUcastPkts", (json_int_t)sample->ifCounters.ifOutUcastPkts);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifOutUcastPkts", json_integer((json_int_t)sample->ifCounters.ifOutUcastPkts));
 
-  kv = json_pack("{sI}", "ifOutMulticastPkts", (json_int_t)sample->ifCounters.ifOutMulticastPkts);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifOutMulticastPkts", json_integer((json_int_t)sample->ifCounters.ifOutMulticastPkts));
 
-  kv = json_pack("{sI}", "ifOutBroadcastPkts", (json_int_t)sample->ifCounters.ifOutBroadcastPkts);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifOutBroadcastPkts", json_integer((json_int_t)sample->ifCounters.ifOutBroadcastPkts));
 
-  kv = json_pack("{sI}", "ifOutDiscards", (json_int_t)sample->ifCounters.ifOutDiscards);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifOutDiscards", json_integer((json_int_t)sample->ifCounters.ifOutDiscards));
 
-  kv = json_pack("{sI}", "ifOutErrors", (json_int_t)sample->ifCounters.ifOutErrors);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifOutErrors", json_integer((json_int_t)sample->ifCounters.ifOutErrors));
 
-  kv = json_pack("{sI}", "ifPromiscuousMode", (json_int_t)sample->ifCounters.ifPromiscuousMode);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ifPromiscuousMode", json_integer((json_int_t)sample->ifCounters.ifPromiscuousMode));
 #endif
 
   return ret;
@@ -2204,61 +2150,33 @@ int readCounters_ethernet(struct bgp_peer *peer, SFSample *sample, char *event_t
 
   if (!peer || !sample || !vobj) return ret;
 
-  kv = json_pack("{ss}", "sf_cnt_type", msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "sf_cnt_type", json_string(msg_type));
 
-  kv = json_pack("{sI}", "dot3StatsAlignmentErrors", (json_int_t)m32_1);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsAlignmentErrors", json_integer((json_int_t)m32_1));
 
-  kv = json_pack("{sI}", "dot3StatsFCSErrors", (json_int_t)m32_2);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsFCSErrors", json_integer((json_int_t)m32_2));
 
-  kv = json_pack("{sI}", "dot3StatsSingleCollisionFrames", (json_int_t)m32_3);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsSingleCollisionFrames", json_integer((json_int_t)m32_3));
 
-  kv = json_pack("{sI}", "dot3StatsMultipleCollisionFrames", (json_int_t)m32_4);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsMultipleCollisionFrames", json_integer((json_int_t)m32_4));
 
-  kv = json_pack("{sI}", "dot3StatsSQETestErrors", (json_int_t)m32_5);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsSQETestErrors", json_integer((json_int_t)m32_5));
 
-  kv = json_pack("{sI}", "dot3StatsDeferredTransmissions", (json_int_t)m32_6);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsDeferredTransmissions", json_integer((json_int_t)m32_6));
 
-  kv = json_pack("{sI}", "dot3StatsLateCollisions", (json_int_t)m32_7);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsLateCollisions", json_integer((json_int_t)m32_7));
 
-  kv = json_pack("{sI}", "dot3StatsExcessiveCollisions", (json_int_t)m32_8);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsExcessiveCollisions", json_integer((json_int_t)m32_8));
 
-  kv = json_pack("{sI}", "dot3StatsInternalMacTransmitErrors", (json_int_t)m32_9);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsInternalMacTransmitErrors", json_integer((json_int_t)m32_9));
 
-  kv = json_pack("{sI}", "dot3StatsCarrierSenseErrors", (json_int_t)m32_10);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsCarrierSenseErrors", json_integer((json_int_t)m32_10));
 
-  kv = json_pack("{sI}", "dot3StatsFrameTooLongs", (json_int_t)m32_11);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsFrameTooLongs", json_integer((json_int_t)m32_11));
 
-  kv = json_pack("{sI}", "dot3StatsInternalMacReceiveErrors", (json_int_t)m32_12);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsInternalMacReceiveErrors", json_integer((json_int_t)m32_12));
 
-  kv = json_pack("{sI}", "dot3StatsSymbolErrors", (json_int_t)m32_13);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "dot3StatsSymbolErrors", json_integer((json_int_t)m32_13));
 #endif
 
   return ret;
@@ -2270,7 +2188,7 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
   int ret = 0;
 #ifdef WITH_JANSSON
   char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   u_int64_t m64_1;
   u_int32_t m32_1, m32_2, m32_3, m32_4;
@@ -2285,33 +2203,19 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
 
   if (!peer || !sample || !vobj) return ret;
 
-  kv = json_pack("{ss}", "sf_cnt_type", msg_type);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "sf_cnt_type", json_string(msg_type));
 
-  kv = json_pack("{sI}", "octets", (json_int_t)m64_1);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "octets", json_integer((json_int_t)m64_1));
 
-  kv = json_pack("{sI}", "ucastPkts", (json_int_t)m32_1);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "ucastPkts", json_integer((json_int_t)m32_1));
 
-  kv = json_pack("{sI}", "multicastPkts", (json_int_t)m32_2);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "multicastPkts", json_integer((json_int_t)m32_2));
 
-  kv = json_pack("{sI}", "broadcastPkts", (json_int_t)m32_3);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "broadcastPkts", json_integer((json_int_t)m32_3));
 
-  kv = json_pack("{sI}", "discards", (json_int_t)m32_4);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "discards", json_integer((json_int_t)m32_4));
 
-  kv = json_pack("{sI}", "vlan", (json_int_t)sample->in_vlan);
-  json_object_update_missing(obj, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(obj, "vlan", json_integer((json_int_t)sample->in_vlan));
 #endif
 
   return ret;
