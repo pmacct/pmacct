@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -173,7 +173,7 @@ int parse_configuration_file(char *filename)
 
 void sanitize_cfg(int rows, char *filename)
 {
-  int rindex = 0, len, got_first;
+  int rindex = 0, len, got_first, got_first_colon;
   char localbuf[10240];
 
   while (rindex < rows) {
@@ -193,12 +193,13 @@ void sanitize_cfg(int rows, char *filename)
     */
     len = strlen(cfg[rindex]);
     if (len) {
-      int symbol = FALSE, cindex = 0, got_first = 0;
+      int symbol = FALSE, cindex = 0, got_first = 0, got_first_colon = 0;
 
       if (!strchr(cfg[rindex], ':')) {
 	Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: missing ':'. Exiting.\n", filename, rindex+1); 
 	exit(1);
       }
+
       while(cindex <= len) {
         if (cfg[rindex][cindex] == '[') symbol++;
         else if (cfg[rindex][cindex] == ']') {
@@ -206,15 +207,24 @@ void sanitize_cfg(int rows, char *filename)
 	  got_first++;
 	}
 	
-	if ((cfg[rindex][cindex] == ':') || (cfg[rindex][cindex] == '\0')) {
+	if (cfg[rindex][cindex] == ':' && !got_first_colon) {
+	  got_first_colon = TRUE;
+
+	  if (symbol) {
+	    Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: illegal brackets. Exiting.\n", filename, rindex+1);
+	    exit(1);
+	  }
+	}
+
+	if (cfg[rindex][cindex] == '\0') {
 	  if (symbol && !got_first) {
-            Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets. Exiting.\n", filename, rindex+1);
+            Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets (1). Exiting.\n", filename, rindex+1);
 	    exit(1);
 	  }
 	}
 
 	if (symbol < 0 && !got_first) {
-	  Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets. Exiting.\n", filename, rindex+1);
+	  Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets (2). Exiting.\n", filename, rindex+1);
 	  exit(1);
 	}
 
