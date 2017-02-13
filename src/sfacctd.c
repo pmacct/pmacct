@@ -1145,7 +1145,7 @@ SFv2v4_read_sampleType:
       readv2v4FlowSample(spp, pptrsv, req);
       break;
     case SFLCOUNTERS_SAMPLE:
-      readv2v4CountersSample(spp);
+      readv2v4CountersSample(spp, pptrsv);
       break;
     default:
       SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 sample", (struct sockaddr *) pptrsv->v4.f_agent);
@@ -1196,13 +1196,13 @@ SFv5_read_sampleType:
       readv5FlowSample(spp, FALSE, pptrsv, req, TRUE);
       break;
     case SFLCOUNTERS_SAMPLE:
-      readv5CountersSample(spp, FALSE, pptrsv, req);
+      readv5CountersSample(spp, FALSE, pptrsv);
       break;
     case SFLFLOW_SAMPLE_EXPANDED:
       readv5FlowSample(spp, TRUE, pptrsv, req, TRUE);
       break;
     case SFLCOUNTERS_SAMPLE_EXPANDED:
-      readv5CountersSample(spp, TRUE, pptrsv, req);
+      readv5CountersSample(spp, TRUE, pptrsv);
       break;
     case SFLACL_BROCADE_SAMPLE:
       getData32(spp); /* trash: sample length */
@@ -1960,7 +1960,7 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
   }
 }
 
-int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char *event_type, int output, u_int32_t tag)
+int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, int version, u_int32_t len, char *event_type, int output, u_int32_t tag)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_SFLOW_COUNTER);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
@@ -2007,20 +2007,53 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, u_int32_t len, char 
 
     json_object_set_new_nocheck(obj, "sflow_cnt_seq", json_integer((json_int_t)sample->cntSequenceNo));
 
-    switch (tag) {
-    case SFLCOUNTERS_GENERIC:
-      readCounters_generic(peer, sample, "log", config.sfacctd_counter_output, obj);
-      break;
-    case SFLCOUNTERS_ETHERNET:
-      readCounters_ethernet(peer, sample, "log", config.sfacctd_counter_output, obj);
-      break;
-    case SFLCOUNTERS_VLAN:
-      readCounters_vlan(peer, sample, "log", config.sfacctd_counter_output, obj);
-      break;
-    default:
-      skipBytes(sample, len);
-      break;
+    if (version == 5) {
+      switch (tag) {
+      case SFLCOUNTERS_GENERIC:
+        readCounters_generic(peer, sample, "log", config.sfacctd_counter_output, obj);
+        break;
+      case SFLCOUNTERS_ETHERNET:
+        readCounters_ethernet(peer, sample, "log", config.sfacctd_counter_output, obj);
+        break;
+      case SFLCOUNTERS_VLAN:
+        readCounters_vlan(peer, sample, "log", config.sfacctd_counter_output, obj);
+        break;
+      default:
+        skipBytes(sample, len);
+        break;
+      }
     }
+    else if (version < 5) {
+      switch (tag) {
+      case INMCOUNTERSVERSION_GENERIC:
+      case INMCOUNTERSVERSION_ETHERNET:
+        readCounters_generic(peer, sample, "log", config.sfacctd_counter_output, obj);
+        break;
+      case INMCOUNTERSVERSION_VLAN:
+	/* nothing here */
+	break;
+      default:
+        skipBytes(sample, len);
+	break;
+      }
+
+      /* now see if there are any specific counter blocks to add */
+      switch (tag) {
+      case INMCOUNTERSVERSION_GENERIC:
+	/* nothing more */
+	break;
+      case INMCOUNTERSVERSION_ETHERNET:
+	readCounters_ethernet(peer, sample, "log", config.sfacctd_counter_output, obj);
+	break;
+      case INMCOUNTERSVERSION_VLAN:
+	readCounters_vlan(peer, sample, "log", config.sfacctd_counter_output, obj);
+	break;
+      default:
+	/* nothing more; already skipped */
+	break;
+      }
+    }
+    else skipBytes(sample, len);
 
     if (config.sfacctd_counter_file && etype == BGP_LOGDUMP_ET_LOG)
       write_and_free_json(peer->log->fd, obj);

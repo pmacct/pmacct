@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -286,8 +286,8 @@ EXT void process_SFv5_packet(SFSample *, struct packet_ptrs_vector *, struct plu
 EXT void process_SF_raw_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
 EXT void readv2v4FlowSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void readv5FlowSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *, int);
-EXT void readv2v4CountersSample(SFSample *);
-EXT void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *);
+EXT void readv2v4CountersSample(SFSample *, struct packet_ptrs_vector *);
+EXT void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *);
 EXT void finalizeSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void InterSampleCleanup(SFSample *);
 EXT void decodeMpls(SFSample *);
@@ -316,7 +316,7 @@ EXT void readFlowSample_ethernet(SFSample *);
 EXT void readFlowSample_IPv4(SFSample *);
 EXT void readFlowSample_IPv6(SFSample *);
 
-EXT int sf_cnt_log_msg(struct bgp_peer *, SFSample *, u_int32_t, char *, int, u_int32_t);
+EXT int sf_cnt_log_msg(struct bgp_peer *, SFSample *, int, u_int32_t, char *, int, u_int32_t);
 EXT int readCounters_generic(struct bgp_peer *, SFSample *, char *, int, void *);
 EXT int readCounters_ethernet(struct bgp_peer *, SFSample *, char *, int, void *);
 EXT int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int, void *);

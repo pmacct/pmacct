@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -1108,7 +1108,7 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
   if (finalize) finalizeSample(sample, pptrsv, req);
 }
 
-void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
+void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv)
 {
   struct sfv5_modules_db_field *db_field = NULL;
   struct xflow_status_entry *xse = NULL;
@@ -1154,7 +1154,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
     }
     else Log(LOG_WARNING, "WARN ( %s/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n", config.name);
 
-    if (sfacctd_counter_backend_methods) sf_cnt_log_msg(peer, sample, length, "log", config.sfacctd_counter_output, tag);
+    if (sfacctd_counter_backend_methods) sf_cnt_log_msg(peer, sample, sample->datagramVersion, length, "log", config.sfacctd_counter_output, tag);
     else skipBytes(sample, length);
   }
 
@@ -1166,9 +1166,27 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
    about the length of current sample. This is because we still need
    to parse the very first part of the sample
 */ 
-void readv2v4CountersSample(SFSample *sample)
+void readv2v4CountersSample(SFSample *sample, struct packet_ptrs_vector *pptrsv)
 {
-  skipBytes(sample, 12);
+  struct xflow_status_entry *xse = NULL;
+  struct bgp_peer *peer = NULL;
+  int have_sample = FALSE;
+  u_int32_t length = 0;
+
+  if (sfacctd_counter_backend_methods) {
+    if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
+    if (xse) peer = (struct bgp_peer *) xse->sf_cnt;
+  }
+
+  sample->cntSequenceNo = getData32(sample);
+
+  {
+    uint32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+
+  sample->statsSamplingInterval = getData32(sample);
   sample->counterBlockVersion = getData32(sample);
 
   switch(sample->counterBlockVersion) {
@@ -1177,20 +1195,25 @@ void readv2v4CountersSample(SFSample *sample)
   case INMCOUNTERSVERSION_TOKENRING:
   case INMCOUNTERSVERSION_FDDI:
   case INMCOUNTERSVERSION_VG:
-  case INMCOUNTERSVERSION_WAN: skipBytes(sample, 88); break;
+  case INMCOUNTERSVERSION_WAN: length += 88; break;
   case INMCOUNTERSVERSION_VLAN: break;
   default: return; 
   }
 
   /* now see if there are any specific counter blocks to add */
   switch(sample->counterBlockVersion) {
-  case INMCOUNTERSVERSION_GENERIC: /* nothing more */ break;
-  case INMCOUNTERSVERSION_ETHERNET: skipBytes(sample, 52); break;
-  case INMCOUNTERSVERSION_TOKENRING: skipBytes(sample, 72); break;
+  case INMCOUNTERSVERSION_GENERIC: have_sample = TRUE; break;
+  case INMCOUNTERSVERSION_ETHERNET: have_sample = TRUE; length += 52; break;
+  case INMCOUNTERSVERSION_TOKENRING: length += 72; break;
   case INMCOUNTERSVERSION_FDDI: break;
-  case INMCOUNTERSVERSION_VG: skipBytes(sample, 80); break;
+  case INMCOUNTERSVERSION_VG: length += 80; break;
   case INMCOUNTERSVERSION_WAN: break;
-  case INMCOUNTERSVERSION_VLAN: skipBytes(sample, 28); break;
+  case INMCOUNTERSVERSION_VLAN: have_sample = TRUE; length += 28; break;
   default: return; 
   }
+
+  if (sfacctd_counter_backend_methods && have_sample)
+    sf_cnt_log_msg(peer, sample, sample->datagramVersion, length, "log", config.sfacctd_counter_output, sample->counterBlockVersion);
+  else
+    skipBytes(sample, length);
 }
