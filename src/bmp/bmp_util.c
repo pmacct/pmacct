@@ -96,7 +96,7 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
     addr_to_str(ip_address, &bmpp->self.addr);
     json_object_set_new_nocheck(obj, "bmp_router", json_string(ip_address));
 
-    json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
+    json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)bmpp->self.tcp_port));
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 #endif
