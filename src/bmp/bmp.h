@@ -163,6 +163,7 @@ struct bmp_data {
   struct host_addr bgp_id;
   u_int32_t peer_asn;
   u_int8_t peer_type;
+  u_int8_t l_flag;
   struct timeval tstamp;
 };
 

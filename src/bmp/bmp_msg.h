@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -43,6 +43,7 @@ EXT void bmp_init_hdr_get_len(struct bmp_init_hdr *, u_int16_t *);
 EXT void bmp_term_hdr_get_len(struct bmp_term_hdr *, u_int16_t *);
 EXT void bmp_term_hdr_get_reason_type(char **, u_int32_t *, u_int16_t *);
 EXT void bmp_peer_hdr_get_family(struct bmp_peer_hdr *, u_int8_t *);
+EXT void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *, struct host_addr *, u_int8_t);
 EXT void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *, struct host_addr *);
 EXT void bmp_peer_hdr_get_tstamp(struct bmp_peer_hdr *, struct timeval *);

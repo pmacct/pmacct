@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -289,6 +289,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
   bmp_peer_hdr_get_family(bph, &bdata.family);
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_l_flag(bph, &bdata.l_flag);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -370,6 +371,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
   bmp_peer_hdr_get_family(bph, &bdata.family);
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_l_flag(bph, &bdata.l_flag);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -451,6 +453,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
   bmp_peer_hdr_get_family(bph, &bdata.family);
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_l_flag(bph, &bdata.l_flag);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -529,6 +532,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   bmp_peer_hdr_get_family(bph, &bdata.family);
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_l_flag(bph, &bdata.l_flag);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
   bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
@@ -651,6 +655,11 @@ void bmp_peer_hdr_get_family(struct bmp_peer_hdr *bph, u_int8_t *family)
     else if (version == 1) (*family) = AF_INET6;
 #endif
   }
+}
+
+void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *bph, u_int8_t *l_flag)
+{
+  if (bph && l_flag) (*l_flag) = (bph->flags & 0x40);
 }
 
 void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t family)
