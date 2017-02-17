@@ -148,7 +148,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
 
   json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->peer_type));
 
-  json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->l_flag));
+  json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->is_post));
 
   json_object_set_new_nocheck(obj, "counter_type", json_integer((json_int_t)blstats->cnt_type));
 
@@ -236,7 +236,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 
   json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->peer_type));
 
-  json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->l_flag));
+  json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->is_post));
 
   json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
 
@@ -270,7 +270,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
   json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->peer_type));
 
-  json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->l_flag));
+  json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->is_post));
 
   json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
 
