@@ -112,6 +112,11 @@ struct bmp_peer {
   struct log_notification missing_peer_up;
 };
 
+struct bgp_msg_extra_data_bmp {
+  struct bmp_data *bdata;
+  // XXX
+};
+
 #define BMP_STATS_TYPE0		0 /* (32-bit Counter) Number of prefixes rejected by inbound policy */
 #define BMP_STATS_TYPE1		1 /* (32-bit Counter) Number of (known) duplicate prefix advertisements */
 #define BMP_STATS_TYPE2		2 /* (32-bit Counter) Number of (known) duplicate withdraws */

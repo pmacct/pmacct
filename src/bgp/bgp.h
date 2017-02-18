@@ -85,6 +85,9 @@
 #define BGP_DAEMON_ONLINE	1
 #define BGP_DAEMON_OFFLINE	2
 
+#define BGP_MSG_EXTRA_DATA_NONE	0
+#define BGP_MSG_EXTRA_DATA_BMP	1
+
 /* structures */
 struct bgp_dump_event {
   struct timeval tstamp;
@@ -189,6 +192,16 @@ struct bgp_peer {
      bmp_peer.bgp_peers[n].bmp_se:	backpointer to parent struct bmp_peer
   */
   void *bmp_se;
+};
+
+struct bgp_msg_extra_data {
+  u_int8_t id;
+  void *data;
+};
+
+struct bgp_msg_data {
+  struct bgp_peer *peer;
+  struct bgp_msg_extra_data extra;
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

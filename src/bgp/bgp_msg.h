@@ -30,9 +30,9 @@
 #endif
 EXT int bgp_marker_check(struct bgp_header *, int);
 EXT int bgp_parse_msg(struct bgp_peer *, time_t, int);
-EXT int bgp_parse_open_msg(struct bgp_peer *, char *, time_t, int);
-EXT int bgp_parse_update_msg(struct bgp_peer *, char *);
-EXT int bgp_parse_notification_msg(struct bgp_peer *, char *, u_int8_t *, u_int8_t *, char *, u_int8_t);
+EXT int bgp_parse_open_msg(struct bgp_msg_data *, char *, time_t, int);
+EXT int bgp_parse_update_msg(struct bgp_msg_data *, char *);
+EXT int bgp_parse_notification_msg(struct bgp_msg_data *, char *, u_int8_t *, u_int8_t *, char *, u_int8_t);
 EXT int bgp_write_keepalive_msg(char *);
 EXT int bgp_write_open_msg(char *, char *, int, struct bgp_peer *);
 EXT int bgp_write_notification_msg(char *, int, char *);
@@ -48,8 +48,8 @@ EXT int bgp_attr_parse_local_pref(struct bgp_peer *, u_int16_t, struct bgp_attr 
 EXT int bgp_attr_parse_origin(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 EXT int bgp_attr_parse_mp_reach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 EXT int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
-EXT int bgp_nlri_parse(struct bgp_peer *, void *, struct bgp_nlri *);
-EXT int bgp_process_update(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, char *);
-EXT int bgp_process_withdraw(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, char *);
+EXT int bgp_nlri_parse(struct bgp_msg_data *, void *, struct bgp_nlri *);
+EXT int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, char *);
+EXT int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, char *);
 #undef EXT
 #endif 

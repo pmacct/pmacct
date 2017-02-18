@@ -30,6 +30,7 @@
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {
   struct bgp_misc_structs *bms;
+  struct bgp_msg_data bmd;
   char tmp_packet[BGP_BUFFER_SIZE], *bgp_packet_ptr;
   struct bgp_header *bhdr;
   int ret, bgp_len = 0;
@@ -39,6 +40,9 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
   bms = bgp_select_misc_db(peer->type);
 
   if (!bms) return ERR;
+
+  memset(&bmd, 0, sizeof(bmd));
+  bmd.peer = peer;
 
   for (bgp_packet_ptr = peer->buf.base; peer->msglen > 0; peer->msglen -= bgp_len, bgp_packet_ptr += bgp_len) {
     bhdr = (struct bgp_header *) bgp_packet_ptr;
@@ -65,7 +69,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 
     switch (bhdr->bgpo_type) {
     case BGP_OPEN:
-      ret = bgp_parse_open_msg(peer, bgp_packet_ptr, now, online);
+      ret = bgp_parse_open_msg(&bmd, bgp_packet_ptr, now, online);
       if (ret < 0) return ret;
       break;
     case BGP_NOTIFICATION:
@@ -74,7 +78,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
         char shutdown_msg[shutdown_msglen];
 
 	memset(shutdown_msg, 0, shutdown_msglen);
-        bgp_parse_notification_msg(peer, bgp_packet_ptr, &res_maj, &res_min, shutdown_msg, shutdown_msglen);
+        bgp_parse_notification_msg(&bmd, bgp_packet_ptr, &res_maj, &res_min, shutdown_msg, shutdown_msglen);
 
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_NOTIFICATION received (%u, %u). Shutdown Message: '%s'\n",
 	    config.name, bms->log_str, bgp_peer_print(peer), res_maj, res_min, shutdown_msg);
@@ -108,7 +112,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 	return ERR;
       }
 
-      ret = bgp_parse_update_msg(peer, bgp_packet_ptr);
+      ret = bgp_parse_update_msg(&bmd, bgp_packet_ptr);
       if (ret < 0) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] BGP UPDATE: malformed (%d).\n", config.name, bms->log_str, bgp_peer_print(peer), ret);
 	return ERR;
@@ -124,8 +128,9 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
   return SUCCESS;
 }
 
-int bgp_parse_open_msg(struct bgp_peer *peer, char *bgp_packet_ptr, time_t now, int online)
+int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t now, int online)
 {
+  struct bgp_peer *peer = bmd->peer;
   struct bgp_misc_structs *bms;
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
   struct bgp_open *bopen;
@@ -461,8 +466,9 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
   return ret;
 }
 
-int bgp_parse_notification_msg(struct bgp_peer *peer, char *pkt, u_int8_t *res_maj, u_int8_t *res_min, char *shutdown_msg, u_int8_t shutdown_msglen)
+int bgp_parse_notification_msg(struct bgp_msg_data *bmd, char *pkt, u_int8_t *res_maj, u_int8_t *res_min, char *shutdown_msg, u_int8_t shutdown_msglen)
 {
+  struct bgp_peer *peer = bmd->peer;
   struct bgp_notification *bn = (struct bgp_notification *) pkt;
   struct bgp_notification_shutdown_msg *bnsm;
   char *pkt_ptr = pkt;
@@ -498,8 +504,9 @@ int bgp_parse_notification_msg(struct bgp_peer *peer, char *pkt, u_int8_t *res_m
   return ret;
 }
 
-int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
+int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 {
+  struct bgp_peer *peer = bmd->peer;
   struct bgp_header bhdr;
   u_char *startp, *endp;
   struct bgp_attr attr;
@@ -569,33 +576,33 @@ int bgp_parse_update_msg(struct bgp_peer *peer, char *pkt)
   }
 
   /* NLRI parsing */
-  if (withdraw.length) bgp_nlri_parse(peer, NULL, &withdraw);
-  if (update.length)  bgp_nlri_parse(peer, &attr, &update);
+  if (withdraw.length) bgp_nlri_parse(bmd, NULL, &withdraw);
+  if (update.length)  bgp_nlri_parse(bmd, &attr, &update);
 	
   if (mp_update.length
 	  && mp_update.afi == AFI_IP
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
 	      mp_update.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(peer, &attr, &mp_update);
+    bgp_nlri_parse(bmd, &attr, &mp_update);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse (peer, NULL, &mp_withdraw);
+    bgp_nlri_parse (bmd, NULL, &mp_withdraw);
 
 #if defined ENABLE_IPV6
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
 	      mp_update.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(peer, &attr, &mp_update);
+    bgp_nlri_parse(bmd, &attr, &mp_update);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP6
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(peer, NULL, &mp_withdraw);
+    bgp_nlri_parse(bmd, NULL, &mp_withdraw);
 #endif
 
   /* Receipt of End-of-RIB can be processed here; being a silent
@@ -895,8 +902,9 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
 
 /* BGP UPDATE NLRI parsing */
-int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
+int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 {
+  struct bgp_peer *peer = bmd->peer;
   u_char *pnt;
   u_char *lim;
   u_char safi, label[3];
@@ -1000,17 +1008,18 @@ int bgp_nlri_parse(struct bgp_peer *peer, void *attr, struct bgp_nlri *info)
 
     /* Let's do our job now! */
     if (attr)
-      ret = bgp_process_update(peer, &p, attr, info->afi, safi, &rd, &path_id, label);
+      ret = bgp_process_update(bmd, &p, attr, info->afi, safi, &rd, &path_id, label);
     else
-      ret = bgp_process_withdraw(peer, &p, attr, info->afi, safi, &rd, &path_id, label);
+      ret = bgp_process_withdraw(bmd, &p, attr, info->afi, safi, &rd, &path_id, label);
   }
 
   return SUCCESS;
 }
 
-int bgp_process_update(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
+int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, afi_t afi, safi_t safi,
 		       rd_t *rd, path_id_t *path_id, char *label)
 {
+  struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_misc_structs *bms;
   struct bgp_node *route = NULL, route_local;
@@ -1138,9 +1147,10 @@ log_update:
   return SUCCESS;
 }
 
-int bgp_process_withdraw(struct bgp_peer *peer, struct prefix *p, void *attr, afi_t afi, safi_t safi,
+int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr, afi_t afi, safi_t safi,
 			 rd_t *rd, path_id_t *path_id, char *label)
 {
+  struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_misc_structs *bms;
   struct bgp_node *route = NULL, route_local;
