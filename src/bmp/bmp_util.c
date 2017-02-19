@@ -207,3 +207,21 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
   bgp_peer_close(peer, type, FALSE, NULL);
 }
+
+int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
+{
+  if (a->id == b->id && a->len == b->len && a->id == BGP_MSG_EXTRA_DATA_BMP)
+    return memcmp(a->data, b->data, a->len);
+  else
+    return ERR;
+}
+
+void bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
+{
+  // XXX
+}
+
+void bgp_extra_data_free_bmp(struct bgp_info *ri)
+{
+  // XXX
+}

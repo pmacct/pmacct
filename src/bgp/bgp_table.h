@@ -56,18 +56,12 @@ struct bgp_node
   void **info;
 
   unsigned int lock;
-/*
-  struct bgp_adj_out *adj_out;
+};
 
-  struct bgp_adj_in *adj_in;
-
-  struct bgp_node *prn;
-
-  unsigned int lock;
-
-  u_char flags;
-#define BGP_NODE_PROCESS_SCHEDULED	(1 << 0)
-*/
+struct bgp_msg_extra_data {
+  u_int8_t id;
+  u_int16_t len;
+  void *data;
 };
 
 struct bgp_info_extra
@@ -75,6 +69,7 @@ struct bgp_info_extra
   rd_t rd;
   u_char label[3];
   path_id_t path_id;
+  struct bgp_msg_extra_data bmed;
 };
 
 struct bgp_info
