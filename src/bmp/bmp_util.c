@@ -216,12 +216,37 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
     return ERR;
 }
 
-void bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
+int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
 {
-  // XXX
+  struct bgp_info_extra *rie = NULL;
+  int ret = BGP_MSG_EXTRA_DATA_NONE;
+
+  if (bmed && ri && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
+    rie = bgp_info_extra_get(ri);
+    if (rie) {
+      rie->bmed.data = malloc(bmed->len);
+      if (rie->bmed.data) {
+	memcpy(rie->bmed.data, bmed->data, bmed->len);
+	rie->bmed.len = bmed->len; 
+	rie->bmed.id = bmed->id;
+
+	ret = BGP_MSG_EXTRA_DATA_BMP;	
+      }
+    }
+  }
+
+  return ret;
 }
 
-void bgp_extra_data_free_bmp(struct bgp_info *ri)
+void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
+{
+  if (bmed && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
+    free(bmed->data);
+    memset(bmed, 0, sizeof(struct bgp_msg_extra_data));
+  }
+}
+
+void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed)
 {
   // XXX
 }

@@ -197,9 +197,9 @@ struct bgp_peer {
 struct bgp_msg_data {
   struct bgp_peer *peer;
   struct bgp_msg_extra_data extra;
-  void (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *);
+  int (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *);
   int (*bgp_extra_data_cmp)(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);
-  void (*bgp_extra_data_free)(struct bgp_info *);
+  void (*bgp_extra_data_free)(struct bgp_msg_extra_data *);
   void (*bgp_extra_data_print)(struct bgp_msg_extra_data *);
 };
 

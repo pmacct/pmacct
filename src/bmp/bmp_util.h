@@ -41,6 +41,7 @@ EXT void bgp_peer_log_msg_extras_bmp(struct bgp_peer *, int, void *);
 EXT void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *, int, void *);
 
 EXT int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);
-EXT void bgp_extra_data_process_bmp(struct bgp_msg_extra_data *, struct bgp_info *);
-EXT void bgp_extra_data_free_bmp(struct bgp_info *);
+EXT int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *, struct bgp_info *);
+EXT void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *);
+EXT void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *);
 #undef EXT
