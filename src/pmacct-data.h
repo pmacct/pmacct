@@ -476,6 +476,7 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_topic", cfg_key_sql_table},
   {"kafka_topic_rr", cfg_key_amqp_routing_key_rr},
   {"kafka_partition", cfg_key_kafka_partition},
+  {"kafka_partition_dynamic", cfg_key_kafka_partition_dynamic},
   {"kafka_partition_key", cfg_key_kafka_partition_key},
   {"kafka_cache_entries", cfg_key_print_cache_entries},
   {"kafka_max_writers", cfg_key_dump_max_writers},

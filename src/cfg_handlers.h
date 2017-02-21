@@ -101,6 +101,7 @@ EXT int cfg_key_amqp_avro_schema_routing_key(char *, char *, char *);
 EXT int cfg_key_amqp_avro_schema_refresh_time(char *, char *, char *);
 EXT int cfg_key_kafka_broker_port(char *, char *, char *);
 EXT int cfg_key_kafka_partition(char *, char *, char *);
+EXT int cfg_key_kafka_partition_dynamic(char *, char *, char *);
 EXT int cfg_key_kafka_partition_key(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_topic(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_refresh_time(char *, char *, char *);

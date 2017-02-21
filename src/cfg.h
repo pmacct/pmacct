@@ -173,6 +173,7 @@ struct configuration {
   int amqp_avro_schema_refresh_time;
   int kafka_broker_port;
   int kafka_partition;
+  int kafka_partition_dynamic;
   char *kafka_partition_key;
   int kafka_partition_keylen;
   char *kafka_avro_schema_topic;
