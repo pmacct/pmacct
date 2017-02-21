@@ -2350,6 +2350,50 @@ void replace_string(char *str, int string_len, char *var, char *value)
   }
 }
 
+int delete_line_from_file(int index, char *path)
+{
+  int len = strlen(path) + 5;
+  int line_idx;
+  char tmpbuf[LARGEBUFLEN];
+  char *copy_path;
+  FILE *file = fopen(path, "r");
+  FILE *file_copy;
+
+  copy_path = malloc(len);
+  memset(copy_path, 0, len);
+
+  strcpy(copy_path, path);
+  strcat(copy_path, ".copy");
+  file_copy = fopen(copy_path, "w");
+
+  if (file == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, path);
+    return -1;
+  }
+
+  if (file_lock(fileno(file))) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Unable to obtain lock.\n", config.name, config.type, path);
+    return -1;
+  }
+
+  line_idx = 0;
+  while (fgets(tmpbuf, LARGEBUFLEN, file)) {
+    if (line_idx != index)
+      fwrite(tmpbuf, 1, strlen(tmpbuf), file_copy);
+
+    line_idx++;
+  }
+
+  fclose(file);
+  unlink(path);
+  fclose(file_copy);
+  rename(copy_path, path);
+
+  file_unlock(fileno(file));
+  free(copy_path);
+  return 0;
+}
+
 void set_truefalse_nonzero(int *value)
 {
   if (!value) return;
