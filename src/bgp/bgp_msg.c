@@ -1213,7 +1213,6 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
       memset(&ri_local, 0, sizeof(struct bgp_info));
 
       ri->peer = peer;
-      ri->attr = bgp_attr_intern(peer, attr);
       bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
       if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, ri);
     }
@@ -1236,7 +1235,6 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
     if (bms->msglog_backend_methods) {
       if (ri->extra && ri->extra->bmed.id && bmd->bgp_extra_data_free) (*bmd->bgp_extra_data_free)(&ri->extra->bmed);
       if (ri->extra) bgp_info_extra_free(&ri->extra);
-      bgp_attr_unintern(peer, ri->attr);
     }
   }
 
