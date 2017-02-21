@@ -1222,11 +1222,7 @@ void *pm_tfind(const void *key, void *const *rootp, int (*compar) (const void *k
 
 void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, const void *key2))
 {
-  void *ptr = tdelete(key, rootp, compar);
-
-  if (ptr) free((*(void **) ptr));
-
-  return NULL;
+  return tdelete(key, rootp, compar);
 }
 
 void pm_twalk(const void *root, void (*action)(const void *nodep, const VISIT which, const int depth))
