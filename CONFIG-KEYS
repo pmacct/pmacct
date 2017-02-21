@@ -1535,6 +1535,16 @@ NOTES:          If NetFlow sampling is enabled, it is recommended to have counte
                 (nfacctd_renormalize set to true).
 DEFAULT:        false
 
+KEY:		nfacctd_templates_file [NFACCTD_ONLY]
+DESC:		Full pathname to a file containing serialized templates data from previous nfacctd use.
+                Templates are loaded from this file when nfacctd is (re)started in order to reduce the amount
+                of dropped packets due to unknown templates. Be aware that this file will be written to with
+                possible new templates and updated versions of provided ones. Hence, you can specify an
+                empty file and incoming templates will be cached into it. This file will be created if it does
+                not exist. Only JSON format is currently supported and requires compiling against Jansson library
+                (--enable-jansson when configuring for compiling).
+DEFAULT:        none
+
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
 VALUES:         [ true | false ]
 DESC:		If set to true adds two new fields, timestamp_min and timestamp_max: given an aggregation
