@@ -338,9 +338,13 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
+  char elem_part_key[SRVBUFLEN];
+  char tmpbuf[LONGLONGSRVBUFLEN];
   int i, j, stop, batch_idx, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;
   int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
+  struct primitives_ptrs prim_ptrs;
+  struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
 
   char *json_buf = NULL;
@@ -382,12 +386,32 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
   memset(&empty_ptun, 0, sizeof(struct pkt_tunnel_primitives));
   memset(empty_pcust, 0, config.cpptrs.len);
+  memset(&prim_ptrs, 0, sizeof(prim_ptrs));
+  memset(&dummy_data, 0, sizeof(dummy_data));
+  memset(tmpbuf, 0, sizeof(tmpbuf));
 
   p_kafka_connect_to_produce(&kafkap_kafka_host);
   p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
+  if (strchr(config.kafka_partition_key, '$')) dyn_partition_key = TRUE;
+  else dyn_partition_key = FALSE;
+
   if (!is_topic_dyn && !config.amqp_routing_key_rr) p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
+
+  if (config.kafka_partition_dynamic && !config.kafka_partition_key) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_partition_dynamic needs a kafka_partition_key to operate. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+  if (config.kafka_partition_dynamic && config.kafka_partition) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_partition_dynamic and kafka_partition are mutually exclusive. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
+  if (config.kafka_partition_dynamic) config.kafka_partition = RD_KAFKA_PARTITION_UA;
+
   p_kafka_set_partition(&kafkap_kafka_host, config.kafka_partition);
-  p_kafka_set_key(&kafkap_kafka_host, config.kafka_partition_key, config.kafka_partition_keylen);
+
+  if (!dyn_partition_key)
+    p_kafka_set_key(&kafkap_kafka_host, config.kafka_partition_key, config.kafka_partition_keylen);
 
   if (config.message_broker_output & PRINT_OUTPUT_JSON) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   else if (config.message_broker_output & PRINT_OUTPUT_AVRO) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
@@ -473,6 +497,15 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else pvlen = NULL;
 
     if (queue[j]->valid == PRINT_CACHE_FREE) continue;
+
+    if (dyn_partition_key) {
+      prim_ptrs.data = &dummy_data;
+      primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
+      strlcpy(elem_part_key, config.kafka_partition_key, SRVBUFLEN);
+      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_part_key, &prim_ptrs);
+      p_kafka_set_key(&kafkap_kafka_host, elem_part_key, strlen(elem_part_key));
+    }
 
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
@@ -676,6 +709,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 void kafka_avro_schema_purge(char *avro_schema_str)
 {
   struct p_kafka_host kafka_avro_schema_host;
+  int part, part_cnt, tpc;
 
   if (!avro_schema_str || !config.kafka_avro_schema_topic) return;
 
@@ -691,7 +725,33 @@ void kafka_avro_schema_purge(char *avro_schema_str)
   p_kafka_set_key(&kafka_avro_schema_host, config.kafka_partition_key, config.kafka_partition_keylen);
   p_kafka_set_content_type(&kafka_avro_schema_host, PM_KAFKA_CNT_TYPE_STR);
 
-  p_kafka_produce_data(&kafka_avro_schema_host, avro_schema_str, strlen(avro_schema_str));
+  if (config.kafka_partition_dynamic) {
+    rd_kafka_resp_err_t err;
+    const struct rd_kafka_metadata *metadata;
+
+    err = rd_kafka_metadata(kafka_avro_schema_host.rk, 0, kafka_avro_schema_host.topic, &metadata, 100);
+    if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to get Kafka metadata for topic %s: %s\n",
+              config.name, config.type, kafka_avro_schema_host.topic, rd_kafka_err2str(err));
+      exit_plugin(1);
+    }
+
+    part_cnt = -1;
+    for (tpc = 0 ; tpc < metadata->topic_cnt ; tpc++) {
+      const struct rd_kafka_metadata_topic *t = &metadata->topics[tpc];
+      if (!strcmp(t->topic, config.kafka_avro_schema_topic)) {
+          part_cnt = t->partition_cnt;
+          break;
+      }
+    }
+
+    for(part = 0; part < part_cnt; part++) {
+      p_kafka_produce_data_to_part(&kafka_avro_schema_host, avro_schema_str, strlen(avro_schema_str), part);
+    }
+  }
+  else {
+    p_kafka_produce_data(&kafka_avro_schema_host, avro_schema_str, strlen(avro_schema_str));
+  }
 
   p_kafka_close(&kafka_avro_schema_host, FALSE);
 }
