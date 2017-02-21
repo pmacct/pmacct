@@ -2429,6 +2429,25 @@ int cfg_key_nfacctd_pro_rating(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_templates_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfacctd_templates_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfacctd_templates_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_stitching(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

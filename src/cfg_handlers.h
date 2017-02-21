@@ -149,6 +149,7 @@ EXT int cfg_key_nfacctd_disable_checks(char *, char *, char *);
 EXT int cfg_key_nfacctd_mcast_groups(char *, char *, char *);
 EXT int cfg_key_nfacctd_pipe_size(char *, char *, char *);
 EXT int cfg_key_nfacctd_pro_rating(char *, char *, char *);
+EXT int cfg_key_nfacctd_templates_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_account_options(char *, char *, char *);
 EXT int cfg_key_nfacctd_stitching(char *, char *, char *);
 EXT int cfg_key_pmacctd_force_frag_handling(char *, char *, char *);
