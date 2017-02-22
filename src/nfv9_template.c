@@ -115,6 +115,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
                         (struct sockaddr *) pptrs->f_agent, seq);
+      increment_metric(&nf_metrics.udp_drop_cnt);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
@@ -231,6 +232,7 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
                         (struct sockaddr *) pptrs->f_agent, seq);
+      increment_metric(&nf_metrics.udp_drop_cnt);
       xflow_tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
@@ -434,6 +436,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
                         (struct sockaddr *) pptrs->f_agent, seq);
+      increment_metric(&nf_metrics.udp_drop_cnt);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
@@ -507,6 +510,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
                         (struct sockaddr *) pptrs->f_agent, seq);
+      increment_metric(&nf_metrics.udp_drop_cnt);
       xflow_tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
