@@ -29,6 +29,7 @@
 #include "plugin_cmn_json.h"
 #include "plugin_cmn_avro.h"
 #include "kafka_plugin.h"
+#include "intstats/intstats.h"
 #ifndef WITH_JANSSON
 #error "--enable-kafka requires --enable-jansson"
 #endif
@@ -267,6 +268,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         pollagain = FALSE;
         memcpy(pipebuf, rg->ptr, bufsz);
+        status->last_plugin_off = (rg->ptr - rg->base);
         rg->ptr += bufsz;
       }
 #ifdef WITH_RABBITMQ
@@ -338,9 +340,10 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
-  int i, j, stop, batch_idx, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;
-  int mv_num = 0, mv_num_save = 0;
+  int i, j, stop, batch_idx, is_topic_dyn = FALSE, qn = 0, err, ret, saved_index = index;
+  int mv_num = 0, mv_num_save = 0, duration_ms;
   time_t start, duration;
+  struct timeval start_ms, end_ms;
   pid_t writer_pid = getpid();
 
   char *json_buf = NULL;
@@ -400,6 +403,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
+  gettimeofday(&start_ms, NULL);
 
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON || config.message_broker_output & PRINT_OUTPUT_AVRO) {
@@ -631,6 +635,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
   }
 
   duration = time(NULL)-start;
+  gettimeofday(&end_ms, NULL);
+  duration_ms = (int)timeval_sub_ms(&end_ms, &start_ms);
 
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON || config.message_broker_output & PRINT_OUTPUT_AVRO) {
@@ -656,6 +662,12 @@ void kafka_cache_purge(struct chained_cache *queue[], int index)
 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
 		config.name, config.type, writer_pid, qn, saved_index, duration);
+
+  err = saved_index - qn;
+  set_kafka_metric(METRICS_INT_KAFKA_FLUSH_CNT, NULL);
+  set_kafka_metric(METRICS_INT_KAFKA_FLUSH_MSG_SENT, &qn);
+  set_kafka_metric(METRICS_INT_KAFKA_FLUSH_MSG_ERR, &err);
+  set_kafka_metric(METRICS_INT_KAFKA_FLUSH_TIME, &duration_ms);
 
   if (config.sql_trigger_exec) P_trigger_exec(config.sql_trigger_exec); 
 
@@ -692,3 +704,51 @@ void kafka_avro_schema_purge(char *avro_schema_str)
   p_kafka_close(&kafka_avro_schema_host, FALSE);
 }
 #endif
+
+void *kafka_generate_stats(void *cfg)
+{
+  struct metric *met = ((struct configuration *)cfg)->met;
+
+  /*
+  //XXX: future metrics can be added here if they don't need event-related increments
+  while (met) {
+    if (cfg->name && strstr(met->type.label, cfg->name) == met->type.label) {
+      switch (met->type.id) {
+        case METRICS_INT_KAFKA_FLUSH_CNT:
+          met->int_value = kfk_metrics->flush_cnt;
+          break;
+      }
+    }
+    met = met->next;
+  }
+  */
+}
+
+/* If val is NULL, the relevant metric is simply incremented */
+void set_kafka_metric(u_int64_t id, void *val)
+{
+  if (!config.intstats_daemon) return;
+
+  struct metric *met_tmp = config.met;
+
+  while(met_tmp) {
+    if (id == met_tmp->type.id
+        && (config.name && strstr(met_tmp->type.label, config.name) == met_tmp->type.label)) {
+      switch (id) {
+        case METRICS_INT_KAFKA_FLUSH_CNT:
+          met_tmp->int_value++;
+          break;
+        case METRICS_INT_KAFKA_FLUSH_MSG_SENT:
+          if (val) met_tmp->int_value += *(int *)val;
+          break;
+        case METRICS_INT_KAFKA_FLUSH_MSG_ERR:
+          if (val) met_tmp->int_value += *(int *)val;
+          break;
+        case METRICS_INT_KAFKA_FLUSH_TIME:
+          if (val) met_tmp->int_value += *(u_int32_t *)val;
+          break;
+      }
+    }
+    met_tmp = met_tmp->next;
+  }
+}
