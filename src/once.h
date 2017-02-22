@@ -22,7 +22,7 @@
 #ifndef _ONCE_H_
 #define _ONCE_H_
 
-#if defined __PMACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C || defined __UACCTD_C || defined __PMACCT_CLIENT_C || defined __PMTELEMETRYD_C || defined __PMBGPD_C || defined __PMBMPD_C
+#if defined __PMACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C || defined __UACCTD_C || defined __PMACCT_CLIENT_C || defined __PMTELEMETRYD_C || defined __PMBGPD_C || defined __PMBMPD_C || defined __INTSTATSD_C
 #define EXT 
 #else
 #define EXT extern

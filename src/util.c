@@ -1011,6 +1011,23 @@ int timeval_cmp(struct timeval *a, struct timeval *b)
 }
 
 /*
+ * Subtract two timevals. Returns (t1 - t2) in milliseconds.
+ */
+u_int32_t
+timeval_sub_ms(const struct timeval *t1, const struct timeval *t2)
+{
+	struct timeval res;
+
+	res.tv_sec = t1->tv_sec - t2->tv_sec;
+	res.tv_usec = t1->tv_usec - t2->tv_usec;
+	if (res.tv_usec < 0) {
+		res.tv_usec += 1000000L;
+		res.tv_sec--;
+	}
+	return ((u_int32_t)res.tv_sec * 1000 + (u_int32_t)res.tv_usec / 1000);
+}
+
+/*
  * exit_all(): Core Process exit lane. Not meant to be a nice shutdown method: it is
  * an exit() replacement that sends kill signals to the plugins.
  */
