@@ -175,6 +175,50 @@ int cfg_key_use_ip_next_hop(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_metrics(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  char *count_token;
+  u_int32_t changes = 0;
+  u_int64_t value[2];
+
+  trim_all_spaces(value_ptr);
+  lower_string(value_ptr);
+  memset(&value, 0, sizeof(value));
+
+  while (count_token = extract_token(&value_ptr, ',')) {
+    if (!strcmp(count_token, "plugin_queues_tot_sz")) cfg_set_metric(filename, value, METRICS_INT_PLUGIN_QUEUES_TOT_SZ, count_token);
+    else if (!strcmp(count_token, "plugin_queues_used_sz")) cfg_set_metric(filename, value, METRICS_INT_PLUGIN_QUEUES_USED_SZ, count_token);
+    else if (!strcmp(count_token, "plugin_queues_used_cnt")) cfg_set_metric(filename, value, METRICS_INT_PLUGIN_QUEUES_USED_CNT, count_token);
+    else if (!strcmp(count_token, "plugin_queues_fill_rate")) cfg_set_metric(filename, value, METRICS_INT_PLUGIN_QUEUES_FILL_RATE, count_token);
+    else if (!strcmp(count_token, "nfacctd_rcv_pkt")) cfg_set_metric(filename, value, METRICS_INT_NFACCTD_RCV_PKT, count_token);
+    else if (!strcmp(count_token, "nfacctd_tpl_cnt")) cfg_set_metric(filename, value, METRICS_INT_NFACCTD_TPL_CNT, count_token);
+    else if (!strcmp(count_token, "nfacctd_udp_tx_queue")) cfg_set_metric(filename, value, METRICS_INT_NFACCTD_UDP_TX_QUEUE, count_token);
+    else if (!strcmp(count_token, "nfacctd_udp_rx_queue")) cfg_set_metric(filename, value, METRICS_INT_NFACCTD_UDP_RX_QUEUE, count_token);
+    else if (!strcmp(count_token, "nfacctd_udp_app_drop_count")) cfg_set_metric(filename, value, METRICS_INT_NFACCTD_UDP_APP_DROP_CNT, count_token);
+    else if (!strcmp(count_token, "nfacctd_udp_sock_drop_count")) cfg_set_metric(filename, value, METRICS_INT_NFACCTD_UDP_SOCK_DROP_CNT, count_token);
+    else if (!strcmp(count_token, "kafka_flush_count")) cfg_set_metric(filename, value, METRICS_INT_KAFKA_FLUSH_CNT, count_token);
+    else if (!strcmp(count_token, "kafka_flush_msg_sent")) cfg_set_metric(filename, value, METRICS_INT_KAFKA_FLUSH_MSG_SENT, count_token);
+    else if (!strcmp(count_token, "kafka_flush_msg_err")) cfg_set_metric(filename, value, METRICS_INT_KAFKA_FLUSH_MSG_ERR, count_token);
+    else if (!strcmp(count_token, "kafka_flush_time")) cfg_set_metric(filename, value, METRICS_INT_KAFKA_FLUSH_TIME, count_token);
+  }
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.metrics_what_to_count = value[1];
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.metrics_what_to_count = value[1];
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -1734,6 +1778,75 @@ int cfg_key_amqp_avro_schema_refresh_time(char *filename, char *name, char *valu
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.amqp_avro_schema_refresh_time = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_statsd_host(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.statsd_host = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.statsd_host = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_statsd_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'statsd_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.statsd_port = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.statsd_port = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_statsd_refresh_time(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'statsd_refresh_time' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.statsd_refresh_time = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.statsd_refresh_time = value;
         changes++;
         break;
       }
@@ -5682,6 +5795,18 @@ void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, ch
   else registry[index] |= value;
 }
 
+void cfg_set_metric(char *filename, u_int64_t registry[], u_int64_t input, char *token)
+{
+  u_int64_t index = (input >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
+  u_int64_t value = (input & COUNT_REGISTRY_MASK);
+
+  if (registry[index] & value) {
+    Log(LOG_ERR, "ERROR: [%s] '%s' repeated in 'metric' or invalid 0x%x bit code.\n", filename, token, input);
+    exit(1);
+  }
+  else registry[index] |= value;
+}
+
 int cfg_key_nfacctd_bgp_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -7374,6 +7499,48 @@ int cfg_key_telemetry_dump_kafka_config_file(char *filename, char *name, char *v
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_dump_kafka_config_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_kafka_config_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_intstats_daemon(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.intstats_daemon = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'intstats_daemon'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_intstats_src_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'intstats_src_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.intstats_src_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'intstats_src_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_intstats_src_ip(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.intstats_src_ip = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'intstats_src_ip'. Globalized.\n", filename);
 
   return changes;
 }

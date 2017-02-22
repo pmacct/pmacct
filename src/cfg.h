@@ -77,6 +77,7 @@ struct configuration {
   pm_cfgreg_t what_to_count_2;	/* second registry */
   pm_cfgreg_t nfprobe_what_to_count;
   pm_cfgreg_t nfprobe_what_to_count_2;
+  pm_cfgreg_t metrics_what_to_count;
   char *aggregate_primitives;
   struct custom_primitives_ptrs cpptrs;
   char *name;
@@ -178,6 +179,9 @@ struct configuration {
   char *kafka_avro_schema_topic;
   int kafka_avro_schema_refresh_time;
   char *kafka_config_file;
+  char *statsd_host;
+  int statsd_port;
+  int statsd_refresh_time;
   int print_cache_entries;
   int print_markers;
   int print_output;
@@ -527,7 +531,11 @@ struct configuration {
   int tmp_net_own_field;
   int tmp_asa_bi_flow;
   int tmp_comms_same_field;
+  int intstats_daemon;
+  char *intstats_src_ip;
+  int intstats_src_port;
   size_t thread_stack;
+  struct metric *met;
 };
 
 /* prototypes */ 

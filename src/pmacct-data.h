@@ -489,6 +489,9 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_avro_schema_topic", cfg_key_kafka_avro_schema_topic},
   {"kafka_avro_schema_refresh_time", cfg_key_kafka_avro_schema_refresh_time},
   {"kafka_config_file", cfg_key_kafka_config_file},
+  {"statsd_host", cfg_key_statsd_host},
+  {"statsd_port", cfg_key_statsd_port},
+  {"statsd_refresh_time", cfg_key_statsd_refresh_time},
   {"nfacctd_proc_name", cfg_key_proc_name},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
@@ -832,6 +835,10 @@ static const struct _dictionary_line dictionary[] = {
   {"tmp_net_own_field", cfg_key_tmp_net_own_field},
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
   {"tmp_comms_same_field", cfg_key_tmp_comms_same_field},
+  {"metric", cfg_key_metrics},
+  {"intstats_daemon", cfg_key_intstats_daemon},
+  {"intstats_src_ip", cfg_key_intstats_src_ip},
+  {"intstats_src_port", cfg_key_intstats_src_port},
   {"", NULL},
 };
 

@@ -105,6 +105,9 @@ EXT int cfg_key_kafka_partition_key(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_topic(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_refresh_time(char *, char *, char *);
 EXT int cfg_key_kafka_config_file(char *, char *, char *);
+EXT int cfg_key_statsd_host(char *, char *, char *);
+EXT int cfg_key_statsd_port(char *, char *, char *);
+EXT int cfg_key_statsd_refresh_time(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_check_core_pid(char *, char *, char *);
@@ -434,7 +437,12 @@ EXT int cfg_key_dump_max_writers(char *, char *, char *);
 EXT int cfg_key_tmp_net_own_field(char *, char *, char *);
 EXT int cfg_key_tmp_asa_bi_flow(char *, char *, char *);
 EXT int cfg_key_tmp_comms_same_field(char *, char *, char *);
+EXT int cfg_key_intstats_daemon(char *, char *, char *);
+EXT int cfg_key_intstats_src_ip(char *, char *, char *);
+EXT int cfg_key_intstats_src_port(char *, char *, char *);
+EXT int cfg_key_metrics(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 EXT void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);
+EXT void cfg_set_metric(char *, u_int64_t [], u_int64_t, char *);
 #undef EXT
