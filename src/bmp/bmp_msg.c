@@ -497,7 +497,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.id = BGP_MSG_EXTRA_DATA_BMP;
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
-      // XXX: set extra data funcs
+      bgp_msg_data_set_funcs(&bmd);
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
       bms->peer_str = saved_peer_str;
 

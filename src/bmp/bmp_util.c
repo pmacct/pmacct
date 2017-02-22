@@ -208,6 +208,14 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
   bgp_peer_close(peer, type, FALSE, NULL);
 }
 
+void bgp_msg_data_set_funcs(struct bgp_msg_data *bmd)
+{
+  bmd->bgp_extra_data_process = bgp_extra_data_process_bmp;
+  bmd->bgp_extra_data_cmp = bgp_extra_data_cmp_bmp;
+  bmd->bgp_extra_data_free = bgp_extra_data_free_bmp;
+  bmd->bgp_extra_data_print = bgp_extra_data_print_bmp; 
+}
+
 int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
 {
   if (a->id == b->id && a->len == b->len && a->id == BGP_MSG_EXTRA_DATA_BMP)
