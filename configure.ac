@@ -1036,7 +1036,8 @@ AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AC_OUTPUT([ Makefile \
-	    src/Makefile src/nfprobe_plugin/Makefile \
+	    src/Makefile src/intstats/Makefile \
+      src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
 	    src/tee_plugin/Makefile src/isis/Makefile \
 	    src/bmp/Makefile src/telemetry/Makefile ])
