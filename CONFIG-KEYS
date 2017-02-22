@@ -2575,3 +2575,69 @@ KEY:		telemetry_daemon_ipprec [GLOBAL]
 DESC:           Marks self-originated Streaming Telemetry messages with the supplied IP precedence value.
 		Applies to TCP sessions only.
 DEFAULT:        0
+
+KEY:		statsd_host [GLOBAL]
+DESC:           StatsD (https://github.com/etsy/statsd) instance IP to send data to.
+DEFAULT:        127.0.0.1
+
+KEY:		statsd_port [GLOBAL]
+DESC:           StatsD (https://github.com/etsy/statsd) instance port to send data to.
+DEFAULT:        8125
+
+KEY:		statsd_refresh_time [GLOBAL]
+DESC:		Time interval, in seconds, between consecutive sendings of metrics.
+DEFAULT:        60
+
+KEY:		intstats_daemon [GLOBAL]
+VALUES:         [ true | false ]
+DESC:		Enables the internal statistics thread.
+DEFAULT:        false
+
+KEY:		metric [GLOBAL]
+DESC:         Internal use metrics to collect and send to StatsD. The list of supported metrics follows:
+
+              plugin_queues_tot_sz        Total size of plugins buffer queues, in bytes
+
+              plugin_queues_used_sz       Used size of plugins buffer queues, in bytes
+
+              plugin_queues_used_cnt      Total number of buffered packets, ie sent by the core but not yet handled
+by the relevant plugin
+
+              plugin_queues_fill_rate     Total filling rate of plugins buffer queues (100 * used_sz / tot_sz),
+computed as a percentage
+
+              nfacctd_rcv_pkt             Number of packets received by nfacctd. Note: This metric is reset between
+sendings.
+
+              nfacctd_tpl_cnt             Number of templates cached by nfacctd
+
+              nfacctd_udp_tx_queue        Size (in bytes) currently used in the receiving buffer of nfacctd's
+listening socket
+
+              nfacctd_udp_app_drop_count  Number of UDP packets dropped by nfacctd because not exploitable as
+Netflow/IPFIX packets: invalid, incomplete, etc. Note: This metric is reset between sendings.
+
+              nfacctd_udp_sock_drop_count Number of UDP packets dropped by the kernel on nfacctd's listening
+socket.  Notes: (a) This metric is reset between sendings. (b) This metric is currently only supported on Linux
+kernels.
+
+              kafka_flush_count           Number of cache flushes (ie purges to the Kafka backend) made by the Kafka
+plugin
+
+              kafka_flush_msg_sent        Number of Kafka messages sent via the Kafka plugin. Note: This metric is
+reset between sendings.
+
+              kafka_flush_msg_err         Number of Kafka messages which could not be sent successfully via the
+Kafka plugin. Note: This metric is reset between sendings.
+
+              kafka_flush_time            Duration, in milliseconds, of the last flush done by the Kafka plugin.
+Note: This metric is reset between sendings.
+DEFAULT:        none
+
+KEY:		intstats_src_port [GLOBAL]
+DESC:		Port to bind the internal stats daemon's sending socket to.
+DEFAULT:        8124
+
+KEY:		intstats_src_ip [GLOBAL]
+DESC:		IP to bind the internal stats daemon's sending socket to.
+DEFAULT:        127.0.0.1

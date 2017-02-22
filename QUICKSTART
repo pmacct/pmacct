@@ -21,10 +21,11 @@ XV.	Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
 XVI.	Quickstart guide to setup the IS-IS daemon
 XVII.	Quickstart guide to setup the BMP daemon
 XVIII.	Quickstart guide to setup Streaming Telemetry collection 
-XIX.	Running the print plugin to write to flat-files
-XX.	Quickstart guide to setup GeoIP lookups
-XXI.	Using pmacct as traffic/event logger
-XXII.	Miscellaneous notes and troubleshooting tips
+XIX.	Quickstart guide to setup internal metrics collection
+XX.	Running the print plugin to write to flat-files
+XXI.	Quickstart guide to setup GeoIP lookups
+XXII.	Using pmacct as traffic/event logger
+XXIII.	Miscellaneous notes and troubleshooting tips
 
 
 I. Plugins included with pmacct distribution
@@ -1645,7 +1646,28 @@ A sample of both the Streaming Telemetry msglog and dump formats are captured in
 the following document: docs/MSGLOG_DUMP_FORMATS
 
 
-XIX. Running the print plugin to write to flat-files
+XIX. Quickstart guide to setup internal metrics collection
+Internal use metrics about pmacct can be periodically sent to statistics
+aggregation backends for various monitoring purposes. The full list of supported
+metrics and backends is available in CONFIG-KEYS, yet a few points are worth
+noting here.  Metrics are specified in a config file, in the same way as
+aggregates. Several instances of the same plugin are supported, so that
+(possibly distinct) metrics can be sent about each of these instances. An
+example configuration for this could be:
+
+plugins: kafka[kafka1], kafka[kafka2]
+intstats_daemon: true
+metric[kafka1]: kafka_flush_count, kafka_flush_msg_sent
+metric[kafka2]: kafka_flush_count, kafka_flush_time
+
+Note that pmacct works on the assumption that metrics are aggregated by stats
+backends, hence most metrics are reset after each [compute & send] cycle.
+Therefore, you may want to ensure that the flush interval of you stats backend
+is higher than that of pmacct, otherwise you may end up with empty values in
+your backend that would pollute your statistics.
+
+
+XX. Running the print plugin to write to flat-files
 pmacct can also output to files via its 'print' plugin. Dynamic filenames are
 supported. Output is either text-based using JSON, CSV or formatted outputs, or
 binary-based using the Apache Avro file container ('print_output' directive).
@@ -1697,7 +1719,7 @@ print_history_roundoff: m
 print_output_file_append: true 
 
 
-XX. Quickstart guide to setup GeoIP lookups
+XXI. Quickstart guide to setup GeoIP lookups
 pmacct can perform GeoIP country lookups against a Maxmind DB v1 (--enable-geoip)
 and against a Maxmind DB v2 (--enable-geoipv2). A v1 database enables resolution
 of src_host_country and dst_host_country primitives only. A v2 database enables
@@ -1763,7 +1785,7 @@ states, counties, metro areas, zip codes, etc.) are not yet supported: should
 you be interested into any of these, please get in touch.  
 
 
-XXI. Using pmacct as traffic/event logger
+XXII. Using pmacct as traffic/event logger
 pmacct was originally conceived as a traffic aggregator. It is now possible
 to use pmacct as a traffic/event logger as well, such development had been 
 fostered particularly by the use of NetFlow/IPFIX as generic transport,
@@ -1856,7 +1878,7 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XXII. Miscellaneous notes and troubleshooting tips
+XXIII. Miscellaneous notes and troubleshooting tips
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
