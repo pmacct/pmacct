@@ -238,7 +238,13 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
   if (bmed && ri && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
     rie = bgp_info_extra_get(ri);
     if (rie) {
-      rie->bmed.data = malloc(bmed->len);
+      if (rie->bmed.data && (rie->bmed.len != bmed->len)) {
+	free(rie->bmed.data);
+	rie->bmed.data = NULL;
+      }
+
+      if (!rie->bmed.data) rie->bmed.data = malloc(bmed->len);
+
       if (rie->bmed.data) {
 	memcpy(rie->bmed.data, bmed->data, bmed->len);
 	rie->bmed.len = bmed->len; 
@@ -255,7 +261,7 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
 void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
 {
   if (bmed && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
-    free(bmed->data);
+    if (bmed->data) free(bmed->data);
     memset(bmed, 0, sizeof(struct bgp_msg_extra_data));
   }
 }

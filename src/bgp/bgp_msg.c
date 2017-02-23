@@ -1101,7 +1101,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
       new->peer = peer;
       new->attr = attr_new;
       bgp_info_extra_process(peer, new, safi, path_id, rd, label);
-      if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, ri);
+      if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, new);
     }
     else return ERR;
 
