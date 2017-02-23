@@ -149,6 +149,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   strcpy(bms->peer_port_str, "bmp_router_port");
   bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
   bms->bgp_peer_logdump_initclose_extras = bgp_peer_logdump_initclose_extras_bmp;
+  bms->bgp_peer_logdump_extra_data = bgp_extra_data_print_bmp;
 
   bms->table_peer_buckets = config.bmp_table_peer_buckets;
   bms->table_per_peer_buckets = config.bmp_table_per_peer_buckets;
@@ -208,12 +209,17 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
   bgp_peer_close(peer, type, FALSE, NULL);
 }
 
-void bgp_msg_data_set_funcs(struct bgp_msg_data *bmd)
+void bgp_msg_data_set_funcs_bmp(struct bgp_msg_data *bmd)
 {
   bmd->bgp_extra_data_process = bgp_extra_data_process_bmp;
   bmd->bgp_extra_data_cmp = bgp_extra_data_cmp_bmp;
   bmd->bgp_extra_data_free = bgp_extra_data_free_bmp;
-  bmd->bgp_extra_data_print = bgp_extra_data_print_bmp; 
+}
+
+void bgp_msg_data_set_data_bmp(struct bgp_msg_extra_data_bmp *bmed_bmp, struct bmp_data *bdata)
+{
+  bmed_bmp->is_post = bdata->is_post;
+  bmed_bmp->is_2b_asn = bdata->is_2b_asn;
 }
 
 int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
@@ -254,7 +260,19 @@ void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
   }
 }
 
-void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed)
+void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void *void_obj)
 {
-  // XXX
+  struct bgp_msg_extra_data_bmp *bmed_bmp;
+
+  if (!bmed || !void_obj || bmed->id != BGP_MSG_EXTRA_DATA_BMP) return;
+
+  bmed_bmp = bmed->data;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+
+    json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
+#endif
+  }
 }

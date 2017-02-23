@@ -138,6 +138,7 @@ struct bgp_misc_structs {
   int msglog_kafka_topic_rr;
   void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, void *);
   void (*bgp_peer_logdump_initclose_extras)(struct bgp_peer *, int, void *);
+  void (*bgp_peer_logdump_extra_data)(struct bgp_msg_extra_data *, int, void *);
 
   int table_peer_buckets;
   int table_per_peer_buckets;
@@ -200,7 +201,6 @@ struct bgp_msg_data {
   int (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *);
   int (*bgp_extra_data_cmp)(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);
   void (*bgp_extra_data_free)(struct bgp_msg_extra_data *);
-  void (*bgp_extra_data_print)(struct bgp_msg_extra_data *);
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

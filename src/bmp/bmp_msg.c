@@ -316,12 +316,13 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
       bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
 
-      bmed_bmp.bdata = &bdata;
       bmd.peer = &bgp_peer_loc;
       bmd.extra.id = BGP_MSG_EXTRA_DATA_BMP;
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       // XXX: set extra data funcs
+      bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
+
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
@@ -492,12 +493,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       memset(&bmed_bmp, 0, sizeof(bmed_bmp));
 
       bms->peer_str = peer_str;
-      bmed_bmp.bdata = &bdata;
       bmd.peer = bmpp_bgp_peer;
       bmd.extra.id = BGP_MSG_EXTRA_DATA_BMP;
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
-      bgp_msg_data_set_funcs(&bmd);
+      bgp_msg_data_set_funcs_bmp(&bmd);
+      bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
       bms->peer_str = saved_peer_str;
 

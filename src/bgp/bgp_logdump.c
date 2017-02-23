@@ -103,6 +103,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
+    if (ri && ri->extra && ri->extra->bmed.id && bms->bgp_peer_logdump_extra_data)
+      bms->bgp_peer_logdump_extra_data(&ri->extra->bmed, output, obj);
+
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 

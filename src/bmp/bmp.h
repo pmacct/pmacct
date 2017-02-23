@@ -113,8 +113,8 @@ struct bmp_peer {
 };
 
 struct bgp_msg_extra_data_bmp {
-  struct bmp_data *bdata;
-  // XXX
+  u_int8_t is_post;
+  u_int8_t is_2b_asn;
 };
 
 #define BMP_STATS_TYPE0		0 /* (32-bit Counter) Number of prefixes rejected by inbound policy */
