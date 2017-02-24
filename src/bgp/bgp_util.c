@@ -197,9 +197,17 @@ struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
   return new;
 }
 
-void bgp_info_extra_free(struct bgp_info_extra **extra)
+void bgp_info_extra_free(struct bgp_peer *peer, struct bgp_info_extra **extra)
 {
+  struct bgp_misc_structs *bms;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
   if (extra && *extra) {
+    if ((*extra)->bmed.id && bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&(*extra)->bmed);
+
     free(*extra);
     *extra = NULL;
   }
@@ -296,7 +304,7 @@ void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri)
   if (ri->attr)
     bgp_attr_unintern(peer, ri->attr);
 
-  bgp_info_extra_free(&ri->extra);
+  bgp_info_extra_free(peer, &ri->extra);
 
   ri->peer->lock--;
   free(ri);

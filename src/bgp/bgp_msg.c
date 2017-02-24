@@ -1058,7 +1058,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
         }
 
 	if (ri->extra && ri->extra->bmed.id) {
-	  if (bmd->bgp_extra_data_cmp && !(*bmd->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
+	  if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
 	  else continue;
 	} 
 
@@ -1084,7 +1084,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
         bgp_attr_unintern(peer, ri->attr);
         ri->attr = attr_new;
         bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
-        if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, ri);
+        if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
         bgp_unlock_node (peer, route);
 
@@ -1101,7 +1101,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
       new->peer = peer;
       new->attr = attr_new;
       bgp_info_extra_process(peer, new, safi, path_id, rd, label);
-      if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, new);
+      if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, new);
     }
     else return ERR;
 
@@ -1128,7 +1128,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
       ri->peer = peer;
       ri->attr = bgp_attr_intern(peer, attr);
       bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
-      if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, ri);
+      if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
       goto log_update;
     }
@@ -1144,8 +1144,7 @@ log_update:
   }
 
   if (bms->skip_rib) {
-    if (ri->extra && ri->extra->bmed.id && bmd->bgp_extra_data_free) (*bmd->bgp_extra_data_free)(&ri->extra->bmed);
-    if (ri->extra) bgp_info_extra_free(&ri->extra);
+    if (ri->extra) bgp_info_extra_free(peer, &ri->extra);
     bgp_attr_unintern(peer, ri->attr);
   }
 
@@ -1195,7 +1194,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
         }
 
         if (ri->extra && ri->extra->bmed.id) {
-          if (bmd->bgp_extra_data_cmp && !(*bmd->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
+          if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
           else continue;
         }
 
@@ -1214,7 +1213,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
 
       ri->peer = peer;
       bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
-      if (bmd->bgp_extra_data_process) (*bmd->bgp_extra_data_process)(&bmd->extra, ri);
+      if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
     }
   }
 
@@ -1233,8 +1232,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
   }
   else {
     if (bms->msglog_backend_methods) {
-      if (ri->extra && ri->extra->bmed.id && bmd->bgp_extra_data_free) (*bmd->bgp_extra_data_free)(&ri->extra->bmed);
-      if (ri->extra) bgp_info_extra_free(&ri->extra);
+      if (ri->extra) bgp_info_extra_free(peer, &ri->extra);
     }
   }
 

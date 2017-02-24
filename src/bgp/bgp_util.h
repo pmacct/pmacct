@@ -47,7 +47,7 @@ EXT struct bgp_misc_structs *bgp_select_misc_db(int);
 EXT void bgp_link_misc_structs(struct bgp_misc_structs *);
 
 EXT struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *);
-EXT void bgp_info_extra_free(struct bgp_info_extra **);
+EXT void bgp_info_extra_free(struct bgp_peer *, struct bgp_info_extra **);
 EXT struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *);
 EXT struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *, struct bgp_info *, safi_t, path_id_t *, rd_t *, char *);
 
