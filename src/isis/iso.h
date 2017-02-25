@@ -196,18 +196,18 @@ extern struct protosw isosw[];
 #define	__P(x)	x
 #define	__BEGIN_DECLS
 #define	__END_DECLS
-#else
-#include <sys/cdefs.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
 struct iso_addr *iso_addr __P((const char *));
 char           *iso_ntoa __P((const struct iso_addr *));
 
 /* THESE DON'T EXIST YET */
 struct hostent *iso_gethostbyname __P((const char *));
 struct hostent *iso_gethostbyaddr __P((const char *, int, int));
-__END_DECLS
+}
+#endif
 
 #endif /* _KERNEL */
 
