@@ -1,3 +1,11 @@
+Build pmacct with pgsql support:
+
+export PGSQL_CFLAGS="-I/usr/pgsql-9.4/include/"
+export PGSQL_LIBS="-L/usr/pgsql-9.4/lib/ -lpq"
+./autogen.sh
+./configure --enable-pgsql
+make
+
 To create the database and grant default permission to the daemon you have to execute
 the two scripts below, in the same order; which user has to execute them and how to
 autenticate with the PostgreSQL server depends upon your current configuration.
