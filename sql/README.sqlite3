@@ -1,3 +1,6 @@
+See how to configure and compile pmacct for SQLite use in the "Configuring
+pmacct for compilation and installing" chapter of QUICKSTART.
+
 To create the database and the table you have to execute the following scripts.
 Remember that SQLite - unlike MySQL and PostgreSQL - does not endorse concepts
 of authentication (username and password couple) and permissions which are

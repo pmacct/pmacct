@@ -1,3 +1,6 @@
+See how to configure and compile pmacct for PostgreSQL use in the "Configuring
+pmacct for compilation and installing" chapter of QUICKSTART. 
+
 To create the database and grant default permission to the daemon you have to execute
 the two scripts below, in the same order; which user has to execute them and how to
 autenticate with the PostgreSQL server depends upon your current configuration.
