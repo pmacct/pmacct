@@ -410,6 +410,7 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
         Log(LOG_ERR, "ERROR: [%s] plugins of type 'core' are not allowed. Exiting.\n", filename);
         exit(1);
       }
+
       if (!ignore_names) {
         if (create_plugin(filename, name, token)) num++;
       }
@@ -461,16 +462,15 @@ int create_plugin(char *filename, char *name, char *type)
   if (plugins_list) {
     id = 0;
     ptr = plugins_list;
-    while(ptr) {
+
+    while (ptr) {
       /* plugin id */
       if (ptr->id > id) id = ptr->id;
 
       /* dupes */
       if (!strcmp(name, ptr->name)) {
-        if (!strcmp(type, ptr->type.string)) {
-          Log(LOG_WARNING, "WARN: [%s] another plugin with the same name '%s' already exists. Preserving first.\n", filename, name);
-          return FALSE;
-        }
+        Log(LOG_WARNING, "WARN: [%s] another plugin with the same name '%s' already exists. Preserving first.\n", filename, name);
+        return FALSE;
       }
       ptr = ptr->next;
     }
