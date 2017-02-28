@@ -823,6 +823,8 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
   /* IPv4 (4), RD+IPv4 (12), IPv6 (16), RD+IPv6 (24), IPv6 link-local+IPv6 global (32) */
   if (mpnhoplen == 4 || mpnhoplen == 12 || mpnhoplen == 16 || mpnhoplen == 24 || mpnhoplen == 32) {
     if (mpreachlen > mpnhoplen) {
+      memset(&attr->mp_nexthop, 0, sizeof(struct host_addr));
+
       switch (mpnhoplen) {
       case 4:
 	attr->mp_nexthop.family = AF_INET;

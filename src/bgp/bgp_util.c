@@ -363,21 +363,11 @@ int attrhash_cmp(const void *p1, const void *p2)
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
       && attr1->pathlimit.ttl == attr2->pathlimit.ttl
-      && attr1->pathlimit.as == attr2->pathlimit.as) {
-    if (attr1->mp_nexthop.family == attr2->mp_nexthop.family) {
-      if (attr1->mp_nexthop.family == AF_INET
-	  && attr1->mp_nexthop.address.ipv4.s_addr == attr2->mp_nexthop.address.ipv4.s_addr) 
-        return 1;
-#if defined ENABLE_IPV6
-      else if (attr1->mp_nexthop.family == AF_INET6
-	  && !memcmp(&attr1->mp_nexthop.address.ipv6, &attr2->mp_nexthop.address.ipv6, 16))
-        return 1;
-#endif
-      else return 1;
-    }
-  }
+      && attr1->pathlimit.as == attr2->pathlimit.as
+      && !memcmp(&attr1->mp_nexthop, &attr2->mp_nexthop, sizeof(struct host_addr)))
+    return TRUE;
 
-  return SUCCESS;
+  return FALSE;
 }
 
 void attrhash_init(int buckets, struct hash **loc_attrhash)
