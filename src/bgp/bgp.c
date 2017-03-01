@@ -541,14 +541,14 @@ void skinny_bgp_daemon_online()
             Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
 				config.name, bgp_misc_db->log_str, bgp_peer_print(&peers[peers_check_idx]));
             FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
-            bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, NULL);
+            bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, NULL);
 	  }
 	  else {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
 				config.name, bgp_misc_db->log_str, bgp_peer_print(&peers[peers_check_idx]),
 				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
 	    FD_CLR(peer->fd, &bkp_read_descs);
-	    bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, NULL);
+	    bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, NULL);
 	    // bgp_batch_rollback(&bp_batch);
 	    goto read_data;
 	  }
@@ -587,7 +587,7 @@ void skinny_bgp_daemon_online()
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP connection reset by peer (%d).\n", config.name, bgp_misc_db->log_str, bgp_peer_print(peer), errno);
       FD_CLR(peer->fd, &bkp_read_descs);
-      bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, NULL);
+      bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, NULL);
       recalc_fds = TRUE;
       goto select_again;
     }
@@ -605,7 +605,7 @@ void skinny_bgp_daemon_online()
       ret = bgp_parse_msg(peer, now, TRUE);
       if (ret < 0) {
         FD_CLR(peer->fd, &bkp_read_descs);
-        bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, NULL);
+        bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, NULL);
         recalc_fds = TRUE;
         goto select_again;
       }

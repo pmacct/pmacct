@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -83,7 +83,7 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
     peer->fd = ERR; /* dirty trick to prevent close() a valid fd in bgp_peer_close() */
   }
 
-  bgp_peer_close(peer, type, FALSE, NULL);
+  bgp_peer_close(peer, type, FALSE, FALSE, NULL);
 }
 
 void telemetry_peer_z_close(telemetry_peer_z *peer_z)

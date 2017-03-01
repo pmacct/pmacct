@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -116,7 +116,7 @@ void my_sigint_handler(int signum)
     int idx;
 
     for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
-      if (peers[idx].fd) bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, "pmacct received SIGINT - shutting down");
+      if (peers[idx].fd) bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, TRUE, "pmacct received SIGINT - shutting down");
     }
   }
 

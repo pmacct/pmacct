@@ -510,7 +510,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   return ret;
 }
 
-void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */, int send_notification, char *shutdown_msg)
+void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */, int no_quiet, int send_notification, char *shutdown_msg)
 {
   struct bgp_misc_structs *bms;
   afi_t afi;
@@ -530,7 +530,8 @@ void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */, int send_notifica
     if (ret) send(peer->fd, notification_msg, ret, 0);
   }
 
-  bgp_peer_info_delete(peer);
+  /* be quiet if we are in a signal handler and already set to exit() */
+  if (!no_quiet) bgp_peer_info_delete(peer);
 
   if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
     bgp_peer_log_close(peer, bms->msglog_output, peer->type);
