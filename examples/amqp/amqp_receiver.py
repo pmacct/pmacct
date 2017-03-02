@@ -35,6 +35,7 @@ except ImportError:
 	avro_available = False
 
 avro_schema = None
+http_url_post = None
 
 def usage(tool):
 	print ""
@@ -49,6 +50,7 @@ def usage(tool):
 	print "Optional Args:"
 	print "  -h, --help".ljust(25) + "Print this help"
 	print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
+	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to (JSON only)" 
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
@@ -64,12 +66,17 @@ def callback(ch, method, properties, body):
 			avro_data.append(str(x))
 		print " [x] Received %r" % (",".join(avro_data),)
 	else:
-		print " [x] Received %r" % (body,)
+		if not http_url_post:
+			print " [x] Received %r" % (body,)
+		else:
+			http_req = urllib2.Request(http_url_post)
+			http_req.add_header('Content-Type', 'application/json')
+			http_response = urllib2.urlopen(http_req, body)
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:d:", ["help", "exchange=",
-				"routing_key=", "queue=", "host=", "decode-with-avro="])
+		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:", ["help", "exchange=",
+				"routing_key=", "queue=", "host=", "url=", "decode-with-avro="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -98,6 +105,8 @@ def main():
             		amqp_queue = a
 		elif o in ("-H", "--host"):
             		amqp_host = a
+		elif o in ("-u", "--url"):
+			http_url_post = a
 		elif o in ("-d", "--decode-with-avro"):
 			if not avro_available:
 				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
@@ -131,8 +140,9 @@ def main():
 
 	channel.queue_bind(exchange=amqp_exchange, routing_key=amqp_routing_key, queue=amqp_queue)
 
-	print ' [*] Example inspired from: http://www.rabbitmq.com/getstarted.html'
-	print ' [*] Waiting for messages on E =', amqp_exchange, ',', amqp_type, 'RK =', amqp_routing_key, 'Q =', amqp_queue, 'H =', amqp_host, '. Edit code to change any parameter. To exit press CTRL+C'
+	if not http_url_post:
+		print ' [*] Example inspired from: http://www.rabbitmq.com/getstarted.html'
+		print ' [*] Waiting for messages on E =', amqp_exchange, ',', amqp_type, 'RK =', amqp_routing_key, 'Q =', amqp_queue, 'H =', amqp_host, '. Edit code to change any parameter. To exit press CTRL+C'
 
 	channel.basic_consume(callback, queue=amqp_queue, no_ack=True)
 

@@ -15,7 +15,7 @@
 # messages produced by the Core Process to a specific plugin; the messages are
 # in binary format, first quad being the sequence number.
 
-import sys, os, getopt, StringIO
+import sys, os, getopt, StringIO, urllib2 
 from kafka import KafkaConsumer
 
 try:
@@ -41,14 +41,15 @@ def usage(tool):
 	print "  -g, --group_id".ljust(25) + "Specify the Group ID to declare"
 	print "  -e, --earliest".ljust(25) + "Set topic offset to 'earliest' [default: 'latest']"
 	print "  -H, --host".ljust(25) + "Define Kafka broker host [default: '127.0.0.1:9092']"
+	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to (JSON only)"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:g:H:d:e", ["help", "topic=",
-				"group_id=", "host=", "decode-with-avro=", "earliest="])
+		opts, args = getopt.getopt(sys.argv[1:], "ht:g:H:d:eu:", ["help", "topic=",
+				"group_id=", "host=", "decode-with-avro=", "earliest=", "url="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -59,6 +60,7 @@ def main():
 	kafka_group_id = None
 	kafka_host = "127.0.0.1:9092"
 	topic_offset = "latest"
+	http_url_post = None
  	
 	required_cl = 0
 
@@ -75,6 +77,8 @@ def main():
             		kafka_host = a
 		elif o in ("-e", "--earliest"):
 			topic_offset = "earliest"
+		elif o in ("-u", "--url"):
+			http_url_post = a
                 elif o in ("-d", "--decode-with-avro"):
 			if not avro_available:
 				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
@@ -111,8 +115,13 @@ def main():
 			print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
 					message.offset, message.key, (",".join(avro_data))))
 		else:
-			print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-					message.offset, message.key, message.value))
+			if not http_url_post:
+				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+						message.offset, message.key, message.value))
+			else:
+				http_req = urllib2.Request(http_url_post)
+				http_req.add_header('Content-Type', 'application/json')
+				http_response = urllib2.urlopen(http_req, message.value)
 
 if __name__ == "__main__":
     main()
