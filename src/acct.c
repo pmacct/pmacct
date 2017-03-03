@@ -216,7 +216,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 	  elem_acc->bytes_counter += data->cst.ba;
           elem_acc->flow_counter += data->cst.fa;
 	}
-        lru_elem_ptr[config.buckets] = elem_acc;
+        lru_elem_ptr[pos] = elem_acc;
         return;
       }
     }
@@ -325,7 +325,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->bytes_counter += data->cst.ba;
         elem_acc->flow_counter += data->cst.fa;
       }
-      lru_elem_ptr[config.buckets] = elem_acc;
+      lru_elem_ptr[pos] = elem_acc;
       return;
     }
 
@@ -445,7 +445,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->cst.fa;
       }
       elem_acc->next = NULL;
-      lru_elem_ptr[config.buckets] = elem_acc;
+      lru_elem_ptr[pos] = elem_acc;
       return;
     }
   }
