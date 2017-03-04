@@ -46,9 +46,9 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 	   required to install the MongoDB API C driver.
 'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
 	   for delivery to consumer applications or tools. Popular consumers
-	   are ElasticSearch, Cassandra and CouchDB.
+	   are ElasticSearch, InfluxDB and Cassandra.
 'kafka':   data is sent to a Kafka broker for delivery to consumer applications
-	   or tools.
+	   or tools. Popular consumers are ElasticSearch, InfluxDB and Cassandra.
 'tee':	   applies to nfacctd and sfacctd daemons only. It's a featureful packet
 	   replicator for NetFlow/IPFIX/sFlow data.
 'nfprobe': applies to pmacctd and uacctd daemons only. Exports collected data via

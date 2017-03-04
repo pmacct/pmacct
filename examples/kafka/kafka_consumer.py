@@ -41,7 +41,7 @@ def usage(tool):
 	print "  -g, --group_id".ljust(25) + "Specify the Group ID to declare"
 	print "  -e, --earliest".ljust(25) + "Set topic offset to 'earliest' [default: 'latest']"
 	print "  -H, --host".ljust(25) + "Define Kafka broker host [default: '127.0.0.1:9092']"
-	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to (JSON only)"
+	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
@@ -112,8 +112,13 @@ def main():
 			while inputio.tell() < len(inputio.getvalue()):
 				x = datum_reader.read(decoder)
 				avro_data.append(str(x))
-			print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-					message.offset, message.key, (",".join(avro_data))))
+			if not http_url_post:
+				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+						message.offset, message.key, (",".join(avro_data))))
+			else:
+				http_req = urllib2.Request(http_url_post)
+				http_req.add_header('Content-Type', 'application/json')
+				http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
 		else:
 			if not http_url_post:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
