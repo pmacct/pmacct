@@ -16,7 +16,7 @@
 # in binary format, first quad being the sequence number.
 
 import sys, os, getopt, StringIO, urllib2 
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 
 try:
 	import avro.io
@@ -34,13 +34,15 @@ def usage(tool):
 	print ""
 
 	print "Mandatory Args:"
-	print "  -t, --topic".ljust(25) + "Define the topic to use"
+	print "  -t, --topic".ljust(25) + "Define the topic to consume from"
 	print ""
 	print "Optional Args:"
 	print "  -h, --help".ljust(25) + "Print this help"
-	print "  -g, --group_id".ljust(25) + "Specify the Group ID to declare"
-	print "  -e, --earliest".ljust(25) + "Set topic offset to 'earliest' [default: 'latest']"
+	print "  -g, --group_id".ljust(25) + "Specify the consumer Group ID"
+	print "  -e, --earliest".ljust(25) + "Set consume topic offset to 'earliest' [default: 'latest']"
 	print "  -H, --host".ljust(25) + "Define Kafka broker host [default: '127.0.0.1:9092']"
+	print "  -p, --print".ljust(25) + "Print data to stdout"
+	print "  -T, --produce-topic".ljust(25) + "Define a topic to produce to"
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
@@ -48,8 +50,9 @@ def usage(tool):
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:g:H:d:eu:", ["help", "topic=",
-				"group_id=", "host=", "decode-with-avro=", "earliest=", "url="])
+		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:", ["help", "topic=",
+				"group_id=", "host=", "decode-with-avro=", "earliest=", "url=",
+				"produce-topic=", "print="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -59,8 +62,10 @@ def main():
 	kafka_topic = None
 	kafka_group_id = None
 	kafka_host = "127.0.0.1:9092"
+	kafka_produce_topic = None
 	topic_offset = "latest"
 	http_url_post = None
+	print_stdout = 0
  	
 	required_cl = 0
 
@@ -71,6 +76,10 @@ def main():
 		elif o in ("-t", "--topic"):
 			required_cl += 1
             		kafka_topic = a
+		elif o in ("-T", "--produce-topic"):
+            		kafka_produce_topic = a
+		elif o in ("-p", "--print"):
+            		print_stdout = 1
 		elif o in ("-g", "--group_id"):
             		kafka_group_id = a
 		elif o in ("-H", "--host"):
@@ -103,30 +112,40 @@ def main():
 
 	consumer = KafkaConsumer(kafka_topic, group_id=kafka_group_id, bootstrap_servers=[kafka_host], auto_offset_reset=topic_offset)
 
+	if kafka_producer_topic:
+		producer = KafkaProducer(bootstrap_servers=[kafka_host])
+
 	for message in consumer:
 		if avro_schema:
 			inputio = StringIO.StringIO(message.value)
 			decoder = avro.io.BinaryDecoder(inputio)
 			datum_reader = avro.io.DatumReader(avro_schema)
+
 			avro_data = []
 			while inputio.tell() < len(inputio.getvalue()):
 				x = datum_reader.read(decoder)
 				avro_data.append(str(x))
-			if not http_url_post:
+
+			if print_stdout:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
 						message.offset, message.key, (",".join(avro_data))))
-			else:
+
+			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
 				http_req.add_header('Content-Type', 'application/json')
 				http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
 		else:
-			if not http_url_post:
+			if print_stdout:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
 						message.offset, message.key, message.value))
-			else:
+
+			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
 				http_req.add_header('Content-Type', 'application/json')
 				http_response = urllib2.urlopen(http_req, message.value)
+
+		if kafka_produce_topic:
+			producer.send(kafka_produce_topic, message.value)
 
 if __name__ == "__main__":
     main()
