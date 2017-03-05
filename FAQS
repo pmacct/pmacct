@@ -224,8 +224,7 @@ A: If you are unable to enable sFlow commandline, you have to resort to the SNMP
    available at the following URL: http://www.inmon.com/technology/sflowenable 
 
 
-Q14: I've configured the pmacct package in order to support IPv6 via the '--enable-ipv6'
-     switch. Now, when i launch either nfacctd or sfacctd i receive the following error
+Q14: When i launch either nfacctd or sfacctd i receive the following error
      message: ERROR ( default/core ): socket() failed. What to do ? 
 A: When IPv6 code is enabled, sfacctd and nfacctd will try to fire up an IPv6 socket.
    The error message is very likely to be caused by the proper kernel module not being
@@ -323,17 +322,16 @@ A: It means you can't receive packets on an IPv4 address and transparently repli
    IP address (nfacctd_ip), if IPv4 is used.
 
 
-Q20: I've enabled IPv6 support in pmacct with --enable-ipv6. Even though the daemon
-     binds to the "::" address, i don't receive NetFlow/IPFIX/sFlow/BGP data sent via
-     IPv4, why?
+Q20: I'm using IPv6 support in pmacct. Even though the daemon binds to the "::"
+     address, i don't receive NetFlow/IPFIX/sFlow/BGP data sent via IPv4, why?
 
-A: Binding to a "::" address (ie. no [sn]facctd_ip specified when pmacct is compiled
-   with --enable-ipv6) should allow to receive both IPv4 and IPv6 senders. IPv4 ones
-   should be reportd in 'netstat' as IPv4-mapped IPv6 addresses. Linux has a kernel
-   switch to enable/disable the functionality and its status can be checked via the
-   /proc/sys/net/ipv6/bindv6only . Historically the default has been '0'. It appears
-   over time some distributions have changed the default to be '1'. If you experience
-   this issue on Linux, please check your kernel setting.
+A: Binding to a "::" address (ie. no [sn]facctd_ip specified should allow to receive
+   both IPv4 and IPv6 senders. IPv4 ones should be reportd in 'netstat' as IPv4-mapped
+   IPv6 addresses. Linux has a kernel switch to enable/disable the functionality and
+   its status can be checked via the /proc/sys/net/ipv6/bindv6only . Historically the
+   default has been '0'. It appears over time some distributions have changed the
+   default to be '1'. If you experience this issue on Linux, please check your kernel
+   setting.
    
 
 /* EOF */

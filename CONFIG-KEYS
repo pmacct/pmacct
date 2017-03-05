@@ -163,7 +163,7 @@ DESC:		Specifies the maximum number of bytes to capture for each packet. This di
 		resources. The right value need to be traded-off. In case classification is enabled, 
 		values under 200 bytes are often meaningless. 500-750 bytes are enough even for text
 		based protocols. Default snaplen values are ok if classification is disabled.
-DEFAULT:	68 bytes; 128 bytes if compiled with --enable-ipv6
+DEFAULT:	128 bytes; 64 bytes if compiled with --disable-ipv6
 
 KEY:		plugins (-P)
 VALUES:		[ memory | print | mysql | pgsql | sqlite3 | mongodb | nfprobe | sfprobe | tee |
