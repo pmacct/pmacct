@@ -9,7 +9,6 @@ AC_PREFIX_DEFAULT([/usr/local])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
 
 COMPILE_ARGS="${ac_configure_args}"
-AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -283,6 +282,7 @@ AC_ARG_ENABLE(l2,
 	[
         	AC_MSG_RESULT(yes)
 		AC_DEFINE(HAVE_L2, 1) 
+		COMPILE_ARGS="${COMPILE_ARGS} '--enable-l2'"
 	]
 )
 
@@ -323,6 +323,7 @@ AC_ARG_ENABLE(ipv6,
 
 			AC_DEFINE(ENABLE_IPV6, 1)
 		ipv6support="yes"
+		COMPILE_ARGS="${COMPILE_ARGS} '--enable-ipv6'"
 	]
 )
 
@@ -943,6 +944,7 @@ AC_ARG_ENABLE(64bit,
 	[
           AC_MSG_RESULT(yes)
 	  AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
+	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-64bit'"
 	]
 )
 
@@ -982,6 +984,7 @@ AC_ARG_ENABLE(threads,
 
           LIBS="${LIBS} -lpthread"
           USING_THREADPOOL=yes
+	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-threads'"
 	]
 )
 
@@ -1008,6 +1011,7 @@ AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt tdestroy])
 
 dnl final checks
 dnl trivial solution to portability issue 
+AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
 CFLAGS="${CFLAGS} ${INCLUDES}"
 INCLUDES=""
 
