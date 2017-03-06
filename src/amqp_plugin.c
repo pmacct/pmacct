@@ -618,7 +618,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index)
       if (json_buf && json_buf_off) {
 	/* no handling of dyn routing keys here: not compatible */
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_buf);
-	ret = p_kafka_produce_data(&kafkap_kafka_host, json_buf, strlen(json_buf));
+	ret = p_amqp_publish_string(&amqpp_amqp_host, json_buf);
 
 	if (!ret) qn += mv_num;
       }
