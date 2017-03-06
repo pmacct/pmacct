@@ -1,6 +1,6 @@
 SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
-sbin_PROGRAMS = pmacctd nfacctd sfacctd pmtelemetryd pmbgpd pmbmpd
-bin_PROGRAMS = pmacct @EXTRABIN@
+sbin_PROGRAMS =
+bin_PROGRAMS =
 EXTRA_PROGRAMS =
 
 AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@ @AVRO_LIBS@
@@ -75,6 +75,9 @@ if USING_THREADPOOL
 libdaemons_la_SOURCES += thread_pool.c thread_pool.h
 endif
 
+if USING_TRAFFIC_BINS
+sbin_PROGRAMS += pmacctd nfacctd sfacctd
+bin_PROGRAMS += pmacct @EXTRABIN@
 pmacctd_SOURCES = pmacctd.c
 pmacctd_LDADD = libdaemons.la
 nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_template.c
@@ -89,12 +92,22 @@ uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
 endif
 pmacct_SOURCES = pmacct.c
 pmacct_LDADD = libcommon.la
+endif
+if USING_ST_BINS
+sbin_PROGRAMS += pmtelemetryd
 pmtelemetryd_SOURCES = pmtelemetryd.c pmtelemetryd.h
 pmtelemetryd_LDFLAGS = $(DEFS)
 pmtelemetryd_LDADD = libdaemons.la
+endif
+if USING_BGP_BINS
+sbin_PROGRAMS += pmbgpd
 pmbgpd_SOURCES = pmbgpd.c pmbgpd.h
 pmbgpd_LDFLAGS = $(DEFS)
 pmbgpd_LDADD = libdaemons.la
+endif
+if USING_BMP_BINS
+sbin_PROGRAMS += pmbmpd
 pmbmpd_SOURCES = pmbmpd.c pmbmpd.h
 pmbmpd_LDFLAGS = $(DEFS)
 pmbmpd_LDADD = libdaemons.la
+endif

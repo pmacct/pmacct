@@ -1004,6 +1004,86 @@ AC_ARG_ENABLE(nflog,
   esac ],
 AC_MSG_RESULT(no))
 
+AC_MSG_CHECKING(whether to link IPv4/IPv6 traffic accounting accounting binaries)
+AC_ARG_ENABLE(traffic-bins,
+	[  --enable-traffic-bins               Link IPv4/IPv6 traffic accounting binaries (default: yes)],
+	[
+	  if test x$enableval = x"yes" ; then
+	    AC_MSG_RESULT(yes)
+	    AC_DEFINE(HAVE_TRAFFIC_BINS, 1)
+	    USING_TRAFFIC_BINS="yes"
+	  else
+	    AC_MSG_RESULT(no)
+	  fi
+	],
+	[
+	  AC_MSG_RESULT(yes)
+	  AC_DEFINE(HAVE_TRAFFIC_BINS, 1)
+	  USING_TRAFFIC_BINS="yes"
+	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-traffic-bins'"
+	]
+)
+
+AC_MSG_CHECKING(whether to link BGP daemon binaries)
+AC_ARG_ENABLE(bgp-bins,
+        [  --enable-bgp-bins                Link BGP daemon binaries (default: yes)],
+        [
+          if test x$enableval = x"yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE(HAVE_BGP_BINS, 1)
+	    USING_BGP_BINS="yes"
+          else
+            AC_MSG_RESULT(no)
+          fi
+        ],
+        [
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(HAVE_BGP_BINS, 1)
+	  USING_BGP_BINS="yes"
+          COMPILE_ARGS="${COMPILE_ARGS} '--enable-bgp-bins'"
+        ]
+)
+
+AC_MSG_CHECKING(whether to link BMP daemon binaries)
+AC_ARG_ENABLE(bmp-bins,
+        [  --enable-bmp-bins                Link BMP daemon binaries (default: yes)],
+        [
+          if test x$enableval = x"yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE(HAVE_BMP_BINS, 1)
+	    USING_BMP_BINS="yes"
+          else
+            AC_MSG_RESULT(no)
+          fi
+        ],
+        [
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(HAVE_BMP_BINS, 1)
+	  USING_BMP_BINS="yes"
+          COMPILE_ARGS="${COMPILE_ARGS} '--enable-bmp-bins'"
+        ]
+)
+
+AC_MSG_CHECKING(whether to link Streaming Telemetry daemon binaries)
+AC_ARG_ENABLE(st-bins,
+        [  --enable-st-bins                 Link Streaming Telemetry daemon binaries (default: yes)],
+        [
+          if test x$enableval = x"yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE(HAVE_ST_BINS, 1)
+	    USING_ST_BINS="yes"
+          else
+            AC_MSG_RESULT(no)
+          fi
+        ],
+        [
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(HAVE_ST_BINS, 1)
+	  USING_ST_BINS="yes"
+          COMPILE_ARGS="${COMPILE_ARGS} '--enable-st-bins'"
+        ]
+)
+
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
@@ -1048,8 +1128,12 @@ AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
-AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
+AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
+AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])
+AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
+AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
+AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
