@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry intstats
 sbin_PROGRAMS = pmacctd nfacctd sfacctd pmtelemetryd pmbgpd pmbmpd
 bin_PROGRAMS = pmacct @EXTRABIN@
 EXTRA_PROGRAMS =
@@ -28,6 +28,7 @@ libdaemons_la_LIBADD  = nfprobe_plugin/libnfprobe_plugin.la
 libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la
 libdaemons_la_LIBADD += bmp/libbmp.la
 libdaemons_la_LIBADD += bgp/libbgp.la
+libdaemons_la_LIBADD += intstats/libintstats.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
 libdaemons_la_LIBADD += isis/libisis.la
 libdaemons_la_LIBADD += telemetry/libtelemetry.la
