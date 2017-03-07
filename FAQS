@@ -1,8 +1,9 @@
-pmacct (Promiscuous mode IP Accounting package)
+pmacct [IP traffic accounting : BGP : BMP : IGP : Streaming Telemetry]
 pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
-A: pmacct homepage is http://www.pmacct.net/
+A: pmacct homepage is http://www.pmacct.net/ . pmacct is also present on GitHub at
+   the URL: https://github.com/pmacct/pmacct .
 
 
 Q2: 'pmacct', 'pmacctd', 'nfacctd', 'sfacctd', 'uacctd', 'pmtelemetryd',
@@ -13,61 +14,62 @@ A: 'pmacct' is intended to be the name of the project; 'pmacctd' is the name of 
    the name of the sFlow v2/v4/v5 accounting daemon; 'uacctd' is the name of the
    Linux Netlink NFLOG-based accounting daemon (historically, it was using ULOG,
    hence its name); 'pmtelemetryd' is the name of the Streaming Telemetry collector
-   daemon, where quoting Cisco IOS-XR Telemetry Configuration Guide at the time of
-   this writing "Streaming telemetry [ .. ] data can be used for analysis and
+   daemon, where, quoting Cisco IOS-XR Telemetry Configuration Guide at the time of
+   this writing, "Streaming telemetry [ .. ] data can be used for analysis and
    troubleshooting purposes to maintain the health of the network. This is achieved
    by leveraging the capabilities of machine-to-machine communication. [ .. ]";
    'pmbgpd' is the name of the pmacct BGP collector daemon; 'pmbmpd' is the name of
    the pmacct BMP collector daemon. 
 
 
-Q3: Does pmacct stand for Promiscuous mode IP Accounting package ?
-A: That is not entirely correct today, it was originally though. pmacct born as a
-   libpcap-based project only. Over the time it evolved to include NetFlow first,
-   sFlow shortly afterwards and NFLOG more recently - this is striving to maintain
-   a consistent implementation over the set, unless technical considerations
-   prevent that to happen for specific cases.  
+Q3: Does pmacct stand for Promiscuous mode IP Accounting package?
+A: Not anymore, it was originally though: pmacct was born as a libpcap-based traffic
+   collection project only. Over the time it evolved to include NetFlow first, sFlow
+   shortly afterwards and NFLOG more recently. Latest additions being in the areas
+   of BGP, BMP and Streaming Telemetry. However the unpronounceable name 'pmacct'
+   remained as a distinctive signature of the project.
 
 
 Q4: What are pmacct main features?
-A: pmacct can collect, replicate and export network data. Collect in memory tables,
-   store persistently to RDBMS (MySQL, PostgreSQL, SQLite 3.x), noSQL databases
-   (key-value: BerkeleyDB 5.x via SQLite API or document-oriented: MongoDB) and
-   flat-files (csv, formatted, JSON, Apache Avro output), publish to AMQP and
-   Kafka brokers (ie. to insert in ElasticSearch, InfluxDB or Cassandra). Export
-   speaking sFlow v5, NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform data
-   aggregation, offering a rich set of primitives to choose from; it can also
-   filter, sample, renormalize, tag and classify at L7. pmacct integrates a BGP
-   daemon join routing visibility and network traffic information.
+A: pmacct can collect, replicate and export network information. On the data plane
+   (ie. IPv4/IPv6 traffic) it can cache in memory tables, store persistently to
+   RDBMS (MySQL, PostgreSQL, SQLite 3.x), noSQL databases (key-value: BerkeleyDB
+   5.x via SQLite API or document-oriented: MongoDB) and flat-files (CSV, formatted,
+   JSON, Apache Avro output), publish to AMQP and Kafka brokers (ie. to insert in
+   ElasticSearch, InfluxDB or Cassandra). Export speaking sFlow v5, NetFlow v1/v5/v9
+   and IPFIX. pmacct is able to perform data aggregation, offering a rich set of
+   primitives to choose from; it can also filter, sample, renormalize, tag and
+   classify at L7. On the control and infrastructure planes it can collect and
+   publish to AMQP and Kafka brokers BGP, BMP, IGP and Streaming Telemetry data
+   both standalone and as correlation/enrichment of data plane information.
 
 
-Q5: Does any of the pmacct daemons logs to flat files?
-A: Yes, but in a specific way. In other tools flat-files are typically used to log every
-   micro-flow (or whatever aggregation the NetFlow agents have been configured to export
-   with) and work in a two-stages fashion: a) write down to persistent storage then b)
-   consolidate, on either or both spatial and temporal axes, to build the desired view.
-   By inception, pmacct always aimed to a single-stage approach instead, ie. offer data
-   reduction tecniques and correlation tools to process network traffic data on the fly,
-   so to immediately offer the desired view(s) of the traffic. pmacct writes to files in
-   text-format (json, csv or formatted via its 'print' plugin, see QUICKSTART doc for
-   further information) so to maximize potential integration with 3rd party applications
-   while keeping low the effort of customization.
+Q5: Do pmacct IPv4/IPv6 traffic accounting daemons log to flat files?
+A: Yes. But while in other tools flat-files are typically used to log every micro-flow
+   (or whatever aggregation the NetFlow agents have been configured to export with) and
+   work in a two-stages fashion, ie. a) write down to persistent storage then b)
+   consolidate to build the desired view, by inception, pmacct always aimed to a
+   single-stage approach instead, ie. offer data reduction tecniques and correlation
+   tools to process network traffic data on the fly, so to offer immediate view(s) of
+   the traffic. pmacct writes to files in text-format (JSON, Avro, CSV or formatted via
+   'print' plugin, and JSON or Avro via Kafka and AMQP plugins, see QUICKSTART doc for
+   further information) so to maximize integration with 3rd party tools while keeping
+   low the effort of customization.
 
 
-Q6: Is it feasible for pmacct to scale by making use of either memory tables or RDBMS
-    as backend for logging network traffic?
-A: pmacct was not originally meant to log network traffic at packet/micro-flow level: it
-   allows to get an aggregated view of the traffic -- both in space and in time. On top
-   of that, there are layers of filtering, sampling and tagging. These are the keys to
-   scale. As these features are fully configurable, data granularity and resolution can
-   be traded off in favour of increased scalability or less resources consumption. More
-   recently, logging has been introduced, by means of two new primitives timestamp_start
-   and timestamp_end, fostered by the development of NetFlow/IPFIX as generic transport
-   protocol, ie. as a replacement of syslog; it was then intuitive to generalize the 
-   logging support to the more traditional traffic accounting part.
+Q6: What are the options to scale a pmacct deployment to match input data rate?
+A: There are two dimensions to it: 1) scale within the same instance of pmacct: make use
+   of data reduction tecniques part of pmacct, ie. spatial and temporal aggregation,
+   filtering, sampling and tagging. As these features are fully configurable, going from
+   full micro-flow visibility to - say - node-to-node IP network traffic matrix, data
+   granularity/resolution can be traded off for scalability/resources consumption; 2)
+   divide-and-conquer input data over a set of pmacct instances by either balancing or
+   mapping data onto collectors. See next point, Q7, for libpcap; the 'tee' plugin can
+   be used for this purpose for NetFlow, IPFIX and sFlow. 
 
 
-Q7: I see my daemon taking much CPU cycles; is there a way to reduce the load?
+Q7: I see my libpcap-based daemon (pmacctd) taking much CPU cycles; is there a way to
+    reduce the load?
 A: CPU cycles are proportional to the amount of traffic (packets, flows, samples) that
    the daemon receives; in case of pmacctd it's possible to reduce the CPU share by
    avoiding unnecessary copies of data, also optimizing and buffering the necessary
@@ -98,12 +100,12 @@ A: CPU cycles are proportional to the amount of traffic (packets, flows, samples
 
 
 Q8: I want to to account both inbound and outbound traffic of my network, with an host
-    breakdown; how to do that in a savy fashion ? Do i need to run two daemon instances 
-    one per traffic direction ?
-A: No, you will be able to leverage the pluggable architecture of the daemons: you will
-   run a single daemon with two plugins attached to it; each of these will get part of
-   the traffic (aggregate_filter), either outbound or inbound. A sample config snippet
-   follows:
+    breakdown; how to do that in a savy fashion? Do i need to run two daemon instances 
+    one per traffic direction?
+A: No, this is a toy case where you will be able to leverage the pluggable architecture
+   of the pmacct daemons: you will run a single daemon with two plugins attached to it;
+   each of these will get part of the traffic (aggregate_filter), either outbound or
+   inbound. A sample config snippet follows:
 
    ...
    aggregate[inbound]: dst_host
@@ -134,11 +136,16 @@ A: No, you will be able to leverage the pluggable architecture of the daemons: y
 
 Q9: I'm intimately fashioned by the idea of storing every single flow flying through my
     network, before making up my mind what to do with such data: i basically would like
-    to aggregate my traffic as 'src_host, dst_host, src_port, dst_port, proto'. Is this
-    feasible without any filtering ?
-A: This is not adviceable. A simple reason being this would result in a huge matrix of
-   data, whose behaviour and size would be totally un-predictable over time (ie. impact
-   of port scans, DDoS, etc.). Nevertless, it remains a valid configuration.
+    to (de-)aggregate my traffic as 'src_host, dst_host, src_port, dst_port, proto' or
+    'src_host, dst_host, src_port, dst_port, proto, timestamp_start, timestamp_end'. Is
+    this feasible without any filtering?
+A: If such data granularity is required by the use-case addressed, ie. DDoS, forensics,
+   security, research, etc. then this can be achieved no problem with pmacct - you have
+   only to be careful planning for the right amount of system/cluster resources. In all
+   other cases this is not adviceable as this would result in a huge matrix of data -
+   meaning increased CPU, memory and disk usage - for no benefit - plus, to be always
+   considered, the impact of unexpected network events (ie. port scans, DDoS, etc.) on
+   the solution.
 
 
 Q10: I use pmacctd. What portion of the packets is included into the bytes counter ?
@@ -164,10 +171,11 @@ A: Historical accounting is easily enabled by adding to the SQL plugin configura
    syntax, refer to CONFIG-KEYS and QUICKSTART documents. 
 
 
-Q12: CLI is not enough to me. I would like to graph traffic data: how to do that?
-A: RRDtool, MRTG and GNUplot are just some tools which could be easily integrated with
-   pmacct operations. 'Memory plugin' is suitable as temporary storage and allows to
-   easily retrieve counters:
+Q12: Counters via CLI are good for (email, web) reporting but not enough. What are the
+     options to graph network data?
+A: An option could be to use traditional graphing tools like RRDtool, MRTG and GNUplot
+   in conjunction with the 'memory' plugin. The plugin works as a cache and offers a
+   pull mechanism, the pmacct IMT client tool, that allows to easily retrieve counters:
  
    shell> ./pmacctd -D -c src_host -P memory -i eth0 
    shell> ./pmacct -c src_host -N 192.168.4.133 -r
@@ -180,9 +188,8 @@ A: RRDtool, MRTG and GNUplot are just some tools which could be easily integrate
 
    shell> rrdtool update 192_168_4_133.rrd N:`./pmacct -c src_host -N 192.168.4.133 -r`
 
-   Starting from 0.7.6, you will also be able to spawn as much as 4096 requests into a
-   single query; you may write your requests commandline (';' separated) but also read
-   them from a file (one per line):
+   Multiple requests can be batched as part of a single query, each request can be ';'
+   separated via CLI or read from an input file (one query per line):
 
    shell> ./pmacct -c src_host,dst_host -N 192.168.4.133,192.168.0.101;192.168.4.5,192.168.4.1;... -r 
    50905
@@ -199,21 +206,10 @@ A: RRDtool, MRTG and GNUplot are just some tools which could be easily integrate
    192.168.4.5,192.168.4.1
    ...
 
-   Furthermore, SNMP is a widespreaded protocol used (and widely supported) in the IP
-   accounting field to gather IP traffic information by network devices. 'pmacct' may
-   also be easily connected to Net-SNMP extensible MIB. What follows is an example for
-   your 'snmpd.conf':
-
-   exec .1.3.6.1.4.1.2021.50 Description /usr/local/bin/pmacct -c src_host -N 192.168.4.133 -r 
-
-   Then, an 'snmpwalk' does the rest of the work:
-   shell> snmpwalk -v 1 localhost -c public .1.3.6.1.4.1.2021.50 
-   .1.3.6.1.4.1.2021.50.1.1 = 1
-   .1.3.6.1.4.1.2021.50.2.1 = "Description"
-   .1.3.6.1.4.1.2021.50.3.1 = "/usr/local/bin/pmacct -c src_host -N 192.168.4.133 -r"
-   .1.3.6.1.4.1.2021.50.100.1 = 0 
-   .1.3.6.1.4.1.2021.50.101.1 = "92984384"
-   .1.3.6.1.4.1.2021.50.102.1 = 0
+   A second option is to leverage one of the several modern data analytics stacks that
+   do typically comprise of data manipulation, storage and visualization. Pointers in
+   this sense would be the ELK stack (ElasticSearch, Logstash, Kibana) or the TICK
+   stack (Telegraf, InfluxDB, Chronograf, Kapacitor). Much more exist. 
 
 
 Q13: The network equipment i'm using supports sFlow but i don't know how to enable it.

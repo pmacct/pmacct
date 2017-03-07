@@ -1,4 +1,4 @@
-pmacct (Promiscuous mode IP Accounting package)
+pmacct [IP traffic accounting : BGP : BMP : IGP : Streaming Telemetry]
 pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 
 
@@ -63,9 +63,10 @@ script to probe default headers and libraries for you. A first round of guessing
 is done via pkg-config then, for some libraries, "typical" default locations
 are checked, ie. /usr/local/lib. Switches you are likely to want enabled are
 already set so, ie. 64 bits counters and multi-threading (pre- requisite for
-the BGP, BMP, and IGP daemon codes). SQL plugins and IPv6 support are by default
-disabled instead. A few examples will follow; as usual to get the list of available
-switches, you can use the following command-line:
+the BGP, BMP, and IGP daemon codes); the full list of switches enabled by default
+are marked as 'default: yes' in the "./configure --help" output. SQL plugins, AMQP
+and Kafka support are all disabled by defaulf instead. A few examples will follow;
+to get the list of available switches, you can use the following command-line:
 
 shell> ./configure --help
 
@@ -284,7 +285,7 @@ at the following URL: https://github.com/mongodb/mongo-c-driver-legacy .
  
 
 IV. Running the libpcap-based daemon (pmacctd) 
-pmacctd, like the other daemons, can be run with commandline options, using a config
+All deamons including pmacctd can be run with commandline options, using a config
 file or a mix of the two. Sample configuration files are in examples/ tree. Note also 
 that most of the new features are available only as configuration directives. To be
 aware of the existing configuration directives, please read the CONFIG-KEYS document. 
@@ -393,9 +394,9 @@ NOTE: superuser privileges are needed to execute pmacctd correctly.
 
 V. Running the NetFlow/IPFIX and sFlow daemons (nfacctd/sfacctd) 
 All examples about pmacctd are also valid for nfacctd and sfacctd with the exception
-of directives that apply exclusively to libpcap. If you've skipped examples in section
-'IV', please read them before continuing. All configuration keys available are in the
-CONFIG-KEYS document. Some examples:
+of directives that apply exclusively to libpcap. If you've skipped examples in the
+previous section, please read them before continuing. All config keys available are
+in the CONFIG-KEYS document. Some examples:
 
 Run nfacctd reading configuration from a specified file.
 shell> nfacctd -f nfacctd.conf

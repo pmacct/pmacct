@@ -1,11 +1,12 @@
 TOOLS DESCRIPTION.
 
-All daemons can print statistics to stdout, keep in memory tables, store
-persistently to open-source RDBMS (MySQL, PostgreSQL, Sqlite 3) to noSQL
-databates (BerkeleyDB, MongoDB) and to flat-files, and publish to AMQP
-and Kafka brokers (typically to insert in ElasticSearch, InfluxDB and
-Cassandra and, in general, all backends which are not natively supported
-by pmacct). 
+All data plane (ie. IPv4/IPv6 traffic) daemons can print statistics to stdout,
+keep them in memory tables, store persistently to open-source RDBMS (MySQL,
+PostgreSQL, Sqlite 3) or to noSQL databates (ie. BerkeleyDB, MongoDB) and to
+flat-files, and publish to AMQP and Kafka brokers (typically to insert in
+ElasticSearch, InfluxDB and Cassandra and, in general, all backends which are
+not natively supported by pmacct). BGP, BMP and Streaming Telemetry daemons
+can publish control and infrastructure planes to AMQP and Kafka brokers. 
 
 pmacctd		libpcap-based accounting daemon: it captures packets from an
 		interface it is bound to. Other than acting as a collector,
@@ -23,14 +24,14 @@ uacctd		Linux Netlink NFLOG accounting daemon; it captures packets by
 		leveraging a NFLOG multicast group - and works only on Linux.
 		Other than acting as a collector, this daemon can also export
 		statistics via NetFlow, IPFIX and sFlow protocols.
-pmtelemetryd	Streaming network telemetry collector daemon; it listens for
+pmtelemetryd	Standalone Streaming Telemetry collector daemon; listens for
 		telemetry data binding to a TCP or UDP port and logs real-time
 		and/or dumps at regular time-intervals to configured backends.
-pmbgpd		Stand-alone BGP collector daemon; acts as a passive iBGP or
+pmbgpd		Standalone BGP collector daemon; acts as a passive iBGP or
 		eBGP neighbor and maintains per-peer RIBs; can log real-time
 		and/or dump at regular time-intervals BGP data to configured
 		backends.
-pmbmpd          Stand-alone BMP collector daemon; can log real-time and/or dump
+pmbmpd          Standalone BMP collector daemon; can log real-time and/or dump
 		at regular time-intervals BMP/BGP data to configured backends.
 pmacct  	commandline pmacct client; it allows to retrieve data from a
 		memory table plugin; it can perform queries over data or do
