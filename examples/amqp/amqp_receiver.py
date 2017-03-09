@@ -37,6 +37,7 @@ except ImportError:
 avro_schema = None
 http_url_post = None
 print_stdout = 0
+convert_to_json_array = 0
 
 def usage(tool):
 	print ""
@@ -53,6 +54,7 @@ def usage(tool):
 	print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
 	print "  -p, --print".ljust(25) + "Print data to stdout"
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to" 
+	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
@@ -76,6 +78,12 @@ def callback(ch, method, properties, body):
 			http_req.add_header('Content-Type', 'application/json')
 			http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
 	else:
+		if convert_to_json_array:
+			value = message.value
+			value = "[" + value + "]"
+			value = value.replace('\n', ',\n')
+			value = value.replace(',\n]', ']')
+
 		if print_stdout:
 			print " [x] Received %r" % (body,)
 
@@ -86,9 +94,9 @@ def callback(ch, method, properties, body):
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:p", ["help", "exchange=",
+		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:pa", ["help", "exchange=",
 				"routing_key=", "queue=", "host=", "url=", "decode-with-avro=",
-				"print="])
+				"print=", "to-json-array="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -121,6 +129,8 @@ def main():
 			http_url_post = a
 		elif o in ("-p", "--print"):
 			print_stdout = 1
+		elif o in ("-a", "--to-json-array"):
+			convert_to_json_array = 1
 		elif o in ("-d", "--decode-with-avro"):
 			if not avro_available:
 				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "

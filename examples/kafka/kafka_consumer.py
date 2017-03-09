@@ -44,15 +44,16 @@ def usage(tool):
 	print "  -p, --print".ljust(25) + "Print data to stdout"
 	print "  -T, --produce-topic".ljust(25) + "Define a topic to produce to"
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to"
+	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:", ["help", "topic=",
+		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:a", ["help", "topic=",
 				"group_id=", "host=", "decode-with-avro=", "earliest=", "url=",
-				"produce-topic=", "print="])
+				"produce-topic=", "print=", "to-json-array="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -66,6 +67,7 @@ def main():
 	topic_offset = "latest"
 	http_url_post = None
 	print_stdout = 0
+	convert_to_json_array = 0
  	
 	required_cl = 0
 
@@ -88,6 +90,8 @@ def main():
 			topic_offset = "earliest"
 		elif o in ("-u", "--url"):
 			http_url_post = a
+		elif o in ("-a", "--to-json-array"):
+			convert_to_json_array = 1
                 elif o in ("-d", "--decode-with-avro"):
 			if not avro_available:
 				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
@@ -135,6 +139,12 @@ def main():
 				http_req.add_header('Content-Type', 'application/json')
 				http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
 		else:
+			if convert_to_json_array:
+                        	value = message.value
+				value = "[" + value + "]"
+				value = value.replace('\n', ',\n')
+				value = value.replace(',\n]', ']')
+
 			if print_stdout:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
 						message.offset, message.key, message.value))
