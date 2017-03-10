@@ -15,7 +15,7 @@
 # messages produced by the Core Process to a specific plugin; the messages are
 # in binary format, first quad being the sequence number.
 
-import sys, os, getopt, StringIO, urllib2 
+import sys, os, getopt, StringIO, time, urllib2 
 from kafka import KafkaConsumer, KafkaProducer
 
 try:
@@ -45,15 +45,16 @@ def usage(tool):
 	print "  -T, --produce-topic".ljust(25) + "Define a topic to produce to"
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to"
 	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
+	print "  -s, --stats-interval".ljust(25) + "Define a time interval, in secs, to get statistics to stdout"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:a", ["help", "topic=",
+		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:as:", ["help", "topic=",
 				"group_id=", "host=", "decode-with-avro=", "earliest=", "url=",
-				"produce-topic=", "print=", "to-json-array="])
+				"produce-topic=", "print=", "to-json-array=", "stats-interval="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -68,6 +69,7 @@ def main():
 	http_url_post = None
 	print_stdout = 0
 	convert_to_json_array = 0
+	stats_interval = 0
  	
 	required_cl = 0
 
@@ -92,10 +94,14 @@ def main():
 			http_url_post = a
 		elif o in ("-a", "--to-json-array"):
 			convert_to_json_array = 1
+		elif o in ("-s", "--stats-interval"):
+			stats_interval = a
+			if stats_interval < 0:
+				sys.stderr.write("ERROR: `--stats-interval` must be positive\n")
+				sys.exit(1)
                 elif o in ("-d", "--decode-with-avro"):
 			if not avro_available:
-				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was "
-					"not found\n")
+				sys.stderr.write("ERROR: `--decode-with-avro` given but Avro package was not found\n")
 				sys.exit(1)
 
 			if not os.path.isfile(a):
@@ -109,7 +115,7 @@ def main():
 		else:
 			assert False, "unhandled option"
 
-	if (required_cl < 1): 
+	if required_cl < 1: 
 		print "ERROR: Missing required arguments"
 		usage(sys.argv[0])
 		sys.exit(1)
@@ -119,7 +125,14 @@ def main():
 	if kafka_producer_topic:
 		producer = KafkaProducer(bootstrap_servers=[kafka_host])
 
+	if stats_interval:
+		elem_count = 0
+		time_count = int(time.time())
+
 	for message in consumer:
+		if stats_interval:
+			time_now = int(time.time())
+
 		if avro_schema:
 			inputio = StringIO.StringIO(message.value)
 			decoder = avro.io.BinaryDecoder(inputio)
@@ -130,15 +143,22 @@ def main():
 				x = datum_reader.read(decoder)
 				avro_data.append(str(x))
 
+			if stats_interval:
+				elem_count += len(avro_data)
+
 			if print_stdout:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-						message.offset, message.key, (",".join(avro_data))))
+						message.offset, message.key, (",\n".join(avro_data))))
 
 			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
 				http_req.add_header('Content-Type', 'application/json')
 				http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
 		else:
+			if stats_interval:
+				elem_count += value.count('\n')
+				elem_count += 1
+
 			if convert_to_json_array:
                         	value = message.value
 				value = "[" + value + "]"
@@ -156,6 +176,12 @@ def main():
 
 		if kafka_produce_topic:
 			producer.send(kafka_produce_topic, message.value)
+
+		if stats_interval:
+			if time_now > (time_count + stats_interval):
+				print("INFO: stats: [ interval=%d records=%d ]" % (stats_interval, elem_count))
+				time_count = time_now
+				elem_count = 0
 
 if __name__ == "__main__":
     main()
