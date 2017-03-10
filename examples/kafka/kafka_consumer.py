@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
-# If missing 'kafka' read how to download it at: 
+# It is recommended to run the kafka module against Python 2.7+. If missing
+# 'kafka' read how to download it at:
 # http://kafka-python.readthedocs.org/
 #
 # If missing 'avro' read how to download it at: 
@@ -14,6 +15,15 @@
 # 'core_proc_name-$plugin_name-$plugin_type') allows to receive a copy of
 # messages produced by the Core Process to a specific plugin; the messages are
 # in binary format, first quad being the sequence number.
+#
+# Three pipelines are supported in this script:
+# * Kafka -> Kafka 
+# * Kafka -> REST API
+# * Kafka -> stdout
+#
+# Two data encoding formats are supported in this script:
+# * JSON
+# * Apache Avro
 
 import sys, os, getopt, StringIO, time, urllib2 
 from kafka import KafkaConsumer, KafkaProducer

@@ -23,6 +23,14 @@
 #
 # 'rabbitmqctl trace_on' enables RabbitMQ Firehose tracer
 # 'rabbitmqctl list_queues' lists declared queues
+#
+# Two pipelines are supported in this script:
+# * RabbitMQ -> REST API
+# * RabbitMQ -> stdout
+#
+# Two data encoding formats are supported in this script:
+# * JSON
+# * Apache Avro
 
 import sys, os, getopt, pika, StringIO, time
 
