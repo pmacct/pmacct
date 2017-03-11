@@ -438,7 +438,7 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
   int ret = FALSE, shutdown_msglen;
   char *reply_msg_ptr;
 
-  if (msglen >= BGP_MIN_NOTIFICATION_MSG_SIZE) {
+  if (bn_reply && msglen >= BGP_MIN_NOTIFICATION_MSG_SIZE) {
     memset(bn_reply->bgpn_marker, 0xff, BGP_MARKER_SIZE);
     bn_reply->bgpn_len = ntohs(BGP_MIN_NOTIFICATION_MSG_SIZE); 
     bn_reply->bgpn_type = BGP_NOTIFICATION; 
@@ -447,18 +447,20 @@ int bgp_write_notification_msg(char *msg, int msglen, char *shutdown_msg)
     ret += BGP_MIN_NOTIFICATION_MSG_SIZE;
 
     /* draft-ietf-idr-shutdown-04 */
-    shutdown_msglen = strlen(shutdown_msg);
+    if (shutdown_msg) {
+      shutdown_msglen = strlen(shutdown_msg);
 
-    if (shutdown_msg && (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN)) {
-      if (msglen >= (BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen)) {
-        reply_msg_ptr = (char *) (msg + BGP_MIN_NOTIFICATION_MSG_SIZE);
-        memset(reply_msg_ptr, 0, (msglen - BGP_MIN_NOTIFICATION_MSG_SIZE));
-        bnsm_reply = (struct bgp_notification_shutdown_msg *) reply_msg_ptr;
+      if (shutdown_msglen <= BGP_NOTIFY_CEASE_SM_LEN) {
+        if (msglen >= (BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen)) {
+          reply_msg_ptr = (char *) (msg + BGP_MIN_NOTIFICATION_MSG_SIZE);
+          memset(reply_msg_ptr, 0, (msglen - BGP_MIN_NOTIFICATION_MSG_SIZE));
+          bnsm_reply = (struct bgp_notification_shutdown_msg *) reply_msg_ptr;
 
-        bnsm_reply->bgpnsm_len = shutdown_msglen;
-        strncpy(bnsm_reply->bgpnsm_data, shutdown_msg, shutdown_msglen);
-	bn_reply->bgpn_len = htons(BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen + 1 /* bgpnsm_len */);
-        ret += (shutdown_msglen + 1 /* bgpnsm_len */);
+          bnsm_reply->bgpnsm_len = shutdown_msglen;
+          strncpy(bnsm_reply->bgpnsm_data, shutdown_msg, shutdown_msglen);
+	  bn_reply->bgpn_len = htons(BGP_MIN_NOTIFICATION_MSG_SIZE + shutdown_msglen + 1 /* bgpnsm_len */);
+          ret += (shutdown_msglen + 1 /* bgpnsm_len */);
+	}
       }
     }
   }
