@@ -1285,7 +1285,7 @@ int main(int argc,char **argv)
       }
     }
     else {
-      printf("ERROR: missing EOF from server\n");
+      printf("ERROR: missing EOF from server (1)\n");
       exit(1);
     }
   }
@@ -1684,7 +1684,7 @@ int main(int argc,char **argv)
   	      else request.data.class = value;
             }
 	    else {
-	      printf("ERROR: missing EOF from server\n");
+	      printf("ERROR: missing EOF from server (2)\n");
 	      exit(1);
 	    }
 	  }
@@ -1729,7 +1729,7 @@ int main(int argc,char **argv)
 	    else request.data.pkt_len_distrib = req_value;
 	  }
 	  else {
-	    printf("ERROR: missing EOF from server\n");
+	    printf("ERROR: missing EOF from server (3)\n");
 	    exit(1);
           }
 	}
@@ -2013,7 +2013,7 @@ int main(int argc,char **argv)
     unpacked = Recv(sd, &largebuf);
  
     if (!unpacked) {
-      printf("ERROR: missing EOF from server\n");
+      printf("ERROR: missing EOF from server (4)\n");
       exit(1);
     }
 
@@ -2055,7 +2055,7 @@ int main(int argc,char **argv)
         }
       }
       else {
-	printf("ERROR: missing EOF from server\n");
+	printf("ERROR: missing EOF from server (5)\n");
 	exit(1);
       }
     }
@@ -2089,7 +2089,7 @@ int main(int argc,char **argv)
 	}
       }
       else {
-	printf("ERROR: missing EOF from server\n");
+	printf("ERROR: missing EOF from server (6)\n");
 	exit(1);
       }
     }
@@ -2825,7 +2825,7 @@ int main(int argc,char **argv)
       }
     }
     else {
-      printf("ERROR: missing EOF from server\n");
+      printf("ERROR: missing EOF from server (7)\n");
       exit(1);
     }
   }
@@ -2841,7 +2841,7 @@ int main(int argc,char **argv)
     unpacked = Recv(sd, &largebuf);
 
     if (!unpacked) {
-      printf("ERROR: missing EOF from server\n");
+      printf("ERROR: missing EOF from server (8)\n");
       exit(1);
     }
 
@@ -2909,7 +2909,7 @@ int main(int argc,char **argv)
       printf("\nFor a total of: %d classifiers\n", ct_eff);
     }
     else {
-      printf("ERROR: missing EOF from server\n");
+      printf("ERROR: missing EOF from server (9)\n");
       exit(1);
     }
   }
@@ -2932,7 +2932,7 @@ int main(int argc,char **argv)
       printf("\nFor a total of: %d packet length distributions\n", pldt_idx);
     }
     else {
-      printf("ERROR: missing EOF from server\n");
+      printf("ERROR: missing EOF from server (10)\n");
       exit(1);
     }
   }
