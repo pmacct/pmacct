@@ -223,15 +223,10 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   bms = bgp_select_misc_db(peer->type);
   if (!bms) return;
 
-/*
-  XXX: workaround to https://github.com/pmacct/pmacct/pull/78 to avoid setting
-       bms->table_per_peer_buckets to 1 in bgp_srcdst_lookup() in bgp_lookup.c
-
-  modulo = modulo_func(peer, NULL);
+  /* XXX: see https://github.com/pmacct/pmacct/pull/78 */
   if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
   else modulo_max = 1;
-*/
-  modulo_max = 1;
+
   modulo = modulo_func(peer, NULL, modulo_max);
 
   matched_node = NULL;
