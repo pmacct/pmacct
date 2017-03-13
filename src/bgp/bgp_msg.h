@@ -35,7 +35,7 @@ EXT int bgp_parse_update_msg(struct bgp_msg_data *, char *);
 EXT int bgp_parse_notification_msg(struct bgp_msg_data *, char *, u_int8_t *, u_int8_t *, char *, u_int8_t);
 EXT int bgp_write_keepalive_msg(char *);
 EXT int bgp_write_open_msg(char *, char *, int, struct bgp_peer *);
-EXT int bgp_write_notification_msg(char *, int, char *);
+EXT int bgp_write_notification_msg(char *, int, u_int8_t, u_int8_t, char *);
 EXT int bgp_attr_parse(struct bgp_peer *, struct bgp_attr *, char *, int, struct bgp_nlri *, struct bgp_nlri *);
 EXT int bgp_attr_parse_community(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 EXT int bgp_attr_parse_ecommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);

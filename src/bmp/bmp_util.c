@@ -210,7 +210,7 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
   if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
     bmp_dump_close_peer(peer);
 
-  bgp_peer_close(peer, type, FALSE, FALSE, NULL);
+  bgp_peer_close(peer, type, FALSE, FALSE, FALSE, FALSE, NULL);
 }
 
 void bgp_msg_data_set_data_bmp(struct bgp_msg_extra_data_bmp *bmed_bmp, struct bmp_data *bdata)

@@ -510,7 +510,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   return ret;
 }
 
-void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */, int no_quiet, int send_notification, char *shutdown_msg)
+void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_notification, u_int8_t n_major, u_int8_t n_minor, char *shutdown_msg)
 {
   struct bgp_misc_structs *bms;
   afi_t afi;
@@ -526,7 +526,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type /* XXX */, int no_quiet, int
     int ret, notification_msglen = (BGP_MIN_NOTIFICATION_MSG_SIZE + BGP_NOTIFY_CEASE_SM_LEN + 1);
     char notification_msg[notification_msglen];
 
-    ret = bgp_write_notification_msg(notification_msg, notification_msglen, shutdown_msg);
+    ret = bgp_write_notification_msg(notification_msg, notification_msglen, n_major, n_minor, shutdown_msg);
     if (ret) send(peer->fd, notification_msg, ret, 0);
   }
 
