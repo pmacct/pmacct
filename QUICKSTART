@@ -1898,23 +1898,25 @@ valgrind, ie. "valgrind --leak-check=yes <pmacct command-line>". A memory leak
 is confirmed if the amount of "definitely lost" bytes keeps increasing over
 time. 
 
-c) If nfacctd or sfacctd is in use and the symptom is no data: 1) check with
-tcpdump, ie. "tcpdump -i <interface> -n port <sfacctd/nfacctd listening port>",
-that packets are arriving. Optionally wireshark (or its commandline counterpart
-tsharki) can be used, in conjunction with decoders (cflow for NetFlow/IPFIX and
-sflow for sFlow) to validate packets are consistent; this proofs there is no
-filtering taking place in between exporters and collector; 2) check firewall
-settings on the collector box, ie. "iptables -L -n" on Linux (disable or do
-appropriate holes): even though tcpdump sees packets hitting the listening
-port, in normal kernel operations the filtering happens after the raw socket
-used by tcpdump is served; 3) especially in case of copy/paste of configs or if
-using a config from a production system in lab, disable or double-check values
-for internal buffering: if set too high they will likely retain data internally
-to the daemon; 4) if multiple interfaces are configured on a system, try to
-disable (at least briefly for a test) rp_filtering. See this link for more info
-on RP filtering: http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html
-To disable RP filtering he value in the rp_filter files in /proc must be set to
-zero.
+c) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
+input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n port
+<sfacctd/nfacctd listening port>", that packets are emitted/received. Optionally
+Wireshark (or its commandline counterpart tshark) can be used, in conjunction
+with decoders ('cflow' for NetFlow/IPFIX and 'sflow' for sFlow), to validate
+packets are consistent; this proofs there is no filtering taking place in
+between exporters and collector; 2) check firewall settings on the collector
+box, ie. "iptables -L -n" on Linux (disable or do appropriate holes): tcpdump
+may see packets hitting the listening port as, in normal kernel operations, the
+filtering happens after the raw socket (the one used by tcpdump) is served; you
+can additionally certainly check with 3rd party equivalent applications or, say,
+'netcat' that the same behaviour is obtained as with pmacct ones 3) especially
+in case of copy/paste of configs or if using a config from a production system
+in lab, disable or double-check values for internal buffering: if set too high
+they will likely retain data internally to the daemon; 4) if multiple interfaces
+are configured on a system, try to disable (at least for a test) rp_filtering.
+See http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
+on RP filtering. To disable RP filtering he value in the rp_filter files in
+/proc must be set to zero.
 
 d) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
 be produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
