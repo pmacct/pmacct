@@ -117,7 +117,8 @@ void my_sigint_handler(int signum)
     int idx;
 
     for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
-      if (peers[idx].fd) bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, TRUE, FALSE /* XXX */, FALSE /* XXX */, shutdown_msg);
+      if (peers[idx].fd)
+	bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, TRUE, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN, shutdown_msg);
     }
   }
 
