@@ -1,4 +1,4 @@
-(poorman's) TABLE OF CONTENTS: 
+TABLE OF CONTENTS: 
 I.	Introduction
 II.	Primitives
 III.	The whole picture
@@ -13,13 +13,10 @@ XI.	BGP daemon thread dimensioning
 
 
 I. Introduction
-Giving a quick look to the old 'INTERNALS' textfile, this new one starts with a big step
-forward: a rough table of contents, though the document is still not fancy nor formatted.
-I'm also conscious the package is still missing its man page. The goal of this document
-would be an 'as much as possible' careful description of the development paths, trying to
-expose the work done to constructive critics.
-Since March 2005, this document is complemented by a paper about an architectural overview
-of the project 'pmacct: steps forward interface counters'; the referred paper is available
+The goal of this document would be to give extra insight on some of the internals of
+pmacct (useful for development or simply constructive critics). Since March 2005,
+this document is complemented by a paper about an architectural overview of the
+project 'pmacct: steps forward interface counters'; the referred paper is available
 for download at the pmacct homepage. 
 
 
@@ -217,6 +214,7 @@ when dealing with a 'dynamic' memory table (which is allowed to grow undefinitel
 memory new chunks of memory are allocated and added to the list during the execution.
 Using a fixed table places a maximum limit to the number of entries the table is able
 to store; the following calculation may help in building a fixed table: 
+
 ES (Entry Size) ~ 50 bytes
 NE (Number of entries)
 
@@ -224,6 +222,10 @@ NE (Number of entries)
 
 Default values are: imt_mem_pools_number = 16; imt_mem_pools_size = 8192; this will let
 the default fixed table to contain a maximum of slightly more than 2600 aggregates.  
+However note the entry size is indicative and can very consistently, ie. depending if
+IPv6 or Layer2 are enabled at compile time or whether BGP, MPLS, NAT, etc. primitives
+are in use as part of the aggregation key. When a fixed size table is needed, it is
+better to constrain it on the size rather than the estimated number of entries to fit.
  
 IMT plugin does not rely any way over the realloc() function, but only mmap(). Table
 grows and shrinks with the help of the above described tracking structures. This is

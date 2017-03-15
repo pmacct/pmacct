@@ -2,13 +2,11 @@ INTRODUCTION
 An executable triggering mechanism feature is part of all SQL plugins
 (sql_trigger_exec). Executables may either be spawned each time a cache
 purging event occurs or at arbitrary time intervals (that are specified
-via sql_trigger_time). Because the triggering mechanism is hooked on top
-of the 'lazy deadlines' plugin concept, it should not be preferred method
-to run tasks strictly connected to timing issues (use crontab instead).
-As a recap, the concept of lazy deadlines was introduced a while ago to
-avoid large use of UNIX signals for precise time handling. Information
-is being passed to the triggered executable in the form of environment
-variables. The list of supported variables follows: 
+via sql_trigger_time). If sql_trigger_time is used, ie. triggers are not
+aligned with purging events (sql_refresh_time), then for time-sensitive
+triggers it is recommended to use crontab instead. Information is being
+passed to the triggered executable in the form of environment variables.
+The list of supported variables follows: 
 
 VAR:		$SQL_DB
 DESC:		RDBMS database name.
