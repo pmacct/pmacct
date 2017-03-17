@@ -105,7 +105,7 @@ def main():
 		elif o in ("-a", "--to-json-array"):
 			convert_to_json_array = 1
 		elif o in ("-s", "--stats-interval"):
-			stats_interval = a
+			stats_interval = int(a)
 			if stats_interval < 0:
 				sys.stderr.write("ERROR: `--stats-interval` must be positive\n")
 				sys.exit(1)
@@ -132,7 +132,7 @@ def main():
 
 	consumer = KafkaConsumer(kafka_topic, group_id=kafka_group_id, bootstrap_servers=[kafka_host], auto_offset_reset=topic_offset)
 
-	if kafka_producer_topic:
+	if kafka_produce_topic:
 		producer = KafkaProducer(bootstrap_servers=[kafka_host])
 
 	if stats_interval:
@@ -140,6 +140,8 @@ def main():
 		time_count = int(time.time())
 
 	for message in consumer:
+		value = message.value
+
 		if stats_interval:
 			time_now = int(time.time())
 
@@ -159,6 +161,7 @@ def main():
 			if print_stdout:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
 						message.offset, message.key, (",\n".join(avro_data))))
+				sys.stdout.flush()
 
 			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
@@ -170,26 +173,28 @@ def main():
 				elem_count += 1
 
 			if convert_to_json_array:
-                        	value = message.value
 				value = "[" + value + "]"
 				value = value.replace('\n', ',\n')
 				value = value.replace(',\n]', ']')
 
 			if print_stdout:
 				print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-						message.offset, message.key, message.value))
+						message.offset, message.key, value))
+				sys.stdout.flush()
 
 			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
 				http_req.add_header('Content-Type', 'application/json')
-				http_response = urllib2.urlopen(http_req, message.value)
+				http_response = urllib2.urlopen(http_req, value)
 
 		if kafka_produce_topic:
-			producer.send(kafka_produce_topic, message.value)
+			producer.send(kafka_produce_topic, value)
 
 		if stats_interval:
-			if time_now > (time_count + stats_interval):
-				print("INFO: stats: [ interval=%d records=%d ]" % (stats_interval, elem_count))
+			if time_now >= (time_count + stats_interval):
+				print("INFO: stats: [ time=%s interval=%d records=%d ]" %
+					(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time_now)), stats_interval, elem_count))
+				sys.stdout.flush()
 				time_count = time_now
 				elem_count = 0
 

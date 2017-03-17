@@ -90,33 +90,37 @@ def callback(ch, method, properties, body):
 
 		if print_stdout:
 			print " [x] Received %r" % (",".join(avro_data),)
+			sys.stdout.flush()
 
 		if http_url_post:
 			http_req = urllib2.Request(http_url_post)
 			http_req.add_header('Content-Type', 'application/json')
 			http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
 	else:
+		value = body
+
 		if stats_interval:
 			elem_count += value.count('\n')
 			elem_count += 1
 
 		if convert_to_json_array:
-			value = message.value
 			value = "[" + value + "]"
 			value = value.replace('\n', ',\n')
 			value = value.replace(',\n]', ']')
 
 		if print_stdout:
-			print " [x] Received %r" % (body,)
+			print " [x] Received %r" % (value,)
+			sys.stdout.flush()
 
 		if http_url_post:
 			http_req = urllib2.Request(http_url_post)
 			http_req.add_header('Content-Type', 'application/json')
-			http_response = urllib2.urlopen(http_req, body)
+			http_response = urllib2.urlopen(http_req, value)
 
 	if stats_interval:
-		if time_now > (time_count + stats_interval):
+		if time_now >= (time_count + stats_interval):
 			print("INFO: stats: [ interval=%d records=%d ]" % (stats_interval, elem_count))
+			sys.stdout.flush()
 			time_count = time_now
 			elem_count = 0
 
@@ -160,7 +164,7 @@ def main():
 		elif o in ("-a", "--to-json-array"):
 			convert_to_json_array = 1
 		elif o in ("-s", "--stats-interval"):
-			stats_interval = a
+			stats_interval = int(a)
 			if stats_interval < 0:
 				sys.stderr.write("ERROR: `--stats-interval` must be positive\n")
 				sys.exit(1)
@@ -200,6 +204,7 @@ def main():
 	if print_stdout:
 		print ' [*] Example inspired from: http://www.rabbitmq.com/getstarted.html'
 		print ' [*] Waiting for messages on E =', amqp_exchange, ',', amqp_type, 'RK =', amqp_routing_key, 'Q =', amqp_queue, 'H =', amqp_host, '. Edit code to change any parameter. To exit press CTRL+C'
+		sys.stdout.flush()
 
 	if stats_interval:
 		elem_count = 0
