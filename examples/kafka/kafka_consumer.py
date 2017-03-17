@@ -60,6 +60,16 @@ def usage(tool):
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
 
+def post_to_url(http_req, value):
+	try:
+		urllib2.urlopen(http_req, value)
+	except urllib2.HTTPError, err:
+		print "WARN: urlopen() returned HTTP error code:", err.code
+		sys.stdout.flush()
+	except urllib2.URLError, err:
+		print "WARN: urlopen() returned URL error reason:", err.reason
+		sys.stdout.flush()
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:as:", ["help", "topic=",
@@ -166,7 +176,7 @@ def main():
 			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
 				http_req.add_header('Content-Type', 'application/json')
-				http_response = urllib2.urlopen(http_req, ("\n".join(avro_data)))
+				post_to_url(http_req, ("\n".join(avro_data)))
 		else:
 			if stats_interval:
 				elem_count += value.count('\n')
@@ -185,7 +195,7 @@ def main():
 			if http_url_post:
 				http_req = urllib2.Request(http_url_post)
 				http_req.add_header('Content-Type', 'application/json')
-				http_response = urllib2.urlopen(http_req, value)
+				post_to_url(http_req, value)
 
 		if kafka_produce_topic:
 			producer.send(kafka_produce_topic, value)
