@@ -28,6 +28,7 @@
 #else
 #define EXT
 #endif
+EXT int bgp_max_msglen_check(u_int32_t);
 EXT int bgp_marker_check(struct bgp_header *, int);
 EXT int bgp_parse_msg(struct bgp_peer *, time_t, int);
 EXT int bgp_parse_open_msg(struct bgp_msg_data *, char *, time_t, int);

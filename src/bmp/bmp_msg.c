@@ -322,6 +322,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
 
+      /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
@@ -497,6 +498,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
+      /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
       bms->peer_str = saved_peer_str;
 

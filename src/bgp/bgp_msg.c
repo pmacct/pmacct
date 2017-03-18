@@ -61,7 +61,13 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
     }
     else peer->buf.truncated_len = 0;
 
-    if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) < 0) {
+    if (bgp_max_msglen_check(peer->msglen) == ERR) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (packet length check failed).\n",
+		config.name, bms->log_str, bgp_peer_print(peer));
+      return ERR;
+    }
+
+    if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) == ERR) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (marker check failed).\n",
 		config.name, bms->log_str, bgp_peer_print(peer));
       return ERR;
@@ -335,6 +341,12 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
   }
 
   return ERR;
+}
+
+int bgp_max_msglen_check(u_int32_t length)
+{
+  if (length <= BGP_MAX_MSGLEN) return SUCCESS; 
+  else return ERR;
 }
 
 /* Marker check. */
