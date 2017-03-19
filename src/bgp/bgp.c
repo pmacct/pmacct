@@ -603,7 +603,7 @@ void skinny_bgp_daemon_online()
       } 
 
       ret = bgp_parse_msg(peer, now, TRUE);
-      if (ret < 0) {
+      if (ret) {
         FD_CLR(peer->fd, &bkp_read_descs);
         bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE /* XXX */, FALSE /* XXX */, FALSE /* XXX */, NULL);
         recalc_fds = TRUE;

@@ -50,7 +50,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
     if (peer->msglen < BGP_HEADER_SIZE && bgp_packet_ptr == peer->buf.base) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (incomplete header).\n",
 		config.name, bms->log_str, bgp_peer_print(peer));
-      return ERR;
+      return BGP_NOTIFY_HEADER_ERR;
     }
 
     /* BGP buffer segmentation + reassembly */
@@ -66,19 +66,20 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
     if (bgp_max_msglen_check(bgp_len) == ERR) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (packet length check failed).\n",
 		config.name, bms->log_str, bgp_peer_print(peer));
-      return ERR;
+      return BGP_NOTIFY_HEADER_ERR;
     }
 
     if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) == ERR) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (marker check failed).\n",
 		config.name, bms->log_str, bgp_peer_print(peer));
-      return ERR;
+      return BGP_NOTIFY_HEADER_ERR;
     }
 
     switch (bhdr->bgpo_type) {
     case BGP_OPEN:
       ret = bgp_parse_open_msg(&bmd, bgp_packet_ptr, now, online);
-      if (ret < 0) return ret;
+      if (ret < 0) return BGP_NOTIFY_OPEN_ERR;
+
       break;
     case BGP_NOTIFICATION:
       {
@@ -117,19 +118,20 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       if (peer->status < Established) {
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] BGP UPDATE received (no neighbor). Discarding.\n",
 		config.name, bms->log_str, bgp_peer_print(peer));
-	return ERR;
+	return BGP_NOTIFY_FSM_ERR;
       }
 
       ret = bgp_parse_update_msg(&bmd, bgp_packet_ptr);
       if (ret < 0) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] BGP UPDATE: malformed (%d).\n", config.name, bms->log_str, bgp_peer_print(peer), ret);
-	return ERR;
+	return BGP_NOTIFY_UPDATE_ERR;
       }
+
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (unsupported message type).\n",
 	  config.name, bms->log_str, bgp_peer_print(peer));
-      return ERR;
+      return BGP_NOTIFY_HEADER_ERR;
     }
   }
 
