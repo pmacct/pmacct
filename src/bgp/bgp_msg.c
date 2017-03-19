@@ -47,24 +47,23 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
   for (bgp_packet_ptr = peer->buf.base; peer->msglen > 0; peer->msglen -= bgp_len, bgp_packet_ptr += bgp_len) {
     bhdr = (struct bgp_header *) bgp_packet_ptr;
 
+    if (peer->msglen < BGP_HEADER_SIZE && bgp_packet_ptr == peer->buf.base) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (incomplete header).\n",
+		config.name, bms->log_str, bgp_peer_print(peer));
+      return ERR;
+    }
+
     /* BGP buffer segmentation + reassembly */
     if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < (bgp_len = ntohs(bhdr->bgpo_len))) {
-      if (bgp_packet_ptr > peer->buf.base) {
-        memcpy(tmp_packet, bgp_packet_ptr, peer->msglen);
-        memcpy(peer->buf.base, tmp_packet, peer->msglen);
-        peer->buf.truncated_len = peer->msglen;
+      memcpy(tmp_packet, bgp_packet_ptr, peer->msglen);
+      memcpy(peer->buf.base, tmp_packet, peer->msglen);
+      peer->buf.truncated_len = peer->msglen;
 
-        break;
-      }
-      else {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (incomplete packet).\n",
-		config.name, bms->log_str, bgp_peer_print(peer));
-        return ERR;
-      }
+      break;
     }
     else peer->buf.truncated_len = 0;
 
-    if (bgp_max_msglen_check(ntohs(bhdr->bgpo_len)) == ERR) {
+    if (bgp_max_msglen_check(bgp_len) == ERR) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (packet length check failed).\n",
 		config.name, bms->log_str, bgp_peer_print(peer));
       return ERR;
