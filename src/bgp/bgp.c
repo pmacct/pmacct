@@ -605,7 +605,10 @@ void skinny_bgp_daemon_online()
       ret = bgp_parse_msg(peer, now, TRUE);
       if (ret) {
         FD_CLR(peer->fd, &bkp_read_descs);
-        bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE /* XXX */, FALSE /* XXX */, FALSE /* XXX */, NULL);
+
+	if (ret < 0) bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	else bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, TRUE, ret, BGP_NOTIFY_SUBCODE_UNSPECIFIC, NULL);
+
         recalc_fds = TRUE;
         goto select_again;
       }
