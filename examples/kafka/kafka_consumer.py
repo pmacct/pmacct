@@ -152,6 +152,10 @@ def main():
 	for message in consumer:
 		value = message.value
 
+		#
+		# XXX: data enrichments, manipulations, correlations, etc. go here
+		#
+
 		if stats_interval:
 			time_now = int(time.time())
 

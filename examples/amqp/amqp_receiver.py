@@ -82,6 +82,10 @@ def post_to_url(http_req, value):
 		sys.stdout.flush()
 
 def callback(ch, method, properties, body):
+	#
+	# XXX: data enrichments, manipulations, correlations, etc. go here
+	#
+
 	if stats_interval:
 		time_now = int(time.time())
 
