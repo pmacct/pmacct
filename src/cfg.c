@@ -150,7 +150,7 @@ int parse_configuration_file(char *filename)
 
   if (!num && config.acct_type < ACCT_FWPLANE_MAX) {
     Log(LOG_WARNING, "WARN: [%s] No plugin has been activated; defaulting to in-memory table.\n", filename); 
-    num = create_plugin(filename, "default", "memory");
+    num = create_plugin(filename, "default_memory", "memory");
   }
 
   if (debug) {
@@ -362,7 +362,7 @@ void parse_core_process_name(char *filename, int rows, int ignore_names)
    if it exists and creates the plugins linked list */ 
 int parse_plugin_names(char *filename, int rows, int ignore_names)
 {
-  int index = 0, num = 0, found = 0;
+  int index = 0, num = 0, found = 0, default_name = FALSE;
   char *start, *end, *start_name, *end_name;
   char key[SRVBUFLEN], value[10240], token[SRVBUFLEN], name[SRVBUFLEN];
 
@@ -401,7 +401,7 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
 	  *start_name = '\0';
 	}
       }
-      else strcpy(name, "default");
+      else default_name = TRUE;
 	
       /* Having already plugins name and type, we'll filter out reserved symbols */
       trim_spaces(token);
@@ -412,10 +412,12 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
       }
 
       if (!ignore_names) {
+        if (default_name) compose_default_plugin_name(name, SRVBUFLEN, token);
         if (create_plugin(filename, name, token)) num++;
       }
       else {
-        if (create_plugin(filename, "default", token)) num++;
+        compose_default_plugin_name(name, SRVBUFLEN, token);
+        if (create_plugin(filename, name, token)) num++;
       }
     }
     start = end+1;
@@ -441,12 +443,19 @@ void set_default_values()
   }
 }
 
+void compose_default_plugin_name(char *out, int outlen, char *type)
+{
+  strcpy(out, "default");
+  strcat(out, "_");
+  strncat(out, type, (outlen - 10));
+}
+
 int create_plugin(char *filename, char *name, char *type)
 {
   struct plugins_list_entry *plugin, *ptr;
   struct plugin_type_entry *ptype = NULL;
   int index = 0, id = 0;
- 
+
   /* searching for a valid known plugin type */
   while(strcmp(plugin_types_list[index].string, "")) {
     if (!strcmp(type, plugin_types_list[index].string)) ptype = &plugin_types_list[index];

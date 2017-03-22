@@ -8,6 +8,18 @@ However, sometimes the upgrade may require some easy operations aimed to support
 the changes done or break old assumptions no longer valid. Such happenings have
 been (and will be) very limited through the development process.
 
+TO:	>= 1.6.2
+FROM:	<= 1.6.1
+TOPIC:	default plugin names
+DESC:	Plugin names had to be unique per plugin type, meaning two plugins
+	could be named "foobar" if they were of different type. Such behaviour
+	has proven to lead to ambiguous scenarios and hence now plugin names
+	must be globally unique. If not naming a plugin, its default name
+	will now be "default_<plugin type>" instead of "default". Any piece
+	of configuration that attaches directives to the "default" name, ie.
+	relying on the assumption the plugin name defaults to "default", must
+	be reviewed. 
+
 TO:     >= 1.6.2
 FROM:   <= 1.6.1
 TOPIC:	print_time_roundoff configuration directive suppressed
