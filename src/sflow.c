@@ -353,8 +353,20 @@ u_int64_t getData64(SFSample *sample)
 void skipBytes(SFSample *sample, int skip)
 {
   int quads = (skip + 3) / 4;
+
   sample->datap += quads;
   // if((u_char *)sample->datap > sample->endp) return 0; 
+}
+
+int skipBytesAndCheck(SFSample *sample, int skip)
+{
+  int quads = (skip + 3) / 4;
+
+  if ((u_char *)(sample->datap + quads) <= sample->endp) {
+    sample->datap += quads;
+    return quads;
+  }
+  else return ERR;
 }
 
 u_int32_t getString(SFSample *sample, char *buf, int bufLen)
@@ -1085,9 +1097,7 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
       case SFLFLOW_EX_CLASS:	    readExtendedClass(sample); break;
       case SFLFLOW_EX_TAG:	    readExtendedTag(sample); break;
       default:
-	// lengthCheck() here for extra security before skipBytes()
-	if (lengthCheck(sample, start, length) == ERR) return;
-	skipBytes(sample, length);
+	if (skipBytesAndCheck(sample, length) == ERR) return;
 	break;
       }
 

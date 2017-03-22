@@ -1213,7 +1213,7 @@ SFv5_read_sampleType:
     default:
       SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
       xflow_tot_bad_datagrams++;
-      return; /* unexpected sampleType; aborting packet */ 
+      return; /* unexpected sampleType; aborting packet */
     }
     if ((u_char *)spp->datap > spp->endp) return; 
   }
