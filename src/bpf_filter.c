@@ -38,7 +38,7 @@
  *	@(#)bpf.c	7.5 (Berkeley) 7/15/91
  */
 
-#if (!defined PCAP_NOBPF)
+#if (!defined PCAP_NOBPF) && (!defined PFRING_LIB_FOUND)
 
 #ifdef WIN32
 
@@ -506,7 +506,6 @@ bpf_filter(pc, p, wirelen, buflen)
 	}
 }
 
-
 /*
  * Return true if the 'fcode' is a valid filter program.
  * The constraints are that each jump be forward and to a valid
@@ -558,4 +557,4 @@ bpf_validate(f, len)
 	return BPF_CLASS(f[len - 1].code) == BPF_RET;
 }
 
-#endif /* PCAP_NOBPF */
+#endif /* (!PCAP_NOBPF) && (!PFRING_LIB_FOUND) */

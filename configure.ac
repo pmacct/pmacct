@@ -408,6 +408,7 @@ if test x"$PCAPLIB" != x""; then
       LIBS="${LIBS} -lpfring -lpcap"
       AC_MSG_RESULT(yes)
       PFRING_LIB_FOUND=1
+      AC_DEFINE(PFRING_LIB_FOUND, 1)
     else
       AC_MSG_RESULT(no)
     fi
@@ -428,6 +429,7 @@ if test x"$PCAPLIBFOUND" = x""; then
       LIBS="${LIBS} -lpfring -lpcap"
       AC_MSG_RESULT(yes)
       PFRING_LIB_FOUND=1
+      AC_DEFINE(PFRING_LIB_FOUND, 1)
     else
       AC_MSG_RESULT(no)
     fi
