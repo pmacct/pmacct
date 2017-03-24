@@ -35,26 +35,34 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 	   command-line client tool, 'pmacct'. This plugin also allows easily to
 	   inject data into 3rd party tools like GNUplot, RRDtool or a Net-SNMP
 	   server. The plugin is good for prototype solutions and smaller-scale
-	   environments.
-'mysql':   a working MySQL installation can be used for data storage.
-'pgsql':   a working PostgreSQL installation can be used for data storage.
+	   environments. This plugin is compiled in by default.
+'mysql':   a working MySQL installation can be used for data storage. This
+	   plugin can be compiled using the --enable-mysql switch. 
+'pgsql':   a working PostgreSQL installation can be used for data storage. This
+	   plugin can be compiled using the --enable-pgsql switch.
 'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite
-	   API) installation can be used for data storage.
+	   API) installation can be used for data storage. This plugin can be
+	   compiled using the --enable-sqlite3 switch.
 'print':   data is printed at regular intervals to flat-files or standard output
-	   in tab-spaced, CSV and JSON formats.
+	   in tab-spaced, CSV and JSON formats. This plugin is compiled in by
+	   default.
 'mongodb': a working MongoDB installation can be used for data storage. It is
-	   required to install the MongoDB API C driver.
+	   required to install the MongoDB API C driver. This plugin can be
+	   compiled using the --enable-mongodb switch.
 'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
 	   for delivery to consumer applications or tools. Popular consumers
-	   are ElasticSearch, InfluxDB and Cassandra.
+	   are ElasticSearch, InfluxDB and Cassandra. This plugin can be compiled
+	   using the --enable-rabbitmq switch.
 'kafka':   data is sent to a Kafka broker for delivery to consumer applications
 	   or tools. Popular consumers are ElasticSearch, InfluxDB and Cassandra.
+	   This plugin can be compiled using the --enable-kafka switch.
 'tee':	   applies to nfacctd and sfacctd daemons only. It's a featureful packet
-	   replicator for NetFlow/IPFIX/sFlow data.
+	   replicator for NetFlow/IPFIX/sFlow data. This plugin is compiled in by
+	   default.
 'nfprobe': applies to pmacctd and uacctd daemons only. Exports collected data via
-	   NetFlow v5/v9 or IPFIX.
+	   NetFlow v5/v9 or IPFIX. This plugin is compiled in by default.
 'sfprobe': applies to pmacctd and uacctd daemons only. Exports collected data via
-	   sFlow v5.
+	   sFlow v5. This plugin is compiled in by default.
 
 
 II. Configuring pmacct for compilation and installing
@@ -83,14 +91,20 @@ Then to compile and install simply typing:
 
 shell> make; make install
 
-But, for example, should you want to compile pmacct with PostgreSQL support and
-have installed PostgreSQL in /usr/local/postgresql and pkg-config is unable to
-help, you can supply this non-default location as follows (assuming you are
-running the bash shell):
+Should you want, for example, to compile pmacct with PostgreSQL support and
+have installed PostgreSQL in /usr/local/postgresql and pkg-config is unable
+to help, you can supply this non-default location as follows (assuming you
+are running the bash shell):
 
 shell> export PGSQL_LIBS="-L/usr/local/postgresql/lib -lpq"
 shell> export PGSQL_CFLAGS="-I/usr/local/postgresql/include"
 shell> ./configure --enable-pgsql
+
+By default all tools - flow, BGP, BMP and Streaming Telemetry - are compiled.
+Specific tool sets can be disabled. For example, to compile only flow tools
+(ie. no pmbgpd, pmbmpd, pmtelemetryd) the following command-line can be used:
+
+shell> ./configure --disable-bgp-bins --disable-bmp-bins --disable-st-bins
 
 Once daemons are installed you can check:
 * how to instrument each daemon via its usage help page: 
