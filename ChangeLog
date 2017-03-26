@@ -1,6 +1,55 @@
 pmacct [IP traffic accounting : BGP : BMP : IGP : Streaming Telemetry]
 pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 
+The keys used are:
+  !: modified feature, -: deleted feature, +: new feature
+
+1.6.2 -- XX-04-2017
+  + BGP, BMP daemons: introduced suppor for BGP Large Communities draft at
+    IETF (draft-ietf-idr-large-community). LC are internally stored in a
+    variable-length field.  
+  + tee plugin, pre_tag_map: introduced support for so-called complex maps
+    that allow inspection of specific flows and selective replication over
+    them. Primitives supported are input and output interfaces, source and
+    destination MAC addresses, VLAN ID. Support is limited to sFlow v5
+    only. 
+  + Added src_host_pocode and dst_host_pocode primitives, pocode being a
+    compact and (de-)aggregatable (easy to identify districts, cities,
+    metro areas, etc.) geographical representation, based on the Maxmind
+    v2 City Database.
+  + AMQP, Kafka plugins: introduced new directives kafka_avro_schema_topic,
+    amqp_avro_schema_routing_key to send Apache Avro schemas on at regular
+    time intervals. The routing key/topic can no problem overlap with the
+    one used to send actual data.
+  + print plugin: introduced new config directive avro_schema_output_file
+    to save the Apache Avro schema in a separate file (originally it was
+    only possible to have it combined at the beginning of the data file).  
+  + BGP, BMP and Streming Telemetry daemons: added writer_id field when
+    writing to Kafka and/or RabbitMQ. The field reports the configured
+    core_proc_name and the actual PID of the writer process (so, while
+    being able to correlate writes to the same daemon, it is possible to
+    distinguish overlapping writes).
+  + SQL plugins: ported (from print, etc. plugins) the 1.6.1 re-working of
+    the max_writers feature.
+  ! fix, pre_tag_map: removed constraint for 'ip' keyword for nfacctd and
+    sfacctd maps. While this is equivalent syntax to specifying rules with
+    'ip=0.0.0.0/0', it allows for map indexing.
+  ! fix, maps_index: indexing now correctly works for IPv6 pre_tag_map
+    enntries. That is, those where 'ip', the IP address of the NetFlow/
+    IPFIX/sFlow exporter, is an IPv6 address.
+  ! fix, tee plugin: tee_max_receiver_pools is now correctly honoured and
+    debug message shows the replicatd protocol, ie. NetFlow/IPFIX vs sFlow.  
+  ! fix, pkt_handlers.c: improved definition and condition to free() in
+    bgp_ext_handler() in order to prevent SEGVs. Thanks to Paul Mabey for
+    his support.
+  ! fix, sfprobe plugin, sfacctd: tags and class primitives are now being
+    encoded/decoded using enterprise #43874, legit, instead of #8800, that
+    was squatted back in the times. See issue #71 on GiHub for more info.
+  ! fix, AMQP plugin: set content type to binary in case of Apache Avro
+    output.
+  ! fix, misc: compiler warnings: fix up missing includes and prototypes;
+    the patch is courtesy by Tim LaBerge.
+
 1.6.1 -- 31-10-2016
   + Introduced pmbgpd daemon: a stand-alone BGP collector daemon; acts as a
     passive neighbor and maintains per-peer RIBs; can log real-time and/or

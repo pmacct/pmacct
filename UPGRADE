@@ -1,12 +1,11 @@
 UPGRAGE guidelines.
-pmacct is developed keeping an eye to backward compatibility: the upgrade to some
-newer version should be as smooth as possible from an user standpoint. This is
-because, for example, features like SQL table versioning have been introduced
-over the time. 
- 
-However, sometimes the upgrade may require some easy operations aimed to support
-the changes done or break old assumptions no longer valid. Such happenings have
-been (and will be) very limited through the development process.
+pmacct is developed keeping an eye to backward compatibility: the upgrade to
+some newer version should be as smooth as possible from an user standpoint.
+However, sometimes the upgrade may require some operations aimed to support
+the changes done or break old assumptions no longer valid; while the effort
+is to keep these cases at a low, please read this file in preparation to
+upgrading your installation.
+
 
 TO:	>= 1.6.2
 FROM:	<= 1.6.1
