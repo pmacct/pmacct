@@ -8,6 +8,10 @@ The keys used are:
   + BGP, BMP daemons: introduced suppor for BGP Large Communities draft at
     IETF (draft-ietf-idr-large-community). LC are internally stored in a
     variable-length field.  
+  + BGP daemon: implemented draft-ietf-idr-shutdown. The draft defines a
+    mechanism to transmit a short freeform UTF-8 message as part of a
+    Cease NOTIFICATION message to inform the peer why the BGP session is
+    being shutdown or reset. 
   + tee plugin, pre_tag_map: introduced support for so-called complex maps
     that allow inspection of specific flows and selective replication over
     them. Primitives supported are input and output interfaces, source and
@@ -24,27 +28,69 @@ The keys used are:
   + print plugin: introduced new config directive avro_schema_output_file
     to save the Apache Avro schema in a separate file (originally it was
     only possible to have it combined at the beginning of the data file).  
+  + BGP daemon: introduced a new bgp_daemon_as config directive to set a
+    Local AS which could be different from the remote peer one. This is to
+    establishing an eBGP session instead of a iBGP one (default).
+  + flow_to_rd_map: introduced support for mpls_vpn_id. In NetFlow/IPFIX
+    this is compared against Field Types #234 and #235.
   + BGP, BMP and Streming Telemetry daemons: added writer_id field when
     writing to Kafka and/or RabbitMQ. The field reports the configured
     core_proc_name and the actual PID of the writer process (so, while
     being able to correlate writes to the same daemon, it is possible to
     distinguish overlapping writes).
+  + amqp, kafka, print plugins: harmonized JSON output to the above: added
+    event_typei field, writer_id field with plugin name and PID.
+  + BGP, BMP daemons: added AFI, SAFI information to log and dump output;
+    also show VPN Label if SAFI is MPLS VPN.
   + SQL plugins: ported (from print, etc. plugins) the 1.6.1 re-working of
     the max_writers feature.
+  + uacctd: use current time when we don't have a timestamp from netlink.
+    We only get a timestamp when there is a timestamp in the skb. Notably,
+    locally generated packets don't get a timestamp. The patch is courtesy
+    by Vincent Bernat.
+  ! fix, BGP daemon: introduced parsing of IPv6 MPLS VPN (vpnv6) NLRIs.
+    Thanks to Alberto Santos for reporting the issue.
+  ! fix, BGP daemon: upon routes lookup, correctly honouring the case of
+    BGP-LU (SAFI_MPLS_LABEL). 
+  ! fix, kafka_partition, *_kafka_partition: default value changed from 0
+    (partition zero) to -1 (RD_KAFKA_PARTITION_UA, partition unassigned).
+    Thanks to Johan van den Dorpe for his support.
   ! fix, pre_tag_map: removed constraint for 'ip' keyword for nfacctd and
     sfacctd maps. While this is equivalent syntax to specifying rules with
     'ip=0.0.0.0/0', it allows for map indexing.
+  ! fix, bgp_agent_map: improved sanity check against bgp_ip for IPv6
+    addresses (ie. an issue appeared for the case of '::1' where the first
+    64 bits are zeroed out). Thanks to Charlie Smurthwaite for reporting
+    the issue.
   ! fix, maps_index: indexing now correctly works for IPv6 pre_tag_map
     enntries. That is, those where 'ip', the IP address of the NetFlow/
     IPFIX/sFlow exporter, is an IPv6 address.
-  ! fix, tee plugin: tee_max_receiver_pools is now correctly honoured and
-    debug message shows the replicatd protocol, ie. NetFlow/IPFIX vs sFlow.  
+  ! fix, pre_tag_map: if mpls_vpn_rd matching condition is specified and
+    maps_index is enabled, PT_map_index_fdata_mpls_vpn_rd_handler() now
+    picks the right info.
   ! fix, pkt_handlers.c: improved definition and condition to free() in
     bgp_ext_handler() in order to prevent SEGVs. Thanks to Paul Mabey for
     his support.
+  ! fix, kafka_common.c: removed waiting time from p_kafka_set_topic().
+    Added docs advicing to create in advance Kafka topics.
+  ! fix, sfacctd, sfprobe: tag and tag2 are now correctly re-defined as
+    64 bits long.
   ! fix, sfprobe plugin, sfacctd: tags and class primitives are now being
     encoded/decoded using enterprise #43874, legit, instead of #8800, that
     was squatted back in the times. See issue #71 on GiHub for more info.
+  ! fix, pretag_handlers.c: in bgp_agent_map added case for 'vlan and ...'
+    filter values.
+  ! fix, BGP, BMP daemons: bgp_process_withdraw() function init aligned to
+    bgp_process_update() in order to prevent SEGVs. Thanks to Yuri Lachin
+    for his support.
+  ! fix, bgp_msg.c: Route Distinguisher was stored and printed incorrectly
+    when of type RD_TYPE_IP. Thanks to Alberto Santos for reporting the
+    issue.
+  ! fix, bgp_logdump.c: p_kafka_set_topic() was being wrongly applied to
+    an amqp_host structure (instead of a kafka_host structure). Thanks to
+    Corentin Neau for reporting the issue.
+  ! fix, tee plugin: tee_max_receiver_pools is now correctly honoured and
+    debug message shows the replicatd protocol, ie. NetFlow/IPFIX vs sFlow.  
   ! fix, AMQP plugin: set content type to binary in case of Apache Avro
     output.
   ! fix, misc: compiler warnings: fix up missing includes and prototypes;
