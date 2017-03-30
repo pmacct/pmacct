@@ -5,40 +5,42 @@ The keys used are:
   !: modified feature, -: deleted feature, +: new feature
 
 1.6.2 -- XX-04-2017
-  + BGP, BMP daemons: introduced suppor for BGP Large Communities draft at
-    IETF (draft-ietf-idr-large-community). LC are internally stored in a
-    variable-length field.  
+  + BGP, BMP daemons: introduced support for BGP Large Communities IETF
+    draft (draft-ietf-idr-large-community). Large Communities are stored
+    in a variable-length field. Thanks to Job Snijders ( @job ) for his
+    support.
   + BGP daemon: implemented draft-ietf-idr-shutdown. The draft defines a
     mechanism to transmit a short freeform UTF-8 message as part of a
     Cease NOTIFICATION message to inform the peer why the BGP session is
-    being shutdown or reset. 
-  + tee plugin, pre_tag_map: introduced support for so-called complex maps
-    that allow inspection of specific flows and selective replication over
-    them. Primitives supported are input and output interfaces, source and
-    destination MAC addresses, VLAN ID. Support is limited to sFlow v5
-    only. 
+    being shutdown or reset. Thanks to Job Snijders ( @job ) for his
+    support. 
+  + tee plugin, pre_tag_map: introduced support for inspetion of specific
+    flow primitives and selective replication over them. The primitives
+    supported are: input and output interfaces, source and destination
+    MAC addresses, VLAN ID. The feature is now limited to sFlow v5 only. 
+    Thanks to Nick Hilliard and Barry O'Donovan for their support.
   + Added src_host_pocode and dst_host_pocode primitives, pocode being a
     compact and (de-)aggregatable (easy to identify districts, cities,
     metro areas, etc.) geographical representation, based on the Maxmind
-    v2 City Database.
+    v2 City Database. Thanks to Jerred Horsman for his support.
   + Kafka support: introduced support for user-defined (librdkafka) config
     file via the new *_kafka_config_file config directives. Full pathname
     to a file containing directives to configure librdkafka is expected.
-    All knobs whose values are string, integer, boolean, CSV are supported.
+    All knobs whose values are string, integer, boolean are supported.
   + AMQP, Kafka plugins: introduced new directives kafka_avro_schema_topic,
-    amqp_avro_schema_routing_key to send Apache Avro schemas on at regular
-    time intervals. The routing key/topic can no problem overlap with the
-    one used to send actual data.
+    amqp_avro_schema_routing_key to transmit Apache Avro schemas at regular
+    time intervals. The routing key/topic can overlap with the one used to
+    send actual data.
   + AMQP, Kafka plugins: introduced support for start/stop markers when
     encoding is set to Avro (ie. 'kafka_output: avro'); also Avro schema
     is now embedded in a JSON envelope when sending it via a topic/routing
     key (ie. kafka_avro_schema_topic).
   + print plugin: introduced new config directive avro_schema_output_file
-    to save the Apache Avro schema in a separate file (originally it was
-    only possible to have it combined at the beginning of the data file).  
+    to save the Apache Avro schema in a separate file (it was only possible
+    to have it combined at the beginning of the data file).  
   + BGP daemon: introduced a new bgp_daemon_as config directive to set a
-    Local AS which could be different from the remote peer one. This is to
-    establishing an eBGP session instead of a iBGP one (default).
+    LocalAS which could be different from the remote peer one. This is to
+    establish an eBGP session instead of a iBGP one (default).
   + flow_to_rd_map: introduced support for mpls_vpn_id. In NetFlow/IPFIX
     this is compared against Field Types #234 and #235.
   + sfacctd: introduced support for sFlow v2/v4 counter samples (generic,
@@ -47,15 +49,15 @@ The keys used are:
   + BGP, BMP and Streming Telemetry daemons: added writer_id field when
     writing to Kafka and/or RabbitMQ. The field reports the configured
     core_proc_name and the actual PID of the writer process (so, while
-    being able to correlate writes to the same daemon, it is possible to
-    distinguish overlapping writes).
+    being able to correlate writes to the same daemon, it's also possible
+    to distinguish among overlapping writes).
   + amqp, kafka, print plugins: harmonized JSON output to the above: added
-    event_typei field, writer_id field with plugin name and PID.
-  + BGP, BMP daemons: added AFI, SAFI information to log and dump output;
+    event_type field, writer_id field with plugin name and PID.
+  + BGP, BMP daemons: added AFI, SAFI information to log and dump outputs;
     also show VPN Label if SAFI is MPLS VPN.
   + pmbgpd, pmbmpd: added logics to bypass building RIBs if only logging
     BGP/BMP data real-time.
-  + BMP daemon: added BMP peer TCP port to log and dump output (for NAT
+  + BMP daemon: added BMP peer TCP port to log and dump outputs (for NAT
     traversal scenarios). Contextually, multiple TCP sessions per IP are
     now supported for the same reason.
   + SQL plugins: ported (from print, etc. plugins) the 1.6.1 re-working of
@@ -63,7 +65,7 @@ The keys used are:
   + uacctd: use current time when we don't have a timestamp from netlink.
     We only get a timestamp when there is a timestamp in the skb. Notably,
     locally generated packets don't get a timestamp. The patch is courtesy
-    by Vincent Bernat.
+    by Vincent Bernat ( @vincentbernat ).
   + build system: added configure options for partial linking of binaries
     with any selection/combination of IPv4/IPv6 accounting daemons, BGP
     daemon, BMP daemon and Streaming Telemetry daemon possible. By default
@@ -72,25 +74,27 @@ The keys used are:
     per-peer header to bgp_parse_update_msg(). Goal is to expose further
     info, ie. pre- vs post- policy, when logging or dumping BMP info.
   ! fix, BGP daemon: introduced parsing of IPv6 MPLS VPN (vpnv6) NLRIs.
-    Thanks to Alberto Santos for reporting the issue.
-  ! fix, BGP daemon: upon routes lookup, correctly honouring the case of
-    BGP-LU (SAFI_MPLS_LABEL). 
+    Thanks to Alberto Santos ( @m4ccbr ) for reporting the issue.
+  ! fix, BGP daemon: upon doing routes lookup, now correctly honouring
+    the case of BGP-LU (SAFI_MPLS_LABEL). 
+  ! fix, BGP daemon: send BGP NOTIFICATION out in case of known failures
+    in bgp_parse_msg().
   ! fix, kafka_partition, *_kafka_partition: default value changed from 0
     (partition zero) to -1 (RD_KAFKA_PARTITION_UA, partition unassigned).
-    Thanks to Johan van den Dorpe for his support.
+    Thanks to Johan van den Dorpe ( @johanek ) for his support.
   ! fix, pre_tag_map: removed constraint for 'ip' keyword for nfacctd and
     sfacctd maps. While this is equivalent syntax to specifying rules with
-    'ip=0.0.0.0/0', it allows for map indexing.
+    'ip=0.0.0.0/0', it allows for map indexing (maps_index: true).
   ! fix, bgp_agent_map: improved sanity check against bgp_ip for IPv6
     addresses (ie. an issue appeared for the case of '::1' where the first
-    64 bits are zeroed out). Thanks to Charlie Smurthwaite for reporting
-    the issue.
+    64 bits are zeroed out). Thanks to Charlie Smurthwaite ( @catphish )
+    for reporting the issue.
   ! fix, maps_index: indexing now correctly works for IPv6 pre_tag_map
-    enntries. That is, those where 'ip', the IP address of the NetFlow/
+    entries. That is, those where 'ip', the IP address of the NetFlow/
     IPFIX/sFlow exporter, is an IPv6 address.
   ! fix, pre_tag_map: if mpls_vpn_rd matching condition is specified and
     maps_index is enabled, PT_map_index_fdata_mpls_vpn_rd_handler() now
-    picks the right info.
+    picks the right (and expected) info.
   ! fix, pkt_handlers.c: improved definition and condition to free() in
     bgp_ext_handler() in order to prevent SEGVs. Thanks to Paul Mabey for
     his support.
@@ -114,11 +118,11 @@ The keys used are:
     bgp_process_update() in order to prevent SEGVs. Thanks to Yuri Lachin
     for his support.
   ! fix, bgp_msg.c: Route Distinguisher was stored and printed incorrectly
-    when of type RD_TYPE_IP. Thanks to Alberto Santos for reporting the
-    issue.
+    when of type RD_TYPE_IP. Thanks to Alberto Santos ( @m4ccbr ) for
+    reporting the issue.
   ! fix, bgp_logdump.c: p_kafka_set_topic() was being wrongly applied to
     an amqp_host structure (instead of a kafka_host structure). Thanks to
-    Corentin Neau for reporting the issue.
+    Corentin Neau ( @weyfonk ) for reporting the issue.
   ! fix, BGP daemon: improved BGP next-hop setting and comparison in cases
     of MP_REACH_NLRI and MPLS VPNs. Many thanks to both Catalin Petrescu
     ( @cpmarvin ) and Alberto Santos ( @m4ccbr ) for their support.
@@ -128,23 +132,23 @@ The keys used are:
     debug message shows the replicatd protocol, ie. NetFlow/IPFIX vs sFlow.
   ! AMQP, Kafka plugins: separate JSON objects, newline separated, are
     preferred to JSON arrays when buffering of output is enabled (ie.
-    kafka_multi_values) and outpus is set to JSON. This is due to quicker
-    serialisation shown by the Jansson library.
+    kafka_multi_values) and output is set to JSON. This is due to quicker
+    serialisation performance shown by the Jansson library.
   ! build system: switched to enable IPv6 support by default (while the
     --disable-ipv6 knob can be used to reverse the behaviour). Patch is
     courtesy by Elisa Jasinska ( @fooelisa ).
-  ! build system: given visibility, ie. via nfacctd -V, into compile
+  ! build system: given visibility, ie. via -V CL option, into compile
     options enabled by default (ie. IPv6, threads, 64bit counters, etc.).
   ! fix, AMQP plugin: set content type to binary in case of Apache Avro
     output.
   ! fix, AMQP, Kafka plugins: optimized amqp_avro_schema_routing_key and
     kafka_avro_schema_topic. Avro schema is built only once at startup.
   ! fix, cfg.c: improved parsing of config key-values where squared brakets
-    appear only in the value part. Thanks to Brad Hein ( @regulatre ) for
+    appear in the value part. Thanks to Brad Hein ( @regulatre ) for
     reporting the issue. Also, detection of duplicates among plugin and
     core process names was improved. 
   ! fix, misc: compiler warnings: fix up missing includes and prototypes;
-    the patch is courtesy by Tim LaBerge.
+    the patch is courtesy by Tim LaBerge ( @tlaberge ).
   ! kafka_consumer.py, amqp_receiver.py: Kafka, RabbitMQ consumer example
     scripts have been greatly expanded to support posting to a REST API or
     to a new Kafka topic, including some stats. Also conversion of multiple
