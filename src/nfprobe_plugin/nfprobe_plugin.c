@@ -976,6 +976,11 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
 		if (target != NULL) {
 			if (target->fd == -1) {
 			  Log(LOG_WARNING, "WARN ( %s/%s ): No connection to collector, discarding flows\n", config.name, config.type);
+			  for (i = 0; i < num_expired; i++) {
+				  free_flow_allocs(expired_flows[i]);
+				  free(expired_flows[i]);
+			  }
+			  free(expired_flows);
 			  return -1;
                         }
 			else {
