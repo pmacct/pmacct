@@ -139,6 +139,9 @@ The keys used are:
     courtesy by Elisa Jasinska ( @fooelisa ).
   ! build system: given visibility, ie. via -V CL option, into compile
     options enabled by default (ie. IPv6, threads, 64bit counters, etc.).
+  ! fix, nfprobe: free expired records when exporting to an unavailable
+    collector in order to prevent a memory leak. Patch is courtersy by
+    Vladimir Kunschikov ( @kunschikov ).
   ! fix, AMQP plugin: set content type to binary in case of Apache Avro
     output.
   ! fix, AMQP, Kafka plugins: optimized amqp_avro_schema_routing_key and
