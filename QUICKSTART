@@ -1342,11 +1342,11 @@ and features see the CONFIG-KEYS document.
 
 
 XV. Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
-A 'tee' plugin which is meant, in basic terms, to replicate NetFlow/sFlow data
-to remote collectors. The plugin can also act transparently by preserving the
-original IP address of the datagrams. Setting up a replicator is very easy. All
-is needed is where to listen to for incoming packets, where to replicate them
-to and optionally a filtering layer, if required. Filtering bases on the
+The 'tee' plugin is meant to replicate NetFlow/sFlow data to remote collectors.
+The plugin can act transparently, by preserving the original IP address of the
+datagrams, or as a proxy. Basic configuration of up a replicator is very easy:
+all is needed is where to listen to for incoming packets, where to replicate
+them to and optionally a filtering layer, if required. Filtering bases on the
 standard pre_tag_map infrastructure; here is presented only coarse-grained
 filtering against the NetFlow/sFlow source IP address (see next section for
 finer-grained filtering). 
@@ -1406,9 +1406,10 @@ ie. against flow-specific primitives, when replicating. For example: replicate
 flows from or to MAC address X1, X2 .. Xn to receiver Y or replicate flows in
 VLAN W to receiver Z. The feature works by inspecting the original packet and
 dissecting it as needed, the most popular use-case being IXPs replicating flows
-back to the members originating and/or receiving them. The primitives supported
-are: source and destination MAC addresses, input and output interfaces ifindex,
-input or output VLAN.
+back to the members originating and/or receiving them. Some of the supported
+primitives are: source and destination MAC addresses, input/output interfaces
+ifindex; the full list is available in examples/pretag.map.example (look for
+"sfacctd, nfacctd when in 'tee' mode").
 
 The feature is configured just like selective teeing shown in the previous
 section. Incoming packets are tagged with a pre_tag_map and then matched to a
