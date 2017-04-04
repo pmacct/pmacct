@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -24,5 +24,6 @@ const struct _map_dictionary_line tee_recvs_map_dictionary[] = {
   {"ip", tee_recvs_map_ip_handler},
   {"tag", tee_recvs_map_tag_handler},
   {"balance-alg", tee_recvs_map_balance_alg_handler},
+  {"src_port", tee_recvs_map_src_port_handler},
   {"", NULL}
 };

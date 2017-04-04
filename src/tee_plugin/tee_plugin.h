@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -58,6 +58,7 @@ struct tee_receivers_pool {
   u_int32_t id;				/* Pool ID */
   struct pretag_filter tag_filter; 	/* filter datagrams basing on a pre_tag_map */
   struct tee_balance balance;		/* balance datagrams basing on supported algorithm */
+  u_int16_t src_port;			/* Non transparent mode: source UDP port to use for replication */
   int num;				/* Number of receivers in the pool */
 };
 
@@ -77,7 +78,7 @@ EXT void Tee_exit_now(int);
 EXT void Tee_init_socks();
 EXT void Tee_destroy_recvs();
 EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
-EXT int Tee_prepare_sock(struct sockaddr *, socklen_t);
+EXT int Tee_prepare_sock(struct sockaddr *, socklen_t, u_int16_t);
 EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
 EXT struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
 EXT struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);

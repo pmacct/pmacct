@@ -21,6 +21,9 @@
 !			number of receivers in pool, 'hash-agent' hashing of
 !			the exporter/agent IP address against the number of
 !			receivers in pool.
+! 'src_port'		When in non-transparent replication mode, use the
+!			specified UDP port to send data to receiver(s) 
+!			
 !
 ! A couple of straightforward examples follow.
 !

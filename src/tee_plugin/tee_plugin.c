@@ -517,7 +517,7 @@ void Tee_init_socks()
         }
       }
 
-      target->fd = Tee_prepare_sock((struct sockaddr *) &target->dest, target->dest_len);
+      target->fd = Tee_prepare_sock((struct sockaddr *) &target->dest, target->dest_len, receivers.pools[pool_idx].src_port);
 
       if (config.debug) {
 	struct host_addr recv_addr;
@@ -533,7 +533,7 @@ void Tee_init_socks()
   }
 }
 
-int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
+int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 {
   int s, ret = 0;
 
@@ -545,9 +545,18 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
     struct sockaddr ssource_ip;
 #endif
 
+    memset(&source_ip, 0, sizeof(source_ip));
+    memset(&ssource_ip, 0, sizeof(ssource_ip));
+
     if (config.nfprobe_source_ip) {
       ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
-      addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, 0);
+      addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
+    }
+    else {
+      if (src_port) { 
+	source_ip.family = addr->sa_family; 
+	ret = addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
+      }
     }
 
     if ((s = socket(addr->sa_family, SOCK_DGRAM, 0)) == -1) {
@@ -564,10 +573,10 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len)
     }
 
     if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1)
-      Log(LOG_ERR, "ERROR ( %s/%s ): bind() error: %s\n", config.name, config.type, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): bind() error: %s\n", config.name, config.type, strerror(errno));
   }
   else {
-    int hincl = 1;                  /* 1 = on, 0 = off */
+    int hincl = TRUE;
 
     if ((s = socket(addr->sa_family, SOCK_RAW, IPPROTO_RAW)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -36,6 +36,7 @@ EXT int tee_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugi
 EXT int tee_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_balance_alg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int tee_recvs_map_src_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
 EXT void tee_recvs_map_validate(char *, struct plugin_requests *);
 
