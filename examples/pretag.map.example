@@ -9,8 +9,8 @@
 ! and 'stack' keys can be used to alter the standard rule evaluation flow.
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
-! engine_type, engine_id, flowset_id, nexthop, bgp_nexthop, filter, v8agg,
-! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan.
+! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
+! v8agg, sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
@@ -62,14 +62,14 @@
 ! 'out' 		MATCH: Output interface. In NFv9/IPFIX this is compared
 !			against IE #14 and, if not existing, against IE #253. 
 ! 'engine_type'		MATCH: in NFv5 this is compared against the 'engine_type'
-!			header field. In NFv9 it's compared against the 3rd octet
-!			of the 'source_id' header field. Provides uniqueness with
-!			respect to the routing engine on the exporting device.
+!			header field. Provides uniqueness with respect to the
+!			routing engine on the exporting device.
 ! 'engine_id'		MATCH: in NFv5 this is compared against the 'engine_id'
-!			header field. In NFv9 it's compared against the 4th octet
-!			of the 'source_id' header field. It provides uniqueness
-!			with respect to the particular line card on the exporting
-!			device.
+!			header field; this provides uniqueness with respect to the
+!			particular line card on the exporting device. In NFv9/IPFIX
+!			it's compared against the source_id header field.
+! 'source_id'		MATCH: In NFv9/IPFIX it's compared against the source_id
+!			header field. This is an alias to engine_id.
 ! 'flowset_id'		MATCH: In NFv9/IPFIX this is compared against the flowset
 !			ID field of the flowset header.
 ! 'nexthop'		MATCH: IPv4/IPv6 address of the next-hop router. In NFv9/

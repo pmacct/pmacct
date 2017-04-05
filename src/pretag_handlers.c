@@ -472,25 +472,21 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
 
 int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  int x = 0, j, len;
+  int x = 0, len;
+  char *endptr;
 
   e->key.engine_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   len = strlen(value);
 
   while (x < len) {
     if (!isdigit(value[x])) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_id' value: '%s'.\n", config.name, config.type, filename, value);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_id' or 'source_id' value: '%s'.\n", config.name, config.type, filename, value);
       return TRUE;
     }
     x++;
   }
 
-  j = atoi(value);
-  if (j > 255) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'engine_id' value (range: 0 >= value > 256).\n", config.name, config.type, filename);
-    return TRUE;
-  }
-  e->key.engine_id.n = j;
+  e->key.engine_id.n = strtoul(value, &endptr, 10);
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_ENGINE_ID) {
@@ -1515,25 +1511,8 @@ int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_char value[4];
 
   switch(hdr->version) {
-  case 10:
-  {
-    struct struct_header_ipfix *hdr = (struct struct_header_ipfix *) pptrs->f_header;
-
-    memcpy(value, &hdr->source_id, 4);
-    if (entry->key.engine_type.n == (u_int8_t)value[2]) return (FALSE | entry->key.engine_type.neg);
-    else return (TRUE ^ entry->key.engine_type.neg);
-  }
-  case 9:
-  {
-    struct struct_header_v9 *hdr = (struct struct_header_v9 *) pptrs->f_header;
-
-    memcpy(value, &hdr->source_id, 4);
-    if (entry->key.engine_type.n == (u_int8_t)value[2]) return (FALSE | entry->key.engine_type.neg);
-    else return (TRUE ^ entry->key.engine_type.neg);
-  }
   case 8:
     if (entry->key.engine_type.n == ((struct struct_header_v8 *)pptrs->f_header)->engine_type) return (FALSE | entry->key.engine_type.neg);
     else return (TRUE ^ entry->key.engine_type.neg);
@@ -1550,23 +1529,23 @@ int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_char value[4];
+  u_int32_t value;
 
   switch(hdr->version) {
   case 10:
   {
     struct struct_header_ipfix *hdr = (struct struct_header_ipfix *) pptrs->f_header;
 
-    memcpy(value, &hdr->source_id, 4);
-    if (entry->key.engine_id.n == (u_int8_t)value[3]) return (FALSE | entry->key.engine_id.neg);
+    value = ntohl(hdr->source_id);
+    if (entry->key.engine_id.n == value) return (FALSE | entry->key.engine_id.neg);
     else return (TRUE ^ entry->key.engine_id.neg);
   }
   case 9:
   {
     struct struct_header_v9 *hdr = (struct struct_header_v9 *) pptrs->f_header;
 
-    memcpy(value, &hdr->source_id, 4);
-    if (entry->key.engine_id.n == (u_int8_t)value[3]) return (FALSE | entry->key.engine_id.neg);
+    value = ntohl(hdr->source_id);
+    if (entry->key.engine_id.n == value) return (FALSE | entry->key.engine_id.neg);
     else return (TRUE ^ entry->key.engine_id.neg);
   }
   case 8:

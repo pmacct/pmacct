@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -145,7 +145,7 @@ struct id_entry_key {
   pt_uint32_t input; /* input interface index */
   pt_uint32_t output; /* output interface index */
   pt_uint8_t engine_type;
-  pt_uint8_t engine_id;
+  pt_uint32_t engine_id;
   pt_uint16_t flowset_id; /* applies to NetFlow v9/IPFIX flowset ID */
   pt_uint32_t agent_id; /* applies to sFlow agentSubId */
   pt_uint32_t sampling_rate; /* applies to sFlow sampling rate */
