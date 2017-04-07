@@ -62,10 +62,10 @@
 !			against IE #10 and, if not existing, against IE #252.  
 ! 'out' 		MATCH: Output interface. In NFv9/IPFIX this is compared
 !			against IE #14 and, if not existing, against IE #253. 
-! 'engine_type'		MATCH: in NFv5 this is compared against the 'engine_type'
+! 'engine_type'		MATCH: in NFv5-v8 this is compared against the engine_type
 !			header field. Provides uniqueness with respect to the
 !			routing engine on the exporting device.
-! 'engine_id'		MATCH: in NFv5 this is compared against the 'engine_id'
+! 'engine_id'		MATCH: in NFv5-v8 this is compared against the engine_id
 !			header field; this provides uniqueness with respect to the
 !			particular line card on the exporting device. In NFv9/IPFIX
 !			it's compared against the source_id header field.
@@ -77,7 +77,7 @@
 !			IPFIX this is compared against IE #15.
 ! 'bgp_nexthop'		MATCH: IPv4/IPv6 address of the next-hop BGP router. In
 !			MPLS-enabled networks this can be also matched against top
-!			label address where available (ie. egress NetFlow v9/IPFIX
+!			label address where available (ie. egress NFv9/IPFIX
 !			exports). In NFv9/IPFIX this is compared against IE #18
 !			for IPv4 and IE #62 for IPv6.
 ! 'filter'		MATCH: incoming packets are mateched against the supplied
@@ -90,8 +90,8 @@
 !			field. sFlow v2/v4 do not carry such field, hence it does
 !			not apply.
 ! 'sampling_rate'       MATCH: in sFlow v2/v4/v5 this is compared against the
-!			sampling rate field; it also works against NetFlow v5.
-!			NetFlow v9 and IPFIX are unsupported instead.
+!			sampling rate field; it also works against NFv5-v8.
+!			NFv9/IPFIX are unsupported instead.
 ! 'sample_type'         MATCH: in sFlow v2/v4/v5 this is compared against the
 !			sample type field. Expected in <Enterprise>:<Format>
 !			notation. In NetFlow/IPIX three keywords are supported:
@@ -100,7 +100,7 @@
 !			flag events and "option" to denote NetFlow/IPFIX option
 !			records data.
 ! 'direction'		MATCH: expected values are 0 (ingress direction) or 1
-!			(egress direction). In NetFlow v9/IPFIX this is compared
+!			(egress direction). In NFv9/IPFIX this is compared
 !			against the direction (61) field; in sFlow v2/v4/v5 this
 !			returns a positive match if: 1) source_id equals to input
 !			interface and this 'direction' key is set to '0' or 2)
@@ -134,18 +134,16 @@
 ! 'mpls_vpn_rd'		MATCH: Destination IP prefix BGP-signalled MPLS L2/L3
 !			VPN Route Distinguisher (RD) value. Encoding types #0, #1
 !			and #2 are supported as per rfc4364. See example below.
-! 'src_mac'		MATCH: In NetFlow v9 and IPFIX this is compared against
-!			IE #56, in sFlow against source MAC address field part
-!			of the Extended Switch object.
-! 'dst_mac'             MATCH: In NetFlow v9 and IPFIX this is compared against
-!                       IE #57, in sFlow against destination MAC address field
-!			part of the Extended Switch object.
-! 'vlan'		MATCH: In NetFlow v9 and IPFIX this is compared against
-!			IE #58 and, if not existing, against IE #242, in sFlow
-!			against in/out VLAN ID fields part of the Extended Switch
-!			object.
-! 'cvlan'		MATCH: In NetFlow v9 and IPFIX this is compared against
-!                       IE #245.
+! 'src_mac'		MATCH: In NFv9/IPFIX this is compared against IE #56,
+!			in sFlow against source MAC address field part of the
+!			Extended Switch object.
+! 'dst_mac'             MATCH: In NFv9/IPFIX this is compared against IE #57,
+!			in sFlow against destination MAC address field part of
+!			the Extended Switch object.
+! 'vlan'		MATCH: In NFv9/IPFIX this is compared against IE #58 and,
+!			if not existing, against IE #242, in sFlow against in/out
+!			VLAN ID fields part of the Extended Switch object.
+! 'cvlan'		MATCH: In NFv9/IPFIX this is compared against IE #245.
 ! 'label'		SET: Mark the rule with label's value. Labels don't need
 !			to be unique: when jumping, the first matching label wins.
 !			Label value 'next' is reserved for internal use and

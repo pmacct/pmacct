@@ -1931,7 +1931,12 @@ they will likely retain data internally to the daemon; 4) if multiple interfaces
 are configured on a system, try to disable (at least for a test) rp_filtering.
 See http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
 on RP filtering. To disable RP filtering he value in the rp_filter files in
-/proc must be set to zero.
+/proc must be set to zero; 5) in case aggregate_filter is in use: the feature
+expects a libpcap-style filter as value. BPF filters are sensible to both VLAN
+tags and MPLS labels: if, for example, the traffic is VLAN tagged and the value
+of aggregate_filter is 'src net X.X.X.X/Y', there will be no match for VLAN-
+tagged traffic from src net X.X.X.X/Y; the filter should be re-written as
+'vlan and src net X.X.X.X/Y'.  
 
 d) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
 be produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
