@@ -268,6 +268,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         pollagain = FALSE;
         memcpy(pipebuf, rg->ptr, bufsz);
+        status->last_plugin_off = (rg->ptr - rg->base);
         rg->ptr += bufsz;
       }
       else {

@@ -410,6 +410,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
 
         memcpy(pipebuf, rgptr, config.buffer_size);
+        status->last_plugin_off = (rgptr - (unsigned char *)((struct channels_list_entry *)ptr)->rg.base);
         if (((struct ch_buf_hdr *)pipebuf)->seq != seq) {
           rg_err_count++;
           if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
