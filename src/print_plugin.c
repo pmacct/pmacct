@@ -1326,9 +1326,11 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #endif
 
     if (config.print_latest_file) {
-      memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
-      handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs);
-      link_latest_output_file(tmpbuf, current_table);
+      if (!safe_action) {
+        memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
+        handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs);
+        link_latest_output_file(tmpbuf, current_table);
+      }
     }
 
 #ifdef WITH_AVRO
