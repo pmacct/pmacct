@@ -492,7 +492,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (dump_writers_get_flags() != CHLD_ALERT) {
       switch (ret = fork()) {
       case 0: /* Child */
-        (*purge_func)(queries_queue, qq_ptr);
+        (*purge_func)(queries_queue, qq_ptr, TRUE);
         exit(0);
       default: /* Parent */
         if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
@@ -590,7 +590,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
     switch (ret = fork()) {
     case 0: /* Child */
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer", config.name);
-      (*purge_func)(queries_queue, qq_ptr);
+      (*purge_func)(queries_queue, qq_ptr, FALSE);
       exit(0);
     default: /* Parent */
       if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
@@ -749,7 +749,7 @@ void P_exit_now(int signum)
   if (qq_ptr) P_cache_mark_flush(queries_queue, qq_ptr, TRUE);
 
   dump_writers_count();
-  if (dump_writers_get_flags() != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr);
+  if (dump_writers_get_flags() != CHLD_ALERT) (*purge_func)(queries_queue, qq_ptr, FALSE);
   else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
   wait(NULL);

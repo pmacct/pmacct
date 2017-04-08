@@ -367,7 +367,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 }
 
-void P_cache_purge(struct chained_cache *queue[], int index)
+void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 {
   struct pkt_primitives *data = NULL;
   struct pkt_bgp_primitives *pbgp = NULL;

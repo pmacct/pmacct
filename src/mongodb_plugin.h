@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -41,23 +41,12 @@
 #define EXT
 #endif
 EXT void mongodb_plugin(int, struct configuration *, void *);
-EXT void MongoDB_cache_purge(struct chained_cache *[], int);
+EXT void MongoDB_cache_purge(struct chained_cache *[], int, int);
 EXT void MongoDB_create_indexes(mongo *, const char *);
 EXT int MongoDB_get_database(char *, int, char *);
 EXT void MongoDB_append_string(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 EXT int MongoDB_oid_fuzz();
 
 /* global vars */
-EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
-EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
-EXT struct scratch_area sa;
-EXT struct chained_cache *cache;
-EXT struct chained_cache **queries_queue;
-EXT struct timeval flushtime;
-EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit; 
-EXT time_t refresh_deadline;
 EXT mongo db_conn;
-
-EXT struct timeval sbasetime;
-EXT int dyn_table;
 #undef EXT

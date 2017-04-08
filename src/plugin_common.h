@@ -142,7 +142,7 @@ EXT int P_test_zero_elem(struct chained_cache *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
-EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
+EXT void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
 EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue, **pending_queries_queue, *pqq_container;
@@ -157,5 +157,9 @@ EXT int (*basetime_cmp)(struct timeval *, struct timeval *);
 EXT struct timeval basetime, ibasetime, new_basetime;
 EXT time_t timeslot;
 EXT int dyn_table;
+
+#ifdef WITH_AVRO
+EXT avro_schema_t avro_acct_schema;
+#endif
 #undef EXT
 #endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */

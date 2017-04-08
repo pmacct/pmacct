@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -29,7 +29,7 @@
 #define EXT
 #endif
 EXT void print_plugin(int, struct configuration *, void *);
-EXT void P_cache_purge(struct chained_cache *[], int);
+EXT void P_cache_purge(struct chained_cache *[], int, int);
 EXT void P_write_stats_header_formatted(FILE *, int);
 EXT void P_write_stats_header_csv(FILE *, int);
 EXT void P_fprintf_csv_string(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
@@ -42,8 +42,4 @@ EXT void P_fprintf_csv_string(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgre
 #define EXT
 #endif
 EXT int print_output_stdout_header;
-
-#ifdef WITH_AVRO
-EXT avro_schema_t avro_acct_schema;
-#endif
 #undef EXT

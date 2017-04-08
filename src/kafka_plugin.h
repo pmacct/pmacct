@@ -34,25 +34,8 @@
 #define EXT
 #endif
 EXT void kafka_plugin(int, struct configuration *, void *);
-EXT void kafka_cache_purge(struct chained_cache *[], int);
+EXT void kafka_cache_purge(struct chained_cache *[], int, int);
 #ifdef WITH_AVRO
 EXT void kafka_avro_schema_purge(char *);
-#endif
-
-/* global vars */
-EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
-EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */
-EXT struct scratch_area sa;
-EXT struct chained_cache *cache;
-EXT struct chained_cache **queries_queue;
-EXT struct timeval flushtime;
-EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit;
-EXT time_t refresh_deadline;
-
-EXT struct timeval sbasetime;
-
-#ifdef WITH_AVRO
-EXT char *avro_buf;
-EXT avro_schema_t avro_acct_schema;
 #endif
 #undef EXT
