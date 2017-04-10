@@ -182,4 +182,5 @@ EXT void pm_scandir_free(struct dirent ***, int);
 EXT int pm_alphasort(const void *, const void *);
 
 EXT void replace_string(char *, int, char *, char *);
+EXT int delete_line_from_file(int, char *);
 #undef EXT
