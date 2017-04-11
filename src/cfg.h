@@ -191,6 +191,7 @@ struct configuration {
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_pro_rating;
+  char *nfacctd_templates_file;
   int nfacctd_account_options;
   int nfacctd_stitching;
   u_int32_t nfacctd_as;
