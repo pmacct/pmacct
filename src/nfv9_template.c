@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -531,7 +531,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
   return tpl;
 }
 
-void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)
+void resolve_vlen_template(char *ptr, u_int16_t flowsetlen, struct template_cache_entry *tpl)
 {
   struct otpl_field *otpl_ptr;
   struct utpl_field *utpl_ptr;
@@ -540,7 +540,8 @@ void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)
 
   while (idx < tpl->num) {
     add_len = 0;
-    if (tpl->list[idx].type == TPL_TYPE_LEGACY) { 
+
+    if (tpl->list[idx].type == TPL_TYPE_LEGACY) {
       otpl_ptr = (struct otpl_field *) tpl->list[idx].ptr;
       if (vlen) otpl_ptr->off = len;
 
@@ -564,6 +565,9 @@ void resolve_vlen_template(char *ptr, struct template_cache_entry *tpl)
 
       len += (utpl_ptr->len+add_len);
     }
+
+    /* if len is invalid (ie. greater than flowsetlen), we stop here */
+    if (len > flowsetlen) break;
 
     idx++;
   }
