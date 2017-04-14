@@ -207,6 +207,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
 #ifdef WITH_JANSSON
 void load_templates_from_file(char *path)
 {
+  struct template_cache_entry *tpl, *prev_ptr = NULL, *ptr = NULL;
   FILE *tmp_file = fopen(path, "r");
   char errbuf[SRVBUFLEN], *tmpbuf;
   int line = 1;
@@ -214,7 +215,7 @@ void load_templates_from_file(char *path)
 
   tmpbuf = malloc(LARGEBUFLEN);
   if (!tmpbuf) {
-    Log(LOG_ERR, "ERROR ( %s/core ): load_templates_from_file(): unable to malloc() tmpbuf. File skipped.\n",
+    Log(LOG_ERR, "ERROR ( %s/core ): load_templates_from_file(): unable to malloc(). File skipped.\n",
 	config.name);
     return;
   }
@@ -225,17 +226,16 @@ void load_templates_from_file(char *path)
     return;
   }
 
-  struct template_cache_entry *tpl, *prev_ptr = NULL, *ptr = NULL;
-
   while (fgets(tmpbuf, LARGEBUFLEN, tmp_file)) {
     tpl = nfacctd_offline_read_json_template(tmpbuf, errbuf, SRVBUFLEN);
+
     if (tpl == NULL) {
       Log(LOG_WARNING, "WARN ( %s/core ): [%s:%u] %s\n", config.name, path, line, errbuf);
     }
     else {
       /* We assume the cache is empty when templates are loaded */
       if (find_template(tpl->template_id, &tpl->agent, tpl->template_type, tpl->source_id))
-        Log(LOG_DEBUG, "WARN ( %s/core ): Template %d already exists in cache. Skipping\n",
+        Log(LOG_DEBUG, "WARN ( %s/core ): Template %u already exists in cache. Skipping\n",
                 config.name, tpl->template_id);
       else {
         modulo = (ntohs(tpl->template_id)%tpl_cache.num);
@@ -249,8 +249,7 @@ void load_templates_from_file(char *path)
         if (prev_ptr) prev_ptr->next = tpl;
         else tpl_cache.c[modulo] = tpl;
 
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): Loaded template %d into cache.\n",
-                config.name, tpl->template_id);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): Loaded template %u into cache.\n", config.name, tpl->template_id);
       }
     }
 
@@ -274,7 +273,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
 
   tmpbuf = malloc(LARGEBUFLEN);
   if (!tmpbuf) {
-    Log(LOG_ERR, "ERROR ( %s/core ): update_template_in_file(): unable to malloc() tmpbuf. Update skipped.\n",
+    Log(LOG_ERR, "ERROR ( %s/core ): update_template_in_file(): unable to malloc(). Update skipped.\n",
 	config.name);
     return;
   }
@@ -364,7 +363,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
   }
 
   if (tpl_found == 0)
-    Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): Template %d not found.\n",
+    Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): Template %u not found.\n",
             config.name, path, tpl->template_id);
   else {
     if (delete_line_from_file(line, path) != 0) {
@@ -382,13 +381,13 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
 
 void save_template(struct template_cache_entry *tpl, char *file)
 {
+  FILE *tpl_file = open_output_file(config.nfacctd_templates_file, "a", TRUE);
   u_int16_t field_idx;
   u_int8_t idx;
   char *fmt;
   char ip_addr[INET6_ADDRSTRLEN];
   json_t *root = json_object(), *agent_obj, *kv;
   json_t *list_array, *tpl_array;
-  FILE *tpl_file = open_output_file(config.nfacctd_templates_file, "a", TRUE);
 
   addr_to_str(ip_addr, &tpl->agent);
   kv = json_pack("{ss}", "agent", ip_addr);
@@ -430,12 +429,12 @@ void save_template(struct template_cache_entry *tpl, char *file)
       json_decref(kv);
 
       /* idea: depending on tpl->list[field_idx].type,
-       * serialize either an otpl_field (if TPL_TYPE_LEGACY) or
-       * an utpl_field (if TPL_TYPE_EXT_DB) */
+         serialize either an otpl_field (if TPL_TYPE_LEGACY) or
+         an utpl_field (if TPL_TYPE_EXT_DB) */
       if (tpl->list[field_idx].type == TPL_TYPE_LEGACY){
         struct otpl_field *otpl_field = (struct otpl_field *) tpl->list[field_idx].ptr;
         /* Where in tpl->tpl to insert the otpl_field
-         * when deserializing */
+           when deserializing */
         int tpl_index = (otpl_field - tpl->tpl);
 
         json_t *json_otpl_field = json_object();
@@ -463,7 +462,7 @@ void save_template(struct template_cache_entry *tpl, char *file)
         u_int16_t ext_db_modulo = (ext_db_ptr->type%TPL_EXT_DB_ENTRIES);
 
         /* Where in tpl->ext_db[ext_db_modulo].ie
-         * to insert the utpl_field when deserializing */
+           to insert the utpl_field when deserializing */
         int ie_idx = (ext_db_ptr - tpl->ext_db[ext_db_modulo].ie);
 
         json_t *json_utpl_field = json_object();
@@ -507,8 +506,8 @@ void save_template(struct template_cache_entry *tpl, char *file)
   else {
     tpl_array = json_array();
     /* Fields with type >= NF9_MAX_DEFINED_FIELD are not serialized
-     * since they don't appear to be taken into account when receiving
-     * the template. */
+       since they don't appear to be taken into account when receiving
+       the template. */
     for (field_idx = 0; field_idx < NF9_MAX_DEFINED_FIELD; field_idx++) {
       if (tpl->tpl[field_idx].off == 0 && tpl->tpl[field_idx].len == 0) continue;
 
@@ -533,13 +532,12 @@ void save_template(struct template_cache_entry *tpl, char *file)
   }
 
   /* NB: member `next` is willingly excluded from serialisation, since
-   * it would make more sense for it to be computed when de-serializing,
-   * to prevent the template cache from being corrupted. */
+     it would make more sense for it to be computed when de-serializing,
+     to prevent the template cache from being corrupted. */
 
   if (root) {
       write_and_free_json(tpl_file, root);
-      Log(LOG_DEBUG, "DEBUG ( %s/core ): Saved template %d into file.\n",
-              config.name, tpl->template_id);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): Saved template %u into file.\n", config.name, tpl->template_id);
   }
 
   close_output_file(tpl_file);
@@ -551,7 +549,9 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
   u_int16_t field_idx;
 
   json_error_t json_err;
-  json_t *json_obj;
+  json_t *json_obj = NULL;
+  json_t *json_tpl_id = NULL, *json_src_id = NULL, *json_tpl_type = NULL, *json_num = NULL, *json_len = NULL, *json_agent = NULL, *json_list = NULL;
+  const char *agent_str;
 
   json_obj = json_loads(buf, 0, &json_err);
 
@@ -570,8 +570,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       }
 
       memset(ret, 0, sizeof(struct template_cache_entry));
+      json_tpl_id = json_object_get(json_obj, "template_id");
 
-      json_t *json_tpl_id = json_object_get(json_obj, "template_id");
       if (json_tpl_id == NULL) {
         snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): template ID null. Line skipped.\n");
         free(ret);
@@ -582,8 +582,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       }
 
       free(json_tpl_id);
+      json_src_id = json_object_get(json_obj, "source_id");
 
-      json_t *json_src_id = json_object_get(json_obj, "source_id");
       if (json_src_id == NULL) {
         snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): source ID null. Line skipped.\n");
         free(ret);
@@ -594,8 +594,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       }
 
       free(json_src_id);
+      json_tpl_type = json_object_get(json_obj, "template_type");
 
-      json_t *json_tpl_type = json_object_get(json_obj, "template_type");
       if (json_tpl_type == NULL) {
         snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): template type null. Line skipped.\n");
         free(ret);
@@ -606,8 +606,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       }
 
       free(json_tpl_type);
+      json_num = json_object_get(json_obj, "num");
 
-      json_t *json_num = json_object_get(json_obj, "num");
       if (json_num == NULL) {
         snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): num null. Line skipped.\n");
         free(ret);
@@ -618,8 +618,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       }
 
       free(json_num);
+      json_len = json_object_get(json_obj, "len");
 
-      json_t *json_len = json_object_get(json_obj, "len");
       if (json_len == NULL) {
         snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): len null. Line skipped.\n");
         free(ret);
@@ -630,10 +630,10 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       }
 
       free(json_len);
+      json_agent = json_object_get(json_obj, "agent");
+      agent_str = json_string_value(json_agent);
 
-      json_t *json_agent = json_object_get(json_obj, "agent");
-      const char *agent_str = json_string_value(json_agent);
-      if(!str_to_addr(agent_str, &ret->agent)) {
+      if (!str_to_addr(agent_str, &ret->agent)) {
         snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): error creating agent.\n");
         free(ret);
         return NULL;
@@ -642,43 +642,50 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       /* Data template */
       if (ret->template_type == 0) {
         json_t *json_vlen = json_object_get(json_obj, "vlen");
+
         if (json_vlen == NULL) {
           snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): vlen null. Line skipped.\n");
           free(ret);
           return NULL;
         }
         else {
-          ret->vlen = json_integer_value(json_vlen);
-        }
+	  ret->vlen = json_integer_value(json_vlen);
+	}
 
         free(json_vlen);
+        json_list = json_object_get(json_obj, "list");
 
-        json_t *json_list = json_object_get(json_obj, "list");
         if (!json_is_array(json_list))
           snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): error parsing template fields list.\n");
         else {
           size_t key;
           json_t *value;
           int idx = 0;
+
           json_array_foreach(json_list, key, value) {
             if (json_integer_value(json_object_get(value, "type")) == TPL_TYPE_LEGACY) {
-              ret->list[idx].type = TPL_TYPE_LEGACY;
               struct otpl_field *otpl = malloc(sizeof(struct otpl_field));
+	      json_t *json_otpl = NULL, *json_otpl_member = NULL;
+	      int tpl_index = 0;
+
+              ret->list[idx].type = TPL_TYPE_LEGACY;
               if (!otpl) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): Unable to allocate enough memory for a new legacy template field.\n");
                 free(ret);
                 return NULL;
               }
-              memset(otpl, 0, sizeof (struct otpl_field));
 
-              json_t *json_otpl = json_object_get(value, "otpl");
+              memset(otpl, 0, sizeof (struct otpl_field));
+              json_otpl = json_object_get(value, "otpl");
+
               if (json_otpl == NULL) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): otpl null. Line skipped.\n");
                 free(ret);
                 return NULL;
               }
 
-              json_t *json_otpl_member = json_object_get(json_otpl, "off");
+              json_otpl_member = json_object_get(json_otpl, "off");
+
               if (json_otpl_member == NULL) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): off null. Line skipped.\n");
                 free(ret);
@@ -708,7 +715,6 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
                 otpl->tpl_len = json_integer_value(json_otpl_member);
               }
 
-              int tpl_index;
               json_otpl_member = json_object_get(json_otpl, "tpl_index");
               if (json_otpl_member == NULL) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): tpl_index null. Line skipped.\n");
@@ -725,8 +731,11 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
               free(json_otpl);
             }
             else if (json_integer_value(json_object_get(value, "type")) == TPL_TYPE_EXT_DB) {
-              ret->list[idx].type = TPL_TYPE_EXT_DB;
               struct utpl_field *utpl = malloc(sizeof(struct utpl_field));
+	      json_t *json_utpl_member = NULL;
+	      int ie_idx = 0, modulo = 0;
+
+              ret->list[idx].type = TPL_TYPE_EXT_DB;
               if (!utpl) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): Unable to allocate enough memory for a new ext_db template field.\n");
                 free(ret);
@@ -741,7 +750,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
                 return NULL;
               }
 
-              json_t *json_utpl_member = json_object_get(json_utpl, "pen");
+              json_utpl_member = json_object_get(json_utpl, "pen");
+
               if (json_utpl_member == NULL) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): pen null. Line skipped.\n");
                 free(ret);
@@ -801,7 +811,6 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
                 utpl->repeat_id = json_integer_value(json_utpl_member);
               }
 
-              int ie_idx, modulo;
               json_utpl_member = json_object_get(json_utpl, "ie_idx");
               if (json_utpl_member == NULL) {
                 snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): ie_idx null. Line skipped.\n");
@@ -833,14 +842,18 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
       /* Options template */
       else {
         json_t *json_tpl = json_object_get(json_obj, "tpl");
-        if (!json_is_array(json_tpl))
+
+        if (!json_is_array(json_tpl)) {
           snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): error parsing template fields list.\n");
+	}
         else {
           size_t key;
           json_t *value;
           int tpl_idx = 0;
+
           json_array_foreach(json_tpl, key, value) {
             struct otpl_field *otpl = malloc(sizeof(struct otpl_field));
+
             if (!otpl) {
               snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): Unable to allocate enough memory for a new options template field.\n");
               free(ret);
