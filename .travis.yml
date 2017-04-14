@@ -1,5 +1,6 @@
 language: C
 compiler: gcc
+dist: trusty
 sudo: required
 
 install:
