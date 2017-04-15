@@ -18,9 +18,11 @@
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label and filter.
 !
-! sfacctd, nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label,
-! ip, engine_type, engine_id, source_id, agent_id, in_iface, out_iface, src_mac,
-! dst_mac, vlan.
+! nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label, ip,
+! engine_type, engine_id, source_id
+!
+! sfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label, ip,
+! agent_id, in_iface, out_iface, src_mac, dst_mac, vlan.
 !
 ! BGP-related keys are independent of the collection method in use, hence apply
 ! to all daemons (BGP daemon must be enabled): src_as, dst_as, src_comms, comms,
