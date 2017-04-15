@@ -1,5 +1,6 @@
 language: C
 compiler: gcc
+dist: trusty
 sudo: required
 
 install:
@@ -28,7 +29,7 @@ addons:
       - libmysqlclient-dev
       - libjansson-dev
       - libnetfilter-log-dev
-      - mysql-client
+      - mysql-client-5.6
       - libtool
       - autoconf
       - automake
