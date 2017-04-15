@@ -355,14 +355,14 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
       addr_to_str(tpl_agent_str, &tpl->agent);
       if (tpl_id == tpl->template_id && tpl_type == tpl->template_type
               && src_id == tpl->source_id && !strcmp(addr, tpl_agent_str)) {
-        tpl_found = 1;
+        tpl_found = TRUE;
         break;
       }
     }
     line++;
   }
 
-  if (tpl_found == 0)
+  if (!tpl_found)
     Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): Template %u not found.\n",
             config.name, path, tpl->template_id);
   else {
@@ -386,47 +386,31 @@ void save_template(struct template_cache_entry *tpl, char *file)
   u_int8_t idx;
   char *fmt;
   char ip_addr[INET6_ADDRSTRLEN];
-  json_t *root = json_object(), *agent_obj, *kv;
+  json_t *root = json_object(), *agent_obj;
   json_t *list_array, *tpl_array;
 
   addr_to_str(ip_addr, &tpl->agent);
-  kv = json_pack("{ss}", "agent", ip_addr);
-  json_object_update_missing(root, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(root, "agent", json_string(ip_addr)); 
 
-  kv = json_pack("{sI}", "source_id", tpl->source_id);
-  json_object_update_missing(root, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(root, "source_id", json_integer(tpl->source_id));
 
-  kv = json_pack("{sI}", "template_id", tpl->template_id);
-  json_object_update_missing(root, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(root, "template_id", json_integer(tpl->template_id));
+  
+  json_object_set_new_nocheck(root, "template_type", json_integer(tpl->template_type));
 
-  kv = json_pack("{sI}", "template_type", tpl->template_type);
-  json_object_update_missing(root, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(root, "num", json_integer(tpl->num));
 
-  kv = json_pack("{sI}", "num", tpl->num);
-  json_object_update_missing(root, kv);
-  json_decref(kv);
-
-  kv = json_pack("{sI}", "len", tpl->len);
-  json_object_update_missing(root, kv);
-  json_decref(kv);
+  json_object_set_new_nocheck(root, "len", json_integer(tpl->len));
 
   /* Data template */
   if (tpl->template_type == 0) {
-    kv = json_pack("{sI}", "vlen", tpl->vlen);
-    json_object_update_missing(root, kv);
-    json_decref(kv);
+    json_object_set_new_nocheck(root, "vlen", json_integer(tpl->vlen));
 
     list_array = json_array();
     for (field_idx = 0; field_idx < tpl->num; field_idx++) {
       json_t *json_tfl_field = json_object();
 
-      kv = json_pack("{sI}", "type", tpl->list[field_idx].type);
-      json_object_update_missing(json_tfl_field, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(json_tfl_field, "type", json_integer(tpl->list[field_idx].type));
 
       /* idea: depending on tpl->list[field_idx].type,
          serialize either an otpl_field (if TPL_TYPE_LEGACY) or
@@ -436,24 +420,15 @@ void save_template(struct template_cache_entry *tpl, char *file)
         /* Where in tpl->tpl to insert the otpl_field
            when deserializing */
         int tpl_index = (otpl_field - tpl->tpl);
-
         json_t *json_otpl_field = json_object();
 
-        kv = json_pack("{sI}", "off", otpl_field->off);
-        json_object_update_missing(json_otpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_otpl_field, "off", json_integer(otpl_field->off));
 
-        kv = json_pack("{sI}", "len", otpl_field->len);
-        json_object_update_missing(json_otpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_otpl_field, "len", json_integer(otpl_field->len));
 
-        kv = json_pack("{sI}", "tpl_len", otpl_field->tpl_len);
-        json_object_update_missing(json_otpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_otpl_field, "tpl_len", json_integer(otpl_field->tpl_len));
 
-        kv = json_pack("{sI}", "tpl_index", tpl_index);
-        json_object_update_missing(json_otpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_otpl_field, "tpl_index", json_integer(tpl_index));
 
         json_object_set_new(json_tfl_field, "otpl", json_otpl_field);
       }
@@ -464,36 +439,21 @@ void save_template(struct template_cache_entry *tpl, char *file)
         /* Where in tpl->ext_db[ext_db_modulo].ie
            to insert the utpl_field when deserializing */
         int ie_idx = (ext_db_ptr - tpl->ext_db[ext_db_modulo].ie);
-
         json_t *json_utpl_field = json_object();
 
-        kv = json_pack("{sI}", "pen", ext_db_ptr->pen);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "pen", json_integer(ext_db_ptr->pen));
 
-        kv = json_pack("{sI}", "type", ext_db_ptr->type);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "type", json_integer(ext_db_ptr->type));
 
-        kv = json_pack("{sI}", "off", ext_db_ptr->off);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "off", json_integer(ext_db_ptr->off));
 
-        kv = json_pack("{sI}", "len", ext_db_ptr->len);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "len", json_integer(ext_db_ptr->len));
 
-        kv = json_pack("{sI}", "tpl_len", ext_db_ptr->tpl_len);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "tpl_len", json_integer(ext_db_ptr->tpl_len));
 
-        kv = json_pack("{sI}", "repeat_id", ext_db_ptr->repeat_id);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "repeat_id", json_integer(ext_db_ptr->repeat_id));
 
-        kv = json_pack("{sI}", "ie_idx", ie_idx);
-        json_object_update_missing(json_utpl_field, kv);
-        json_decref(kv);
+        json_object_set_new_nocheck(json_utpl_field, "ie_idx", json_integer(ie_idx));
 
         json_object_set_new(json_tfl_field, "utpl", json_utpl_field);
       }
@@ -513,17 +473,11 @@ void save_template(struct template_cache_entry *tpl, char *file)
 
       json_t *json_tpl_field = json_object();
 
-      kv = json_pack("{sI}", "type", field_idx);
-      json_object_update_missing(json_tpl_field, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(json_tpl_field, "type", json_integer(field_idx));
 
-      kv = json_pack("{sI}", "off", tpl->tpl[field_idx].off);
-      json_object_update_missing(json_tpl_field, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(json_tpl_field, "off", json_integer(tpl->tpl[field_idx].off));
 
-      kv = json_pack("{sI}", "len", tpl->tpl[field_idx].len);
-      json_object_update_missing(json_tpl_field, kv);
-      json_decref(kv);
+      json_object_set_new_nocheck(json_tpl_field, "len", json_integer(tpl->tpl[field_idx].len));
 
       json_array_append_new(tpl_array, json_tpl_field);
     }
@@ -549,8 +503,8 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
   u_int16_t field_idx;
 
   json_error_t json_err;
-  json_t *json_obj = NULL;
-  json_t *json_tpl_id = NULL, *json_src_id = NULL, *json_tpl_type = NULL, *json_num = NULL, *json_len = NULL, *json_agent = NULL, *json_list = NULL;
+  json_t *json_obj = NULL, *json_tpl_id = NULL, *json_src_id = NULL, *json_tpl_type = NULL;
+  json_t *json_num = NULL, *json_len = NULL, *json_agent = NULL, *json_list = NULL;
   const char *agent_str;
 
   json_obj = json_loads(buf, 0, &json_err);
@@ -897,7 +851,6 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
         }
         free (json_tpl);
       }
-
       return ret;
     }
 
