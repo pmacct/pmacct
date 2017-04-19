@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 The keys used are:
   !: modified feature, -: deleted feature, +: new feature
 
-1.6.2 -- XX-04-2017
+1.6.2 -- 21-04-2017
   + BGP, BMP daemons: introduced support for BGP Large Communities IETF
     draft (draft-ietf-idr-large-community). Large Communities are stored
     in a variable-length field. Thanks to Job Snijders ( @job ) for his
