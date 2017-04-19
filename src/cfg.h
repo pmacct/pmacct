@@ -455,6 +455,7 @@ struct configuration {
   int memory_pool_size;
   int buckets;
   int daemon;
+  int dump_per_connection;
   int active_plugins;
   char *logfile; 
   FILE *logfile_fd; 

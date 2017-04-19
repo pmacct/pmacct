@@ -35,6 +35,7 @@ EXT int cfg_key_syslog(char *, char *, char *);
 EXT int cfg_key_logfile(char *, char *, char *);
 EXT int cfg_key_pidfile(char *, char *, char *);
 EXT int cfg_key_daemonize(char *, char *, char *);
+EXT int cfg_key_telemetry_dump_per_connection(char *, char *, char *);
 EXT int cfg_key_proc_name(char *, char *, char *);
 EXT int cfg_key_proc_priority(char *, char *, char *);
 EXT int cfg_key_aggregate(char *, char *, char *);
