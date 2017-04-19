@@ -7028,6 +7028,20 @@ int cfg_key_telemetry_dump_refresh_time(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_telemetry_dump_per_connection(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_per_connection= value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_per_connection'. Globalized.\n", filename); 
+
+  return changes;
+}
+
 int cfg_key_telemetry_dump_amqp_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

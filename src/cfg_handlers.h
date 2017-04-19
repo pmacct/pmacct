@@ -218,6 +218,7 @@ EXT int cfg_key_telemetry_dump_output(char *, char *, char *);
 EXT int cfg_key_telemetry_dump_file(char *, char *, char *);
 EXT int cfg_key_telemetry_dump_latest_file(char *, char *, char *);
 EXT int cfg_key_telemetry_dump_refresh_time(char *, char *, char *);
+EXT int cfg_key_telemetry_dump_per_connection(char *, char *, char *);
 EXT int cfg_key_telemetry_dump_amqp_host(char *, char *, char *);
 EXT int cfg_key_telemetry_dump_amqp_vhost(char *, char *, char *);
 EXT int cfg_key_telemetry_dump_amqp_user(char *, char *, char *);
