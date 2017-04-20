@@ -207,6 +207,32 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
 }
 
 /*_________________---------------------------__________________
+  _________________     decodeIPV4_inner      __________________
+  -----------------___________________________------------------
+*/
+
+void decodeIPV4_inner(SFSample *sample, u_char *ptr)
+{
+  u_char *end = sample->header + sample->headerLen;
+  u_int16_t caplen = end - ptr;
+  struct SF_iphdr ip;
+
+  if (caplen < IP4HdrSz) return;
+  memcpy(&ip, ptr, sizeof(ip));
+
+  sample->dcd_inner_srcIP.s_addr = ip.saddr;
+  sample->dcd_inner_dstIP.s_addr = ip.daddr;
+  sample->dcd_inner_ipProtocol = ip.protocol;
+  sample->dcd_inner_ipTos = ip.tos;
+
+  sample->ip_inner_fragmentOffset = ntohs(ip.frag_off) & 0x1FFF;
+  if (sample->ip_inner_fragmentOffset == 0) {
+    ptr += (ip.version_and_headerLen & 0x0f) * 4;
+    decodeIPLayer4(sample, ptr, ip.protocol);
+  }
+}
+
+/*_________________---------------------------__________________
   _________________     decodeIPV4            __________________
   -----------------___________________________------------------
 */
@@ -237,7 +263,11 @@ void decodeIPV4(SFSample *sample)
       /* advance the pointer to the next protocol layer */
       /* ip headerLen is expressed as a number of quads */
       ptr += (ip.version_and_headerLen & 0x0f) * 4;
-      decodeIPLayer4(sample, ptr, ip.protocol);
+
+      if (ip.protocol == 4 /* ipencap */ || ip.protocol == 94 /* ipip */)
+	decodeIPV4_inner(sample, ptr);
+      else
+	decodeIPLayer4(sample, ptr, ip.protocol);
     }
   }
 }
@@ -314,7 +344,11 @@ void decodeIPV6(SFSample *sample)
     // now that we have eliminated the extension headers, nextHeader should have what we want to
     // remember as the ip protocol...
     sample->dcd_ipProtocol = nextHeader;
-    decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
+
+    if (sample->dcd_ipProtocol == 4 /* ipencap */ || sample->dcd_ipProtocol == 94 /* ipip */)
+      decodeIPV4_inner(sample, ptr); 
+    else
+      decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
   }
 }
 #endif
