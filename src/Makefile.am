@@ -57,6 +57,10 @@ if WITH_AVRO
 libdaemons_la_LIBADD  += @AVRO_LIBS@
 libdaemons_la_CFLAGS  += @AVRO_CFLAGS@
 endif
+if WITH_NDPI
+libdaemons_la_LIBADD  += @NDPI_LIBS@
+libdaemons_la_CFLAGS  += @NDPI_CFLAGS@
+endif
 if WITH_RABBITMQ
 libdaemons_la_SOURCES += amqp_common.c amqp_common.h amqp_plugin.c amqp_plugin.h
 libdaemons_la_LIBADD  += @RABBITMQ_LIBS@

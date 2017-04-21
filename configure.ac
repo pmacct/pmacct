@@ -913,6 +913,10 @@ AC_ARG_ENABLE(ndpi,
     USING_NDPI="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS"
     AC_DEFINE(WITH_NDPI, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $NDPI_LIBS"
+    AC_CHECK_LIB(ndpi, ndpi_init_detection_module, [], [])
+    LIBS="$_save_LIBS"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1154,6 +1158,7 @@ AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
+AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
