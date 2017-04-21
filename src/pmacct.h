@@ -89,6 +89,10 @@
 #include <maxminddb.h>
 #endif
 
+#if defined (WITH_NDPI)
+#include <libndpi/ndpi_main.h>
+#endif
+
 #include "pmacct-build.h"
 
 #if !defined ETHER_ADDRSTRLEN

@@ -29,4 +29,6 @@
   AVRO_LIBS			linker flags for AVRO, overriding pkg-config
   NFLOG_CFLAGS			C compiler flags for NFLOG, overriding pkg-config
   NFLOG_LIBS			linker flags for NFLOG, overriding pkg-config
+  NDPI_CFLAGS			C compiler flags for nDPI, overriding pkg-config
+  NDPI_LIBS			linker flags for nDPI, overriding pkg-config
 

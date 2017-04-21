@@ -659,6 +659,7 @@ AC_ARG_ENABLE(mongodb,
 )
 dnl finish: mongodb handling
 
+dnl start: sqlite3 handling
 AC_MSG_CHECKING(whether to enable SQLite3 support)
 AC_ARG_ENABLE(sqlite3,
   [  --enable-sqlite3                 Enable SQLite3 support (default: no)],
@@ -900,6 +901,28 @@ AC_ARG_ENABLE(avro,
   ]
 )
 dnl finish: Avro handling
+
+dnl start: nDPI handling
+AC_MSG_CHECKING(whether to enable nDPI support)
+AC_ARG_ENABLE(ndpi,
+  [  --enable-ndpi                    Enable nDPI support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([NDPI], [libndpi])
+    USING_NDPI="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS"
+    AC_DEFINE(WITH_NDPI, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: nDPI handling
 
 if test x"$USING_DLOPEN" = x"yes"; then
 	AC_DEFINE(HAVE_DLOPEN, 1)
