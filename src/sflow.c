@@ -213,22 +213,24 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
 
 void decodeIPV4_inner(SFSample *sample, u_char *ptr)
 {
-  u_char *end = sample->header + sample->headerLen;
-  u_int16_t caplen = end - ptr;
-  struct SF_iphdr ip;
+  if (sample->got_inner_IPV4) {
+    u_char *end = sample->header + sample->headerLen;
+    u_int16_t caplen = end - ptr;
+    struct SF_iphdr ip;
 
-  if (caplen < IP4HdrSz) return;
-  memcpy(&ip, ptr, sizeof(ip));
+    if (caplen < IP4HdrSz) return;
+    memcpy(&ip, ptr, sizeof(ip));
 
-  sample->dcd_inner_srcIP.s_addr = ip.saddr;
-  sample->dcd_inner_dstIP.s_addr = ip.daddr;
-  sample->dcd_inner_ipProtocol = ip.protocol;
-  sample->dcd_inner_ipTos = ip.tos;
+    sample->dcd_inner_srcIP.s_addr = ip.saddr;
+    sample->dcd_inner_dstIP.s_addr = ip.daddr;
+    sample->dcd_inner_ipProtocol = ip.protocol;
+    sample->dcd_inner_ipTos = ip.tos;
 
-  sample->ip_inner_fragmentOffset = ntohs(ip.frag_off) & 0x1FFF;
-  if (sample->ip_inner_fragmentOffset == 0) {
-    ptr += (ip.version_and_headerLen & 0x0f) * 4;
-    decodeIPLayer4(sample, ptr, ip.protocol);
+    sample->ip_inner_fragmentOffset = ntohs(ip.frag_off) & 0x1FFF;
+    if (sample->ip_inner_fragmentOffset == 0) {
+      ptr += (ip.version_and_headerLen & 0x0f) * 4;
+      decodeIPLayer4(sample, ptr, ip.protocol);
+    }
   }
 }
 
@@ -264,10 +266,11 @@ void decodeIPV4(SFSample *sample)
       /* ip headerLen is expressed as a number of quads */
       ptr += (ip.version_and_headerLen & 0x0f) * 4;
 
-      if (ip.protocol == 4 /* ipencap */ || ip.protocol == 94 /* ipip */)
+      if (ip.protocol == 4 /* ipencap */ || ip.protocol == 94 /* ipip */) {
+	sample->got_inner_IPV4 = TRUE;
 	decodeIPV4_inner(sample, ptr);
-      else
-	decodeIPLayer4(sample, ptr, ip.protocol);
+      }
+      else decodeIPLayer4(sample, ptr, ip.protocol);
     }
   }
 }
@@ -345,10 +348,11 @@ void decodeIPV6(SFSample *sample)
     // remember as the ip protocol...
     sample->dcd_ipProtocol = nextHeader;
 
-    if (sample->dcd_ipProtocol == 4 /* ipencap */ || sample->dcd_ipProtocol == 94 /* ipip */)
+    if (sample->dcd_ipProtocol == 4 /* ipencap */ || sample->dcd_ipProtocol == 94 /* ipip */) {
+      sample->got_inner_IPV4 = TRUE;
       decodeIPV4_inner(sample, ptr); 
-    else
-      decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
+    }
+    else decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
   }
 }
 #endif

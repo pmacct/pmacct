@@ -107,6 +107,7 @@ typedef struct _SFSample {
   u_int32_t udp_pduLen;
 
   /* inner header decode */
+  int got_inner_IPV4;
   struct in_addr dcd_inner_srcIP;
   struct in_addr dcd_inner_dstIP;
   u_int32_t dcd_inner_ipProtocol;

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -516,6 +516,7 @@ struct extra_primitives {
   u_int16_t off_pkt_lbgp_primitives;
   u_int16_t off_pkt_nat_primitives;
   u_int16_t off_pkt_mpls_primitives;
+  u_int16_t off_pkt_tun_primitives;
   u_int16_t off_custom_primitives;
   u_int16_t off_pkt_extras; /* nfprobe only */
   u_int16_t off_pkt_vlen_hdr_primitives;
@@ -527,6 +528,7 @@ struct primitives_ptrs {
   struct pkt_legacy_bgp_primitives *plbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
+  struct pkt_tunnel_primitives *ptun;
   char *pcust;
   struct pkt_extras *pextras;
   struct pkt_vlen_hdr_primitives *pvlen;
@@ -574,6 +576,13 @@ struct pkt_mpls_primitives {
   u_int32_t mpls_label_top;
   u_int32_t mpls_label_bottom;
   u_int8_t mpls_stack_depth;
+};
+
+struct pkt_tunnel_primitives {
+  struct host_addr tunnel_src_ip;
+  struct host_addr tunnel_dst_ip;
+  u_int8_t tunnel_tos;
+  u_int8_t tunnel_proto;
 };
 
 /* same as pkt_legacy_bgp_primitives but pointers in place of strings */
