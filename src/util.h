@@ -137,6 +137,7 @@ EXT void primptrs_set_bgp(u_char *, struct extra_primitives *, struct primitives
 EXT void primptrs_set_lbgp(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_nat(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_mpls(u_char *, struct extra_primitives *, struct primitives_ptrs *);
+EXT void primptrs_set_tun(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_custom(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_extras(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 EXT void primptrs_set_vlen_hdr(u_char *, struct extra_primitives *, struct primitives_ptrs *);

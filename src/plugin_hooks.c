@@ -76,6 +76,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & PIPE_TYPE_BGP) min_sz += sizeof(struct pkt_bgp_primitives);
       if (list->cfg.data_type & PIPE_TYPE_LBGP) min_sz += sizeof(struct pkt_legacy_bgp_primitives);
       if (list->cfg.data_type & PIPE_TYPE_NAT) min_sz += sizeof(struct pkt_nat_primitives);
+      if (list->cfg.data_type & PIPE_TYPE_TUN) min_sz += sizeof(struct pkt_tunnel_primitives);
       if (list->cfg.data_type & PIPE_TYPE_MPLS) min_sz += sizeof(struct pkt_mpls_primitives);
       if (list->cfg.cpptrs.len) min_sz += list->cfg.cpptrs.len;
       if (list->cfg.data_type & PIPE_TYPE_VLEN) {
@@ -179,31 +180,43 @@ void load_plugins(struct plugin_requests *req)
 	offset = sizeof(struct pkt_data);
       }
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) chptr->clean_func = pkt_payload_clean;
+
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) {
 	chptr->extras.off_pkt_extras = offset;
 	offset += sizeof(struct pkt_extras);
       }
       if (list->cfg.data_type & PIPE_TYPE_MSG) chptr->clean_func = pkt_msg_clean;
+
       if (list->cfg.data_type & PIPE_TYPE_BGP) {
         chptr->extras.off_pkt_bgp_primitives = offset;
 	offset += sizeof(struct pkt_bgp_primitives);
       }
       else chptr->extras.off_pkt_bgp_primitives = 0; 
+
       if (list->cfg.data_type & PIPE_TYPE_LBGP) {
         chptr->extras.off_pkt_lbgp_primitives = offset;
         offset += sizeof(struct pkt_legacy_bgp_primitives);
       }
       else chptr->extras.off_pkt_lbgp_primitives = 0;
+
       if (list->cfg.data_type & PIPE_TYPE_NAT) {
         chptr->extras.off_pkt_nat_primitives = offset;
         offset += sizeof(struct pkt_nat_primitives);
       }
       else chptr->extras.off_pkt_nat_primitives = 0; 
+
+      if (list->cfg.data_type & PIPE_TYPE_TUN) {
+        chptr->extras.off_pkt_tun_primitives = offset;
+        offset += sizeof(struct pkt_tunnel_primitives);
+      }
+      else chptr->extras.off_pkt_tun_primitives = 0;
+
       if (list->cfg.data_type & PIPE_TYPE_MPLS) {
         chptr->extras.off_pkt_mpls_primitives = offset;
         offset += sizeof(struct pkt_mpls_primitives);
       }
       else chptr->extras.off_pkt_mpls_primitives = 0;
+
       if (list->cfg.cpptrs.len) {
 	chptr->extras.off_custom_primitives = offset;
 	offset += list->cfg.cpptrs.len;

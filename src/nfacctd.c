@@ -435,6 +435,10 @@ int main(int argc,char **argv, char **envp)
 			COUNT_MPLS_STACK_DEPTH))
 	  list->cfg.data_type |= PIPE_TYPE_MPLS;
 
+	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|
+			COUNT_TUNNEL_IP_PROTO|COUNT_TUNNEL_IP_TOS))
+	  list->cfg.data_type |= PIPE_TYPE_TUN;
+
 	if (list->cfg.what_to_count_2 & (COUNT_LABEL))
 	  list->cfg.data_type |= PIPE_TYPE_VLEN;
 
@@ -2195,6 +2199,7 @@ void compute_once()
   PlbgpSz = sizeof(struct pkt_legacy_bgp_primitives);
   PnatSz = sizeof(struct pkt_nat_primitives);
   PmplsSz = sizeof(struct pkt_mpls_primitives);
+  PtunSz = sizeof(struct pkt_tunnel_primitives);
   PvhdrSz = sizeof(struct pkt_vlen_hdr_primitives);
   PmLabelTSz = sizeof(pm_label_t);
   PtLabelTSz = sizeof(pt_label_t);

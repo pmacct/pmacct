@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -40,7 +40,7 @@ EXT u_int32_t IP4HdrSz, IP4TlSz, IP6HdrSz, IP6AddrSz, IP6TlSz;
 EXT u_int32_t MyTLHdrSz, TCPFlagOff;
 EXT u_int32_t SFSampleSz, SFLAddressSz, SFrenormEntrySz;
 EXT u_int32_t PptrsSz, UDPHdrSz, CSSz, MyTCPHdrSz, IpFlowCmnSz; 
-EXT u_int16_t PbgpSz, PlbgpSz, PnatSz, PmplsSz;
+EXT u_int16_t PbgpSz, PlbgpSz, PnatSz, PmplsSz, PtunSz;
 
 #undef EXT
 

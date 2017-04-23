@@ -1833,6 +1833,11 @@ void set_primptrs_funcs(struct extra_primitives *extras)
     idx++;
   }
 
+  if (extras->off_pkt_tun_primitives) {
+    primptrs_funcs[idx] = primptrs_set_tun;
+    idx++;
+  }
+
   if (extras->off_custom_primitives) {
     primptrs_funcs[idx] = primptrs_set_custom;
     idx++;
@@ -1870,6 +1875,12 @@ void primptrs_set_nat(u_char *base, struct extra_primitives *extras, struct prim
 void primptrs_set_mpls(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
   prim_ptrs->pmpls = (struct pkt_mpls_primitives *) (base + extras->off_pkt_mpls_primitives);
+  prim_ptrs->vlen_next_off = 0;
+}
+
+void primptrs_set_tun(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
+{
+  prim_ptrs->ptun = (struct pkt_tunnel_primitives *) (base + extras->off_pkt_tun_primitives);
   prim_ptrs->vlen_next_off = 0;
 }
 
