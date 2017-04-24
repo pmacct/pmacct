@@ -68,6 +68,7 @@ struct chained_cache {
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
+  struct pkt_tunnel_primitives *ptun;
   char *pcust;
   struct pkt_vlen_hdr_primitives *pvlen;
   u_int8_t valid;
