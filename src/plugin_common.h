@@ -148,7 +148,7 @@ EXT struct scratch_area sa;
 EXT struct chained_cache *cache;
 EXT struct chained_cache **queries_queue, **pending_queries_queue, *pqq_container;
 EXT struct timeval flushtime;
-EXT int qq_ptr, pqq_ptr, pp_size, pb_size, pn_size, pm_size, pc_size;
+EXT int qq_ptr, pqq_ptr, pp_size, pb_size, pn_size, pm_size, pt_size, pc_size;
 EXT int dbc_size, quit; 
 EXT time_t refresh_deadline;
 

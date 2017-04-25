@@ -227,6 +227,18 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH)
     avro_schema_record_field_append(schema, "mpls_stack_depth", avro_schema_long());
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_HOST)
+    avro_schema_record_field_append(schema, "tunnel_ip_src", avro_schema_string());
+
+  if (wtc_2 & COUNT_TUNNEL_DST_HOST)
+    avro_schema_record_field_append(schema, "tunnel_ip_dst", avro_schema_string());
+
+  if (wtc_2 & COUNT_TUNNEL_IP_PROTO)
+    avro_schema_record_field_append(schema, "tunnel_ip_proto", avro_schema_string());
+
+  if (wtc_2 & COUNT_TUNNEL_IP_TOS)
+    avro_schema_record_field_append(schema, "tunnel_tos", avro_schema_long());
+
   if (wtc_2 & COUNT_TIMESTAMP_START)
     avro_schema_record_field_append(schema, "timestamp_start", avro_schema_string());
 
@@ -715,6 +727,34 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
     check_i(avro_value_get_by_name(&value, "mpls_stack_depth", &field, NULL));
     check_i(avro_value_set_long(&field, pmpls->mpls_stack_depth));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
+    addr_to_str(src_host, &ptun->tunnel_src_ip);
+    check_i(avro_value_get_by_name(&value, "tunnel_ip_src", &field, NULL));
+    check_i(avro_value_set_string(&field, src_host));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_HOST) {
+    addr_to_str(dst_host, &ptun->tunnel_dst_ip);
+    check_i(avro_value_get_by_name(&value, "tunnel_ip_dst", &field, NULL));
+    check_i(avro_value_set_string(&field, dst_host));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
+    check_i(avro_value_get_by_name(&value, "tunnel_ip_proto", &field, NULL));
+    if (!config.num_protos && (ptun->tunnel_proto < protocols_number))
+      check_i(avro_value_set_string(&field, _protocols[ptun->tunnel_proto].name));
+    else {
+      char proto_number[6];
+      snprintf(proto_number, sizeof(proto_number), "%d", ptun->tunnel_proto);
+      check_i(avro_value_set_string(&field, proto_number));
+    }
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
+    check_i(avro_value_get_by_name(&value, "tunnel_tos", &field, NULL));
+    check_i(avro_value_set_long(&field, ptun->tunnel_tos));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {

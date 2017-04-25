@@ -375,7 +375,7 @@ EXT unsigned char *pipebuf;
 EXT struct db_cache *cache;
 EXT struct db_cache **queries_queue, **pending_queries_queue;
 EXT struct db_cache *collision_queue;
-EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size;
+EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
 EXT int pc_size, dbc_size, cq_size, pqq_ptr;
 EXT struct db_cache lru_head, *lru_tail;
 EXT struct frags where[N_PRIMITIVES+2];

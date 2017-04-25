@@ -333,6 +333,26 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
+    cjhandler[idx] = compose_json_tunnel_src_host;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_HOST) {
+    cjhandler[idx] = compose_json_tunnel_dst_host;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
+    cjhandler[idx] = compose_json_tunnel_proto;
+    idx++;
+  } 
+    
+  if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
+    cjhandler[idx] = compose_json_tunnel_tos;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     cjhandler[idx] = compose_json_timestamp_start;
     idx++;
@@ -856,6 +876,37 @@ void compose_json_mpls_label_bottom(json_t *obj, struct chained_cache *cc)
 void compose_json_mpls_stack_depth(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "mpls_stack_depth", json_integer((json_int_t)cc->pmpls->mpls_stack_depth));
+}
+
+void compose_json_tunnel_src_host(json_t *obj, struct chained_cache *cc)
+{
+  char ip_address[INET6_ADDRSTRLEN];
+
+  addr_to_str(ip_address, &cc->ptun->tunnel_src_ip);
+  json_object_set_new_nocheck(obj, "tunnel_ip_src", json_string(ip_address));
+}
+
+void compose_json_tunnel_dst_host(json_t *obj, struct chained_cache *cc)
+{
+  char ip_address[INET6_ADDRSTRLEN];
+
+  addr_to_str(ip_address, &cc->ptun->tunnel_dst_ip);
+  json_object_set_new_nocheck(obj, "tunnel_ip_dst", json_string(ip_address));
+}
+
+void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
+{
+  char misc_str[VERYSHORTBUFLEN];
+
+  if (!config.num_protos && (cc->ptun->tunnel_proto < protocols_number))
+    json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(_protocols[cc->ptun->tunnel_proto].name));
+  else
+    json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_integer((json_int_t)cc->ptun->tunnel_proto));
+}
+
+void compose_json_tunnel_tos(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)cc->ptun->tunnel_tos));
 }
 
 void compose_json_timestamp_start(json_t *obj, struct chained_cache *cc)

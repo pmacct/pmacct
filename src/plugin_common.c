@@ -77,6 +77,7 @@ void P_init_default_values()
   pb_size = sizeof(struct pkt_bgp_primitives);
   pn_size = sizeof(struct pkt_nat_primitives);
   pm_size = sizeof(struct pkt_mpls_primitives);
+  pt_size = sizeof(struct pkt_tunnel_primitives);
   pc_size = config.cpptrs.len;
   dbc_size = sizeof(struct chained_cache);
 
@@ -125,6 +126,7 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   register unsigned int modulo;
@@ -133,6 +135,7 @@ unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
   if (pbgp) modulo ^= cache_crc32((unsigned char *)pbgp, pb_size);
   if (pnat) modulo ^= cache_crc32((unsigned char *)pnat, pn_size);
   if (pmpls) modulo ^= cache_crc32((unsigned char *)pmpls, pm_size);
+  if (ptun) modulo ^= cache_crc32((unsigned char *)ptun, pt_size);
   if (pcust) modulo ^= cache_crc32((unsigned char *)pcust, pc_size);
   if (pvlen) modulo ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
 
@@ -146,12 +149,13 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
-  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_time = TRUE;
-  int res_cust = TRUE, res_vlen = TRUE;
+  int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_tun = TRUE;
+  int res_time = TRUE, res_cust = TRUE, res_vlen = TRUE;
 
   start:
   res_data = memcmp(&cache_ptr->primitives, data, sizeof(struct pkt_primitives));
@@ -176,6 +180,11 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   }
   else res_mpls = FALSE;
 
+  if (ptun) {
+    if (cache_ptr->ptun) res_tun = memcmp(cache_ptr->ptun, ptun, sizeof(struct pkt_tunnel_primitives));
+  }
+  else res_tun = FALSE;
+
   if (pcust) {
     if (cache_ptr->pcust) res_cust = memcmp(cache_ptr->pcust, pcust, config.cpptrs.len);
   }
@@ -186,7 +195,7 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
   }
   else res_vlen = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust || res_vlen) {
+  if (res_data || res_bgp || res_nat || res_mpls || res_tun || res_time || res_cust || res_vlen) {
     if (cache_ptr->valid == PRINT_CACHE_INUSE) {
       if (cache_ptr->next) {
         cache_ptr = cache_ptr->next;
@@ -205,12 +214,13 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   unsigned int modulo = P_cache_modulo(prim_ptrs);
   struct chained_cache *cache_ptr = &cache[modulo];
   struct pkt_primitives *srcdst = &data->primitives;
-  int res_data, res_bgp, res_nat, res_mpls, res_time, res_cust, res_vlen;
+  int res_data, res_bgp, res_nat, res_mpls, res_tun, res_time, res_cust, res_vlen;
 
   /* pro_rating vars */
   int time_delta = 0, time_total = 0;
@@ -271,7 +281,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   }
 
   start:
-  res_data = res_bgp = res_nat = res_mpls = res_time = res_cust = res_vlen = TRUE;
+  res_data = res_bgp = res_nat = res_mpls = res_tun = res_time = res_cust = res_vlen = TRUE;
 
   res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives)); 
 
@@ -295,6 +305,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   }
   else res_mpls = FALSE;
 
+  if (ptun) {
+    if (cache_ptr->ptun) res_tun = memcmp(cache_ptr->ptun, ptun, sizeof(struct pkt_tunnel_primitives));
+  }
+  else res_tun = FALSE;
+
   if (pcust) {
     if (cache_ptr->pcust) res_cust = memcmp(cache_ptr->pcust, pcust, config.cpptrs.len); 
   }
@@ -305,7 +320,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   }
   else res_vlen = FALSE;
 
-  if (res_data || res_bgp || res_nat || res_mpls || res_time || res_cust || res_vlen) {
+  if (res_data || res_bgp || res_nat || res_mpls || res_tun || res_time || res_cust || res_vlen) {
     /* aliasing of entries */
     if (cache_ptr->valid == PRINT_CACHE_INUSE) { 
       if (cache_ptr->next) {
@@ -356,6 +371,16 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     else {
       if (cache_ptr->pmpls) free(cache_ptr->pmpls);
       cache_ptr->pmpls = NULL;
+    }
+
+    if (ptun) {
+      if (!cache_ptr->ptun) cache_ptr->ptun = (struct pkt_tunnel_primitives *) malloc(PtunSz);
+      if (cache_ptr->ptun) memcpy(cache_ptr->ptun, ptun, sizeof(struct pkt_tunnel_primitives));
+      else goto safe_action;
+    }
+    else {
+      if (cache_ptr->ptun) free(cache_ptr->ptun);
+      cache_ptr->ptun = NULL;
     }
 
     if (pcust) {
@@ -557,8 +582,9 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
     }
 
     if (cache_ptr->pbgp) free(cache_ptr->pbgp);
-    if (cache_ptr->pmpls) free(cache_ptr->pmpls);
     if (cache_ptr->pnat) free(cache_ptr->pnat);
+    if (cache_ptr->pmpls) free(cache_ptr->pmpls);
+    if (cache_ptr->ptun) free(cache_ptr->ptun);
     if (cache_ptr->pcust) free(cache_ptr->pcust);
     if (cache_ptr->pvlen) free(cache_ptr->pvlen);
     if (cache_ptr->stitch) free(cache_ptr->stitch);
@@ -566,8 +592,9 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
     memcpy(cache_ptr, &container[j], dbc_size); 
 
     container[j].pbgp = NULL;
-    container[j].pmpls = NULL;
     container[j].pnat = NULL;
+    container[j].pmpls = NULL;
+    container[j].ptun = NULL;
     container[j].pcust = NULL;
     container[j].pvlen = NULL;
     container[j].stitch = NULL;
@@ -655,8 +682,9 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
       memcpy(&pqq_container[j], pending_queries_queue[j], dbc_size);
 
       pending_queries_queue[j]->pbgp = NULL;
-      pending_queries_queue[j]->pmpls = NULL;
       pending_queries_queue[j]->pnat = NULL;
+      pending_queries_queue[j]->pmpls = NULL;
+      pending_queries_queue[j]->ptun = NULL;
       pending_queries_queue[j]->pcust = NULL;
       pending_queries_queue[j]->pvlen = NULL;
       pending_queries_queue[j]->stitch = NULL;
@@ -891,6 +919,7 @@ void primptrs_set_all_from_chained_cache(struct primitives_ptrs *prim_ptrs, stru
     prim_ptrs->pbgp = entry->pbgp;
     prim_ptrs->pnat = entry->pnat;
     prim_ptrs->pmpls = entry->pmpls;
+    prim_ptrs->ptun = entry->ptun;
     prim_ptrs->pcust = entry->pcust;
     prim_ptrs->pvlen = entry->pvlen;
   }
