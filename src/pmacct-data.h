@@ -120,7 +120,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
 };
 
 static const struct _protocols_struct _protocols[] = {
-  {"ip", 0},
+  {"0", 0},
   {"icmp", 1},
   {"igmp", 2},
   {"ggp", 3},
