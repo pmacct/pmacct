@@ -829,9 +829,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) {
 	  if (!config.num_protos && (ptun->tunnel_proto < protocols_number))
-	    fprintf(f, "%-10s     ", _protocols[ptun->tunnel_proto].name);
+	    fprintf(f, "%-10s       ", _protocols[ptun->tunnel_proto].name);
 	  else
-	    fprintf(f, "%-10d     ", ptun->tunnel_proto);
+	    fprintf(f, "%-10d       ", ptun->tunnel_proto);
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%-3u         ", ptun->tunnel_tos);

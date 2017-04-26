@@ -124,7 +124,7 @@ static const struct _protocols_struct _protocols[] = {
   {"icmp", 1},
   {"igmp", 2},
   {"ggp", 3},
-  {"4", 4},
+  {"ipencap", 4},
   {"5", 5},
   {"tcp", 6},
   {"7", 7},

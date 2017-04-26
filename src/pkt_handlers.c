@@ -4692,7 +4692,8 @@ void SF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP ||
+      sample->dcd_inner_ipProtocol == IPPROTO_UDP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
     pdata->primitives.src_port = sample->dcd_sport; 
   else pdata->primitives.src_port = 0;
 }
@@ -4702,7 +4703,8 @@ void SF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP ||
+      sample->dcd_inner_ipProtocol == IPPROTO_UDP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
     pdata->primitives.dst_port = sample->dcd_dport;
   else pdata->primitives.dst_port = 0;
 }
@@ -4728,7 +4730,8 @@ void SF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  pdata->tcp_flags = sample->dcd_tcpFlags; 
+  if (sample->dcd_ipProtocol == IPPROTO_TCP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+    pdata->tcp_flags = sample->dcd_tcpFlags; 
 }
 
 void SF_counters_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
