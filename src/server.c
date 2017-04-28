@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -78,6 +78,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   struct pkt_legacy_bgp_primitives dummy_plbgp;
   struct pkt_nat_primitives dummy_pnat;
   struct pkt_mpls_primitives dummy_pmpls;
+  struct pkt_tunnel_primitives dummy_ptun;
   char *dummy_pcust = NULL, *custbuf = NULL;
   struct pkt_vlen_hdr_primitives dummy_pvlen;
   char emptybuf[LARGEBUFLEN];
@@ -95,6 +96,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   memset(&dummy_plbgp, 0, sizeof(struct pkt_legacy_bgp_primitives));
   memset(&dummy_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&dummy_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(&dummy_ptun, 0, sizeof(struct pkt_tunnel_primitives));
   memset(dummy_pcust, 0, config.cpptrs.len); 
   memset(custbuf, 0, config.cpptrs.len); 
   memset(&dummy_pvlen, 0, sizeof(struct pkt_vlen_hdr_primitives));
@@ -134,6 +136,11 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     offset += sizeof(struct pkt_mpls_primitives);
   }
   else q->extras.off_pkt_mpls_primitives = 0;
+  if (extras->off_pkt_tun_primitives) {
+    q->extras.off_pkt_tun_primitives = offset;
+    offset += sizeof(struct pkt_tunnel_primitives);
+  }
+  else q->extras.off_pkt_tun_primitives = 0;
   if (extras->off_custom_primitives) {
     q->extras.off_custom_primitives = offset;
     offset += config.cpptrs.len;
@@ -184,6 +191,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
         if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
           enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
+	}
+
+        if (extras->off_pkt_tun_primitives && acc_elem->ptun) {
+          enQueue_elem(sd, &rb, acc_elem->ptun, PtunSz, datasize - extras->off_pkt_tun_primitives);
 	}
 
         if (extras->off_custom_primitives && acc_elem->pcust) {
@@ -248,6 +259,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	prim_ptrs.plbgp = &request.plbgp;
 	prim_ptrs.pnat = &request.pnat;
 	prim_ptrs.pmpls = &request.pmpls;
+	prim_ptrs.ptun = &request.ptun;
 	prim_ptrs.pcust = request.pcust;
 	prim_ptrs.pvlen = request.pvlen;
 
@@ -276,6 +288,10 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	    if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
 	      enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 	    }
+
+            if (extras->off_pkt_tun_primitives && acc_elem->ptun) {
+              enQueue_elem(sd, &rb, acc_elem->ptun, PtunSz, datasize - extras->off_pkt_tun_primitives);
+            }
 
 	    if (extras->off_custom_primitives && acc_elem->pcust) {
 	      enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
@@ -306,6 +322,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	      if (extras->off_pkt_mpls_primitives)
 		enQueue_elem(sd, &rb, &dummy_pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 
+	      if (extras->off_pkt_tun_primitives)
+		enQueue_elem(sd, &rb, &dummy_ptun, PtunSz, datasize - extras->off_pkt_tun_primitives);
+
 	      if (extras->off_custom_primitives)
 		enQueue_elem(sd, &rb, &dummy_pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
 
@@ -330,6 +349,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	    if (extras->off_pkt_mpls_primitives)
 	      enQueue_elem(sd, &rb, &dummy_pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 
+	    if (extras->off_pkt_tun_primitives)
+	      enQueue_elem(sd, &rb, &dummy_ptun, PtunSz, datasize - extras->off_pkt_tun_primitives);
+
             if (extras->off_custom_primitives)  
               enQueue_elem(sd, &rb, &dummy_pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
 
@@ -344,6 +366,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 	struct pkt_legacy_bgp_primitives lbbuf;
 	struct pkt_nat_primitives nbuf;
 	struct pkt_mpls_primitives mbuf;
+	struct pkt_tunnel_primitives ubuf;
 	struct pkt_data abuf;
         following_chain = FALSE;
 	elem = (unsigned char *) a;
@@ -353,12 +376,13 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
           if (!following_chain) acc_elem = (struct acc *) elem;
 	  if (!test_zero_elem(acc_elem)) {
 	    /* XXX: support for custom and vlen primitives */
-	    mask_elem(&tbuf, &bbuf, &lbbuf, &nbuf, &mbuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
+	    mask_elem(&tbuf, &bbuf, &lbbuf, &nbuf, &mbuf, &ubuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives)) &&
 		!memcmp(&lbbuf, &request.plbgp, sizeof(struct pkt_legacy_bgp_primitives)) &&
 		!memcmp(&nbuf, &request.pnat, sizeof(struct pkt_nat_primitives)) &&
-		!memcmp(&mbuf, &request.pmpls, sizeof(struct pkt_mpls_primitives))) {
+		!memcmp(&mbuf, &request.pmpls, sizeof(struct pkt_mpls_primitives)) &&
+		!memcmp(&ubuf, &request.ptun, sizeof(struct pkt_tunnel_primitives))) {
 	      if (q->type & WANT_COUNTER) Accumulate_Counters(&abuf, acc_elem); 
 	      else {
 		enQueue_elem(sd, &rb, acc_elem, PdataSz, datasize); /* q->type == WANT_MATCH */
@@ -382,6 +406,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 		if (extras->off_pkt_mpls_primitives && acc_elem->pmpls) {
 		  enQueue_elem(sd, &rb, acc_elem->pmpls, PmplsSz, datasize - extras->off_pkt_mpls_primitives);
 		}
+                if (extras->off_pkt_tun_primitives && acc_elem->ptun) {
+                  enQueue_elem(sd, &rb, acc_elem->ptun, PtunSz, datasize - extras->off_pkt_tun_primitives);
+                }
                 if (extras->off_custom_primitives && acc_elem->pcust) {
                   enQueue_elem(sd, &rb, acc_elem->pcust, config.cpptrs.len, datasize - extras->off_custom_primitives);
                 }
@@ -480,8 +507,8 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 }
 
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct pkt_legacy_bgp_primitives *d5,
-		struct pkt_nat_primitives *d3, struct pkt_mpls_primitives *d4, struct acc *src, pm_cfgreg_t w,
-		pm_cfgreg_t w2, struct extra_primitives *extras)
+		struct pkt_nat_primitives *d3, struct pkt_mpls_primitives *d4, struct pkt_tunnel_primitives *d6,
+		struct acc *src, pm_cfgreg_t w, pm_cfgreg_t w2, struct extra_primitives *extras)
 {
   struct pkt_primitives *s1 = &src->primitives;
   struct pkt_bgp_primitives *s2 = src->pbgp;
@@ -489,6 +516,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   struct pkt_legacy_bgp_primitives *s5 = &tmp_plbgp;
   struct pkt_nat_primitives *s3 = src->pnat;
   struct pkt_mpls_primitives *s4 = src->pmpls;
+  struct pkt_tunnel_primitives *s6 = src->ptun;
 
   cache_to_pkt_legacy_bgp_primitives(s5, src->clbgp);
 
@@ -497,6 +525,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   memset(d5, 0, sizeof(struct pkt_legacy_bgp_primitives));
   memset(d3, 0, sizeof(struct pkt_nat_primitives));
   memset(d4, 0, sizeof(struct pkt_mpls_primitives));
+  memset(d6, 0, sizeof(struct pkt_tunnel_primitives));
 
 #if defined (HAVE_L2)
   if (w & COUNT_SRC_MAC) memcpy(d1->eth_shost, s1->eth_shost, ETH_ADDR_LEN); 
@@ -572,6 +601,13 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w2 & COUNT_MPLS_LABEL_TOP) d4->mpls_label_top = s4->mpls_label_top;
     if (w2 & COUNT_MPLS_LABEL_BOTTOM) d4->mpls_label_bottom = s4->mpls_label_bottom;
     if (w2 & COUNT_MPLS_STACK_DEPTH) d4->mpls_stack_depth = s4->mpls_stack_depth;
+  }
+
+  if (extras->off_pkt_tun_primitives && s6) {
+    if (w2 & COUNT_TUNNEL_SRC_HOST) memcpy(&d6->tunnel_src_ip, &s6->tunnel_src_ip, sizeof(d6->tunnel_src_ip));
+    if (w2 & COUNT_TUNNEL_DST_HOST) memcpy(&d6->tunnel_src_ip, &s6->tunnel_dst_ip, sizeof(d6->tunnel_dst_ip));
+    if (w2 & COUNT_TUNNEL_IP_PROTO) memcpy(&d6->tunnel_proto, &s6->tunnel_proto, sizeof(d6->tunnel_proto));
+    if (w2 & COUNT_TUNNEL_IP_TOS) memcpy(&d6->tunnel_tos, &s6->tunnel_tos, sizeof(d6->tunnel_tos));
   }
 }
 

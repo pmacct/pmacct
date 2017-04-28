@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -56,6 +56,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_legacy_bgp_primitives *plbgp, empty_plbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
   struct pkt_mpls_primitives *pmpls, empty_pmpls;
+  struct pkt_tunnel_primitives *ptun, empty_ptun;
   char *pcust, empty_pcust[] = "";
   struct pkt_vlen_hdr_primitives *pvlen, empty_pvlen;
   struct networks_file_data nfd;
@@ -191,6 +192,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&empty_plbgp, 0, sizeof(empty_plbgp));
   memset(&empty_pnat, 0, sizeof(empty_pnat));
   memset(&empty_pmpls, 0, sizeof(empty_pmpls));
+  memset(&empty_ptun, 0, sizeof(empty_ptun));
   memset(&empty_pvlen, 0, sizeof(empty_pvlen));
 
   memset(&table_reset_stamp, 0, sizeof(table_reset_stamp));
@@ -370,11 +372,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	 free() up memory allocations before erasing */ 
       /* XXX: given the current use of empty_* vars we have always to
          free_extra_allocs() in order to prevent memory leaks */
-      /*
-      if (extras.off_pkt_bgp_primitives || extras.off_pkt_nat_primitives ||
-	  extras.off_pkt_mpls_primitives || extras.off_custom_primitives)
-      */
-	free_extra_allocs(); 
+
+      free_extra_allocs(); 
       clear_memory_pool_table();
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
       if (current_pool == NULL) {
@@ -463,6 +462,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (extras.off_pkt_mpls_primitives) 
             pmpls = (struct pkt_mpls_primitives *) ((u_char *)data + extras.off_pkt_mpls_primitives);
           else pmpls = &empty_pmpls;
+          if (extras.off_pkt_tun_primitives) 
+            ptun = (struct pkt_tunnel_primitives *) ((u_char *)data + extras.off_pkt_tun_primitives);
+          else ptun = &empty_ptun;
           if (extras.off_custom_primitives)
 	    pcust = ((u_char *)data + extras.off_custom_primitives);
           else pcust = empty_pcust;
@@ -487,6 +489,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  prim_ptrs.plbgp = plbgp; 
 	  prim_ptrs.pnat = pnat;
 	  prim_ptrs.pmpls = pmpls;
+	  prim_ptrs.ptun = ptun;
 	  prim_ptrs.pcust = pcust;
 	  prim_ptrs.pvlen = pvlen;
 	  
@@ -590,6 +593,10 @@ void free_extra_allocs()
     if (acc_elem->pmpls) {
       free(acc_elem->pmpls);
       acc_elem->pmpls = NULL;
+    }
+    if (acc_elem->ptun) {
+      free(acc_elem->ptun);
+      acc_elem->ptun = NULL;
     }
     if (acc_elem->pcust) {
       free(acc_elem->pcust);

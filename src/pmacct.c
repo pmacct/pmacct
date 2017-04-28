@@ -48,7 +48,8 @@ int pmc_bgp_rd2str(char *, rd_t *);
 int pmc_bgp_str2rd(rd_t *, char *);
 char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
-			struct pkt_nat_primitives *, struct pkt_mpls_primitives *, char *,
+			struct pkt_nat_primitives *, struct pkt_mpls_primitives *,
+			struct pkt_tunnel_primitives *, char *,
 			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
 			pm_counter_t, u_int32_t, struct timeval *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int, int);
@@ -225,9 +226,20 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("POST_NAT_SRC_PORT  ");
     printf("POST_NAT_DST_PORT  ");
     printf("NAT_EVENT ");
+
     printf("MPLS_LABEL_TOP  ");
     printf("MPLS_LABEL_BOTTOM  ");
     printf("MPLS_STACK_DEPTH  ");
+
+#if defined ENABLE_IPV6
+    printf("TUNNEL_SRC_IP                                  ");
+    printf("TUNNEL_DST_IP                                  ");
+#else
+    printf("TUNNEL_SRC_IP    ");
+    printf("TUNNEL_DST_IP    ");
+#endif
+    printf("TUNNEL_PROTOCOL  ");
+    printf("TUNNEL_TOS  ");
 
     printf("TIMESTAMP_START                ");
     printf("TIMESTAMP_END                  ");
@@ -361,9 +373,20 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT  ");
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
+
     if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("MPLS_LABEL_TOP  ");
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("MPLS_LABEL_BOTTOM  ");
     if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("MPLS_STACK_DEPTH  ");
+
+#if defined ENABLE_IPV6
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("TUNNEL_SRC_IP                                  ");
+    if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("TUNNEL_DST_IP                                  ");
+#else
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("TUNNEL_SRC_IP    ");
+    if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("TUNNEL_DST_IP    ");
+#endif
+    if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("TUNNEL_PROTOCOL  ");
+    if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("TUNNEL_TOS  ");
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                  "); 
@@ -478,6 +501,10 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
     printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
+    printf("%sTUNNEL_SRC_IP", write_sep(sep, &count));
+    printf("%sTUNNEL_DST_IP", write_sep(sep, &count));
+    printf("%sTUNNEL_PROTOCOL", write_sep(sep, &count));
+    printf("%sTUNNEL_TOS", write_sep(sep, &count));
     printf("%sTIMESTAMP_START", write_sep(sep, &count));
     printf("%sTIMESTAMP_END", write_sep(sep, &count));
     printf("%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
@@ -591,9 +618,15 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("%sNAT_EVENT", write_sep(sep, &count));
+
     if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
+
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("%sTUNNEL_SRC_IP", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("%sTUNNEL_DST_IP", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("%sTUNNEL_PROTOCOL", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("%sTUNNEL_TOS", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("%sTIMESTAMP_END", write_sep(sep, &count));
@@ -685,12 +718,14 @@ int main(int argc,char **argv)
   struct pkt_legacy_bgp_primitives empty_plbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
+  struct pkt_tunnel_primitives empty_ptun;
   struct pkt_vlen_hdr_primitives empty_pvlen;
   struct query_entry request;
   struct pkt_bgp_primitives *pbgp = NULL;
   struct pkt_legacy_bgp_primitives *plbgp = NULL;
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
+  struct pkt_tunnel_primitives *ptun = NULL;
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
   char *pcust = NULL;
   char *clibuf, *bufptr;
@@ -734,6 +769,7 @@ int main(int argc,char **argv)
   memset(&empty_plbgp, 0, sizeof(struct pkt_legacy_bgp_primitives));
   memset(&empty_pnat, 0, sizeof(struct pkt_nat_primitives));
   memset(&empty_pmpls, 0, sizeof(struct pkt_mpls_primitives));
+  memset(&empty_ptun, 0, sizeof(struct pkt_tunnel_primitives));
   memset(&empty_pvlen, 0, sizeof(struct pkt_vlen_hdr_primitives));
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
@@ -1879,13 +1915,13 @@ int main(int argc,char **argv)
         }
         else if (!strcmp(count_token[match_string_index], "post_nat_src_host")) {
           if (!str_to_addr(match_string_token, &request.pnat.post_nat_src_ip)) {
-            printf("ERROR: src_host: Invalid IP address: '%s'\n", match_string_token);
+            printf("ERROR: post_nat_src_host: Invalid IP address: '%s'\n", match_string_token);
             exit(1);
           }
         }
         else if (!strcmp(count_token[match_string_index], "post_nat_dst_host")) {
           if (!str_to_addr(match_string_token, &request.pnat.post_nat_dst_ip)) {
-            printf("ERROR: dst_host: Invalid IP address: '%s'\n", match_string_token);
+            printf("ERROR: post_nat_dst_host: Invalid IP address: '%s'\n", match_string_token);
             exit(1);
           }
         }
@@ -1907,6 +1943,49 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "mpls_stack_depth")) {
           request.pmpls.mpls_stack_depth = atoi(match_string_token);
         }
+        else if (!strcmp(count_token[match_string_index], "tunnel_src_host")) {
+          if (!str_to_addr(match_string_token, &request.ptun.tunnel_src_ip)) {
+            printf("ERROR: tunnel_src_host: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
+        else if (!strcmp(count_token[match_string_index], "tunnel_dst_host")) {
+          if (!str_to_addr(match_string_token, &request.ptun.tunnel_dst_ip)) {
+            printf("ERROR: tunnel_dst_host: Invalid IP address: '%s'\n", match_string_token);
+            exit(1);
+          }
+        }
+        else if (!strcmp(count_token[match_string_index], "tunnel_proto")) {
+	  int proto;
+
+	  if (!want_ipproto_num) {
+	    for (index = 0; _protocols[index].number != -1; index++) { 
+	      if (!strcmp(_protocols[index].name, match_string_token)) {
+	        proto = _protocols[index].number;
+	        break;
+	      }
+	    }
+	    if (proto <= 0) {
+	      proto = atoi(match_string_token);
+	      if ((proto <= 0) || (proto > 255)) {
+	        printf("ERROR: invalid protocol: '%s'\n", match_string_token);
+	        exit(1);
+	      }
+	    }
+	  }
+	  else {
+	    proto = atoi(match_string_token); 
+            if ((proto <= 0) || (proto > 255)) {
+              printf("ERROR: invalid protocol: '%s'\n", match_string_token);
+              exit(1);
+            }
+	  }
+	  request.ptun.tunnel_proto = proto;
+        }
+	else if (!strcmp(count_token[match_string_index], "tunnel_tos")) {
+	  tmpnum = atoi(match_string_token);
+	  request.ptun.tunnel_tos = (u_int8_t) tmpnum; 
+	}
         else if (!strcmp(count_token[match_string_index], "timestamp_start")) {
 	  struct tm tmp;
 	  char *delim = strchr(match_string_token, '.');
@@ -2137,6 +2216,9 @@ int main(int argc,char **argv)
       if (extras.off_pkt_mpls_primitives) pmpls = (struct pkt_mpls_primitives *) ((u_char *)elem + extras.off_pkt_mpls_primitives);
       else pmpls = &empty_pmpls;
 
+      if (extras.off_pkt_tun_primitives) ptun = (struct pkt_tunnel_primitives *) ((u_char *)elem + extras.off_pkt_tun_primitives);
+      else ptun = &empty_ptun;
+
       if (extras.off_custom_primitives) pcust = ((u_char *)elem + extras.off_custom_primitives);
       else pcust = NULL;
 
@@ -2148,6 +2230,7 @@ int main(int argc,char **argv)
 	  memcmp(plbgp, &empty_plbgp, sizeof(struct pkt_legacy_bgp_primitives)) != 0 ||
 	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
 	  memcmp(pmpls, &empty_pmpls, sizeof(struct pkt_mpls_primitives)) != 0 ||
+	  memcmp(ptun, &empty_ptun, sizeof(struct pkt_tunnel_primitives)) != 0 ||
 	  pmc_custom_primitives_registry.len ||
 	  memcmp(pvlen, &empty_pvlen, sizeof(struct pkt_vlen_hdr_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_TAG)) {
@@ -2697,6 +2780,70 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_stack_depth);
         }
 
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_SRC_HOST)) {
+          addr_to_str(ip_address, &ptun->tunnel_src_ip);
+
+#if defined ENABLE_IPV6
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#else
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#endif
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_DST_HOST)) {
+          addr_to_str(ip_address, &ptun->tunnel_dst_ip);
+
+#if defined ENABLE_IPV6
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#else
+          if (strlen(ip_address)) {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
+          }
+          else {
+            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
+            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
+          }
+#endif
+        }
+
+	if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_IP_PROTO)) {
+	  if (ptun->tunnel_proto < protocols_number && !want_ipproto_num) {
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10s       ", _protocols[ptun->tunnel_proto].name);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), _protocols[ptun->tunnel_proto].name);
+	  }
+	  else {
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10u  ", ptun->tunnel_proto);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_proto);
+	  }
+	}
+
+	if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_IP_TOS)) {
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u         ", ptun->tunnel_tos);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_tos);
+	}
+
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
 	  char tstamp_str[SRVBUFLEN];
 
@@ -2775,8 +2922,9 @@ int main(int argc,char **argv)
 	  char *json_str;
 
 	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
-				      &acc_elem->primitives, pbgp, plbgp, pnat, pmpls, pcust, pvlen, acc_elem->pkt_len,
-				      acc_elem->pkt_num, acc_elem->flo_num, acc_elem->tcp_flags, NULL);
+				      &acc_elem->primitives, pbgp, plbgp, pnat, pmpls, ptun, pcust, pvlen,
+				      acc_elem->pkt_len, acc_elem->pkt_num, acc_elem->flo_num,
+				      acc_elem->tcp_flags, NULL);
 
 	  if (json_str) {
 	    printf("%s\n", json_str);
@@ -3268,8 +3416,9 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
-		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+		  struct pkt_tunnel_primitives *ptun, char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
+		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
@@ -3587,6 +3736,23 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH) json_object_set_new_nocheck(obj, "mpls_stack_depth", json_integer((json_int_t)pmpls->mpls_stack_depth));
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
+    addr_to_str(src_host, &ptun->tunnel_src_ip);
+    json_object_set_new_nocheck(obj, "tunnel_ip_src", json_string(src_host));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_HOST) {
+    addr_to_str(dst_host, &ptun->tunnel_dst_ip);
+    json_object_set_new_nocheck(obj, "tunnel_ip_dst", json_string(dst_host));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
+    if (!want_ipproto_num) json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(_protocols[ptun->tunnel_proto].name));
+    else json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_integer((json_int_t)_protocols[ptun->tunnel_proto].number));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, want_tstamp_since_epoch);
     json_object_set_new_nocheck(obj, "timestamp_start", json_string(tstamp_str));
@@ -3644,8 +3810,9 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  char *pcust, struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
-		  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, struct timeval *basetime)
+		  struct pkt_tunnel_primitives *ptun, char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
+		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
+		  u_int32_t tcp_flags, struct timeval *basetime)
 {
   return NULL;
 }
