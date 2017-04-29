@@ -471,6 +471,9 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     if (queue[j]->pmpls) pmpls = queue[j]->pmpls;
     else pmpls = &empty_pmpls;
 
+    if (queue[j]->ptun) ptun = queue[j]->ptun;
+    else ptun = &empty_ptun;
+
     if (queue[j]->pcust) pcust = queue[j]->pcust;
     else pcust = empty_pcust;
 
