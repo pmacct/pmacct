@@ -252,6 +252,11 @@ EXT void count_nat_event_handler(const struct db_cache *, struct insert_data *, 
 EXT void count_mpls_label_top_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_label_bottom_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_stack_depth_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void MY_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void PG_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
@@ -285,6 +290,8 @@ EXT void count_peer_src_ip_aton_handler(const struct db_cache *, struct insert_d
 EXT void count_peer_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_post_nat_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_post_nat_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void fake_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)

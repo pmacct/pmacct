@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -321,6 +321,61 @@ void count_mpls_stack_depth_handler(const struct db_cache *cache_elem, struct in
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pmpls->mpls_stack_depth);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pmpls->mpls_stack_depth);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_src_ip_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->ptun->tunnel_src_ip);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_dst_ip_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->ptun->tunnel_dst_ip);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void MY_count_tunnel_ip_proto_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  if (cache_elem->ptun->tunnel_proto < protocols_number) {
+    snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, _protocols[cache_elem->ptun->tunnel_proto].name);
+    snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, _protocols[cache_elem->ptun->tunnel_proto].name);
+  }
+  else {
+    char proto_str[PROTO_LEN];
+
+    snprintf(proto_str, sizeof(proto_str), "%d", cache_elem->ptun->tunnel_proto);
+    snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, proto_str);
+    snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, proto_str);
+  }
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void PG_count_tunnel_ip_proto_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->tunnel_proto);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->tunnel_proto);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_ip_tos_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->tunnel_tos);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->tunnel_tos);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -737,7 +792,6 @@ void count_ip_tos_handler(const struct db_cache *cache_elem, struct insert_data 
   *ptr_values += strlen(*ptr_values);
 }
 
-
 void MY_count_ip_proto_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   if (cache_elem->primitives.proto < protocols_number) {
@@ -1042,6 +1096,42 @@ void count_post_nat_dst_ip_aton_handler(const struct db_cache *cache_elem, struc
   if (cache_elem->pnat->post_nat_dst_ip.family == AF_INET) aton = aton_v4;
 #if defined ENABLE_IPV6
   else if (cache_elem->pnat->post_nat_dst_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_src_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->ptun->tunnel_src_ip);
+  if (cache_elem->ptun->tunnel_src_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->ptun->tunnel_src_ip.family == AF_INET6) aton = aton_v6;
+#endif
+  else aton = aton_null;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, aton, ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_dst_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char ptr[INET6_ADDRSTRLEN];
+
+  addr_to_str(ptr, &cache_elem->ptun->tunnel_dst_ip);
+  if (cache_elem->ptun->tunnel_dst_ip.family == AF_INET) aton = aton_v4;
+#if defined ENABLE_IPV6
+  else if (cache_elem->ptun->tunnel_dst_ip.family == AF_INET6) aton = aton_v6;
 #endif
   else aton = aton_null;
 

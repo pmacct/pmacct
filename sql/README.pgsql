@@ -134,6 +134,10 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * mpls_label_top => mpls_label_top (INT NOT NULL DEFAULT 0)
   * mpls_label_bottom => mpls_label_bottom (INT NOT NULL DEFAULT 0)
   * mpls_stack_depth => mpls_stack_depth (INT NOT NULL DEFAULT 0)
+  * tunnel_src_host => tunnel_ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * tunnel_dst_host => tunnel_ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
+  * tunnel_proto => tunnel_ip_proto (SMALLINT NOT NULL DEFAULT 0)
+  * tunnel_tos => tunnel_tos (INT NOT NULL DEFAULT 0)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_start_residual INT NOT NULL DEFAULT 0, see README.timestamp)
