@@ -1248,6 +1248,10 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) what_to_count_2 |= COUNT_POST_NAT_DST_PORT;
     if (config.what_to_count_2 & COUNT_NAT_EVENT) what_to_count_2 |= COUNT_NAT_EVENT;
 
+    if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
+    if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
+    if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) what_to_count_2 |= COUNT_MPLS_STACK_DEPTH;
+
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) what_to_count_2 |= COUNT_TUNNEL_SRC_HOST;
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) what_to_count_2 |= COUNT_TUNNEL_DST_HOST;
     if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) what_to_count_2 |= COUNT_TUNNEL_IP_PROTO;
