@@ -55,6 +55,9 @@ void usage_daemon(char *prog_name)
   printf("  -d  \tEnable debug\n");
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
+  printf("  -o  \tOutput file to log real-time BMP messages\n");
+  printf("  -O  \tOutput file to dump BMP data and generated RIBs at regular time intervals\n");
+  printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
   printf("\n");
   printf("  See QUICKSTART or visit http://wiki.pmacct.net/ for examples.\n");
   printf("\n");
@@ -129,6 +132,21 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'S':
       strlcpy(cfg_cmdline[rows], "syslog: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'o':
+      strlcpy(cfg_cmdline[rows], "bmp_daemon_msglog_file: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'O':
+      strlcpy(cfg_cmdline[rows], "bmp_dump_file: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'i':
+      strlcpy(cfg_cmdline[rows], "bmp_dump_refresh_time: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
