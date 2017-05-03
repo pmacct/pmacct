@@ -776,7 +776,7 @@ AC_ARG_ENABLE(geoip,
     AC_MSG_RESULT(yes)
     dnl reasonably old Maxmind GeoIP v1 already support pkg-config
     PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0])
-    PLUGINS="${PLUGINS} geoip"
+    SUPPORTS="${SUPPORTS} geoip"
     USING_MMGEOIP="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIP_CFLAGS"
     AC_DEFINE(WITH_GEOIP, 1)
@@ -832,7 +832,7 @@ AC_ARG_ENABLE(geoipv2,
                 CFLAGS="$_save_CFLAGS"
 	fi
     ])
-    PLUGINS="${PLUGINS} geoipv2"
+    SUPPORTS="${SUPPORTS} geoipv2"
     USING_MMGEOIPV2="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIPV2_CFLAGS"
     AC_DEFINE(WITH_GEOIPV2, 1)
@@ -856,7 +856,7 @@ AC_ARG_ENABLE(jansson,
     AC_MSG_RESULT(yes)
     dnl reasonably old Jansson already support pkg-config
     PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2])
-    PLUGINS="${PLUGINS} jansson"
+    SUPPORTS="${SUPPORTS} jansson"
     USING_JANSSON="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $JANSSON_CFLAGS"
     AC_DEFINE(WITH_JANSSON, 1)
@@ -884,6 +884,7 @@ AC_ARG_ENABLE(avro,
   yes)
     AC_MSG_RESULT(yes)
     PKG_CHECK_MODULES([AVRO], [avro-c >= 1.8])
+    SUPPORTS="${SUPPORTS} avro"
     USING_AVRO="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $AVRO_CFLAGS"
     AC_DEFINE(WITH_AVRO, 1)
@@ -910,6 +911,7 @@ AC_ARG_ENABLE(ndpi,
   yes)
     AC_MSG_RESULT(yes)
     PKG_CHECK_MODULES([NDPI], [libndpi])
+    SUPPORTS="${SUPPORTS} ndpi"
     USING_NDPI="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS"
     AC_DEFINE(WITH_NDPI, 1)
@@ -1132,6 +1134,7 @@ CFLAGS ....... : ${CFLAGS}
 LIBS ......... : ${LIBS}
 LDFLAGS ...... : ${LDFLAGS}
 PLUGINS ...... : ${PLUGINS}
+SUPPORTS ..... : ${SUPPORTS}
 
 Now type 'make' to compile the source code.
 
