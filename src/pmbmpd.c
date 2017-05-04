@@ -59,7 +59,9 @@ void usage_daemon(char *prog_name)
   printf("  -O  \tOutput file to dump BMP data and generated RIBs at regular time intervals\n");
   printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
   printf("\n");
-  printf("  See QUICKSTART or visit http://wiki.pmacct.net/ for examples.\n");
+  printf("For examples, see:\n");
+  printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");
+  printf("  https://github.com/pmacct/pmacct/wiki\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }

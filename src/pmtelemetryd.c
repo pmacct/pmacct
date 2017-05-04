@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -55,8 +55,13 @@ void usage_daemon(char *prog_name)
   printf("  -d  \tEnable debug\n");
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
+  printf("  -o  \tOutput file to log real-time Streaming Telemetry data\n");
+  printf("  -O  \tOutput file to dump Streaming Telemetry data at regular time intervals\n");
+  printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
   printf("\n");
-  printf("  See QUICKSTART or visit http://wiki.pmacct.net/ for examples.\n");
+  printf("For examples, see:\n");
+  printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");
+  printf("  https://github.com/pmacct/pmacct/wiki\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
@@ -130,6 +135,21 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'S':
       strlcpy(cfg_cmdline[rows], "syslog: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'o':
+      strlcpy(cfg_cmdline[rows], "telemetry_daemon_msglog_file: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'O':
+      strlcpy(cfg_cmdline[rows], "telemetry_dump_file: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'i':
+      strlcpy(cfg_cmdline[rows], "telemetry_dump_refresh_time: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
