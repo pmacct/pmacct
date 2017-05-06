@@ -114,6 +114,36 @@ Once daemons are installed you can check:
 * supported traffic aggregation primitives by the daemon, and their description:
   shell> nfacctd -a
 
+IIa. Compiling pmacct with JSON support
+JSON encoding is supported via the Jansson library (http://www.digip.org/jansson/
+and https://github.com/akheron/jansson); to compile pmacct with JSON support
+simply do: 
+
+shell> ./configure --enable-jansson
+
+However should you have installed Jansson in the /usr/local/jansson directory
+and pkg-config is unable to help, you can supply this non-default location as
+follows (assuming you are running the bash shell):
+
+shell> export JANSSON_LIBS="-L/usr/local/jansson/lib -ljansson"
+shell> export JANSSON_CFLAGS="-I/usr/local/jansson/include"
+shell> ./configure --enable-jansson
+
+IIb. Compiling pmacct with Apache Avro support
+Apache Avro encoding is supported via libavro library (http://avro.apache.org/
+and https://avro.apache.org/docs/1.8.1/api/c/index.html); to compile pmacct with
+Apache Avro support simply do:
+
+shell> ./configure --enable-avro
+
+However should you have installed libavro in the /usr/local/avro directory
+and pkg-config is unable to help, you can supply this non-default location as
+follows (assuming you are running the bash shell):
+
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
+./configure --enable-rabbitmq --enable-avro
+
 
 III. Brief SQL and noSQL setup examples
 RDBMS require a table schema to manage data. pmacct offers two options: use one
@@ -602,11 +632,11 @@ export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq"
 export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
 ./configure --enable-rabbitmq --enable-jansson
 
-Ditto for the location of the Avro libraries, if using Avro encoding:
+You can check further information on how to compile pmacct with JSON/libjansson
+support in the section "Compiling pmacct with JSON support" of this document.
 
-export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
-export AVRO_CFLAGS="-I/usr/local/avro/include"
-./configure --enable-rabbitmq --enable-avro
+You can check further information on how to compile pmacct with Avro support in
+the section "Compiling pmacct with Apache Avro support" of this document.
 
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic RabbitMQ/AMQP plugin configuration (assumes: RabbitMQ server is available
@@ -673,11 +703,11 @@ export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
 export KAFKA_CFLAGS="-I/usr/local/kafka/include"
 ./configure --enable-kafka --enable-jansson
 
-Ditto for the location of the Avro libraries, if using Avro encoding:
+You can check further information on how to compile pmacct with JSON/libjansson
+support in the section "Compiling pmacct with JSON support" of this document.
 
-export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
-export AVRO_CFLAGS="-I/usr/local/avro/include"
-./configure --enable-kafka --enable-avro
+You can check further information on how to compile pmacct with Avro support in
+the section "Compiling pmacct with Apache Avro support" of this document.
 
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
@@ -1281,20 +1311,11 @@ enables BGP analytics and BGP event management, for example spot unstable
 routes, trigger alarms on route hijacks, etc. 
 
 Both features export data formatted as JSON messages, hence compiling pmacct
-against libjansson is a requirement. Messages can be written to plain-text files
-or pointed at AMQP or Kafka brokers (in which case compiling against RabbitMQ or
+against libjansson is a requirement. See how to compile pmacct with JSON/
+libjansson support in the section "Compiling pmacct with JSON support" of this
+document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
 Kafka libraries is required; read more in respectively the "Running the
-RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document):
-
-shell> ./configure --enable-jansson
-
-But, for example, should you have installed Jansson in /usr/local/jansson and
-pkg-config is unable to help, you can supply this non-default location as
-follows (assuming you are running the bash shell):
-
-shell> export JANSSON_LIBS="-L/usr/local/jansson/lib -ljansson"
-shell> export JANSSON_CFLAGS="-I/usr/local/jansson/include"
-shell> ./configure --enable-jansson
+RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
 
 A basic dump of BGP tables at regular intervals (60 secs) to plain-text files,
 split by BGP peer and time of the day, is configured as follows:
@@ -1532,6 +1553,13 @@ AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
 Also, route monitoring messages are saved in a RIB structure for IP prefix
 lookup.
 
+All features export data formatted as JSON messages, hence compiling pmacct
+against libjansson is a requirement. See how to compile pmacct with JSON/
+libjansson support in the section "Compiling pmacct with JSON support" of this
+document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
+Kafka libraries is required; read more in respectively the "Running the
+RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
+
 Following a simple example on how to configure nfacctd to enable the BMP thread
 to a) log, in real-time, BGP stats, events and routes received via BMP to a
 text-file (bmp_daemon_msglog_file) and b) dump the same (ie. BGP stats and
@@ -1622,6 +1650,13 @@ pmtelemetryd for standalone consumpton of data. Streaming telemetry data can
 be logged real-time and/or dumped at regular time intervals to flat-files,
 RabbitMQ or Kafka brokers.
 
+All features export data formatted as JSON messages, hence compiling pmacct
+against libjansson is a requirement. See how to compile pmacct with JSON/
+libjansson support in the section "Compiling pmacct with JSON support" of this
+document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
+Kafka libraries is required; read more in respectively the "Running the
+RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
+
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
 thread must be explicitely enabled with a 'telemetry_daemon: true' config line.
@@ -1682,19 +1717,13 @@ Which, over time, would produce a would produce a series of files as follows:
 -rw-------  1 paolo paolo   1916 Nov 21 00:45 blabla-20111121-0030.txt
 -rw-------  1 paolo paolo   2940 Nov 21 01:00 blabla-20111121-0045.txt
 
-JSON output requires compiling pmacct against Jansson library, which can be
-found at the following URL: http://www.digip.org/jansson/ . pmacct can be
-configured for compilation against the library using the --enable-jansson
-switch. Please refer to the configure script help screen (and/or "Configuring
-pmacct for compilation and installing" section of this document) to supply
-custom locations of Jansson library and/or headers. 
+JSON output requires compiling pmacct against Jansson library. See how to
+compile pmacct with JSON/libjansson support in the section "Compiling pmacct
+with JSON support" of this document.
 
-Avro output requires compiling pmacct against Apache Avro library, which can be
-found at the following URL: http://avro.apache.org/ . pmacct can be configured
-for compilation against the library using the --enable-avro switch. Please
-refer to the configure script help screen (and/or "Configuring pmacct for
-compilation and installing" section of this document) to supply custom
-locations of Avro library and/or headers.
+Avro output requires compiling pmacct against libavro library. See how to
+compile pmacct with Avro support in the section "Compiling pmacct with Apache
+Avro support" of this document.
 
 Splitting data into time bins is supported via print_history directive. When
 enabled, time-related variable substitutions of dynamic print_output_file names
