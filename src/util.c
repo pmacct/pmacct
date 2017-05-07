@@ -1715,15 +1715,29 @@ void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
 #ifdef WITH_AVRO
 void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 {
-  FILE *avro_fp = open_output_file(filename, "w", TRUE);
-  avro_writer_t avro_schema_writer = avro_writer_file(avro_fp);
+  FILE *avro_fp;
+  avro_writer_t avro_schema_writer;
 
-  if (avro_schema_to_json(schema, avro_schema_writer)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
-    exit(1);
+  avro_fp = open_output_file(filename, "w", TRUE);
+
+  if (avro_fp) {
+    avro_schema_writer = avro_writer_file(avro_fp);
+
+    if (avro_schema_writer) {
+      if (avro_schema_to_json(schema, avro_schema_writer))
+	goto exit_lane;
+    }
+    else goto exit_lane;
+
+    close_output_file(avro_fp);
   }
+  else goto exit_lane;
 
-  close_output_file(avro_fp);
+  return;
+
+  exit_lane:
+  Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_file(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
+  exit(1);
 }
 
 char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
@@ -1744,7 +1758,7 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
   avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
 
   if (avro_schema_to_json(avro_schema, avro_writer)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to dump schema: %s\n", config.name, config.type, avro_strerror());
+    Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
     exit_plugin(1);
   }
 
