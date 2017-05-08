@@ -857,7 +857,8 @@ static struct plugin_type_entry plugin_types_list[] = {
   {PLUGIN_ID_SQLITE3,	"sqlite3",	sqlite3_plugin},
 #endif
 #ifdef WITH_MONGODB
-  {PLUGIN_ID_MONGODB,   "mongodb",      mongodb_plugin},
+  {PLUGIN_ID_UNKNOWN,	"mongodb",		mongodb_legacy_warning},
+  {PLUGIN_ID_MONGODB,  	"mongodb_legacy",	mongodb_plugin},
 #endif
 #ifdef WITH_RABBITMQ
   {PLUGIN_ID_AMQP,	"amqp",		amqp_plugin},

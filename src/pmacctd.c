@@ -58,7 +58,7 @@ void usage_daemon(char *prog_name)
   printf("  -z  \tAllow to run with non root privileges (ie. setcap in use)\n");
   printf("  -n  \tPath to a file containing networks and/or ASNs definitions\n");
   printf("  -t  \tPath to a file containing ports definitions\n");
-  printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | mongodb | amqp | kafka | nfprobe | sfprobe ] \n\tActivate plugin\n"); 
+  printf("  -P  \t[ memory | print | mysql | pgsql | sqlite3 | amqp | kafka | nfprobe | sfprobe ] \n\tActivate plugin\n"); 
   printf("  -d  \tEnable debug\n");
   printf("  -i  \tListen on the specified interface\n");
   printf("  -I  \tRead packets from the specified savefile\n");

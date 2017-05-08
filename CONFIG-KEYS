@@ -167,24 +167,20 @@ DESC:		Specifies the maximum number of bytes to capture for each packet. This di
 DEFAULT:	128 bytes; 64 bytes if compiled with --disable-ipv6
 
 KEY:		plugins (-P)
-VALUES:		[ memory | print | mysql | pgsql | sqlite3 | mongodb | nfprobe | sfprobe | tee |
-		  amqp | kafka ]
+VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe | tee | amqp | kafka ]
 DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins are always
 		included in pmacct executables as they do not contain dependencies on external
-		libraries. Database (ie. SQL, MongoDB) and messaging ones (ie. amqp, kafka) do
-		have external dependencies and hence are available only if explicitely configured
-		and compiled.
+		libraries. Database (ie. RDBMS, noSQL) and messaging ones (ie. amqp, kafka) do have
+		external dependencies and hence are available only if explicitely configured and
+		compiled.
 		memory plugin uses a memory table as backend; then, a client tool, 'pmacct', can fetch
 		the memory table content; the memory plugin is good for prototype solutions and/or
 		small environments. mysql, pgsql and sqlite3 plugins output respectively to MySQL,
 		PostgreSQL and SQLite 3.x (or BerkeleyDB 5.x with the SQLite API compiled-in) tables
-		to store data. mongodb enables use of the noSQL document-oriented database MongoDB
-		(requires installation of MongoDB API C driver which is shipped separatedly from the
-		main MongoDB package; read more in QUICKSTART in the "noSQL (MongoDB) setup examples"
-		section). print plugin prints output data to flat-files or stdout in JSON, CSV or
-		tab-spaced formats, or encodes it using the Apache Avro serialization system. amqp
-		and kafka plugins allow to output data to RabbitMQ and Kafka brokers respectively. All
-		these plugins, SQL, no-SQL and messaging are good for production solutions and/or
+		to store data. print plugin prints output data to flat-files or stdout in JSON, CSV
+		or tab-spaced formats, or encodes it using the Apache Avro serialization system. amqp
+		and kafka plugins allow to output data to RabbitMQ and Kafka brokers respectively.
+		All these plugins, SQL, no-SQL and messaging are good for production solutions and/or
 		larger scenarios.
 		nfprobe acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v1/v5/
 		v9 and IPFIX datagrams to a remote collector. sfprobe acts as a sFlow agent and 

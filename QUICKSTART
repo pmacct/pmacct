@@ -5,7 +5,7 @@ pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 TABLE OF CONTENTS:
 I.	Plugins included with pmacct distribution
 II.	Configuring pmacct for compilation and installing
-III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) and noSQL (MongoDB) setup examples
+III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow/IPFIX and sFlow daemons (nfacctd/sfacctd)
 VI.	Running the NFLOG-based daemon (uacctd)
@@ -46,9 +46,6 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 'print':   data is printed at regular intervals to flat-files or standard output
 	   in tab-spaced, CSV and JSON formats. This plugin is compiled in by
 	   default.
-'mongodb': a working MongoDB installation can be used for data storage. It is
-	   required to install the MongoDB API C driver. This plugin can be
-	   compiled using the --enable-mongodb switch.
 'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
 	   for delivery to consumer applications or tools. Popular consumers
 	   are ElasticSearch, InfluxDB and Cassandra. This plugin can be compiled
@@ -79,13 +76,12 @@ to get the list of available switches, you can use the following command-line:
 shell> ./configure --help
 
 Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
-(4) MongoDB and any (5) mixed compilation:
+and any (4) mixed compilation:
 
 (1) shell> ./configure --enable-mysql
 (2) shell> ./configure --enable-pgsql
 (3) shell> ./configure --enable-sqlite3
-(4) shell> ./configure --enable-mongodb
-(5) shell> ./configure --enable-mysql --enable-pgsql
+(4) shell> ./configure --enable-mysql --enable-pgsql
 
 Then to compile and install simply typing:
 
@@ -308,25 +304,6 @@ real-time data feed is a requirement) is to set up a synthetic auto-increment 'i
 field: it successfully prevents duplicates but comes at the expenses of GROUP BY
 queries when retrieving data.
 
-IIIg. MongoDB examples 
-MongoDB if a document-oriented noSQL database. Defining feature of document-oriented
-databases is that they are schemaless hence this section will only need to focus on a
-simple configuration with historical accounting support:
-
-...
-plugins: mongodb
-aggregate: ...
-mongo_history: 5m
-mongo_history_roundoff: m
-mongo_refresh_time: 300
-mongo_table: pmacct.acct
-...
-
-MongoDB release >= 2.2.0 is recommended. Installation of the MongoDB C driver 0.8,
-also referred as legacy, is required. Version 0.9 of the driver and laters (also
-referred as current) is not supported (yet). The legacy driver can be downloaded
-at the following URL: https://github.com/mongodb/mongo-c-driver-legacy .
- 
 
 IV. Running the libpcap-based daemon (pmacctd) 
 All deamons including pmacctd can be run with commandline options, using a config

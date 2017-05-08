@@ -2,11 +2,11 @@ TOOLS DESCRIPTION.
 
 All data plane (ie. IPv4/IPv6 traffic) daemons can print statistics to stdout,
 keep them in memory tables, store persistently to open-source RDBMS (MySQL,
-PostgreSQL, Sqlite 3) or to noSQL databates (ie. BerkeleyDB, MongoDB) and to
-flat-files, and publish to AMQP and Kafka brokers (typically to insert in
-ElasticSearch, InfluxDB and Cassandra and, in general, all backends which are
-not natively supported by pmacct). BGP, BMP and Streaming Telemetry daemons
-can publish control and infrastructure planes to AMQP and Kafka brokers. 
+PostgreSQL, Sqlite 3) or to noSQL databates (ie. BerkeleyDB) and to flat-files,
+and publish to AMQP and Kafka brokers (typically to insert in ElasticSearch,
+InfluxDB and Cassandra and, in general, all backends which are not natively
+supported by pmacct). BGP, BMP and Streaming Telemetry daemons can publish
+control and infrastructure planes to AMQP and Kafka brokers. 
 
 pmacctd		libpcap-based accounting daemon: it captures packets from an
 		interface it is bound to. Other than acting as a collector,

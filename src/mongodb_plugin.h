@@ -41,6 +41,7 @@
 #define EXT
 #endif
 EXT void mongodb_plugin(int, struct configuration *, void *);
+EXT void mongodb_legacy_warning(int, struct configuration *, void *);
 EXT void MongoDB_cache_purge(struct chained_cache *[], int, int);
 EXT void MongoDB_create_indexes(mongo *, const char *);
 EXT int MongoDB_get_database(char *, int, char *);
