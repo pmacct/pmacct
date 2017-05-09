@@ -6,6 +6,18 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.0
+FROM:	<= 1.6.2
+TOPIC:	Obsoleted features
+DESC:	Following is the list of features, knobs and plugins that are being
+	discontinued with release 1.7:
+	* tmp_net_own_field knob was allowing to revert to backward compatible
+	  behaviour of IP prefixes (ie. src_net) being written in the same
+	  field as IP addresses (ie. src_host)
+	* MongoDB plugin is being discontinued since the old Mongo API is
+	  not supported anymore and there has never been enough push from
+	  the community to transition to the new/current API (which would
+	  require a rewrite of most of the plugin)
 
 TO:	>= 1.6.2
 FROM:	<= 1.6.1

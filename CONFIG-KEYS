@@ -832,11 +832,10 @@ DESC:		Defines the SQL database to use. Remember that when using the SQLite3 plu
 		directive refers to the full path to the database file
 DEFAULT:	'pmacct'; SQLite 3.x: '/tmp/pmacct.db' 
 
-KEY:            [ sql_table | print_output_file | mongo_table ]
-DESC:           In SQL and mongodb plugins this defines the table to use; in print plugin it defines the
-		file to write output to. Dynamic names are supported through the use of variables, which
-		are computed at the moment when data is purged to the backend. The list of supported
-		variables follows: 
+KEY:            [ sql_table | print_output_file ]
+DESC:           In SQL this defines the table to use; in print plugin it defines the file to write output
+		to. Dynamic names are supported through the use of variables, which are computed at the
+		moment when data is purged to the backend. The list of supported variables follows: 
 
 		%d		The day of the month as a decimal number (range 01 to 31).
 
@@ -1016,38 +1015,31 @@ DESC:		This switch makes sense only when using PostgreSQL plugin and supplied de
 		configuration switch deprecated.
 DEFAULT:	typed
 
-KEY:	 	[ sql_host | mongo_host ]
+KEY:	 	sql_host
 DESC:		Defines the backend server IP/hostname
 DEFAULT:	localhost
 
-KEY:		[ sql_user | mongo_user ]
-DESC:		Defines the username to use when connecting to the server. In MongoDB, if both
-		mongo_user and mongo_passwd directives are omitted, authentication is disabled;
-		if only one of the two is specified, the other is set to its default value.
+KEY:		sql_user
+DESC:		Defines the username to use when connecting to the server.
 DEFAULT:	pmacct
 
-KEY:		[ sql_passwd | mongo_passwd ]
-DESC:		Defines the password to use when connecting to the server. In MongoDB, if both
-                mongo_user and mongo_passwd directives are omitted, authentication is disabled;
-		if only one of the two is specified, the other is set to its default value.
+KEY:		sql_passwd
+DESC:		Defines the password to use when connecting to the server.
 DEFAULT:	'arealsmartpwd'
 
-KEY:		[ sql_refresh_time | print_refresh_time | mongo_refresh_time | amqp_refresh_time |
-		  kafka_refresh_time ] (-r)
+KEY:		[ sql_refresh_time | print_refresh_time | amqp_refresh_time | kafka_refresh_time ] (-r)
 DESC:		Time interval, in seconds, between consecutive executions of the plugin cache scanner. The
 		scanner purges data into the plugin backend. Note: internally all these config directives
 		write to the same variable; when using multiple plugins it is recommended to bind refresh
 		time definitions to specific plugins, ie.:
 
-		plugins: mysql[x], mongodb[y]
+		plugins: mysql[x]
 		sql_refresh_time[x]: 900
-		mongo_refresh_time[y]: 300
 
 		As doing otherwise can originate unexpected behaviours.
 DEFAULT:	60
 
-KEY:		[ sql_startup_delay | print_startup_delay | mongo_startup_delay | amqp_startup_delay |
-		  kafka_startup_delay ]
+KEY:		[ sql_startup_delay | print_startup_delay | amqp_startup_delay | kafka_startup_delay ]
 DESC:		Defines the time, in seconds, the first cache scan event has to be delayed. This delay
 		is, in turn, propagated to the subsequent scans. It comes useful in two scenarios: a) so 
 		that multiple plugins can use the same refresh time (ie. sql_refresh_time) value, allowing
@@ -1068,7 +1060,7 @@ DESC:		Enables the optimization of the statements sent to the RDBMS essentially 
 		the 'sql_table_version' directive.
 DEFAULT:	false
 
-KEY:		[ sql_history | print_history | mongo_history | amqp_history | kafka_history ]
+KEY:		[ sql_history | print_history | amqp_history | kafka_history ]
 VALUES:		#[s|m|h|d|w|M]
 DESC:		Enables historical accounting by placing accounted data into configurable time-bins. It
 		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
@@ -1083,15 +1075,14 @@ DESC:		Enables historical accounting by placing accounted data into configurable
 		- four hours, '86400' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
 
-KEY:            [ sql_history_offset | print_history_offset | mongo_history_offset | amqp_history_offset |
-		  kafka_history_offset ]
+KEY:            [ sql_history_offset | print_history_offset | amqp_history_offset | kafka_history_offset ]
 DESC:		Sets an offset to timeslots basetime. If history is set to 30 mins (by default creating
 		10:00, 10:30, 11:00, etc. time-bins), with an offset of 900 seconds (so 15 mins) it will
 		create 10:15, 10:45, 11:15, etc. time-bins. It expects a positive value, in seconds.
 DEFAULT:	0
 
-KEY:		[ sql_history_roundoff | print_history_roundoff | mongo_history_roundoff |
-		  amqp_history_roundoff | kafka_history_roundoff ]
+KEY:		[ sql_history_roundoff | print_history_roundoff | amqp_history_roundoff |
+		  kafka_history_roundoff ]
 VALUES		[m,h,d,w,M]
 DESC:		Enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
 		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).
@@ -1113,8 +1104,7 @@ DESC:           Enables recovery mode; recovery mechanism kicks in if DB fails. 
 		system on a box) to use in the case the primary backend fails.
 DEFAULT:	none
 
-KEY:            [ sql_max_writers | print_max_writers | mongo_max_writers | amqp_max_writers |
-		  kafka_max_writers ]
+KEY:            [ sql_max_writers | print_max_writers | amqp_max_writers | kafka_max_writers ]
 DESC:           Sets the maximum number of concurrent writer processes the plugin is allowed to start.
 		This setting allows pmacct to degrade gracefully during major backend lock/outages/
 		unavailability. The value is split as follows: up to N-1 concurrent processes will
@@ -1123,8 +1113,7 @@ DESC:           Sets the maximum number of concurrent writer processes the plugi
 		(so, data will be lost at this stage) and an error message is printed out.
 DEFAULT:	10
 
-KEY:		[ sql_cache_entries | print_cache_entries | mongo_cache_entries | amqp_cache_entries |
-		  kafka_cache_entries ]
+KEY:		[ sql_cache_entries | print_cache_entries | amqp_cache_entries | kafka_cache_entries ]
 DESC:		All plugins have a memory cache in order to store data until next purging event (see
 		refresh time directives, ie. sql_refresh_time). In case of network traffic data, the
 		cache allows to accumulate bytes and packets counters. This directive sets the number
@@ -1162,8 +1151,8 @@ NOTES:		* non SQL plugins: the cache structure has two dimensions, a base and a 
 		  MPLS-related primitives; all these can make the total cache memory size increase
 		  slightly at runtime. 
 		
-DEFAULT:	sql_cache_entries: 32771; print_cache_entries, mongo_cache_entries, amqp_cache_entries,
-		kafka_cache_entries: 16411
+DEFAULT:	print_cache_entries, amqp_cache_entries, kafka_cache_entries: 16411;
+		sql_cache_entries: 32771
 
 KEY:		sql_dont_try_update
 VALUES:         [ true | false ]
@@ -1203,15 +1192,15 @@ DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT st
 		in JSON objects newline-separated (preferred to JSON arrays for performance).  
 DEFAULT:        0
 
-KEY:		[ sql_trigger_exec | print_trigger_exec | mongo_trigger_exec ]
+KEY:		[ sql_trigger_exec | print_trigger_exec ]
 DESC:		Defines the executable to be launched at fixed time intervals to post-process aggregates;
 		in SQL plugins, intervals are specified by the 'sql_trigger_time' directive; if no interval
 		is supplied 'sql_refresh_time' value is used instead: this will result in a trigger being
 		fired each purging event. A number of environment variables are set in order to allow the
 		trigger to take actions; take a look to docs/TRIGGER_VARS to check them out. In the print
-		and mongodb plugins a simpler implementation is made: triggers can be fired each time data
-		is written to the backend (ie. print_refresh_time) and no environment variables are passed
-		over to the executable.
+		plugin a simpler implementation is made: triggers can be fired each time data is written to
+		the backend (ie. print_refresh_time) and no environment variables are passed over to the
+		executable.
 DEFAULT:	none
 
 KEY:		sql_trigger_time
@@ -1223,7 +1212,7 @@ DESC:		Specifies time interval at which the executable specified by 'sql_trigger
 		the executable will be fired each hour).
 DEFAULT:	none
 
-KEY:		[ sql_preprocess | print_preprocess | mongo_preprocess | amqp_preprocess | kafka_preprocess ]
+KEY:		[ sql_preprocess | print_preprocess | amqp_preprocess | kafka_preprocess ]
 DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks) while
 		purging data to the backend thus resulting in a powerful selection tier; aggregates filtered
 		out may be just discarded or saved through the recovery mechanism (if enabled, if supported
@@ -1333,8 +1322,7 @@ DESC:		Allows to process aggregates (via a comma-separated list of conditionals 
 		the following line can be used to instrument the print plugin: 'print_preprocess: minb=100000'. 
 DEFAULT:	none
 
-KEY:		[ sql_preprocess_type | print_preprocess_type | mongo_preprocess_type | amqp_preprocess_type |
-		  kafka_preprocess_type ]
+KEY:		[ sql_preprocess_type | print_preprocess_type | amqp_preprocess_type | kafka_preprocess_type ]
 VALUES:		[ any | all ]
 DESC:		When more checks are to be evaluated, this directive tells whether aggregates on the queue
 		are valid if they just match one of the checks (any) or all of them (all).
@@ -1359,22 +1347,6 @@ DESC:           All timestamps (ie. timestamp_start, timestamp_end, timestamp_ar
                 PostgreSQL:     timestamp without time zone ==> bigint
                 SQLite3:        DATETIME ==> INT(8)
 DEFAULT:        false
-
-KEY:		mongo_insert_batch
-DESC:		When purging data in a MongoDB database, defines the amount of elements to be inserted per
-		batch. This value depends on available memory: with 8GB RAM a max 35000 value did work OK;
-		with 16GB RAM a max 75000 value did work OK instead.
-DEFAULT:	10000
-
-KEY:            mongo_indexes_file
-DESC:           Full pathname to a file containing a list of indexes to apply to a MongoDB collection with
-		dynamic name. If the collection does not exists, it is created. Index names are picked by
-		MongoDB. For example, to create collections with two indexes 1) one using as key source/
-		destination IP addresses and 2) the other using source/destination TCP/UDP ports compile
-		the file pointed by this directive as:
-
-		src_host, dst_host
-		src_port, dst_port
 
 KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
@@ -1461,7 +1433,7 @@ DESC:		Time interval, in seconds, at which the generated Avro schema is sent ove
 		AMQP routing key (amqp_avro_schema_routing_key) or Kafka topic (kafka_avro_schema_topic).
 DEFAULT:	60
 
-KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | mongo_num_protos | kafka_num_protos ]
+KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]
 DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
 		or left numerical. The default is to look protocol names up.
