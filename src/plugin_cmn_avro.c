@@ -146,18 +146,16 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_MPLS_VPN_RD)
     avro_schema_record_field_append(schema, "mpls_vpn_rd", avro_schema_string());
 
-  if ((wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST)) ||
-      ((wtc & (COUNT_SRC_NET|COUNT_SUM_NET)) && !config.tmp_net_own_field))
+  if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST))
     avro_schema_record_field_append(schema, "ip_src", avro_schema_string());
 
-  if ((wtc & (COUNT_SRC_NET|COUNT_SUM_NET)) && config.tmp_net_own_field)
+  if (wtc & (COUNT_SRC_NET|COUNT_SUM_NET))
     avro_schema_record_field_append(schema, "net_src", avro_schema_string());
 
-  if ((wtc & COUNT_DST_HOST) ||
-      ((wtc & COUNT_DST_NET) && !config.tmp_net_own_field))
+  if (wtc & COUNT_DST_HOST)
     avro_schema_record_field_append(schema, "ip_dst", avro_schema_string());
 
-  if ((wtc & COUNT_DST_NET) && config.tmp_net_own_field)
+  if (wtc & COUNT_DST_NET)
     avro_schema_record_field_append(schema, "net_dst", avro_schema_string());
 
   if (wtc & COUNT_SRC_NMASK)
@@ -556,14 +554,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
 
   if (wtc & (COUNT_SRC_NET|COUNT_SUM_NET)) {
     addr_to_str(src_host, &pbase->src_net);
-    if (config.tmp_net_own_field) {
-      check_i(avro_value_get_by_name(&value, "net_src", &field, NULL));
-      check_i(avro_value_set_string(&field, src_host));
-    }
-    else {
-      check_i(avro_value_get_by_name(&value, "ip_src", &field, NULL));
-      check_i(avro_value_set_string(&field, src_host));
-    }
+    check_i(avro_value_get_by_name(&value, "net_src", &field, NULL));
+    check_i(avro_value_set_string(&field, src_host));
   }
 
   if (wtc & COUNT_DST_HOST) {
@@ -574,14 +566,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
 
   if (wtc & COUNT_DST_NET) {
     addr_to_str(dst_host, &pbase->dst_net);
-    if (config.tmp_net_own_field) {
-      check_i(avro_value_get_by_name(&value, "net_dst", &field, NULL));
-      check_i(avro_value_set_string(&field, dst_host));
-    }
-    else {
-      check_i(avro_value_get_by_name(&value, "ip_dst", &field, NULL));
-      check_i(avro_value_set_string(&field, dst_host));
-    }
+    check_i(avro_value_get_by_name(&value, "net_dst", &field, NULL));
+    check_i(avro_value_set_string(&field, dst_host));
   }
 
   if (wtc & COUNT_SRC_NMASK) {

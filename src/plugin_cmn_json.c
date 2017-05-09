@@ -695,8 +695,7 @@ void compose_json_src_net(json_t *obj, struct chained_cache *cc)
   char ip_address[INET6_ADDRSTRLEN];
 
   addr_to_str(ip_address, &cc->primitives.src_net);
-  if (!config.tmp_net_own_field) json_object_set_new_nocheck(obj, "ip_src", json_string(ip_address));
-  else json_object_set_new_nocheck(obj, "net_src", json_string(ip_address));
+  json_object_set_new_nocheck(obj, "net_src", json_string(ip_address));
 }
 
 void compose_json_dst_host(json_t *obj, struct chained_cache *cc)
@@ -712,8 +711,7 @@ void compose_json_dst_net(json_t *obj, struct chained_cache *cc)
   char ip_address[INET6_ADDRSTRLEN];
 
   addr_to_str(ip_address, &cc->primitives.dst_net);
-  if (!config.tmp_net_own_field) json_object_set_new_nocheck(obj, "ip_dst", json_string(ip_address));
-  else json_object_set_new_nocheck(obj, "net_dst", json_string(ip_address));
+  json_object_set_new_nocheck(obj, "net_dst", json_string(ip_address));
 }
 
 void compose_json_src_mask(json_t *obj, struct chained_cache *cc)

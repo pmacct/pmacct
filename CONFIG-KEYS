@@ -2493,14 +2493,6 @@ DESC:		Defines a list of packet length distributions, comma-separated, which is 
 		than a single bin the latest definition wins. 
 DEFAULT:        none
 
-KEY:		tmp_net_own_field
-VALUES:         [ true | false ]
-DESC:		Writes IP prefixes, src_net and dst_net primitives, to a own/distinct field than the
-		one used for IP addresses, src_host and dst_host primitives. This config directive is
-		meant for pmacct 1.6 only in order to ease backward compatibility by setting the value
-		of this directive to false. In the next major release this directive will be removed.
-DEFAULT:        true
-
 KEY:		tmp_asa_bi_flow
 VALUES:		[ true | false ]
 DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and

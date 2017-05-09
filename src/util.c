@@ -1151,7 +1151,6 @@ void set_default_preferences(struct configuration *cfg)
     set_truefalse_nonzero(&cfg->nfacctd_disable_checks);
   }
   set_truefalse_nonzero(&cfg->pipe_check_core_pid);
-  set_truefalse_nonzero(&cfg->tmp_net_own_field);
   if (!cfg->nfacctd_bgp_peer_as_src_type) cfg->nfacctd_bgp_peer_as_src_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->nfacctd_bgp_src_std_comm_type) cfg->nfacctd_bgp_src_std_comm_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->nfacctd_bgp_src_ext_comm_type) cfg->nfacctd_bgp_src_ext_comm_type = BGP_SRC_PRIMITIVES_KEEP;
