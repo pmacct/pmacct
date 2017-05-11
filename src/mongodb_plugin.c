@@ -516,10 +516,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
           }
         }
 
-        if (!config.tmp_comms_same_field)
-	  MongoDB_append_string(bson_elem, "ecomms", pvlen, COUNT_INT_EXT_COMM);
-        else
-	  MongoDB_append_string(bson_elem, "comms", pvlen, COUNT_INT_EXT_COMM);
+	MongoDB_append_string(bson_elem, "ecomms", pvlen, COUNT_INT_EXT_COMM);
       }
 
       if (config.what_to_count_2 & COUNT_LRG_COMM) {
@@ -585,10 +582,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
           }
         }
 
-        if (!config.tmp_comms_same_field)
-          MongoDB_append_string(bson_elem, "src_ecomms", pvlen, COUNT_INT_SRC_EXT_COMM);
-        else
-          MongoDB_append_string(bson_elem, "src_comms", pvlen, COUNT_INT_SRC_EXT_COMM);
+        MongoDB_append_string(bson_elem, "src_ecomms", pvlen, COUNT_INT_SRC_EXT_COMM);
       }
 
       if (config.what_to_count_2 & COUNT_SRC_LRG_COMM) {

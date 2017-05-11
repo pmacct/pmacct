@@ -63,7 +63,7 @@ void pmc_lower_string(char *);
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
 char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
-int want_ipproto_num, tmp_comms_same_field, want_tstamp_since_epoch;
+int want_ipproto_num, want_tstamp_since_epoch;
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -285,22 +285,10 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("SRC_AS      ");
     if (what_to_count & COUNT_DST_AS) printf("DST_AS      "); 
-    if (!tmp_comms_same_field) {
-      if (what_to_count & COUNT_STD_COMM) printf("COMMS                   ");
-      if (what_to_count & COUNT_EXT_COMM) printf("ECOMMS                  ");
-    }
-    else {
-      if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
-	printf("COMMS                   ");
-    }
-    if (!tmp_comms_same_field) {
-      if (what_to_count & COUNT_SRC_STD_COMM) printf("SRC_COMMS               ");
-      if (what_to_count & COUNT_SRC_EXT_COMM) printf("SRC_ECOMMS              ");
-    }
-    else {
-      if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
-	printf("SRC_COMMS               ");
-    }
+    if (what_to_count & COUNT_STD_COMM) printf("COMMS                   ");
+    if (what_to_count & COUNT_EXT_COMM) printf("ECOMMS                  ");
+    if (what_to_count & COUNT_SRC_STD_COMM) printf("SRC_COMMS               ");
+    if (what_to_count & COUNT_SRC_EXT_COMM) printf("SRC_ECOMMS              ");
     if (what_to_count_2 & COUNT_LRG_COMM) printf("LCOMMS                  ");
     if (what_to_count_2 & COUNT_SRC_LRG_COMM) printf("SRC_LCOMMS              ");
     if (what_to_count & COUNT_AS_PATH) printf("AS_PATH                  ");
@@ -535,22 +523,10 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
 #endif
     if (what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) printf("%sSRC_AS", write_sep(sep, &count));
     if (what_to_count & COUNT_DST_AS) printf("%sDST_AS", write_sep(sep, &count)); 
-    if (!tmp_comms_same_field) {
-      if (what_to_count & COUNT_STD_COMM) printf("%sCOMMS", write_sep(sep, &count));
-      if (what_to_count & COUNT_EXT_COMM) printf("%sECOMMS", write_sep(sep, &count));
-    }
-    else {
-      if (what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM))
-        printf("%sCOMMS", write_sep(sep, &count));
-    }
-    if (!tmp_comms_same_field) {
-      if (what_to_count & COUNT_SRC_STD_COMM) printf("%sSRC_COMMS", write_sep(sep, &count));
-      if (what_to_count & COUNT_SRC_EXT_COMM) printf("%sSRC_ECOMMS", write_sep(sep, &count));
-    }
-    else {
-      if (what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM))
-        printf("%sSRC_COMMS", write_sep(sep, &count));
-    }
+    if (what_to_count & COUNT_STD_COMM) printf("%sCOMMS", write_sep(sep, &count));
+    if (what_to_count & COUNT_EXT_COMM) printf("%sECOMMS", write_sep(sep, &count));
+    if (what_to_count & COUNT_SRC_STD_COMM) printf("%sSRC_COMMS", write_sep(sep, &count));
+    if (what_to_count & COUNT_SRC_EXT_COMM) printf("%sSRC_ECOMMS", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_LRG_COMM) printf("%sLCOMMS", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_SRC_LRG_COMM) printf("%sSRC_LCOMMS", write_sep(sep, &count));
     if (what_to_count & COUNT_AS_PATH) printf("%sAS_PATH", write_sep(sep, &count));
@@ -777,7 +753,6 @@ int main(int argc,char **argv)
   which_counter = FALSE;
   topN_counter = FALSE;
   topN_howmany = FALSE;
-  tmp_comms_same_field = FALSE;
   sum_counters = FALSE;
   num_counters = FALSE;
   fetch_from_file = FALSE;
@@ -1183,9 +1158,6 @@ int main(int argc,char **argv)
     case 'a':
       want_all_fields = TRUE;
       break;
-    case 'x':
-      tmp_comms_same_field = TRUE;
-      break;
     case 'r':
       q.type |= WANT_RESET;
       want_reset = TRUE;
@@ -1351,18 +1323,6 @@ int main(int argc,char **argv)
   else {
     printf("ERROR: -E option expects a single char as separator\n  Exiting...\n\n");
     exit(1);
-  }
-
-  /* Sanitizing the aggregation method */ 
-  if (what_to_count || what_to_count_2) {
-    if (tmp_comms_same_field && what_to_count & COUNT_STD_COMM && what_to_count & COUNT_EXT_COMM) {
-      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
-      exit(1);
-    }
-    if (tmp_comms_same_field && what_to_count & COUNT_SRC_STD_COMM && what_to_count & COUNT_SRC_EXT_COMM) {
-      printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
-      exit(1);
-    }
   }
 
   memcpy(q.passwd, password, sizeof(password));
@@ -3452,18 +3412,10 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
       if (bgp_comm) *bgp_comm = '_';
     }
 
-    if (!tmp_comms_same_field) {
-      if (strlen(plbgp->ext_comms))
-	json_object_set_new_nocheck(obj, "ecomms", json_string(plbgp->ext_comms));
-      else
-	json_object_set_new_nocheck(obj, "ecomms", json_string(empty_string));
-    }
-    else {
-      if (strlen(plbgp->ext_comms))
-	json_object_set_new_nocheck(obj, "comms", json_string(plbgp->ext_comms));
-      else
-	json_object_set_new_nocheck(obj, "comms", json_string(empty_string));
-    }
+    if (strlen(plbgp->ext_comms))
+      json_object_set_new_nocheck(obj, "ecomms", json_string(plbgp->ext_comms));
+    else
+      json_object_set_new_nocheck(obj, "ecomms", json_string(empty_string));
   }
 
   if (wtc_2 & COUNT_LRG_COMM) {
@@ -3529,18 +3481,10 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
       if (bgp_comm) *bgp_comm = '_';
     }
 
-    if (!tmp_comms_same_field) {
-      if (strlen(plbgp->src_ext_comms))
-	json_object_set_new_nocheck(obj, "src_ecomms", json_string(plbgp->src_ext_comms));
-      else
-	json_object_set_new_nocheck(obj, "src_ecomms", json_string(empty_string));
-    }
-    else {
-      if (strlen(plbgp->src_ext_comms))
-	json_object_set_new_nocheck(obj, "src_comms", json_string(plbgp->src_ext_comms));
-      else
-	json_object_set_new_nocheck(obj, "src_comms", json_string(empty_string));
-    }
+    if (strlen(plbgp->src_ext_comms))
+      json_object_set_new_nocheck(obj, "src_ecomms", json_string(plbgp->src_ext_comms));
+    else
+      json_object_set_new_nocheck(obj, "src_ecomms", json_string(empty_string));
   }
 
   if (wtc_2 & COUNT_SRC_LRG_COMM) {

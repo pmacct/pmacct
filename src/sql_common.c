@@ -1644,14 +1644,8 @@ int sql_evaluate_primitives(int primitive)
         strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
       }
 
-      if (!config.tmp_comms_same_field) {
-        strncat(insert_clause, "ecomms", SPACELEFT(insert_clause));
-        strncat(where[primitive].string, "ecomms=\'%s\'", SPACELEFT(where[primitive].string));
-      }
-      else {
-        strncat(insert_clause, "comms", SPACELEFT(insert_clause));
-        strncat(where[primitive].string, "comms=\'%s\'", SPACELEFT(where[primitive].string));
-      }
+      strncat(insert_clause, "ecomms", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "ecomms=\'%s\'", SPACELEFT(where[primitive].string));
 
       strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_INT_EXT_COMM;
@@ -1696,14 +1690,8 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
-    if (!config.tmp_comms_same_field) {
-      strncat(insert_clause, "ecomms_src", SPACELEFT(insert_clause));
-      strncat(where[primitive].string, "ecomms_src=\'%s\'", SPACELEFT(where[primitive].string));
-    }
-    else {
-      strncat(insert_clause, "comms_src", SPACELEFT(insert_clause));
-      strncat(where[primitive].string, "comms_src=\'%s\'", SPACELEFT(where[primitive].string));
-    }
+    strncat(insert_clause, "ecomms_src", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "ecomms_src=\'%s\'", SPACELEFT(where[primitive].string));
     strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_SRC_EXT_COMM;
     values[primitive].handler = where[primitive].handler = count_src_ext_comm_handler;

@@ -511,8 +511,7 @@ void compose_json_ext_comm(json_t *obj, struct chained_cache *cc)
   }
   else str_ptr = empty_string;
 
-  if (!config.tmp_comms_same_field) json_object_set_new_nocheck(obj, "ecomms", json_string(str_ptr));
-  else json_object_set_new_nocheck(obj, "comms", json_string(str_ptr));
+  json_object_set_new_nocheck(obj, "ecomms", json_string(str_ptr));
 }
 
 void compose_json_lrg_comm(json_t *obj, struct chained_cache *cc)
@@ -616,8 +615,7 @@ void compose_json_src_ext_comm(json_t *obj, struct chained_cache *cc)
   }
   else str_ptr = empty_string;
 
-  if (!config.tmp_comms_same_field) json_object_set_new_nocheck(obj, "src_ecomms", json_string(str_ptr));
-  else json_object_set_new_nocheck(obj, "src_comms", json_string(str_ptr));
+  json_object_set_new_nocheck(obj, "src_ecomms", json_string(str_ptr));
 }
 
 void compose_json_src_lrg_comm(json_t *obj, struct chained_cache *cc)

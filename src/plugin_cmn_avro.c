@@ -84,12 +84,8 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_STD_COMM)
     avro_schema_record_field_append(schema, "comms", avro_schema_string());
 
-  if (wtc & COUNT_EXT_COMM) {
-    if (!config.tmp_comms_same_field)
-      avro_schema_record_field_append(schema, "ecomms", avro_schema_string());
-    else
-      avro_schema_record_field_append(schema, "comms", avro_schema_string());
-  }
+  if (wtc & COUNT_EXT_COMM)
+    avro_schema_record_field_append(schema, "ecomms", avro_schema_string());
 
   if (wtc_2 & COUNT_LRG_COMM)
     avro_schema_record_field_append(schema, "lcomms", avro_schema_string());
@@ -118,12 +114,8 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_SRC_STD_COMM)
     avro_schema_record_field_append(schema, "src_comms", avro_schema_string());
 
-  if (wtc & COUNT_SRC_EXT_COMM) {
-    if (!config.tmp_comms_same_field)
-      avro_schema_record_field_append(schema, "src_ecomms", avro_schema_string());
-    else
-      avro_schema_record_field_append(schema, "src_comms", avro_schema_string());
-  }
+  if (wtc & COUNT_SRC_EXT_COMM)
+    avro_schema_record_field_append(schema, "src_ecomms", avro_schema_string());
 
   if (wtc_2 & COUNT_SRC_LRG_COMM)
     avro_schema_record_field_append(schema, "src_lcomms", avro_schema_string());
@@ -386,11 +378,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    if (!config.tmp_comms_same_field)
-      check_i(avro_value_get_by_name(&value, "ecomms", &field, NULL));
-    else 
-      check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
-
+    check_i(avro_value_get_by_name(&value, "ecomms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
@@ -482,11 +470,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    if (!config.tmp_comms_same_field)
-      check_i(avro_value_get_by_name(&value, "src_ecomms", &field, NULL));
-    else
-      check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
-
+    check_i(avro_value_get_by_name(&value, "src_ecomms", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 

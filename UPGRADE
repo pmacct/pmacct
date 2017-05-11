@@ -14,6 +14,9 @@ DESC:	Following is the list of features, knobs and plugins that are being
 	* tmp_net_own_field knob was allowing to revert to backward compatible
 	  behaviour of IP prefixes (ie. src_net) being written in the same
 	  field as IP addresses (ie. src_host)
+	* tmp_comms_same_field knob was allowing to revert to backward
+	  compatible behaviour of BGP communities (standard, extended) being
+	  writeen all in the same field.
 	* MongoDB plugin is being discontinued since the old Mongo API is
 	  not supported anymore and there has never been enough push from
 	  the community to transition to the new/current API (which would

@@ -526,7 +526,6 @@ struct configuration {
   int use_ip_next_hop;
   int dump_max_writers;
   int tmp_asa_bi_flow;
-  int tmp_comms_same_field;
   size_t thread_stack;
 };
 

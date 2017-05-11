@@ -1552,21 +1552,11 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 #endif
   if (config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) fprintf(f, "%sSRC_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_AS) fprintf(f, "%sDST_AS", write_sep(sep, &count));
-  if (!config.tmp_comms_same_field) {
-    if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "%sCOMMS", write_sep(sep, &count));
-    if (config.what_to_count & COUNT_EXT_COMM) fprintf(f, "%sECOMMS", write_sep(sep, &count));
-  }
-  else {
-    if (config.what_to_count & (COUNT_STD_COMM|COUNT_EXT_COMM)) fprintf(f, "%sCOMMS", write_sep(sep, &count));
-  }
+  if (config.what_to_count & COUNT_STD_COMM) fprintf(f, "%sCOMMS", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_EXT_COMM) fprintf(f, "%sECOMMS", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_LRG_COMM) fprintf(f, "%sLCOMMS", write_sep(sep, &count));
-  if (!config.tmp_comms_same_field) {
-    if (config.what_to_count & COUNT_SRC_STD_COMM) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
-    if (config.what_to_count & COUNT_SRC_EXT_COMM) fprintf(f, "%sSRC_ECOMMS", write_sep(sep, &count));
-  }
-  else {
-    if (config.what_to_count & (COUNT_SRC_STD_COMM|COUNT_SRC_EXT_COMM)) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
-  }
+  if (config.what_to_count & COUNT_SRC_STD_COMM) fprintf(f, "%sSRC_COMMS", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_SRC_EXT_COMM) fprintf(f, "%sSRC_ECOMMS", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_SRC_LRG_COMM) fprintf(f, "%sSRC_LCOMMS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_AS_PATH) fprintf(f, "%sAS_PATH", write_sep(sep, &count));
   if (config.what_to_count & COUNT_SRC_AS_PATH) fprintf(f, "%sSRC_AS_PATH", write_sep(sep, &count));

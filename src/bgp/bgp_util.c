@@ -913,14 +913,6 @@ void bgp_config_checks(struct configuration *c)
 			  COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH)) ||
       (c->what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
     /* Sanitizing the aggregation method */
-    if (config.tmp_comms_same_field) {
-      if (((c->what_to_count & COUNT_STD_COMM) && (c->what_to_count & COUNT_EXT_COMM)) ||
-	  ((c->what_to_count & COUNT_SRC_STD_COMM) && (c->what_to_count & COUNT_SRC_EXT_COMM))) {
-        printf("ERROR: The use of STANDARD and EXTENDED BGP communitities is mutual exclusive.\n");
-        exit(1);
-      }
-    }
-
     if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type) ||
          (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
 	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
