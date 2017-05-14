@@ -4,7 +4,7 @@ dist: trusty
 sudo: required
 
 install:
-  - sudo apt-get install libtool autoconf cmake
+  - sudo apt-get install pkg-config libtool autoconf automake cmake bash
   - git clone https://github.com/edenhill/librdkafka
   - cd librdkafka && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/alanxz/rabbitmq-c
@@ -12,6 +12,8 @@ install:
   - wget https://github.com/maxmind/libmaxminddb/releases/download/1.1.2/libmaxminddb-1.1.2.tar.gz
   - tar fxz libmaxminddb-1.1.2.tar.gz
   - cd libmaxminddb-1.1.2 && ./configure && make && sudo make install && cd ..
+  - git clone https://github.com/ntop/nDPI
+  - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && cd ..
 
 script:
   - ./autogen.sh
