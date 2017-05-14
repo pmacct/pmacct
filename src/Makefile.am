@@ -84,6 +84,9 @@ sbin_PROGRAMS += pmacctd nfacctd sfacctd
 bin_PROGRAMS += pmacct @EXTRABIN@
 pmacctd_SOURCES = pmacctd.c
 pmacctd_LDADD = libdaemons.la
+if WITH_NDPI
+pmacctd_LDADD += @NDPI_LIBS_STATIC@
+endif
 nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_template.c
 nfacctd_LDADD = libdaemons.la
 sfacctd_SOURCES = sfacctd.c sflow.c sfacctd.h sfv5_module.c sfv5_module.h

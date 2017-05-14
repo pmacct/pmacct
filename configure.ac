@@ -919,6 +919,19 @@ AC_ARG_ENABLE(ndpi,
     LIBS="$LIBS $NDPI_LIBS"
     AC_CHECK_LIB(ndpi, ndpi_init_detection_module, [], [])
     LIBS="$_save_LIBS"
+
+    dnl XXX: to be improved: 1) to guess non-standard paths and 2) avoid linking both static and dynamic libs
+    if test -r /usr/lib/libndpi.a; then
+      NDPI_LIBS_STATIC="/usr/lib/libndpi.a"
+    elif test -r /usr/local/lib/libndpi.a; then
+      NDPI_LIBS_STATIC="/usr/local/lib/libndpi.a"
+    elif test -r /usr/local/nDPI/lib/libndpi.a; then
+      NDPI_LIBS_STATIC="/usr/local/nDPI/lib/libndpi.a"
+    else
+      AC_MSG_ERROR([ERROR: missing nDPI static library])
+    fi
+
+    AC_SUBST([NDPI_LIBS_STATIC])
     ;;
   no)
     AC_MSG_RESULT(no)
