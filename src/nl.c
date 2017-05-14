@@ -36,6 +36,9 @@
 #include "isis/isis.h"
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
+#if defined WITH_NDPI
+#include "ndpi/ndpi_util.h"
+#endif
 
 void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {
@@ -63,6 +66,25 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
+
+#if WITH_NDPI
+
+            struct ndpi_proto p;
+
+            /* allocate an exact size buffer to check overflows */
+            uint8_t *packet_checked = malloc(pkthdr->caplen);
+
+            memcpy(packet_checked, buf, pkthdr->caplen);
+            p = ndpi_workflow_process_packet(workflow, pkthdr, packet_checked);
+
+/*
+            printf("%s %s\n",
+        	       ndpi_get_proto_name(workflow->ndpi_struct, p.master_protocol),
+        	       ndpi_get_proto_name(workflow->ndpi_struct, p.app_protocol));
+                 */
+
+#endif
+
         if (config.nfacctd_isis) {
           isis_srcdst_lookup(&pptrs);
         }
@@ -191,7 +213,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
     if (pptrs->l4_proto == IPPROTO_TCP && off_l4+TCPFlagOff+1 <= caplen)
       pptrs->tcp_flags = ((struct my_tcphdr *)pptrs->tlh_ptr)->th_flags;
 
-    /* tunnel handlers here */ 
+    /* tunnel handlers here */
     if (config.tunnel0 && !pptrs->tun_stack) {
       for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[0][num].tf; num++) {
         if (tunnel_registry[0][num].proto == pptrs->l4_proto) {
@@ -202,7 +224,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
         }
       }
     }
-    else if (pptrs->tun_stack) { 
+    else if (pptrs->tun_stack) {
       if (tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].proto == pptrs->l4_proto) {
         if (!tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port || (pptrs->tlh_ptr && tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port == ntohs(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
           ret = (*tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].tf)(pptrs);
