@@ -1,0 +1,12 @@
+***************
+*** 1,4 ****
+- AM_CFLAGS = $(PMACCT_CFLAGS)
+  
+  noinst_LTLIBRARIES = libndpi_support.la
+  libndpi_support_la_SOURCES = ndpi_util.c ndpi_util.h
+--- 1,5 ----
++ AM_LDFLAGS = @NDPI_LIBS@
++ AM_CFLAGS = $(PMACCT_CFLAGS) $(NDPI_CFLAGS)
+  
+  noinst_LTLIBRARIES = libndpi_support.la
+  libndpi_support_la_SOURCES = ndpi_util.c ndpi_util.h

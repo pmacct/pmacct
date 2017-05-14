@@ -1,0 +1,12 @@
+***************
+*** 1171,1174 ****
+  	    src/Makefile src/nfprobe_plugin/Makefile \
+  	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
+  	    src/tee_plugin/Makefile src/isis/Makefile \
+- 	    src/bmp/Makefile src/telemetry/Makefile ])
+--- 1184,1188 ----
+  	    src/Makefile src/nfprobe_plugin/Makefile \
+  	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
+  	    src/tee_plugin/Makefile src/isis/Makefile \
++ 	    src/bmp/Makefile src/telemetry/Makefile \
++ 	    src/ndpi/Makefile ])
