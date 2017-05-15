@@ -9,9 +9,8 @@ install:
   - cd librdkafka && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/alanxz/rabbitmq-c
   - cd rabbitmq-c && mkdir build && cd build && cmake .. && sudo cmake --build . --target install && cd .. && cd ..
-  - wget https://github.com/maxmind/libmaxminddb/releases/download/1.1.2/libmaxminddb-1.1.2.tar.gz
-  - tar fxz libmaxminddb-1.1.2.tar.gz
-  - cd libmaxminddb-1.1.2 && ./configure && make && sudo make install && cd ..
+  - git clone --recursive https://github.com/maxmind/libmaxminddb 
+  - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/ntop/nDPI
   - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && cd ..
 
