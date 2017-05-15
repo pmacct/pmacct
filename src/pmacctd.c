@@ -38,7 +38,7 @@
 #include "isis/isis.h"
 
 #if defined WITH_NDPI
-#include "nDPI/ndpi_util.h"
+#include "ndpi/ndpi_util.h"
 u_int32_t current_ndpi_memory = 0, max_ndpi_memory = 0;
 #endif
 
