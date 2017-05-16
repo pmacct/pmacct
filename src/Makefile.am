@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry ndpi
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -58,6 +58,7 @@ libdaemons_la_LIBADD  += @AVRO_LIBS@
 libdaemons_la_CFLAGS  += @AVRO_CFLAGS@
 endif
 if WITH_NDPI
+libdaemons_la_LIBADD += ndpi/libndpi_support.la
 libdaemons_la_LIBADD  += @NDPI_LIBS@
 libdaemons_la_CFLAGS  += @NDPI_CFLAGS@
 endif

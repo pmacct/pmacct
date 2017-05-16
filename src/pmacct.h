@@ -402,5 +402,13 @@ EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase 
 EXT u_char dummy_tlhdr[16];
 EXT pcap_t *glob_pcapt;
 EXT struct pcap_stat ps;
+
+/* XXX: nDPI stuff */
+#if defined WITH_NDPI
+EXT NDPI_PROTOCOL_BITMASK all;
+EXT struct ndpi_workflow *workflow;
+//EXT u_int32_t current_ndpi_memory = 0, max_ndpi_memory = 0;
+#endif
+
 #undef EXT
 #endif /* _PMACCT_H_ */

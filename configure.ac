@@ -1184,4 +1184,5 @@ AC_OUTPUT([ Makefile \
 	    src/Makefile src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
 	    src/tee_plugin/Makefile src/isis/Makefile \
-	    src/bmp/Makefile src/telemetry/Makefile ])
+	    src/bmp/Makefile src/telemetry/Makefile \
+	    src/ndpi/Makefile ])
