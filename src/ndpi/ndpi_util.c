@@ -21,6 +21,7 @@
  * along with nDPI.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifdef WITH_NDPI
 
 #include <stdlib.h>
 
@@ -958,3 +959,5 @@ void ndpi_ethernet_crc32(const void* data, size_t n_bytes, uint32_t* crc) {
 	for(i = n_accum*sizeof(accum_t); i < n_bytes; ++i)
 		*crc = table[(uint8_t)*crc ^ ((uint8_t*)data)[i]] ^ *crc >> 8;
 }
+
+#endif
