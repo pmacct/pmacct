@@ -19,19 +19,6 @@
  *
  */
 
-/**
- * This module contains routines to help setup a simple nDPI program.
- *
- * If you concern about performance or have to integrate nDPI in your
- * application, you could need to reimplement them yourself.
- *
- * WARNING: this API is unstable! Use it at your own risk!
- */
-#ifndef __NDPI_UTIL_H__
-#define __NDPI_UTIL_H__
-
-#include <pcap.h>
-
 #define MAX_NUM_READER_THREADS     16
 #define IDLE_SCAN_PERIOD           10 /* msec (use TICK_RESOLUTION = 1000) */
 #define MAX_IDLE_TIME           30000
@@ -40,8 +27,7 @@
 #define MAX_NDPI_FLOWS      200000000
 #define TICK_RESOLUTION          1000
 
-
-// flow tracking
+/* flow tracking */
 typedef struct ndpi_flow_info {
   u_int32_t lower_ip;
   u_int32_t upper_ip;
@@ -70,8 +56,7 @@ typedef struct ndpi_flow_info {
   void *src_id, *dst_id;
 } ndpi_flow_info_t;
 
-
-// flow statistics info
+/* flow statistics info */
 typedef struct ndpi_stats {
   u_int32_t guessed_flow_protocols;
   u_int64_t raw_packet_count;
@@ -87,8 +72,7 @@ typedef struct ndpi_stats {
   u_int16_t max_packet_len;
 } ndpi_stats_t;
 
-
-// flow preferences
+/* flow preferences */
 typedef struct ndpi_workflow_prefs {
   u_int8_t decode_tunnels;
   u_int8_t quiet_mode;
@@ -98,11 +82,10 @@ typedef struct ndpi_workflow_prefs {
 
 struct ndpi_workflow;
 
-/** workflow, flow, user data */
+/* workflow, flow, user data */
 typedef void (*ndpi_workflow_callback_ptr) (struct ndpi_workflow *, struct ndpi_flow_info *, void *);
 
-
-// workflow main structure
+/* workflow main structure */
 typedef struct ndpi_workflow {
   u_int64_t last_time;
 
@@ -122,44 +105,29 @@ typedef struct ndpi_workflow {
   struct ndpi_detection_module_struct *ndpi_struct;
 } ndpi_workflow_t;
 
-
+/* prototypes */
+#if (!defined __NDPI_UTIL_C)
+#define EXT extern
+#else
+#define EXT
+#endif
 /* TODO: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
-struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs * prefs, pcap_t * pcap_handle);
+EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs * prefs, pcap_t * pcap_handle);
 
+/* workflow main free function */
+EXT void ndpi_workflow_free(struct ndpi_workflow * workflow);
 
- /* workflow main free function */
-void ndpi_workflow_free(struct ndpi_workflow * workflow);
-
-
-/** Free flow_info ndpi support structures but not the flow_info itself
+/* Free flow_info ndpi support structures but not the flow_info itself
  *
  *  TODO remove! Half freeing things is bad!
  */
-void ndpi_free_flow_info_half(struct ndpi_flow_info *flow);
-
+EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *flow);
 
 /* Process a packet and update the workflow  */
-struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow * workflow,
-					       const struct pcap_pkthdr *header,
-					       const u_char *packet);
+EXT struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow * workflow, const struct pcap_pkthdr *header, const u_char *packet);
 
-
-/* flow callbacks for complete detected flow
-   (ndpi_flow_info will be freed right after) */
-static inline void ndpi_workflow_set_flow_detected_callback(struct ndpi_workflow * workflow, ndpi_workflow_callback_ptr callback, void * udata) {
-  workflow->__flow_detected_callback = callback;
-  workflow->__flow_detected_udata = udata;
-}
-
-/* flow callbacks for sufficient detected flow
-   (ndpi_flow_info will be freed right after) */
-static inline void ndpi_workflow_set_flow_giveup_callback(struct ndpi_workflow * workflow, ndpi_workflow_callback_ptr callback, void * udata) {
-  workflow->__flow_giveup_callback = callback;
-  workflow->__flow_giveup_udata = udata;
-}
-
- /* compare two nodes in workflow */
-int ndpi_workflow_node_cmp(const void *a, const void *b);
-void process_ndpi_collected_info(struct ndpi_workflow * workflow, struct ndpi_flow_info *flow);
-void ndpi_ethernet_crc32(const void* data, size_t n_bytes, uint32_t* crc);
-#endif
+/* compare two nodes in workflow */
+EXT int ndpi_workflow_node_cmp(const void *, const void *);
+EXT void process_ndpi_collected_info(struct ndpi_workflow *, struct ndpi_flow_info *);
+EXT void ndpi_ethernet_crc32(const void *, size_t, uint32_t *);
+#undef EXT

@@ -21,34 +21,13 @@
  * along with nDPI.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#define __NDPI_UTIL_C
+
 #ifdef WITH_NDPI
+#include "../pmacct.h"
+#include "ndpi_util.h"
 
-#include <stdlib.h>
-
-#ifdef WIN32
-#include <winsock2.h> /* winsock.h is included automatically */
-#include <process.h>
-#include <io.h>
-#else
-#include <unistd.h>
-#include <netinet/in.h>
-#endif
-
-#ifndef ETH_P_IP
-#define ETH_P_IP               0x0800 	/* IPv4 */
-#endif
-
-#ifndef ETH_P_IPv6
-#define ETH_P_IPV6	       0x86dd	/* IPv6 */
-#endif
-
-#define SLARP                  0x8035   /* Cisco Slarp */
-#define CISCO_D_PROTO          0x2000	/* Cisco Discovery Protocol */
-
-#define VLAN                   0x8100
-#define MPLS_UNI               0x8847
-#define MPLS_MULTI             0x8848
-#define PPPoE                  0x8864
 #define SNAP                   0xaa
 #define BSTP                   0x42     /* Bridge Spanning Tree Protocol */
 
@@ -64,13 +43,6 @@
 
 #define GTP_U_V1_PORT                   2152
 #define TZSP_PORT                      37008
-
-#ifndef DLT_LINUX_SLL
-#define DLT_LINUX_SLL  113
-#endif
-
-#include "../pmacct.h"
-#include "ndpi_util.h"
 
 /* ***************************************************** */
 
@@ -643,9 +615,9 @@ struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
   switch(datalink_type) {
   case DLT_NULL:
     if(ntohl(*((u_int32_t*)&packet[eth_offset])) == 2)
-      type = ETH_P_IP;
+      type = ETHERTYPE_IP;
     else
-      type = ETH_P_IPV6;
+      type = ETHERTYPE_IPV6;
 
     ip_offset = 4 + eth_offset;
     break;
@@ -738,7 +710,7 @@ struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
 
   /* check ether type */
   switch(type) {
-  case VLAN:
+  case ETHERTYPE_8021Q:
     vlan_id = ((packet[ip_offset] << 8) + packet[ip_offset+1]) & 0xFFF;
     type = (packet[ip_offset+2] << 8) + packet[ip_offset+3];
     ip_offset += 4;
@@ -750,22 +722,22 @@ struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
       ip_offset += 4;
     }
     break;
-  case MPLS_UNI:
-  case MPLS_MULTI:
+  case ETHERTYPE_MPLS:
+  case ETHERTYPE_MPLS_MULTI:
     mpls = (struct ndpi_mpls_header *) &packet[ip_offset];
     label = ntohl(mpls->label);
     /* label = ntohl(*((u_int32_t*)&packet[ip_offset])); */
     workflow->stats.mpls_count++;
-    type = ETH_P_IP, ip_offset += 4;
+    type = ETHERTYPE_IP, ip_offset += 4;
 
     while((label & 0x100) != 0x100) {
       ip_offset += 4;
       label = ntohl(mpls->label);
     }
     break;
-  case PPPoE:
+  case ETHERTYPE_PPPOE:
     workflow->stats.pppoe_count++;
-    type = ETH_P_IP;
+    type = ETHERTYPE_IP;
     ip_offset += 8;
     break;
   default:
@@ -779,7 +751,7 @@ struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
   iph = (struct ndpi_iphdr *) &packet[ip_offset];
 
   /* just work on Ethernet packets that contain IP */
-  if(type == ETH_P_IP && header->caplen >= ip_offset) {
+  if(type == ETHERTYPE_IP && header->caplen >= ip_offset) {
     frag_off = ntohs(iph->frag_off);
 
     proto = iph->protocol;
@@ -960,4 +932,15 @@ void ndpi_ethernet_crc32(const void* data, size_t n_bytes, uint32_t* crc) {
 		*crc = table[(uint8_t)*crc ^ ((uint8_t*)data)[i]] ^ *crc >> 8;
 }
 
+/* flow callbacks for complete detected flow (ndpi_flow_info will be freed right after) */
+static inline void ndpi_workflow_set_flow_detected_callback(struct ndpi_workflow * workflow, ndpi_workflow_callback_ptr callback, void * udata) {
+  workflow->__flow_detected_callback = callback;
+  workflow->__flow_detected_udata = udata;
+}
+
+/* flow callbacks for sufficient detected flow (ndpi_flow_info will be freed right after) */
+static inline void ndpi_workflow_set_flow_giveup_callback(struct ndpi_workflow * workflow, ndpi_workflow_callback_ptr callback, void * udata) {
+  workflow->__flow_giveup_callback = callback;
+  workflow->__flow_giveup_udata = udata;
+}
 #endif

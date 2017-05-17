@@ -97,6 +97,9 @@ sbin_PROGRAMS += uacctd
 uacctd_SOURCES = uacctd.c uacctd.h
 uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@
 uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
+if WITH_NDPI
+uacctd_LDADD += @NDPI_LIBS_STATIC@
+endif
 endif
 pmacct_SOURCES = pmacct.c
 pmacct_LDADD = libcommon.la

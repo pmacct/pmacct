@@ -40,6 +40,11 @@
 #include <libnfnetlink/libnfnetlink.h>
 #include <libnetfilter_log/libnetfilter_log.h>
 
+#if defined WITH_NDPI
+#include "ndpi/ndpi_util.h"
+u_int32_t current_ndpi_memory = 0, max_ndpi_memory = 0;
+#endif
+
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
