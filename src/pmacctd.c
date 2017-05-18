@@ -36,10 +36,8 @@
 #include "bgp/bgp.h"
 #include "classifier.h"
 #include "isis/isis.h"
-
 #if defined WITH_NDPI
 #include "ndpi/ndpi_util.h"
-u_int32_t current_ndpi_memory = 0, max_ndpi_memory = 0;
 #endif
 
 /* variables to be exported away */
@@ -877,16 +875,17 @@ int main(int argc,char **argv, char **envp)
   }
 
   #if defined WITH_NDPI
-    NDPI_PROTOCOL_BITMASK all;
-    struct ndpi_workflow_prefs prefs;
+  memset(&ndpi_wfl_prefs, 0, sizeof(ndpi_wfl_prefs));
 
-    memset(&prefs, 0, sizeof(prefs));
-    prefs.decode_tunnels = 0;
-    prefs.num_roots = NUM_ROOTS;
-    prefs.max_ndpi_flows = MAX_NDPI_FLOWS;
-    prefs.quiet_mode = 0;
+  if (config.classifier_ndpi) {
+    ndpi_wfl_prefs.decode_tunnels = 0;
+    ndpi_wfl_prefs.num_roots = NDPI_NUM_ROOTS;
+    ndpi_wfl_prefs.max_ndpi_flows = NDPI_MAXFLOWS;
+    ndpi_wfl_prefs.quiet_mode = TRUE;
 
-    workflow = ndpi_workflow_init(&prefs, glob_pcapt);
+    ndpi_wfl = ndpi_workflow_init(&ndpi_wfl_prefs, glob_pcapt);
+  }
+  else ndpi_wfl = NULL;
   #endif
 
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing

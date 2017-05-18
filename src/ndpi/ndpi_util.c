@@ -37,7 +37,6 @@
 #define FCF_SUBTYPE(fc)  (((fc) >> 4) & 0xF)    /* 0000 1111 = 0xF */
 #define FCF_TO_DS(fc)        ((fc) & 0x0100)
 #define FCF_FROM_DS(fc)      ((fc) & 0x0200)
-
 /* mask for Bad FCF presence */
 #define BAD_FCS                         0x50    /* 0101 0000 */
 
@@ -46,7 +45,8 @@
 
 /* ***************************************************** */
 
-void ndpi_free_flow_info_half(struct ndpi_flow_info *flow) {
+void ndpi_free_flow_info_half(struct ndpi_flow_info *flow)
+{
   if(flow->ndpi_flow) { ndpi_flow_free(flow->ndpi_flow); flow->ndpi_flow = NULL; }
   if(flow->src_id)    { ndpi_free(flow->src_id); flow->src_id = NULL; }
   if(flow->dst_id)    { ndpi_free(flow->dst_id); flow->dst_id = NULL; }
@@ -54,16 +54,15 @@ void ndpi_free_flow_info_half(struct ndpi_flow_info *flow) {
 
 /* ***************************************************** */
 
-extern u_int32_t current_ndpi_memory, max_ndpi_memory;
-
 /**
  * @brief malloc wrapper function
  */
-static void *ndpi_malloc_wrapper(size_t size) {
-  current_ndpi_memory += size;
+static void *ndpi_malloc_wrapper(size_t size)
+{
+  ndpi_current_memory += size;
 
-  if(current_ndpi_memory > max_ndpi_memory)
-    max_ndpi_memory = current_ndpi_memory;
+  if(ndpi_current_memory > ndpi_max_memory)
+    ndpi_max_memory = ndpi_current_memory;
 
   return malloc(size);
 }
@@ -73,37 +72,41 @@ static void *ndpi_malloc_wrapper(size_t size) {
 /**
  * @brief free wrapper function
  */
-static void ndpi_free_wrapper(void *freeable) {
+static void ndpi_free_wrapper(void *freeable)
+{
   free(freeable);
 }
 
 /* ***************************************************** */
 
-struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs * prefs, pcap_t * pcap_handle) {
+struct ndpi_workflow *ndpi_workflow_init(const struct ndpi_workflow_prefs *prefs, pcap_t *pcap_handle)
+{
+  if (!prefs || !pcap_handle) return NULL;
 
   set_ndpi_malloc(ndpi_malloc_wrapper), set_ndpi_free(ndpi_free_wrapper);
   set_ndpi_flow_malloc(NULL), set_ndpi_flow_free(NULL);
   /* TODO: just needed here to init ndpi malloc wrapper */
-  struct ndpi_detection_module_struct * module = ndpi_init_detection_module();
-
-  struct ndpi_workflow * workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
+  struct ndpi_detection_module_struct *module = ndpi_init_detection_module();
+  struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
 
   workflow->pcap_handle = pcap_handle;
   workflow->prefs = *prefs;
   workflow->ndpi_struct = module;
 
-  if(workflow->ndpi_struct == NULL) {
+  if (workflow->ndpi_struct == NULL) {
     NDPI_LOG(0, NULL, NDPI_LOG_ERROR, "global structure initialization failed\n");
     exit(-1);
   }
 
   workflow->ndpi_flows_root = ndpi_calloc(workflow->prefs.num_roots, sizeof(void *));
+
   return workflow;
 }
 
 /* ***************************************************** */
 
-static void ndpi_flow_info_freer(void *node) {
+static void ndpi_flow_info_freer(void *node)
+{
   struct ndpi_flow_info *flow = (struct ndpi_flow_info*)node;
 
   ndpi_free_flow_info_half(flow);
@@ -112,7 +115,8 @@ static void ndpi_flow_info_freer(void *node) {
 
 /* ***************************************************** */
 
-void ndpi_workflow_free(struct ndpi_workflow * workflow) {
+void ndpi_workflow_free(struct ndpi_workflow *workflow)
+{
   int i;
 
   for(i=0; i<workflow->prefs.num_roots; i++)
@@ -125,7 +129,8 @@ void ndpi_workflow_free(struct ndpi_workflow * workflow) {
 
 /* ***************************************************** */
 
-int ndpi_workflow_node_cmp(const void *a, const void *b) {
+int ndpi_workflow_node_cmp(const void *a, const void *b)
+{
   struct ndpi_flow_info *fa = (struct ndpi_flow_info*)a;
   struct ndpi_flow_info *fb = (struct ndpi_flow_info*)b;
 
@@ -141,7 +146,8 @@ int ndpi_workflow_node_cmp(const void *a, const void *b) {
 
 /* ***************************************************** */
 
-static void ndpi_patchIPv6Address(char *str) {
+static void ndpi_patchIPv6Address(char *str)
+{
   int i = 0, j = 0;
 
   while(str[i] != '\0') {
@@ -159,7 +165,7 @@ static void ndpi_patchIPv6Address(char *str) {
 
 /* ***************************************************** */
 
-static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow * workflow,
+static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 						 const u_int8_t version,
 						 u_int16_t vlan_id,
 						 const struct ndpi_iphdr *iph,
@@ -175,7 +181,8 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow * workflow
 						 u_int8_t *proto,
 						 u_int8_t **payload,
 						 u_int16_t *payload_len,
-						 u_int8_t *src_to_dst_direction) {
+						 u_int8_t *src_to_dst_direction)
+{
   u_int32_t idx, l4_offset;
   u_int32_t lower_ip;
   u_int32_t upper_ip;
@@ -378,7 +385,7 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow * workflow
 
 /* ****************************************************** */
 
-static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow * workflow,
+static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
 						  u_int16_t vlan_id,
 						  const struct ndpi_ipv6hdr *iph6,
 						  u_int16_t ip_offset,
@@ -390,7 +397,8 @@ static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow * workflo
 						  u_int8_t *proto,
 						  u_int8_t **payload,
 						  u_int16_t *payload_len,
-						  u_int8_t *src_to_dst_direction) {
+						  u_int8_t *src_to_dst_direction)
+{
   struct ndpi_iphdr iph;
 
   memset(&iph, 0, sizeof(iph));
@@ -414,7 +422,8 @@ static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow * workflo
 
 /* ****************************************************** */
 
-void process_ndpi_collected_info(struct ndpi_workflow * workflow, struct ndpi_flow_info *flow) {
+void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
+{
   if(!flow->ndpi_flow) return;
 
     snprintf(flow->host_server_name, sizeof(flow->host_server_name), "%s",
@@ -479,13 +488,14 @@ void process_ndpi_collected_info(struct ndpi_workflow * workflow, struct ndpi_fl
 
    @Note: ipsize = header->len - ip_offset ; rawsize = header->len
 */
-static struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow * workflow,
+static struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
 					   const u_int64_t time,
 					   u_int16_t vlan_id,
 					   const struct ndpi_iphdr *iph,
 					   struct ndpi_ipv6hdr *iph6,
 					   u_int16_t ip_offset,
-					   u_int16_t ipsize, u_int16_t rawsize) {
+					   u_int16_t ipsize, u_int16_t rawsize)
+{
   struct ndpi_id_struct *src, *dst;
   struct ndpi_flow_info *flow = NULL;
   struct ndpi_flow_struct *ndpi_flow = NULL;
@@ -548,9 +558,10 @@ static struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow * workflow,
 
 /* ****************************************************** */
 
-struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
+struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow *workflow,
 						const struct pcap_pkthdr *header,
-						const u_char *packet) {
+						const u_char *packet)
+{
   /*
    * Declare pointers to packet headers
    */
@@ -598,7 +609,7 @@ struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
   workflow->stats.raw_packet_count++;
 
   /* setting time */
-  time = ((uint64_t) header->ts.tv_sec) * TICK_RESOLUTION + header->ts.tv_usec / (1000000 / TICK_RESOLUTION);
+  time = ((uint64_t) header->ts.tv_sec) * NDPI_TICK_RESOLUTION + header->ts.tv_usec / (1000000 / NDPI_TICK_RESOLUTION);
 
   /* safety check */
   if(workflow->last_time > time) {
@@ -889,7 +900,8 @@ struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow * workflow,
 /*       http://home.thep.lu.se/~bjorn/crc/crc32_fast.c       */
 /* ********************************************************** */
 
-static uint32_t crc32_for_byte(uint32_t r) {
+static uint32_t crc32_for_byte(uint32_t r)
+{
 	int j;
 
 	for(j = 0; j < 8; ++j)
@@ -897,49 +909,48 @@ static uint32_t crc32_for_byte(uint32_t r) {
 	return r ^ (uint32_t)0xFF000000L;
 }
 
-/* Any unsigned integer type with at least 32 bits may be used as
- * accumulator type for fast crc32-calulation, but unsigned long is
- * probably the optimal choice for most systems. */
-typedef unsigned long accum_t;
-
-static void ndpi_init_tables(uint32_t* table, uint32_t* wtable) {
+static void ndpi_init_tables(uint32_t *table, uint32_t *wtable)
+{
 	size_t i, k, w, j;
 
 	for(i = 0; i < 0x100; ++i)
 		table[i] = crc32_for_byte(i);
-	for(k = 0; k < sizeof(accum_t); ++k)
+	for(k = 0; k < sizeof(ndpi_accum_t); ++k)
 		for(i = 0; i < 0x100; ++i) {
-			for(j = w = 0; j < sizeof(accum_t); ++j)
+			for(j = w = 0; j < sizeof(ndpi_accum_t); ++j)
 				w = table[(uint8_t)(j == k? w ^ i: w)] ^ w >> 8;
 			wtable[(k << 8) + i] = w ^ (k? wtable[0]: 0);
 		}
 }
 
-void ndpi_ethernet_crc32(const void* data, size_t n_bytes, uint32_t* crc) {
-	static uint32_t table[0x100], wtable[0x100*sizeof(accum_t)];
-	size_t n_accum = n_bytes/sizeof(accum_t);
+void ndpi_ethernet_crc32(const void *data, size_t n_bytes, uint32_t *crc)
+{
+	static uint32_t table[0x100], wtable[0x100*sizeof(ndpi_accum_t)];
+	size_t n_accum = n_bytes/sizeof(ndpi_accum_t);
 	size_t i, k, j;
 
 	if(!*table)
 		ndpi_init_tables(table, wtable);
 	for(i = 0; i < n_accum; ++i) {
-		accum_t a = *crc ^ ((accum_t*)data)[i];
-		for(j = *crc = 0; j < sizeof(accum_t); ++j)
+		ndpi_accum_t a = *crc ^ ((ndpi_accum_t*)data)[i];
+		for(j = *crc = 0; j < sizeof(ndpi_accum_t); ++j)
 			*crc ^= wtable[(j << 8) + (uint8_t)(a >> 8*j)];
 	}
 
-	for(i = n_accum*sizeof(accum_t); i < n_bytes; ++i)
+	for(i = n_accum*sizeof(ndpi_accum_t); i < n_bytes; ++i)
 		*crc = table[(uint8_t)*crc ^ ((uint8_t*)data)[i]] ^ *crc >> 8;
 }
 
 /* flow callbacks for complete detected flow (ndpi_flow_info will be freed right after) */
-static inline void ndpi_workflow_set_flow_detected_callback(struct ndpi_workflow * workflow, ndpi_workflow_callback_ptr callback, void * udata) {
+static inline void ndpi_workflow_set_flow_detected_callback(struct ndpi_workflow *workflow, ndpi_workflow_callback_ptr callback, void *udata)
+{
   workflow->__flow_detected_callback = callback;
   workflow->__flow_detected_udata = udata;
 }
 
 /* flow callbacks for sufficient detected flow (ndpi_flow_info will be freed right after) */
-static inline void ndpi_workflow_set_flow_giveup_callback(struct ndpi_workflow * workflow, ndpi_workflow_callback_ptr callback, void * udata) {
+static inline void ndpi_workflow_set_flow_giveup_callback(struct ndpi_workflow *workflow, ndpi_workflow_callback_ptr callback, void *udata)
+{
   workflow->__flow_giveup_callback = callback;
   workflow->__flow_giveup_udata = udata;
 }

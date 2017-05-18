@@ -252,6 +252,7 @@ EXT int cfg_key_sampling_map(char *, char *, char *);
 EXT int cfg_key_classifiers(char *, char *, char *);
 EXT int cfg_key_classifier_tentatives(char *, char *, char *);
 EXT int cfg_key_classifier_table_num(char *, char *, char *);
+EXT int cfg_key_classifier_ndpi(char *, char *, char *);
 EXT int cfg_key_nfprobe_timeouts(char *, char *, char *);
 EXT int cfg_key_nfprobe_hoplimit(char *, char *, char *);
 EXT int cfg_key_nfprobe_maxflows(char *, char *, char *);

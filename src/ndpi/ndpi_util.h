@@ -19,13 +19,13 @@
  *
  */
 
-#define MAX_NUM_READER_THREADS     16
-#define IDLE_SCAN_PERIOD           10 /* msec (use TICK_RESOLUTION = 1000) */
-#define MAX_IDLE_TIME           30000
-#define IDLE_SCAN_BUDGET         1024
-#define NUM_ROOTS                 512
-#define MAX_NDPI_FLOWS      200000000
-#define TICK_RESOLUTION          1000
+#define NDPI_MAX_NUM_READER_THREADS	16
+#define NDPI_IDLE_SCAN_PERIOD		10 /* msec (use TICK_RESOLUTION = 1000) */
+#define NDPI_MAX_IDLE_TIME		30000
+#define NDPI_IDLE_SCAN_BUDGET		1024
+#define NDPI_NUM_ROOTS			512
+#define NDPI_MAXFLOWS			200000000
+#define NDPI_TICK_RESOLUTION		1000
 
 /* flow tracking */
 typedef struct ndpi_flow_info {
@@ -105,13 +105,24 @@ typedef struct ndpi_workflow {
   struct ndpi_detection_module_struct *ndpi_struct;
 } ndpi_workflow_t;
 
-/* prototypes */
+/* Any unsigned integer type with at least 32 bits may be used as
+ * accumulator type for fast crc32-calulation, but unsigned long is
+ * probably the optimal choice for most systems. */
+typedef unsigned long ndpi_accum_t;
+
 #if (!defined __NDPI_UTIL_C)
 #define EXT extern
 #else
 #define EXT
 #endif
-/* TODO: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
+/* global vars */
+EXT u_int32_t ndpi_current_memory, ndpi_max_memory;
+EXT NDPI_PROTOCOL_BITMASK ndpi_all;
+EXT struct ndpi_workflow *ndpi_wfl;
+EXT struct ndpi_workflow_prefs ndpi_wfl_prefs;
+
+/* prototypes */
+/* XXX: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
 EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs * prefs, pcap_t * pcap_handle);
 
 /* workflow main free function */
@@ -119,7 +130,7 @@ EXT void ndpi_workflow_free(struct ndpi_workflow * workflow);
 
 /* Free flow_info ndpi support structures but not the flow_info itself
  *
- *  TODO remove! Half freeing things is bad!
+ * XXX: remove! Half freeing things is bad!
  */
 EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *flow);
 

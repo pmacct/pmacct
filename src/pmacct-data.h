@@ -643,6 +643,7 @@ static const struct _dictionary_line dictionary[] = {
   {"classifiers", cfg_key_classifiers},
   {"classifier_tentatives", cfg_key_classifier_tentatives},
   {"classifier_table_num", cfg_key_classifier_table_num},
+  {"classifier_ndpi", cfg_key_classifier_ndpi},
   {"nfprobe_timeouts", cfg_key_nfprobe_timeouts},
   {"nfprobe_hoplimit", cfg_key_nfprobe_hoplimit},
   {"nfprobe_maxflows", cfg_key_nfprobe_maxflows},

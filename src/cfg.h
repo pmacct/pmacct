@@ -492,6 +492,7 @@ struct configuration {
   char *classifiers_path;
   int classifier_tentatives;
   int classifier_table_num;
+  int classifier_ndpi;
   char *nfprobe_timeouts;
   int nfprobe_id;
   int nfprobe_hoplimit;

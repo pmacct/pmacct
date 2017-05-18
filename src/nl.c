@@ -68,20 +68,21 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       if ((*pptrs.l3_handler)(&pptrs)) {
 
 #if WITH_NDPI
+        if (config.classifier_ndpi && ndpi_wfl) {
+          struct ndpi_proto ndpi_p;
 
-            struct ndpi_proto p;
+          /* allocate an exact size buffer to check overflows */
+          uint8_t *ndpi_packet_checked = malloc(pkthdr->caplen);
 
-            /* allocate an exact size buffer to check overflows */
-            uint8_t *packet_checked = malloc(pkthdr->caplen);
+          memcpy(ndpi_packet_checked, buf, pkthdr->caplen);
+          ndpi_p = ndpi_workflow_process_packet(ndpi_wfl, pkthdr, ndpi_packet_checked);
 
-            memcpy(packet_checked, buf, pkthdr->caplen);
-            p = ndpi_workflow_process_packet(workflow, pkthdr, packet_checked);
-
-/*
+	  /* XXX:
             printf("%s %s\n",
-        	       ndpi_get_proto_name(workflow->ndpi_struct, p.master_protocol),
-        	       ndpi_get_proto_name(workflow->ndpi_struct, p.app_protocol));
-                 */
+              ndpi_get_proto_name(ndpi_wfl->ndpi_struct, ndpi_p.master_protocol),
+	      ndpi_get_proto_name(ndpi_wfl->ndpi_struct, ndpi_p.app_protocol));
+	  */
+	}
 
 #endif
 

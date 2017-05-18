@@ -5028,6 +5028,20 @@ int cfg_key_classifier_table_num(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_classifier_ndpi(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.classifier_ndpi = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfprobe_timeouts(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
