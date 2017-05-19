@@ -71,11 +71,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
         if (config.classifier_ndpi && ndpi_wfl) {
           struct ndpi_proto ndpi_p;
 
-          /* allocate an exact size buffer to check overflows */
-          uint8_t *ndpi_packet_checked = malloc(pkthdr->caplen);
-
-          memcpy(ndpi_packet_checked, buf, pkthdr->caplen);
-          ndpi_p = ndpi_workflow_process_packet(ndpi_wfl, pkthdr, ndpi_packet_checked);
+          ndpi_p = ndpi_workflow_process_packet(ndpi_wfl, &pptrs);
 
 	  /* XXX:
             printf("%s %s\n",
@@ -83,7 +79,6 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 	      ndpi_get_proto_name(ndpi_wfl->ndpi_struct, ndpi_p.app_protocol));
 	  */
 	}
-
 #endif
 
         if (config.nfacctd_isis) {

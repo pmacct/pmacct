@@ -123,19 +123,19 @@ EXT struct ndpi_workflow_prefs ndpi_wfl_prefs;
 
 /* prototypes */
 /* XXX: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
-EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs * prefs, pcap_t * pcap_handle);
+EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs *, pcap_t *);
 
 /* workflow main free function */
-EXT void ndpi_workflow_free(struct ndpi_workflow * workflow);
+EXT void ndpi_workflow_free(struct ndpi_workflow *);
 
 /* Free flow_info ndpi support structures but not the flow_info itself
  *
  * XXX: remove! Half freeing things is bad!
  */
-EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *flow);
+EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *);
 
 /* Process a packet and update the workflow  */
-EXT struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow * workflow, const struct pcap_pkthdr *header, const u_char *packet);
+EXT struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow *, struct packet_ptrs *);
 
 /* compare two nodes in workflow */
 EXT int ndpi_workflow_node_cmp(const void *, const void *);
