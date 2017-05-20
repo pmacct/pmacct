@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -391,7 +391,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	  eas.val = (*pnt++ << 8);
 	  eas.val |= (*pnt++);
 
-	  len = sprintf( str_buf + str_pnt, "%s%d:%d", prefix,
+	  len = sprintf( str_buf + str_pnt, "%s%u:%u", prefix,
                         eas.as, eas.val );
 	  str_pnt += len;
 	  first = 0;
@@ -406,7 +406,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	  eas.val |= (*pnt++ << 8);
 	  eas.val |= (*pnt++);
 
-	  len = sprintf (str_buf + str_pnt, "%s%d:%d", prefix,
+	  len = sprintf (str_buf + str_pnt, "%s%u:%u", prefix,
 			 eas.as, eas.val);
 	  str_pnt += len;
 	  first = 0;
@@ -418,7 +418,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	  eip.val = (*pnt++ << 8);
 	  eip.val |= (*pnt++);
 
-	  len = sprintf (str_buf + str_pnt, "%s%s:%d", prefix,
+	  len = sprintf (str_buf + str_pnt, "%s%s:%u", prefix,
 			 inet_ntoa (eip.ip), eip.val);
 	  str_pnt += len;
 	  first = 0;
