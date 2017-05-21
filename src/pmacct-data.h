@@ -293,8 +293,6 @@ static struct _devices_struct _devices[] = {
   {null_handler, DLT_NULL},
   {eth_handler, DLT_EN10MB},
   {ppp_handler, DLT_PPP},
-  {fddi_handler, DLT_FDDI},
-  {tr_handler, DLT_IEEE802},
 #if defined DLT_IEEE802_11
   {ieee_802_11_handler, DLT_IEEE802_11}, 
 #endif
@@ -303,12 +301,6 @@ static struct _devices_struct _devices[] = {
 #endif
 #if defined DLT_RAW
   {raw_handler, DLT_RAW},
-#endif
-#if defined DLT_C_HDLC
-  {chdlc_handler, DLT_C_HDLC},
-#endif
-#ifdef DLT_HDLC
-  {chdlc_handler, DLT_HDLC},
 #endif
   {NULL, -1},
 };

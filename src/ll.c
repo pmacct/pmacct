@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2013 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -185,70 +185,6 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
   }
 
   return FALSE;
-}
-
-void fddi_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs) 
-{
-  register u_char *p;
-  u_int caplen = h->caplen;
-  struct fddi_header *fddi_pk;
-
-  if (caplen < FDDI_HDRLEN) {
-    pptrs->iph_ptr = NULL;
-    return;
-  }
-
-  p = pptrs->packet_ptr;
-  fddi_pk = (struct fddi_header *) pptrs->packet_ptr;
-  if ((fddi_pk->fddi_fc & FDDIFC_CLFF) == FDDIFC_LLC_ASYNC) {
-    pptrs->mac_ptr = (u_char *) fddi_pk->fddi_dhost; 
-
-    /* going up to LLC/SNAP layer header */
-    p += FDDI_HDRLEN;
-    caplen -= FDDI_HDRLEN;
-    if ((p = llc_handler(h, caplen, p, pptrs)) != NULL) {
-      pptrs->iph_ptr = p;
-      return;
-    }
-  }
-
-  pptrs->iph_ptr = NULL; 
-}
-
-void tr_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs)
-{
-  register u_char *p;
-  u_int caplen = h->caplen, route_len = 0;
-  struct token_header *tr_pk;
-
-  if (caplen < ETHER_HDRLEN) {
-    pptrs->iph_ptr = NULL;
-    return;
-  }
-
-  p = pptrs->packet_ptr;
-  tr_pk = (struct token_header *) pptrs->packet_ptr;
-  if (TR_IS_SOURCE_ROUTED(tr_pk)) {
-    route_len = TR_RIF_LENGTH(tr_pk);
-    if (caplen < ETHER_HDRLEN + route_len) {
-      pptrs->iph_ptr = NULL;
-      return;
-    }
-  }
-
-  if (((tr_pk->token_fc & 0xC0) >> 6) == TOKEN_FC_LLC) {
-    pptrs->mac_ptr = (u_char *) tr_pk->token_dhost;
-
-    /* going up to LLC/SNAP layer header */
-    p += (ETHER_HDRLEN + route_len);
-    caplen -= (ETHER_HDRLEN + route_len);
-    if ((p = llc_handler(h, caplen, p, pptrs)) != NULL) {
-      pptrs->iph_ptr = p;
-      return;
-    }
-  }
-
-  pptrs->iph_ptr = NULL;
 }
 
 void ppp_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs)
@@ -511,46 +447,4 @@ u_char *llc_handler(const struct pcap_pkthdr *h, u_int caplen, register u_char *
     else return 0; 
   }
   else return 0;
-}
-
-void chdlc_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs)
-{
-  u_char *p = pptrs->packet_ptr;
-  u_int16_t caplen = h->caplen, nl = 0;
-  u_int16_t proto;
-
-  if (caplen < CHDLC_HDRLEN) {
-    pptrs->iph_ptr = NULL;
-    return; 
-  }
-
-  proto = EXTRACT_16BITS(&p[2]);
-  caplen -= CHDLC_HDRLEN;
-  p += CHDLC_HDRLEN;
-
-  recurse:
-  switch (proto) {
-  case ETHERTYPE_IP:
-    pptrs->l3_proto = ETHERTYPE_IP;
-    pptrs->l3_handler = ip_handler;
-    pptrs->iph_ptr = p;
-    return;
-#if defined ENABLE_IPV6 
-  case ETHERTYPE_IPV6:
-    pptrs->l3_proto = ETHERTYPE_IPV6;
-    pptrs->l3_handler = ip6_handler;
-    pptrs->iph_ptr = p;
-    return;
-#endif
-  case ETHERTYPE_MPLS:
-  case ETHERTYPE_MPLS_MULTI:
-    proto = mpls_handler(p, &caplen, &nl, pptrs);
-    goto recurse;
-  default:
-    break;
-  }
-
-  pptrs->l3_proto = 0;
-  pptrs->l3_handler = NULL;
-  pptrs->iph_ptr = NULL;
 }
