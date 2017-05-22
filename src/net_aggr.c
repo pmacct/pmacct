@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -746,6 +746,9 @@ void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 
   memset(maskbits, 0,sizeof(maskbits));
   mask = p->src_nmask;
+
+  if (config.networks_no_mask_if_zero && !mask) mask = 128;
+
   for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
   if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
 
@@ -795,6 +798,9 @@ void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
 
   memset(maskbits, 0,sizeof(maskbits));
   mask = p->dst_nmask; 
+
+  if (config.networks_no_mask_if_zero && !mask) mask = 128;
+
   for (j = 0; j < 4 && mask >= 32; j++, mask -= 32) maskbits[j] = 0xffffffffU;
   if (j < 4 && mask) maskbits[j] = ~(0xffffffffU >> mask);
 

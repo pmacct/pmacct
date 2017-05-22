@@ -463,6 +463,7 @@ struct configuration {
   char *networks_file;
   int networks_file_filter;
   int networks_file_no_lpm;
+  int networks_no_mask_if_zero;
   int networks_cache_entries;
   char *ports_file;
   char *a_filter;

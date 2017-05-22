@@ -776,7 +776,9 @@ DEFAULT:	none
 KEY:		networks_file_filter
 VALUES          [ true | false ]
 DESC:           Makes networks_file work as a filter in addition to its basic resolver functionality:
-		networks and hosts not belonging to defined networks are zeroed out.
+		networks and hosts not belonging to defined networks are zeroed out. This feature can
+		interfere with the intended behaviour of networks_no_mask_if_zero, if they are both
+		set to true.
 DEFAULT:        false
 
 KEY:		networks_file_no_lpm
@@ -803,6 +805,16 @@ DESC:		Makes a matching IP prefix defined in a networks_file win always, even if
 		process; setting networks_file_no_lpm to true makes 192.168.5.0/24, coming from the
 		networks_file, win instead. 
 DEFAULT:        false
+
+KEY:		networks_no_mask_if_zero
+VALUES		[ true | false ]
+DESC:		If set to true, IP prefixes with zero mask - that is, unknown ones or those hitting a
+		default route - are not masked (ie. they are applied a full 0xF mask, that is, 32 bits
+		for IPv4 addresses and 128 bits for IPv6 ones). The feature applies to *_net fields
+		and makes sure individual IP addresses belonging to unknown IP prefixes are not zeroed
+		out. This feature can interfere with the intended behaviour of networks_file_filter,
+		if they are both set to true.
+DEFAULT:	false
 
 KEY:            networks_mask
 DESC:           Specifies the network mask - in bits - to apply to IP address values in L3 header. The
