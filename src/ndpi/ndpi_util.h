@@ -1,28 +1,35 @@
 /*
- * ndpi_util.h
- *
- * Originally based on:
- * Copyright (C) 2011-16 - ntop.org
- *
- * nDPI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * nDPI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with nDPI.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+*/
 
+/*
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
+/*
+    Originally based on:
+    ndpi_util.h | nDPI | Copyright (C) 2011-17 - ntop.org
+*/
+
+/*
 #define NDPI_MAX_NUM_READER_THREADS	16
-#define NDPI_IDLE_SCAN_PERIOD		10 /* msec (use TICK_RESOLUTION = 1000) */
+#define NDPI_IDLE_SCAN_PERIOD		10
 #define NDPI_MAX_IDLE_TIME		30000
 #define NDPI_IDLE_SCAN_BUDGET		1024
+*/
 #define NDPI_NUM_ROOTS			512
 #define NDPI_MAXFLOWS			200000000
 #define NDPI_TICK_RESOLUTION		1000
@@ -97,9 +104,6 @@ typedef struct ndpi_workflow {
   ndpi_workflow_callback_ptr __flow_giveup_callback;
   void * __flow_giveup_udata;
 
-  /* outside referencies */
-  pcap_t *pcap_handle;
-
   /* allocated by prefs */
   void **ndpi_flows_root;
   struct ndpi_detection_module_struct *ndpi_struct;
@@ -123,7 +127,7 @@ EXT struct ndpi_workflow_prefs ndpi_wfl_prefs;
 
 /* prototypes */
 /* XXX: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
-EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs *, pcap_t *);
+EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs *);
 
 /* workflow main free function */
 EXT void ndpi_workflow_free(struct ndpi_workflow *);
@@ -140,5 +144,4 @@ EXT struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow *, stru
 /* compare two nodes in workflow */
 EXT int ndpi_workflow_node_cmp(const void *, const void *);
 EXT void process_ndpi_collected_info(struct ndpi_workflow *, struct ndpi_flow_info *);
-EXT void ndpi_ethernet_crc32(const void *, size_t, uint32_t *);
 #undef EXT

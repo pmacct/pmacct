@@ -921,7 +921,7 @@ int main(int argc,char **argv, char **envp)
     ndpi_wfl_prefs.max_ndpi_flows = NDPI_MAXFLOWS;
     ndpi_wfl_prefs.quiet_mode = TRUE;
 
-    ndpi_wfl = ndpi_workflow_init(&ndpi_wfl_prefs, glob_pcapt);
+    ndpi_wfl = ndpi_workflow_init(&ndpi_wfl_prefs);
   }
   else ndpi_wfl = NULL;
   #endif
