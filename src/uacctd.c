@@ -681,6 +681,22 @@ int main(int argc,char **argv, char **envp)
     init_conntrack_table();
   }
 
+  #if defined WITH_NDPI
+  memset(&ndpi_wfl_prefs, 0, sizeof(ndpi_wfl_prefs));
+
+  if (config.classifier_ndpi) {
+    config.handle_fragments = TRUE;
+
+    ndpi_wfl_prefs.decode_tunnels = 0;
+    ndpi_wfl_prefs.num_roots = NDPI_NUM_ROOTS;
+    ndpi_wfl_prefs.max_ndpi_flows = NDPI_MAXFLOWS;
+    ndpi_wfl_prefs.quiet_mode = TRUE;
+
+    ndpi_wfl = ndpi_workflow_init(&ndpi_wfl_prefs);
+  }
+  else ndpi_wfl = NULL;
+  #endif
+
   if (config.aggregate_primitives) {
     req.key_value_table = (void *) &custom_primitives_registry;
     load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
@@ -911,20 +927,6 @@ int main(int argc,char **argv, char **envp)
   signal(SIGTERM, my_sigint_handler);
   signal(SIGCHLD, handle_falling_child);
   kill(getpid(), SIGCHLD);
-
-  #if defined WITH_NDPI
-  memset(&ndpi_wfl_prefs, 0, sizeof(ndpi_wfl_prefs));
-
-  if (config.classifier_ndpi) {
-    ndpi_wfl_prefs.decode_tunnels = 0;
-    ndpi_wfl_prefs.num_roots = NDPI_NUM_ROOTS;
-    ndpi_wfl_prefs.max_ndpi_flows = NDPI_MAXFLOWS;
-    ndpi_wfl_prefs.quiet_mode = TRUE;
-
-    ndpi_wfl = ndpi_workflow_init(&ndpi_wfl_prefs);
-  }
-  else ndpi_wfl = NULL;
-  #endif
 
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing
      and reopening again our listening device */

@@ -356,6 +356,7 @@ struct packet_ptrs {
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 
+  u_int8_t frag_found; /* fragment handling: entry found in fragments table */
   u_char *vlan_ptr; /* ptr to vlan id */
   u_char *mpls_ptr; /* ptr to base MPLS label */
   u_char *iph_ptr; /* ptr to ip header */

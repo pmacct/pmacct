@@ -152,7 +152,7 @@ static void ndpi_patchIPv6Address(char *str)
 /* ***************************************************** */
 
 static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
-						 const u_int8_t version,
+						 struct packet_ptrs *pptrs,
 						 u_int16_t vlan_id,
 						 const struct ndpi_iphdr *iph,
 						 const struct ndpi_ipv6hdr *iph6,
@@ -178,40 +178,17 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   void *ret;
   u_int8_t *l3, *l4;
 
-  /*
-    Note: to keep things simple (ndpiReader is just a demo app)
-    we handle IPv6 a-la-IPv4.
-  */
-  if (version == IPVERSION) {
-    if (ipsize < 20) return NULL;
-
-    if ((iph->ihl * 4) > ipsize || ipsize < ntohs(iph->tot_len)
-       /* || (iph->frag_off & htons(0x1FFF)) != 0 */)
-      return NULL;
-
-    l4_offset = iph->ihl * 4;
-    l3 = (u_int8_t*)iph;
+  /* XXX: IPv4 fragments handling */
+/*
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if ((iph->frag_off & htons(0x1FFF)) && !pptrs->frag_found) {
+    }
+    else return NULL;
   }
-  else {
-    l4_offset = sizeof(struct ndpi_ipv6hdr);
-    l3 = (u_int8_t*)iph6;
-  }
+*/
 
-  if (l4_packet_len < 64)
-    workflow->stats.packet_len[0]++;
-  else if (l4_packet_len >= 64 && l4_packet_len < 128)
-    workflow->stats.packet_len[1]++;
-  else if (l4_packet_len >= 128 && l4_packet_len < 256)
-    workflow->stats.packet_len[2]++;
-  else if (l4_packet_len >= 256 && l4_packet_len < 1024)
-    workflow->stats.packet_len[3]++;
-  else if (l4_packet_len >= 1024 && l4_packet_len < 1500)
-    workflow->stats.packet_len[4]++;
-  else if (l4_packet_len >= 1500)
-    workflow->stats.packet_len[5]++;
-
-  if (l4_packet_len > workflow->stats.max_packet_len)
-    workflow->stats.max_packet_len = l4_packet_len;
+  l4_offset = (pptrs->tlh_ptr - pptrs->iph_ptr);
+  l3 = (u_int8_t *) pptrs->iph_ptr;
 
   if (iph->saddr < iph->daddr) {
     lower_ip = iph->saddr;
@@ -225,11 +202,10 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   *proto = iph->protocol;
   l4 = ((u_int8_t *) l3 + l4_offset);
 
+  /* TCP */
   if (iph->protocol == IPPROTO_TCP && l4_packet_len >= 20) {
     u_int tcp_len;
 
-    // tcp
-    workflow->stats.tcp_count++;
     *tcph = (struct ndpi_tcphdr *)l4;
     *sport = ntohs((*tcph)->source), *dport = ntohs((*tcph)->dest);
 
@@ -256,10 +232,8 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
     *payload = &l4[tcp_len];
     *payload_len = ndpi_max(0, l4_packet_len-4*(*tcph)->doff);
   }
+  /* UDP */
   else if (iph->protocol == IPPROTO_UDP && l4_packet_len >= 8) {
-    // udp
-
-    workflow->stats.udp_count++;
     *udph = (struct ndpi_udphdr *)l4;
     *sport = ntohs((*udph)->source), *dport = ntohs((*udph)->dest);
     *payload = &l4[sizeof(struct ndpi_udphdr)];
@@ -321,10 +295,10 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
       newflow->protocol = iph->protocol, newflow->vlan_id = vlan_id;
       newflow->lower_ip = lower_ip, newflow->upper_ip = upper_ip;
       newflow->lower_port = lower_port, newflow->upper_port = upper_port;
-      newflow->ip_version = version;
+      newflow->ip_version = pptrs->l3_proto;
       newflow->src_to_dst_direction = *src_to_dst_direction;
 
-      if (version == IPVERSION) {
+      if (pptrs->l3_proto == ETHERTYPE_IP) {
 	inet_ntop(AF_INET, &lower_ip, newflow->lower_name, sizeof(newflow->lower_name));
 	inet_ntop(AF_INET, &upper_ip, newflow->upper_name, sizeof(newflow->upper_name));
       }
@@ -380,6 +354,7 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 /* ****************************************************** */
 
 static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
+						  struct packet_ptrs *pptrs,
 						  u_int16_t vlan_id,
 						  const struct ndpi_ipv6hdr *iph6,
 						  u_int16_t ip_offset,
@@ -407,7 +382,7 @@ static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow
     iph.protocol = options[0];
   }
 
-  return(get_ndpi_flow_info(workflow, 6, vlan_id, &iph, iph6, ip_offset,
+  return(get_ndpi_flow_info(workflow, pptrs, vlan_id, &iph, iph6, ip_offset,
 			    sizeof(struct ndpi_ipv6hdr),
 			    ntohs(iph6->ip6_ctlun.ip6_un1.ip6_un1_plen),
 			    tcph, udph, sport, dport,
@@ -418,47 +393,7 @@ static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow
 
 void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
 {
-  if (!flow->ndpi_flow) return;
-
-    snprintf(flow->host_server_name, sizeof(flow->host_server_name), "%s",
-	   flow->ndpi_flow->host_server_name);
-
-  /* BITTORRENT */
-  if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_BITTORRENT) {
-    int i, j, n = 0;
-
-    for(i=0, j = 0; j < sizeof(flow->bittorent_hash)-1; i++) {
-      sprintf(&flow->bittorent_hash[j], "%02x", flow->ndpi_flow->bittorent_hash[i]);
-      j += 2, n += flow->ndpi_flow->bittorent_hash[i];
-    }
-
-    if (n == 0) flow->bittorent_hash[0] = '\0';
-  }
-  /* MDNS */
-  else if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_MDNS) {
-    snprintf(flow->info, sizeof(flow->info), "%s", flow->ndpi_flow->protos.mdns.answer);
-  }
-  /* UBNTAC2 */
-  else if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UBNTAC2) {
-    snprintf(flow->info, sizeof(flow->info), "%s", flow->ndpi_flow->protos.ubntac2.version);
-  }
-  if (flow->detected_protocol.app_protocol != NDPI_PROTOCOL_DNS) {
-    /* SSH */
-    if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_SSH) {
-      snprintf(flow->ssh_ssl.client_info, sizeof(flow->ssh_ssl.client_info), "%s",
-	       flow->ndpi_flow->protos.ssh.client_signature);
-      snprintf(flow->ssh_ssl.server_info, sizeof(flow->ssh_ssl.server_info), "%s",
-	       flow->ndpi_flow->protos.ssh.server_signature);
-    }
-    /* SSL */
-    else if ((flow->detected_protocol.app_protocol == NDPI_PROTOCOL_SSL)
-	    || (flow->detected_protocol.master_protocol == NDPI_PROTOCOL_SSL)) {
-      snprintf(flow->ssh_ssl.client_info, sizeof(flow->ssh_ssl.client_info), "%s",
-	       flow->ndpi_flow->protos.ssl.client_certificate);
-      snprintf(flow->ssh_ssl.server_info, sizeof(flow->ssh_ssl.server_info), "%s",
-	       flow->ndpi_flow->protos.ssl.server_certificate);
-    }
-  }
+  if (!workflow || !flow || !flow->ndpi_flow) return;
 
   if (flow->detection_completed) {
     if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN) {
@@ -484,6 +419,7 @@ void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flo
    @Note: ipsize = header->len - ip_offset ; rawsize = header->len
 */
 static struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
+					   struct packet_ptrs *pptrs,
 					   const u_int64_t time,
 					   u_int16_t vlan_id,
 					   const struct ndpi_iphdr *iph,
@@ -502,23 +438,25 @@ static struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   u_int8_t src_to_dst_direction = 1;
   struct ndpi_proto nproto = { NDPI_PROTOCOL_UNKNOWN, NDPI_PROTOCOL_UNKNOWN };
 
+  if (!workflow) return nproto;
+
   if (iph)
-    flow = get_ndpi_flow_info(workflow, IPVERSION, vlan_id, iph, NULL,
+    flow = get_ndpi_flow_info(workflow, pptrs, vlan_id, iph, NULL,
 			      ip_offset, ipsize,
 			      ntohs(iph->tot_len) - (iph->ihl * 4),
 			      &tcph, &udph, &sport, &dport,
 			      &src, &dst, &proto,
 			      &payload, &payload_len, &src_to_dst_direction);
   else if (iph6)
-    flow = get_ndpi_flow_info6(workflow, vlan_id, iph6, ip_offset,
+    flow = get_ndpi_flow_info6(workflow, pptrs, vlan_id, iph6, ip_offset,
 			       &tcph, &udph, &sport, &dport,
 			       &src, &dst, &proto,
 			       &payload, &payload_len, &src_to_dst_direction);
 
-  if (flow != NULL) {
+  if (flow) {
     workflow->stats.ip_packet_count++;
     workflow->stats.total_wire_bytes += rawsize + 24 /* CRC etc */,
-      workflow->stats.total_ip_bytes += rawsize;
+    workflow->stats.total_ip_bytes += rawsize;
     ndpi_flow = flow->ndpi_flow;
     flow->packets++, flow->bytes += rawsize;
     flow->last_seen = time;
@@ -562,6 +500,8 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
   u_int64_t time = 0;
   u_int16_t ip_offset = 0, vlan_id = 0;
 
+  if (!workflow || !pptrs) return nproto;
+
   if (pptrs->l3_proto == ETHERTYPE_IP) iph = (struct ndpi_iphdr *) pptrs->iph_ptr;
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) iph6 = (struct ndpi_ipv6hdr *) pptrs->iph_ptr;
 
@@ -589,7 +529,7 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
   ip_offset = (u_int16_t)(pptrs->iph_ptr - pptrs->packet_ptr);
 
   /* process the packet */
-  return (ndpi_packet_processing(workflow, time, vlan_id, iph, iph6,
+  return (ndpi_packet_processing(workflow, pptrs, time, vlan_id, iph, iph6,
 				ip_offset, (pptrs->pkthdr->len - ip_offset),
 				pptrs->pkthdr->len));
 }
