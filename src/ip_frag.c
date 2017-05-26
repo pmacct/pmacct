@@ -89,7 +89,7 @@ int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
 	  // pptrs->tlh_ptr = fp->tlhdr; 
 	  memcpy(pptrs->tlh_ptr, fp->tlhdr, MyTLHdrSz); 
 
-	  pptrs->frag_found = TRUE;
+	  pptrs->frag_first_found = TRUE;
 	  return TRUE;
 	}
 	else {
@@ -98,13 +98,12 @@ int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
 	    fp->got_first = TRUE;
 	    memcpy(fp->tlhdr, pptrs->tlh_ptr, MyTLHdrSz);
 
-	    fp->a += ntohs(iphp->ip_len);
-	    iphp->ip_len = htons(fp->a);
-	    pptrs->pf = fp->pa;
+	    pptrs->frag_sum_bytes = fp->a;
+	    pptrs->frag_sum_pkts = fp->pa;
 	    fp->pa = 0;
 	    fp->a = 0;
 
-	    pptrs->frag_found = TRUE;
+	    pptrs->frag_first_found = TRUE;
             return TRUE;
 	  }
 	  else { /* we still don't have the first fragment; increase accumulators */
@@ -113,7 +112,7 @@ int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
 	      fp->a += ntohs(iphp->ip_len);
 	    }
 
-	    pptrs->frag_found = FALSE;
+	    pptrs->frag_first_found = FALSE;
 	    return FALSE;
 	  } 
 	}
@@ -135,7 +134,7 @@ int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
   if (candidate) ret = create_fragment(now, candidate, TRUE, bucket, pptrs);
   else ret = create_fragment(now, last_seen, FALSE, bucket, pptrs); 
 
-  pptrs->frag_found = ret;
+  pptrs->frag_first_found = ret;
   return ret;
 }
 
@@ -366,9 +365,8 @@ int find_fragment6(u_int32_t now, struct packet_ptrs *pptrs, struct ip6_frag *fh
             fp->got_first = TRUE;
             memcpy(fp->tlhdr, pptrs->tlh_ptr, MyTLHdrSz);
 
-            fp->a += ntohs(iphp->ip6_plen); /* IPv6 Header length will be added later */
-            iphp->ip6_plen = htons(fp->a);
-	    pptrs->pf = fp->pa;
+	    pptrs->frag_sum_bytes = fp->a;
+	    pptrs->frag_sum_pkts = fp->pa;
             fp->pa = 0;
             fp->a = 0;
             return TRUE;

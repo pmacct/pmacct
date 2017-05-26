@@ -178,14 +178,15 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   void *ret;
   u_int8_t *l3, *l4;
 
-  /* XXX: IPv4 fragments handling */
-/*
+  /* IPv4 fragments handling */
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    if ((iph->frag_off & htons(0x1FFF)) && !pptrs->frag_found) {
+    if ((((struct my_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_OFFMASK))) {
+      if (pptrs->frag_first_found) {
+	// XXX
+      }
+      else return NULL;
     }
-    else return NULL;
   }
-*/
 
   l4_offset = (pptrs->tlh_ptr - pptrs->iph_ptr);
   l3 = (u_int8_t *) pptrs->iph_ptr;

@@ -1131,11 +1131,17 @@ void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) pdata->pkt_len = ntohs(((struct ip6_hdr *) pptrs->iph_ptr)->ip6_plen)+IP6HdrSz;
 #endif
-  if (pptrs->pf) {
-    pdata->pkt_num = pptrs->pf+1;
-    pptrs->pf = 0;
+  if (pptrs->frag_sum_bytes) {
+    pdata->pkt_len += pptrs->frag_sum_bytes;
+    pptrs->frag_sum_bytes = 0;
   }
-  else pdata->pkt_num = 1; 
+
+  pdata->pkt_num = 1;
+  if (pptrs->frag_sum_pkts) {
+    pdata->pkt_num += pptrs->frag_sum_pkts;
+    pptrs->frag_sum_pkts = 0;
+  }
+
   pdata->time_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
   pdata->time_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
   pdata->time_end.tv_sec = 0;
