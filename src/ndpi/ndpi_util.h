@@ -120,28 +120,31 @@ typedef unsigned long ndpi_accum_t;
 #define EXT
 #endif
 /* global vars */
-EXT u_int32_t ndpi_current_memory, ndpi_max_memory;
 EXT NDPI_PROTOCOL_BITMASK ndpi_all;
 EXT struct ndpi_workflow *ndpi_wfl;
-EXT struct ndpi_workflow_prefs ndpi_wfl_prefs;
 
 /* prototypes */
 /* XXX: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
-EXT struct ndpi_workflow * ndpi_workflow_init(const struct ndpi_workflow_prefs *);
-
-/* workflow main free function */
-EXT void ndpi_workflow_free(struct ndpi_workflow *);
+EXT struct ndpi_workflow * ndpi_workflow_init();
 
 /* Free flow_info ndpi support structures but not the flow_info itself
- *
- * XXX: remove! Half freeing things is bad!
- */
+   XXX: remove! Half freeing things is bad! */
 EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *);
 
 /* Process a packet and update the workflow  */
-EXT struct ndpi_proto ndpi_workflow_process_packet (struct ndpi_workflow *, struct packet_ptrs *);
+EXT struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *, struct packet_ptrs *);
 
 /* compare two nodes in workflow */
 EXT int ndpi_workflow_node_cmp(const void *, const void *);
+EXT struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
+						const struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t, struct ndpi_tcphdr **,
+						struct ndpi_udphdr **, u_int16_t *, u_int16_t *, struct ndpi_id_struct **,
+						struct ndpi_id_struct **, u_int8_t *, u_int8_t **, u_int16_t *, u_int8_t *);
+EXT struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_ipv6hdr *,
+						u_int16_t, struct ndpi_tcphdr **, struct ndpi_udphdr **, u_int16_t *, u_int16_t *,
+						struct ndpi_id_struct **, struct ndpi_id_struct **, u_int8_t *, u_int8_t **,
+						u_int16_t *, u_int8_t *);
 EXT void process_ndpi_collected_info(struct ndpi_workflow *, struct ndpi_flow_info *);
+EXT struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
+						const struct ndpi_iphdr *, struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t); 
 #undef EXT

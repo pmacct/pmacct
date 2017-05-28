@@ -30,53 +30,34 @@
 #include "../pmacct.h"
 #include "ndpi_util.h"
 
-/* ***************************************************** */
-
 void ndpi_free_flow_info_half(struct ndpi_flow_info *flow)
 {
-  if(flow->ndpi_flow) { ndpi_flow_free(flow->ndpi_flow); flow->ndpi_flow = NULL; }
-  if(flow->src_id)    { ndpi_free(flow->src_id); flow->src_id = NULL; }
-  if(flow->dst_id)    { ndpi_free(flow->dst_id); flow->dst_id = NULL; }
+  if (flow->ndpi_flow) {
+    ndpi_flow_free(flow->ndpi_flow);
+    flow->ndpi_flow = NULL;
+  }
+
+  if (flow->src_id) {
+    ndpi_free(flow->src_id);
+    flow->src_id = NULL;
+  }
+
+  if (flow->dst_id) {
+    ndpi_free(flow->dst_id);
+    flow->dst_id = NULL;
+  }
 }
 
-/* ***************************************************** */
-
-/**
- * @brief malloc wrapper function
- */
-static void *ndpi_malloc_wrapper(size_t size)
+struct ndpi_workflow *ndpi_workflow_init()
 {
-  ndpi_current_memory += size;
-
-  if (ndpi_current_memory > ndpi_max_memory)
-    ndpi_max_memory = ndpi_current_memory;
-
-  return malloc(size);
-}
-
-/* ***************************************************** */
-
-/**
- * @brief free wrapper function
- */
-static void ndpi_free_wrapper(void *freeable)
-{
-  free(freeable);
-}
-
-/* ***************************************************** */
-
-struct ndpi_workflow *ndpi_workflow_init(const struct ndpi_workflow_prefs *prefs)
-{
-  if (!prefs) return NULL;
-
-  set_ndpi_malloc(ndpi_malloc_wrapper), set_ndpi_free(ndpi_free_wrapper);
-  set_ndpi_flow_malloc(NULL), set_ndpi_flow_free(NULL);
-  /* TODO: just needed here to init ndpi malloc wrapper */
   struct ndpi_detection_module_struct *module = ndpi_init_detection_module();
   struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
 
-  workflow->prefs = *prefs;
+  workflow->prefs.decode_tunnels = 0;
+  workflow->prefs.num_roots = NDPI_NUM_ROOTS;
+  workflow->prefs.max_ndpi_flows = NDPI_MAXFLOWS;
+  workflow->prefs.quiet_mode = TRUE;
+
   workflow->ndpi_struct = module;
 
   if (workflow->ndpi_struct == NULL) {
@@ -89,17 +70,14 @@ struct ndpi_workflow *ndpi_workflow_init(const struct ndpi_workflow_prefs *prefs
   return workflow;
 }
 
-/* ***************************************************** */
-
-static void ndpi_flow_info_freer(void *node)
+/*
+void ndpi_flow_info_freer(void *node)
 {
   struct ndpi_flow_info *flow = (struct ndpi_flow_info*)node;
 
   ndpi_free_flow_info_half(flow);
   ndpi_free(flow);
 }
-
-/* ***************************************************** */
 
 void ndpi_workflow_free(struct ndpi_workflow *workflow)
 {
@@ -112,8 +90,7 @@ void ndpi_workflow_free(struct ndpi_workflow *workflow)
   free(workflow->ndpi_flows_root);
   free(workflow);
 }
-
-/* ***************************************************** */
+*/
 
 int ndpi_workflow_node_cmp(const void *a, const void *b)
 {
@@ -132,26 +109,7 @@ int ndpi_workflow_node_cmp(const void *a, const void *b)
 
 /* ***************************************************** */
 
-static void ndpi_patchIPv6Address(char *str)
-{
-  int i = 0, j = 0;
-
-  while (str[i] != '\0') {
-    if ((str[i] == ':')
-       && (str[i+1] == '0')
-       && (str[i+2] == ':')) {
-      str[j++] = ':';
-      str[j++] = ':';
-      i += 3;
-    }
-    else str[j++] = str[i++];
-  }
-  if (str[j] != '\0') str[j] = '\0';
-}
-
-/* ***************************************************** */
-
-static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
+struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 						 struct packet_ptrs *pptrs,
 						 u_int16_t vlan_id,
 						 const struct ndpi_iphdr *iph,
@@ -169,14 +127,14 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 						 u_int16_t *payload_len,
 						 u_int8_t *src_to_dst_direction)
 {
-  u_int32_t idx, l4_offset;
+  u_int32_t idx;
   u_int32_t lower_ip;
   u_int32_t upper_ip;
   u_int16_t lower_port;
   u_int16_t upper_port;
   struct ndpi_flow_info flow;
   void *ret;
-  u_int8_t *l3, *l4;
+  u_int8_t *l4;
 
   /* IPv4 fragments handling */
   if (pptrs->l3_proto == ETHERTYPE_IP) {
@@ -188,9 +146,6 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
     }
   }
 
-  l4_offset = (pptrs->tlh_ptr - pptrs->iph_ptr);
-  l3 = (u_int8_t *) pptrs->iph_ptr;
-
   if (iph->saddr < iph->daddr) {
     lower_ip = iph->saddr;
     upper_ip = iph->daddr;
@@ -201,7 +156,7 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   }
 
   *proto = iph->protocol;
-  l4 = ((u_int8_t *) l3 + l4_offset);
+  l4 = (u_int8_t *) pptrs->tlh_ptr;
 
   /* TCP */
   if (iph->protocol == IPPROTO_TCP && l4_packet_len >= 20) {
@@ -272,8 +227,8 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   flow.lower_port = lower_port, flow.upper_port = upper_port;
 
 /*
-  NDPI_LOG(0, workflow->ndpi_struct, NDPI_LOG_DEBUG, "[NDPI] [%u][%u:%u <-> %u:%u]\n",
-	   iph->protocol, lower_ip, ntohs(lower_port), upper_ip, ntohs(upper_port));
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): "get_ndpi_flow_info(): [%u][%u:%u <-> %u:%u]\n",
+	iph->protocol, lower_ip, ntohs(lower_port), upper_ip, ntohs(upper_port));
 */
 
   idx = (vlan_id + lower_ip + upper_ip + iph->protocol + lower_port + upper_port) % workflow->prefs.num_roots;
@@ -298,17 +253,6 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
       newflow->lower_port = lower_port, newflow->upper_port = upper_port;
       newflow->ip_version = pptrs->l3_proto;
       newflow->src_to_dst_direction = *src_to_dst_direction;
-
-      if (pptrs->l3_proto == ETHERTYPE_IP) {
-	inet_ntop(AF_INET, &lower_ip, newflow->lower_name, sizeof(newflow->lower_name));
-	inet_ntop(AF_INET, &upper_ip, newflow->upper_name, sizeof(newflow->upper_name));
-      }
-      else {
-	inet_ntop(AF_INET6, &iph6->ip6_src, newflow->lower_name, sizeof(newflow->lower_name));
-	inet_ntop(AF_INET6, &iph6->ip6_dst, newflow->upper_name, sizeof(newflow->upper_name));
-	/* For consistency across platforms replace :0: with :: */
-	ndpi_patchIPv6Address(newflow->lower_name), ndpi_patchIPv6Address(newflow->upper_name);
-      }
 
       if ((newflow->ndpi_flow = ndpi_flow_malloc(SIZEOF_FLOW_STRUCT)) == NULL) {
 	Log(LOG_ERR, "ERROR ( %s/core ): get_ndpi_flow_info() not enough memory (2).\n", config.name);
@@ -354,7 +298,7 @@ static struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 
 /* ****************************************************** */
 
-static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
+struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
 						  struct packet_ptrs *pptrs,
 						  u_int16_t vlan_id,
 						  const struct ndpi_ipv6hdr *iph6,
@@ -390,8 +334,6 @@ static struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow
 			    src, dst, proto, payload, payload_len, src_to_dst_direction));
 }
 
-/* ****************************************************** */
-
 void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
 {
   if (!workflow || !flow || !flow->ndpi_flow) return;
@@ -407,19 +349,18 @@ void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flo
     }
 
     ndpi_free_flow_info_half(flow);
+    workflow->stats.ndpi_flow_count--;
   }
 }
 
-/* ****************************************************** */
-
-/**
+/*
    Function to process the packet:
    determine the flow of a packet and try to decode it
    @return: 0 if success; else != 0
 
    @Note: ipsize = header->len - ip_offset ; rawsize = header->len
 */
-static struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
+struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
 					   struct packet_ptrs *pptrs,
 					   const u_int64_t time,
 					   u_int16_t vlan_id,

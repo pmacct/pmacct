@@ -631,17 +631,9 @@ int main(int argc,char **argv, char **envp)
   }
 
   #if defined WITH_NDPI
-  memset(&ndpi_wfl_prefs, 0, sizeof(ndpi_wfl_prefs));
-
   if (config.classifier_ndpi) {
     config.handle_fragments = TRUE;
-
-    ndpi_wfl_prefs.decode_tunnels = 0;
-    ndpi_wfl_prefs.num_roots = NDPI_NUM_ROOTS;
-    ndpi_wfl_prefs.max_ndpi_flows = NDPI_MAXFLOWS;
-    ndpi_wfl_prefs.quiet_mode = TRUE;
-
-    ndpi_wfl = ndpi_workflow_init(&ndpi_wfl_prefs);
+    ndpi_wfl = ndpi_workflow_init();
   }
   else ndpi_wfl = NULL;
   #endif
