@@ -21,7 +21,7 @@
 
 /*
     Originally based on:
-    ndpi_util.c | nDPI | Copyright (C) 2011-17 - ntop.org
+    ndpi_util.c ndpiReader.c | nDPI | Copyright (C) 2011-17 - ntop.org
 */
 
 #define __NDPI_UTIL_C
@@ -53,7 +53,8 @@ struct ndpi_workflow *ndpi_workflow_init()
   struct ndpi_detection_module_struct *module = ndpi_init_detection_module();
   struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
 
-  workflow->prefs.decode_tunnels = 0;
+  workflow->prefs.decode_tunnels = FALSE;
+  workflow->prefs.enable_protocol_guess = FALSE;
   workflow->prefs.num_roots = NDPI_NUM_ROOTS;
   workflow->prefs.max_ndpi_flows = NDPI_MAXFLOWS;
   workflow->prefs.quiet_mode = TRUE;
@@ -106,8 +107,6 @@ int ndpi_workflow_node_cmp(const void *a, const void *b)
 
   return(0);
 }
-
-/* ***************************************************** */
 
 struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 						 struct packet_ptrs *pptrs,
@@ -296,8 +295,6 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   }
 }
 
-/* ****************************************************** */
-
 struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
 						  struct packet_ptrs *pptrs,
 						  u_int16_t vlan_id,
@@ -432,8 +429,6 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   return(flow->detected_protocol);
 }
 
-/* ****************************************************** */
-
 struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, struct packet_ptrs *pptrs)
 {
   struct ndpi_iphdr *iph = NULL;
@@ -471,9 +466,96 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
   ip_offset = (u_int16_t)(pptrs->iph_ptr - pptrs->packet_ptr);
 
   /* process the packet */
-  return (ndpi_packet_processing(workflow, pptrs, time, vlan_id, iph, iph6,
+  nproto = ndpi_packet_processing(workflow, pptrs, time, vlan_id, iph, iph6,
 				ip_offset, (pptrs->pkthdr->len - ip_offset),
-				pptrs->pkthdr->len));
+				pptrs->pkthdr->len);
+
+  ndpi_idle_flows_cleanup(workflow);
+
+  return nproto;
+}
+
+/*
+ * Guess Undetected Protocol
+ */
+u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
+{
+
+  flow->detected_protocol = ndpi_guess_undetected_protocol(workflow->ndpi_struct,
+                                                           flow->protocol,
+                                                           ntohl(flow->lower_ip),
+                                                           ntohs(flow->lower_port),
+                                                           ntohl(flow->upper_ip),
+                                                           ntohs(flow->upper_port));
+
+  return (flow->detected_protocol.app_protocol);
+}
+
+/*
+ * Proto Guess Walker
+ */
+void ndpi_node_proto_guess_walker(const void *node, ndpi_VISIT which, int depth, void *user_data)
+{
+  struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
+  struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
+
+  if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
+    if ((!flow->detection_completed) && flow->ndpi_flow)
+      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
+
+    if (workflow->prefs.enable_protocol_guess) {
+      if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
+        node_guess_undetected_protocol(workflow, flow);
+    }
+
+    process_ndpi_collected_info(workflow, flow);
+  }
+}
+
+/*
+ * Idle Scan Walker
+ */
+void ndpi_node_idle_scan_walker(const void *node, ndpi_VISIT which, int depth, void *user_data)
+{
+  struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
+  struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
+
+  /* TODO optimise with a budget-based walk */
+  if (workflow->num_idle_flows == NDPI_IDLE_SCAN_BUDGET) return;
+
+  if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
+    if (flow->last_seen + NDPI_MAX_IDLE_TIME < workflow->last_time) {
+      /* update stats */
+      ndpi_node_proto_guess_walker(node, which, depth, user_data);
+
+      ndpi_free_flow_info_half(flow);
+      workflow->stats.ndpi_flow_count--;
+
+      /* adding to a queue (we can't delete it from the tree inline ) */
+      workflow->idle_flows[workflow->num_idle_flows++] = flow;
+    }
+  }
+}
+
+void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
+{
+  if ((workflow->last_idle_scan_time + NDPI_IDLE_SCAN_PERIOD) < workflow->last_time) {
+    /* scan for idle flows */
+    ndpi_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_node_idle_scan_walker, workflow);
+
+    /* remove idle flows (unfortunately we cannot do this inline) */
+    while (workflow->num_idle_flows > 0) {
+      /* search and delete the idle flow from the "ndpi_flow_root" (see struct reader thread) - here flows are the node of a b-tree */
+      ndpi_tdelete(workflow->idle_flows[--workflow->num_idle_flows], &workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_workflow_node_cmp);
+
+      /* free the memory associated to idle flow in "idle_flows" - (see struct reader thread)*/
+      ndpi_free_flow_info_half(workflow->idle_flows[workflow->num_idle_flows]);
+      ndpi_free(workflow->idle_flows[workflow->num_idle_flows]);
+    }
+
+    if (++workflow->idle_scan_idx == workflow->prefs.num_roots) workflow->idle_scan_idx = 0;
+    workflow->last_idle_scan_time = workflow->last_time;
+  }
 }
 
 /* flow callbacks for complete detected flow (ndpi_flow_info will be freed right after) */

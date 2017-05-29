@@ -24,12 +24,9 @@
     ndpi_util.h | nDPI | Copyright (C) 2011-17 - ntop.org
 */
 
-/*
-#define NDPI_MAX_NUM_READER_THREADS	16
 #define NDPI_IDLE_SCAN_PERIOD		10
 #define NDPI_MAX_IDLE_TIME		30000
 #define NDPI_IDLE_SCAN_BUDGET		1024
-*/
 #define NDPI_NUM_ROOTS			512
 #define NDPI_MAXFLOWS			200000000
 #define NDPI_TICK_RESOLUTION		1000
@@ -82,6 +79,7 @@ typedef struct ndpi_stats {
 /* flow preferences */
 typedef struct ndpi_workflow_prefs {
   u_int8_t decode_tunnels;
+  u_int8_t enable_protocol_guess;
   u_int8_t quiet_mode;
   u_int32_t num_roots;
   u_int32_t max_ndpi_flows;
@@ -95,6 +93,11 @@ typedef void (*ndpi_workflow_callback_ptr) (struct ndpi_workflow *, struct ndpi_
 /* workflow main structure */
 typedef struct ndpi_workflow {
   u_int64_t last_time;
+
+  u_int64_t last_idle_scan_time;
+  u_int32_t num_idle_flows;
+  u_int32_t idle_scan_idx;
+  struct ndpi_flow_info *idle_flows[NDPI_IDLE_SCAN_BUDGET];
 
   struct ndpi_workflow_prefs prefs;
   struct ndpi_stats stats;
@@ -147,4 +150,10 @@ EXT struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *, struct pa
 EXT void process_ndpi_collected_info(struct ndpi_workflow *, struct ndpi_flow_info *);
 EXT struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
 						const struct ndpi_iphdr *, struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t); 
+
+EXT u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *, struct ndpi_flow_info *);
+EXT void ndpi_node_proto_guess_walker(const void *, ndpi_VISIT, int, void *);
+EXT void ndpi_node_idle_scan_walker(const void *, ndpi_VISIT, int, void *);
+EXT void ndpi_idle_flows_cleanup(struct ndpi_workflow *);
+
 #undef EXT
