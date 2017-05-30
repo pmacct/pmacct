@@ -879,7 +879,7 @@ dnl finish: Jansson handling
 dnl start: Avro handling
 AC_MSG_CHECKING(whether to enable Avro support)
 AC_ARG_ENABLE(avro,
-  [  --enable-avro                    Enable avro support (default: no)],
+  [  --enable-avro                    Enable Apache Avro support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -1050,7 +1050,7 @@ AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING(whether to link IPv4/IPv6 traffic accounting accounting binaries)
 AC_ARG_ENABLE(traffic-bins,
-	[  --enable-traffic-bins               Link IPv4/IPv6 traffic accounting binaries (default: yes)],
+	[  --enable-traffic-bins            Link IPv4/IPv6 traffic accounting binaries (default: yes)],
 	[
 	  if test x$enableval = x"yes" ; then
 	    AC_MSG_RESULT(yes)
