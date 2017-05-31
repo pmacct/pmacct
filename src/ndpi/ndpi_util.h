@@ -37,27 +37,21 @@ typedef struct ndpi_flow_info {
   u_int32_t upper_ip;
   u_int16_t lower_port;
   u_int16_t upper_port;
-  u_int8_t detection_completed, protocol, src_to_dst_direction;
+  u_int8_t detection_completed;
+  u_int8_t protocol;
+  u_int8_t src_to_dst_direction;
   u_int16_t vlan_id;
   struct ndpi_flow_struct *ndpi_flow;
-  char lower_name[48], upper_name[48];
   u_int8_t ip_version;
   u_int64_t last_seen;
   u_int64_t bytes;
   u_int32_t packets;
 
-  // result only, not used for flow identification
+  /* result only, not used for flow identification */
   ndpi_protocol detected_protocol;
 
-  char info[96];
-  char host_server_name[192];
-  char bittorent_hash[41];
-
-  struct {
-    char client_info[48], server_info[48];
-  } ssh_ssl;
-
-  void *src_id, *dst_id;
+  void *src_id;
+  void *dst_id;
 } ndpi_flow_info_t;
 
 /* flow statistics info */
@@ -112,26 +106,18 @@ typedef struct ndpi_workflow {
   struct ndpi_detection_module_struct *ndpi_struct;
 } ndpi_workflow_t;
 
-/* Any unsigned integer type with at least 32 bits may be used as
- * accumulator type for fast crc32-calulation, but unsigned long is
- * probably the optimal choice for most systems. */
-typedef unsigned long ndpi_accum_t;
-
 #if (!defined __NDPI_UTIL_C)
 #define EXT extern
 #else
 #define EXT
 #endif
 /* global vars */
-EXT NDPI_PROTOCOL_BITMASK ndpi_all;
 EXT struct ndpi_workflow *ndpi_wfl;
 
 /* prototypes */
-/* XXX: remove wrappers parameters and use ndpi global, when their initialization will be fixed... */
 EXT struct ndpi_workflow * ndpi_workflow_init();
 
-/* Free flow_info ndpi support structures but not the flow_info itself
-   XXX: remove! Half freeing things is bad! */
+/* Free flow_info ndpi support structures but not the flow_info itself */
 EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *);
 
 /* Process a packet and update the workflow  */
@@ -139,6 +125,7 @@ EXT struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *, struc
 
 /* compare two nodes in workflow */
 EXT int ndpi_workflow_node_cmp(const void *, const void *);
+
 EXT struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
 						const struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t, struct ndpi_tcphdr **,
 						struct ndpi_udphdr **, u_int16_t *, u_int16_t *, struct ndpi_id_struct **,
@@ -155,5 +142,4 @@ EXT u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *, struct ndpi
 EXT void ndpi_node_proto_guess_walker(const void *, ndpi_VISIT, int, void *);
 EXT void ndpi_node_idle_scan_walker(const void *, ndpi_VISIT, int, void *);
 EXT void ndpi_idle_flows_cleanup(struct ndpi_workflow *);
-
 #undef EXT

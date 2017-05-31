@@ -32,19 +32,21 @@
 
 void ndpi_free_flow_info_half(struct ndpi_flow_info *flow)
 {
-  if (flow->ndpi_flow) {
-    ndpi_flow_free(flow->ndpi_flow);
-    flow->ndpi_flow = NULL;
-  }
+  if (flow) {
+    if (flow->ndpi_flow) {
+      ndpi_flow_free(flow->ndpi_flow);
+      flow->ndpi_flow = NULL;
+    }
 
-  if (flow->src_id) {
-    ndpi_free(flow->src_id);
-    flow->src_id = NULL;
-  }
+    if (flow->src_id) {
+      ndpi_free(flow->src_id);
+      flow->src_id = NULL;
+    }
 
-  if (flow->dst_id) {
-    ndpi_free(flow->dst_id);
-    flow->dst_id = NULL;
+    if (flow->dst_id) {
+      ndpi_free(flow->dst_id);
+      flow->dst_id = NULL;
+    }
   }
 }
 
@@ -70,28 +72,6 @@ struct ndpi_workflow *ndpi_workflow_init()
 
   return workflow;
 }
-
-/*
-void ndpi_flow_info_freer(void *node)
-{
-  struct ndpi_flow_info *flow = (struct ndpi_flow_info*)node;
-
-  ndpi_free_flow_info_half(flow);
-  ndpi_free(flow);
-}
-
-void ndpi_workflow_free(struct ndpi_workflow *workflow)
-{
-  int i;
-
-  for(i=0; i<workflow->prefs.num_roots; i++)
-    ndpi_tdestroy(workflow->ndpi_flows_root[i], ndpi_flow_info_freer);
-
-  ndpi_exit_detection_module(workflow->ndpi_struct);
-  free(workflow->ndpi_flows_root);
-  free(workflow);
-}
-*/
 
 int ndpi_workflow_node_cmp(const void *a, const void *b)
 {
@@ -426,6 +406,7 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   }
 
   process_ndpi_collected_info(workflow, flow);
+
   return(flow->detected_protocol);
 }
 
@@ -480,6 +461,7 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
  */
 u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
 {
+  if (!flow || !workflow) return;
 
   flow->detected_protocol = ndpi_guess_undetected_protocol(workflow->ndpi_struct,
                                                            flow->protocol,
@@ -498,6 +480,8 @@ void ndpi_node_proto_guess_walker(const void *node, ndpi_VISIT which, int depth,
 {
   struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
   struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
+
+  if (!flow || !workflow) return;
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
     if ((!flow->detection_completed) && flow->ndpi_flow)
@@ -520,18 +504,16 @@ void ndpi_node_idle_scan_walker(const void *node, ndpi_VISIT which, int depth, v
   struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
   struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
 
-  /* TODO optimise with a budget-based walk */
+  if (!flow || !workflow) return;
+
+  /* XXX: optimise with a budget-based walk */
   if (workflow->num_idle_flows == NDPI_IDLE_SCAN_BUDGET) return;
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
     if (flow->last_seen + NDPI_MAX_IDLE_TIME < workflow->last_time) {
-      /* update stats */
       ndpi_node_proto_guess_walker(node, which, depth, user_data);
 
-      ndpi_free_flow_info_half(flow);
-      workflow->stats.ndpi_flow_count--;
-
-      /* adding to a queue (we can't delete it from the tree inline ) */
+      /* adding to a queue (we can't delete it from the tree inline) */
       workflow->idle_flows[workflow->num_idle_flows++] = flow;
     }
   }
@@ -539,6 +521,8 @@ void ndpi_node_idle_scan_walker(const void *node, ndpi_VISIT which, int depth, v
 
 void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
 {
+  if (!workflow) return;
+
   if ((workflow->last_idle_scan_time + NDPI_IDLE_SCAN_PERIOD) < workflow->last_time) {
     /* scan for idle flows */
     ndpi_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_node_idle_scan_walker, workflow);
