@@ -36,7 +36,10 @@ void mongodb_legacy_warning(int pipe_fd, struct configuration *cfgptr, void *ptr
 {
   Log(LOG_WARNING, "WARN ( %s/%s ): =======\n", config.name, config.type);
   Log(LOG_WARNING, "WARN ( %s/%s ): MongoDB plugin is in the process of being discontinued.\n", config.name, config.type);
-  Log(LOG_WARNING, "WARN ( %s/%s ): MongoDB plugin can still be used via the 'mongodb_legacy' keyword.\n", config.name, config.type);
+  Log(LOG_WARNING, "WARN ( %s/%s ): MongoDB plugin can still be used via the 'mongodb_legacy' keyword, ie.:\n", config.name, config.type);
+  Log(LOG_WARNING, "WARN ( %s/%s ): \n", config.name, config.type);
+  Log(LOG_WARNING, "WARN ( %s/%s ): plugins: mongodb_legacy[abc]\n", config.name, config.type);
+  Log(LOG_WARNING, "WARN ( %s/%s ): \n", config.name, config.type);
   Log(LOG_WARNING, "WARN ( %s/%s ): If you consider to keep using this plugin, please get in touch: %s\n", config.name, config.type, MANTAINER);
   Log(LOG_WARNING, "WARN ( %s/%s ): =======\n", config.name, config.type);
 
