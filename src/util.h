@@ -98,8 +98,6 @@ EXT void pm_twalk(const void *, void (*action)(const void *, const VISIT, const 
 EXT void pm_tdestroy(void **, void (*free_node)(void *));
 EXT void load_allow_file(char *, struct hosts_table *);
 EXT int check_allow(struct hosts_table *, struct sockaddr *);
-EXT void load_bgp_md5_file(char *, struct bgp_md5_table *);
-EXT void unload_bgp_md5_file(struct bgp_md5_table *);
 EXT int BTA_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void calc_refresh_timeout(time_t, time_t, int *);
 EXT void calc_refresh_timeout_sec(time_t, time_t, int *);

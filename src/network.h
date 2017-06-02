@@ -615,7 +615,7 @@ struct packet_ptrs_vector {
 };
 
 struct hosts_table {
-  short int num;
+  int num;
   struct host_addr table[MAX_MAP_ENTRIES];
 };
 
@@ -625,7 +625,7 @@ struct bgp_md5_table_entry {
 };
 
 struct bgp_md5_table {
-  short int num;
+  int num;
   struct bgp_md5_table_entry table[BGP_MD5_MAP_ENTRIES];
 };
 

@@ -1271,62 +1271,6 @@ void load_allow_file(char *filename, struct hosts_table *t)
   }
 }
 
-void load_bgp_md5_file(char *filename, struct bgp_md5_table *t)
-{
-  FILE *file;
-  char buf[SRVBUFLEN], *ptr;
-  int index = 0;
-
-  if (filename) {
-    if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] file not found.\n", config.name, filename);
-      exit(1);
-    }
-
-    memset(t->table, 0, sizeof(t->table));
-    while (!feof(file)) {
-      if (index >= BGP_MD5_MAP_ENTRIES) break; /* XXX: we shouldn't exit silently */
-      memset(buf, 0, SRVBUFLEN);
-      if (fgets(buf, SRVBUFLEN, file)) {
-        if (!sanitize_buf(buf)) {
-	  char *endptr, *token;
-	  int tk_idx = 0, ret = 0, len = 0;
-
-	  ptr = buf;
-	  memset(&t->table[index], 0, sizeof(t->table[index]));
-	  while ( (token = extract_token(&ptr, ',')) && tk_idx < 2 ) {
-	    if (tk_idx == 0) ret = str_to_addr(token, &t->table[index].addr);
-	    else if (tk_idx == 1) {
-	      strlcpy(t->table[index].key, token, TCP_MD5SIG_MAXKEYLEN); 
-	      len = strlen(t->table[index].key); 
-	    } 
-	    tk_idx++;
-	  }
-
-          if (ret > 0 && len > 0) index++;
-          else Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] line '%s' ignored.\n", config.name, filename, buf);
-        }
-      }
-    }
-    t->num = index;
-
-    /* Set to -1 to distinguish between no map and empty map conditions */
-    if (!t->num) t->num = -1;
-
-    fclose(file);
-  }
-}
-
-void unload_bgp_md5_file(struct bgp_md5_table *t)
-{
-  int index = 0;
-
-  while (index < t->num) {
-    memset(t->table[index].key, 0, TCP_MD5SIG_MAXKEYLEN);
-    index++;
-  }
-}
-
 int check_allow(struct hosts_table *allow, struct sockaddr *sa)
 {
   int index;

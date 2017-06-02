@@ -282,8 +282,8 @@ void skinny_bgp_daemon_online()
 
   /* Preparing MD5 keys, if any */
   if (config.nfacctd_bgp_md5_file) {
-    load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
-    if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5);
+    bgp_md5_file_load(config.nfacctd_bgp_md5_file, &bgp_md5);
+    if (bgp_md5.num) bgp_md5_file_process(config.bgp_sock, &bgp_md5);
   }
 
   /* Let's initialize clean shared RIB */
@@ -385,10 +385,11 @@ void skinny_bgp_daemon_online()
     /* signals handling */
     if (reload_map_bgp_thread) {
       if (config.nfacctd_bgp_md5_file) {
-	unload_bgp_md5_file(&bgp_md5);
-	if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5); // process unload
-	load_bgp_md5_file(config.nfacctd_bgp_md5_file, &bgp_md5);
-	if (bgp_md5.num) process_bgp_md5_file(config.bgp_sock, &bgp_md5); // process load
+	bgp_md5_file_unload(&bgp_md5);
+	if (bgp_md5.num) bgp_md5_file_process(config.bgp_sock, &bgp_md5); // process unload
+
+	bgp_md5_file_load(config.nfacctd_bgp_md5_file, &bgp_md5);
+	if (bgp_md5.num) bgp_md5_file_process(config.bgp_sock, &bgp_md5); // process load
       }
 
       reload_map_bgp_thread = FALSE;
