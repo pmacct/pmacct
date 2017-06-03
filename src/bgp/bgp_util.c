@@ -930,19 +930,25 @@ void bgp_config_checks(struct configuration *c)
   }
 }
 
+void bgp_md5_file_init(struct bgp_md5_table *t)
+{
+  if (t) memset(t, 0, sizeof(struct bgp_md5_table));
+}
+
 void bgp_md5_file_load(char *filename, struct bgp_md5_table *t)
 {
   FILE *file;
   char buf[SRVBUFLEN], *ptr;
   int index = 0;
 
-  if (filename) {
+  if (filename && t) {
+    Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] (re)loading map.\n", config.name, filename);
+
     if ((file = fopen(filename, "r")) == NULL) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] file not found.\n", config.name, filename);
       exit(1);
     }
 
-    memset(t->table, 0, sizeof(t->table));
     while (!feof(file)) {
       if (index >= BGP_MD5_MAP_ENTRIES) {
 	Log(LOG_WARNING, "WARN ( %s/core/BGP ): [%s] loaded the first %u entries.\n", config.name, filename, BGP_MD5_MAP_ENTRIES);
@@ -955,7 +961,7 @@ void bgp_md5_file_load(char *filename, struct bgp_md5_table *t)
           int tk_idx = 0, ret = 0, len = 0;
 
           ptr = buf;
-          memset(&t->table[index], 0, sizeof(t->table[index]));
+	  memset(&t->table[index], 0, sizeof(t->table[index]));
           while ( (token = extract_token(&ptr, ',')) && tk_idx < 2 ) {
             if (tk_idx == 0) ret = str_to_addr(token, &t->table[index].addr);
             else if (tk_idx == 1) {
@@ -975,6 +981,7 @@ void bgp_md5_file_load(char *filename, struct bgp_md5_table *t)
     /* Set to -1 to distinguish between no map and empty map conditions */
     if (!t->num) t->num = -1;
 
+    Log(LOG_INFO, "INFO ( %s/core/BGP ): [%s] map successfully (re)loaded.\n", config.name, filename);
     fclose(file);
   }
 }
@@ -982,6 +989,8 @@ void bgp_md5_file_load(char *filename, struct bgp_md5_table *t)
 void bgp_md5_file_unload(struct bgp_md5_table *t)
 {
   int index = 0;
+
+  if (!t) return;
 
   while (index < t->num) {
     memset(t->table[index].key, 0, TCP_MD5SIG_MAXKEYLEN);
@@ -994,6 +1003,8 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
   struct my_tcp_md5sig md5sig;
   struct sockaddr_storage ss_md5sig;
   int rc, keylen, idx = 0, ss_md5sig_len;
+
+  if (!bgp_md5) return;
 
   while (idx < bgp_md5->num) {
     memset(&md5sig, 0, sizeof(md5sig));

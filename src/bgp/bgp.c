@@ -282,6 +282,7 @@ void skinny_bgp_daemon_online()
 
   /* Preparing MD5 keys, if any */
   if (config.nfacctd_bgp_md5_file) {
+    bgp_md5_file_init(&bgp_md5);
     bgp_md5_file_load(config.nfacctd_bgp_md5_file, &bgp_md5);
     if (bgp_md5.num) bgp_md5_file_process(config.bgp_sock, &bgp_md5);
   }

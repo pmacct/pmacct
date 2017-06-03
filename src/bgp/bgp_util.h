@@ -41,6 +41,7 @@ EXT void evaluate_bgp_aspath_radius(char *, int, int);
 EXT void copy_stdcomm_to_asn(char *, as_t *, int);
 EXT void write_neighbors_file(char *, int);
 EXT struct bgp_rt_structs *bgp_select_routing_db(int);
+EXT void bgp_md5_file_init(struct bgp_md5_table *);
 EXT void bgp_md5_file_load(char *, struct bgp_md5_table *);
 EXT void bgp_md5_file_unload(struct bgp_md5_table *);
 EXT void bgp_md5_file_process(int, struct bgp_md5_table *);
