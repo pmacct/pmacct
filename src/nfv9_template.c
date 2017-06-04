@@ -48,8 +48,8 @@ struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
     if (tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid))
-      tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, version, len, seq);
-    else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, version, len, seq);
+      tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len, seq);
+    else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
   }
 
   return tpl;
@@ -896,14 +896,8 @@ void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *p
   Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u template type : %s\n", config.name, version, ( tpl->template_type == 0 || tpl->template_type == 2 ) ? "flow" : "options");
   Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u template ID   : %u\n", config.name, version, ntohs(tpl->template_id));
 
-  if ( tpl->template_type == 0 || tpl->template_type == 2 ) {
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): -------------------------------------------------------------\n", config.name);
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): |    pen     |         field type         | offset |  size  |\n", config.name);
-  }
-  else {
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): ------------------------------------------------\n", config.name);
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): |         field type         | offset |  size  |\n", config.name);
-  }
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): -------------------------------------------------------------\n", config.name);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): |    pen     |         field type         | offset |  size  |\n", config.name);
 }
 
 void log_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
@@ -930,20 +924,20 @@ void log_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t
   }
 }
 
-void log_opt_template_field(u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
+void log_opt_template_field(u_int8_t vlen, u_int32_t *pen, u_int16_t type, u_int16_t off, u_int16_t len, u_int8_t version)
 {
-  if (type <= MAX_OPT_TPL_DESC_LIST && strlen(opt_tpl_desc_list[type]))
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18s [%-5u] | %6u | %6u |\n", config.name, opt_tpl_desc_list[type], type, off, len);
-  else
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-18u [%-5u] | %6u | %6u |\n", config.name, type, type, off, len);
+  if (!pen) {
+    if (type <= MAX_OPT_TPL_DESC_LIST && strlen(opt_tpl_desc_list[type]))
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18s [%-5u] | %6u | %6u |\n", config.name, 0, opt_tpl_desc_list[type], type, off, len);
+    else
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u [%-5u] | %6u | %6u |\n", config.name, 0, type, type, off, len);
+  }
+  else Log(LOG_DEBUG, "DEBUG ( %s/core ): | %-10u | %-18u [%-5u] | %6u | %6u |\n", config.name, ntohl(*pen), type, type, off, len);
 }
 
 void log_template_footer(struct template_cache_entry *tpl, u_int16_t size, u_int8_t version)
 {
-  if ( tpl->template_type == 0 || tpl->template_type == 2 )
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): -------------------------------------------------------------\n", config.name);
-  else 
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): ------------------------------------------------\n", config.name);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): -------------------------------------------------------------\n", config.name);
 
   if (!size)
     Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %s\n", config.name, "tbd");
@@ -953,13 +947,15 @@ void log_template_footer(struct template_cache_entry *tpl, u_int16_t size, u_int
 }
 
 struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
-							u_int32_t sid, u_int8_t version, u_int16_t len, u_int32_t seq)
+							u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len, u_int32_t seq)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
   u_int16_t modulo, count, slen, olen, type, port, tid, off;
+  u_int32_t *pen;
+  u_int8_t ipfix_ebit;
   u_char *tpl;
 
   /* NetFlow v9 */
@@ -1015,18 +1011,33 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
       return NULL;
     }
 
+    pen = NULL;
+    ipfix_ebit = FALSE;
     type = ntohs(field->type);
-    log_opt_template_field(type, ptr->len, ntohs(field->len), version);
-    if (type < NF9_MAX_DEFINED_FIELD) { 
+
+    if (type & IPFIX_TPL_EBIT && version == 10) {
+      ipfix_ebit = TRUE;
+      type ^= IPFIX_TPL_EBIT;
+      if (pens) (*pens)++;
+      pen = (u_int32_t *) field;
+      pen++;
+    }
+
+    log_opt_template_field(FALSE, pen, type, ptr->len, ntohs(field->len), version);
+    if (type < NF9_MAX_DEFINED_FIELD && !pen) { 
       ptr->tpl[type].off = ptr->len;
       ptr->tpl[type].len = ntohs(field->len);
       ptr->len += ptr->tpl[type].len;
     }
-    else ptr->len += ntohs(field->len);
+    else ptr->len += ntohs(field->len); // XXX
 
     count--;
-    field++;
     off += NfTplFieldV9Sz;
+    if (ipfix_ebit) {
+      field++; /* skip 32-bits ahead */
+      off += sizeof(u_int32_t);
+    }
+    field++;
   }
 
   if (prevptr) prevptr->next = ptr;
@@ -1043,13 +1054,15 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 }
 
 struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type,
-							u_int32_t sid, u_int8_t version, u_int16_t len, u_int32_t seq)
+							u_int32_t sid, u_int16_t *pens, u_int8_t version, u_int16_t len, u_int32_t seq)
 {
   struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
   struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
   struct template_cache_entry backup, *next;
   struct template_field_v9 *field;
   u_int16_t slen, olen, count, type, port, tid, off;
+  u_int32_t *pen;
+  u_int8_t ipfix_ebit;
   u_char *ptr;
 
   /* NetFlow v9 */
@@ -1093,18 +1106,32 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
       return NULL;
     }
 
+    pen = NULL;
+    ipfix_ebit = FALSE;
     type = ntohs(field->type);
-    log_opt_template_field(type, tpl->len, ntohs(field->len), version);
-    if (type < NF9_MAX_DEFINED_FIELD) {
+
+    if (type & IPFIX_TPL_EBIT && version == 10) {
+      ipfix_ebit = TRUE;
+      type ^= IPFIX_TPL_EBIT;
+      if (pens) (*pens)++;
+      pen = (u_int32_t *) field; pen++;
+    }
+
+    log_opt_template_field(FALSE, pen, type, tpl->len, ntohs(field->len), version);
+    if (type < NF9_MAX_DEFINED_FIELD && !pen) {
       tpl->tpl[type].off = tpl->len;
       tpl->tpl[type].len = ntohs(field->len);
       tpl->len += tpl->tpl[type].len;
     }
-    else tpl->len += ntohs(field->len);
+    else tpl->len += ntohs(field->len); // XXX
 
     count--;
-    field++;
     off += NfTplFieldV9Sz;
+    if (ipfix_ebit) {
+      field++; /* skip 32-bits ahead */
+      off += sizeof(u_int32_t);
+    }
+    field++;
   }
 
   log_template_footer(tpl, tpl->len, version);
