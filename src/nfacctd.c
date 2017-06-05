@@ -1477,7 +1477,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (ssaved) sentry->next = ssaved;
 	  }
 	}
-	else if (tpl->tpl[NF9_APPLICATION_ID].len == 4) {
+	else if (tpl->tpl[NF9_APPLICATION_ID].len == 4 && tpl->tpl[NF9_APPLICATION_NAME].len > 0) {
 	  struct pkt_classifier css;
 	  pm_class_t class_id = 0, class_int_id = 0;
 
@@ -1500,9 +1500,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (centry) {
             memset(centry, 0, sizeof(struct xflow_status_entry_class));
 	    memset(&css, 0, sizeof(struct pkt_classifier));
-
-            if (tpl->tpl[NF9_APPLICATION_NAME].len > 0)
-	      memcpy(&centry->class_name, pkt+tpl->tpl[NF9_APPLICATION_NAME].off, MIN((MAX_PROTOCOL_LEN-1), tpl->tpl[NF9_APPLICATION_NAME].len));
+	    memcpy(&centry->class_name, pkt+tpl->tpl[NF9_APPLICATION_NAME].off, MIN((MAX_PROTOCOL_LEN-1), tpl->tpl[NF9_APPLICATION_NAME].len));
             centry->class_id = class_id;
 	    centry->class_int_id = class_int_id;
             if (csaved) centry->next = csaved;

@@ -1029,7 +1029,22 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
       ptr->tpl[type].len = ntohs(field->len);
       ptr->len += ptr->tpl[type].len;
     }
-    else ptr->len += ntohs(field->len); // XXX
+    else {
+      u_int8_t repeat_id = 0;
+      struct utpl_field *ext_db_ptr = ext_db_get_next_ie(ptr, type, &repeat_id);
+
+      if (ext_db_ptr) {
+        if (pen) ext_db_ptr->pen = ntohl(*pen);
+        ext_db_ptr->type = type;
+        ext_db_ptr->off = ptr->len;
+        ext_db_ptr->tpl_len = ntohs(field->len);
+        ext_db_ptr->repeat_id = repeat_id;
+        ext_db_ptr->len = ext_db_ptr->tpl_len;
+      }
+      ptr->list[count].ptr = (char *) ext_db_ptr;
+      ptr->list[count].type = TPL_TYPE_EXT_DB;
+      ptr->len += ntohs(ext_db_ptr->len);
+    }
 
     count--;
     off += NfTplFieldV9Sz;
@@ -1123,7 +1138,22 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
       tpl->tpl[type].len = ntohs(field->len);
       tpl->len += tpl->tpl[type].len;
     }
-    else tpl->len += ntohs(field->len); // XXX
+    else {
+      u_int8_t repeat_id = 0;
+      struct utpl_field *ext_db_ptr = ext_db_get_next_ie(tpl, type, &repeat_id);
+
+      if (ext_db_ptr) {
+        if (pen) ext_db_ptr->pen = ntohl(*pen);
+        ext_db_ptr->type = type;
+        ext_db_ptr->off = tpl->len;
+        ext_db_ptr->tpl_len = ntohs(field->len);
+        ext_db_ptr->repeat_id = repeat_id;
+        ext_db_ptr->len = ext_db_ptr->tpl_len;
+      }
+      tpl->list[count].ptr = (char *) ext_db_ptr;
+      tpl->list[count].type = TPL_TYPE_EXT_DB;
+      tpl->len += ntohs(ext_db_ptr->len);
+    }
 
     count--;
     off += NfTplFieldV9Sz;
