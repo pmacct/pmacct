@@ -73,8 +73,7 @@ typedef struct ndpi_stats {
 /* flow preferences */
 typedef struct ndpi_workflow_prefs {
   u_int8_t decode_tunnels;
-  u_int8_t enable_protocol_guess;
-  u_int8_t quiet_mode;
+  u_int8_t protocol_guess;
   u_int32_t num_roots;
   u_int32_t max_ndpi_flows;
 } ndpi_workflow_prefs_t;

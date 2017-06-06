@@ -494,6 +494,9 @@ struct configuration {
   int classifier_tentatives;
   int classifier_table_num;
   int classifier_ndpi;
+  u_int32_t ndpi_num_roots;
+  u_int32_t ndpi_max_flows;
+  int ndpi_proto_guess;
   char *nfprobe_timeouts;
   int nfprobe_id;
   int nfprobe_hoplimit;

@@ -56,10 +56,15 @@ struct ndpi_workflow *ndpi_workflow_init()
   struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
 
   workflow->prefs.decode_tunnels = FALSE;
-  workflow->prefs.enable_protocol_guess = FALSE;
-  workflow->prefs.num_roots = NDPI_NUM_ROOTS;
-  workflow->prefs.max_ndpi_flows = NDPI_MAXFLOWS;
-  workflow->prefs.quiet_mode = TRUE;
+
+  if (config.ndpi_num_roots) workflow->prefs.num_roots = config.ndpi_num_roots;
+  else workflow->prefs.num_roots = NDPI_NUM_ROOTS;
+
+  if (config.ndpi_max_flows) workflow->prefs.max_ndpi_flows = config.ndpi_max_flows;
+  else workflow->prefs.max_ndpi_flows = NDPI_MAXFLOWS;
+
+  if (config.ndpi_proto_guess) workflow->prefs.protocol_guess;
+  else workflow->prefs.protocol_guess = FALSE;
 
   workflow->ndpi_struct = module;
 
@@ -487,7 +492,7 @@ void ndpi_node_proto_guess_walker(const void *node, ndpi_VISIT which, int depth,
     if ((!flow->detection_completed) && flow->ndpi_flow)
       flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
 
-    if (workflow->prefs.enable_protocol_guess) {
+    if (workflow->prefs.protocol_guess) {
       if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
         node_guess_undetected_protocol(workflow, flow);
     }

@@ -5064,6 +5064,48 @@ int cfg_key_classifier_ndpi(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_classifier_ndpi_num_roots(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_num_roots = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_num_roots'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_classifier_ndpi_max_flows(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+  
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_max_flows = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_max_flows'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_classifier_ndpi_proto_guess(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_proto_guess = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_proto_guess'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfprobe_timeouts(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
