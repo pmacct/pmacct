@@ -63,8 +63,17 @@ struct ndpi_workflow *ndpi_workflow_init()
   if (config.ndpi_max_flows) workflow->prefs.max_ndpi_flows = config.ndpi_max_flows;
   else workflow->prefs.max_ndpi_flows = NDPI_MAXFLOWS;
 
-  if (config.ndpi_proto_guess) workflow->prefs.protocol_guess;
+  if (config.ndpi_proto_guess) workflow->prefs.protocol_guess = config.ndpi_proto_guess;
   else workflow->prefs.protocol_guess = FALSE;
+
+  if (config.ndpi_idle_scan_period) workflow->prefs.idle_scan_period = config.ndpi_idle_scan_period; 
+  else workflow->prefs.idle_scan_period = NDPI_IDLE_SCAN_PERIOD;
+
+  if (config.ndpi_idle_max_time) workflow->prefs.idle_max_time = config.ndpi_idle_max_time;
+  else workflow->prefs.idle_max_time = NDPI_IDLE_MAX_TIME;
+
+  if (config.ndpi_idle_scan_budget) workflow->prefs.idle_scan_budget = config.ndpi_idle_scan_budget;
+  else workflow->prefs.idle_scan_budget = NDPI_IDLE_SCAN_BUDGET; 
 
   workflow->ndpi_struct = module;
 
@@ -318,18 +327,9 @@ struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
 
 void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
 {
-  if (!workflow || !flow || !flow->ndpi_flow) return;
+  if (!workflow || !flow) return;
 
   if (flow->detection_completed) {
-    if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN) {
-      if (workflow->__flow_giveup_callback != NULL)
-	workflow->__flow_giveup_callback(workflow, flow, workflow->__flow_giveup_udata);
-    }
-    else {
-      if (workflow->__flow_detected_callback != NULL)
-	workflow->__flow_detected_callback(workflow, flow, workflow->__flow_detected_udata);
-    }
-
     ndpi_free_flow_info_half(flow);
     workflow->stats.ndpi_flow_count--;
   }
@@ -401,7 +401,7 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
      || ((proto == IPPROTO_UDP) && (flow->packets > 8))
      || ((proto == IPPROTO_TCP) && (flow->packets > 10))) {
     /* New protocol detected or give up */
-    flow->detection_completed = 1;
+    flow->detection_completed = TRUE;
   }
 
   if (flow->detection_completed) {
@@ -512,10 +512,10 @@ void ndpi_node_idle_scan_walker(const void *node, ndpi_VISIT which, int depth, v
   if (!flow || !workflow) return;
 
   /* XXX: optimise with a budget-based walk */
-  if (workflow->num_idle_flows == NDPI_IDLE_SCAN_BUDGET) return;
+  if (workflow->num_idle_flows == workflow->prefs.idle_scan_budget) return;
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
-    if (flow->last_seen + NDPI_MAX_IDLE_TIME < workflow->last_time) {
+    if (flow->last_seen + workflow->prefs.idle_max_time < workflow->last_time) {
       ndpi_node_proto_guess_walker(node, which, depth, user_data);
 
       /* adding to a queue (we can't delete it from the tree inline) */
@@ -528,7 +528,7 @@ void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
 {
   if (!workflow) return;
 
-  if ((workflow->last_idle_scan_time + NDPI_IDLE_SCAN_PERIOD) < workflow->last_time) {
+  if ((workflow->last_idle_scan_time + workflow->prefs.idle_scan_period) < workflow->last_time) {
     /* scan for idle flows */
     ndpi_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_node_idle_scan_walker, workflow);
 
@@ -545,19 +545,5 @@ void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
     if (++workflow->idle_scan_idx == workflow->prefs.num_roots) workflow->idle_scan_idx = 0;
     workflow->last_idle_scan_time = workflow->last_time;
   }
-}
-
-/* flow callbacks for complete detected flow (ndpi_flow_info will be freed right after) */
-static inline void ndpi_workflow_set_flow_detected_callback(struct ndpi_workflow *workflow, ndpi_workflow_callback_ptr callback, void *udata)
-{
-  workflow->__flow_detected_callback = callback;
-  workflow->__flow_detected_udata = udata;
-}
-
-/* flow callbacks for sufficient detected flow (ndpi_flow_info will be freed right after) */
-static inline void ndpi_workflow_set_flow_giveup_callback(struct ndpi_workflow *workflow, ndpi_workflow_callback_ptr callback, void *udata)
-{
-  workflow->__flow_giveup_callback = callback;
-  workflow->__flow_giveup_udata = udata;
 }
 #endif

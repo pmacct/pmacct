@@ -497,6 +497,9 @@ struct configuration {
   u_int32_t ndpi_num_roots;
   u_int32_t ndpi_max_flows;
   int ndpi_proto_guess;
+  u_int32_t ndpi_idle_scan_period;
+  u_int32_t ndpi_idle_max_time;
+  u_int32_t ndpi_idle_scan_budget;
   char *nfprobe_timeouts;
   int nfprobe_id;
   int nfprobe_hoplimit;

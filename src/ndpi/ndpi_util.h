@@ -25,7 +25,7 @@
 */
 
 #define NDPI_IDLE_SCAN_PERIOD		10
-#define NDPI_MAX_IDLE_TIME		30000
+#define NDPI_IDLE_MAX_TIME		30000
 #define NDPI_IDLE_SCAN_BUDGET		1024
 #define NDPI_NUM_ROOTS			512
 #define NDPI_MAXFLOWS			200000000
@@ -76,12 +76,12 @@ typedef struct ndpi_workflow_prefs {
   u_int8_t protocol_guess;
   u_int32_t num_roots;
   u_int32_t max_ndpi_flows;
+  u_int32_t idle_scan_period;
+  u_int32_t idle_max_time;
+  u_int32_t idle_scan_budget; 
 } ndpi_workflow_prefs_t;
 
 struct ndpi_workflow;
-
-/* workflow, flow, user data */
-typedef void (*ndpi_workflow_callback_ptr) (struct ndpi_workflow *, struct ndpi_flow_info *, void *);
 
 /* workflow main structure */
 typedef struct ndpi_workflow {
@@ -94,11 +94,6 @@ typedef struct ndpi_workflow {
 
   struct ndpi_workflow_prefs prefs;
   struct ndpi_stats stats;
-
-  ndpi_workflow_callback_ptr __flow_detected_callback;
-  void * __flow_detected_udata;
-  ndpi_workflow_callback_ptr __flow_giveup_callback;
-  void * __flow_giveup_udata;
 
   /* allocated by prefs */
   void **ndpi_flows_root;

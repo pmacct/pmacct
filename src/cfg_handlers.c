@@ -5106,6 +5106,48 @@ int cfg_key_classifier_ndpi_proto_guess(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_classifier_ndpi_idle_scan_period(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_idle_scan_period = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_idle_scan_period'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_classifier_ndpi_idle_max_time(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_idle_max_time= value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_idle_max_time'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_classifier_ndpi_idle_scan_budget(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoul(value_ptr, &endptr, 10);
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_idle_scan_budget = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_idle_scan_budget'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfprobe_timeouts(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
