@@ -656,11 +656,6 @@ use the plugin are:
 * Librdkafka: https://github.com/edenhill/librdkafka/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
 
-Software combinations that have been tested working are:
-
-* librdkafka 0.9.1, Kafka 0.8.2.2 and Scala 2.9.2
-* librdkafka 0.9.1, Kafka 0.10.0 and Scala 2.11.8
-
 Additionally, the Apache Avro C library (http://avro.apache.org/) needs to be
 installed to be able to send messages packed using Avro (you will also need to
 pass --enable-avro to the configuration script).
@@ -713,21 +708,38 @@ This is a pointer to the quick start guide to Kafka (0.10.0):
 
 http://kafka.apache.org/0100/quickstart.html
 
-When using Kafka over a dedicated node or VM, you will have to update the 
-default Kafka server configuration. Edit with your favorite text editor the file
-named server.properties under the config folder of your kafka installation. Uncomment
+When using Kafka over a dedicated node or VM, you will have to update the default
+Kafka server configuration. Edit with your favorite text editor the file named
+server.properties under the config folder of your kafka installation. Uncomment
 the following parameters:
-- listeners,
-- advertised.listeners,
-- listener.security.protocol.map,
-and configure it according to your kafka design. 
 
-Taking a simple example where there is one single Kafka node used for both zookeeper 
-and Kafka and this node is using and ip address like 172.16.2.1. Those tree parameters 
-will look like this:
+* listeners,
+* advertised.listeners,
+* listener.security.protocol.map
+
+and configure it according to your kafka design. Taking a simple example where
+there is one single Kafka node used for both zookeeper  and Kafka and this node
+is using and ip address like 172.16.2.1. Those tree parameters  will look like
+this:
+
 listeners=PLAINTEXT://172.16.2.1:9092
 advertised.listeners=PLAINTEXT://172.16.2.1:9092
 listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
+
+Finally, when the amount of data published to Kafka is substantial, ie. in the
+order of thousands of entries per second, some care is needed in order to avoid
+every single entry originating a produce call to Kafka. Two strategies are being
+available for batching: 1) kafka_multi_values feature of pmacct; 2) as per
+librdkafka documentation, "The two most important configuration properties for
+performance tuning are:
+
+* batch.num.messages : the minimum number of messages to wait for to accumulate
+  in the local queue before sending off a message set.
+* queue.buffering.max.ms : how long to wait for batch.num.messages to fill up
+  in the local queue."
+
+These knobs can be set and supplied to pmacct via kafka_config_file. 
+
 
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
