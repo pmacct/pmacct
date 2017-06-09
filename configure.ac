@@ -18,9 +18,7 @@ PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:/usr/local/lib/pkgconfig
 export PKG_CONFIG_PATH
 PKG_PROG_PKG_CONFIG
 
-host_os=`uname`
-host_cpu=`uname -m`
-host_os1=`uname -rs`
+AC_CANONICAL_HOST
 
 AC_MSG_CHECKING(OS)
 AC_MSG_RESULT($host_os)
@@ -115,6 +113,9 @@ case "$host_os" in
     ;;
   *BSD)
     AC_DEFINE(BSD, 1)
+    ;;
+  linux*)
+    AC_DEFINE(LINUX, 1)
     ;;
 esac
 
