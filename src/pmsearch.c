@@ -92,7 +92,6 @@
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "pmsearch.h"
 
 /* Possibly "split" a node with two red successors, and/or fix up two red
    edges in a row.  ROOTP is a pointer to the lowest node we visited, PARENTP

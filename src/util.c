@@ -28,7 +28,6 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "plugin_hooks.h"
-#include <search.h>
 #include <sys/file.h>
 
 /* functions */
@@ -1205,38 +1204,62 @@ void *pm_tsearch(const void *key, void **rootp, int (*compar)(const void *key1, 
   if (alloc_size) {
     alloc_key = malloc(alloc_size);
     memcpy(alloc_key, key, alloc_size);
+#if defined LINUX
+    ret_key = __pm_tsearch(alloc_key, rootp, compar);
+#else
     ret_key = tsearch(alloc_key, rootp, compar);
+#endif
 
     if ((*(void **) ret_key) != alloc_key) free(alloc_key);
 
     return ret_key;
   }
+#if defined LINUX
+  else return __pm_tsearch(key, rootp, compar); 
+#else
   else return tsearch(key, rootp, compar); 
+#endif
 }
 
 void *pm_tfind(const void *key, void *const *rootp, int (*compar) (const void *key1, const void *key2))
 {
+#if defined LINUX
+  return __pm_tfind(key, rootp, compar);
+#else
   return tfind(key, rootp, compar);
+#endif
 }
 
 void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, const void *key2))
 {
+#if defined LINUX
+  return __pm_tdelete(key, rootp, compar);
+#else
   return tdelete(key, rootp, compar);
+#endif
 }
 
-void pm_twalk(const void *root, void (*action)(const void *nodep, const VISIT which, const int depth))
+void pm_twalk(const void *root, void (*action)(const void *nodep, const pm_VISIT which, const int depth))
 {
+#if defined LINUX
+  __pm_twalk(root, action);
+#else
   twalk(root, action);
+#endif
 }
 
 void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 {
   /* in implementations where tdestroy() is not defined, tdelete() against
      the root node of the three destroys also the last few remaining bits */
+#if defined LINUX
+  __pm_tdestroy((*root), free_node);
+#else
 #if (defined HAVE_TDESTROY)
   tdestroy((*root), free_node);
 #endif
   (*root) = NULL;
+#endif
 }
 
 void load_allow_file(char *filename, struct hosts_table *t)

@@ -52,15 +52,15 @@ typedef const struct pm_node_t *pm_const_node;
    Everything depends on that.  */
 typedef enum
 {
-  pm_preorder,
-  pm_postorder,
-  pm_endorder,
-  pm_leaf
+  preorder,
+  postorder,
+  endorder,
+  leaf
 }
-pm_VISIT;
+__pm_VISIT;
 
 typedef int (*pm_compar_fn_t) (const void *, const void *);
-typedef void (*pm_action_fn_t) (const void *__nodep, pm_VISIT __value, int __level);
+typedef void (*pm_action_fn_t) (const void *__nodep, __pm_VISIT __value, int __level);
 typedef void (*pm_free_fn_t) (void *__nodep);
 
 /* prototypes */
