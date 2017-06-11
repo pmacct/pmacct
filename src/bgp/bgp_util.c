@@ -1170,7 +1170,11 @@ void bgp_peer_free(void *a)
 {
 }
 
+#if defined LINUX
+int bgp_peers_bintree_walk_print(const void *nodep, const pm_VISIT which, const int depth)
+#else
 void bgp_peers_bintree_walk_print(const void *nodep, const pm_VISIT which, const int depth)
+#endif
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -1186,9 +1190,17 @@ void bgp_peers_bintree_walk_print(const void *nodep, const pm_VISIT which, const
     addr_to_str(peer_str, &peer->addr);
     Log(LOG_INFO, "INFO ( %s/%s ): bgp_peers_bintree_walk_print(): %s\n", config.name, bms->log_str, peer_str);
   }
+
+#if defined LINUX
+  return TRUE;
+#endif
 }
 
+#if defined LINUX
+int bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, const int depth)
+#else
 void bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, const int depth)
+#endif
 {
   struct bgp_misc_structs *bms;
   char peer_str[] = "peer_ip", *saved_peer_str;
@@ -1208,4 +1220,8 @@ void bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, cons
   bms->peer_str = saved_peer_str;
 
   // XXX: count tree elements to index and free() later
+
+#if defined LINUX
+  return TRUE;
+#endif
 }

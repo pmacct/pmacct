@@ -91,11 +91,6 @@ EXT void handle_dynname_internal_strings_same(char *, int, char *, struct primit
 EXT void escape_ip_uscores(char *);
 EXT int sql_history_to_secs(int, int);
 EXT void *pm_malloc(size_t);
-EXT void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
-EXT void *pm_tfind(const void *, void *const *, int (*compar)(const void *, const void *));
-EXT void *pm_tdelete(const void *, void **, int (*compar)(const void *, const void *));
-EXT void pm_twalk(const void *, void (*action)(const void *, const pm_VISIT, const int));
-EXT void pm_tdestroy(void **, void (*free_node)(void *));
 EXT void load_allow_file(char *, struct hosts_table *);
 EXT int check_allow(struct hosts_table *, struct sockaddr *);
 EXT int BTA_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
@@ -179,6 +174,16 @@ EXT int dump_writers_add(pid_t);
 EXT int pm_scandir(const char *, struct dirent ***, int (*select)(const struct dirent *), int (*compar)(const void *, const void *));
 EXT void pm_scandir_free(struct dirent ***, int);
 EXT int pm_alphasort(const void *, const void *);
+
+EXT void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
+EXT void *pm_tfind(const void *, void *const *, int (*compar)(const void *, const void *));
+EXT void *pm_tdelete(const void *, void **, int (*compar)(const void *, const void *));
+EXT void pm_tdestroy(void **, void (*free_node)(void *));
+#if defined LINUX
+EXT void pm_twalk(const void *, int (*action)(const void *, const pm_VISIT, const int));
+#else
+EXT void pm_twalk(const void *, void (*action)(const void *, const pm_VISIT, const int));
+#endif
 
 EXT void replace_string(char *, int, char *, char *);
 EXT int delete_line_from_file(int, char *);

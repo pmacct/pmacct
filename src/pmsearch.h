@@ -44,8 +44,6 @@ typedef struct pm_node_t
 
 typedef const struct pm_node_t *pm_const_node;
 
-#define CHECK_TREE(a)
-
 /* The tsearch routines are very interesting. They make many
    assumptions about the compiler.  It assumes that the first field
    in node must be the "key" field, which points to the datum.
@@ -60,7 +58,7 @@ typedef enum
 __pm_VISIT;
 
 typedef int (*pm_compar_fn_t) (const void *, const void *);
-typedef void (*pm_action_fn_t) (const void *__nodep, __pm_VISIT __value, int __level);
+typedef int (*pm_action_fn_t) (const void *__nodep, __pm_VISIT __value, int __level);
 typedef void (*pm_free_fn_t) (void *__nodep);
 
 /* prototypes */

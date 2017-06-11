@@ -1239,14 +1239,17 @@ void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, 
 #endif
 }
 
+#if defined LINUX
+void pm_twalk(const void *root, int (*action)(const void *nodep, const pm_VISIT which, const int depth))
+{
+  __pm_twalk(root, action);
+}
+#else
 void pm_twalk(const void *root, void (*action)(const void *nodep, const pm_VISIT which, const int depth))
 {
-#if defined LINUX
-  __pm_twalk(root, action);
-#else
   twalk(root, action);
-#endif
 }
+#endif
 
 void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 {

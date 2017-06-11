@@ -204,8 +204,6 @@ __pm_tsearch (const void *key, void **vrootp, pm_compar_fn_t compar)
   if (root != NULL)
     SETBLACK(root);
 
-  CHECK_TREE (root);
-
   nextp = rootp;
   while (DEREFNODEPTR(nextp) != NULL)
     {
@@ -269,7 +267,6 @@ __pm_tfind (const void *key, void *const *vrootp, pm_compar_fn_t compar)
     return NULL;
 
   root = DEREFNODEPTR(rootp);
-  CHECK_TREE (root);
 
   while (DEREFNODEPTR(rootp) != NULL)
     {
@@ -307,8 +304,6 @@ __pm_tdelete (const void *key, void **vrootp, pm_compar_fn_t compar)
   p = DEREFNODEPTR(rootp);
   if (p == NULL)
     return NULL;
-
-  CHECK_TREE (p);
 
   root = DEREFNODEPTR(rootp);
   while ((cmp = (*compar) (key, root->key)) != 0)
@@ -595,8 +590,6 @@ __pm_twalk (const void *vroot, pm_action_fn_t action)
 {
   pm_const_node root = (pm_const_node) vroot;
 
-  CHECK_TREE ((pm_node) root);
-
   if (root != NULL && action != NULL)
     pm_trecurse (root, action, 0);
 }
@@ -619,8 +612,6 @@ void
 __pm_tdestroy (void *vroot, pm_free_fn_t freefct)
 {
   pm_node root = (pm_node) vroot;
-
-  CHECK_TREE (root);
 
   if (root != NULL)
     pm_tdestroy_recurse (root, freefct);
