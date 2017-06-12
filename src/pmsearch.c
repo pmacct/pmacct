@@ -85,8 +85,6 @@
 
 #define __PMSEARCH_C
 
-#if defined LINUX
-
 /* includes */
 #include "pmacct.h"
 #include <stdalign.h>
@@ -185,8 +183,7 @@ pm_maybe_split_for_insert (pm_node *rootp, pm_node *parentp, pm_node *gparentp,
 /* Find or insert datum into search tree.
    KEY is the key to be located, ROOTP is the address of tree root,
    COMPAR the ordering function.  */
-void *
-__pm_tsearch (const void *key, void **vrootp, pm_compar_fn_t compar)
+void * __pm_tsearch (const void *key, void **vrootp, pm_compar_fn_t compar)
 {
   pm_node q, root;
   pm_node *parentp = NULL, *gparentp = NULL;
@@ -257,8 +254,7 @@ __pm_tsearch (const void *key, void **vrootp, pm_compar_fn_t compar)
 /* Find datum in search tree.
    KEY is the key to be located, ROOTP is the address of tree root,
    COMPAR the ordering function.  */
-void *
-__pm_tfind (const void *key, void *const *vrootp, pm_compar_fn_t compar)
+void *pm_tfind (const void *key, void **vrootp, pm_compar_fn_t compar)
 {
   pm_node root;
   pm_node *rootp = (pm_node *) vrootp;
@@ -285,8 +281,7 @@ __pm_tfind (const void *key, void *const *vrootp, pm_compar_fn_t compar)
 /* Delete node with given key.
    KEY is the key to be deleted, ROOTP is the address of the root of tree,
    COMPAR the comparison function.  */
-void *
-__pm_tdelete (const void *key, void **vrootp, pm_compar_fn_t compar)
+void *pm_tdelete (const void *key, void **vrootp, pm_compar_fn_t compar)
 {
   pm_node p, q, r, retval;
   int cmp;
@@ -562,42 +557,53 @@ __pm_tdelete (const void *key, void **vrootp, pm_compar_fn_t compar)
 
 /* Walk the nodes of a tree.
    ROOT is the root of the tree to be walked, ACTION the function to be
-   called at each node.  LEVEL is the level of ROOT in the whole tree.  */
-static void
-pm_trecurse (const void *vroot, pm_action_fn_t action, int level)
+   called at each node.  LEVEL is the level of ROOT in the whole tree.
+   RET, the return level from ACTION, says if continue (TRUE) or break
+   (FALSE), ie. due to budgeted traversal */
+static void pm_trecurse (const void *vroot, pm_action_fn_t action, int level, void *extra)
 {
+  int ret = TRUE;
   pm_const_node root = (pm_const_node) vroot;
 
-  if (LEFT(root) == NULL && RIGHT(root) == NULL)
-    (*action) (root, leaf, level);
-  else
-    {
-      (*action) (root, preorder, level);
-      if (LEFT(root) != NULL)
-	pm_trecurse (LEFT(root), action, level + 1);
-      (*action) (root, postorder, level);
-      if (RIGHT(root) != NULL)
-	pm_trecurse (RIGHT(root), action, level + 1);
-      (*action) (root, endorder, level);
-    }
+  if (LEFT(root) == NULL && RIGHT(root) == NULL) {
+    ret = (*action) (root, leaf, level, extra);
+  }
+  else {
+    ret = (*action) (root, preorder, level, extra);
+    if (!ret) goto exit_lane;
+
+    if (LEFT(root) != NULL)
+      pm_trecurse (LEFT(root), action, level + 1, extra);
+
+    ret = (*action) (root, postorder, level, extra);
+    if (!ret) goto exit_lane;
+
+    if (RIGHT(root) != NULL)
+      pm_trecurse (RIGHT(root), action, level + 1, extra);
+
+    ret = (*action) (root, endorder, level, extra);
+    if (!ret) goto exit_lane;
+  }
+
+  exit_lane:
+
+  return;
 }
 
 /* Walk the nodes of a tree.
    ROOT is the root of the tree to be walked, ACTION the function to be
    called at each node.  */
-void
-__pm_twalk (const void *vroot, pm_action_fn_t action)
+void pm_twalk (const void *vroot, pm_action_fn_t action, void *extra)
 {
   pm_const_node root = (pm_const_node) vroot;
 
   if (root != NULL && action != NULL)
-    pm_trecurse (root, action, 0);
+    pm_trecurse (root, action, 0, extra);
 }
 
 /* The standardized functions miss an important functionality: the
    tree cannot be removed easily.  We provide a function to do this.  */
-static void
-pm_tdestroy_recurse (pm_node root, pm_free_fn_t freefct)
+static void pm_tdestroy_recurse (pm_node root, pm_free_fn_t freefct)
 {
   if (LEFT(root) != NULL)
     pm_tdestroy_recurse (LEFT(root), freefct);
@@ -608,12 +614,10 @@ pm_tdestroy_recurse (pm_node root, pm_free_fn_t freefct)
   free (root);
 }
 
-void
-__pm_tdestroy (void *vroot, pm_free_fn_t freefct)
+void __pm_tdestroy (void *vroot, pm_free_fn_t freefct)
 {
   pm_node root = (pm_node) vroot;
 
   if (root != NULL)
     pm_tdestroy_recurse (root, freefct);
 }
-#endif

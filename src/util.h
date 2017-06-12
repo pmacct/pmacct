@@ -176,14 +176,7 @@ EXT void pm_scandir_free(struct dirent ***, int);
 EXT int pm_alphasort(const void *, const void *);
 
 EXT void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
-EXT void *pm_tfind(const void *, void *const *, int (*compar)(const void *, const void *));
-EXT void *pm_tdelete(const void *, void **, int (*compar)(const void *, const void *));
 EXT void pm_tdestroy(void **, void (*free_node)(void *));
-#if defined LINUX
-EXT void pm_twalk(const void *, int (*action)(const void *, const pm_VISIT, const int));
-#else
-EXT void pm_twalk(const void *, void (*action)(const void *, const pm_VISIT, const int));
-#endif
 
 EXT void replace_string(char *, int, char *, char *);
 EXT int delete_line_from_file(int, char *);

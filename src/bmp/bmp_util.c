@@ -203,7 +203,7 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
   if (!bms) return;
 
-  pm_twalk(bmpp->bgp_peers, bgp_peers_bintree_walk_delete);
+  pm_twalk(bmpp->bgp_peers, bgp_peers_bintree_walk_delete, NULL);
 
   pm_tdestroy(&bmpp->bgp_peers, bgp_peer_free);
 

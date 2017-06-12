@@ -65,15 +65,9 @@
 #include <signal.h>
 #include <syslog.h>
 #include <sys/resource.h>
-#if defined LINUX
-#include "pmsearch.h"
-typedef __pm_VISIT pm_VISIT;
-#else
-#include <search.h>
-typedef VISIT pm_VISIT;
-#endif
 #include <dirent.h>
 #include <limits.h>
+#include "pmsearch.h"
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)

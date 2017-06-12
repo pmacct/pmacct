@@ -1204,63 +1204,22 @@ void *pm_tsearch(const void *key, void **rootp, int (*compar)(const void *key1, 
   if (alloc_size) {
     alloc_key = malloc(alloc_size);
     memcpy(alloc_key, key, alloc_size);
-#if defined LINUX
     ret_key = __pm_tsearch(alloc_key, rootp, compar);
-#else
-    ret_key = tsearch(alloc_key, rootp, compar);
-#endif
 
     if ((*(void **) ret_key) != alloc_key) free(alloc_key);
 
     return ret_key;
   }
-#if defined LINUX
   else return __pm_tsearch(key, rootp, compar); 
-#else
-  else return tsearch(key, rootp, compar); 
-#endif
 }
-
-void *pm_tfind(const void *key, void *const *rootp, int (*compar) (const void *key1, const void *key2))
-{
-#if defined LINUX
-  return __pm_tfind(key, rootp, compar);
-#else
-  return tfind(key, rootp, compar);
-#endif
-}
-
-void *pm_tdelete(const void *key, void **rootp, int (*compar)(const void *key1, const void *key2))
-{
-#if defined LINUX
-  return __pm_tdelete(key, rootp, compar);
-#else
-  return tdelete(key, rootp, compar);
-#endif
-}
-
-#if defined LINUX
-void pm_twalk(const void *root, int (*action)(const void *nodep, const pm_VISIT which, const int depth))
-{
-  __pm_twalk(root, action);
-}
-#else
-void pm_twalk(const void *root, void (*action)(const void *nodep, const pm_VISIT which, const int depth))
-{
-  twalk(root, action);
-}
-#endif
 
 void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 {
   /* in implementations where tdestroy() is not defined, tdelete() against
      the root node of the three destroys also the last few remaining bits */
-#if defined LINUX
+#if (defined HAVE_TDESTROY)
   __pm_tdestroy((*root), free_node);
 #else
-#if (defined HAVE_TDESTROY)
-  tdestroy((*root), free_node);
-#endif
   (*root) = NULL;
 #endif
 }

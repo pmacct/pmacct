@@ -16,8 +16,6 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#if defined LINUX
-
 /* definitions */
 typedef struct pm_node_t
 {
@@ -55,11 +53,11 @@ typedef enum
   endorder,
   leaf
 }
-__pm_VISIT;
+pm_VISIT;
 
 typedef int (*pm_compar_fn_t) (const void *, const void *);
-typedef int (*pm_action_fn_t) (const void *__nodep, __pm_VISIT __value, int __level);
-typedef void (*pm_free_fn_t) (void *__nodep);
+typedef int (*pm_action_fn_t) (const void *, pm_VISIT, int, void *);
+typedef void (*pm_free_fn_t) (void *);
 
 /* prototypes */
 #if (!defined __PMSEARCH_C)
@@ -69,19 +67,18 @@ typedef void (*pm_free_fn_t) (void *__nodep);
 #endif
 /* Search for an entry matching the given KEY in the tree pointed to
    by *ROOTP and insert a new element if not found.  */
-EXT void *__pm_tsearch (const void *__key, void **__rootp, pm_compar_fn_t __compar);
+EXT void *__pm_tsearch (const void *, void **, pm_compar_fn_t);
 
 /* Search for an entry matching the given KEY in the tree pointed to
    by *ROOTP.  If no matching entry is available return NULL.  */
-EXT void *__pm_tfind (const void *__key, void *const *__rootp, pm_compar_fn_t __compar);
+EXT void *pm_tfind (const void *, void **, pm_compar_fn_t);
 
 /* Remove the element matching KEY from the tree pointed to by *ROOTP.  */
-EXT void *__pm_tdelete (const void *__restrict __key, void **__restrict __rootp, pm_compar_fn_t __compar);
+EXT void *pm_tdelete (const void *, void **, pm_compar_fn_t);
 
 /* Walk through the whole tree and call the ACTION callback for every node or leaf.  */
-EXT void __pm_twalk (const void *__root, pm_action_fn_t __action);
+EXT void pm_twalk (const void *, pm_action_fn_t, void *);
 
 /* Destroy the whole tree, call FREEFCT for each node or leaf.  */
-EXT void __pm_tdestroy (void *__root, pm_free_fn_t __freefct);
+EXT void __pm_tdestroy (void *, pm_free_fn_t);
 #undef EXT
-#endif

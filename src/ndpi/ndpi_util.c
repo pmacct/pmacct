@@ -225,7 +225,7 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 */
 
   idx = (vlan_id + lower_ip + upper_ip + iph->protocol + lower_port + upper_port) % workflow->prefs.num_roots;
-  ret = ndpi_tfind(&flow, &workflow->ndpi_flows_root[idx], ndpi_workflow_node_cmp);
+  ret = pm_tfind(&flow, &workflow->ndpi_flows_root[idx], ndpi_workflow_node_cmp);
 
   if (ret == NULL) {
     if (workflow->stats.ndpi_flow_count == workflow->prefs.max_ndpi_flows) {
@@ -268,7 +268,7 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
       }
       else memset(newflow->dst_id, 0, SIZEOF_ID_STRUCT);
 
-      ndpi_tsearch(newflow, &workflow->ndpi_flows_root[idx], ndpi_workflow_node_cmp); /* Add */
+      pm_tsearch(newflow, &workflow->ndpi_flows_root[idx], ndpi_workflow_node_cmp, 0); /* Add */
       workflow->stats.ndpi_flow_count++;
 
       *src = newflow->src_id, *dst = newflow->dst_id;
@@ -481,12 +481,12 @@ u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct 
 /*
  * Proto Guess Walker
  */
-void ndpi_node_proto_guess_walker(const void *node, ndpi_VISIT which, int depth, void *user_data)
+int ndpi_node_proto_guess_walker(const void *node, const pm_VISIT which, const int depth, void *user_data)
 {
   struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
   struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
 
-  if (!flow || !workflow) return;
+  if (!flow || !workflow) return FALSE;
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
     if ((!flow->detection_completed) && flow->ndpi_flow)
@@ -499,20 +499,21 @@ void ndpi_node_proto_guess_walker(const void *node, ndpi_VISIT which, int depth,
 
     process_ndpi_collected_info(workflow, flow);
   }
+
+  return TRUE;
 }
 
 /*
  * Idle Scan Walker
  */
-void ndpi_node_idle_scan_walker(const void *node, ndpi_VISIT which, int depth, void *user_data)
+int ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int depth, void *user_data)
 {
   struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
   struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
 
-  if (!flow || !workflow) return;
+  if (!flow || !workflow) return FALSE;
 
-  /* XXX: optimise with a budget-based walk */
-  if (workflow->num_idle_flows == workflow->prefs.idle_scan_budget) return;
+  if (workflow->num_idle_flows == workflow->prefs.idle_scan_budget) return FALSE;
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
     if (flow->last_seen + workflow->prefs.idle_max_time < workflow->last_time) {
@@ -522,6 +523,8 @@ void ndpi_node_idle_scan_walker(const void *node, ndpi_VISIT which, int depth, v
       workflow->idle_flows[workflow->num_idle_flows++] = flow;
     }
   }
+
+  return TRUE;
 }
 
 void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
@@ -530,12 +533,12 @@ void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
 
   if ((workflow->last_idle_scan_time + workflow->prefs.idle_scan_period) < workflow->last_time) {
     /* scan for idle flows */
-    ndpi_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_node_idle_scan_walker, workflow);
+    pm_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_node_idle_scan_walker, workflow);
 
     /* remove idle flows (unfortunately we cannot do this inline) */
     while (workflow->num_idle_flows > 0) {
       /* search and delete the idle flow from the "ndpi_flow_root" (see struct reader thread) - here flows are the node of a b-tree */
-      ndpi_tdelete(workflow->idle_flows[--workflow->num_idle_flows], &workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_workflow_node_cmp);
+      pm_tdelete(workflow->idle_flows[--workflow->num_idle_flows], &workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_workflow_node_cmp);
 
       /* free the memory associated to idle flow in "idle_flows" - (see struct reader thread)*/
       ndpi_free_flow_info_half(workflow->idle_flows[workflow->num_idle_flows]);
