@@ -1179,7 +1179,7 @@ int bgp_peers_bintree_walk_print(const void *nodep, const pm_VISIT which, const 
   peer = (*(struct bgp_peer **) nodep);
   bms = bgp_select_misc_db(peer->type);
 
-  if (!bms) return;
+  if (!bms) return FALSE;
 
   if (!peer) Log(LOG_INFO, "INFO ( %s/%s ): bgp_peers_bintree_walk_print(): null\n", config.name, bms->log_str);
   else {
@@ -1198,11 +1198,11 @@ int bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, const
 
   peer = (*(struct bgp_peer **) nodep);
 
-  if (!peer) return;
+  if (!peer) return FALSE;
 
   bms = bgp_select_misc_db(peer->type);
 
-  if (!bms) return;
+  if (!bms) return FALSE;
 
   saved_peer_str = bms->peer_str;
   bms->peer_str = peer_str;
