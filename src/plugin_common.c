@@ -462,7 +462,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       if (config.nfacctd_stitching) {
 	if (cache_ptr->stitch) {
 	  if (data->time_end.tv_sec) {
-	    if (data->time_end.tv_sec > cache_ptr->stitch->timestamp_max.tv_sec ||
+	    if (data->time_end.tv_sec > cache_ptr->stitch->timestamp_max.tv_sec && 
 		data->time_end.tv_usec > cache_ptr->stitch->timestamp_max.tv_usec)
 	      memcpy(&cache_ptr->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
 	  }

@@ -909,7 +909,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     if (config.nfacctd_stitching) {
       if (Cursor->stitch) {
         if (data->time_end.tv_sec) {
-          if (data->time_end.tv_sec > Cursor->stitch->timestamp_max.tv_sec ||
+          if (data->time_end.tv_sec > Cursor->stitch->timestamp_max.tv_sec && 
               data->time_end.tv_usec > Cursor->stitch->timestamp_max.tv_usec)
             memcpy(&Cursor->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
         }
