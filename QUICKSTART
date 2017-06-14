@@ -738,7 +738,13 @@ performance tuning are:
 * queue.buffering.max.ms : how long to wait for batch.num.messages to fill up
   in the local queue."
 
-These knobs can be set and supplied to pmacct via kafka_config_file. 
+Also, intuitively, queue.buffering.max.messages, the "Maximum number of messages
+allowed on the producer queue" should be kept greater than the batch.num.messages.
+These knobs can all be in pmacct to Kafka via a file pointed by kafka_config_file,
+as global settings, ie.:
+ 
+global, queue.buffering.max.messages, 8000000
+global, batch.num.messages, 100000
 
 
 X. Internal buffering and queueing
