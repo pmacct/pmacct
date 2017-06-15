@@ -466,7 +466,7 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
  */
 u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
 {
-  if (!flow || !workflow) return;
+  if (!flow || !workflow) return 0;
 
   flow->detected_protocol = ndpi_guess_undetected_protocol(workflow->ndpi_struct,
                                                            flow->protocol,
