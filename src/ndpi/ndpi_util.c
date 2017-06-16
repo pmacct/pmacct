@@ -479,31 +479,6 @@ u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct 
 }
 
 /*
- * Proto Guess Walker
- */
-int ndpi_node_proto_guess_walker(const void *node, const pm_VISIT which, const int depth, void *user_data)
-{
-  struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
-  struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
-
-  if (!flow || !workflow) return FALSE;
-
-  if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
-    if ((!flow->detection_completed) && flow->ndpi_flow)
-      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
-
-    if (workflow->prefs.protocol_guess) {
-      if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
-        node_guess_undetected_protocol(workflow, flow);
-    }
-
-    process_ndpi_collected_info(workflow, flow);
-  }
-
-  return TRUE;
-}
-
-/*
  * Idle Scan Walker
  */
 int ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int depth, void *user_data)
@@ -517,8 +492,6 @@ int ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
     if (flow->last_seen + workflow->prefs.idle_max_time < workflow->last_time) {
-      ndpi_node_proto_guess_walker(node, which, depth, user_data);
-
       /* adding to a queue (we can't delete it from the tree inline) */
       workflow->idle_flows[workflow->num_idle_flows++] = flow;
     }
@@ -543,6 +516,7 @@ void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
       /* free the memory associated to idle flow in "idle_flows" - (see struct reader thread)*/
       ndpi_free_flow_info_half(workflow->idle_flows[workflow->num_idle_flows]);
       ndpi_free(workflow->idle_flows[workflow->num_idle_flows]);
+      workflow->stats.ndpi_flow_count--;
     }
 
     if (++workflow->idle_scan_idx == workflow->prefs.num_roots) workflow->idle_scan_idx = 0;

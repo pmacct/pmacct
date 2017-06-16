@@ -135,6 +135,5 @@ EXT struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *, struct pack
 EXT u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *, struct ndpi_flow_info *);
 EXT void ndpi_idle_flows_cleanup(struct ndpi_workflow *);
 
-EXT int ndpi_node_proto_guess_walker(const void *, const pm_VISIT, const int, void *);
 EXT int ndpi_node_idle_scan_walker(const void *, const pm_VISIT, const int, void *);
 #undef EXT
