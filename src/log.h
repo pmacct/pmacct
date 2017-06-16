@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -60,6 +60,9 @@ struct _log_notifications {
   struct log_notification bmp_peers_throttling;
   struct log_notification geoip_ipv4_file_null;
   struct log_notification geoip_ipv6_file_null;
+#ifdef WITH_NDPI
+  struct log_notification ndpi_cache_full;
+#endif
 };
 
 /* prototypes */

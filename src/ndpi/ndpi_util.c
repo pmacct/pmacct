@@ -55,6 +55,8 @@ struct ndpi_workflow *ndpi_workflow_init()
   struct ndpi_detection_module_struct *module = ndpi_init_detection_module();
   struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
 
+  log_notification_init(&log_notifications.ndpi_cache_full);
+
   workflow->prefs.decode_tunnels = FALSE;
 
   if (config.ndpi_num_roots) workflow->prefs.num_roots = config.ndpi_num_roots;
@@ -102,7 +104,7 @@ int ndpi_workflow_node_cmp(const void *a, const void *b)
   return(0);
 }
 
-struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
+struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
 						 struct packet_ptrs *pptrs,
 						 u_int16_t vlan_id,
 						 const struct ndpi_iphdr *iph,
@@ -220,7 +222,7 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   flow.lower_port = lower_port, flow.upper_port = upper_port;
 
 /*
-  Log(LOG_DEBUG, "DEBUG ( %s/core ): "get_ndpi_flow_info(): [%u][%u:%u <-> %u:%u]\n",
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): "ndpi_get_flow_info(): [%u][%u:%u <-> %u:%u]\n",
 	iph->protocol, lower_ip, ntohs(lower_port), upper_ip, ntohs(upper_port));
 */
 
@@ -229,15 +231,19 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
 
   if (ret == NULL) {
     if (workflow->stats.ndpi_flow_count == workflow->prefs.max_ndpi_flows) {
-      Log(LOG_ERR, "ERROR ( %s/core ): nDPI maximum flow count (%u) has been exceeded.\n", config.name, workflow->prefs.max_ndpi_flows);
-      exit(1);
+      if (!log_notification_isset(&log_notifications.ndpi_cache_full, pptrs->pkthdr->ts.tv_sec)) {
+        Log(LOG_WARNING, "WARN ( %s/core ): nDPI maximum flow count (%u) has been exceeded.\n", config.name, workflow->prefs.max_ndpi_flows);
+	log_notification_set(&log_notifications.ndpi_cache_full, pptrs->pkthdr->ts.tv_sec, 60);
+      }
+
+      return(NULL);
     }
     else {
       struct ndpi_flow_info *newflow = (struct ndpi_flow_info*)malloc(sizeof(struct ndpi_flow_info));
 
       if (newflow == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): get_ndpi_flow_info() not enough memory (1).\n", config.name);
-	return(NULL);
+	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (1).\n", config.name);
+	exit(1);
       }
 
       memset(newflow, 0, sizeof(struct ndpi_flow_info));
@@ -248,23 +254,20 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
       newflow->src_to_dst_direction = *src_to_dst_direction;
 
       if ((newflow->ndpi_flow = ndpi_flow_malloc(SIZEOF_FLOW_STRUCT)) == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): get_ndpi_flow_info() not enough memory (2).\n", config.name);
-	free(newflow);
-	return(NULL);
+	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (2).\n", config.name);
+	exit(1);
       }
       else memset(newflow->ndpi_flow, 0, SIZEOF_FLOW_STRUCT);
 
       if ((newflow->src_id = ndpi_malloc(SIZEOF_ID_STRUCT)) == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): get_ndpi_flow_info() not enough memory (3).\n", config.name);
-	free(newflow);
-	return(NULL);
+	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (3).\n", config.name);
+	exit(1);
       }
       else memset(newflow->src_id, 0, SIZEOF_ID_STRUCT);
 
       if ((newflow->dst_id = ndpi_malloc(SIZEOF_ID_STRUCT)) == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): get_ndpi_flow_info() not enough memory (4).\n", config.name);
-	free(newflow);
-	return(NULL);
+	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (4).\n", config.name);
+	exit(1);
       }
       else memset(newflow->dst_id, 0, SIZEOF_ID_STRUCT);
 
@@ -289,7 +292,7 @@ struct ndpi_flow_info *get_ndpi_flow_info(struct ndpi_workflow *workflow,
   }
 }
 
-struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
+struct ndpi_flow_info *ndpi_get_flow_info6(struct ndpi_workflow *workflow,
 						  struct packet_ptrs *pptrs,
 						  u_int16_t vlan_id,
 						  const struct ndpi_ipv6hdr *iph6,
@@ -318,21 +321,11 @@ struct ndpi_flow_info *get_ndpi_flow_info6(struct ndpi_workflow *workflow,
     iph.protocol = options[0];
   }
 
-  return(get_ndpi_flow_info(workflow, pptrs, vlan_id, &iph, iph6, ip_offset,
+  return(ndpi_get_flow_info(workflow, pptrs, vlan_id, &iph, iph6, ip_offset,
 			    sizeof(struct ndpi_ipv6hdr),
 			    ntohs(iph6->ip6_ctlun.ip6_un1.ip6_un1_plen),
 			    tcph, udph, sport, dport,
 			    src, dst, proto, payload, payload_len, src_to_dst_direction));
-}
-
-void process_ndpi_collected_info(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
-{
-  if (!workflow || !flow) return;
-
-  if (flow->detection_completed) {
-    ndpi_free_flow_info_half(flow);
-    workflow->stats.ndpi_flow_count--;
-  }
 }
 
 /*
@@ -365,14 +358,14 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   if (!workflow) return nproto;
 
   if (iph)
-    flow = get_ndpi_flow_info(workflow, pptrs, vlan_id, iph, NULL,
+    flow = ndpi_get_flow_info(workflow, pptrs, vlan_id, iph, NULL,
 			      ip_offset, ipsize,
 			      ntohs(iph->tot_len) - (iph->ihl * 4),
 			      &tcph, &udph, &sport, &dport,
 			      &src, &dst, &proto,
 			      &payload, &payload_len, &src_to_dst_direction);
   else if (iph6)
-    flow = get_ndpi_flow_info6(workflow, pptrs, vlan_id, iph6, ip_offset,
+    flow = ndpi_get_flow_info6(workflow, pptrs, vlan_id, iph6, ip_offset,
 			       &tcph, &udph, &sport, &dport,
 			       &src, &dst, &proto,
 			       &payload, &payload_len, &src_to_dst_direction);
@@ -406,11 +399,15 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
 
   if (flow->detection_completed) {
     if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
-      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct,
-						      flow->ndpi_flow);
-  }
+      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
 
-  process_ndpi_collected_info(workflow, flow);
+    if (workflow->prefs.protocol_guess) {
+      if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
+        ndpi_node_guess_undetected_protocol(workflow, flow);
+	flow->guess_completed = TRUE;
+      }
+    }
+  }
 
   return(flow->detected_protocol);
 }
@@ -464,7 +461,7 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
 /*
  * Guess Undetected Protocol
  */
-u_int16_t node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
+u_int16_t ndpi_node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
 {
   if (!flow || !workflow) return 0;
 
