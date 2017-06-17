@@ -30,6 +30,9 @@
 #define NDPI_NUM_ROOTS			512
 #define NDPI_MAXFLOWS			200000000
 #define NDPI_TICK_RESOLUTION		1000
+#define NDPI_GIVEUP_PROTO_TCP		10
+#define NDPI_GIVEUP_PROTO_UDP		8
+#define NDPI_GIVEUP_PROTO_OTHER		8	
 
 /* flow tracking */
 typedef struct ndpi_flow_info {
@@ -80,6 +83,9 @@ typedef struct ndpi_workflow_prefs {
   u_int32_t idle_scan_period;
   u_int32_t idle_max_time;
   u_int32_t idle_scan_budget; 
+  u_int8_t giveup_proto_tcp;
+  u_int8_t giveup_proto_udp;
+  u_int8_t giveup_proto_other;
 } ndpi_workflow_prefs_t;
 
 struct ndpi_workflow;

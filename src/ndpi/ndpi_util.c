@@ -77,6 +77,15 @@ struct ndpi_workflow *ndpi_workflow_init()
   if (config.ndpi_idle_scan_budget) workflow->prefs.idle_scan_budget = config.ndpi_idle_scan_budget;
   else workflow->prefs.idle_scan_budget = NDPI_IDLE_SCAN_BUDGET; 
 
+  if (config.ndpi_giveup_proto_tcp) workflow->prefs.giveup_proto_tcp = config.ndpi_giveup_proto_tcp;
+  else workflow->prefs.giveup_proto_tcp = NDPI_GIVEUP_PROTO_TCP;
+
+  if (config.ndpi_giveup_proto_udp) workflow->prefs.giveup_proto_udp = config.ndpi_giveup_proto_udp;
+  else workflow->prefs.giveup_proto_udp = NDPI_GIVEUP_PROTO_UDP;
+
+  if (config.ndpi_giveup_proto_other) workflow->prefs.giveup_proto_other = config.ndpi_giveup_proto_other;
+  else workflow->prefs.giveup_proto_other = NDPI_GIVEUP_PROTO_OTHER;
+
   workflow->ndpi_struct = module;
 
   if (workflow->ndpi_struct == NULL) {
@@ -391,8 +400,9 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
 							  ipsize, time, src, dst);
 
   if ((flow->detected_protocol.app_protocol != NDPI_PROTOCOL_UNKNOWN)
-     || ((proto == IPPROTO_UDP) && (flow->packets > 8))
-     || ((proto == IPPROTO_TCP) && (flow->packets > 10))) {
+     || ((proto == IPPROTO_UDP) && (flow->packets > workflow->prefs.giveup_proto_tcp))
+     || ((proto == IPPROTO_TCP) && (flow->packets > workflow->prefs.giveup_proto_udp))
+     || ((proto != IPPROTO_UDP && proto != IPPROTO_TCP) && (flow->packets > workflow->prefs.giveup_proto_other))) {
     /* New protocol detected or give up */
     flow->detection_completed = TRUE;
   }

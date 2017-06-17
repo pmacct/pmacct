@@ -5148,6 +5148,57 @@ int cfg_key_classifier_ndpi_idle_scan_budget(char *filename, char *name, char *v
   return changes;
 }
 
+int cfg_key_classifier_ndpi_giveup_proto_tcp(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_INFO, "INFO: [%s] 'classifier_ndpi_giveup_proto_tcp' has to be >= 1.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_giveup_proto_tcp = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_giveup_proto_tcp'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_classifier_ndpi_giveup_proto_udp(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_INFO, "INFO: [%s] 'classifier_ndpi_giveup_proto_udp' has to be >= 1.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_giveup_proto_udp = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_giveup_proto_udp'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_classifier_ndpi_giveup_proto_other(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list; 
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_INFO, "INFO: [%s] 'classifier_ndpi_giveup_proto_other' has to be >= 1.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.ndpi_giveup_proto_other = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_giveup_proto_other'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfprobe_timeouts(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

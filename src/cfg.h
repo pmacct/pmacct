@@ -500,6 +500,9 @@ struct configuration {
   u_int32_t ndpi_idle_scan_period;
   u_int32_t ndpi_idle_max_time;
   u_int32_t ndpi_idle_scan_budget;
+  int ndpi_giveup_proto_tcp;
+  int ndpi_giveup_proto_udp;
+  int ndpi_giveup_proto_other;
   char *nfprobe_timeouts;
   int nfprobe_id;
   int nfprobe_hoplimit;
