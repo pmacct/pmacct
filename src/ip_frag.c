@@ -74,7 +74,7 @@ int ip_fragment_handler(struct packet_ptrs *pptrs)
 
 int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
 {
-  struct my_iphdr *iphp = (struct my_iphdr *)pptrs->iph_ptr;
+  struct pm_iphdr *iphp = (struct pm_iphdr *)pptrs->iph_ptr;
   struct ip_fragment *fp, *candidate = NULL, *last_seen = NULL;
   unsigned int bucket = hash_fragment(iphp->ip_id, iphp->ip_src.s_addr,
 				      iphp->ip_dst.s_addr, iphp->ip_p);
@@ -140,7 +140,7 @@ int find_fragment(u_int32_t now, struct packet_ptrs *pptrs)
 
 int create_fragment(u_int32_t now, struct ip_fragment *fp, u_int8_t is_candidate, unsigned int bucket, struct packet_ptrs *pptrs)
 {
-  struct my_iphdr *iphp = (struct my_iphdr *)pptrs->iph_ptr;
+  struct pm_iphdr *iphp = (struct pm_iphdr *)pptrs->iph_ptr;
   struct ip_fragment *newf;
 
   if (!ipft_total_nodes) {

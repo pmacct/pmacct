@@ -520,7 +520,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   if (glob_pcapt) device.link_type = pcap_datalink(glob_pcapt);
   else if (config.uacctd_group) device.link_type = DLT_RAW;
   else device.link_type = 1;
-  device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+my_iphdr+my_tlhdr */
+  device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+pm_iphdr+pm_tlhdr */
 
   pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
   if (pcap_compile(device.dev_desc, &e->key.filter, value, 0, netmask) < 0) {

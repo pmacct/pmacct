@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -106,7 +106,7 @@ EXT void init_ip_flow_handler(); /* wrapper */
 EXT void init_ip4_flow_handler(); 
 EXT void ip_flow_handler(struct packet_ptrs *); 
 EXT void find_flow(struct timeval *, struct packet_ptrs *); 
-EXT void create_flow(struct timeval *, struct ip_flow *, u_int8_t, unsigned int, struct packet_ptrs *, struct my_iphdr *, struct my_tlhdr *, unsigned int); 
+EXT void create_flow(struct timeval *, struct ip_flow *, u_int8_t, unsigned int, struct packet_ptrs *, struct pm_iphdr *, struct pm_tlhdr *, unsigned int); 
 EXT void prune_old_flows(struct timeval *); 
 
 EXT unsigned int hash_flow(u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t);
@@ -122,7 +122,7 @@ EXT void ip_flow6_handler(struct packet_ptrs *);
 EXT unsigned int hash_flow6(u_int32_t, struct in6_addr *, struct in6_addr *);
 EXT unsigned int normalize_flow6(struct in6_addr *, struct in6_addr *, u_int16_t *, u_int16_t *);
 EXT void find_flow6(struct timeval *, struct packet_ptrs *);
-EXT void create_flow6(struct timeval *, struct ip_flow6 *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_hdr *, struct my_tlhdr *, unsigned int);
+EXT void create_flow6(struct timeval *, struct ip_flow6 *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_hdr *, struct pm_tlhdr *, unsigned int);
 EXT void prune_old_flows6(struct timeval *); 
 #endif
 

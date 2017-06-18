@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2008 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -100,112 +100,112 @@ void v8_2_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_2 *exp = (struct struct_export_v8_2 *) data;
 
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
 }
 
 void v8_3_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_3 *exp = (struct struct_export_v8_3 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
 }
 
 void v8_4_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_4 *exp = (struct struct_export_v8_4 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
 }
 
 void v8_5_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_5 *exp = (struct struct_export_v8_5 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
 }
 
 void v8_6_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_6 *exp = (struct struct_export_v8_6 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dstaddr);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dstaddr);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
 }
 
 void v8_7_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_7 *exp = (struct struct_export_v8_7 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->srcaddr);
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dstaddr);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->srcaddr);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dstaddr);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
 }
 
 void v8_8_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_8 *exp = (struct struct_export_v8_8 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->srcaddr);
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dstaddr);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->srcaddr);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dstaddr);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
 }
 
 void v8_9_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_9 *exp = (struct struct_export_v8_9 *) data;
 
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
 }
 
 void v8_10_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_10 *exp = (struct struct_export_v8_10 *) data;
 
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
 }
 
 void v8_11_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_11 *exp = (struct struct_export_v8_11 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
 }
 
 void v8_12_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_12 *exp = (struct struct_export_v8_12 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
 }
 
 void v8_13_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_13 *exp = (struct struct_export_v8_13 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
 }
 
 void v8_14_filter_handler(struct packet_ptrs *pptrs, void *data)
 {
   struct struct_export_v8_14 *exp = (struct struct_export_v8_14 *) data;
 
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
-  Assign32(((struct my_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
-  Assign8(((struct my_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
-  Assign16(((struct my_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp->src_prefix);
+  Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp->dst_prefix);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, exp->prot);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp->tos);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, exp->srcport);
+  Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, exp->dstport);
 }

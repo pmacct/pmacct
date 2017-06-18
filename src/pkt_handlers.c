@@ -1047,7 +1047,7 @@ void src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    pdata->primitives.src_ip.address.ipv4.s_addr = ((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr;
+    pdata->primitives.src_ip.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr;
     pdata->primitives.src_ip.family = AF_INET;
   }
 #if defined ENABLE_IPV6 
@@ -1063,7 +1063,7 @@ void dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr;
+    pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr;
     pdata->primitives.dst_ip.family = AF_INET;
   }
 #if defined ENABLE_IPV6 
@@ -1079,7 +1079,7 @@ void src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l4_proto == IPPROTO_UDP || pptrs->l4_proto == IPPROTO_TCP)
-    pdata->primitives.src_port = ntohs(((struct my_tlhdr *) pptrs->tlh_ptr)->src_port);
+    pdata->primitives.src_port = ntohs(((struct pm_tlhdr *) pptrs->tlh_ptr)->src_port);
   else pdata->primitives.src_port = 0;
 }
 
@@ -1088,7 +1088,7 @@ void dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l4_proto == IPPROTO_UDP || pptrs->l4_proto == IPPROTO_TCP)
-    pdata->primitives.dst_port = ntohs(((struct my_tlhdr *) pptrs->tlh_ptr)->dst_port);
+    pdata->primitives.dst_port = ntohs(((struct pm_tlhdr *) pptrs->tlh_ptr)->dst_port);
   else pdata->primitives.dst_port = 0;
 }
 
@@ -1098,7 +1098,7 @@ void ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   u_int32_t tos = 0;
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    pdata->primitives.tos = ((struct my_iphdr *) pptrs->iph_ptr)->ip_tos;
+    pdata->primitives.tos = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_tos;
   }
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
@@ -1127,7 +1127,7 @@ void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  if (pptrs->l3_proto == ETHERTYPE_IP) pdata->pkt_len = ntohs(((struct my_iphdr *) pptrs->iph_ptr)->ip_len);
+  if (pptrs->l3_proto == ETHERTYPE_IP) pdata->pkt_len = ntohs(((struct pm_iphdr *) pptrs->iph_ptr)->ip_len);
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) pdata->pkt_len = ntohs(((struct ip6_hdr *) pptrs->iph_ptr)->ip6_plen)+IP6HdrSz;
 #endif
@@ -5319,7 +5319,7 @@ void src_host_country_geoip_handler(struct channels_list_entry *chptr, struct pa
 
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
+      pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
   }
 #if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
@@ -5338,7 +5338,7 @@ void dst_host_country_geoip_handler(struct channels_list_entry *chptr, struct pa
 
   if (config.geoip_ipv4) {
     if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
+      pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
   }
 #if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
@@ -5382,7 +5382,7 @@ void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   memset(&pptrs->geoipv2_src, 0, sizeof(pptrs->geoipv2_src));
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr, AF_INET);
+    raw_to_sa(sa, (char *) &((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr, AF_INET);
   }
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
@@ -5408,7 +5408,7 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   memset(&pptrs->geoipv2_dst, 0, sizeof(pptrs->geoipv2_dst));
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    raw_to_sa(sa, (char *) &((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr, AF_INET);
+    raw_to_sa(sa, (char *) &((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr, AF_INET);
   }
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {

@@ -1000,7 +1000,7 @@ void bgp_md5_file_unload(struct bgp_md5_table *t)
 
 void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
 {
-  struct my_tcp_md5sig md5sig;
+  struct pm_tcp_md5sig md5sig;
   struct sockaddr_storage ss_md5sig;
   int rc, keylen, idx = 0, ss_md5sig_len;
 

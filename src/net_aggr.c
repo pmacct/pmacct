@@ -1347,7 +1347,7 @@ as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, 
 
   if (pptrs->l3_proto == ETHERTYPE_IP) { 
     addr.family = AF_INET;
-    addr.address.ipv4.s_addr = ((struct my_iphdr *) pptrs->iph_ptr)->ip_src.s_addr;
+    addr.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr;
     res = binsearch(nt, nc, &addr);
     if (!res) return 0;
     else return res->as;
@@ -1375,7 +1375,7 @@ as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, 
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     addr.family = AF_INET;
-    addr.address.ipv4.s_addr = ((struct my_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr;
+    addr.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr;
     res = binsearch(nt, nc, &addr);
     if (!res) return 0;
     else return res->as;

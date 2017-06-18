@@ -142,7 +142,7 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
 
   /* IPv4 fragments handling */
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    if ((((struct my_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_OFFMASK))) {
+    if ((((struct pm_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_OFFMASK))) {
       if (pptrs->frag_first_found) {
 	// XXX
       }
@@ -408,7 +408,7 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   }
 
   if (proto == IPPROTO_TCP) {
-    struct my_tcphdr *tcph = (struct my_tcphdr *) pptrs->tlh_ptr;
+    struct pm_tcphdr *tcph = (struct pm_tcphdr *) pptrs->tlh_ptr;
     if (tcph->th_flags & (TH_FIN|TH_RST)) flow->tcp_finished = TRUE;
   }
 

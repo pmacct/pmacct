@@ -290,14 +290,14 @@ void ieee_802_11_handler(const struct pcap_pkthdr *h, register struct packet_ptr
 void raw_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs)
 {
   register u_int16_t caplen = h->caplen;
-  struct my_iphdr *hdr;
+  struct pm_iphdr *hdr;
 
   if (caplen < 4) {
     pptrs->iph_ptr = NULL;
     return;
   } 
 
-  hdr = (struct my_iphdr *) pptrs->packet_ptr;
+  hdr = (struct pm_iphdr *) pptrs->packet_ptr;
   switch (IP_V(hdr)) {
   case 4:
     pptrs->iph_ptr = pptrs->packet_ptr; 

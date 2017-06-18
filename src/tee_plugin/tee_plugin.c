@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -380,25 +380,25 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
   else {
     char *buf_ptr = tee_send_buf;
     struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
-    struct my_iphdr *i4h = (struct my_iphdr *) buf_ptr;
+    struct pm_iphdr *i4h = (struct pm_iphdr *) buf_ptr;
 #if defined ENABLE_IPV6
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
     struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
 #endif
-    struct my_udphdr *uh;
+    struct pm_udphdr *uh;
 
     if (msg->agent.sa_family == target->sa_family) {
       /* UDP header first */
       if (target->sa_family == AF_INET) {
         buf_ptr += IP4HdrSz;
-        uh = (struct my_udphdr *) buf_ptr;
+        uh = (struct pm_udphdr *) buf_ptr;
         uh->uh_sport = sa->sin_port;
         uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
       }
 #if defined ENABLE_IPV6
       else if (target->sa_family == AF_INET6) {
         buf_ptr += IP6HdrSz;
-        uh = (struct my_udphdr *) buf_ptr;
+        uh = (struct pm_udphdr *) buf_ptr;
         uh->uh_sport = sa6->sin6_port;
         uh->uh_dport = ((struct sockaddr_in6 *)target)->sin6_port;
       }

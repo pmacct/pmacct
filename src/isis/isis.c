@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -371,7 +371,7 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
 
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->igp_src) {
-	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+	memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
 	result = route_node_match_ipv4(area->route_table[level-1], &pref4);
 
 	if (result) {
@@ -385,7 +385,7 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
       }
 
       if (!pptrs->igp_dst) {
-	memcpy(&pref4, &((struct my_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+	memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
 	result = route_node_match_ipv4(area->route_table[level-1], &pref4);
 
 	if (result) {

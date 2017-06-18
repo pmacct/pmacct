@@ -219,7 +219,7 @@ void init_class_accumulators(struct packet_ptrs *pptrs, struct ip_flow_common *f
 
 void handle_class_accumulators(struct packet_ptrs *pptrs, struct ip_flow_common *fp, unsigned int idx)
 {
-  struct my_iphdr *iphp = (struct my_iphdr *)pptrs->iph_ptr; 
+  struct pm_iphdr *iphp = (struct pm_iphdr *)pptrs->iph_ptr; 
 #if defined ENABLE_IPV6
   struct ip6_hdr *ip6hp = (struct ip6_hdr *)pptrs->iph_ptr; 
 #endif
