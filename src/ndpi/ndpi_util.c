@@ -407,7 +407,12 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
     flow->detection_completed = TRUE;
   }
 
-  if (flow->detection_completed) {
+  if (proto == IPPROTO_TCP) {
+    struct my_tcphdr *tcph = (struct my_tcphdr *) pptrs->tlh_ptr;
+    if (tcph->th_flags & (TH_FIN|TH_RST)) flow->tcp_finished = TRUE;
+  }
+
+  if (flow->detection_completed || flow->tcp_finished) {
     if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
       flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
 
@@ -498,7 +503,9 @@ int ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int
   if (workflow->num_idle_flows == workflow->prefs.idle_scan_budget) return FALSE;
 
   if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
-    if (flow->last_seen + workflow->prefs.idle_max_time < workflow->last_time) {
+    /* expire Idle and TCP finished flows */
+    if ((flow->last_seen + workflow->prefs.idle_max_time < workflow->last_time) ||
+	(flow->tcp_finished == TRUE)) {
       /* adding to a queue (we can't delete it from the tree inline) */
       workflow->idle_flows[workflow->num_idle_flows++] = flow;
     }
