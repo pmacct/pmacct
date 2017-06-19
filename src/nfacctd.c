@@ -2233,6 +2233,7 @@ void compute_once()
 u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
   u_int8_t ret = NF9_FTYPE_TRAFFIC;
+  u_int8_t have_ip_proto = FALSE;
 
   /* first round: event vs traffic */
   if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len /* && packets? */) {
@@ -2244,10 +2245,25 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
     if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
 
     /* Explicit IP protocol definition first; a bit of heuristics as fallback */
-    if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4);
-    else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) ret += NF9_FTYPE_TRAFFIC_IPV6;
-    else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len > 0);
-    else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len > 0) ret += NF9_FTYPE_TRAFFIC_IPV6;
+    if (tpl->tpl[NF9_IP_PROTOCOL_VERSION].len) {
+      if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4) {
+	have_ip_proto = TRUE;
+      }
+      else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) {
+	ret += NF9_FTYPE_TRAFFIC_IPV6;
+	have_ip_proto = TRUE;
+      }
+    }
+
+    if (!have_ip_proto) {
+      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
+	have_ip_proto = TRUE;
+      }
+      else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
+	ret += NF9_FTYPE_TRAFFIC_IPV6;
+	have_ip_proto - TRUE;
+      }
+    }
   }
 
   /* second round: overrides */
