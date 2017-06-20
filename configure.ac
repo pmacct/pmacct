@@ -856,7 +856,7 @@ AC_ARG_ENABLE(jansson,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old Jansson already support pkg-config
-    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.2])
+    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.5])
     SUPPORTS="${SUPPORTS} jansson"
     USING_JANSSON="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $JANSSON_CFLAGS"

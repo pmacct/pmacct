@@ -112,8 +112,8 @@ Once daemons are installed you can check:
 
 IIa. Compiling pmacct with JSON support
 JSON encoding is supported via the Jansson library (http://www.digip.org/jansson/
-and https://github.com/akheron/jansson); to compile pmacct with JSON support
-simply do: 
+and https://github.com/akheron/jansson); a library version >= 2.5 is required. To
+compile pmacct with JSON support simply do: 
 
 shell> ./configure --enable-jansson
 
