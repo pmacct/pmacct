@@ -362,6 +362,9 @@ struct packet_ptrs {
   MMDB_lookup_result_s geoipv2_src;
   MMDB_lookup_result_s geoipv2_dst;
 #endif
+#if defined (WITH_NDPI)
+  pm_class2_t ndpi_class;
+#endif
 };
 
 struct host_addr {
@@ -414,6 +417,9 @@ struct pkt_primitives {
   pm_country_t dst_ip_country;
   pm_pocode_t src_ip_pocode;
   pm_pocode_t dst_ip_pocode;
+#endif
+#if defined (WITH_NDPI)
+  pm_class2_t ndpi_class;
 #endif
   pm_id_t tag;
   pm_id_t tag2;

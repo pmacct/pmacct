@@ -219,7 +219,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_TAG, count_token);
     else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_TAG2, count_token);
     else if (!strcmp(count_token, "flows")) cfg_set_aggregate(filename, value, COUNT_INT_FLOWS, count_token);
-    else if (!strcmp(count_token, "class")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token);
+    else if (!strcmp(count_token, "class")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token); // XXX: to disappear
+    else if (!strcmp(count_token, "ndpi_class")) cfg_set_aggregate(filename, value, COUNT_INT_NDPI_CLASS, count_token); // XXX: to become 'class'
     else if (!strcmp(count_token, "tcpflags")) cfg_set_aggregate(filename, value, COUNT_INT_TCPFLAGS, count_token);
     else if (!strcmp(count_token, "std_comm")) cfg_set_aggregate(filename, value, COUNT_INT_STD_COMM, count_token);
     else if (!strcmp(count_token, "ext_comm")) cfg_set_aggregate(filename, value, COUNT_INT_EXT_COMM, count_token);

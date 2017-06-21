@@ -69,15 +69,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 
 #if WITH_NDPI
         if (config.classifier_ndpi && ndpi_wfl) {
-          struct ndpi_proto ndpi_p;
-
-          ndpi_p = ndpi_workflow_process_packet(ndpi_wfl, &pptrs);
-
-	  /* XXX:
-            printf("%s %s\n",
-              ndpi_get_proto_name(ndpi_wfl->ndpi_struct, ndpi_p.master_protocol),
-	      ndpi_get_proto_name(ndpi_wfl->ndpi_struct, ndpi_p.app_protocol));
-	  */
+          pptrs.ndpi_class = ndpi_workflow_process_packet(ndpi_wfl, &pptrs);
 	}
 #endif
 

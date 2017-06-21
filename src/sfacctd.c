@@ -40,6 +40,9 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
+#if defined WITH_NDPI
+#include "ndpi/ndpi_util.h"
+#endif
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -482,8 +485,13 @@ int main(int argc,char **argv, char **envp)
               list->cfg.nfacctd_net |= NF_NET_NEW;
           }
         }
+
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
+	  exit(1);
+	}
+	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS && !list->cfg.classifier_ndpi) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'ndpi_class' aggregation selected but NO 'classifier_ndpi' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
 
@@ -744,6 +752,11 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);
+
+  #if defined WITH_NDPI
+  if (config.classifier_ndpi) ndpi_wfl = ndpi_workflow_init();
+  else ndpi_wfl = NULL;
+  #endif
 
   /* plugins glue: creation */
   load_plugins(&req);

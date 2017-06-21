@@ -470,6 +470,10 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_CLASS;
 	  config.handle_flows = TRUE;
 	}
+	if ((list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) && list->cfg.classifier_ndpi) {
+	  list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
+	  config.handle_fragments = TRUE;
+	}
 	if (list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_TAG;
 	  list->cfg.what_to_count |= COUNT_TAG2;
@@ -511,6 +515,10 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_CLASS;
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
+	}
+	if (list->cfg.classifier_ndpi) {
+	  list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
+	  config.handle_fragments = TRUE;
 	}
         if (list->cfg.networks_file || (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP)) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
@@ -575,6 +583,9 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
+	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
+	  config.handle_fragments = TRUE;
+	}
 	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 && !list->cfg.cpptrs.num) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
@@ -609,8 +620,13 @@ int main(int argc,char **argv, char **envp)
 	      list->cfg.nfacctd_net |= NF_NET_NEW;
           }
         }
+
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
+	  exit(1);
+	}
+	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS && !list->cfg.classifier_ndpi) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'ndpi_class' aggregation selected but NO 'classifier_ndpi' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
 

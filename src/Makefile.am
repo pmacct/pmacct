@@ -91,8 +91,14 @@ pmacctd_LDADD += @NDPI_LIBS_STATIC@
 endif
 nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_template.c
 nfacctd_LDADD = libdaemons.la
+if WITH_NDPI
+nfacctd_LDADD += @NDPI_LIBS_STATIC@
+endif
 sfacctd_SOURCES = sfacctd.c sflow.c sfacctd.h sfv5_module.c sfv5_module.h
 sfacctd_LDADD = libdaemons.la
+if WITH_NDPI
+sfacctd_LDADD += @NDPI_LIBS_STATIC@
+endif
 if WITH_NFLOG
 sbin_PROGRAMS += uacctd
 uacctd_SOURCES = uacctd.c uacctd.h
@@ -110,16 +116,25 @@ sbin_PROGRAMS += pmtelemetryd
 pmtelemetryd_SOURCES = pmtelemetryd.c pmtelemetryd.h
 pmtelemetryd_LDFLAGS = $(DEFS)
 pmtelemetryd_LDADD = libdaemons.la
+if WITH_NDPI
+pmtelemetryd_LDADD += @NDPI_LIBS_STATIC@
+endif
 endif
 if USING_BGP_BINS
 sbin_PROGRAMS += pmbgpd
 pmbgpd_SOURCES = pmbgpd.c pmbgpd.h
 pmbgpd_LDFLAGS = $(DEFS)
 pmbgpd_LDADD = libdaemons.la
+if WITH_NDPI
+pmbgpd_LDADD += @NDPI_LIBS_STATIC@
+endif
 endif
 if USING_BMP_BINS
 sbin_PROGRAMS += pmbmpd
 pmbmpd_SOURCES = pmbmpd.c pmbmpd.h
 pmbmpd_LDFLAGS = $(DEFS)
 pmbmpd_LDADD = libdaemons.la
+if WITH_NDPI
+pmbmpd_LDADD += @NDPI_LIBS_STATIC@
+endif
 endif
