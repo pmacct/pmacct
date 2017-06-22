@@ -1963,18 +1963,26 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 
 void custom_primitive_value_print(char *out, int outlen, char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
 {
-  char format[SRVBUFLEN];
+  char format[VERYSHORTBUFLEN];
 
   if (in && out && cp_entry) {
     memset(out, 0, outlen); 
 
     if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
 	cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
+      char double_fmt[] = "ll", semantics[VERYSHORTBUFLEN];
+
+      if (cp_entry->ptr->len == 8)
+	snprintf(semantics, VERYSHORTBUFLEN, "%s%s", double_fmt, cps_type[cp_entry->ptr->semantics]);
+      else /* XXX: limit to 1, 2 and 4 bytes lengths? */
+	snprintf(semantics, VERYSHORTBUFLEN, "%s", cps_type[cp_entry->ptr->semantics]); 
+
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name), 
-			cps_type[cp_entry->ptr->semantics]); 
+        snprintf(format, VERYSHORTBUFLEN, "%%-%u%s",
+		cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name), 
+		semantics);
       else
-        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]); 
+        snprintf(format, VERYSHORTBUFLEN, "%%%s", semantics);
 
       if (cp_entry->ptr->len == 1) {
         u_int8_t t8;

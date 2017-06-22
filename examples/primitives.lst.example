@@ -32,11 +32,12 @@
 !			uacctd only strings can be defined vlen; in nfacctd
 !			string and raw semantics can be defined vlen.
 ! 'semantics'		Specifies semantics of the primitive. Allowed values
-!			are: 'u_int' (unsigned integer, presented as decimal
-!			number), 'hex' (unsigned integer, presented as hexa-
-!			decimal number), 'ip' (IP address), 'mac' (L2 MAC
-!			address), 'str' (string) and 'raw' (raw data, fixed
-!			or variable length in hex format). 
+!			are: 'u_int' (unsigned integer [1,2,4,8 bytes long],
+!			presented as decimal number), 'hex' (unsigned integer
+!			[1,2,4,8 bytes long], presented as hexadecimal number),
+!			'ip' (IP address), 'mac' (L2 MAC address), 'str'
+!			(string) and 'raw' (raw data, fixed or variable length
+!			in hex format). 
 ! 
 ! Examples:
 !
