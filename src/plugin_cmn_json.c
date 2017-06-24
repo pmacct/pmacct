@@ -29,6 +29,9 @@
 #include "plugin_cmn_json.h"
 #include "ip_flow.h"
 #include "classifier.h"
+#if defined (WITH_NDPI)
+#include "ndpi/ndpi_util.h"
+#endif
 
 /* Functions */
 #ifdef WITH_JANSSON
@@ -62,6 +65,13 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     cjhandler[idx] = compose_json_class;
     idx++;
   }
+
+#if defined (WITH_NDPI)
+  if (wtc_2 & COUNT_NDPI_CLASS) {
+    cjhandler[idx] = compose_json_ndpi_class;
+    idx++;
+  }
+#endif
 
 #if defined (HAVE_L2)
   if (wtc & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
@@ -435,6 +445,16 @@ void compose_json_class(json_t *obj, struct chained_cache *cc)
 
   json_object_set_new_nocheck(obj, "class", json_string((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown"));
 }
+
+#if defined (WITH_NDPI)
+void compose_json_ndpi_class(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+  struct pkt_primitives *pbase = &cc->primitives;
+
+  json_object_set_new_nocheck(obj, "ndpi_class", json_string(ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol)));
+}
+#endif
 
 void compose_json_src_mac(json_t *obj, struct chained_cache *cc)
 {

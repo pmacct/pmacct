@@ -35,7 +35,7 @@
 #include "bgp/bgp.h"
 #include "isis/prefix.h"
 #include "isis/table.h"
-#if defined WITH_NDPI
+#if defined (WITH_NDPI)
 #include "ndpi/ndpi_util.h"
 #endif
 
@@ -534,12 +534,14 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+#if defined (WITH_NDPI)
     if (channels_list[index].aggregation_2 & COUNT_NDPI_CLASS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = ndpi_class_handler;
       else if (config.acct_type == ACCT_NF) primitives--; /* NO nDPI support for NetFlow/IPFIX */
       else if (config.acct_type == ACCT_SF) primitives--; /* NO nDPI support for sFlow (yet) */
       primitives++;
     }
+#endif
 
     if (channels_list[index].aggregation & COUNT_IN_IFACE) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = in_iface_handler;
@@ -1207,14 +1209,14 @@ void class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   pdata->cst.tentatives = pptrs->cst.tentatives;
 }
 
+#if defined (WITH_NDPI)
 void ndpi_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-#if defined WITH_NDPI
   memcpy(&pdata->primitives.ndpi_class, &pptrs->ndpi_class, sizeof(pm_class2_t));
-#endif
 }
+#endif
 
 void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {

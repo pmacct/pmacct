@@ -40,7 +40,7 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
-#if defined WITH_NDPI
+#if defined (WITH_NDPI)
 #include "ndpi/ndpi_util.h"
 #endif
 
@@ -450,7 +450,7 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.what_to_count_2 & (COUNT_LABEL))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
 
-	evaluate_sums(&list->cfg.what_to_count, list->name, list->type.string);
+	evaluate_sums(&list->cfg.what_to_count, &list->cfg.what_to_count_2, list->name, list->type.string);
 	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 && !list->cfg.cpptrs.num) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
@@ -753,10 +753,10 @@ int main(int argc,char **argv, char **envp)
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);
 
-  #if defined WITH_NDPI
+#if defined (WITH_NDPI)
   if (config.classifier_ndpi) ndpi_wfl = ndpi_workflow_init();
   else ndpi_wfl = NULL;
-  #endif
+#endif
 
   /* plugins glue: creation */
   load_plugins(&req);

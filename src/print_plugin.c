@@ -34,7 +34,7 @@
 #include "classifier.h"
 #include "crc32.h"
 #include "bgp/bgp.h"
-#if defined WITH_NDPI
+#if defined (WITH_NDPI)
 #include "ndpi/ndpi_util.h"
 #endif
 
@@ -593,10 +593,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count & COUNT_TAG) fprintf(f, "%-10llu  ", data->tag);
         if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10llu  ", data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-  #if defined WITH_NDPI
+  #if defined (WITH_NDPI)
 	if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%-16s  ", ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
   #endif
-  #if defined (HAVE_L2)
+  #if defined HAVE_L2
         if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
           etheraddr_string(data->eth_shost, src_mac);
   	if (strlen(src_mac))
@@ -966,7 +966,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag2);
 	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_string(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
-  #if defined WITH_NDPI
+  #if defined (WITH_NDPI)
         if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
   #endif
   #if defined (HAVE_L2)
@@ -1438,10 +1438,10 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_TAG) fprintf(f, "TAG         ");
   if (config.what_to_count & COUNT_TAG2) fprintf(f, "TAG2        ");
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS             ");
-#if WITH_NDPI
+#if defined (WITH_NDPI)
   if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "NDPI_CLASS        ");
 #endif
-#if defined HAVE_L2
+#if defined (HAVE_L2)
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "SRC_MAC            ");
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC            ");
   if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN   ");
@@ -1555,7 +1555,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_TAG2) fprintf(f, "%sTAG2", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_LABEL) fprintf(f, "%sLABEL", write_sep(sep, &count));
   if (config.what_to_count & COUNT_CLASS) fprintf(f, "%sCLASS", write_sep(sep, &count));
-#if defined WITH_NDPI
+#if defined (WITH_NDPI)
   if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%sNDPI_CLASS", write_sep(sep, &count));
 #endif
 #if defined HAVE_L2

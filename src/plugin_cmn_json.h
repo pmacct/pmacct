@@ -40,6 +40,9 @@ EXT void compose_json_tag(json_t *, struct chained_cache *);
 EXT void compose_json_tag2(json_t *, struct chained_cache *);
 EXT void compose_json_label(json_t *, struct chained_cache *);
 EXT void compose_json_class(json_t *, struct chained_cache *);
+#if defined (WITH_NDPI)
+EXT void compose_json_ndpi_class(json_t *, struct chained_cache *);
+#endif
 EXT void compose_json_src_mac(json_t *, struct chained_cache *);
 EXT void compose_json_dst_mac(json_t *, struct chained_cache *);
 EXT void compose_json_vlan(json_t *, struct chained_cache *);

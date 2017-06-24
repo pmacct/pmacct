@@ -853,11 +853,12 @@ void lower_string(char *string)
   }
 }
 
-void evaluate_sums(u_int64_t *wtc, char *name, char *type)
+void evaluate_sums(u_int64_t *wtc, u_int64_t *wtc_2, char *name, char *type)
 {
   int tag = FALSE;
   int tag2 = FALSE;
   int class = FALSE;
+  int ndpi_class = FALSE;
   int flows = FALSE;
 
   if (*wtc & COUNT_TAG) {
@@ -873,6 +874,11 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
   if (*wtc & COUNT_CLASS) {
     *wtc ^= COUNT_CLASS;
     class = TRUE;
+  }
+
+  if (*wtc_2 & COUNT_NDPI_CLASS) {
+    *wtc_2 ^= COUNT_NDPI_CLASS;
+    ndpi_class = TRUE;
   }
 
   if (*wtc & COUNT_FLOWS) {
@@ -915,6 +921,7 @@ void evaluate_sums(u_int64_t *wtc, char *name, char *type)
   if (tag) *wtc |= COUNT_TAG;
   if (tag2) *wtc |= COUNT_TAG2;
   if (class) *wtc |= COUNT_CLASS;
+  if (ndpi_class) *wtc_2 |= COUNT_NDPI_CLASS;
   if (flows) *wtc |= COUNT_FLOWS;
 }
 

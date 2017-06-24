@@ -36,7 +36,7 @@
 #include "isis/isis.h"
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
-#if defined WITH_NDPI
+#if defined (WITH_NDPI)
 #include "ndpi/ndpi_util.h"
 #endif
 
@@ -67,7 +67,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     if (pptrs.iph_ptr) {
       if ((*pptrs.l3_handler)(&pptrs)) {
 
-#if WITH_NDPI
+#if defined (WITH_NDPI)
         if (config.classifier_ndpi && ndpi_wfl) {
           pptrs.ndpi_class = ndpi_workflow_process_packet(ndpi_wfl, &pptrs);
 	}

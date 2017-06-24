@@ -60,7 +60,7 @@ struct _log_notifications {
   struct log_notification bmp_peers_throttling;
   struct log_notification geoip_ipv4_file_null;
   struct log_notification geoip_ipv6_file_null;
-#ifdef WITH_NDPI
+#if defined (WITH_NDPI)
   struct log_notification ndpi_cache_full;
 #endif
 };
