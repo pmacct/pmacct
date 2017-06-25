@@ -97,6 +97,11 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
+  if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'ndpi_class' primitive is not supported in IMT plugin. Exiting ..\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   reload_map = FALSE;
   status->wakeup = TRUE;
 
