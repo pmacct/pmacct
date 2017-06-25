@@ -1919,7 +1919,7 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
 
 void custom_primitive_header_print(char *out, int outlen, struct custom_primitive_ptrs *cp_entry, int formatted)
 {
-  char format[SRVBUFLEN];
+  char format[VERYSHORTBUFLEN];
 
   if (out && cp_entry) {
     memset(out, 0, outlen);
@@ -1927,18 +1927,18 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
     if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
         cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
-	snprintf(format, SRVBUFLEN, "%%-%u", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name));
+	snprintf(format, VERYSHORTBUFLEN, "%%-%u", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name));
 	strncat(format, "s", SRVBUFLEN);
       }
-      else snprintf(format, SRVBUFLEN, "%s", "%s");
+      else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
-	snprintf(format, SRVBUFLEN, "%%-%u", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name));
+	snprintf(format, VERYSHORTBUFLEN, "%%-%u", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name));
 	strncat(format, "s", SRVBUFLEN);
       }
-      else snprintf(format, SRVBUFLEN, "%s", "%s");
+      else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_IP) {
       int len = 0;
@@ -1949,19 +1949,19 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 #endif
       	
       if (formatted) {
-        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
+        snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
         strncat(format, "s", SRVBUFLEN);
       }
-      else snprintf(format, SRVBUFLEN, "%s", "%s");
+      else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_MAC) {
       int len = ETHER_ADDRSTRLEN;
 
       if (formatted) {
-        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
+        snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
         strncat(format, "s", SRVBUFLEN);
       }
-      else snprintf(format, SRVBUFLEN, "%s", "%s");
+      else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
 
     snprintf(out, outlen, format, cp_entry->ptr->name);
@@ -2022,10 +2022,10 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted)
-	snprintf(format, SRVBUFLEN, "%%-%u%s", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name),
+	snprintf(format, VERYSHORTBUFLEN, "%%-%u%s", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name),
 			cps_type[cp_entry->ptr->semantics]); 
       else
-	snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]); 
+	snprintf(format, VERYSHORTBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]); 
 
       snprintf(out, outlen, format, (in+cp_entry->off));
     }
@@ -2055,10 +2055,10 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
 
       addr_to_str(ip_str, &ip_addr);
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
+        snprintf(format, VERYSHORTBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
                         cps_type[cp_entry->ptr->semantics]);
       else
-        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
+        snprintf(format, VERYSHORTBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
 
       snprintf(out, outlen, format, ip_str);
     }
@@ -2070,10 +2070,10 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
       etheraddr_string(in+cp_entry->off, eth_str);
 
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
+        snprintf(format, VERYSHORTBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
                         cps_type[cp_entry->ptr->semantics]);
       else
-        snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
+        snprintf(format, VERYSHORTBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
 
       snprintf(out, outlen, format, eth_str);
     }
