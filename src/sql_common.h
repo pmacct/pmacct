@@ -303,6 +303,10 @@ EXT void count_src_host_pocode_handler(const struct db_cache *, struct insert_da
 EXT void count_dst_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 #endif
 
+#if defined (WITH_NDPI)
+EXT void count_ndpi_class_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+#endif
+
 EXT void count_counters_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_flows_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tcpflags_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

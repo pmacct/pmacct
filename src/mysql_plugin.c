@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -442,8 +442,10 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   for (j = 0, stop = 0; (!stop) && sql_preprocess_funcs[j]; j++)
     stop = sql_preprocess_funcs[j](queue, &index, j); 
-  if (config.what_to_count & COUNT_CLASS)
+
+  if ((config.what_to_count & COUNT_CLASS) || (config.what_to_count_2 & COUNT_NDPI_CLASS))
     sql_invalidate_shadow_entries(queue, &index);
+
   idata->ten = index;
 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);

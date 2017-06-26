@@ -1260,6 +1260,10 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) what_to_count_2 |= COUNT_EXPORT_PROTO_SEQNO;
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) what_to_count_2 |= COUNT_EXPORT_PROTO_VERSION;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
+
+#if defined (WITH_NDPI)
+    if (config.what_to_count_2 & COUNT_NDPI_CLASS) what_to_count_2 |= COUNT_NDPI_CLASS;
+#endif
   }
 
   /* sorting out delimiter */
@@ -2834,6 +2838,22 @@ int sql_evaluate_primitives(int primitive)
       primitive++;
     }
   }
+
+#if defined (WITH_NDPI)
+  if (what_to_count_2 & COUNT_NDPI_CLASS) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "ndpi_class", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "ndpi_class=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_CLASS;
+    values[primitive].handler = where[primitive].handler = count_ndpi_class_handler;
+    primitive++;
+  }
+#endif
 
 #if defined (HAVE_L2)
   if (fakes & FAKE_SRC_MAC) {
