@@ -59,11 +59,11 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "label", avro_schema_string());
 
   if (wtc & COUNT_CLASS)
-    avro_schema_record_field_append(schema, "class", avro_schema_string());
+    avro_schema_record_field_append(schema, "class_legacy", avro_schema_string());
 
 #if defined (WITH_NDPI)
   if (wtc_2 & COUNT_NDPI_CLASS)
-    avro_schema_record_field_append(schema, "ndpi_class", avro_schema_string());
+    avro_schema_record_field_append(schema, "class", avro_schema_string());
 #endif
 
 #if defined (HAVE_L2)
@@ -316,13 +316,13 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc & COUNT_CLASS) {
-    check_i(avro_value_get_by_name(&value, "class", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "class_legacy", &field, NULL));
     check_i(avro_value_set_string(&field, ((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown" )));
   }
 
 #if defined (WITH_NDPI)
   if (wtc_2 & COUNT_NDPI_CLASS) {
-    check_i(avro_value_get_by_name(&value, "ndpi_class", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "class", &field, NULL));
     check_i(avro_value_set_string(&field, (ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol))));
   }
 #endif

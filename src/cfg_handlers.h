@@ -253,7 +253,6 @@ EXT int cfg_key_sampling_map(char *, char *, char *);
 EXT int cfg_key_classifiers(char *, char *, char *);
 EXT int cfg_key_classifier_tentatives(char *, char *, char *);
 EXT int cfg_key_classifier_table_num(char *, char *, char *);
-EXT int cfg_key_classifier_ndpi(char *, char *, char *);
 EXT int cfg_key_classifier_ndpi_num_roots(char *, char *, char *);
 EXT int cfg_key_classifier_ndpi_max_flows(char *, char *, char *);
 EXT int cfg_key_classifier_ndpi_proto_guess(char *, char *, char *);

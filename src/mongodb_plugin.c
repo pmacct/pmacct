@@ -478,10 +478,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       if (config.what_to_count & COUNT_TAG2) bson_append_long(bson_elem, "tag2", data->tag2);
       if (config.what_to_count_2 & COUNT_LABEL) MongoDB_append_string(bson_elem, "label", pvlen, COUNT_INT_LABEL); 
 
-      if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
+      if (config.what_to_count & COUNT_CLASS) bson_append_string(bson_elem, "class_legacy", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
 
   #if defined (WITH_NDPI)
-      if (config.what_to_count_2 & COUNT_NDPI_CLASS) bson_append_string(bson_elem, "ndpi_class", (ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol)));
+      if (config.what_to_count_2 & COUNT_NDPI_CLASS) bson_append_string(bson_elem, "class", (ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol)));
   #endif
 
   #if defined (HAVE_L2)

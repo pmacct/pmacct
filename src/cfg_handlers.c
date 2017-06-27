@@ -219,8 +219,10 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_TAG, count_token);
     else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_TAG2, count_token);
     else if (!strcmp(count_token, "flows")) cfg_set_aggregate(filename, value, COUNT_INT_FLOWS, count_token);
-    else if (!strcmp(count_token, "class")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token); // XXX: to disappear
-    else if (!strcmp(count_token, "ndpi_class")) cfg_set_aggregate(filename, value, COUNT_INT_NDPI_CLASS, count_token); // XXX: to become 'class'
+    else if (!strcmp(count_token, "class_legacy")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token); // XXX: to disappear
+#if defined (WITH_NDPI)
+    else if (!strcmp(count_token, "class")) cfg_set_aggregate(filename, value, COUNT_INT_NDPI_CLASS, count_token);
+#endif
     else if (!strcmp(count_token, "tcpflags")) cfg_set_aggregate(filename, value, COUNT_INT_TCPFLAGS, count_token);
     else if (!strcmp(count_token, "std_comm")) cfg_set_aggregate(filename, value, COUNT_INT_STD_COMM, count_token);
     else if (!strcmp(count_token, "ext_comm")) cfg_set_aggregate(filename, value, COUNT_INT_EXT_COMM, count_token);
@@ -5051,20 +5053,6 @@ int cfg_key_classifier_table_num(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_classifier_ndpi(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  for (; list; list = list->next, changes++) list->cfg.classifier_ndpi = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_classifier_ndpi_num_roots(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -5074,7 +5062,7 @@ int cfg_key_classifier_ndpi_num_roots(char *filename, char *name, char *value_pt
   value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_num_roots = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_num_roots'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_num_roots'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5088,7 +5076,7 @@ int cfg_key_classifier_ndpi_max_flows(char *filename, char *name, char *value_pt
   value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_max_flows = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_max_flows'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_max_flows'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5102,7 +5090,7 @@ int cfg_key_classifier_ndpi_proto_guess(char *filename, char *name, char *value_
   if (value < 0) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_proto_guess = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_proto_guess'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_proto_guess'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5116,7 +5104,7 @@ int cfg_key_classifier_ndpi_idle_scan_period(char *filename, char *name, char *v
   value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_idle_scan_period = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_idle_scan_period'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_idle_scan_period'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5130,7 +5118,7 @@ int cfg_key_classifier_ndpi_idle_max_time(char *filename, char *name, char *valu
   value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_idle_max_time= value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_idle_max_time'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_idle_max_time'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5144,7 +5132,7 @@ int cfg_key_classifier_ndpi_idle_scan_budget(char *filename, char *name, char *v
   value = strtoul(value_ptr, &endptr, 10);
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_idle_scan_budget = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_idle_scan_budget'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_idle_scan_budget'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5156,12 +5144,12 @@ int cfg_key_classifier_ndpi_giveup_proto_tcp(char *filename, char *name, char *v
 
   value = atoi(value_ptr);
   if (value <= 0) {
-    Log(LOG_INFO, "INFO: [%s] 'classifier_ndpi_giveup_proto_tcp' has to be >= 1.\n", filename);
+    Log(LOG_INFO, "INFO: [%s] 'classifier_giveup_proto_tcp' has to be >= 1.\n", filename);
     return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_giveup_proto_tcp = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_giveup_proto_tcp'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_giveup_proto_tcp'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5173,12 +5161,12 @@ int cfg_key_classifier_ndpi_giveup_proto_udp(char *filename, char *name, char *v
 
   value = atoi(value_ptr);
   if (value <= 0) {
-    Log(LOG_INFO, "INFO: [%s] 'classifier_ndpi_giveup_proto_udp' has to be >= 1.\n", filename);
+    Log(LOG_INFO, "INFO: [%s] 'classifier_giveup_proto_udp' has to be >= 1.\n", filename);
     return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_giveup_proto_udp = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_giveup_proto_udp'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_giveup_proto_udp'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5190,12 +5178,12 @@ int cfg_key_classifier_ndpi_giveup_proto_other(char *filename, char *name, char 
 
   value = atoi(value_ptr);
   if (value <= 0) {
-    Log(LOG_INFO, "INFO: [%s] 'classifier_ndpi_giveup_proto_other' has to be >= 1.\n", filename);
+    Log(LOG_INFO, "INFO: [%s] 'classifier_giveup_proto_other' has to be >= 1.\n", filename);
     return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.ndpi_giveup_proto_other = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_ndpi_giveup_proto_other'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_giveup_proto_other'. Globalized.\n", filename);
 
   return changes;
 }

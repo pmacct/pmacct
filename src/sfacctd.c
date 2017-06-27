@@ -490,10 +490,8 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
-	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS && !list->cfg.classifier_ndpi) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): 'ndpi_class' aggregation selected but NO 'classifier_ndpi' key specified. Exiting...\n\n", list->name, list->type.string);
-	  exit(1);
-	}
+
+	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) config.classifier_ndpi = TRUE;
 
 	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);

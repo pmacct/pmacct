@@ -443,7 +443,7 @@ void compose_json_class(json_t *obj, struct chained_cache *cc)
   char empty_string[] = "", *str_ptr;
   struct pkt_primitives *pbase = &cc->primitives;
 
-  json_object_set_new_nocheck(obj, "class", json_string((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown"));
+  json_object_set_new_nocheck(obj, "class_legacy", json_string((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown"));
 }
 
 #if defined (WITH_NDPI)
@@ -452,7 +452,7 @@ void compose_json_ndpi_class(json_t *obj, struct chained_cache *cc)
   char empty_string[] = "", *str_ptr;
   struct pkt_primitives *pbase = &cc->primitives;
 
-  json_object_set_new_nocheck(obj, "ndpi_class", json_string(ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol)));
+  json_object_set_new_nocheck(obj, "class", json_string(ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol)));
 }
 #endif
 

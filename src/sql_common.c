@@ -2846,9 +2846,9 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
-    strncat(insert_clause, "ndpi_class", SPACELEFT(insert_clause));
+    strncat(insert_clause, "class", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "ndpi_class=\'%s\'", SPACELEFT(where[primitive].string));
+    strncat(where[primitive].string, "class=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_CLASS;
     values[primitive].handler = where[primitive].handler = count_ndpi_class_handler;
     primitive++;

@@ -1437,9 +1437,9 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 {
   if (config.what_to_count & COUNT_TAG) fprintf(f, "TAG         ");
   if (config.what_to_count & COUNT_TAG2) fprintf(f, "TAG2        ");
-  if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS             ");
+  if (config.what_to_count & COUNT_CLASS) fprintf(f, "CLASS_LEGACY      ");
 #if defined (WITH_NDPI)
-  if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "NDPI_CLASS        ");
+  if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "CLASS             ");
 #endif
 #if defined (HAVE_L2)
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "SRC_MAC            ");
@@ -1554,9 +1554,9 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_TAG) fprintf(f, "%sTAG", write_sep(sep, &count));
   if (config.what_to_count & COUNT_TAG2) fprintf(f, "%sTAG2", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_LABEL) fprintf(f, "%sLABEL", write_sep(sep, &count));
-  if (config.what_to_count & COUNT_CLASS) fprintf(f, "%sCLASS", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_CLASS) fprintf(f, "%sCLASS_LEGACY", write_sep(sep, &count));
 #if defined (WITH_NDPI)
-  if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%sNDPI_CLASS", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%sCLASS", write_sep(sep, &count));
 #endif
 #if defined HAVE_L2
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
