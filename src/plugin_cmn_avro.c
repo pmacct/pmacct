@@ -316,7 +316,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc & COUNT_CLASS) {
-    check_i(avro_value_get_by_name(&value, "class_legacy", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "class", &field, NULL));
     check_i(avro_value_set_string(&field, ((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown" )));
   }
 

@@ -40,9 +40,6 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
-#if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
-#endif
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -491,8 +488,6 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 
-	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) config.classifier_ndpi = TRUE;
-
 	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);
 
@@ -750,11 +745,6 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);
-
-#if defined (WITH_NDPI)
-  if (config.classifier_ndpi) ndpi_wfl = ndpi_workflow_init();
-  else ndpi_wfl = NULL;
-#endif
 
   /* plugins glue: creation */
   load_plugins(&req);
