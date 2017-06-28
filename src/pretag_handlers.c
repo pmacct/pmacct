@@ -2973,6 +2973,18 @@ int PT_map_index_entries_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *
   return FALSE;
 }
 
+int PT_map_index_entries_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  memcpy(&e->key.fwdstatus, &src_e->key.fwdstatus, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, (char *)&src_e->key.fwdstatus.n, sizeof(pt_uint32_t), TRUE);
+
+  return FALSE;
+}
+
 int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
@@ -3574,6 +3586,30 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *ha
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.cvlan_id.n, sizeof(u_int16_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
+        memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 4));
+        e->key.fwdstatus.n = ntohl(tmp32);
+      }
+    }
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.fwdstatus.n, sizeof(u_int32_t), FALSE);
 
   return FALSE;
 }

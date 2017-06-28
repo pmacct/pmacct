@@ -80,6 +80,7 @@ EXT int PT_map_index_entries_src_mac_handler(struct id_entry *, pm_hash_serial_t
 EXT int PT_map_index_entries_dst_mac_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_entries_vlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_entries_cvlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *); 
+EXT int PT_map_index_entries_fwdstatus_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_ip_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_input_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_output_handler(struct id_entry *, pm_hash_serial_t *, void *); 
@@ -95,6 +96,7 @@ EXT int PT_map_index_fdata_src_mac_handler(struct id_entry *, pm_hash_serial_t *
 EXT int PT_map_index_fdata_dst_mac_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_vlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *);
 EXT int PT_map_index_fdata_cvlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *);
+EXT int PT_map_index_fdata_fwdstatus_handler(struct id_entry *, pm_hash_serial_t *, void *);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 EXT int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
