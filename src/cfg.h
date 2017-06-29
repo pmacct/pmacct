@@ -447,6 +447,7 @@ struct configuration {
 #endif
   int promisc; /* pcap_open_live() promisc parameter */
   char *clbuf; /* pcap filter */
+  int pcap_protocol;
   char *pcap_savefile;
   char *dev;
   int if_wait;
