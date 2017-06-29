@@ -896,13 +896,14 @@ void count_class_id_handler(const struct db_cache *cache_elem, struct insert_dat
 #if defined (WITH_NDPI)
 void count_ndpi_class_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char buf[MAX_PROTOCOL_LEN+1];
+  char ndpi_class[SUPERSHORTBUFLEN];
 
-  memset(buf, 0, sizeof(buf));
-  snprintf(buf, MAX_PROTOCOL_LEN, "%s", ndpi_get_proto_name(ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.app_protocol)); 
+  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.master_protocol),
+	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.app_protocol));
 
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, buf);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, buf);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ndpi_class);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ndpi_class);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

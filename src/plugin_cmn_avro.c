@@ -322,8 +322,14 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
 
 #if defined (WITH_NDPI)
   if (wtc_2 & COUNT_NDPI_CLASS) {
+    char ndpi_class[SUPERSHORTBUFLEN];
+
+    snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
+	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
+
     check_i(avro_value_get_by_name(&value, "class", &field, NULL));
-    check_i(avro_value_set_string(&field, (ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol))));
+    check_i(avro_value_set_string(&field, ndpi_class));
   }
 #endif
 

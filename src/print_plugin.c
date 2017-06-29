@@ -387,7 +387,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator, *fd_buf;
   char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
-  char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
+  char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0", ndpi_class[SUPERSHORTBUFLEN];
   FILE *f = NULL, *lockf = NULL;
   int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index, file_to_be_created;
   time_t start, duration;
@@ -594,7 +594,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10llu  ", data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (WITH_NDPI)
-	if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%-16s  ", ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+	if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
+	  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+		ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.master_protocol),
+		ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+	  fprintf(f, "%-16s  ", ndpi_class);
+	}
   #endif
   #if defined HAVE_L2
         if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
@@ -967,7 +972,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_string(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (WITH_NDPI)
-        if (config.what_to_count_2 & COUNT_NDPI_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+        if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
+	  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+		ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.master_protocol),
+		ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+	  fprintf(f, "%s%s", write_sep(sep, &count), ndpi_class);
+	}
   #endif
   #if defined (HAVE_L2)
         if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {

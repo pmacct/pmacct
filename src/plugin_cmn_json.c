@@ -449,10 +449,14 @@ void compose_json_class(json_t *obj, struct chained_cache *cc)
 #if defined (WITH_NDPI)
 void compose_json_ndpi_class(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char ndpi_class[SUPERSHORTBUFLEN];
   struct pkt_primitives *pbase = &cc->primitives;
 
-  json_object_set_new_nocheck(obj, "class", json_string(ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol)));
+  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
+	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
+
+  json_object_set_new_nocheck(obj, "class", json_string(ndpi_class));
 }
 #endif
 
