@@ -70,7 +70,12 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
 - To understand difference between the various BGP table versions:
   * Only BGP table v1 is currently available.
 
-- Aggregation primitives to SQL schema mapping:
+- Aggregation primitives to SQL schema mapping. Although default schemas
+  come all with "NOT NULL", this is optional and depending on the scenario:
+  for example, if mixed L2 (containing L2 only info) and L3 (containing L2
+  and L3 info) flows are collected, maybe L3-related fields like src_host
+  or dst_host are best defined without the "NOT NULL" constraint.
+
   Aggregation primitive => SQL table field
   * tag => agent_id (BIGINT NOT NULL DEFAULT 0)
     - or tag => tag (BIGINT NOT NULL DEFAULT 0, if sql_table_version >= 9)
