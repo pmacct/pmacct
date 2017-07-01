@@ -13,7 +13,7 @@ VII.	Running the pmacct client (pmacct)
 VIII.	Running the RabbitMQ/AMQP plugin
 IX.	Running the Kafka plugin
 X.	Internal buffering and queueing
-XI.	Quickstart guide to packet/stream classifiers
+XI.	Quickstart guide to packet classification
 XII.	Quickstart guide to setup a NetFlow/IPFIX agent/probe 
 XIII.	Quickstart guide to setup a sFlow agent/probe 
 XIV.	Quickstart guide to setup the BGP daemon
@@ -485,6 +485,7 @@ name=vrf_id_ingress     field_type=234  len=4   semantics=u_int
 name=vrf_id_egress      field_type=235  len=4   semantics=u_int
 name=vrf_name           field_type=236  len=32  semantics=str
 
+
 VI. Running the NFLOG-based daemon (uacctd)
 All examples about pmacctd are also valid for uacctd with the exception of directives
 that apply exclusively to libpcap. If you've skipped examples in section 'IV', please
@@ -526,6 +527,7 @@ sql_history_roundoff: mh
 sql_table_version: 4
 sql_dont_try_update: true
 ! ...
+
 
 VII. Running the pmacct client (pmacct)
 The pmacct client is used to retrieve data from memory tables. Requests and answers
@@ -750,15 +752,14 @@ global, batch.num.messages, 100000
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
 queue implementation available since day one of pmacct (configured via plugin_pipe_size
-and documented in docs/INTERNALS) and 2) use a RabbitMQ or Kafka broker for queueing
-purposes (configured via plugin_pipe_amqp and plugin_pipe_amqp_* or plugin_pipe_kafka
-and plugin_pipe_kafka_* directives).
+and documented in docs/INTERNALS) and 2) use a RabbitMQ broker for queueing purposes
+(configured via plugin_pipe_amqp and plugin_pipe_amqp_* directives).
 
-For a quick comparison: while relying on a RabbitMQ or Kafka broker for queueing does
-introduce an external dependency (ie. rabbitmq-c library, RabbitMQ server, etc.), it
-reduces the amount of fine tuning needed by the home-grown queue implementation, for
-example trial and error tasks like determine a value for plugin_pipe_size and find a
-viable ratio among plugin_pipe_size and plugin_buffer_size. 
+For a quick comparison: while relying on a RabbitMQ broker for queueing does introduce
+an external dependency (ie. rabbitmq-c library, RabbitMQ server, etc.), it reduces the
+amount of fine tuning needed by the home-grown queue implementation, for example trial
+and error tasks like determine a value for plugin_pipe_size and find a viable ratio
+among plugin_pipe_size and plugin_buffer_size. 
 
 The home-grown cicular queue has no external dependencies and is configured, for
 example, as:
@@ -789,84 +790,55 @@ plugin_pipe_amqp_vhost[blabla]: "/"
 plugin_pipe_amqp_routing_key[blabla]: blabla-print
 plugin_pipe_amqp_retry[blabla]: 60
 
-The Kafka queue has the same dependencies as the Kafka plugin; consult the "Running
-the Kafka plugin" chapter in this document for where to download the required
-packages/libraries and how to compile pmacct against these. When plugin_pipe_kafka is
-set to true, following is how data exchange via a Kafka broker is configured under
-default settings:
 
-plugins: print[blabla]
-plugin_buffer_size[blabla]: 10240
-!
-plugin_pipe_kafka[blabla]: true
-plugin_pipe_kafka_topic[blabla]: pmacct.blabla-print
-plugin_pipe_kafka_retry[blabla]: 60
+XI. Quickstart guide to packet classification
+Packet classification is a feature available for pmacctd (libpcap-based daemon) and
+uacctd (NFLOG-based daemon) (please get in touch if packet classification against
+the sFlow raw header sample is desired). The current approach is to leverage the
+popular free, open-source nDPI library. To enable the fature please follow these
+steps:
 
+1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub
+   repository (https://github.com/pmacct/pmacct).
 
-XI. Quickstart guide to packet classifiers
-The current approach for a packet classification engine is fully extensible: patterns
-are based on regular expressions (RE), must be placed into a common directory and have
-a .pat file extension. Patterns for well-known protocols are available and are just a
-click away. Furthermore, you can write your own patterns (and share them with the
-L7-filter project's community). Below the quickstarter guide:
+2) Download nDPI from its GitHub repository (https://github.com/XXX). pmacct
+   code is tested against the latest stable version of the library and hence that
+   is the recommended download. 
 
-a) download pmacct
-shell> wget http://www.pmacct.net/pmacct-x.y.z.tar.gz 
+3) Configure for compiling, compile and install the downloaded nDPI library, ie.:
 
-b) compile pmacct
-shell> cd pmacct-x.y.z; ./configure && make && make install 
+   shell> XXX
 
-c-1) download regular expression (RE) classifiers as-you-need them: you just need to
-     point your browser to http://l7-filter.sourceforge.net/protocols/ then:
+4) Configure for compiling pmacct with the --enable-ndpi switch. Then compile and
+   install, ie.:
 
-     shell> cd /path/to/classifiers/
-     shell> wget http://l7-filter.sourceforge.net/layer7-protocols/protocols/[ protocol ].pat 
+   If downloading a release from http://www.pmacct.net :
 
-c-2) download all the RE classifiers available: you just need to point your browser to
-     http://sourceforge.net/projects/l7-filter (and take to the latest L7-protocol
-     definitions tarball). Pay attention to remove potential catch-all patterns which
-     might be part of the downloaded package (ie. unknown.pat and unset.pat).
+   shell> ./configure --enable-ndpi; make; make install
 
-c-3) download shared object (SO) classifiers (written in C) as-you-need them: you need
-     just to point your browser to http://www.pmacct.net/classification/ , download the
-     available package, extract files and compile things following INSTALL instructions.
-     When everything is finished, install the produced shared objects:
+   If downloading code from https://github.com/pmacct/pmacct :
 
-     shell> mv *.so /path/to/classifiers/
+   shell> ./autogen.sh; ./configure --enable-ndpi; make; make install
 
-d-1) build pmacct configuration, a memory table example:
-!
-daemonize: true
-interface: eth0
-aggregate: flows, class
-plugins: memory
-classifiers: /path/to/classifiers/
-snaplen: 700
-!...
+5) Configure pmacct. The following sample configuration is based on pmacctd and
+   the print plugin with formatted output to stdout: 
 
-d-2) build pmacct configuration, a SQL example:
-!
-daemonize: true
-interface: eth0
-aggregate: flows, class
-plugins: mysql 
-classifiers: /path/to/classifiers/
-snaplen: 700
-sql_history: 1h
-sql_history_roundoff: h
-sql_table_version: 5
-sql_aggressive_classification: true
-!...
+   daemonize: true
+   interface: eth0
+   snaplen: 700
+   !
+   plugins: print
+   !
+   aggregate: src_host, dst_host, src_port dst_port, proto, tos, class
 
-e) Ok, we are done! Fire the pmacct collector daemon:
+   What enables packet classification is the use of the 'class' primitive as part
+   of the supplied aggregation method. Further classification-related options, 
+   such as timers, attempts, etc., are documented in the CONFIG-KEYS document
+   (classifier_* directives). 
 
-   shell> pmacctd -f /path/to/configuration/file 
+6) Execute pmacct as:
 
-   You can now play with the SQL or pmacct client; furthermore, you can add/remove/write
-   patterns and load them by restarting the pmacct daemon. If using the memory plugin
-   you can check out the list of loaded plugins with 'pmacct -C'. Don't underestimate
-   the importance of 'snaplen', 'pmacctd_flow_buffer_size', 'pmacctd_flow_buffer_buckets'
-   values; get the time to take a read about them in the CONFIG-KEYS document.
+   shell> pmacctd -f /path/to/pmacctd.conf
 
 
 XII. Quickstart guide to setup a NetFlow/IPFIX agent/probe

@@ -73,8 +73,7 @@ DESC:		Aggregate captured traffic data by selecting the specified set of primiti
 		allows to make an unique aggregate which  accounts for the grand total of
 		traffic flowing through a specific interface. 'tag', 'tag2' and 'label' enable
 		generation of tags when tagging engines (pre_tag_map, post_tag) are in use.
-		'class' enables L7 traffic classes when Packet/Flow Classification engine
-		(classifiers) is in use.
+		'class' enables L7 traffic classification.
 NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
 		  any default SQL table schema shipped. Always check out documentation related
 		  to the RDBMS in use (ie. 'sql/README.mysql') which will point you to extra
@@ -157,13 +156,13 @@ DEFAULT:	none
 
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Specifies the maximum number of bytes to capture for each packet. This directive has
-		key importance when enabling both classification and connection tracking engines. In
-		fact, some protocols (mostly text-based eg.: RTSP, SIP, etc.) benefit of extra bytes
-		because they give more chances to successfully track data streams spawned by control 
-		channel. But it must be also noted that capturing larger packet portion require more 
-		resources. The right value need to be traded-off. In case classification is enabled, 
-		values under 200 bytes are often meaningless. 500-750 bytes are enough even for text
-		based protocols. Default snaplen values are ok if classification is disabled.
+		key importance to both classification and connection tracking engines. In fact, some
+		protocols (mostly text-based eg.: RTSP, SIP, etc.) benefit of extra bytes because
+		they give more chances to successfully track data streams spawned by control channel.
+		But it must be also noted that capturing larger packet portion require more resources.
+		The right value need to be traded-off. In case classification is enabled, values under
+		200 bytes are often meaningless. 500-750 bytes are enough even for text based
+		protocols. Default snaplen values are ok if classification is disabled.
 DEFAULT:	128 bytes; 64 bytes if compiled with --disable-ipv6
 
 KEY:		plugins (-P)
@@ -1813,20 +1812,6 @@ DESC:           Defines output format for the streamed logging of sFlow counters
 		compiling).
 DEFAULT:	json
 
-KEY:		classifiers [GLOBAL, NO_NFACCTD, NO_SFACCTD]
-DESC:		Full path to a spool directory containing the packet classification patterns (expected as .pat
-		or .so files; files with different extensions and subdirectories will be just ignored). This
-		feature enables packet/flow classification against application layer data (that is, the packet
-		payload) and based either over regular expression (RE) patterns (.pat) or external/pluggable C
-		modules (.so). Patterns are loaded in filename alphabetic order and will be evaluated in the
-		same order while classifying packets. Supported RE patterns are those from the great L7-filter
-		project, which is a new packet classifier for Linux kernel, and are avilable for download at:
-		http://sourceforge.net/projects/l7-filter/ (then point to the Protocol definitions archive).
-		Existing SO patterns are available at: http://www.pmacct.net/classification/ . 
-		This configuration directive should be specified whenever the 'class' aggregation method is in
-		use (ie. 'aggregate: class'). It's supported only by pmacctd. 
-DEFAULT:	none
-
 KEY:		sql_aggressive_classification 
 VALUES:		[ true | false ]
 DESC:		Usually 5 to 10 packets are required to classify a stream by the 'classifiers' feature. Until
@@ -1835,7 +1820,7 @@ DESC:		Usually 5 to 10 packets are required to classify a stream by the 'classif
 		they are still cached by the SQL plugin. This directive delays 'unknown' streams - but only
 		those which would have still chances to be correctly classified - from being purged to the DB
 		but only for a small number of consecutive sql_refresh_time slots. It is incompatible with
-		sql_dont_try_update and sql_use_copy directives.
+		sql_dont_try_update and sql_use_copy directives. This feature/directive is being phased-out.
 DEFAULT:        false
 
 KEY:		sql_locking_style
@@ -1851,17 +1836,6 @@ DESC:		Defines the locking style for the SQL table. MySQL supports "table" and "
 		over the whole database (requirement for "table" locking in MySQL) is not available, it is not
 		recommended since serialization allows to contain database load.
 DEFAULT:        table
-
-KEY:		classifier_tentatives [GLOBAL, NO_NFACCTD, NO_SFACCTD]
-DESC:		Number of tentatives to classify a stream. Usually 5 "full" (ie. carrying payload) packets are
-		sufficient to classify an uni-directional flow. This is the default value. However classifiers
-		not basing on the payload content may require a different (maybe larger) number of tentatives.
-DEFAULT:	5
-
-KEY:		classifier_table_num [GLOBAL, NO_NFACCTD, NO_SFACCTD]
-DESC:		The maximum number of classifiers (SO + RE) that could be loaded runtime. The default number is 
-		usually ok, but some "dirty" uses of classifiers might require more entries.
-DEFAULT:	256
 
 KEY:		nfprobe_timeouts
 DESC:		Allows to tune a set of timeouts to be applied over collected packets. The value is expected in
@@ -2551,3 +2525,45 @@ KEY:		telemetry_daemon_ipprec [GLOBAL]
 DESC:           Marks self-originated Streaming Telemetry messages with the supplied IP precedence value.
 		Applies to TCP sessions only.
 DEFAULT:        0
+
+KEY:		classifier_num_roots [GLOBAL]
+DESC:		Defines the number of buckets of the nDPI memory structure on which to hash flows.
+		The more the buckets, the more memory will be allocated at startup and the smaller
+		- and hence more performing - each memory structure will be.
+DEFAULT:	512
+
+KEY:		classifier_max_flows [GLOBAL]
+DESC:		Maximum number of concurrent flows allowed in the nDPI memory structure.
+DEFAULT:	200000000
+
+KEY:		classifier_proto_guess [GLOBAL]
+VALUES:         [ true | false ]
+DESC:		If DPI classification is unsuccessful, and before giving up, try guessing the protocol 
+		given collected flow characteristics, ie. IP protocol, port numbers, etc.
+DEFAULT:	false
+
+KEY:		classifier_idle_scan_period [GLOBAL]
+DESC:		Defines the time interval, in seconds, at which going through the memory structure to
+		find for idle flows to expire.  
+DEFAULT:	10
+
+KEY:		classifier_idle_scan_budget [GLOBAL]
+DESC:		Defines the amount of idle flows to expire per each classifier_idle_scan_period. This
+		feature is to prevent too many flows to expire can disrupt the regular classification
+		activity.
+DEFAULT:	1024
+
+KEY:		classifier_giveup_proto_tcp [GLOBAL]
+DESC:		Defines the maximum amount of packets to try to classify a TCP flow. After such amount
+		of trials, the flow will be marked as given up and no classification attempts will be
+		made anymore, until it expires.
+DEFAULT:	10
+
+KEY:		classifier_giveup_proto_udp [GLOBAL]
+DESC:		Same as classifier_giveup_proto_tcp but for UDP flows.
+DEFAULT:	8
+
+KEY:		classifier_giveup_proto_other [GLOBAL]
+DESC:		Same as classifier_giveup_proto_tcp but for flows which IP protocol is different than
+		TCP and UDP.
+DEFAULT:	8

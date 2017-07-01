@@ -71,7 +71,7 @@ NetFlow	   |    \	    &&				      |  						 |
          |								    	  			      |
 	 |         [   handle   ]     [  handle  ]    [  handle   ]	[ handle ]     [     handle	]     |
 	 | ... ====[ link layer ]=====[ IP layer ]====[ fragments ]==== [ flows  ]==== [ classification ] ... |
-	 |		ll.c		  nl.c		ip_frag.c       ip_flow.c         classifier.c	      |
+	 |		ll.c		  nl.c		ip_frag.c       ip_flow.c         nDPI library        |
 	 |												      |
 	 |	   [   handle    ]      [ Correlate ]     						      |
          | ... ====[    maps     ]===== [ BGP, IGP  ] ...						      |
@@ -358,9 +358,10 @@ accounting is enabled (ie. print plugin, 'sql_history', etc.).
 
 
 IX. Classifier and connection tracking engines
-pmacct 0.10.0 sees the introduction of new packet/stream classification and connection tracking
-features in the pmacctd daemon. Firstly, let's give a look to the global picture; then how they
-work:
+Classification and connection tracking features were introduced in pmacctd and uacctd daemons as
+early as 0.10.0 release. As of pmacct 1.7, classification is switched from the mixed home-grown
+implementation + L7 layer project to the nDPI library. Firstly, let's give a look to the global
+picture; then how they work:
 
           ----[ pmacctd loop ]-------------------------------------------------------------
 	 |						     [  regular   ]		   |
@@ -373,7 +374,7 @@ work:
          |        [ fragment ]   [   flow   ]   [      flow      ]   [ connection ]	   |
          | ... ==>[ handling ]==>[ handling ]==>[ classification ]==>[  tracking  ]==> ... |
          |        [  engine  ]   [  engine  ]   [     engine     ]   [   engine   ]	   |
-	 |	   ip_frag.c	  ip_flow.c	   classifier.c	\     conntrack.c	   |
+	 |	   ip_frag.c	  ip_flow.c	   nDPI library	\     conntrack.c	   |
 	 |						|        \___			   |
 	 |						\            \			   |
 	 |						 \  [ shared  ]			   |
@@ -395,11 +396,9 @@ A connection tracking module might be assigned to certain classified streams if 
 a protocol which is known to be based over a control channel (ie. FTP, RTSP, SIP, H.323, etc.).
 However, some protocols (ie. MSN messenger) spawn data channels that can still be distinguished
 because of some regular patterns into the payload; in such cases a classificator exists rather
-than a tracking module. Connection tracking modules are C routines statically compiled into the
-collector code that hint IP address/port couples for upcoming data streams as signalled by one
-of the parties into the control channel; such information fragments are then meant to classify
-the new data streams; classification patterns are either regular expressions (RE) or pluggable 
-shared objects (SO, written in C), both loaded at runtime.  
+than a tracking module. Connection tracking modules hint IP address/port couples for upcoming
+data streams as signalled by one of the parties into the control channel; such pieces of
+information are then meant to classify the new data streams.
 In this context, 'snaplen' directive, which specifies the maximum number of bytes to capture for
 each packet, has key importance. In fact, some protocols (mostly text-based eg. RTSP, SIP, etc.)
 benefit of extra bytes because they give more chances to identify new data streams spawned by
