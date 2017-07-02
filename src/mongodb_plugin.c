@@ -43,7 +43,7 @@ void mongodb_legacy_warning(int pipe_fd, struct configuration *cfgptr, void *ptr
   Log(LOG_WARNING, "WARN ( %s/%s ): \n", config.name, config.type);
   Log(LOG_WARNING, "WARN ( %s/%s ): plugins: mongodb_legacy[abc]\n", config.name, config.type);
   Log(LOG_WARNING, "WARN ( %s/%s ): \n", config.name, config.type);
-  Log(LOG_WARNING, "WARN ( %s/%s ): If you consider to keep using this plugin, please get in touch: %s\n", config.name, config.type, MANTAINER);
+  Log(LOG_WARNING, "WARN ( %s/%s ): %s: %s\n", config.name, config.type, GET_IN_TOUCH_MSG, MANTAINER);
   Log(LOG_WARNING, "WARN ( %s/%s ): =======\n", config.name, config.type);
 
   exit(0);

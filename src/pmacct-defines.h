@@ -90,6 +90,7 @@
 #define PRIMITIVE_DESC_LEN	64
 
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
+#define GET_IN_TOUCH_MSG "If you see this message, please get in touch"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.7.0-git"
 #define UACCTD_USAGE_HEADER "Linux NetFilter NFLOG Accounting Daemon, uacctd 1.7.0-git"
 #define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.7.0-git"

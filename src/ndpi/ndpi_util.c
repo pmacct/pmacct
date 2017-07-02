@@ -56,6 +56,7 @@ struct ndpi_workflow *ndpi_workflow_init()
   struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
 
   log_notification_init(&log_notifications.ndpi_cache_full);
+  log_notification_init(&log_notifications.ndpi_tmp_frag_warn);
 
   workflow->prefs.decode_tunnels = FALSE;
 
@@ -143,6 +144,11 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
   /* IPv4 fragments handling */
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     if ((((struct pm_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_OFFMASK))) {
+      if (!log_notification_isset(&log_notifications.ndpi_tmp_frag_warn, pptrs->pkthdr->ts.tv_sec)) {
+        Log(LOG_WARNING, "WARN ( %s/core ): nDPI support for fragmented traffic not implemented. %s: %s\n", config.name, GET_IN_TOUCH_MSG, MANTAINER);
+        log_notification_set(&log_notifications.ndpi_cache_full, pptrs->pkthdr->ts.tv_sec, 180);
+      }
+
       if (pptrs->frag_first_found) {
 	// XXX
       }
