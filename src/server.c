@@ -560,6 +560,11 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w2 & COUNT_SRC_HOST_POCODE) memcpy(&d1->src_ip_pocode, &s1->src_ip_pocode, sizeof(d1->src_ip_pocode)); 
   if (w2 & COUNT_DST_HOST_POCODE) memcpy(&d1->dst_ip_pocode, &s1->dst_ip_pocode, sizeof(d1->dst_ip_pocode)); 
 #endif
+
+#if defined (WITH_NDPI)
+  if (w2 & COUNT_NDPI_CLASS) memcpy(&d1->ndpi_class, &s1->class, sizeof(d1->ndpi_class)); 
+#endif
+
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
   if (w2 & COUNT_PKT_LEN_DISTRIB) d1->pkt_len_distrib = s1->pkt_len_distrib; 
 

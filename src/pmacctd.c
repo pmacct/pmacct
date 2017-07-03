@@ -646,6 +646,7 @@ int main(int argc,char **argv, char **envp)
   if (config.classifier_ndpi) {
     config.handle_fragments = TRUE;
     ndpi_wfl = ndpi_workflow_init();
+    ndpi_export_proto_to_class(ndpi_wfl);
   }
   else ndpi_wfl = NULL;
 #endif

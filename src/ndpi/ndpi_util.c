@@ -28,6 +28,8 @@
 
 #ifdef WITH_NDPI
 #include "../pmacct.h"
+#include "../ip_flow.h"
+#include "../classifier.h"
 #include "ndpi_util.h"
 
 void ndpi_free_flow_info_half(struct ndpi_flow_info *flow)
@@ -541,6 +543,26 @@ void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
 
     if (++workflow->idle_scan_idx == workflow->prefs.num_roots) workflow->idle_scan_idx = 0;
     workflow->last_idle_scan_time = workflow->last_time;
+  }
+}
+
+void ndpi_export_proto_to_class(struct ndpi_workflow *workflow)
+{
+  struct pkt_classifier css;
+  u_int32_t class_st_sz;
+  int idx;
+
+  if (!workflow || !workflow->ndpi_struct) return;
+
+  class_st_sz = sizeof(struct pkt_classifier) * workflow->ndpi_struct->ndpi_num_supported_protocols;
+  class = map_shared(0, class_st_sz, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+  memset(class, 0, class_st_sz);
+
+  for (idx = 0; idx < (int) workflow->ndpi_struct->ndpi_num_supported_protocols; idx++) {
+    memset(&css, 0, sizeof(css));
+    css.id = idx + 1; /* id are >= 1 */
+    strncpy(css.protocol, workflow->ndpi_struct->proto_defaults[idx].protoName, MAX_PROTOCOL_LEN);
+    pmct_register(&css);
   }
 }
 #endif

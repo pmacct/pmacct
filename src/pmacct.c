@@ -58,12 +58,13 @@ void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_pri
 void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
 void pmc_lower_string(char *);
+char *pmc_ndpi_get_proto_name(u_int16_t);
 
 /* vars */
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
 char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
-int want_ipproto_num, want_tstamp_since_epoch;
+int want_ipproto_num, want_tstamp_since_epoch, ct_idx, ct_num;
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -274,6 +275,9 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_TAG) printf("TAG         ");
     if (what_to_count & COUNT_TAG2) printf("TAG2        ");
     if (what_to_count & COUNT_CLASS) printf("CLASS             ");
+#if defined (WITH_NDPI)
+    if (what_to_count_2 & COUNT_NDPI_CLASS) printf("CLASS             "); 
+#endif
     if (what_to_count & COUNT_IN_IFACE) printf("IN_IFACE    ");
     if (what_to_count & COUNT_OUT_IFACE) printf("OUT_IFACE   ");
 #if defined HAVE_L2
@@ -512,6 +516,9 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_TAG2) printf("%sTAG2", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_LABEL) printf("%sLABEL", write_sep(sep, &count));
     if (what_to_count & COUNT_CLASS) printf("%sCLASS", write_sep(sep, &count));
+#if defined (WITH_NDPI)
+    if (what_to_count_2 & COUNT_NDPI_CLASS) printf("%sCLASS", write_sep(sep, &count)); 
+#endif
     if (what_to_count & COUNT_IN_IFACE) printf("%sIN_IFACE", write_sep(sep, &count));
     if (what_to_count & COUNT_OUT_IFACE) printf("%sOUT_IFACE", write_sep(sep, &count));
 #if defined HAVE_L2
@@ -685,11 +692,11 @@ int main(int argc,char **argv)
   char *pcust = NULL;
   char *clibuf, *bufptr;
   unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
-  char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
+  char ethernet_address[18], ip_address[INET6_ADDRSTRLEN], ndpi_class[SUPERSHORTBUFLEN];
   char path[SRVBUFLEN], file[SRVBUFLEN], password[9], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
   int sd, buflen, unpacked, printed;
-  int counter=0, ct_idx=0, ct_num=0, sep_len=0;
+  int counter=0, sep_len=0;
   int pldt_idx=0, pldt_num=0, is_event;
   char *sep_ptr = NULL, sep[10], default_sep[] = ",";
   struct imt_custom_primitives custom_primitives_input;
@@ -2041,7 +2048,7 @@ int main(int argc,char **argv)
 
     /* Before going on with the output, we need to retrieve the class strings
        from the server */
-    if (what_to_count & COUNT_CLASS && !class_table) {
+    if (((what_to_count & COUNT_CLASS) || (what_to_count_2 & COUNT_NDPI_CLASS)) && !class_table) {
       struct query_header qhdr;
       int unpacked_class;
 
@@ -2171,12 +2178,25 @@ int main(int argc,char **argv)
 	}
 
         if (!have_wtc || (what_to_count & COUNT_CLASS)) {
-           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-16s  ", (acc_elem->primitives.class == 0 || acc_elem->primitives.class > ct_idx ||
-							!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);
-           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count),
+          if (want_output & PRINT_OUTPUT_FORMATTED)
+	    printf("%-16s  ", (acc_elem->primitives.class == 0 || acc_elem->primitives.class > ct_idx ||
+				!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);
+          else if (want_output & PRINT_OUTPUT_CSV)
+	    printf("%s%s", write_sep(sep_ptr, &count),
 				(acc_elem->primitives.class == 0 || acc_elem->primitives.class > ct_idx ||
 				!class_table[acc_elem->primitives.class-1].id) ? "unknown" : class_table[acc_elem->primitives.class-1].protocol);
 	}
+
+#if defined (WITH_NDPI)
+	if (!have_wtc || (what_to_count_2 & COUNT_NDPI_CLASS)) {
+	  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+		pmc_ndpi_get_proto_name(acc_elem->primitives.ndpi_class.master_protocol),
+		pmc_ndpi_get_proto_name(acc_elem->primitives.ndpi_class.app_protocol));
+
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-16s  ", ndpi_class); 
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ndpi_class);
+	}
+#endif
 
         if (!have_wtc || (what_to_count_2 & COUNT_LABEL)) {
           if (want_output & PRINT_OUTPUT_FORMATTED); /* case not supported */
@@ -3349,7 +3369,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
-  char tstamp_str[SRVBUFLEN], unknown_pkt_len_distrib[] = "not_recv", *label_ptr;
+  char tstamp_str[SRVBUFLEN], ndpi_class[SUPERSHORTBUFLEN], unknown_pkt_len_distrib[] = "not_recv", *label_ptr;
   int ret = FALSE;
   json_t *obj = json_object();
   
@@ -3366,6 +3386,16 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   if (wtc & COUNT_CLASS)
     json_object_set_new_nocheck(obj, "class", json_string((pbase->class && class_table[(pbase->class)-1].id) ? class_table[(pbase->class)-1].protocol : "unknown"));
+
+#if defined (WITH_NDPI)
+  if (wtc_2 & COUNT_NDPI_CLASS) {
+    snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
+		pmc_ndpi_get_proto_name(pbase->ndpi_class.master_protocol),
+		pmc_ndpi_get_proto_name(pbase->ndpi_class.app_protocol));
+
+    json_object_set_new_nocheck(obj, "class", json_string(ndpi_class));
+  }
+#endif
 
 #if defined (HAVE_L2)
   if (wtc & COUNT_SRC_MAC) {
@@ -3949,4 +3979,10 @@ void pmc_lower_string(char *string)
     string[i] = tolower(string[i]);
     i++;
   }
+}
+
+char *pmc_ndpi_get_proto_name(u_int16_t proto_id)
+{
+  if (!proto_id || proto_id > ct_idx || !class_table[proto_id].id) return class_table[0].protocol;
+  else return class_table[proto_id].protocol;
 }
