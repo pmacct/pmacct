@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -457,6 +457,18 @@ flow_to_flowset_class_handler(char *flowset, const struct FLOW *flow, int idx, i
 
   return 0;
 }
+
+#if defined (WITH_NDPI)
+static int
+flow_to_flowset_ndpi_class_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+{
+  u_int32_t tmp32 = flow->ndpi_class.app_protocol;
+
+  memcpy(flowset, &tmp32, size);
+
+  return 0;
+}
+#endif
 
 static int
 flow_to_flowset_tag_handler(char *flowset, const struct FLOW *flow, int idx, int size)
@@ -1067,6 +1079,19 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 4;
           rcount++;
         }
+#if defined (WITH_NDPI)
+	if (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS) { 
+	  v4_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
+	  v4_template.r[rcount].length = htons(4);
+	  v4_int_template.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
+	  v4_int_template.r[rcount].length = 4;
+	  v4_template_out.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
+	  v4_template_out.r[rcount].length = htons(4);
+	  v4_int_template_out.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
+	  v4_int_template_out.r[rcount].length = 4;
+	  rcount++;
+	}
+#endif
 
         /* all custom primitives printed here: must be kept last since
 	   only the first field will also have a corresponding handler */
@@ -1449,7 +1474,7 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 1;
           rcount++;
         }
-        if (config.nfprobe_what_to_count & COUNT_CLASS) {
+        if (config.nfprobe_what_to_count & COUNT_CLASS) { 
           v6_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
           v6_template.r[rcount].length = htons(4);
           v6_int_template.r[rcount].handler = flow_to_flowset_class_handler;
@@ -1460,6 +1485,19 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 4;
           rcount++;
         }
+#if defined (WITH_NDPI)
+	if (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS) { 
+	  v6_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
+	  v6_template.r[rcount].length = htons(4);
+	  v6_int_template.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
+	  v6_int_template.r[rcount].length = 4;
+	  v6_template_out.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
+	  v6_template_out.r[rcount].length = htons(4);
+	  v6_int_template_out.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
+	  v6_int_template_out.r[rcount].length = 4;
+	  rcount++;
+	}
+#endif
 
         /* all custom primitives printed here: must be kept last since
            only the first field will also have a corresponding handler */
@@ -2093,7 +2131,11 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			  send_options = TRUE;
 			  send_sampling_option = TRUE;
 			}
-			if (config.nfprobe_what_to_count & COUNT_CLASS && num_class) {
+			if (((config.nfprobe_what_to_count & COUNT_CLASS) ||
+#if defined (WITH_NDPI) 
+			    (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
+#endif
+			    ) && num_class > 0) {
                           memcpy(packet + offset, &class_option_template, class_option_template.tot_len);
                           offset += class_option_template.tot_len;
                           flows++;

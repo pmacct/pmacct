@@ -560,9 +560,9 @@ void ndpi_export_proto_to_class(struct ndpi_workflow *workflow)
 
   for (idx = 0; idx < (int) workflow->ndpi_struct->ndpi_num_supported_protocols; idx++) {
     memset(&css, 0, sizeof(css));
-    css.id = idx + 1; /* id are >= 1 */
+    css.id = workflow->ndpi_struct->proto_defaults[idx].protoId;
     strncpy(css.protocol, workflow->ndpi_struct->proto_defaults[idx].protoName, MAX_PROTOCOL_LEN);
-    pmct_register(&css);
+    pmct_ndpi_register(&css);
   }
 }
 #endif

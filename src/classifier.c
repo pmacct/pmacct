@@ -585,6 +585,26 @@ pm_class_t pmct_register(struct pkt_classifier *css)
   else return 0;
 }
 
+/* same as pmct_register but without the index decrement */
+pm_class_t pmct_ndpi_register(struct pkt_classifier *css)
+{
+  int max = pmct_get_num_entries();
+
+  if (!css) return 0;
+
+  /* let's check that a) a valid class ID has been supplied, b) the class ID
+     is still available. If this is the case, let's proceed with this entry,
+     otherwise we will switch to a default behaviour. */
+
+  if (!strcmp(css->protocol, "")) return 0;
+
+  if (css->id <= max && !class[css->id].id) {
+    memcpy(&class[css->id], css, sizeof(struct pkt_classifier));
+    return css->id;
+  }
+  else return 0;
+}
+
 void pmct_unregister(pm_class_t id)
 {
   int max = pmct_get_num_entries();

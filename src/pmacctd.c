@@ -466,9 +466,13 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
 	}
-	if ((list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) && list->cfg.classifiers_path) {
-	  list->cfg.what_to_count |= COUNT_CLASS;
-	  config.handle_flows = TRUE;
+	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
+	  if (list->cfg.classifiers_path) {
+	    list->cfg.what_to_count |= COUNT_CLASS;
+	    config.handle_flows = TRUE;
+	  }
+	  if (list->cfg.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
+	    list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 	}
 	if (list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_TAG;
@@ -623,7 +627,8 @@ int main(int argc,char **argv, char **envp)
       }
 
       /* applies to all plugins */
-      if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
+      if ((list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) ||
+	  (list->cfg.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)) {
 	config.handle_fragments = TRUE;
 	config.classifier_ndpi = TRUE;
       }

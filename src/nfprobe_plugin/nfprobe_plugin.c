@@ -455,6 +455,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->packets[ndx] = data->pkt_num;
   flow->flows[ndx] = data->flo_num;
   flow->class = p->class;
+  memcpy(&flow->ndpi_class, &p->ndpi_class, sizeof(pm_class2_t));
   flow->tag[ndx] = p->tag;
   flow->tag2[ndx] = p->tag2;
 
@@ -518,6 +519,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->packets[ndx] = data->pkt_num; 
   flow->flows[ndx] = data->flo_num;
   flow->class = p->class;
+  memcpy(&flow->ndpi_class, &p->ndpi_class, sizeof(pm_class2_t));
   flow->tag[ndx] = p->tag;
   flow->tag2[ndx] = p->tag2;
 
@@ -756,6 +758,8 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
 #endif
     }
     if (!flow->class) flow->class = tmp.class;
+    if (!flow->ndpi_class.app_protocol)
+      memcpy(&flow->ndpi_class, &tmp.ndpi_class, sizeof(pm_class2_t));
     if (!flow->tag[0]) flow->tag[0] = tmp.tag[0];
     if (!flow->tag[1]) flow->tag[1] = tmp.tag[1];
     if (!flow->tag2[0]) flow->tag2[0] = tmp.tag2[0];

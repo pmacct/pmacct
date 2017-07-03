@@ -78,6 +78,7 @@ EXT void clear_context_chain(struct ip_flow_common *, unsigned int);
 EXT void prepare_classifier_data(struct pkt_classifier_data *, struct ip_flow_common *, unsigned int, struct packet_ptrs *);
 
 EXT pm_class_t pmct_register(struct pkt_classifier *);
+EXT pm_class_t pmct_ndpi_register(struct pkt_classifier *);
 EXT void pmct_unregister(pm_class_t);
 EXT pm_class_t pmct_find_first_free();
 EXT pm_class_t pmct_find_last_free();

@@ -180,6 +180,7 @@ struct FLOW {
 
 	/* classification stuff */
 	pm_class_t class;			/* Classification internal ID */
+	pm_class2_t ndpi_class;			/* nDPI classification internal ID */
 	pm_id_t tag[2];				/* Tag */
 	pm_id_t tag2[2];			/* Tag2 */
 
