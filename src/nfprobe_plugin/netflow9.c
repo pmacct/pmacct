@@ -2131,9 +2131,9 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			  send_options = TRUE;
 			  send_sampling_option = TRUE;
 			}
-			if (((config.nfprobe_what_to_count & COUNT_CLASS) ||
+			if (((config.nfprobe_what_to_count & COUNT_CLASS)
 #if defined (WITH_NDPI) 
-			    (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
+			    || (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
 #endif
 			    ) && num_class > 0) {
                           memcpy(packet + offset, &class_option_template, class_option_template.tot_len);
