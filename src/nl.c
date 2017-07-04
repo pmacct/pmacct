@@ -68,8 +68,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       if ((*pptrs.l3_handler)(&pptrs)) {
 
 #if defined (WITH_NDPI)
-        if (config.classifier_ndpi && ndpi_wfl) {
-          pptrs.ndpi_class = ndpi_workflow_process_packet(ndpi_wfl, &pptrs);
+        if (config.classifier_ndpi && pm_ndpi_wfl) {
+          pptrs.ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, &pptrs);
 	}
 #endif
 

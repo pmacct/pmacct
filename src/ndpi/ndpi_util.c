@@ -32,7 +32,7 @@
 #include "../classifier.h"
 #include "ndpi_util.h"
 
-void ndpi_free_flow_info_half(struct ndpi_flow_info *flow)
+void pm_ndpi_free_flow_info_half(struct pm_ndpi_flow_info *flow)
 {
   if (flow) {
     if (flow->ndpi_flow) {
@@ -52,10 +52,10 @@ void ndpi_free_flow_info_half(struct ndpi_flow_info *flow)
   }
 }
 
-struct ndpi_workflow *ndpi_workflow_init()
+struct pm_ndpi_workflow *pm_ndpi_workflow_init()
 {
   struct ndpi_detection_module_struct *module = ndpi_init_detection_module();
-  struct ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct ndpi_workflow));
+  struct pm_ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct pm_ndpi_workflow));
 
   log_notification_init(&log_notifications.ndpi_cache_full);
   log_notification_init(&log_notifications.ndpi_tmp_frag_warn);
@@ -101,10 +101,10 @@ struct ndpi_workflow *ndpi_workflow_init()
   return workflow;
 }
 
-int ndpi_workflow_node_cmp(const void *a, const void *b)
+int pm_ndpi_workflow_node_cmp(const void *a, const void *b)
 {
-  struct ndpi_flow_info *fa = (struct ndpi_flow_info*)a;
-  struct ndpi_flow_info *fb = (struct ndpi_flow_info*)b;
+  struct pm_ndpi_flow_info *fa = (struct pm_ndpi_flow_info*)a;
+  struct pm_ndpi_flow_info *fb = (struct pm_ndpi_flow_info*)b;
 
   if(fa->vlan_id   < fb->vlan_id  )   return(-1); else { if(fa->vlan_id   > fb->vlan_id    ) return(1); }
   if(fa->lower_ip   < fb->lower_ip  ) return(-1); else { if(fa->lower_ip   > fb->lower_ip  ) return(1); }
@@ -116,7 +116,7 @@ int ndpi_workflow_node_cmp(const void *a, const void *b)
   return(0);
 }
 
-struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
+struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *workflow,
 						 struct packet_ptrs *pptrs,
 						 u_int16_t vlan_id,
 						 const struct ndpi_iphdr *iph,
@@ -139,7 +139,7 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
   u_int32_t upper_ip;
   u_int16_t lower_port;
   u_int16_t upper_port;
-  struct ndpi_flow_info flow;
+  struct pm_ndpi_flow_info flow;
   void *ret;
   u_int8_t *l4;
 
@@ -239,12 +239,12 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
   flow.lower_port = lower_port, flow.upper_port = upper_port;
 
 /*
-  Log(LOG_DEBUG, "DEBUG ( %s/core ): "ndpi_get_flow_info(): [%u][%u:%u <-> %u:%u]\n",
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): "pm_ndpi_get_flow_info(): [%u][%u:%u <-> %u:%u]\n",
 	iph->protocol, lower_ip, ntohs(lower_port), upper_ip, ntohs(upper_port));
 */
 
   idx = (vlan_id + lower_ip + upper_ip + iph->protocol + lower_port + upper_port) % workflow->prefs.num_roots;
-  ret = pm_tfind(&flow, &workflow->ndpi_flows_root[idx], ndpi_workflow_node_cmp);
+  ret = pm_tfind(&flow, &workflow->ndpi_flows_root[idx], pm_ndpi_workflow_node_cmp);
 
   if (ret == NULL) {
     if (workflow->stats.ndpi_flow_count == workflow->prefs.max_ndpi_flows) {
@@ -256,14 +256,14 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
       return(NULL);
     }
     else {
-      struct ndpi_flow_info *newflow = (struct ndpi_flow_info*)malloc(sizeof(struct ndpi_flow_info));
+      struct pm_ndpi_flow_info *newflow = (struct pm_ndpi_flow_info*)malloc(sizeof(struct pm_ndpi_flow_info));
 
       if (newflow == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (1).\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (1).\n", config.name);
 	exit(1);
       }
 
-      memset(newflow, 0, sizeof(struct ndpi_flow_info));
+      memset(newflow, 0, sizeof(struct pm_ndpi_flow_info));
       newflow->protocol = iph->protocol, newflow->vlan_id = vlan_id;
       newflow->lower_ip = lower_ip, newflow->upper_ip = upper_ip;
       newflow->lower_port = lower_port, newflow->upper_port = upper_port;
@@ -271,24 +271,24 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
       newflow->src_to_dst_direction = *src_to_dst_direction;
 
       if ((newflow->ndpi_flow = ndpi_flow_malloc(SIZEOF_FLOW_STRUCT)) == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (2).\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (2).\n", config.name);
 	exit(1);
       }
       else memset(newflow->ndpi_flow, 0, SIZEOF_FLOW_STRUCT);
 
       if ((newflow->src_id = ndpi_malloc(SIZEOF_ID_STRUCT)) == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (3).\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (3).\n", config.name);
 	exit(1);
       }
       else memset(newflow->src_id, 0, SIZEOF_ID_STRUCT);
 
       if ((newflow->dst_id = ndpi_malloc(SIZEOF_ID_STRUCT)) == NULL) {
-	Log(LOG_ERR, "ERROR ( %s/core ): ndpi_get_flow_info() not enough memory (4).\n", config.name);
+	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (4).\n", config.name);
 	exit(1);
       }
       else memset(newflow->dst_id, 0, SIZEOF_ID_STRUCT);
 
-      pm_tsearch(newflow, &workflow->ndpi_flows_root[idx], ndpi_workflow_node_cmp, 0); /* Add */
+      pm_tsearch(newflow, &workflow->ndpi_flows_root[idx], pm_ndpi_workflow_node_cmp, 0); /* Add */
       workflow->stats.ndpi_flow_count++;
 
       *src = newflow->src_id, *dst = newflow->dst_id;
@@ -297,7 +297,7 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
     }
   }
   else {
-    struct ndpi_flow_info *flow = *(struct ndpi_flow_info**)ret;
+    struct pm_ndpi_flow_info *flow = *(struct pm_ndpi_flow_info**)ret;
 
     if (flow->lower_ip == lower_ip && flow->upper_ip == upper_ip
        && flow->lower_port == lower_port && flow->upper_port == upper_port)
@@ -309,7 +309,7 @@ struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *workflow,
   }
 }
 
-struct ndpi_flow_info *ndpi_get_flow_info6(struct ndpi_workflow *workflow,
+struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *workflow,
 						  struct packet_ptrs *pptrs,
 						  u_int16_t vlan_id,
 						  const struct ndpi_ipv6hdr *iph6,
@@ -338,7 +338,7 @@ struct ndpi_flow_info *ndpi_get_flow_info6(struct ndpi_workflow *workflow,
     iph.protocol = options[0];
   }
 
-  return(ndpi_get_flow_info(workflow, pptrs, vlan_id, &iph, iph6, ip_offset,
+  return(pm_ndpi_get_flow_info(workflow, pptrs, vlan_id, &iph, iph6, ip_offset,
 			    sizeof(struct ndpi_ipv6hdr),
 			    ntohs(iph6->ip6_ctlun.ip6_un1.ip6_un1_plen),
 			    tcph, udph, sport, dport,
@@ -352,7 +352,7 @@ struct ndpi_flow_info *ndpi_get_flow_info6(struct ndpi_workflow *workflow,
 
    @Note: ipsize = header->len - ip_offset ; rawsize = header->len
 */
-struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
+struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
 					   struct packet_ptrs *pptrs,
 					   const u_int64_t time,
 					   u_int16_t vlan_id,
@@ -362,7 +362,7 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
 					   u_int16_t ipsize, u_int16_t rawsize)
 {
   struct ndpi_id_struct *src, *dst;
-  struct ndpi_flow_info *flow = NULL;
+  struct pm_ndpi_flow_info *flow = NULL;
   struct ndpi_flow_struct *ndpi_flow = NULL;
   u_int8_t proto;
   struct ndpi_tcphdr *tcph = NULL;
@@ -375,14 +375,14 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   if (!workflow) return nproto;
 
   if (iph)
-    flow = ndpi_get_flow_info(workflow, pptrs, vlan_id, iph, NULL,
+    flow = pm_ndpi_get_flow_info(workflow, pptrs, vlan_id, iph, NULL,
 			      ip_offset, ipsize,
 			      ntohs(iph->tot_len) - (iph->ihl * 4),
 			      &tcph, &udph, &sport, &dport,
 			      &src, &dst, &proto,
 			      &payload, &payload_len, &src_to_dst_direction);
   else if (iph6)
-    flow = ndpi_get_flow_info6(workflow, pptrs, vlan_id, iph6, ip_offset,
+    flow = pm_ndpi_get_flow_info6(workflow, pptrs, vlan_id, iph6, ip_offset,
 			       &tcph, &udph, &sport, &dport,
 			       &src, &dst, &proto,
 			       &payload, &payload_len, &src_to_dst_direction);
@@ -426,7 +426,7 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
 
     if (workflow->prefs.protocol_guess) {
       if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
-        ndpi_node_guess_undetected_protocol(workflow, flow);
+        pm_ndpi_node_guess_undetected_protocol(workflow, flow);
 	flow->guess_completed = TRUE;
       }
     }
@@ -435,7 +435,7 @@ struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *workflow,
   return(flow->detected_protocol);
 }
 
-struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, struct packet_ptrs *pptrs)
+struct ndpi_proto pm_ndpi_workflow_process_packet(struct pm_ndpi_workflow *workflow, struct packet_ptrs *pptrs)
 {
   struct ndpi_iphdr *iph = NULL;
   struct ndpi_ipv6hdr *iph6 = NULL;
@@ -472,11 +472,11 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
   ip_offset = (u_int16_t)(pptrs->iph_ptr - pptrs->packet_ptr);
 
   /* process the packet */
-  nproto = ndpi_packet_processing(workflow, pptrs, time, vlan_id, iph, iph6,
+  nproto = pm_ndpi_packet_processing(workflow, pptrs, time, vlan_id, iph, iph6,
 				ip_offset, (pptrs->pkthdr->len - ip_offset),
 				pptrs->pkthdr->len);
 
-  ndpi_idle_flows_cleanup(workflow);
+  pm_ndpi_idle_flows_cleanup(workflow);
 
   return nproto;
 }
@@ -484,7 +484,7 @@ struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *workflow, s
 /*
  * Guess Undetected Protocol
  */
-u_int16_t ndpi_node_guess_undetected_protocol(struct ndpi_workflow *workflow, struct ndpi_flow_info *flow)
+u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *workflow, struct pm_ndpi_flow_info *flow)
 {
   if (!flow || !workflow) return 0;
 
@@ -501,10 +501,10 @@ u_int16_t ndpi_node_guess_undetected_protocol(struct ndpi_workflow *workflow, st
 /*
  * Idle Scan Walker
  */
-int ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int depth, void *user_data)
+int pm_ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int depth, void *user_data)
 {
-  struct ndpi_flow_info *flow = *(struct ndpi_flow_info **) node;
-  struct ndpi_workflow *workflow = (struct ndpi_workflow *) user_data;
+  struct pm_ndpi_flow_info *flow = *(struct pm_ndpi_flow_info **) node;
+  struct pm_ndpi_workflow *workflow = (struct pm_ndpi_workflow *) user_data;
 
   if (!flow || !workflow) return FALSE;
 
@@ -522,21 +522,21 @@ int ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const int
   return TRUE;
 }
 
-void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
+void pm_ndpi_idle_flows_cleanup(struct pm_ndpi_workflow *workflow)
 {
   if (!workflow) return;
 
   if ((workflow->last_idle_scan_time + workflow->prefs.idle_scan_period) < workflow->last_time) {
     /* scan for idle flows */
-    pm_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_node_idle_scan_walker, workflow);
+    pm_twalk(workflow->ndpi_flows_root[workflow->idle_scan_idx], pm_ndpi_node_idle_scan_walker, workflow);
 
     /* remove idle flows (unfortunately we cannot do this inline) */
     while (workflow->num_idle_flows > 0) {
       /* search and delete the idle flow from the "ndpi_flow_root" (see struct reader thread) - here flows are the node of a b-tree */
-      pm_tdelete(workflow->idle_flows[--workflow->num_idle_flows], &workflow->ndpi_flows_root[workflow->idle_scan_idx], ndpi_workflow_node_cmp);
+      pm_tdelete(workflow->idle_flows[--workflow->num_idle_flows], &workflow->ndpi_flows_root[workflow->idle_scan_idx], pm_ndpi_workflow_node_cmp);
 
       /* free the memory associated to idle flow in "idle_flows" - (see struct reader thread)*/
-      ndpi_free_flow_info_half(workflow->idle_flows[workflow->num_idle_flows]);
+      pm_ndpi_free_flow_info_half(workflow->idle_flows[workflow->num_idle_flows]);
       ndpi_free(workflow->idle_flows[workflow->num_idle_flows]);
       workflow->stats.ndpi_flow_count--;
     }
@@ -546,7 +546,7 @@ void ndpi_idle_flows_cleanup(struct ndpi_workflow *workflow)
   }
 }
 
-void ndpi_export_proto_to_class(struct ndpi_workflow *workflow)
+void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *workflow)
 {
   struct pkt_classifier css;
   u_int32_t class_st_sz;

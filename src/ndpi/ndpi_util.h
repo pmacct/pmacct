@@ -35,7 +35,7 @@
 #define NDPI_GIVEUP_PROTO_OTHER		8	
 
 /* flow tracking */
-typedef struct ndpi_flow_info {
+typedef struct pm_ndpi_flow_info {
   u_int32_t lower_ip;
   u_int32_t upper_ip;
   u_int16_t lower_port;
@@ -57,10 +57,10 @@ typedef struct ndpi_flow_info {
 
   void *src_id;
   void *dst_id;
-} ndpi_flow_info_t;
+} pm_ndpi_flow_info_t;
 
 /* flow statistics info */
-typedef struct ndpi_stats {
+typedef struct pm_ndpi_stats {
   u_int32_t guessed_flow_protocols;
   u_int64_t raw_packet_count;
   u_int64_t ip_packet_count;
@@ -73,10 +73,10 @@ typedef struct ndpi_stats {
   u_int64_t mpls_count, pppoe_count, vlan_count, fragmented_count;
   u_int64_t packet_len[6];
   u_int16_t max_packet_len;
-} ndpi_stats_t;
+} pm_ndpi_stats_t;
 
 /* flow preferences */
-typedef struct ndpi_workflow_prefs {
+typedef struct pm_ndpi_workflow_prefs {
   u_int8_t decode_tunnels;
   u_int8_t protocol_guess;
   u_int32_t num_roots;
@@ -87,26 +87,26 @@ typedef struct ndpi_workflow_prefs {
   u_int8_t giveup_proto_tcp;
   u_int8_t giveup_proto_udp;
   u_int8_t giveup_proto_other;
-} ndpi_workflow_prefs_t;
+} pm_ndpi_workflow_prefs_t;
 
-struct ndpi_workflow;
+struct pm_ndpi_workflow;
 
 /* workflow main structure */
-typedef struct ndpi_workflow {
+typedef struct pm_ndpi_workflow {
   u_int64_t last_time;
 
   u_int64_t last_idle_scan_time;
   u_int32_t num_idle_flows;
   u_int32_t idle_scan_idx;
-  struct ndpi_flow_info *idle_flows[NDPI_IDLE_SCAN_BUDGET];
+  struct pm_ndpi_flow_info *idle_flows[NDPI_IDLE_SCAN_BUDGET];
 
-  struct ndpi_workflow_prefs prefs;
-  struct ndpi_stats stats;
+  struct pm_ndpi_workflow_prefs prefs;
+  struct pm_ndpi_stats stats;
 
   /* allocated by prefs */
   void **ndpi_flows_root;
   struct ndpi_detection_module_struct *ndpi_struct;
-} ndpi_workflow_t;
+} pm_ndpi_workflow_t;
 
 #if (!defined __NDPI_UTIL_C)
 #define EXT extern
@@ -114,34 +114,34 @@ typedef struct ndpi_workflow {
 #define EXT
 #endif
 /* global vars */
-EXT struct ndpi_workflow *ndpi_wfl;
+EXT struct pm_ndpi_workflow *pm_ndpi_wfl;
 
 /* prototypes */
-EXT struct ndpi_workflow * ndpi_workflow_init();
+EXT struct pm_ndpi_workflow *pm_ndpi_workflow_init();
 
 /* Free flow_info ndpi support structures but not the flow_info itself */
-EXT void ndpi_free_flow_info_half(struct ndpi_flow_info *);
+EXT void pm_ndpi_free_flow_info_half(struct pm_ndpi_flow_info *);
 
 /* Process a packet and update the workflow  */
-EXT struct ndpi_proto ndpi_workflow_process_packet(struct ndpi_workflow *, struct packet_ptrs *);
+EXT struct ndpi_proto pm_ndpi_workflow_process_packet(struct pm_ndpi_workflow *, struct packet_ptrs *);
 
 /* compare two nodes in workflow */
-EXT int ndpi_workflow_node_cmp(const void *, const void *);
+EXT int pm_ndpi_workflow_node_cmp(const void *, const void *);
 
-EXT struct ndpi_flow_info *ndpi_get_flow_info(struct ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
+EXT struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
 						const struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t, struct ndpi_tcphdr **,
 						struct ndpi_udphdr **, u_int16_t *, u_int16_t *, struct ndpi_id_struct **,
 						struct ndpi_id_struct **, u_int8_t *, u_int8_t **, u_int16_t *, u_int8_t *);
-EXT struct ndpi_flow_info *ndpi_get_flow_info6(struct ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_ipv6hdr *,
+EXT struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_ipv6hdr *,
 						u_int16_t, struct ndpi_tcphdr **, struct ndpi_udphdr **, u_int16_t *, u_int16_t *,
 						struct ndpi_id_struct **, struct ndpi_id_struct **, u_int8_t *, u_int8_t **,
 						u_int16_t *, u_int8_t *);
-EXT struct ndpi_proto ndpi_packet_processing(struct ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
+EXT struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
 						const struct ndpi_iphdr *, struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t); 
 
-EXT u_int16_t ndpi_node_guess_undetected_protocol(struct ndpi_workflow *, struct ndpi_flow_info *);
-EXT void ndpi_idle_flows_cleanup(struct ndpi_workflow *);
-EXT void ndpi_export_proto_to_class(struct ndpi_workflow *);
+EXT u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *, struct pm_ndpi_flow_info *);
+EXT void pm_ndpi_idle_flows_cleanup(struct pm_ndpi_workflow *);
+EXT void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *);
 
-EXT int ndpi_node_idle_scan_walker(const void *, const pm_VISIT, const int, void *);
+EXT int pm_ndpi_node_idle_scan_walker(const void *, const pm_VISIT, const int, void *);
 #undef EXT

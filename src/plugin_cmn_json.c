@@ -453,8 +453,8 @@ void compose_json_ndpi_class(json_t *obj, struct chained_cache *cc)
   struct pkt_primitives *pbase = &cc->primitives;
 
   snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
-	ndpi_get_proto_name(ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
+	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
+	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
 
   json_object_set_new_nocheck(obj, "class", json_string(ndpi_class));
 }

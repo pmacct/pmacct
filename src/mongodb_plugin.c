@@ -483,8 +483,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   #if defined (WITH_NDPI)
       if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
 	snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-		ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.master_protocol),
-		ndpi_get_proto_name(ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.master_protocol),
+		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
 
 	bson_append_string(bson_elem, "class", ndpi_class);
       }

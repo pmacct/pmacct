@@ -701,10 +701,10 @@ int main(int argc,char **argv, char **envp)
 #if defined (WITH_NDPI)
   if (config.classifier_ndpi) {
     config.handle_fragments = TRUE;
-    ndpi_wfl = ndpi_workflow_init();
-    ndpi_export_proto_to_class(ndpi_wfl);
+    pm_ndpi_wfl = pm_ndpi_workflow_init();
+    pm_ndpi_export_proto_to_class(pm_ndpi_wfl);
   }
-  else ndpi_wfl = NULL;
+  else pm_ndpi_wfl = NULL;
 #endif
 
   if (config.aggregate_primitives) {
