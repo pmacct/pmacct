@@ -344,7 +344,7 @@ AC_ARG_ENABLE(plabel,
   ])
 
 AC_ARG_WITH(pcap-includes,
-  [  --with-pcap-includes=DIR         Search the specified directories for header files],
+  [  --with-pcap-includes=DIR         Search the specified directory for header files],
   [
 	AC_LINEARIZE_PATH($withval, withval=$absdir)
 	INCLUDES="${INCLUDES} -I$withval"
@@ -391,7 +391,7 @@ if test x"$PCAPINCLUDESFOUND" = x""; then
 fi
 
 AC_ARG_WITH(pcap-libs,
-  [  --with-pcap-libs=DIR             Search the specified directories for libraries],
+  [  --with-pcap-libs=DIR             Search the specified directory for pcap library],
   [	
 	AC_LINEARIZE_PATH($withval, withval=$absdir)
 	LIBS="${LIBS} -L$withval"
@@ -905,6 +905,24 @@ AC_ARG_ENABLE(avro,
 dnl finish: Avro handling
 
 dnl start: nDPI handling
+AC_ARG_WITH(ndpi-static-lib,
+  [  --with-ndpi-static-lib=DIR       Search the specified directory for nDPI static library],
+  [
+        AC_LINEARIZE_PATH($withval, withval=$absdir)
+        NDPI_CUST_STATIC_LIB=$withval
+  ])
+
+if test x"$NDPI_CUST_STATIC_LIB" != x""; then
+  AC_MSG_CHECKING(your own nDPI library)
+  if test -r $NDPI_CUST_STATIC_LIB/libndpi.a; then
+    AC_MSG_RESULT(ok)
+    NDPI_CUST_STATIC_LIB_FOUND="yes"
+  else
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(ERROR: unable to find nDPI library in $NDPI_CUST_STATIC_LIB)
+  fi
+fi
+
 AC_MSG_CHECKING(whether to enable nDPI support)
 AC_ARG_ENABLE(ndpi,
   [  --enable-ndpi                    Enable nDPI support (default: no)],
@@ -914,15 +932,25 @@ AC_ARG_ENABLE(ndpi,
     PKG_CHECK_MODULES([NDPI], [libndpi])
     SUPPORTS="${SUPPORTS} ndpi"
     USING_NDPI="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS"
+
+    if test x"$NDPI_CFLAGS" != x""; then
+      NDPI_CFLAGS_INST=`echo $NDPI_CFLAGS | sed 's/ $//'`
+      NDPI_CFLAGS_INST="$NDPI_CFLAGS_INST/libndpi"
+    else
+      NDPI_CFLAGS_INST=""
+    fi
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS $NDPI_CFLAGS_INST"
+
     AC_DEFINE(WITH_NDPI, 1)
     _save_LIBS="$LIBS"
     LIBS="$LIBS $NDPI_LIBS"
     AC_CHECK_LIB(ndpi, ndpi_init_detection_module, [], [])
     LIBS="$_save_LIBS"
 
-    dnl XXX: to be improved: 1) to guess non-standard paths and 2) avoid linking both static and dynamic libs
-    if test -r /usr/lib/libndpi.a; then
+    dnl XXX: to be improved: avoid linking both static and dynamic libs
+    if test x"$NDPI_CUST_STATIC_LIB_FOUND" = x"yes"; then
+      NDPI_LIBS_STATIC="$NDPI_CUST_STATIC_LIB/libndpi.a"
+    elif test -r /usr/lib/libndpi.a; then
       NDPI_LIBS_STATIC="/usr/lib/libndpi.a"
     elif test -r /usr/local/lib/libndpi.a; then
       NDPI_LIBS_STATIC="/usr/local/lib/libndpi.a"

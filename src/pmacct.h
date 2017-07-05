@@ -90,7 +90,7 @@
 #endif
 
 #if defined (WITH_NDPI)
-#include <libndpi/ndpi_main.h>
+#include <ndpi_main.h>
 #endif
 
 #include "pmacct-build.h"
