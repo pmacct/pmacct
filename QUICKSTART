@@ -898,14 +898,13 @@ router bgp Y
 
    2) encode flow classification information in NetFlow v9 like Cisco does with its
    NBAR/NetFlow v9 integration. This can be done by introducing the 'class' primitive
-   to the afore mentioned 'aggregate' and add the extra configuration directives:
+   to the afore mentioned 'aggregate' and add the extra configuration directive:
 
 aggregate: class, src_host, dst_host, src_port, dst_port, proto, tos
-classifiers: /path/to/classifiers/
 snaplen: 700
 
-   Further information on this topic can be found in the section of this document about
-   stream classification.
+   Further information on this topic can be found in the 'Quickstart guide to packet
+   classification' section of this document.
 
    3) add direction (ingress, egress) awareness to measured IP traffic flows. Direction
    can be defined statically (in, out) or inferred dinamically (tag, tag2) via the use
@@ -968,8 +967,7 @@ nfacctd_ip: 1.2.3.4
 nfacctd_port: 2100
 plugins: memory[display]
 aggregate[display]: src_host, dst_host, src_port, dst_port, proto
-!
-! classifiers: /path/to/classifiers
+! aggregate[display]: class, src_host, dst_host, src_port, dst_port, proto
 
 d) Ok, we are done ! Now fire both daemons:
 
@@ -983,9 +981,10 @@ IPFIX: in short, it works by exporting portions of sampled packets rather than
 caching and building uni-directional flows as it happens in NetFlow; this not
 stateful approach makes sFlow a light export protocol well-tailored for high-
 speed networks. Furthermore, sFlow v5 can be extended much like NetFlow v9: meaning
-classification information, tags or basic Extended Gateway information (ie. src_as,
-dst_as) can be easily included in the record structure being exported. Below the
-quickstarter guide:
+classification information (if nDPI is compiled in, see 'Quickstart guide to packet
+classification' section of this document), tags or basic Extended Gateway info
+(ie. src_as, dst_as) can be easily included in the record structure being exported.
+Below a quickstarter guide:
 
 b) build sFlow probe configuration, using pmacctd:
 !
@@ -997,7 +996,6 @@ sfprobe_agentsubid: 1402
 sfprobe_receiver: 1.2.3.4:6343
 !
 ! networks_file: /path/to/networks.lst
-! classifiers: /path/to/classifiers/
 ! snaplen: 700
 !...
 

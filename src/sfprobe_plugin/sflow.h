@@ -261,7 +261,11 @@ typedef struct _SFLExtended_classification {
 } SFLExtended_classification;
 
 typedef struct _SFLExtended_classification2 {
+#if defined (WITH_NDPI)
   pm_class2_t id;
+#else
+  u_int64_t id;
+#endif
 } SFLExtended_classification2;
 
 typedef struct _SFLExtended_tag {

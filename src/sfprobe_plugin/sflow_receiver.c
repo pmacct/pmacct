@@ -385,8 +385,14 @@ inline static void putClass(SFLReceiver *receiver, SFLExtended_classification *c
 
 inline static void putClass2(SFLReceiver *receiver, SFLExtended_classification2 *class2_elem)
 {
- putNet32(receiver, class2_elem->id.master_protocol);
- putNet32(receiver, class2_elem->id.app_protocol);
+  u_int64_t dummy = 0;
+
+#if defined (WITH_NDPI)
+  putNet32(receiver, class2_elem->id.master_protocol);
+  putNet32(receiver, class2_elem->id.app_protocol);
+#else
+  putNet64(receiver, dummy);
+#endif
 }
 
 inline static void putTag(SFLReceiver *receiver, SFLExtended_tag *tag_elem)
