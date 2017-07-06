@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /* 
@@ -271,7 +271,8 @@ static void init_agent(SflSp *sp)
 
 static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *buf)
 {
-  SFLFlow_sample_element hdrElem, classHdrElem, gatewayHdrElem, routerHdrElem, tagHdrElem, switchHdrElem;
+  SFLFlow_sample_element hdrElem, classHdrElem, class2HdrElem, tagHdrElem;
+  SFLFlow_sample_element gatewayHdrElem, routerHdrElem, switchHdrElem;
   SFLExtended_as_path_segment as_path_segment;
   u_int32_t frame_len, header_len;
   int direction, sampledPackets, ethHdrLen, idx = 0;
@@ -446,11 +447,21 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
     SFLADD_ELEMENT(&fs, &hdrElem);
 
     if (config.what_to_count & COUNT_CLASS) {
-	memset(&classHdrElem, 0, sizeof(classHdrElem));
-	classHdrElem.tag = SFLFLOW_EX_CLASS;
-	classHdrElem.flowType.class.class = hdr->class;
-	SFLADD_ELEMENT(&fs, &classHdrElem);
+      memset(&classHdrElem, 0, sizeof(classHdrElem));
+      classHdrElem.tag = SFLFLOW_EX_CLASS;
+      classHdrElem.flowType.class.class = hdr->class;
+      SFLADD_ELEMENT(&fs, &classHdrElem);
     }
+
+#if defined (WITH_NDPI)
+    if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
+      memset(&class2HdrElem, 0, sizeof(class2HdrElem));
+      class2HdrElem.tag = SFLFLOW_EX_CLASS2;
+      class2HdrElem.flowType.ndpi_class.id.master_protocol = hdr->ndpi_class.master_protocol;
+      class2HdrElem.flowType.ndpi_class.id.app_protocol = hdr->ndpi_class.app_protocol;
+      SFLADD_ELEMENT(&fs, &class2HdrElem);
+    }
+#endif
 
     if (config.what_to_count & (COUNT_TAG|COUNT_TAG2)) {
       memset(&tagHdrElem, 0, sizeof(tagHdrElem));

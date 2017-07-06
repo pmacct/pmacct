@@ -538,7 +538,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_NDPI_CLASS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = ndpi_class_handler;
       else if (config.acct_type == ACCT_NF) primitives--; /* NO nDPI support for NetFlow/IPFIX */
-      else if (config.acct_type == ACCT_SF) primitives--; /* NO nDPI support for sFlow (yet) */
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_ndpi_class_handler;
       primitives++;
     }
 #endif
@@ -1249,6 +1249,9 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
   payload->pkt_num = 1; 
   payload->time_start = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
   payload->class = pptrs->class;
+#if defined (WITH_NDPI)
+  memcpy(&payload->ndpi_class, &pptrs->ndpi_class, sizeof(pm_class2_t));
+#endif
   payload->tag = pptrs->tag;
   payload->tag2 = pptrs->tag2;
   if (pptrs->ifindex_in > 0)  payload->ifindex_in  = pptrs->ifindex_in;
@@ -5213,6 +5216,17 @@ void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   pdata->cst.stamp.tv_sec = time(NULL); /* XXX */
   pdata->cst.stamp.tv_usec = 0;
 }
+
+#if defined (WITH_NDPI)
+void SF_ndpi_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.ndpi_class.master_protocol = sample->ndpi_class.master_protocol;
+  pdata->primitives.ndpi_class.app_protocol = sample->ndpi_class.app_protocol;
+}
+#endif
 
 void SF_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {

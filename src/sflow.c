@@ -799,6 +799,17 @@ void readExtendedClass(SFSample *sample)
   else skipBytes(sample, MAX_PROTOCOL_LEN);
 }
 
+void readExtendedClass2(SFSample *sample)
+{
+  if (config.classifier_ndpi) {
+#if defined (WITH_NDPI)
+    sample->ndpi_class.master_protocol = getData32(sample);
+    sample->ndpi_class.app_protocol = getData32(sample);
+#endif
+  }
+  else skipBytes(sample, 8);
+}
+
 void readExtendedTag(SFSample *sample)
 {
   sample->tag = getData64(sample);
@@ -1133,6 +1144,7 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
       case SFLFLOW_EX_VLAN_TUNNEL:  readExtendedVlanTunnel(sample); break;
       case SFLFLOW_EX_PROCESS:      readExtendedProcess(sample); break;
       case SFLFLOW_EX_CLASS:	    readExtendedClass(sample); break;
+      case SFLFLOW_EX_CLASS2:	    readExtendedClass2(sample); break;
       case SFLFLOW_EX_TAG:	    readExtendedTag(sample); break;
       default:
 	if (skipBytesAndCheck(sample, length) == ERR) return;

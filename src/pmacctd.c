@@ -516,6 +516,11 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
+#if defined (WITH_NDPI)
+	{ // XXX: some if condition here
+	  list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
+	}
+#endif
         if (list->cfg.networks_file || (list->cfg.nfacctd_bgp && list->cfg.nfacctd_as == NF_AS_BGP)) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;

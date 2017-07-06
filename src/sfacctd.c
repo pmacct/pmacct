@@ -40,6 +40,9 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
+#if defined (WITH_NDPI)
+#include "ndpi/ndpi_util.h"
+#endif
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -488,6 +491,16 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 
+	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
+          config.handle_fragments = TRUE;
+          config.classifier_ndpi = TRUE;
+	}
+
+	if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
+	  exit(1);
+	}
+
 	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);
 
@@ -745,6 +758,15 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);
+
+#if defined (WITH_NDPI)
+  if (config.classifier_ndpi) {
+    config.handle_fragments = TRUE;
+    pm_ndpi_wfl = pm_ndpi_workflow_init();
+    pm_ndpi_export_proto_to_class(pm_ndpi_wfl);
+  }
+  else pm_ndpi_wfl = NULL;
+#endif
 
   /* plugins glue: creation */
   load_plugins(&req);

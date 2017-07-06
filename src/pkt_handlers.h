@@ -202,6 +202,7 @@ EXT void dst_host_pocode_geoipv2_handler(struct channels_list_entry *, struct pa
 
 #if defined (WITH_NDPI)
 EXT void ndpi_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_ndpi_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 #endif
 
 EXT int evaluate_lm_method(struct packet_ptrs *, u_int8_t, u_int32_t, u_int32_t);

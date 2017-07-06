@@ -291,8 +291,9 @@ enum SFLFlow_type_tag {
   SFLFLOW_EX_MPLS_LDP_FEC = 1011,
   SFLFLOW_EX_VLAN_TUNNEL  = 1012,   /* VLAN stack */
   /* enterprise = 43874 pmacct */
-  SFLFLOW_EX_CLASS        = (43874 << 12) + 1,
+  SFLFLOW_EX_CLASS	= (43874 << 12) + 1,
   SFLFLOW_EX_TAG	= (43874 << 12) + 2,
+  SFLFLOW_EX_CLASS2	= (43874 << 12) + 3,
   /* enterprise = 4300 (inmon)...*/
   SFLFLOW_EX_PROCESS   = (4300 << 12) + 3, /* =17612803 Extended Process information */
 };

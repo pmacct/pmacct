@@ -449,6 +449,9 @@ struct pkt_payload {
   pm_counter_t pkt_num;
   u_int32_t time_start;
   pm_class_t class;
+#if defined (WITH_NDPI)
+  pm_class2_t ndpi_class;
+#endif
   pm_id_t tag;
   pm_id_t tag2;
   struct host_addr src_ip;
