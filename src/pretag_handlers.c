@@ -1244,7 +1244,7 @@ int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct
 
   return FALSE;
 }
-int PT_map_fwdStatus_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int PT_map_fwdstatus_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int tmp, x = 0;
 
@@ -1253,11 +1253,12 @@ int PT_map_fwdStatus_handler(char *filename, struct id_entry *e, char *value, st
   e->key.fwdstatus.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   tmp = atoi(value);
-  if (tmp < 0 || tmp > 4096) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'fwdstatus' need to be in the following range: 0 > value > 4096.\n", config.name, config.type, filename);
+  if (tmp < 0 || tmp > 256) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'fwdstatus' need to be in the following range: 0 > value > 256.\n", config.name, config.type, filename);
     return TRUE;
   }
   e->key.fwdstatus.n = tmp;
+
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_FWDSTATUS_ID) {
@@ -2061,15 +2062,14 @@ int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, vo
   struct id_entry *entry = e;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t tmp32 = 0, fwdstatus = 0;
+  u_int32_t fwdstatus = 0;
 
   switch (hdr->version) {
   case 10:
   case 9:
     if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
-      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 4));
+      memcpy(&fwdstatus, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 4));
     }
-    fwdstatus = ntohl(tmp32);
     
     u_int32_t comp = (entry->key.fwdstatus.n & 0xC0);
     if ( comp == entry->key.fwdstatus.n) {
@@ -3603,7 +3603,7 @@ int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *h
     case 9:
       if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
         memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 4));
-        e->key.fwdstatus.n = ntohl(tmp32);
+        e->key.fwdstatus.n = tmp32;
       }
     }
   }

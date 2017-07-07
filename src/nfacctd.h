@@ -596,7 +596,7 @@ struct data_hdr_v9 {
 #define NF9_CUST_LABEL			3
 /* CUSTOM TYPES END HERE */
 
-#define MAX_TPL_DESC_LIST 81
+#define MAX_TPL_DESC_LIST 89
 static char *tpl_desc_list[] = {
   "",
   "in bytes",
@@ -662,7 +662,15 @@ static char *tpl_desc_list[] = {
   "mpls label 9",
   "mpls label 10",
   "in dst mac",
-  "out src mac"
+  "out src mac",
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "", "",
+  "", "", "", "",
+  "forwarding status",
 };
 
 #define MAX_OPT_TPL_DESC_LIST 100

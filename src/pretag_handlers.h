@@ -40,7 +40,7 @@ EXT int PT_map_filter_handler(char *, struct id_entry *, char *, struct plugin_r
 EXT int PT_map_v8agg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_agent_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_flowset_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int PT_map_fwdStatus_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_fwdstatus_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_sampling_rate_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_sample_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_direction_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
