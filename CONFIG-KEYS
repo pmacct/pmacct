@@ -1675,22 +1675,22 @@ KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [ 0-2^64-1 ]
 DESC:		Expects one or more tags (when multiple tags are supplied, they need to be comma separated
 		and a logical OR is used in the evaluation phase) as value and allows to filter aggregates
-		basing upon their tag value: in case of a match, the aggregate is delivered to the plugin.
-		This directive has to be bound to a plugin (that is, it cannot be global) and is suitable,
-		for example, to split tagged data among the active plugins. While tags themselves need to be
-		positive values, this directive also allows to specify a tag value '0' to intercept untagged
+		basing upon their tag (or tag2) value: in case of a match, the aggregate is filtered in, ie.
+		it is delivered to the plugin it is attached to. This directive has to be attached to a
+		plugin (that is, it cannot be global) and is suitable, for example, to split tagged data
+		among the active plugins. This directive also allows to specify a value '0' to match untagged
 		data, thus allowing to split tagged traffic from untagged one. It also allows negations by
 		pre-pending a minus sign to the tag value (ie. '-6' would send everything but traffic tagged
-		as '6' to the plugin it is bound to) and ranges (ie. '10-20' would send over traffic tagged
-		in the range 10..20) and any combination of these. This directive makes sense if coupled with
-		'pre_tag_map'; it could be used in conjunction with 'aggregate_filter'.
+		as '6' to the plugin it is attached to, hence achieving a filter out behaviour) and ranges
+		(ie. '10-20' would send over traffic tagged in the range 10..20) and any combination of these.
+		This directive makes sense if coupled with 'pre_tag_map'.
 DEFAULT:	none
 
 KEY:            pre_tag_label_filter [NO_GLOBAL]
 DESC:		Expects one or more labels (when multiple labels are supplied, they need to be comma
-		separated and a logical OR is used in the evaluation phase) as value and allows to filter
-		aggregates basing upon their label value: only in case of match data is delivered to the
-		plugin. This directive has to be bound to a plugin (that is, it cannot be global). Null
+		separated and a logical OR is used in the evaluation phase) as value and allows to filter in
+		aggregates basing upon their label value(s): only in case of match data is delivered to the
+		plugin. This directive has to be attached to a plugin (that is, it cannot be global). Null
 		label values (ie. unlabelled data) can be matched using the 'null' keyword. Negations are
 		allowed by pre-pending a minus sign to the label value. The use of this directive makes
 		sense if coupled with 'pre_tag_map'.

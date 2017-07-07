@@ -801,24 +801,39 @@ steps:
 1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub
    repository (https://github.com/pmacct/pmacct).
 
-2) Download nDPI from its GitHub repository (https://github.com/XXX). pmacct
-   code is tested against the latest stable version of the library and hence that
-   is the recommended download. 
+2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI). pmacct
+   code is tested against the latest stable version of the nDPI library and hence
+   that is the recommended download. 
 
-3) Configure for compiling, compile and install the downloaded nDPI library, ie.:
+3) Configure for compiling, compile and install the downloaded nDPI library, ie.
+   inside the nDPI directory:
 
-   shell> XXX
+   shell> ./autogen.sh; ./configure; make; make install 
 
 4) Configure for compiling pmacct with the --enable-ndpi switch. Then compile and
    install, ie.:
 
-   If downloading a release from http://www.pmacct.net :
+   If downloading a release from http://www.pmacct.net , from inside the pmacct
+   directory:
 
    shell> ./configure --enable-ndpi; make; make install
 
-   If downloading code from https://github.com/pmacct/pmacct :
+   If downloading code from https://github.com/pmacct/pmacct , from inside the
+   pmacct directory:
 
    shell> ./autogen.sh; ./configure --enable-ndpi; make; make install
+
+   If using a nDPI library that is not installed (or not installed in a default
+   location) on the system, then NDPI_LIBS and NDPI_CFLAGS should be set to the
+   location where nDPI headers and dynamic library are lying. Additionally, the
+   configure switch --with-ndpi-static-lib allows to specify the location for the
+   static version of the library:
+
+   shell> NDPI_LIBS=-L/path/to/nDPI/src/lib/.libs  
+   shell> NDPI_CFLAGS=-I/path/to/nDPI/src/include
+   shell> export NDPI_LIBS NDPI_CFLAGS
+   shell> ./configure --enable-ndpi --with-ndpi-static-lib=/path/to/nDPI/src/lib/.libs
+   shell> make; make install
 
 5) Configure pmacct. The following sample configuration is based on pmacctd and
    the print plugin with formatted output to stdout: 
