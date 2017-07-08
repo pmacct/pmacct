@@ -58,6 +58,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"jeq", PT_map_jeq_handler},
   {"return", PT_map_return_handler},
   {"stack", PT_map_stack_handler},
+  {"fwdstatus", PT_map_fwdStatus_handler},
   {"", NULL}
 };
 
@@ -77,6 +78,7 @@ const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_DST_MAC, PT_map_index_entries_dst_mac_handler},
   {PRETAG_VLAN_ID, PT_map_index_entries_vlan_id_handler},
   {PRETAG_CVLAN_ID, PT_map_index_entries_cvlan_id_handler},
+  {PRETAG_FWDSTATUS_ID, PT_map_index_entries_fwdstatus_handler},
   {0, NULL}
 };
 
@@ -96,6 +98,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_DST_MAC, PT_map_index_fdata_dst_mac_handler},
   {PRETAG_VLAN_ID, PT_map_index_fdata_vlan_id_handler},
   {PRETAG_CVLAN_ID, PT_map_index_fdata_cvlan_id_handler},
+  {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwdstatus_handler},
   {0, NULL}
 };
 

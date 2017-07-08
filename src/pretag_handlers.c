@@ -1244,6 +1244,37 @@ int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct
 
   return FALSE;
 }
+int PT_map_fwdstatus_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int tmp, x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
+  e->key.fwdstatus.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  tmp = atoi(value);
+  if (tmp < 0 || tmp > 256) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'fwdstatus' need to be in the following range: 0 > value > 256.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+  e->key.fwdstatus.n = tmp;
+
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_FWDSTATUS_ID) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'fwdstatus' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_forwarding_status_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_FWDSTATUS_ID;
+
+  return FALSE;
+}
+
+
+
 
 int pretag_dummy_ip_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
@@ -2025,6 +2056,43 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     return TRUE; /* this field does not exist: condition is always true */
   }
 }
+
+int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t fwdstatus = 0;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
+      memcpy(&fwdstatus, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 4));
+    }
+    
+    u_int32_t comp = (entry->key.fwdstatus.n & 0xC0);
+    if ( comp == entry->key.fwdstatus.n) {
+      // We have a generic (unknown) status provided so we then take everything that match that.
+      u_int32_t base = (fwdstatus & 0xC0);
+      if ( comp == base ) {
+        return (FALSE | entry->key.fwdstatus.neg);
+      } else {
+        return (TRUE ^ entry->key.fwdstatus.neg);
+      }
+    } else { // We have a specific code so lets handle that.
+      if (entry->key.fwdstatus.n == fwdstatus) 
+        return (FALSE | entry->key.fwdstatus.neg);
+      else 
+        return (TRUE ^ entry->key.fwdstatus.neg);
+    }
+
+
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
 
 int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
@@ -2905,6 +2973,18 @@ int PT_map_index_entries_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *
   return FALSE;
 }
 
+int PT_map_index_entries_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  memcpy(&e->key.fwdstatus, &src_e->key.fwdstatus, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, (char *)&src_e->key.fwdstatus.n, sizeof(pt_uint32_t), TRUE);
+
+  return FALSE;
+}
+
 int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
@@ -3506,6 +3586,30 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *ha
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.cvlan_id.n, sizeof(u_int16_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
+        memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 4));
+        e->key.fwdstatus.n = tmp32;
+      }
+    }
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.fwdstatus.n, sizeof(u_int32_t), FALSE);
 
   return FALSE;
 }
