@@ -503,8 +503,8 @@ struct data_hdr_v9 {
 #define NF9_IN_DST_MAC			80 
 #define NF9_OUT_SRC_MAC			81 
 /* ... */
-#define NF9_FLOW_BYTES			            85 
-#define NF9_FLOW_PACKETS		            86 
+#define NF9_FLOW_BYTES			85 
+#define NF9_FLOW_PACKETS		86 
 
 #define NF9_FORWARDING_STATUS           89
 /* ... */
@@ -664,12 +664,7 @@ static char *tpl_desc_list[] = {
   "in dst mac",
   "out src mac",
   "", "", "", "",
-  "", "", "", "",
-  "", "", "", "",
-  "", "", "", "",
-  "", "", "", "",
-  "", "", "", "",
-  "", "", "", "",
+  "", "", "",
   "forwarding status",
 };
 
