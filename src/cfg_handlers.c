@@ -5010,6 +5010,19 @@ int cfg_key_nfacctd_disable_checks(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_disable_opt_scope_check(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse_nonzero(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_opt_scope_check = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_disable_opt_scope_check'. Globalized.\n", filename);
+
+  return changes;
+}
 
 int cfg_key_classifiers(char *filename, char *name, char *value_ptr)
 {

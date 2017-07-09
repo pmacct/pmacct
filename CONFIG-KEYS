@@ -1619,6 +1619,13 @@ DESC:           Both nfacctd and sfacctd can log warning messages for failing ba
 		and notes).
 DEFAULT:        true
 
+KEY:		nfacctd_disable_opt_scope_check [GLOBAL, ONLY_NFACCTD]
+VALUES:         [ true | false ]
+DESC:		Mainly a workaround to implementations not encoding NetFlow v9/IPIFX option scope correctly,
+		this knob allows to disable option scope checking. By doing so, options are considered scoped
+		to the system level (ie. to the IP address of the expoter).
+DEFAULT:	false
+
 KEY:		pre_tag_map [MAP]
 DESC:		Full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering
 		purposes, see pre_tag_filter configuration directive) or exposed to users (ie. if 'tag', 'tag2'

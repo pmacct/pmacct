@@ -147,6 +147,7 @@ EXT int cfg_key_nfacctd_time_new(char *, char *, char *);
 EXT int cfg_key_nfacctd_as_new(char *, char *, char *);
 EXT int cfg_key_nfacctd_net(char *, char *, char *);
 EXT int cfg_key_nfacctd_disable_checks(char *, char *, char *);
+EXT int cfg_key_nfacctd_disable_opt_scope_check(char *, char *, char *);
 EXT int cfg_key_nfacctd_mcast_groups(char *, char *, char *);
 EXT int cfg_key_nfacctd_pipe_size(char *, char *, char *);
 EXT int cfg_key_nfacctd_pro_rating(char *, char *, char *);

@@ -506,6 +506,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"nfacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"nfacctd_disable_checks", cfg_key_nfacctd_disable_checks},
+  {"nfacctd_disable_opt_scope_check", cfg_key_nfacctd_disable_opt_scope_check},
   {"pmacctd_proc_name", cfg_key_proc_name},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"pmacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},

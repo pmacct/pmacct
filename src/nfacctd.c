@@ -1413,7 +1413,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  u_int64_t t64 = 0;
 
 	  /* Handling the global option scoping case */
-	  if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	  if (!config.nfacctd_disable_opt_scope_check) {
+	    if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	  }
+	  else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
 	    memcpy(&t8, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
@@ -1482,7 +1485,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pm_class_t class_id = 0, class_int_id = 0;
 
 	  /* Handling the global option scoping case */
-	  if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	  if (!config.nfacctd_disable_opt_scope_check) {
+	    if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	  }
+	  else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  memcpy(&class_id, pkt+tpl->tpl[NF9_APPLICATION_ID].off, 4);
 

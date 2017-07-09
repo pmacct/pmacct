@@ -221,6 +221,7 @@ struct configuration {
   int sfacctd_counter_kafka_retry;
   char *sfacctd_counter_kafka_config_file;
   int nfacctd_disable_checks;
+  int nfacctd_disable_opt_scope_check;
   int telemetry_daemon;
   int telemetry_sock;
   int telemetry_port_tcp;
