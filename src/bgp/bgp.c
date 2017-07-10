@@ -70,6 +70,7 @@ void skinny_bgp_daemon_online()
   struct host_addr addr;
   struct bgp_peer *peer;
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
+  char bgp_peer_str[INET6_ADDRSTRLEN];
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
 #else
@@ -539,15 +540,16 @@ void skinny_bgp_daemon_online()
       /* XXX: fixme for NAT traversal scenarios */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
+	  bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
 	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
             Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
-				config.name, bgp_misc_db->log_str, bgp_peer_print(&peers[peers_check_idx]));
+				config.name, bgp_misc_db->log_str, bgp_peer_str);
             FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
             bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 	  }
 	  else {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
-				config.name, bgp_misc_db->log_str, bgp_peer_print(&peers[peers_check_idx]),
+				config.name, bgp_misc_db->log_str, bgp_peer_str,
 				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
@@ -558,8 +560,9 @@ void skinny_bgp_daemon_online()
 	else if (peers[peers_check_idx].fd) peers_num++;
       }
 
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP peers usage: %u/%u\n", config.name, bgp_misc_db->log_str,
-		bgp_peer_print(peer), peers_num, config.nfacctd_bgp_max_peers);
+		bgp_peer_str, peers_num, config.nfacctd_bgp_max_peers);
 
       if (config.nfacctd_bgp_neighbors_file) write_neighbors_file(config.nfacctd_bgp_neighbors_file, FUNC_TYPE_BGP);
     }
@@ -587,7 +590,8 @@ void skinny_bgp_daemon_online()
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP connection reset by peer (%d).\n", config.name, bgp_misc_db->log_str, bgp_peer_print(peer), errno);
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP connection reset by peer (%d).\n", config.name, bgp_misc_db->log_str, bgp_peer_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
       recalc_fds = TRUE;

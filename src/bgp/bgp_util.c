@@ -549,19 +549,22 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
     write_neighbors_file(bms->neighbors_file, peer->type);
 }
 
-char *bgp_peer_print(struct bgp_peer *peer)
+void bgp_peer_print(struct bgp_peer *peer, char *buf, int len)
 {
-  static __thread char buf[INET6_ADDRSTRLEN], dumb_buf[] = "0.0.0.0";
+  char dumb_buf[] = "0.0.0.0";
   int ret = 0;
 
+  if (!buf || len < INET6_ADDRSTRLEN) return;
+
   if (peer) {
-    if (peer->id.family) return inet_ntoa(peer->id.address.ipv4);
+    if (peer->id.family) {
+      inet_ntop(AF_INET, &peer->id.address.ipv4, buf, len);
+      ret = AF_INET;
+    }
     else ret = addr_to_str(buf, &peer->addr);
   }
 
   if (!ret) strcpy(buf, dumb_buf);
-
-  return buf;
 }
 
 void bgp_peer_info_delete(struct bgp_peer *peer)

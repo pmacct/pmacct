@@ -66,7 +66,7 @@ EXT int bgp_attr_munge_as4path(struct bgp_peer *, struct bgp_attr *, struct aspa
 
 EXT int bgp_peer_init(struct bgp_peer *, int);
 EXT void bgp_peer_close(struct bgp_peer *, int, int, int, u_int8_t, u_int8_t, char *);
-EXT char *bgp_peer_print(struct bgp_peer *);
+EXT void bgp_peer_print(struct bgp_peer *, char *, int);
 EXT void bgp_peer_info_delete(struct bgp_peer *);
 
 EXT void bgp_batch_init(struct bgp_peer_batch *, int, int);
