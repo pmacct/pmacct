@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 #
-# It is recommended to run the kafka module against Python 2.7+. If missing
-# 'kafka' read how to download it at:
+# It is recommended to run the Kafka Python module against Python 2.7+. The
+# module is available at:
 # http://kafka-python.readthedocs.org/
 #
-# If missing 'avro' read how to download it at: 
+# UltraJSON, an ultra fast JSON encoder and decoder, is available at:
+# https://pypi.python.org/pypi/ujson
+#
+# The Apache Avro Python module is available at: 
 # https://avro.apache.org/docs/1.8.1/gettingstartedpython.html
 #
 # Binding to the topic specified by kafka_topic (by default 'acct') allows to
@@ -27,6 +30,7 @@
 
 import sys, os, getopt, StringIO, time, urllib2 
 from kafka import KafkaConsumer, KafkaProducer
+import ujson as json
 
 try:
 	import avro.io

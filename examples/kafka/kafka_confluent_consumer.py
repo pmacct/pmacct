@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 #
-# confluent_kafka is available at:
+# Confluent Kafka Python module is available at:
 # https://github.com/confluentinc/confluent-kafka-python
+#
+# UltraJSON, an ultra fast JSON encoder and decoder, is available at:
+# https://pypi.python.org/pypi/ujson
 #
 # Binding to the topic specified by kafka_topic (by default 'acct') allows to
 # receive messages published by a 'kafka' plugin, in JSON format. Similarly for
@@ -22,6 +25,7 @@
 
 import sys, os, getopt, StringIO, time, urllib2
 import confluent_kafka
+import ujson as json
 import uuid
 
 def usage(tool):

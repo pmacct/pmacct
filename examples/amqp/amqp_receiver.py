@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 #
-# If missing 'pika' read how to download it at: 
+# Pika is a pure-Python implementation of the AMQP 0-9-1 protocol and
+# is available at:
+# https://pypi.python.org/pypi/pika
 # http://www.rabbitmq.com/tutorials/tutorial-one-python.html
 #
-# If missing 'avro' read how to download it at: 
+# UltraJSON, an ultra fast JSON encoder and decoder, is available at:
+# https://pypi.python.org/pypi/ujson
+#
+# The Apache Avro Python module is available at: 
 # https://avro.apache.org/docs/1.8.1/gettingstartedpython.html
 #
 # Binding to the routing key specified by amqp_routing_key (by default 'acct')
@@ -33,6 +38,7 @@
 # * Apache Avro
 
 import sys, os, getopt, pika, StringIO, time
+import ujson as json
 
 try:
 	import avro.io
