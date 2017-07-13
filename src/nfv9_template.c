@@ -343,6 +343,8 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         break;
       }
     }
+
+    json_decref(json_obj);
     line++;
   }
 
