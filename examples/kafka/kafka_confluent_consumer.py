@@ -42,6 +42,7 @@ def usage(tool):
 	print "  -e, --earliest".ljust(25) + "Set consume topic offset to 'earliest' [default: 'latest']"
 	print "  -H, --host".ljust(25) + "Define Kafka broker host [default: '127.0.0.1:9092']"
 	print "  -p, --print".ljust(25) + "Print data to stdout"
+	print "  -n, --num".ljust(25) + "Number of rows to print to stdout [default: 0, ie. forever]"
 	print "  -T, --produce-topic".ljust(25) + "Define a topic to produce to"
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to"
 	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
@@ -60,9 +61,9 @@ def post_to_url(http_req, value):
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pg:H:d:eu:as:r:", ["help", "topic=",
+		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pin:g:H:d:eu:as:r:", ["help", "topic=",
 				"group_id=", "host=", "earliest=", "url=", "produce-topic=", "print=",
-				"to-json-array=", "stats-interval="])
+				"num=", "to-json-array=", "stats-interval="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -76,6 +77,8 @@ def main():
 	topic_offset = "latest"
 	http_url_post = None
 	print_stdout = 0
+        print_stdout_num = 0
+        print_stdout_max = 0
 	convert_to_json_array = 0
 	stats_interval = 0
  	
@@ -92,6 +95,8 @@ def main():
             		kafka_produce_topic = a
 		elif o in ("-p", "--print"):
             		print_stdout = 1
+		elif o in ("-n", "--num"):
+			print_stdout_max = int(a)
 		elif o in ("-g", "--group_id"):
             		kafka_group_id = a
 		elif o in ("-H", "--host"):
@@ -157,6 +162,9 @@ def main():
 				print("%s:%d:%d: key=%s value=%s" % (message.topic(), message.partition(),
 						message.offset(), str(message.key()), value))
 				sys.stdout.flush()
+				print_stdout_num += 1
+				if (print_stdout_max == print_stdout_num):
+					sys.exit(0)
 
 			if http_url_post:
 				http_req = urllib2.Request(http_url_post)

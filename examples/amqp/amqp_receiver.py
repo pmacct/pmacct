@@ -51,6 +51,8 @@ except ImportError:
 avro_schema = None
 http_url_post = None
 print_stdout = 0
+print_stdout_num = 0
+print_stdout_max = 0
 convert_to_json_array = 0
 stats_interval = 0
 time_count = 0
@@ -70,6 +72,7 @@ def usage(tool):
 	print "  -h, --help".ljust(25) + "Print this help"
 	print "  -H, --host".ljust(25) + "Define RabbitMQ broker host [default: 'localhost']"
 	print "  -p, --print".ljust(25) + "Print data to stdout"
+	print "  -n, --num".ljust(25) + "Number of rows to print to stdout [default: 0, ie. forever]"
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to" 
 	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
 	print "  -s, --stats-interval".ljust(25) + "Define a time interval, in secs, to get statistics to stdout"
@@ -111,6 +114,9 @@ def callback(ch, method, properties, body):
 		if print_stdout:
 			print " [x] Received %r" % (",".join(avro_data),)
 			sys.stdout.flush()
+			print_stdout_num += 1
+			if (print_stdout_max == print_stdout_num):
+				sys.exit(0)
 
 		if http_url_post:
 			http_req = urllib2.Request(http_url_post)
@@ -131,6 +137,9 @@ def callback(ch, method, properties, body):
 		if print_stdout:
 			print " [x] Received %r" % (value,)
 			sys.stdout.flush()
+			print_stdout_num += 1
+			if (print_stdout_max == print_stdout_num):
+				sys.exit(0)
 
 		if http_url_post:
 			http_req = urllib2.Request(http_url_post)
@@ -146,9 +155,10 @@ def callback(ch, method, properties, body):
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:pas:", ["help", "exchange=",
-				"routing_key=", "queue=", "host=", "url=", "decode-with-avro=",
-				"print=", "to-json-array=", "stats-interval="])
+		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:pn:as:", ["help",
+				"exchange=", "routing_key=", "queue=", "host=", "url=",
+				"decode-with-avro=", "print=", "num=", "to-json-array=",
+				"stats-interval="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -181,6 +191,8 @@ def main():
 			http_url_post = a
 		elif o in ("-p", "--print"):
 			print_stdout = 1
+		elif o in ("-n", "--num"):
+			print_stdout_max = int(a)
 		elif o in ("-a", "--to-json-array"):
 			convert_to_json_array = 1
 		elif o in ("-s", "--stats-interval"):
