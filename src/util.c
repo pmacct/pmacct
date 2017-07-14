@@ -1928,7 +1928,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
         cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
 	snprintf(format, VERYSHORTBUFLEN, "%%-%u", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name));
-	strncat(format, "s", SRVBUFLEN);
+	strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -1936,7 +1936,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, VERYSHORTBUFLEN, "%%-%u", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name));
-	strncat(format, "s", SRVBUFLEN);
+	strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -1950,7 +1950,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
       	
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
-        strncat(format, "s", SRVBUFLEN);
+        strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -1959,7 +1959,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
-        strncat(format, "s", SRVBUFLEN);
+        strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }

@@ -16,6 +16,10 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+/* includes */
+#include <stddef.h>
+#include <stdint.h>
+
 /* definitions */
 typedef struct pm_node_t
 {
