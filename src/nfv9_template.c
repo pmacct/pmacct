@@ -293,11 +293,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
                   config.name, path);
           continue;
         }
-        else {
-          tpl_id = json_integer_value(json_tpl_id);
-        }
-
-        free(json_tpl_id);
+        else tpl_id = json_integer_value(json_tpl_id);
 
         json_t *json_agent = json_object_get(json_obj, "agent");
         if (json_agent == NULL) {
@@ -305,11 +301,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
                   config.name, path);
           continue;
         }
-        else {
-          addr = json_string_value(json_agent);
-        }
-
-        free(json_agent);
+        else addr = json_string_value(json_agent);
 
         json_t *json_src_id = json_object_get(json_obj, "source_id");
         if (json_src_id == NULL) {
@@ -317,11 +309,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
                   config.name, path);
           continue;
         }
-        else {
-          src_id = json_integer_value(json_src_id);
-        }
-
-        free(json_src_id);
+        else src_id = json_integer_value(json_src_id);
 
         json_t *json_tpl_type = json_object_get(json_obj, "template_type");
         if (json_tpl_type == NULL) {
@@ -329,11 +317,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
                   config.name, path);
           continue;
         }
-        else {
-          tpl_type = json_integer_value(json_tpl_type);
-        }
-
-        free(json_tpl_type);
+        else tpl_type = json_integer_value(json_tpl_type);
       }
 
       addr_to_str(tpl_agent_str, &tpl->agent);
