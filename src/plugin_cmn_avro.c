@@ -30,7 +30,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
+#include "ndpi/ndpi.h"
 #endif
 
 /* functions */

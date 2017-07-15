@@ -37,7 +37,7 @@
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
 #if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
+#include "ndpi/ndpi.h"
 #endif
 
 void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)

@@ -37,7 +37,7 @@
 #include "classifier.h"
 #include "isis/isis.h"
 #if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
+#include "ndpi/ndpi.h"
 #endif
 
 /* variables to be exported away */

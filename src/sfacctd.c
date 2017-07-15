@@ -41,7 +41,7 @@
 #include "isis/isis.h"
 #include "bmp/bmp.h"
 #if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
+#include "ndpi/ndpi.h"
 #endif
 
 /* variables to be exported away */

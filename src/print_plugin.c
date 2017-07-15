@@ -35,7 +35,7 @@
 #include "crc32.h"
 #include "bgp/bgp.h"
 #if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
+#include "ndpi/ndpi.h"
 #endif
 
 /* Functions */

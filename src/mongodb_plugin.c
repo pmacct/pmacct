@@ -31,7 +31,7 @@
 #include "classifier.h"
 #include "crc32.h"
 #if defined (WITH_NDPI)
-#include "ndpi/ndpi_util.h"
+#include "ndpi/ndpi.h"
 #endif
 
 /* Functions */
