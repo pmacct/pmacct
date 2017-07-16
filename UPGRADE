@@ -21,6 +21,9 @@ DESC:	Following is the list of features, knobs and plugins that are being
 	  not supported anymore and there has never been enough push from
 	  the community to transition to the new/current API (which would
 	  require a rewrite of most of the plugin)
+	* Packet classification basing on the L7-filter project is being
+	  discontinued (ie. 'classifiers' directive). This is being replaced
+	  by an implementation basing on the nDPI project. 
 
 TO:	>= 1.6.2
 FROM:	<= 1.6.1

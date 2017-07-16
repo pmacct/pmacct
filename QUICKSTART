@@ -2002,3 +2002,26 @@ counter was increasing, verify it does not increase anymore). As suggested
 in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
 any lift in the buffering must be also supported by the kernel, adjusting
 /proc/sys/net/core/rmem_max.
+
+f) packet classification using the nDPI library is among the new features of
+pmacct 1.7. As with any major and complex feature, it is expected that not
+everything may work great and smooth at the first round of implementation.
+In this section you will find a few tips on how to help providing meaningful
+report of issues you may be experiencing in this area. 1) Please follow
+guidelines in the section "Quickstart guide to packet classification" of this
+document; 2) avoid generic reporting a-la "it doesn't work" or "there is too
+much unknown traffic" or "i know protocol X is in my traffic mix but it's not
+being classified properly"; 3) it is OK to contact the author directly given
+sensitiveness of data may be involved; 4) it is OK to compare classification
+results achieved with a 3rd party tool also using nDPI for classification; in
+case of different results, show the actual results when reporting the issue
+and please elaborate as much as possible how the comparison was done (ie.
+say how it is being ensured that the two data- sets are the same or as much
+as possible similar); 5) remember that the most effective way troubleshoot
+any issue related to packet classification is by the author being able to
+reproduce the issue or for him to verify first hand the problem: whenever
+possible please share a traffic capture in pcap format or grant remote-access
+to your testbed; 6) excluded from these guidelines are problems related to
+nDPI but unrelated to classification, ie. memory leaks, performance issues,
+crashes, etc. for which you can follow the other guide lines in this
+"Miscellaneous notes and troubleshooting tips" section.
