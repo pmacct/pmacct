@@ -284,14 +284,14 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
       if (!json_is_object(json_obj)) {
         Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): json_is_object() failed. Line skipped.\n",
                 config.name, path);
-        continue;
+        goto next_line;
       }
       else {
         json_t *json_tpl_id = json_object_get(json_obj, "template_id");
         if (json_tpl_id == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): template ID null. Line skipped.\n",
                   config.name, path);
-          continue;
+          goto next_line;
         }
         else tpl_id = json_integer_value(json_tpl_id);
 
@@ -299,7 +299,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         if (json_agent == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): agent null. Line skipped.\n",
                   config.name, path);
-          continue;
+          goto next_line;
         }
         else addr = json_string_value(json_agent);
 
@@ -307,7 +307,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         if (json_src_id == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): source ID null. Line skipped.\n",
                   config.name, path);
-          continue;
+          goto next_line;
         }
         else src_id = json_integer_value(json_src_id);
 
@@ -315,7 +315,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         if (json_tpl_type == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): template type null. Line skipped.\n",
                   config.name, path);
-          continue;
+          goto next_line;
         }
         else tpl_type = json_integer_value(json_tpl_type);
       }
@@ -324,10 +324,12 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
       if (tpl_id == tpl->template_id && tpl_type == tpl->template_type
               && src_id == tpl->source_id && !strcmp(addr, tpl_agent_str)) {
         tpl_found = TRUE;
+	json_decref(json_obj);
         break;
       }
     }
 
+    next_line:
     json_decref(json_obj);
     line++;
   }
