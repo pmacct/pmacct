@@ -10,11 +10,6 @@
 # receive messages published by a 'kafka' plugin, in JSON format. Similarly for
 # BGP daemon bgp_*_topic and BMP daemon bmp_*_topic.
 #
-# Binding to the topic specified by plugin_pipe_kafka_topic (by default
-# 'core_proc_name-$plugin_name-$plugin_type') allows to receive a copy of
-# messages produced by the Core Process to a specific plugin; the messages are
-# in binary format, first quad being the sequence number.
-#
 # Three pipelines are supported in this script:
 # * Kafka -> Kafka 
 # * Kafka -> REST API
