@@ -154,13 +154,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
 #endif
   }
-  else if (config.pipe_kafka) {
-    plugin_pipe_kafka_compile_check();
-#ifdef WITH_KAFKA
-    pipe_fd = plugin_pipe_kafka_connect_to_consume(kafka_host, plugin_data);
-    kafka_timeout = plugin_pipe_set_retry_timeout(&kafka_host->btimers, pipe_fd);
-#endif
-  }
   else setnonblocking(pipe_fd);
 
   now = time(NULL);
@@ -183,12 +176,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
       ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
     }
-#ifdef WITH_KAFKA
-    else if (config.pipe_kafka) {
-      timeout = MIN(refresh_timeout, (kafka_timeout ? kafka_timeout : INT_MAX));
-      ret = p_kafka_consume_poller(kafka_host, &kafka_msg, timeout);
-    }
-#endif
 
     if (ret < 0) goto poll_again;
 
@@ -214,16 +201,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
       }
       else amqp_timeout = plugin_pipe_calc_retry_timeout_diff(&amqp_host->btimers, now);
-    }
-#endif
-
-#ifdef WITH_KAFKA
-    if (config.pipe_kafka && pipe_fd == ERR) {
-      if (timeout == kafka_timeout) {
-        pipe_fd = plugin_pipe_kafka_connect_to_consume(kafka_host, plugin_data);
-        kafka_timeout = plugin_pipe_set_retry_timeout(&kafka_host->btimers, pipe_fd);
-      }
-      else kafka_timeout = plugin_pipe_calc_retry_timeout_diff(&kafka_host->btimers, now);
     }
 #endif
 
@@ -276,15 +253,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         seq = ((struct ch_buf_hdr *)pipebuf)->seq;
         amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
-      }
-#endif
-#ifdef WITH_KAFKA
-      else if (config.pipe_kafka) {
-        ret = p_kafka_consume_data(kafka_host, kafka_msg, pipebuf, config.buffer_size);
-        if (ret) pipe_fd = ERR;
-
-        seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-        kafka_timeout = plugin_pipe_set_retry_timeout(&kafka_host->btimers, pipe_fd);
       }
 #endif
 

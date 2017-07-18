@@ -367,48 +367,6 @@ void load_plugins(struct plugin_requests *req)
     }
   }
 #endif
-
-  /* Kafka handling, if required */
-#ifdef WITH_KAFKA
-  {
-    int ret, index, index2;
-
-    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
-      chptr = &channels_list[index];
-      list = chptr->plugin;
-
-      /* XXX: no sleeper thread, trusting librdkafka */
-      if (list->cfg.pipe_kafka) ret = plugin_pipe_kafka_init_host(&chptr->kafka_host, list, TRUE);
-
-      /* reset core process pipe Kafka topic */
-      if (list->type.id == PLUGIN_ID_CORE) list->cfg.pipe_kafka_topic = NULL;
-    }
-
-    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
-      struct plugins_list_entry *list2 = plugins_list;
-      struct channels_list_entry *chptr2 = NULL;
-
-      chptr = &channels_list[index];
-      list = chptr->plugin;
-
-      for (index2 = index; channels_list[index2].aggregation || channels_list[index2].aggregation_2; index2++) {
-        chptr2 = &channels_list[index2];
-        list2 = chptr2->plugin;
-
-        if (index2 > index && list->cfg.pipe_kafka_broker_host && list->cfg.pipe_kafka_topic) {
-          if (!strcmp(list->cfg.pipe_kafka_broker_host, list2->cfg.pipe_kafka_broker_host) &&
-              list->cfg.pipe_kafka_broker_port == list2->cfg.pipe_kafka_broker_port &&
-              !strcmp(list->cfg.pipe_kafka_topic, list2->cfg.pipe_kafka_topic) /* && XXX: topic partition too? */ ) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): Duplicated plugin_pipe_kafka_broker_*, plugin_pipe_kafka_topic: %s, %s, %s\nExiting.\n",
-                list->name, list->type.string, list->cfg.pipe_kafka_broker_host, list->cfg.pipe_kafka_broker_port,
-		list->cfg.pipe_kafka_topic);
-            exit(1);
-          }
-        }
-      }
-    }
-  }
-#endif
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
@@ -550,15 +508,6 @@ reprocess:
 	  if (!chptr->amqp_host_sleep) ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
 	  else ret = FALSE;
           if (ret) plugin_pipe_amqp_sleeper_start(chptr);
-#endif
-	}
-	/* sending the buffer to the Kafka broker */
-	else if (channels_list[index].plugin->cfg.pipe_kafka) {
-#ifdef WITH_KAFKA
-          struct channels_list_entry *chptr = &channels_list[index];
-
-	  /* XXX: no sleeper thread, trusting librdkafka */
-	  ret = p_kafka_produce_data(&chptr->kafka_host, chptr->rg.ptr, chptr->bufsize);
 #endif
 	}
 	else {
@@ -892,11 +841,6 @@ void fill_pipe_buffer()
       p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
 #endif
     }
-    else if (chptr->plugin->cfg.pipe_kafka) {
-#ifdef WITH_KAFKA
-      p_kafka_produce_data(&chptr->kafka_host, chptr->rg.ptr, chptr->bufsize);
-#endif
-    }
     else {
       if (chptr->status->wakeup) {
         chptr->status->wakeup = chptr->request;
@@ -1171,51 +1115,6 @@ int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct pl
 }
 #endif
 
-#if defined WITH_KAFKA
-int plugin_pipe_kafka_init_host(struct p_kafka_host *kafka_host, struct plugins_list_entry *list, int is_prod)
-{
-  int ret = SUCCESS;
-
-  if (kafka_host && list && !validate_truefalse(is_prod)) {
-    char *topic = plugin_pipe_compose_default_string(list, "pmacct.$core_proc_name-$plugin_name-$plugin_type");
-
-    p_kafka_init_host(kafka_host, NULL);
-
-    if (is_prod) ret = p_kafka_connect_to_produce(kafka_host);
-    else ret = p_kafka_connect_to_consume(kafka_host);
-
-    if (!list->cfg.pipe_kafka_broker_host) list->cfg.pipe_kafka_broker_host = default_kafka_broker_host;
-    if (!list->cfg.pipe_kafka_broker_port) list->cfg.pipe_kafka_broker_port = default_kafka_broker_port;
-    if (!list->cfg.pipe_kafka_topic) list->cfg.pipe_kafka_topic = topic;
-    if (!list->cfg.pipe_kafka_retry) list->cfg.pipe_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
-
-    p_kafka_set_broker(kafka_host, list->cfg.pipe_kafka_broker_host, list->cfg.pipe_kafka_broker_port);
-    p_kafka_set_topic(kafka_host, list->cfg.pipe_kafka_topic);
-    p_kafka_set_partition(kafka_host, list->cfg.pipe_kafka_partition);
-    p_kafka_set_key(kafka_host, list->cfg.pipe_kafka_partition_key, list->cfg.pipe_kafka_partition_keylen);
-    p_kafka_set_fallback(kafka_host, list->cfg.pipe_kafka_fallback);
-    p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
-    P_broker_timers_set_retry_interval(&kafka_host->btimers, list->cfg.pipe_kafka_retry);
-  }
-  else return ERR;
-
-  return ret;
-}
-
-int plugin_pipe_kafka_connect_to_consume(struct p_kafka_host *kafka_host, struct plugins_list_entry *plugin_data)
-{
-  int ret = SUCCESS;
-
-  if (kafka_host && plugin_data) {
-    ret = plugin_pipe_kafka_init_host(kafka_host, plugin_data, FALSE);
-    if (!ret) ret = p_kafka_manage_consumer(kafka_host, TRUE);
-  }
-  else return ERR;
-
-  return ret;
-}
-#endif 
-
 int plugin_pipe_set_retry_timeout(struct p_broker_timers *btimers, int pipe_fd)
 {
   if (pipe_fd == ERR) return (P_broker_timers_get_retry_interval(btimers) * 1000);
@@ -1240,18 +1139,11 @@ void plugin_pipe_amqp_compile_check()
 #endif
 }
 
-void plugin_pipe_kafka_compile_check()
-{
-#ifndef WITH_KAFKA
-  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_kafka' requires compiling with --enable-kafka. Exiting ..\n", config.name, config.type);
-  exit_plugin(1);
-#endif
-}
-
 void plugin_pipe_check(struct configuration *cfg)
 {
-  if (!cfg->pipe_amqp && !cfg->pipe_kafka) cfg->pipe_homegrown = TRUE;
+  if (!cfg->pipe_amqp) cfg->pipe_homegrown = TRUE;
 
+/*
   if (cfg->pipe_amqp && cfg->pipe_kafka) {
     Log(LOG_WARNING, "WARN ( %s/%s ): 'plugin_pipe_amqp' and 'plugin_pipe_kafka' are mutual exclusive: disabling both.\n", cfg->name, cfg->type);
 
@@ -1259,4 +1151,5 @@ void plugin_pipe_check(struct configuration *cfg)
     cfg->pipe_kafka = FALSE;
     cfg->pipe_homegrown = TRUE;
   }
+*/
 }

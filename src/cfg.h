@@ -103,15 +103,6 @@ struct configuration {
   char *pipe_amqp_exchange;
   char *pipe_amqp_routing_key;
   int pipe_amqp_retry;
-  int pipe_kafka;
-  char *pipe_kafka_broker_host;
-  char *pipe_kafka_topic;
-  int pipe_kafka_partition;
-  char *pipe_kafka_partition_key;
-  int pipe_kafka_partition_keylen;
-  int pipe_kafka_broker_port;
-  int pipe_kafka_retry;
-  char *pipe_kafka_fallback;
   int files_umask;
   int files_uid;
   int files_gid;
