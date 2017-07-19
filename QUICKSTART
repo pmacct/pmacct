@@ -772,24 +772,6 @@ For more information about the home-grown circular queue, consult plugin_buffer_
 and plugin_pipe_size entries in CONFIG-KEYS and docs/INTERNALS "Communications between
 core process and plugins" chapter. 
 
-The RabbitMQ queue has the same dependencies as the AMQP plugin; consult the "Running
-the RabbitMQ/AMQP plugin" chapter in this document for where to download the required
-packages/libraries and how to compile pmacct against these. When plugin_pipe_amqp is
-set to true, following is how data exchange via a RabbitMQ broker is configured under
-default settings:
-
-plugins: print[blabla]
-plugin_buffer_size[blabla]: 10240
-!
-plugin_pipe_amqp[blabla]: true
-plugin_pipe_amqp_user[blabla]: guest
-plugin_pipe_amqp_passwd[blabla]: guest
-plugin_pipe_amqp_exchange[blabla]: pmacct
-plugin_pipe_amqp_host[blabla]: localhost
-plugin_pipe_amqp_vhost[blabla]: "/"
-plugin_pipe_amqp_routing_key[blabla]: blabla-print
-plugin_pipe_amqp_retry[blabla]: 60
-
 
 XI. Quickstart guide to packet classification
 Packet classification is a feature available for pmacctd (libpcap-based daemon) and

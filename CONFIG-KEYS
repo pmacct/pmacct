@@ -252,20 +252,6 @@ DESC:		Core Process and each of the plugin instances are run into different proc
 		logged - indicating the plugin affected and current settings.
 DEFAULT:	4MB
 
-KEY:		plugin_pipe_amqp
-VALUES:         [ true | false ]
-DESC:		By defining this directive to 'true', a RabbitMQ broker is used for queueing and
-		data exchange between the Core Process and the plugins. This is in alternative to
-		the home-grown circular queue implementation (see plugin_pipe_size description).
-		This directive, along with all other plugin_pipe_amqp_* directives, can be set
-		globally or apply on a per plugin basis (ie. it is a valid scenario, if multiple
-		plugins are instantiated, that some make use of home-grown queueing, while others
-		use RabbitMQ based queueing). For a quick comparison: while relying on a RabbitMQ
-		broker for queueing introduces an external dependency (rabbitmq-c library, RabbitMQ
-		server, etc.), it reduces the amount of setting needed by the home-grown circular
-		queue implementation. See QUICKSTART for some examples.
-DEFAULT:	false
-
 KEY:		plugin_buffer_size 
 DESC:		By defining the transfer buffer size, in bytes, this directive enables buffering of
 		data transfers between core process and active plugins. Once a buffer is filled, it
@@ -275,9 +261,7 @@ DESC:		By defining the transfer buffer size, in bytes, this directive enables bu
 		with the home-grown circular queue implemetation, the value has to be minor/equal to
 		the size defined by 'plugin_pipe_size' and keeping a ratio between 1:100 and 1:1000
 		among the two is considered good practice; the circular queue of plugin_pipe_size size
-		is partitioned in chunks of plugin_buffer_size; if used with the RabbitMQ broker based
-		queueing (ie. 'plugin_pipe_amqp: true') this directive sets the frame_max allowed by
-		the underlying RabbitMQ session. 
+		is partitioned in chunks of plugin_buffer_size.
 DEFAULT:	Set to the size of the smallest element to buffer 
 
 KEY:            plugin_pipe_backlog
@@ -293,10 +277,9 @@ KEY:		plugin_pipe_check_core_pid
 VALUES:		[ true | false ]
 DESC:		When enabled (default), validates the sender of data at the plugin side. The check
 		consists in verifying that the sender PID matches the PID of the plugin parent
-		process. This is useful when plugin_pipe_amqp is enabled and hence a broker sits
-		between the daemon Core Process and the Plugins. The feature is not inteded to be
-		a security one; instead its objective is to limit impact of such things like mis-
-		configurations, daemons started twice with the same configuration, etc. 
+		process. The feature is not inteded to be a security one; instead its objective is
+		to limit impact of such things like mis- configurations, daemons started twice with
+		the same configuration, etc. 
 DEFAULT:	true
 
 KEY:		files_umask 
@@ -395,10 +378,9 @@ DESC:           Enables logging to a file (bypassing syslog); expected value is 
 		be rotated. 
 DEFAULT:	none (logging to stderr)
 
-KEY:		[ amqp_host | plugin_pipe_amqp_host ]
+KEY:		amqp_host
 DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to the broker used by an
-		AMQP plugin to purge data out; plugin_pipe_amqp_* directives refer to the broker used
-		by the core process to send data to plugins. 
+		AMQP plugin to purge data out.
 DEFAULT:        localhost
 
 KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
@@ -416,7 +398,7 @@ DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker us
 		thread/daemon to dump data out at regular time intervals.
 DEFAULT:	See amqp_host	
 
-KEY:            [ amqp_vhost | plugin_pipe_amqp_vhost ]
+KEY:            amqp_vhost
 DESC:           Defines the AMQP/RabbitMQ server virtual host; see also amqp_host.
 DEFAULT:        "/"
 
@@ -426,7 +408,7 @@ KEY:		[ bgp_daemon_msglog_amqp_vhost | bgp_table_dump_amqp_vhost | bmp_dump_amqp
 DESC:           See amqp_vhost; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_vhost 
 
-KEY:		[ amqp_user | plugin_pipe_amqp_user ]
+KEY:		amqp_user
 DESC:           Defines the username to use when connecting to the AMQP/RabbitMQ server; see also
 		amqp_host.
 DEFAULT:        guest
@@ -437,7 +419,7 @@ KEY:		[ bgp_daemon_msglog_amqp_user | bgp_table_dump_amqp_user | bmp_dump_amqp_u
 DESC:		See amqp_user; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_user
 
-KEY:		[ amqp_passwd | plugin_pipe_amqp_passwd ]
+KEY:		amqp_passwd
 DESC:           Defines the password to use when connecting to the server; see also amqp_host.
 DEFAULT:        guest
 
@@ -501,7 +483,7 @@ KEY:		[ bgp_daemon_msglog_amqp_routing_key_rr | bgp_table_dump_amqp_routing_key_
 DESC:		See amqp_routing_key_rr; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_routing_key_rr
 
-KEY:            [ amqp_exchange | plugin_pipe_amqp_exchange ]
+KEY:            amqp_exchange
 DESC:           Name of the AMQP exchange to publish data; see also amqp_host.
 DEFAULT:	pmacct
 
@@ -570,29 +552,12 @@ KEY:		[ bgp_daemon_msglog_amqp_heartbeat_interval | bgp_table_dump_amqp_heartbea
 DESC:           See amqp_heartbeat_interval; see also bgp_daemon_msglog_amqp_host.
 DEFAULT:	See amqp_heartbeat_interval
 
-KEY:            plugin_pipe_amqp_routing_key 
-DESC:           Name of the AMQP routing key to use to send data to a plugin. Currently each plugin
-		must bind to a different routing key in order to avoid duplications. Dynamic names
-		are supported through the use of variables, which are computed at startup. The list
-		of variables supported is:
-
-                $core_proc_name	Configured core_proc_name.
-
-                $plugin_name	Configured plugin name (ie. 'foo' if 'plugins: print[foo]') 
-
-                $plugin_type	Plugin type (ie. memory, print, amqp, etc.)
-
-DEFAULT:        '$core_proc_name-$plugin_name-$plugin_type'
-
-KEY:		plugin_pipe_amqp_retry
-DESC:           Defines the interval of time, in seconds, after which a connection to the RabbitMQ
-		server should be retried after a failure is detected; see also amqp_host.
-DEFAULT:	60
-
 KEY:		[ bgp_daemon_msglog_amqp_retry | bmp_daemon_msglog_amqp_retry |
 		  sfacctd_counter_amqp_retry | telemetry_daemon_msglog_amqp_retry ] [GLOBAL]
-DESC:		See plugin_pipe_amqp_retry; see also bgp_daemon_msglog_amqp_host.
-DEFAULT: 	See plugin_pipe_amqp_retry	
+DESC:		Defines the interval of time, in seconds, after which a connection to the RabbitMQ
+		server should be retried after a failure is detected; see also amqp_host. See also
+		bgp_daemon_msglog_amqp_host.
+DEFAULT: 	60
 
 KEY:		kafka_topic
 DESC:           Name of the Kafka topic to attach to published data. Dynamic names are supported by

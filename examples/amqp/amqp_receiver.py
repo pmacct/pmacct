@@ -15,11 +15,6 @@
 # allows to receive messages published by an 'amqp' plugin, in JSON format.
 # Similarly for BGP daemon bgp_*_routing_key and BMP daemon bmp_*_routing_key.
 #
-# Binding to the routing key specified by plugin_pipe_amqp_routing_key (by
-# default 'core_proc_name-$plugin_name-$plugin_type') allows to receive a copy
-# of messages published by the Core Process to a specific plugin; the messages
-# are in binary format, first quad being the sequence number.
-#
 # Binding to the reserved exchange 'amq.rabbitmq.trace' and to routing keys
 # 'publish.pmacct' or 'deliver.<queue name>' allows to receive a copy of the
 # messages that published via a specific exchange or delivered to a specific

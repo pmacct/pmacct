@@ -96,7 +96,7 @@ A: CPU cycles are proportional to the amount of traffic (packets, flows, samples
    to all daemons. Buffering is enabled with the plugin_buffer_size directive; buffers
    can then be queued and distributed with a choice of an home-grown circolar queue
    implementation (plugin_pipe_size) or a RabbitMQ broker (plugin_pipe_amqp). Check
-   CONFIG-KEYS and QUICKSTART for more information. 
+   CONFIG-KEYS and QUICKSTART for more information.
 
 
 Q8: I want to to account both inbound and outbound traffic of my network, with an host
