@@ -1899,7 +1899,43 @@ release), you may be very possibly asked to try one of these first. Finally,
 please refrain to open issues on GitHub if not using master code (use the
 pmacct-discussion mailing list or unicast email instead). 
 
-a) In case of crashes of an any process, regardless if predictable or not, the
+a) Here are recap some popular issues when compiling pmacct or linking it at
+runtime against shared libraries:
+
+  1) /usr/local/sbin/pmacctd: error while loading shared libraries:
+     librabbitmq.so.4: cannot open shared object file: No such file or directory 
+
+     This can happen at runtime and, especially in case of freshly downloaded
+     and compiled libraries, it is a symptom that after installing the shared
+     library, ldconfig was not called. Or alternatively that the directory
+     where the library is located is not inserted in /etc/ld.so.conf or in any
+     files included it includes.
+
+  2) json_array_foreach(json_list, key, value) {
+                                               ^
+     nfv9_template.c: In function ‘nfacctd_offline_read_json_template’:
+     nfv9_template.c:572:53: error: expected ‘;’ before ‘{’ token
+
+     This can happen at compile time and and is a bit tricky to hint. In this
+     example the function json_array_foreach() is not being recognized, in
+     other words while the library could be located, it does not contain the
+     specific function. This is a symptom that the library version in use is
+     too old. Typical situation is when using a packaged library rather than
+     a freshly downloaded and compiled latest stable release. 
+
+  3) /usr/local/lib/libpcap.so: undefined reference to `pcap_lex'
+     collect2: error: ld returned 1 exit status
+     make[2]: *** [pmacctd] Error 1
+
+     This can happen at compile time and it is a symptom that the needed
+     library could not be located by the linker. This is a symptom that the 
+     library could be in some non-standard location and the linked need an
+     hint. For libpcap --with-pcap-libs knob is available at configure time;
+     for all other libraries the library_LIBS and library_CFLAGS environment
+     variables are available. See examples in the "Configuring pmacct for
+     compilation and installing" section of this document.
+
+b) In case of crashes of an any process, regardless if predictable or not, the
 advice is to run the daemon with "ulimit -c unlimited" so to generate a core
 dump. The file is placed in the directory where the daemon is started so it
 is good to take care of that. pmacct developers will then ask for one or both
@@ -1918,7 +1954,7 @@ Optionally, especially if the issue can be easily reproduced, the daemon can
 be re-configured for compiling with the --debug flag so to produce extra info
 suitable for troubleshooting. 
 
-b) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
+c) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
 with "./configure --debug <any other flags already in use>"; --debug sets as
 CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables any code
 optimizations the compiler may introduce; 2) run the resulting daemon under
@@ -1926,7 +1962,7 @@ valgrind, ie. "valgrind --leak-check=yes <pmacct command-line>". A memory leak
 is confirmed if the amount of "definitely lost" bytes keeps increasing over
 time. 
 
-c) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
+d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
 input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n port
 <sfacctd/nfacctd listening port>", that packets are emitted/received. Optionally
 Wireshark (or its commandline counterpart tshark) can be used, in conjunction
@@ -1956,7 +1992,7 @@ NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs);
 you can confirm whether templates are being exported/replicated/received with a
 touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id". 
 
-d) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
+e) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
 be produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
 port <sfacctd/nfacctd listening port>". The output file can be replayed in
 lab with tcpreplay. Before replaying, L2/L3 must be adjusted to reflect the
@@ -1968,7 +2004,7 @@ the output file from tcprewrite can be supplied to tcpreplay for the actual
 replay, ie.: "tcpreplay -i <output interface> -x <speed multiplicator> <input
 file>". 
 
-e) Buffering is often an element to tune. While buffering internal to pmacct, 
+f) Buffering is often an element to tune. While buffering internal to pmacct, 
 configured with plugin_buffer_size and plugin_pipe_size, returns warning
 messages in case of data loss and brings solid queueing alterantives like
 RabbitMQ and Kafka, buffering between pmacct and the kernel, configured with
@@ -1985,7 +2021,7 @@ in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
 any lift in the buffering must be also supported by the kernel, adjusting
 /proc/sys/net/core/rmem_max.
 
-f) packet classification using the nDPI library is among the new features of
+g) packet classification using the nDPI library is among the new features of
 pmacct 1.7. As with any major and complex feature, it is expected that not
 everything may work great and smooth at the first round of implementation.
 In this section you will find a few tips on how to help providing meaningful
