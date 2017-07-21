@@ -1,7 +1,7 @@
 !
 ! Sample networks-list; enabled by 'networks_file' key.
 !
-! Format supported: [<label>','][<next-hop>','][[<peer AS number>'_']<origin AS number>',']<Network>'/'<numeric mask>
+! Format supported: [<label>','][<(BGP) next-hop>','][[<peer AS number>'_']<origin AS number>',']<Network>'/'<numeric mask>
 !
 !
 ! <Network>'/'<numeric mask> examples
@@ -26,7 +26,7 @@
 64512_65501,192.168.2.0/25
 64512_65502,192.168.4.0/23
 !
-! <next-hop>','<origin AS number>','<Network>'/'<numeric mask> examples
+! <(BGP) next-hop>','<origin AS number>','<Network>'/'<numeric mask> examples
 !
 10.0.0.1,65500,192.168.1.0/24
 10.0.0.2,65501,192.168.2.0/25

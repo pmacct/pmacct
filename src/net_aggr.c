@@ -1131,7 +1131,12 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
 
   if (!(config.nfacctd_as & NF_AS_FALLBACK)) p->src_as = as;
   else {
-    if (mask >= p->src_nmask) p->src_as = as;
+    if (config.networks_file_no_lpm) {
+      if (mask) p->src_as = as;
+    }
+    else {
+      if (mask >= p->src_nmask) p->src_as = as;
+    }
   }
 }
 
@@ -1172,7 +1177,12 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
 
   if (!(config.nfacctd_as & NF_AS_FALLBACK)) p->dst_as = as;
   else {
-    if (mask >= p->dst_nmask) p->dst_as = as;
+    if (config.networks_file_no_lpm) {
+      if (mask) p->dst_as = as;
+    }
+    else {
+      if (mask >= p->dst_nmask) p->dst_as = as;
+    }
   }
 }
 
@@ -1215,8 +1225,13 @@ void search_peer_src_as(struct networks_table *nt, struct networks_cache *nc, st
     if (pbgp) pbgp->peer_src_as = as;
   }
   else {
-    if (mask >= p->src_nmask) {
-      if (pbgp) pbgp->peer_src_as = as;
+    if (config.networks_file_no_lpm) {
+      if (mask && pbgp) pbgp->peer_src_as = as;
+    }
+    else {
+      if (mask >= p->src_nmask) {
+        if (pbgp) pbgp->peer_src_as = as;
+      }
     }
   }
 }
@@ -1260,8 +1275,13 @@ void search_peer_dst_as(struct networks_table *nt, struct networks_cache *nc, st
     if (pbgp) pbgp->peer_dst_as = as;
   }
   else {
-    if (mask >= p->dst_nmask) {
-      if (pbgp) pbgp->peer_dst_as = as;
+    if (config.networks_file_no_lpm) {
+      if (mask && pbgp) pbgp->peer_dst_as = as;
+    }
+    else {
+      if (mask >= p->dst_nmask) {
+        if (pbgp) pbgp->peer_dst_as = as;
+      }
     }
   }
 }
@@ -1306,8 +1326,13 @@ void search_peer_dst_ip(struct networks_table *nt, struct networks_cache *nc, st
       memcpy(&pbgp->peer_dst_ip, &nh, sizeof(struct host_addr));
     }
     else {
-      if (mask >= p->dst_nmask) {
-        memcpy(&pbgp->peer_dst_ip, &nh, sizeof(struct host_addr));
+      if (config.networks_file_no_lpm) {
+        if (mask && pbgp) memcpy(&pbgp->peer_dst_ip, &nh, sizeof(struct host_addr));
+      }
+      else {
+        if (mask >= p->dst_nmask) {
+          if (pbgp) memcpy(&pbgp->peer_dst_ip, &nh, sizeof(struct host_addr));
+	}
       }
     }
   }
