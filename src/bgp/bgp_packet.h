@@ -119,7 +119,7 @@ struct bgp_notification {
     /* data should follow */
 };
 
-/* based on: draft-ietf-idr-shutdown-01 */
+/* based on: rfc8203 (draft-ietf-idr-shutdown) */
 #define BGP_NOTIFY_CEASE_SM_LEN			128
 
 struct bgp_notification_shutdown_msg {
