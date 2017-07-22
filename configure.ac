@@ -709,6 +709,28 @@ AC_ARG_ENABLE(rabbitmq,
 )
 dnl finish: RabbitMQ/AMQP handling
 
+dnl start: ZMQ/AMQP handling
+AC_MSG_CHECKING(whether to enable ZMQ/AMQP support)
+AC_ARG_ENABLE(zmq,
+  [  --enable-zmq                     Enable ZMQ/AMQP support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([ZMQ], [libzmq])
+    SUPPORTS="${SUPPORTS} zmq"
+    USING_ZMQ="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $ZMQ_CFLAGS"
+    AC_DEFINE(WITH_ZMQ, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: ZMQ/AMQP handling
 
 dnl start: Kafka handling
 AC_MSG_CHECKING(whether to enable Kafka support)
@@ -1199,6 +1221,7 @@ AM_CONDITIONAL([WITH_PGSQL], [test x"$USING_PGSQL" = x"yes"])
 AM_CONDITIONAL([WITH_MONGODB], [test x"$USING_MONGODB" = x"yes"])
 AM_CONDITIONAL([WITH_SQLITE3], [test x"$USING_SQLITE3" = x"yes"])
 AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
+AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
