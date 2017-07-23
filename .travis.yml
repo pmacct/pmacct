@@ -15,10 +15,12 @@ install:
   - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
   - git clone -b 2.0-stable https://github.com/ntop/nDPI
   - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && cd ..
+  - git clone https://github.com/zeromq/libzmq.git
+  - cd libzmq && ./autogen.sh && ./configure && make && sudo make install && cd ..
 
 script:
   - ./autogen.sh
-  - ./configure --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog
+  - ./configure --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi
   - make
   - sudo make install
   - make distcheck
