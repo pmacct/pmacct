@@ -93,6 +93,10 @@
 #include <ndpi_main.h>
 #endif
 
+#if defined (WITH_ZMQ)
+#include <zmq.h>
+#endif
+
 #include "pmacct-build.h"
 
 #if !defined ETHER_ADDRSTRLEN

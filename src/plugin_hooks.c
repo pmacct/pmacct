@@ -367,6 +367,31 @@ void load_plugins(struct plugin_requests *req)
     }
   }
 #endif
+
+  /* ZMQ handling, if required */
+#ifdef WITH_ZMQ
+  {
+    char bind_str[VERYSHORTBUFLEN];
+    int ret, index;
+
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+      chptr = &channels_list[index];
+      list = chptr->plugin;
+
+      if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port) {
+	chptr->zmq_host.ctx = zmq_ctx_new();
+        chptr->zmq_host.sock = zmq_socket(chptr->zmq_host.ctx, ZMQ_PUB);
+
+	snprintf(bind_str, VERYSHORTBUFLEN, "%s:%u", "tcp://localhost", list->cfg.pipe_zmq_port);
+        ret = zmq_bind(chptr->zmq_host.sock, bind_str);
+	if (ret != 0) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed binding to %s\nExiting.\n", list->name, list->type.string, bind_str);
+	  exit(1);
+	}
+      }
+    }
+  }
+#endif
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 

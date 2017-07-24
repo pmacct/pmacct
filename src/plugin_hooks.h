@@ -92,6 +92,10 @@ struct plugins_list_entry {
 #include "kafka_common.h"
 #endif
 
+#ifdef WITH_ZMQ
+#include "zmq_common.h"
+#endif
+
 struct channels_list_entry {
   pm_cfgreg_t aggregation;
   pm_cfgreg_t aggregation_2;
@@ -133,6 +137,9 @@ struct channels_list_entry {
   int kafka_host_reconnect;				// flag need to reconnect to Kafka server
   void *kafka_host_sleep;				// pointer to the sleep thread (in case of reconnection)
 */
+#endif
+#ifdef WITH_ZMQ
+  struct p_zmq_host zmq_host;
 #endif
 };
 

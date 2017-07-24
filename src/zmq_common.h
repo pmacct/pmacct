@@ -19,12 +19,13 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* includes */
-#include <zmq.h>
-
 /* defines */
 
 /* structures */
+struct p_zmq_host {
+  void *ctx;
+  void *sock;
+};
 
 /* prototypes */
 #if (!defined __ZMQ_COMMON_C)

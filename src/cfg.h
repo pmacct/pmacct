@@ -103,6 +103,8 @@ struct configuration {
   char *pipe_amqp_exchange;
   char *pipe_amqp_routing_key;
   int pipe_amqp_retry;
+  int pipe_zmq;
+  int pipe_zmq_port;
   int files_umask;
   int files_uid;
   int files_gid;

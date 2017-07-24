@@ -116,6 +116,8 @@ EXT int cfg_key_plugin_pipe_amqp_host(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp_vhost(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp_routing_key(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_amqp_retry(char *, char *, char *);
+EXT int cfg_key_plugin_pipe_zmq(char *, char *, char *);
+EXT int cfg_key_plugin_pipe_zmq_port(char *, char *, char *);
 EXT int cfg_key_plugin_buffer_size(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);
 EXT int cfg_key_networks_file(char *, char *, char *);
