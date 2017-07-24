@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -92,6 +92,8 @@ EXT int p_amqp_publish_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT int p_amqp_consume_binary(struct p_amqp_host *, void *, u_int32_t);
 EXT void p_amqp_close(struct p_amqp_host *, int);
 EXT int p_amqp_is_alive(struct p_amqp_host *);
+
+EXT int write_and_free_json_amqp(void *, void *);
 
 /* global vars */
 EXT struct p_amqp_host amqpp_amqp_host;

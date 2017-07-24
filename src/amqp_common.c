@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -481,4 +481,32 @@ int p_amqp_is_alive(struct p_amqp_host *amqp_host)
 {
   if (amqp_host->status == AMQP_STATUS_OK && amqp_host->conn && (amqp_get_sockfd(amqp_host->conn) >= 0)) return SUCCESS;
   else return ERR;
+}
+
+int write_and_free_json_amqp(void *amqp_log, void *obj)
+{
+  char *orig_amqp_routing_key = NULL, dyn_amqp_routing_key[SRVBUFLEN];
+  struct p_amqp_host *alog = (struct p_amqp_host *) amqp_log;
+  int ret = ERR;
+
+  char *tmpbuf = NULL;
+  json_t *json_obj = (json_t *) obj;
+
+  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
+  json_decref(json_obj);
+
+  if (tmpbuf) {
+    if (alog->rk_rr.max) {
+      orig_amqp_routing_key = p_amqp_get_routing_key(alog);
+      P_handle_table_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &alog->rk_rr);
+      p_amqp_set_routing_key(alog, dyn_amqp_routing_key);
+    }
+
+    ret = p_amqp_publish_string(alog, tmpbuf);
+    free(tmpbuf);
+
+    if (alog->rk_rr.max) p_amqp_set_routing_key(alog, orig_amqp_routing_key);
+  }
+
+  return ret;
 }

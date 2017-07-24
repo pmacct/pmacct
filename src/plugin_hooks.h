@@ -88,10 +88,6 @@ struct plugins_list_entry {
 #include "amqp_common.h"
 #endif
 
-#ifdef WITH_KAFKA
-#include "kafka_common.h"
-#endif
-
 #ifdef WITH_ZMQ
 #include "zmq_common.h"
 #endif
@@ -130,13 +126,6 @@ struct channels_list_entry {
   struct p_amqp_host amqp_host;
   int amqp_host_reconnect;				/* flag need to reconnect to RabbitMQ server */ 
   void *amqp_host_sleep;				/* pointer to the sleep thread (in case of reconnection) */
-#endif
-#ifdef WITH_KAFKA
-  struct p_kafka_host kafka_host;
-/* XXX Kafka:
-  int kafka_host_reconnect;				// flag need to reconnect to Kafka server
-  void *kafka_host_sleep;				// pointer to the sleep thread (in case of reconnection)
-*/
 #endif
 #ifdef WITH_ZMQ
   struct p_zmq_host zmq_host;

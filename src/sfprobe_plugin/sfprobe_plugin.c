@@ -602,10 +602,6 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
 #endif
 
-#ifdef WITH_KAFKA
-  struct p_kafka_host *kafka_host = &((struct channels_list_entry *)ptr)->kafka_host;
-#endif
-
   memset(&sp, 0, sizeof(sp));
 
   memcpy(&config, cfgptr, sizeof(struct configuration));

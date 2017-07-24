@@ -93,6 +93,8 @@ EXT int p_kafka_consume_data(struct p_kafka_host *, void *, char *, u_int32_t);
 EXT void p_kafka_close(struct p_kafka_host *, int);
 EXT int p_kafka_check_outq_len(struct p_kafka_host *);
 
+EXT int write_and_free_json_kafka(void *, void *);
+
 /* global vars */
 EXT struct p_kafka_host kafkap_kafka_host;
 EXT struct p_kafka_host bgp_daemon_msglog_kafka_host;

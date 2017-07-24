@@ -1422,10 +1422,6 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
 #endif
 
-#ifdef WITH_KAFKA
-  struct p_kafka_host *kafka_host = &((struct channels_list_entry *)ptr)->kafka_host;
-#endif
-
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);

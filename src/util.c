@@ -1546,66 +1546,6 @@ void write_and_free_json(FILE *f, void *obj)
   }
 }
 
-#ifdef WITH_RABBITMQ
-int write_and_free_json_amqp(void *amqp_log, void *obj)
-{
-  char *orig_amqp_routing_key = NULL, dyn_amqp_routing_key[SRVBUFLEN];
-  struct p_amqp_host *alog = (struct p_amqp_host *) amqp_log;
-  int ret = ERR;
-
-  char *tmpbuf = NULL;
-  json_t *json_obj = (json_t *) obj;
-
-  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
-  json_decref(json_obj);
-
-  if (tmpbuf) {
-    if (alog->rk_rr.max) {
-      orig_amqp_routing_key = p_amqp_get_routing_key(alog);
-      P_handle_table_dyn_rr(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &alog->rk_rr);
-      p_amqp_set_routing_key(alog, dyn_amqp_routing_key);
-    }
-
-    ret = p_amqp_publish_string(alog, tmpbuf);
-    free(tmpbuf);
-
-    if (alog->rk_rr.max) p_amqp_set_routing_key(alog, orig_amqp_routing_key);
-  }
-
-  return ret;
-}
-#endif
-
-#ifdef WITH_KAFKA
-int write_and_free_json_kafka(void *kafka_log, void *obj)
-{
-  char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
-  struct p_kafka_host *alog = (struct p_kafka_host *) kafka_log;
-  int ret = ERR;
-
-  char *tmpbuf = NULL;
-  json_t *json_obj = (json_t *) obj;
-
-  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
-  json_decref(json_obj);
-
-  if (tmpbuf) {
-    if (alog->topic_rr.max) {
-      orig_kafka_topic = p_kafka_get_topic(alog);
-      P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &alog->topic_rr);
-      p_kafka_set_topic(alog, dyn_kafka_topic);
-    }
-
-    ret = p_kafka_produce_data(alog, tmpbuf, strlen(tmpbuf));
-    free(tmpbuf);
-
-    if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);
-  }
-
-  return ret;
-}
-#endif
-
 void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
 {
   char wid[SHORTSHORTBUFLEN]; 
@@ -1625,20 +1565,6 @@ char *compose_json_str(void *obj)
 void write_and_free_json(FILE *f, void *obj)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-}
-
-int write_and_free_json_amqp(void *amqp_log, void *obj)
-{
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_amqp(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-
-  return 0;
-}
-
-int write_and_free_json_kafka(void *kafka_log, void *obj)
-{
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_kafka(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-
-  return 0;
 }
 
 void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)

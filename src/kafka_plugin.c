@@ -26,6 +26,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
+#include "kafka_common.h"
 #include "plugin_cmn_json.h"
 #include "plugin_cmn_avro.h"
 #include "kafka_plugin.h"

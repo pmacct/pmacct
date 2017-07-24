@@ -532,3 +532,31 @@ int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
 
   return SUCCESS;
 }
+
+int write_and_free_json_kafka(void *kafka_log, void *obj)
+{
+  char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
+  struct p_kafka_host *alog = (struct p_kafka_host *) kafka_log;
+  int ret = ERR;
+
+  char *tmpbuf = NULL;
+  json_t *json_obj = (json_t *) obj;
+
+  tmpbuf = json_dumps(json_obj, JSON_PRESERVE_ORDER);
+  json_decref(json_obj);
+
+  if (tmpbuf) {
+    if (alog->topic_rr.max) {
+      orig_kafka_topic = p_kafka_get_topic(alog);
+      P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &alog->topic_rr);
+      p_kafka_set_topic(alog, dyn_kafka_topic);
+    }
+
+    ret = p_kafka_produce_data(alog, tmpbuf, strlen(tmpbuf));
+    free(tmpbuf);
+
+    if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);
+  }
+
+  return ret;
+}
