@@ -240,6 +240,15 @@ void load_plugins(struct plugin_requests *req)
 	list->cfg.nfprobe_id = nfprobe_id;
 	nfprobe_id++;
       }
+
+      /* ZMQ inits, if required */
+#ifdef WITH_ZMQ
+      if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port) {
+	p_zmq_set_plugin_name(&chptr->zmq_host, list->name);
+	p_zmq_set_plugin_type(&chptr->zmq_host, list->type.string); 
+        p_zmq_set_port(&chptr->zmq_host, list->cfg.pipe_zmq_port);
+      }
+#endif
       
       switch (list->pid = fork()) {  
       case -1: /* Something went wrong */
@@ -371,7 +380,6 @@ void load_plugins(struct plugin_requests *req)
   /* ZMQ handling, if required */
 #ifdef WITH_ZMQ
   {
-    char bind_str[VERYSHORTBUFLEN];
     int ret, index;
 
     for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
@@ -379,15 +387,7 @@ void load_plugins(struct plugin_requests *req)
       list = chptr->plugin;
 
       if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port) {
-	chptr->zmq_host.ctx = zmq_ctx_new();
-        chptr->zmq_host.sock = zmq_socket(chptr->zmq_host.ctx, ZMQ_PUB);
-
-	snprintf(bind_str, VERYSHORTBUFLEN, "%s:%u", "tcp://localhost", list->cfg.pipe_zmq_port);
-        ret = zmq_bind(chptr->zmq_host.sock, bind_str);
-	if (ret != 0) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed binding to %s\nExiting.\n", list->name, list->type.string, bind_str);
-	  exit(1);
-	}
+	p_zmq_plugin_pipe_publish(&chptr->zmq_host);
       }
     }
   }
@@ -1164,17 +1164,24 @@ void plugin_pipe_amqp_compile_check()
 #endif
 }
 
+void plugin_pipe_zmq_compile_check()
+{
+#ifndef WITH_ZMQ
+  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_zmq' requires compiling with --enable-zmq. Exiting ..\n", config.name, config.type);
+  exit_plugin(1);
+#endif
+}
+
 void plugin_pipe_check(struct configuration *cfg)
 {
-  if (!cfg->pipe_amqp) cfg->pipe_homegrown = TRUE;
+  if (!cfg->pipe_amqp && !cfg->pipe_zmq)
+    cfg->pipe_homegrown = TRUE;
 
-/*
-  if (cfg->pipe_amqp && cfg->pipe_kafka) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): 'plugin_pipe_amqp' and 'plugin_pipe_kafka' are mutual exclusive: disabling both.\n", cfg->name, cfg->type);
+  if (cfg->pipe_amqp && cfg->pipe_zmq) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): 'plugin_pipe_amqp' and 'plugin_pipe_zmq' are mutual exclusive: disabling both.\n", cfg->name, cfg->type);
 
     cfg->pipe_amqp = FALSE;
-    cfg->pipe_kafka = FALSE;
+    cfg->pipe_zmq = FALSE;
     cfg->pipe_homegrown = TRUE;
   }
-*/
 }

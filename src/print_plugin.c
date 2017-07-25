@@ -70,6 +70,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
 #endif
 
+#ifdef WITH_ZMQ
+  struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -135,6 +139,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_RABBITMQ
     pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
     amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
+#endif
+  }
+  else if (config.pipe_zmq) {
+    plugin_pipe_zmq_compile_check();
+
+#ifdef WITH_ZMQ
+    p_zmq_plugin_pipe_consume(zmq_host);
+    // XXX: p_zmq_get_fd();
 #endif
   }
   else setnonblocking(pipe_fd);

@@ -25,6 +25,10 @@
 struct p_zmq_host {
   void *ctx;
   void *sock;
+
+  int port;
+  char *pname;
+  char *ptype;
 };
 
 /* prototypes */
@@ -33,6 +37,12 @@ struct p_zmq_host {
 #else
 #define EXT
 #endif
+EXT void p_zmq_set_port(struct p_zmq_host *, int);
+EXT void p_zmq_set_plugin_name(struct p_zmq_host *, char *);
+EXT void p_zmq_set_plugin_type(struct p_zmq_host *, char *);
+
+EXT void p_zmq_plugin_pipe_publish(struct p_zmq_host *);
+EXT void p_zmq_plugin_pipe_consume(struct p_zmq_host *);
 
 /* global vars */
 #undef EXT
