@@ -519,6 +519,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (dump_writers_get_flags() != CHLD_ALERT) {
       switch (ret = fork()) {
       case 0: /* Child */
+	pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer (urgent)", config.name);
         (*purge_func)(queries_queue, qq_ptr, TRUE);
         exit(0);
       default: /* Parent */
