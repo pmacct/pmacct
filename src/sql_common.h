@@ -98,6 +98,7 @@ struct insert_data {
   int pending_accumulators;
   int num_primitives;
   int dyn_table;
+  int dyn_table_time_only;
   char dyn_table_name[SRVBUFLEN];
   int recover;
   int locks;
@@ -398,7 +399,7 @@ EXT int glob_num_primitives; /* last resort for signal handling */
 EXT int glob_basetime; /* last resort for signal handling */
 EXT time_t glob_new_basetime; /* last resort for signal handling */
 EXT time_t glob_committed_basetime; /* last resort for signal handling */
-EXT int glob_dyn_table; /* last resort for signal handling */
+EXT int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal handling */
 EXT int glob_timeslot; /* last resort for sql handlers */
 
 EXT struct sqlfunc_cb_registry sqlfunc_cbr; 

@@ -371,8 +371,17 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
     config.sql_table = default_table;
     Log(LOG_INFO, "INFO ( %s/%s ): mongo_table set to '%s'\n", config.name, config.type, default_table);
   }
-  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) dyn_table = TRUE;
-  else dyn_table = FALSE;
+
+  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) {
+    dyn_table = TRUE;
+
+    if (!strchr(config.sql_table, '$')) dyn_table_time_only = TRUE;
+    else dyn_table_time_only = FALSE;
+  }
+  else {
+    dyn_table = FALSE;
+    dyn_table_time_only = FALSE;
+  }
 
   bson_batch = (bson **) malloc(sizeof(bson *) * index);
   if (!bson_batch) {
@@ -423,7 +432,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
-    if (dyn_table) {
+    if (dyn_table &&
+	(!dyn_table_time_only ||
+	(config.acct_type == ACCT_NF && !config.nfacctd_time_new))) {
       time_t stamp = 0;
 
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?

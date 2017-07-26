@@ -157,7 +157,7 @@ EXT void (*basetime_eval)(struct timeval *, struct timeval *, time_t);
 EXT int (*basetime_cmp)(struct timeval *, struct timeval *);
 EXT struct timeval basetime, ibasetime, new_basetime;
 EXT time_t timeslot;
-EXT int dyn_table;
+EXT int dyn_table, dyn_table_time_only;
 
 #ifdef WITH_AVRO
 EXT avro_schema_t avro_acct_schema;

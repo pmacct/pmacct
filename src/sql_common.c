@@ -1083,6 +1083,7 @@ void sql_exit_gracefully(int signum)
   idata.now = time(NULL);
   idata.basetime = glob_basetime;
   idata.dyn_table = glob_dyn_table;
+  idata.dyn_table_time_only = glob_dyn_table_time_only;
   idata.new_basetime = glob_new_basetime;
   idata.timeslot = glob_timeslot;
   idata.committed_basetime = glob_committed_basetime;

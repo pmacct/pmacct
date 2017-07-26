@@ -181,10 +181,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     Log(LOG_WARNING, "WARN ( %s/%s ): no print_output_file and no print_output_lock_file defined.\n", config.name, config.type);
 
   if (config.sql_table) {
-    if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$'))
+    if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) {
       dyn_table = TRUE;
+
+      if (!strchr(config.sql_table, '$')) dyn_table_time_only = TRUE;
+      else dyn_table_time_only = FALSE;
+    }
     else {
       dyn_table = FALSE;
+      dyn_table_time_only = FALSE;
     
       if (config.print_latest_file && (strchr(config.print_latest_file, '%') || strchr(config.print_latest_file, '$'))) {
         Log(LOG_WARNING, "WARN ( %s/%s ): Disabling print_latest_file due to non-dynamic print_output_file.\n", config.name, config.type); 
@@ -521,7 +526,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
-    if (dyn_table) {
+    if (dyn_table &&
+	(!dyn_table_time_only ||
+	(config.acct_type == ACCT_NF && !config.nfacctd_time_new))) {
       time_t stamp = 0;
 
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?

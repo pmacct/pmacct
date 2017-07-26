@@ -3025,7 +3025,10 @@ int cfg_key_nfacctd_time_new(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) {
     if (!list->cfg.nfacctd_time) {
-      if (value) list->cfg.nfacctd_time = NF_TIME_NEW;
+      if (value) {
+	list->cfg.nfacctd_time = NF_TIME_NEW;
+	list->cfg.nfacctd_time_new = TRUE;
+      }
     }
     else Log(LOG_WARNING, "WARN: [%s] Possibly 'nfacctd_time_secs: true' set. 'nfacctd_time_new' ignored.\n", filename);
   }

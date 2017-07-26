@@ -515,7 +515,9 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   for (j = 0; j < index; j++) {
     go_to_pending = FALSE;
 
-    if (idata->dyn_table) {
+    if (idata->dyn_table &&
+	(!idata->dyn_table_time_only ||
+	(config.acct_type == ACCT_NF && !config.nfacctd_time_new))) {
       time_t stamp = 0;
 
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
@@ -965,8 +967,12 @@ void PG_init_default_values(struct insert_data *idata)
       else config.sql_table = pgsql_table_uni;
     }
   }
-  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) idata->dyn_table = TRUE;
+  if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) {
+    idata->dyn_table = TRUE;
+    if (!strchr(config.sql_table, '$')) idata->dyn_table_time_only = TRUE;
+  }
   glob_dyn_table = idata->dyn_table;
+  glob_dyn_table_time_only = idata->dyn_table_time_only;
 
   if (config.sql_backup_host) idata->recover = TRUE;
   if (!config.sql_dont_try_update && config.sql_use_copy) config.sql_use_copy = FALSE; 
