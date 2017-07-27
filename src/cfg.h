@@ -105,6 +105,7 @@ struct configuration {
   int pipe_amqp_retry;
   int pipe_zmq;
   int pipe_zmq_port;
+  int pipe_zmq_retry;
   int files_umask;
   int files_uid;
   int files_gid;

@@ -42,6 +42,23 @@ void p_zmq_set_plugin_type(struct p_zmq_host *zmq_host, char *ptype)
   if (zmq_host) zmq_host->ptype = ptype;
 }
 
+void p_zmq_set_retry_timeout(struct p_zmq_host *zmq_host, int tout)
+{
+  if (zmq_host) zmq_setsockopt(zmq_host->sock, ZMQ_RECONNECT_IVL, &tout, sizeof(tout));
+}
+
+int p_zmq_get_fd(struct p_zmq_host *zmq_host)
+{
+  int fd = ERR;
+  size_t len = sizeof(fd);
+
+  if (zmq_host) {
+    zmq_getsockopt(zmq_host->sock, ZMQ_FD, &fd, &len);
+  }
+
+  return fd;
+}
+
 void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 {
   char bind_str[VERYSHORTBUFLEN];
@@ -84,4 +101,24 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
         zmq_host->pname, zmq_host->ptype, strerror(errno));
     exit_plugin(1);
   }
+}
+
+int p_zmq_recv(struct p_zmq_host *zmq_host, char *buf, u_int64_t len)
+{
+  int ret = 0, events;
+  size_t elen = sizeof(events);
+
+  zmq_getsockopt(zmq_host->sock, ZMQ_EVENTS, &events, &elen); 
+
+  // XXX: while instead of if?
+  if (events & ZMQ_POLLIN) {
+    ret = zmq_recv(zmq_host->sock, buf, len, 0);
+    if (ret == ERR);
+    if (ret > len) {
+      ret = len;
+      buf[ret] = '\0';
+    }
+  }
+
+  return ret;
 }

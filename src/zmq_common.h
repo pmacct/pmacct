@@ -40,9 +40,13 @@ struct p_zmq_host {
 EXT void p_zmq_set_port(struct p_zmq_host *, int);
 EXT void p_zmq_set_plugin_name(struct p_zmq_host *, char *);
 EXT void p_zmq_set_plugin_type(struct p_zmq_host *, char *);
+EXT void p_zmq_set_retry_timeout(struct p_zmq_host *, int);
+
+EXT int p_zmq_get_fd(struct p_zmq_host *);
 
 EXT void p_zmq_plugin_pipe_publish(struct p_zmq_host *);
 EXT void p_zmq_plugin_pipe_consume(struct p_zmq_host *);
+EXT int p_zmq_recv(struct p_zmq_host *, char *, u_int64_t);
 
 /* global vars */
 #undef EXT

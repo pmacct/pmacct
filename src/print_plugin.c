@@ -47,7 +47,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pollfd pfd;
   struct insert_data idata;
   time_t t;
-  int timeout, refresh_timeout, amqp_timeout, kafka_timeout, ret, num, is_event;
+  int timeout, refresh_timeout, amqp_timeout = 0, ret, num, is_event;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -143,10 +143,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
   else if (config.pipe_zmq) {
     plugin_pipe_zmq_compile_check();
-
 #ifdef WITH_ZMQ
     p_zmq_plugin_pipe_consume(zmq_host);
-    // XXX: p_zmq_get_fd();
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
+    pipe_fd = p_zmq_get_fd(zmq_host);
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -207,7 +207,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
 
-    if (config.pipe_homegrown || config.pipe_amqp) {
+    if (config.pipe_homegrown || config.pipe_amqp || config.pipe_zmq) {
       timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
       ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
     }
@@ -297,6 +297,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 	seq = ((struct ch_buf_hdr *)pipebuf)->seq;
 	amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
+      }
+#endif
+#ifdef WITH_ZMQ
+      else if (config.pipe_zmq) {
+	ret = p_zmq_recv(zmq_host, pipebuf, config.buffer_size);
+	// XXX: more receive data handling
       }
 #endif
 
