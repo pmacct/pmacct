@@ -1277,8 +1277,10 @@ KEY:            timestamps_since_epoch
 VALUES          [ true | false ]
 DESC:           All timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival primitives; sql_history-
 		related fields stamp_inserted, stamp_updated; etc.) in the standard seconds since the Epoch
-		format. In case the output is to a RDBMS, setting this directive to true will require changes
-		to the default types for timestamp fields in the SQL schema.
+		format. This not only makes output more compact but also prevents computationally expensive
+		time-formatting functions to be invoked, resulting in speed gains at purge time. In case the
+		output is to a RDBMS, setting this directive to true will require changes to the default types
+		for timestamp fields in the SQL schema.
 
 		MySQL:          DATETIME ==> INT(8) UNSIGNED
                 PostgreSQL:     timestamp without time zone ==> bigint

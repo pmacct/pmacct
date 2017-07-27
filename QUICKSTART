@@ -826,7 +826,7 @@ steps:
    !
    plugins: print
    !
-   aggregate: src_host, dst_host, src_port dst_port, proto, tos, class
+   aggregate: src_host, dst_host, src_port, dst_port, proto, tos, class
 
    What enables packet classification is the use of the 'class' primitive as part
    of the supplied aggregation method. Further classification-related options, 
