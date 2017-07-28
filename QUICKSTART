@@ -63,7 +63,8 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 
 
 II. Configuring pmacct for compilation and installing
-The simplest way to configure the package for compilation is to let the configure
+The simplest way to configure the package for compilation is to download the
+latest stable released tarball from http://www.pmacct.net/ and let the configure
 script to probe default headers and libraries for you. A first round of guessing
 is done via pkg-config then, for some libraries, "typical" default locations
 are checked, ie. /usr/local/lib. Switches you are likely to want enabled are
@@ -83,7 +84,13 @@ and any (4) mixed compilation:
 (3) shell> ./configure --enable-sqlite3
 (4) shell> ./configure --enable-mysql --enable-pgsql
 
-Then to compile and install simply typing:
+If cloning the GitHub repository ( https://github.com/pmacct/pmacct ) instead,
+the configure script has to be generated, resulting in one extra step than the
+process just described. Please refer to the Building section of the README.md
+document for instruction about cloning the repo, generate the configure script
+along with the required installed packages.
+
+Then compile and install simply typing:
 
 shell> make; make install
 
