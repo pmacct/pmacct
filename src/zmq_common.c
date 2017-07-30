@@ -32,14 +32,9 @@ void p_zmq_set_port(struct p_zmq_host *zmq_host, int port)
   if (zmq_host) zmq_host->port = port;
 }
 
-void p_zmq_set_plugin_name(struct p_zmq_host *zmq_host, char *pname)
+void p_zmq_set_topic(struct p_zmq_host *zmq_host, char *topic)
 {
-  if (zmq_host) zmq_host->pname = pname;
-}
-
-void p_zmq_set_plugin_type(struct p_zmq_host *zmq_host, char *ptype)
-{
-  if (zmq_host) zmq_host->ptype = ptype;
+  if (zmq_host) zmq_host->topic = topic;
 }
 
 void p_zmq_set_retry_timeout(struct p_zmq_host *zmq_host, int tout)
@@ -71,8 +66,8 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
   snprintf(bind_str, VERYSHORTBUFLEN, "%s:%u", "tcp://127.0.0.1", zmq_host->port);
   ret = zmq_bind(zmq_host->sock, bind_str);
   if (ret != 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed binding: %s (%s)\nExiting.\n",
-	zmq_host->pname, zmq_host->ptype, bind_str, strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed binding for %s: %s (%s)\nExiting.\n",
+	config.name, config.type, zmq_host->topic, bind_str, strerror(errno));
     exit(1);
   }
 }
@@ -90,17 +85,35 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
   ret = zmq_connect(zmq_host->sock, bind_str);
   if (ret != 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_connect() failed: %s (%s)\nExiting.\n",
-	zmq_host->pname, zmq_host->ptype, bind_str, strerror(errno));
+	config.name, config.type, bind_str, strerror(errno));
     exit_plugin(1);
   }
 
-  snprintf(filter, SRVBUFLEN, "%s/%s", zmq_host->pname, zmq_host->ptype);
-  ret = zmq_setsockopt(zmq_host->sock, ZMQ_SUBSCRIBE, filter, strlen(filter));
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_SUBSCRIBE, zmq_host->topic, strlen(filter));
   if (ret != 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() failed %s\nExiting.\n",
-        zmq_host->pname, zmq_host->ptype, strerror(errno));
+        config.name, config.type, strerror(errno));
     exit_plugin(1);
   }
+}
+
+int p_zmq_send(struct p_zmq_host *zmq_host, void *data, u_int32_t data_len)
+{
+  zmq_msg_t topic, msg;
+  int topic_len, ret;
+
+  topic_len = strlen(zmq_host->topic);
+  zmq_msg_init_size(&topic, topic_len);
+  memcpy(zmq_msg_data(&topic), zmq_host->topic, topic_len); 
+  ret = zmq_send(zmq_host->sock, &topic, topic_len, ZMQ_SNDMORE);
+
+  zmq_msg_init_size(&msg, data_len);
+  memcpy (zmq_msg_data(&msg), data, data_len);
+  ret = zmq_send(zmq_host->sock, &msg, data_len, 0);
+  if (ret) Log(LOG_ERR, "ERROR ( %s/%s ): publishing to ZMQ: p_zmq_send() [topic=%s]\n",
+		config.name, config.type, zmq_host->topic);
+
+  return ret;
 }
 
 int p_zmq_recv(struct p_zmq_host *zmq_host, char *buf, u_int64_t len)

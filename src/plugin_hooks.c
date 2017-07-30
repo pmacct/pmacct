@@ -243,11 +243,8 @@ void load_plugins(struct plugin_requests *req)
 
       /* ZMQ inits, if required */
 #ifdef WITH_ZMQ
-      if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port) {
-	p_zmq_set_plugin_name(&chptr->zmq_host, list->name);
-	p_zmq_set_plugin_type(&chptr->zmq_host, list->type.string); 
-        p_zmq_set_port(&chptr->zmq_host, list->cfg.pipe_zmq_port);
-      }
+      if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port)
+	plugin_pipe_zmq_init_host(&chptr->zmq_host, list);
 #endif
       
       switch (list->pid = fork()) {  
@@ -533,6 +530,14 @@ reprocess:
 	  if (!chptr->amqp_host_sleep) ret = p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
 	  else ret = FALSE;
           if (ret) plugin_pipe_amqp_sleeper_start(chptr);
+#endif
+	}
+	/* sending buffer to connected ZMQ subscriber(s) */
+	else if (channels_list[index].plugin->cfg.pipe_zmq) {
+          struct channels_list_entry *chptr = &channels_list[index];
+
+#ifdef WITH_ZMQ
+	  ret = p_zmq_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
 #endif
 	}
 	else {
@@ -1155,6 +1160,21 @@ int plugin_pipe_calc_retry_timeout_diff(struct p_broker_timers *btimers, time_t 
 
   return timeout;
 }
+
+#ifdef WITH_ZMQ
+void plugin_pipe_zmq_init_host(struct p_zmq_host *zmq_host, struct plugins_list_entry *list)
+{
+  int ret;
+
+  if (zmq_host) {
+    char *topic = plugin_pipe_compose_default_string(list, "$core_proc_name-$plugin_name-$plugin_type");
+
+    memset(zmq_host, 0, sizeof(struct p_zmq_host));
+    p_zmq_set_topic(zmq_host, topic);
+    p_zmq_set_port(zmq_host, list->cfg.pipe_zmq_port);
+  }
+}
+#endif
 
 void plugin_pipe_amqp_compile_check()
 {
