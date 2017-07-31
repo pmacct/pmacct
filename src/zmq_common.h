@@ -27,7 +27,7 @@ struct p_zmq_host {
   void *sock;
 
   int port;
-  char *topic;
+  u_int8_t topic;
 };
 
 /* prototypes */
@@ -37,7 +37,7 @@ struct p_zmq_host {
 #define EXT
 #endif
 EXT void p_zmq_set_port(struct p_zmq_host *, int);
-EXT void p_zmq_set_topic(struct p_zmq_host *, char *);
+EXT void p_zmq_set_topic(struct p_zmq_host *, u_int8_t);
 EXT void p_zmq_set_retry_timeout(struct p_zmq_host *, int);
 
 EXT int p_zmq_get_fd(struct p_zmq_host *);

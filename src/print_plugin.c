@@ -302,6 +302,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_ZMQ
       else if (config.pipe_zmq) {
 	ret = p_zmq_recv(zmq_host, pipebuf, config.buffer_size);
+	seq = ((struct ch_buf_hdr *)pipebuf)->seq;
 	// XXX: more receive data handling
       }
 #endif

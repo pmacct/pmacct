@@ -106,7 +106,7 @@ void load_plugins(struct plugin_requests *req)
       while (list->cfg.buffer_size % 4 != 0) list->cfg.buffer_size--;
 #endif
 
-      if (!list->cfg.pipe_amqp) {
+      if (!list->cfg.pipe_amqp && !list->cfg.pipe_zmq) {
         /* creating communication channel */
         socketpair(AF_UNIX, SOCK_DGRAM, 0, list->pipe);
 
@@ -267,11 +267,11 @@ void load_plugins(struct plugin_requests *req)
 
 	close(config.sock);
 	close(config.bgp_sock);
-	if (!list->cfg.pipe_amqp) close(list->pipe[1]);
+	if (!list->cfg.pipe_amqp && !list->cfg.pipe_zmq) close(list->pipe[1]);
 	(*list->type.func)(list->pipe[0], &list->cfg, chptr);
 	exit(0);
       default: /* Parent */
-	if (!list->cfg.pipe_amqp) {
+	if (!list->cfg.pipe_amqp && !list->cfg.pipe_zmq) {
 	  close(list->pipe[0]);
 	  setnonblocking(list->pipe[1]);
 	}
@@ -871,6 +871,11 @@ void fill_pipe_buffer()
       p_amqp_publish_binary(&chptr->amqp_host, chptr->rg.ptr, chptr->bufsize);
 #endif
     }
+    else if (chptr->plugin->cfg.pipe_zmq) {
+#ifdef WITH_ZMQ
+      p_zmq_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+#endif
+    }
     else {
       if (chptr->status->wakeup) {
         chptr->status->wakeup = chptr->request;
@@ -1167,10 +1172,8 @@ void plugin_pipe_zmq_init_host(struct p_zmq_host *zmq_host, struct plugins_list_
   int ret;
 
   if (zmq_host) {
-    char *topic = plugin_pipe_compose_default_string(list, "$core_proc_name-$plugin_name-$plugin_type");
-
     memset(zmq_host, 0, sizeof(struct p_zmq_host));
-    p_zmq_set_topic(zmq_host, topic);
+    p_zmq_set_topic(zmq_host, list->id);
     p_zmq_set_port(zmq_host, list->cfg.pipe_zmq_port);
   }
 }
