@@ -716,7 +716,7 @@ AC_ARG_ENABLE(zmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([ZMQ], [libzmq])
+    PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.0.0])
     SUPPORTS="${SUPPORTS} zmq"
     USING_ZMQ="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $ZMQ_CFLAGS"
