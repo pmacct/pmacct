@@ -301,9 +301,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #endif
 #ifdef WITH_ZMQ
       else if (config.pipe_zmq) {
+	zmq_read_data:
 	ret = p_zmq_recv(zmq_host, pipebuf, config.buffer_size);
-	seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-	// XXX: more receive data handling
+	if (ret > 0) seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	else goto poll_again;
       }
 #endif
 
@@ -354,6 +355,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 
       if (config.pipe_homegrown) goto read_data;
+#ifdef WITH_ZMQ
+      else if (config.pipe_zmq) goto zmq_read_data;
+#endif
     }
   }
 }

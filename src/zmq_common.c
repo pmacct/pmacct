@@ -136,7 +136,6 @@ int p_zmq_recv(struct p_zmq_host *zmq_host, char *buf, u_int64_t len)
 
   zmq_getsockopt(zmq_host->sock, ZMQ_EVENTS, &events, &elen); 
 
-  // XXX: while instead of if?
   if (events & ZMQ_POLLIN) {
     ret = zmq_recv(zmq_host->sock, &topic, 1, 0); /* read topic first */
     if (ret == ERR) {
