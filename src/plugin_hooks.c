@@ -534,9 +534,9 @@ reprocess:
 	}
 	/* sending buffer to connected ZMQ subscriber(s) */
 	else if (channels_list[index].plugin->cfg.pipe_zmq) {
+#ifdef WITH_ZMQ
           struct channels_list_entry *chptr = &channels_list[index];
 
-#ifdef WITH_ZMQ
 	  ret = p_zmq_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
 #endif
 	}

@@ -147,6 +147,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     p_zmq_plugin_pipe_consume(zmq_host);
     p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
     pipe_fd = p_zmq_get_fd(zmq_host);
+    seq = 0;
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -301,9 +302,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #endif
 #ifdef WITH_ZMQ
       else if (config.pipe_zmq) {
-	zmq_read_data:
 	ret = p_zmq_recv(zmq_host, pipebuf, config.buffer_size);
-	if (ret > 0) seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	if (ret > 0) {
+	  if (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
+		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->seq, ((seq + 1) % MAX_SEQNUM));
+	  } 
+
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	}
 	else goto poll_again;
       }
 #endif
@@ -354,10 +361,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       }
 
-      if (config.pipe_homegrown) goto read_data;
-#ifdef WITH_ZMQ
-      else if (config.pipe_zmq) goto zmq_read_data;
-#endif
+      if (config.pipe_homegrown || config.pipe_zmq) goto read_data;
     }
   }
 }
