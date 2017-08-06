@@ -32,7 +32,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_msg *msg;
   unsigned char *pipebuf;
   struct pollfd pfd;
-  int timeout, refresh_timeout, amqp_timeout, kafka_timeout, err, ret, num;
+  int timeout, refresh_timeout, err, ret, num;
   int fd, pool_idx, recv_idx;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -47,11 +47,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
   time_t now;
-  void *kafka_msg;
-
-#ifdef WITH_RABBITMQ
-  struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
-#endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
   recollect_pipe_memory(ptr);
@@ -143,14 +138,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
 
-  if (config.pipe_amqp) {
-    plugin_pipe_amqp_compile_check();
-#ifdef WITH_RABBITMQ
-    pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
-    amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
-#endif
-  }
-  else setnonblocking(pipe_fd);
+  setnonblocking(pipe_fd);
 
   now = time(NULL);
 
@@ -168,10 +156,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
 
-    if (config.pipe_homegrown || config.pipe_amqp) {
-      timeout = MIN(refresh_timeout, (amqp_timeout ? amqp_timeout : INT_MAX));
-      ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
-    }
+    ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), refresh_timeout);
 
     if (ret < 0) goto poll_again;
 
@@ -189,16 +174,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     now = time(NULL);
-
-#ifdef WITH_RABBITMQ
-    if (config.pipe_amqp && pipe_fd == ERR) {
-      if (timeout == amqp_timeout) {
-        pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
-        amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
-      }
-      else amqp_timeout = plugin_pipe_calc_retry_timeout_diff(&amqp_host->btimers, now);
-    }
-#endif
 
     switch (ret) {
     case 0: /* timeout */
@@ -242,15 +217,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         memcpy(pipebuf, rg->ptr, bufsz);
         rg->ptr += bufsz;
       }
-#ifdef WITH_RABBITMQ
-      else if (config.pipe_amqp) {
-        ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
-        if (ret) pipe_fd = ERR;
-
-        seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-        amqp_timeout = plugin_pipe_set_retry_timeout(&amqp_host->btimers, pipe_fd);
-      }
-#endif
 
       msg = (struct pkt_msg *) (pipebuf+sizeof(struct ch_buf_hdr));
       msg->payload = (pipebuf+sizeof(struct ch_buf_hdr)+PmsgSz);
@@ -287,7 +253,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       }
 
-      if (config.pipe_homegrown) goto read_data;
+      goto read_data;
     }
   }  
 }
