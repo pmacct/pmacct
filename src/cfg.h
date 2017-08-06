@@ -96,13 +96,6 @@ struct configuration {
   int pipe_backlog;
   int pipe_check_core_pid;
   int pipe_amqp;
-  char *pipe_amqp_host;
-  char *pipe_amqp_vhost;
-  char *pipe_amqp_user;
-  char *pipe_amqp_passwd;
-  char *pipe_amqp_exchange;
-  char *pipe_amqp_routing_key;
-  int pipe_amqp_retry;
   int pipe_zmq;
   int pipe_zmq_port;
   int pipe_zmq_retry;

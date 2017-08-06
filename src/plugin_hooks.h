@@ -124,21 +124,11 @@ struct channels_list_entry {
   struct extra_primitives extras;			/* offset for non-standard aggregation primitives structures */
 #ifdef WITH_RABBITMQ
   struct p_amqp_host amqp_host;
-  int amqp_host_reconnect;				/* flag need to reconnect to RabbitMQ server */ 
-  void *amqp_host_sleep;				/* pointer to the sleep thread (in case of reconnection) */
 #endif
 #ifdef WITH_ZMQ
   struct p_zmq_host zmq_host;
 #endif
 };
-
-#ifdef WITH_RABBITMQ
-struct plugin_pipe_amqp_sleeper {
-  struct p_amqp_host *amqp_host;
-  struct plugins_list_entry *plugin;
-  int *do_reconnect;
-};
-#endif
 
 #if (defined __PLUGIN_HOOKS_C)
 extern struct channels_list_entry channels_list[MAX_N_PLUGINS];
@@ -171,13 +161,8 @@ EXT int pkt_extras_clean(void *, int);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
-#if defined WITH_RABBITMQ
+#if defined RABBITMQ
 EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
-EXT struct plugin_pipe_amqp_sleeper *plugin_pipe_amqp_sleeper_define(struct p_amqp_host *, int *, struct plugins_list_entry *);
-EXT void plugin_pipe_amqp_sleeper_free(struct plugin_pipe_amqp_sleeper **);
-EXT void plugin_pipe_amqp_sleeper_publish_func(struct plugin_pipe_amqp_sleeper *);
-EXT void plugin_pipe_amqp_sleeper_start(struct channels_list_entry *);
-EXT void plugin_pipe_amqp_sleeper_stop(struct channels_list_entry *);
 EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
 #endif
 #if defined WITH_ZMQ
@@ -186,11 +171,6 @@ EXT void plugin_pipe_zmq_init_host(struct p_zmq_host *, struct plugins_list_entr
 EXT void plugin_pipe_amqp_compile_check();
 EXT void plugin_pipe_zmq_compile_check();
 EXT void plugin_pipe_check(struct configuration *);
-EXT int plugin_pipe_set_retry_timeout(struct p_broker_timers *, int);
-EXT int plugin_pipe_calc_retry_timeout_diff(struct p_broker_timers *, time_t);
-
-EXT void handle_plugin_pipe_dyn_strings(char *, int, char *, struct plugins_list_entry *);
-EXT char *plugin_pipe_compose_default_string(struct plugins_list_entry *, char *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)
