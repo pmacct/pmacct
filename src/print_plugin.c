@@ -207,16 +207,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (ret < 0) goto poll_again;
     }
 
-    idata.now = time(NULL);
-
-    if (config.sql_history) {
-      while (idata.now > (basetime.tv_sec + timeslot)) {
-	new_basetime.tv_sec = basetime.tv_sec;
-        basetime.tv_sec += timeslot;
-        if (config.sql_history == COUNT_MONTHLY)
-          timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
-      }
-    }
+    P_update_time_reference(&idata);
 
     switch (ret) {
     case 0: /* timeout */
@@ -282,6 +273,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #endif
 
       /* lazy refresh time handling */ 
+      P_update_time_reference(&idata);
+
       if (idata.now > refresh_deadline) {
 	int saved_qq_ptr;
 

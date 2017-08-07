@@ -1028,6 +1028,20 @@ void P_handle_table_dyn_strings(char *new, int newlen, char *old, struct chained
   }
 }
 
+void P_update_time_reference(struct insert_data *idata)
+{
+  idata->now = time(NULL);
+
+  if (config.sql_history) {
+    while (idata->now > (basetime.tv_sec + timeslot)) {
+      new_basetime.tv_sec = basetime.tv_sec;
+      basetime.tv_sec += timeslot;
+      if (config.sql_history == COUNT_MONTHLY)
+	timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
+    }
+  }
+}
+
 void P_broker_timers_set_last_fail(struct p_broker_timers *btimers, time_t timestamp)
 {
   if (btimers) btimers->last_fail = timestamp;

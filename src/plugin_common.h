@@ -139,6 +139,8 @@ EXT void P_init_historical_acct(time_t);
 EXT void P_init_refresh_deadline(time_t *, int, int, char *);
 EXT void P_eval_historical_acct(struct timeval *, struct timeval *, time_t);
 EXT int P_cmp_historical_acct(struct timeval *, struct timeval *);
+EXT void P_update_time_reference(struct insert_data *);
+
 EXT int P_test_zero_elem(struct chained_cache *);
 
 /* global vars */
