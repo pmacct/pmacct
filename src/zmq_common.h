@@ -22,8 +22,16 @@
 /* defines */
 
 /* structures */
+struct p_zmq_zap {
+  void *sock;
+  void *thread; 
+  char username[SHORTBUFLEN];
+  char password[SHORTBUFLEN];
+};
+
 struct p_zmq_host {
   void *ctx;
+  struct p_zmq_zap zap;
   void *sock;
 
   int port;
@@ -39,12 +47,20 @@ struct p_zmq_host {
 EXT void p_zmq_set_port(struct p_zmq_host *, int);
 EXT void p_zmq_set_topic(struct p_zmq_host *, u_int8_t);
 EXT void p_zmq_set_retry_timeout(struct p_zmq_host *, int);
+EXT void p_zmq_set_username(struct p_zmq_host *);
+EXT void p_zmq_set_password(struct p_zmq_host *);
 
 EXT int p_zmq_get_fd(struct p_zmq_host *);
 
 EXT void p_zmq_plugin_pipe_publish(struct p_zmq_host *);
 EXT void p_zmq_plugin_pipe_consume(struct p_zmq_host *);
-EXT int p_zmq_recv(struct p_zmq_host *, char *, u_int64_t);
+EXT int p_zmq_plugin_pipe_recv(struct p_zmq_host *, void *, u_int64_t);
+EXT int p_zmq_plugin_pipe_send(struct p_zmq_host *, void *, u_int64_t);
+EXT char *p_zmq_recv_str(void *);
+EXT int p_zmq_send_str(void *, char *);
+EXT int p_zmq_sendmore_str(void *, char *);
+
+EXT void p_zmq_zap_handler(void *);
 
 /* global vars */
 #undef EXT

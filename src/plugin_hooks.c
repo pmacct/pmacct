@@ -483,7 +483,7 @@ reprocess:
 #ifdef WITH_ZMQ
           struct channels_list_entry *chptr = &channels_list[index];
 
-	  ret = p_zmq_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+	  ret = p_zmq_plugin_pipe_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
 #endif
 	}
 	else {
@@ -814,7 +814,7 @@ void fill_pipe_buffer()
 
     if (chptr->plugin->cfg.pipe_zmq) {
 #ifdef WITH_ZMQ
-      p_zmq_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+      p_zmq_plugin_pipe_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
 #endif
     }
     else {
@@ -964,6 +964,8 @@ void plugin_pipe_zmq_init_host(struct p_zmq_host *zmq_host, struct plugins_list_
     memset(zmq_host, 0, sizeof(struct p_zmq_host));
     p_zmq_set_topic(zmq_host, list->id);
     p_zmq_set_port(zmq_host, list->cfg.pipe_zmq_port);
+    p_zmq_set_username(zmq_host);
+    p_zmq_set_password(zmq_host);
   }
 }
 #endif

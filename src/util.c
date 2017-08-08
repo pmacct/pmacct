@@ -2545,3 +2545,18 @@ int pm_alphasort(const void *a, const void *b)
 
   return(strcmp(dira->d_name, dirb->d_name));
 }
+
+void generate_random_string(char *s, const int len)
+{
+  static const char alphanum[] =
+	"0123456789"
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	"abcdefghijklmnopqrstuvwxyz";
+  int i;
+
+  for (i = 0; i < len; ++i) {
+    s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+  }
+
+  s[len] = '\0';
+}

@@ -179,4 +179,6 @@ EXT void pm_tdestroy(void **, void (*free_node)(void *));
 
 EXT void replace_string(char *, int, char *, char *);
 EXT int delete_line_from_file(int, char *);
+
+EXT void generate_random_string(char *, const int);
 #undef EXT
