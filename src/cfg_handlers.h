@@ -109,7 +109,6 @@ EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_backlog(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_check_core_pid(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_zmq(char *, char *, char *);
-EXT int cfg_key_plugin_pipe_zmq_port(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_zmq_retry(char *, char *, char *);
 EXT int cfg_key_plugin_buffer_size(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);

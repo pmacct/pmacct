@@ -2104,34 +2104,6 @@ int cfg_key_plugin_pipe_zmq(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_plugin_pipe_zmq_port(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value <= 0 || value > 65535) {
-    Log(LOG_ERR, "WARN: [%s] 'plugin_pipe_zmq_port' has to be 0 > value >= 65535.\n", filename);
-    return ERR;
-  }
-
-  if (!name) {
-    Log(LOG_ERR, "ERROR: [%s] plugin_pipe_zmq_port cannot be global. Not loaded.\n", filename);
-    changes++;
-  }
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.pipe_zmq_port = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_plugin_pipe_zmq_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -27,11 +27,6 @@
 #include "zmq_common.h"
 
 /* Functions */
-void p_zmq_set_port(struct p_zmq_host *zmq_host, int port)
-{
-  if (zmq_host) zmq_host->port = port;
-}
-
 void p_zmq_set_topic(struct p_zmq_host *zmq_host, u_int8_t topic)
 {
   if (zmq_host) zmq_host->topic = topic;
@@ -73,10 +68,41 @@ int p_zmq_get_fd(struct p_zmq_host *zmq_host)
   return fd;
 }
 
+void p_zmq_plugin_pipe_init_core(struct p_zmq_host *zmq_host, u_int8_t plugin_id)
+{
+  int ret;
+
+  if (zmq_host) {
+    memset(zmq_host, 0, sizeof(struct p_zmq_host));
+    p_zmq_set_topic(zmq_host, plugin_id);
+    p_zmq_set_username(zmq_host);
+    p_zmq_set_password(zmq_host);
+  }
+}
+
+void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
+{
+  if (zmq_host) {
+    if (zmq_host->sock) {
+      zmq_unbind(zmq_host->sock, zmq_host->bind_str);
+      zmq_close(zmq_host->sock);
+    }
+
+    if (zmq_host->zap.sock) zmq_close(zmq_host->zap.sock);
+    if (zmq_host->zap.thread) zmq_threadclose(zmq_host->zap.thread);
+
+    if (zmq_host->ctx) {
+      zmq_ctx_shutdown(zmq_host->ctx);
+      zmq_ctx_term(zmq_host->ctx);
+      zmq_host->ctx = NULL;
+    }
+  }
+}
+
 void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 {
-  char bind_str[VERYSHORTBUFLEN];
   int ret, as_server = TRUE;
+  size_t bind_strlen;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
@@ -102,18 +128,24 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
     exit(1);
   }
 
-  snprintf(bind_str, VERYSHORTBUFLEN, "%s:%u", "tcp://127.0.0.1", zmq_host->port);
-  ret = zmq_bind(zmq_host->sock, bind_str);
+  ret = zmq_bind(zmq_host->sock, "tcp://127.0.0.1:*");
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed binding for topic %u: %s (%s)\nExiting.\n",
-	config.name, config.type, zmq_host->topic, bind_str, strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for topic %u: %s\nExiting.\n",
+	config.name, config.type, zmq_host->topic, strerror(errno));
+    exit(1);
+  }
+
+  bind_strlen = sizeof(zmq_host->bind_str);
+  ret = zmq_getsockopt(zmq_host->sock, ZMQ_LAST_ENDPOINT, zmq_host->bind_str, &bind_strlen);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_getsockopt() ZMQ_LAST_ENDPOINT failed for topic %u: %s\nExiting.\n",
+        config.name, config.type, zmq_host->topic, strerror(errno));
     exit(1);
   }
 }
 
 void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
 {
-  char bind_str[VERYSHORTBUFLEN];
   int ret;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
@@ -134,11 +166,10 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
     exit_plugin(1);
   }
 
-  snprintf(bind_str, VERYSHORTBUFLEN, "%s:%u", "tcp://127.0.0.1", zmq_host->port);
-  ret = zmq_connect(zmq_host->sock, bind_str);
+  ret = zmq_connect(zmq_host->sock, zmq_host->bind_str);
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_connect() failed: %s (%s)\nExiting.\n",
-	config.name, config.type, bind_str, strerror(errno));
+	config.name, config.type, zmq_host->bind_str, strerror(errno));
     exit_plugin(1);
   }
 

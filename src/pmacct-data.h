@@ -333,7 +333,6 @@ static const struct _dictionary_line dictionary[] = {
   {"plugin_pipe_backlog", cfg_key_plugin_pipe_backlog},
   {"plugin_pipe_check_core_pid", cfg_key_plugin_pipe_check_core_pid},
   {"plugin_pipe_zmq", cfg_key_plugin_pipe_zmq},
-  {"plugin_pipe_zmq_port", cfg_key_plugin_pipe_zmq_port},
   {"plugin_pipe_zmq_retry", cfg_key_plugin_pipe_zmq_retry},
   {"plugin_buffer_size", cfg_key_plugin_buffer_size},
   {"interface", cfg_key_interface},

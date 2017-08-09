@@ -243,8 +243,10 @@ void load_plugins(struct plugin_requests *req)
 
       /* ZMQ inits, if required */
 #ifdef WITH_ZMQ
-      if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port)
-	plugin_pipe_zmq_init_host(&chptr->zmq_host, list);
+      if (list->cfg.pipe_zmq) {
+	p_zmq_plugin_pipe_init_core(&chptr->zmq_host, list->id);
+	p_zmq_plugin_pipe_publish(&chptr->zmq_host);
+      }
 #endif
       
       switch (list->pid = fork()) {  
@@ -330,22 +332,6 @@ void load_plugins(struct plugin_requests *req)
       list = list->next;
     }
   }
-
-  /* ZMQ handling, if required */
-#ifdef WITH_ZMQ
-  {
-    int ret, index;
-
-    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
-      chptr = &channels_list[index];
-      list = chptr->plugin;
-
-      if (list->cfg.pipe_zmq && list->cfg.pipe_zmq_port) {
-	p_zmq_plugin_pipe_publish(&chptr->zmq_host);
-      }
-    }
-  }
-#endif
 }
 
 void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req) 
@@ -952,21 +938,6 @@ int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct pl
   plugin_pipe_amqp_init_host(amqp_host, plugin_data);
   p_amqp_connect_to_consume(amqp_host);
   return p_amqp_get_sockfd(amqp_host);
-}
-#endif
-
-#ifdef WITH_ZMQ
-void plugin_pipe_zmq_init_host(struct p_zmq_host *zmq_host, struct plugins_list_entry *list)
-{
-  int ret;
-
-  if (zmq_host) {
-    memset(zmq_host, 0, sizeof(struct p_zmq_host));
-    p_zmq_set_topic(zmq_host, list->id);
-    p_zmq_set_port(zmq_host, list->cfg.pipe_zmq_port);
-    p_zmq_set_username(zmq_host);
-    p_zmq_set_password(zmq_host);
-  }
 }
 #endif
 

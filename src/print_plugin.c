@@ -132,6 +132,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.pipe_zmq) {
     plugin_pipe_zmq_compile_check();
 #ifdef WITH_ZMQ
+    p_zmq_plugin_pipe_init_plugin(zmq_host);
     p_zmq_plugin_pipe_consume(zmq_host);
     p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
     pipe_fd = p_zmq_get_fd(zmq_host);

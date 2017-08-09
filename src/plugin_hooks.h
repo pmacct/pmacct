@@ -69,13 +69,13 @@ struct aggregate_filter {
 };
 
 struct plugin_type_entry {
-  int id;
+  u_int8_t id;
   char string[16];
   void (*func)(int, struct configuration *, void *);
 };
 
 struct plugins_list_entry {
-  int id;
+  u_int8_t id;
   pid_t pid;
   char name[SRVBUFLEN];
   struct configuration cfg;
@@ -161,12 +161,9 @@ EXT int pkt_extras_clean(void *, int);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
-#if defined RABBITMQ
+#if defined WITH_RABBITMQ
 EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
 EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
-#endif
-#if defined WITH_ZMQ
-EXT void plugin_pipe_zmq_init_host(struct p_zmq_host *, struct plugins_list_entry *);
 #endif
 EXT void plugin_pipe_amqp_compile_check();
 EXT void plugin_pipe_zmq_compile_check();
