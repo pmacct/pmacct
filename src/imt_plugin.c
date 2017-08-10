@@ -60,17 +60,23 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *pcust, empty_pcust[] = "";
   struct pkt_vlen_hdr_primitives *pvlen, empty_pvlen;
   struct networks_file_data nfd;
-  struct timeval select_timeout;
   struct primitives_ptrs prim_ptrs;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
 
-  fd_set read_descs, bkp_read_descs; /* select() stuff */
-  int select_fd, lock = FALSE;
+  int lock = FALSE;
   int cLen, num, sd, sd2;
   char *dataptr;
 
+  /* poll() stuff */
+  struct pollfd poll_fd[2]; /* pipe + server */
+  int poll_timeout;
+
 #ifdef WITH_RABBITMQ
   struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
+#endif
+
+#ifdef WITH_ZMQ
+  struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
 #endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -111,6 +117,16 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     plugin_pipe_amqp_compile_check();
 #ifdef WITH_RABBITMQ
     pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
+#endif
+  }
+  else if (config.pipe_zmq) {
+    plugin_pipe_zmq_compile_check();
+#ifdef WITH_ZMQ
+    p_zmq_plugin_pipe_init_plugin(zmq_host);
+    p_zmq_plugin_pipe_consume(zmq_host);
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
+    pipe_fd = p_zmq_get_fd(zmq_host);
+    seq = 0;
 #endif
   }
   else setnonblocking(pipe_fd);
@@ -201,36 +217,26 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   sd = build_query_server(config.imt_plugin_path);
   cLen = sizeof(cAddr);
 
-  /* preparing for synchronous I/O multiplexing */
-  select_fd = 0;
-
-  FD_ZERO(&read_descs);
-  FD_SET(sd, &read_descs);
-
-  if (sd > select_fd) select_fd = sd;
-  if (pipe_fd != ERR) {
-    FD_SET(pipe_fd, &read_descs);
-    if (pipe_fd > select_fd) select_fd = pipe_fd;
-  }
-
-  select_fd++;
-  memcpy(&bkp_read_descs, &read_descs, sizeof(read_descs));
-
   qh = (struct query_header *) srvbuf;
 
   /* plugin main loop */
   for(;;) {
-    select_again:
-    select_timeout.tv_sec = MIN(DEFAULT_IMT_PLUGIN_SELECT_TIMEOUT, amqp_timeout);
-    select_timeout.tv_usec = 0;
+    poll_again:
 
-    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
-    num = select(select_fd, &read_descs, NULL, NULL, &select_timeout);
+    poll_timeout = DEFAULT_IMT_PLUGIN_POLL_TIMEOUT * 1000;
+    memset(&poll_fd, 0, sizeof(poll_fd));
+    poll_fd[0].fd = pipe_fd;
+    poll_fd[0].events = POLLIN;
+    poll_fd[1].fd = sd;
+    poll_fd[1].events = POLLIN;
+
+    num = poll(poll_fd, 2, poll_timeout);
 
     gettimeofday(&cycle_stamp, NULL);
 
 #ifdef WITH_RABBITMQ
     if (config.pipe_amqp && pipe_fd == ERR) {
+/*
       if (select_timeout.tv_sec == amqp_timeout) {
         pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
 
@@ -246,6 +252,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         amqp_timeout = ((P_broker_timers_get_last_fail(&amqp_host->btimers) + P_broker_timers_get_retry_interval(&amqp_host->btimers)) - cycle_stamp.tv_sec);
         assert(amqp_timeout >= 0);
       }
+*/
     }
 #endif
 
@@ -255,11 +262,11 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	exit_plugin(1);
       } 
 
-      goto select_again;  
+      if (num < 0) goto poll_again;  
     }
 
     /* doing server tasks */
-    if (FD_ISSET(sd, &read_descs)) {
+    if (poll_fd[1].revents & POLLIN) {
       struct pollfd pfd;
       int ret;
 
@@ -276,7 +283,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (ret == 0) {
         Log(LOG_WARNING, "WARN ( %s/%s ): Timed out while processing fragmented query.\n", config.name, config.type); 
         close(sd2);
-	goto select_again;
+	goto poll_again;
       }
       else {
         num = recv(sd2, srvbufptr, sz, 0);
@@ -392,8 +399,15 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       memcpy(&table_reset_stamp, &cycle_stamp, sizeof(struct timeval));
     }
 
-    if (FD_ISSET(pipe_fd, &read_descs)) {
-      if (!config.pipe_amqp) {
+    if (reload_map) {
+      load_networks(config.networks_file, &nt, &nc);
+      load_ports(config.ports_file, &pt);
+      reload_map = FALSE;
+    }
+
+    if (poll_fd[0].revents & POLLIN) {
+      read_data:
+      if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
           seq %= MAX_SEQNUM;
@@ -405,7 +419,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         if (num < 0) {
           pollagain = TRUE;
-          goto select_again;
+          goto poll_again;
         }
 
         memcpy(pipebuf, rgptr, config.buffer_size);
@@ -422,13 +436,14 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	}
       }
 #ifdef WITH_RABBITMQ
-      else {
+      else if (config.pipe_amqp) {
         ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
         if (!ret) {
           seq = ((struct ch_buf_hdr *)pipebuf)->seq;
 	  amqp_timeout = LONGLONG_RETRY;
 	  num = TRUE;
 	}
+/*
 	else {
           if (pipe_fd != ERR) {
             FD_CLR(pipe_fd, &bkp_read_descs);
@@ -436,6 +451,21 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           }
 	  amqp_timeout = P_broker_timers_get_retry_interval(&amqp_host->btimers);
 	}
+*/
+      }
+#endif
+#ifdef WITH_ZMQ
+      else if (config.pipe_zmq) {
+	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);
+	if (ret > 0) {
+	  if (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
+		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->seq, ((seq + 1) % MAX_SEQNUM));
+	  }
+
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	}
+	else goto poll_again;
       }
 #endif
 
@@ -504,12 +534,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
 	}
       }
-    } 
 
-    if (reload_map) {
-      load_networks(config.networks_file, &nt, &nc);
-      load_ports(config.ports_file, &pt);
-      reload_map = FALSE;
+#ifdef WITH_ZMQ
+      if (config.pipe_zmq) goto read_data;
+#endif
     }
   }
 }
