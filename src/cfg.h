@@ -95,7 +95,6 @@ struct configuration {
   int buffer_immediate;
   int pipe_backlog;
   int pipe_check_core_pid;
-  int pipe_amqp;
   int pipe_zmq;
   int pipe_zmq_retry;
   int files_umask;

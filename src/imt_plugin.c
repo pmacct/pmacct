@@ -39,7 +39,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char srvbuf[maxqsize];
   unsigned char *srvbufptr;
   struct query_header *qh;
-  unsigned char *pipebuf;
+  unsigned char *pipebuf, *dataptr;
   char path[] = "/tmp/collect.pipe";
   short int go_to_clear = FALSE;
   u_int32_t request, sz;
@@ -51,7 +51,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = 0;
   u_int32_t seq = 0;
   int rg_err_count = 0;
-  int amqp_timeout = INT_MAX, ret;
+  int ret, lock = FALSE, cLen, num, sd, sd2;
   struct pkt_bgp_primitives *pbgp, empty_pbgp;
   struct pkt_legacy_bgp_primitives *plbgp, empty_plbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
@@ -63,17 +63,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
 
-  int lock = FALSE;
-  int cLen, num, sd, sd2;
-  char *dataptr;
-
   /* poll() stuff */
   struct pollfd poll_fd[2]; /* pipe + server */
   int poll_timeout;
-
-#ifdef WITH_RABBITMQ
-  struct p_amqp_host *amqp_host = &((struct channels_list_entry *)ptr)->amqp_host;
-#endif
 
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
@@ -113,13 +105,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  if (config.pipe_amqp) {
-    plugin_pipe_amqp_compile_check();
-#ifdef WITH_RABBITMQ
-    pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
-#endif
-  }
-  else if (config.pipe_zmq) {
+  if (config.pipe_zmq) {
     plugin_pipe_zmq_compile_check();
 #ifdef WITH_ZMQ
     p_zmq_plugin_pipe_init_plugin(zmq_host);
@@ -233,28 +219,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     num = poll(poll_fd, 2, poll_timeout);
 
     gettimeofday(&cycle_stamp, NULL);
-
-#ifdef WITH_RABBITMQ
-    if (config.pipe_amqp && pipe_fd == ERR) {
-/*
-      if (select_timeout.tv_sec == amqp_timeout) {
-        pipe_fd = plugin_pipe_amqp_connect_to_consume(amqp_host, plugin_data);
-
-        if (pipe_fd != ERR) {
-          FD_SET(pipe_fd, &bkp_read_descs);
-          if (pipe_fd > select_fd) select_fd = pipe_fd;
-          select_fd++;
-	  amqp_timeout = LONGLONG_RETRY;
-        }
-	else amqp_timeout = P_broker_timers_get_retry_interval(&amqp_host->btimers);
-      }
-      else {
-        amqp_timeout = ((P_broker_timers_get_last_fail(&amqp_host->btimers) + P_broker_timers_get_retry_interval(&amqp_host->btimers)) - cycle_stamp.tv_sec);
-        assert(amqp_timeout >= 0);
-      }
-*/
-    }
-#endif
 
     if (num <= 0) {
       if (getppid() == 1) {
@@ -435,25 +399,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           seq = ((struct ch_buf_hdr *)pipebuf)->seq;
 	}
       }
-#ifdef WITH_RABBITMQ
-      else if (config.pipe_amqp) {
-        ret = p_amqp_consume_binary(amqp_host, pipebuf, config.buffer_size);
-        if (!ret) {
-          seq = ((struct ch_buf_hdr *)pipebuf)->seq;
-	  amqp_timeout = LONGLONG_RETRY;
-	  num = TRUE;
-	}
-/*
-	else {
-          if (pipe_fd != ERR) {
-            FD_CLR(pipe_fd, &bkp_read_descs);
-	    pipe_fd = ERR;
-          }
-	  amqp_timeout = P_broker_timers_get_retry_interval(&amqp_host->btimers);
-	}
-*/
-      }
-#endif
 #ifdef WITH_ZMQ
       else if (config.pipe_zmq) {
 	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);

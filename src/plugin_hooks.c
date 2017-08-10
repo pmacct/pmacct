@@ -925,30 +925,6 @@ int pkt_extras_clean(void *pextras, int len)
   return PdataSz+PextrasSz;
 }
 
-#ifdef WITH_RABBITMQ
-void plugin_pipe_amqp_init_host(struct p_amqp_host *amqp_host, struct plugins_list_entry *list)
-{
-  int ret;
-
-  if (amqp_host) p_amqp_init_host(amqp_host);
-}
-
-int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *amqp_host, struct plugins_list_entry *plugin_data)
-{
-  plugin_pipe_amqp_init_host(amqp_host, plugin_data);
-  p_amqp_connect_to_consume(amqp_host);
-  return p_amqp_get_sockfd(amqp_host);
-}
-#endif
-
-void plugin_pipe_amqp_compile_check()
-{
-#ifndef WITH_RABBITMQ
-  Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_amqp' requires compiling with --enable-rabbitmq. Exiting ..\n", config.name, config.type);
-  exit_plugin(1);
-#endif
-}
-
 void plugin_pipe_zmq_compile_check()
 {
 #ifndef WITH_ZMQ

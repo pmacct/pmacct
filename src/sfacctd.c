@@ -40,6 +40,9 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
+#ifdef WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif

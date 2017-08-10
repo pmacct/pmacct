@@ -84,10 +84,6 @@ struct plugins_list_entry {
   struct plugins_list_entry *next;
 };
 
-#ifdef WITH_RABBITMQ 
-#include "amqp_common.h"
-#endif
-
 #ifdef WITH_ZMQ
 #include "zmq_common.h"
 #endif
@@ -122,9 +118,6 @@ struct channels_list_entry {
   struct sampling s;
   struct plugins_list_entry *plugin;			/* backpointer to the plugin the actual channel belongs to */
   struct extra_primitives extras;			/* offset for non-standard aggregation primitives structures */
-#ifdef WITH_RABBITMQ
-  struct p_amqp_host amqp_host;
-#endif
 #ifdef WITH_ZMQ
   struct p_zmq_host zmq_host;
 #endif
@@ -161,11 +154,6 @@ EXT int pkt_extras_clean(void *, int);
 EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
-#if defined WITH_RABBITMQ
-EXT void plugin_pipe_amqp_init_host(struct p_amqp_host *, struct plugins_list_entry *);
-EXT int plugin_pipe_amqp_connect_to_consume(struct p_amqp_host *, struct plugins_list_entry *);
-#endif
-EXT void plugin_pipe_amqp_compile_check();
 EXT void plugin_pipe_zmq_compile_check();
 EXT void plugin_pipe_check(struct configuration *);
 #undef EXT
