@@ -1417,6 +1417,10 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
 
+#ifdef WITH_ZMQ
+  struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -1524,7 +1528,17 @@ sort_version:
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
 
-  setnonblocking(pipe_fd);
+  if (config.pipe_zmq) {
+    plugin_pipe_zmq_compile_check();
+#ifdef WITH_ZMQ
+    p_zmq_plugin_pipe_init_plugin(zmq_host);
+    p_zmq_plugin_pipe_consume(zmq_host);
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
+    pipe_fd = p_zmq_get_fd(zmq_host);
+    seq = 0;
+#endif
+  }
+  else setnonblocking(pipe_fd);
 
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
   set_primptrs_funcs(&extras);
@@ -1613,6 +1627,20 @@ read_data:
         memcpy(pipebuf, rg->ptr, bufsz);
         rg->ptr += bufsz;
       }
+#ifdef WITH_ZMQ
+      else if (config.pipe_zmq) {
+	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);
+	if (ret > 0) {
+	  if (seq && (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM))) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
+		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->seq, ((seq + 1) % MAX_SEQNUM));
+	  }
+
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	}
+	else goto handle_flow_expiration;
+      }
+#endif
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 

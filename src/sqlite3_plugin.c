@@ -55,6 +55,10 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
 
+#ifdef WITH_ZMQ
+  struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -85,7 +89,17 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   sql_init_triggers(idata.now, &idata);
   sql_init_refresh_deadline(&refresh_deadline);
 
-  setnonblocking(pipe_fd);
+  if (config.pipe_zmq) {
+    plugin_pipe_zmq_compile_check();
+#ifdef WITH_ZMQ
+    p_zmq_plugin_pipe_init_plugin(zmq_host);
+    p_zmq_plugin_pipe_consume(zmq_host);
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
+    pipe_fd = p_zmq_get_fd(zmq_host);
+    seq = 0;
+#endif
+  }
+  else setnonblocking(pipe_fd);
 
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
@@ -177,6 +191,20 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         memcpy(pipebuf, rg->ptr, bufsz);
         rg->ptr += bufsz;
       }
+#ifdef WITH_ZMQ
+      else if (config.pipe_zmq) {
+	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);
+	if (ret > 0) {
+	  if (seq && (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM))) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
+		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->seq, ((seq + 1) % MAX_SEQNUM));
+	  }
+
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	}
+	else goto poll_again;
+      }
+#endif
 
       /* lazy sql refresh handling */ 
       if (idata.now > refresh_deadline) {

@@ -48,6 +48,10 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 1, rg_err_count = 0;
   time_t now;
 
+#ifdef WITH_ZMQ
+  struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   recollect_pipe_memory(ptr);
   pm_setproctitle("%s [%s]", "Tee Plugin", config.name);
@@ -138,7 +142,17 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
 
-  setnonblocking(pipe_fd);
+  if (config.pipe_zmq) {
+    plugin_pipe_zmq_compile_check();
+#ifdef WITH_ZMQ
+    p_zmq_plugin_pipe_init_plugin(zmq_host);
+    p_zmq_plugin_pipe_consume(zmq_host);
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
+    pipe_fd = p_zmq_get_fd(zmq_host);
+    seq = 0;
+#endif
+  }
+  else setnonblocking(pipe_fd);
 
   now = time(NULL);
 
@@ -217,6 +231,20 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         memcpy(pipebuf, rg->ptr, bufsz);
         rg->ptr += bufsz;
       }
+#ifdef WITH_ZMQ
+      else if (config.pipe_zmq) {
+	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);
+	if (ret > 0) {
+	  if (seq && (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM))) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
+		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->seq, ((seq + 1) % MAX_SEQNUM));
+	  }
+
+	  seq = ((struct ch_buf_hdr *)pipebuf)->seq;
+	}
+	else goto poll_again;
+      }
+#endif
 
       msg = (struct pkt_msg *) (pipebuf+sizeof(struct ch_buf_hdr));
       msg->payload = (pipebuf+sizeof(struct ch_buf_hdr)+PmsgSz);
