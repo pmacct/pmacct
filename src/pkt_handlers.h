@@ -135,6 +135,8 @@ EXT void igp_peer_dst_ip_handler(struct channels_list_entry *, struct packet_ptr
 EXT void SF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_src_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_dst_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

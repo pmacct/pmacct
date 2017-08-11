@@ -70,6 +70,20 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_SRC_VLAN) {
+      if (config.acct_type == ACCT_PM) primitives--; /* src/dst VLAN support for sFlow only */
+      else if (config.acct_type == ACCT_NF) primitives--; /* src/dst VLAN support for sFlow only */
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_src_vlan_handler;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_DST_VLAN) {
+      if (config.acct_type == ACCT_PM) primitives--; /* src/dst VLAN support for sFlow only */
+      else if (config.acct_type == ACCT_NF) primitives--; /* src/dst VLAN support for sFlow only */
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_dst_vlan_handler;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation & COUNT_COS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = cos_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_cos_handler;
@@ -4659,6 +4673,22 @@ void SF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   
   pdata->primitives.vlan_id = sample->in_vlan;
   if (!pdata->primitives.vlan_id) pdata->primitives.vlan_id = sample->out_vlan;
+}
+
+void SF_src_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.src_vlan_id = sample->in_vlan;
+}
+
+void SF_dst_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.dst_vlan_id = sample->out_vlan;
 }
 
 void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

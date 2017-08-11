@@ -76,6 +76,12 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_VLAN)
     avro_schema_record_field_append(schema, "vlan", avro_schema_long());
 
+  if (wtc_2 & COUNT_SRC_VLAN)
+    avro_schema_record_field_append(schema, "src_vlan", avro_schema_long());
+
+  if (wtc_2 & COUNT_DST_VLAN)
+    avro_schema_record_field_append(schema, "dst_vlan", avro_schema_long());
+
   if (wtc & COUNT_COS)
     avro_schema_record_field_append(schema, "cos", avro_schema_long());
 
@@ -349,6 +355,16 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc & COUNT_VLAN) {
     check_i(avro_value_get_by_name(&value, "vlan", &field, NULL));
     check_i(avro_value_set_long(&field, pbase->vlan_id));
+  }
+
+  if (wtc_2 & COUNT_SRC_VLAN) {
+    check_i(avro_value_get_by_name(&value, "src_vlan", &field, NULL));
+    check_i(avro_value_set_long(&field, pbase->src_vlan_id));
+  }
+
+  if (wtc_2 & COUNT_DST_VLAN) {
+    check_i(avro_value_get_by_name(&value, "dst_vlan", &field, NULL));
+    check_i(avro_value_set_long(&field, pbase->dst_vlan_id));
   }
 
   if (wtc & COUNT_COS) {

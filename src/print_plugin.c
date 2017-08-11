@@ -575,6 +575,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
             fprintf(f, "%-17s  ", empty_macaddress);
         }
         if (config.what_to_count & COUNT_VLAN) fprintf(f, "%-5u  ", data->vlan_id); 
+        if (config.what_to_count_2 & COUNT_SRC_VLAN) fprintf(f, "%-8u  ", data->src_vlan_id);
+        if (config.what_to_count_2 & COUNT_DST_VLAN) fprintf(f, "%-8u  ", data->dst_vlan_id);
         if (config.what_to_count & COUNT_COS) fprintf(f, "%-2u  ", data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%-5x  ", data->etype); 
   #endif
@@ -947,6 +949,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%s%s", write_sep(sep, &count), dst_mac);
         }
         if (config.what_to_count & COUNT_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->vlan_id); 
+        if (config.what_to_count_2 & COUNT_SRC_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->src_vlan_id);
+        if (config.what_to_count_2 & COUNT_DST_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->dst_vlan_id);
         if (config.what_to_count & COUNT_COS) fprintf(f, "%s%u", write_sep(sep, &count), data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%s%x", write_sep(sep, &count), data->etype); 
   #endif
@@ -1413,6 +1417,8 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "SRC_MAC            ");
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC            ");
   if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN   ");
+  if (config.what_to_count_2 & COUNT_SRC_VLAN) fprintf(f, "SRC_VLAN  ");
+  if (config.what_to_count_2 & COUNT_DST_VLAN) fprintf(f, "DST_VLAN  ");
   if (config.what_to_count & COUNT_COS) fprintf(f, "COS ");
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "ETYPE  ");
 #endif
@@ -1530,6 +1536,8 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "%sDST_MAC", write_sep(sep, &count));
   if (config.what_to_count & COUNT_VLAN) fprintf(f, "%sVLAN", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_SRC_VLAN) fprintf(f, "%sSRC_VLAN", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_DST_VLAN) fprintf(f, "%sDST_VLAN", write_sep(sep, &count));
   if (config.what_to_count & COUNT_COS) fprintf(f, "%sCOS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%sETYPE", write_sep(sep, &count));
 #endif
