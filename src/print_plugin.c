@@ -1424,8 +1424,13 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "SRC_MED ");
   if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "PEER_SRC_AS ");
   if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "PEER_DST_AS ");
+#if defined ENABLE_IPV6
+  if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP                                    ");
+  if (config.what_to_count & COUNT_PEER_DST_IP) fprintf(f, "PEER_DST_IP                                    ");
+#else
   if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP      ");
   if (config.what_to_count & COUNT_PEER_DST_IP) fprintf(f, "PEER_DST_IP      ");
+#endif
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE    ");
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE   ");
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD         ");
