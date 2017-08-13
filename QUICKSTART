@@ -759,14 +759,13 @@ global, batch.num.messages, 100000
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
 queue implementation available since day one of pmacct (configured via plugin_pipe_size
-and documented in docs/INTERNALS) and 2) use a RabbitMQ broker for queueing purposes
-(configured via plugin_pipe_amqp and plugin_pipe_amqp_* directives).
+and documented in docs/INTERNALS) and 2) a ZeroMQ queue (configured via plugin_pipe_zmq
+and plugin_pipe_zmq_* directives).
 
-For a quick comparison: while relying on a RabbitMQ broker for queueing does introduce
-an external dependency (ie. rabbitmq-c library, RabbitMQ server, etc.), it reduces the
-amount of fine tuning needed by the home-grown queue implementation, for example trial
-and error tasks like determine a value for plugin_pipe_size and find a viable ratio
-among plugin_pipe_size and plugin_buffer_size. 
+For a quick comparison: while relying on a ZeroMQ queue does introduce an external
+dependency, ie. libzmq, it reduces the amount of trial and error needed to fine
+tune plugin_buffer_size and plugin_pipe_size directives needed by the home-grown
+queue implementation.
 
 The home-grown cicular queue has no external dependencies and is configured, for
 example, as:
@@ -778,6 +777,39 @@ plugin_pipe_size[blabla]: 1024000
 For more information about the home-grown circular queue, consult plugin_buffer_size
 and plugin_pipe_size entries in CONFIG-KEYS and docs/INTERNALS "Communications between
 core process and plugins" chapter. 
+
+ZeroMQ, from 0MQ The Guide, "looks like an embeddable networking library but acts like
+a concurrency framework. It gives you sockets that carry atomic messages across various
+transports like in-process, inter-process, TCP, and multicast. You can connect sockets
+N-to-N with patterns like fan-out, pub-sub, task distribution, and request-reply. It's
+fast enough to be the fabric for clustered products. Its asynchronous I/O model gives
+you scalable multicore applications, built as asynchronous message-processing tasks.
+[ .. ]". pmacct integrates ZeroMQ using a pub-sub queue architecture, using ephemeral
+TCP ports and implementing plain authentication (username and password, auto-generated
+at runtime).
+
+The only requirement to use a ZeroMQ queue is to have the latest available stable
+release of libzmq installed on the system (http://zeromq.org/intro:get-the-software ,
+https://github.com/zeromq/libzmq/releases). Once this is installed, pmacct can be
+configured for compiling. pmacct makes use of pkg-config for finding libraries and
+headers location and checks some "typical" default locations, ie. /usr/local/lib and
+/usr/local/include. So all you should do is just:
+
+./configure --enable-zmq
+
+But, for example, should you have installed ZeroMQ in /usr/local/zeromq and should also
+pkg-config be unable to help, the non-default location can be supplied as follows (bash
+shell assumed):
+
+export ZMQ_LIBS="-L/usr/local/zeromq/lib -lzmq"
+export ZMQ_CFLAGS="-I/usr/local/zeromq/include"
+./configure --enable-zmq
+
+Then "make; make install" as usual. Following a configuration snippet showing how easy
+is to leverage ZeroMQ for queueing (see CONFIG-KEYS for all ZeroMQ-related options):
+
+plugins: print[blabla]
+plugin_pipe_zmq[blabla]: true 
 
 
 XI. Quickstart guide to packet classification

@@ -95,7 +95,7 @@ A: CPU cycles are proportional to the amount of traffic (packets, flows, samples
    Internal buffering can also help and, contrary to the previous tecniques, applies
    to all daemons. Buffering is enabled with the plugin_buffer_size directive; buffers
    can then be queued and distributed with a choice of an home-grown circolar queue
-   implementation (plugin_pipe_size) or a RabbitMQ broker (plugin_pipe_amqp). Check
+   implementation (plugin_pipe_size) or a ZeroMQ queue (plugin_pipe_zmq). Check both
    CONFIG-KEYS and QUICKSTART for more information.
 
 

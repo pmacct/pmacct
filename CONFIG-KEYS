@@ -282,6 +282,26 @@ DESC:		When enabled (default), validates the sender of data at the plugin side. 
 		the same configuration, etc. 
 DEFAULT:	true
 
+KEY:		plugin_pipe_zmq
+VALUES:		[ true | false ]
+DESC:		By defining this directive to 'true', a ZeroMQ queue is used for queueing and data
+		exchange between the Core Process and the plugins. This is in alternative to the
+		home-grown circular queue implementation (see plugin_pipe_size description). This
+		directive, along with all other plugin_pipe_zmq_* directives, can be set globally
+		or be applied on a per plugin basis (ie. it is a valid scenario, if multiple
+		plugins are instantiated, that some make use of home-grown queueing, while others
+		use ZeroMQ based queueing). For a quick comparison: while relying on a ZeroMQ queue
+                introduces an external dependency, ie. libzmq, it reduces the bare minimum the need
+		of settings of the home-grown circular queue implementation. See QUICKSTART for
+		some examples.
+DEFAULT:        false
+
+KEY:		plugin_pipe_zmq_retry
+DESC:		Defines the interval of time, in seconds, after which a connection to the ZeroMQ
+                server (Core Process) should be retried by the client (Plugin) after a failure is
+		detected.
+DEFAULT:        60
+
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.) and their related directory
 		structure. A mask less than "002" is not accepted due to security reasons.
