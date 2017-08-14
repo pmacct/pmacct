@@ -767,3 +767,8 @@ void MY_init_default_values(struct insert_data *idata)
 
   if (config.sql_locking_style) idata->locks = sql_select_locking_style(config.sql_locking_style);
 }
+
+void MY_mysql_get_version()
+{
+  printf("MySQL %s\n", MYSQL_SERVER_VERSION);
+}

@@ -29,6 +29,7 @@
 #include "classifier.h"
 #include "plugin_hooks.h"
 #include <sys/file.h>
+#include <sys/utsname.h>
 
 /* functions */
 void setnonblocking(int sock)
@@ -1510,10 +1511,50 @@ char *write_sep(char *sep, int *count)
 
 void version_daemon(char *header)
 {
-  printf("%s (%s)\n", header, PMACCT_BUILD);
-  printf("%s\n\n", PMACCT_COMPILE_ARGS);
+  struct utsname utsbuf;
+
+  printf("%s (%s)\n\n", header, PMACCT_BUILD);
+
+  printf("Arguments:\n");
+  printf("%s\n", PMACCT_COMPILE_ARGS);
+  printf("\n");
+
+  printf("Libs:\n");
+  printf("%s\n", pcap_lib_version());
+#ifdef WITH_MYSQL
+  MY_mysql_get_version();
+#endif
+#ifdef WITH_PGSQL
+  PG_postgresql_get_version();
+#endif
+#ifdef WITH_SQLITE3
+  SQLI_sqlite3_get_version();
+#endif 
+#ifdef WITH_RABBITMQ
+  p_amqp_get_version();
+#endif
+#ifdef WITH_KAFKA
+  p_kafka_get_version();
+#endif
+#ifdef WITH_JANSSON
+  printf("jansson %s\n", JANSSON_VERSION);
+#endif
+#ifdef WITH_GEOIPV2
+  printf("MaxmindDB %s\n", MMDB_lib_version());
+#endif
+#ifdef WITH_ZMQ
+  printf("ZeroMQ %u.%u.%u\n", ZMQ_VERSION_MAJOR, ZMQ_VERSION_MINOR, ZMQ_VERSION_PATCH); 
+#endif
+  printf("\n");
+
+  if (!uname(&utsbuf)) {
+    printf("System:\n");
+    printf("%s %s %s %s\n", utsbuf.sysname, utsbuf.release, utsbuf.version, utsbuf.machine); 
+    printf("\n");
+  }
+
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
-} 
+}
 
 #ifdef WITH_JANSSON 
 char *compose_json_str(void *obj)

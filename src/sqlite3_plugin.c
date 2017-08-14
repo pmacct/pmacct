@@ -743,3 +743,8 @@ void SQLI_init_default_values(struct insert_data *idata)
 
   if (config.sql_locking_style) idata->locks = sql_select_locking_style(config.sql_locking_style);
 }
+
+void SQLI_sqlite3_get_version()
+{
+  printf("sqlite3 %s\n", sqlite3_libversion());
+}

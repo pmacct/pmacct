@@ -205,6 +205,11 @@ void p_kafka_set_config_file(struct p_kafka_host *kafka_host, char *config_file)
   }
 }
 
+void p_kafka_get_version()
+{
+  printf("rdkafka %s\n", rd_kafka_version_str());
+}
+
 int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
 {
   char *value_ptr, *token;

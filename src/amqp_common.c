@@ -148,6 +148,11 @@ int p_amqp_get_sockfd(struct p_amqp_host *amqp_host)
   return ERR;
 }
 
+void p_amqp_get_version()
+{
+  printf("rabbimq-c %s\n", amqp_version());
+}
+
 int p_amqp_connect_to_publish(struct p_amqp_host *amqp_host)
 {
   amqp_host->conn = amqp_new_connection();

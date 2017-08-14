@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -42,6 +42,7 @@ static int PG_affected_rows(PGresult *);
 void PG_create_backend(struct DBdesc *);
 void PG_set_callbacks(struct sqlfunc_cb_registry *);
 void PG_init_default_values(struct insert_data *);
+void PG_postgresql_get_version();
 
 /* global vars */
 int typed = TRUE;

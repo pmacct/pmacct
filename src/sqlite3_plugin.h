@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2009 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -37,6 +37,7 @@ void SQLI_get_errmsg(struct DBdesc *);
 void SQLI_create_backend(struct DBdesc *);
 void SQLI_set_callbacks(struct sqlfunc_cb_registry *);
 void SQLI_init_default_values(struct insert_data *);
+void SQLI_sqlite3_get_version();
 
 /* variables */
 static char sqlite3_db[] = "/tmp/pmacct.db";

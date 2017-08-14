@@ -75,6 +75,7 @@ EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
 EXT int p_kafka_get_content_type(struct p_kafka_host *);
 EXT int p_kafka_get_partition(struct p_kafka_host *);
 EXT char *p_kafka_get_key(struct p_kafka_host *);
+EXT void p_kafka_get_version();
 
 EXT void p_kafka_unset_topic(struct p_kafka_host *);
 

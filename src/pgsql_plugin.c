@@ -976,3 +976,8 @@ void PG_init_default_values(struct insert_data *idata)
 
   if (config.sql_locking_style) idata->locks = sql_select_locking_style(config.sql_locking_style);
 }
+
+void PG_postgresql_get_version()
+{
+  printf("PostgreSQL %u\n", PQlibVersion());
+}

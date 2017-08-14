@@ -82,6 +82,7 @@ EXT void p_amqp_set_content_type_binary(struct p_amqp_host *);
 EXT char *p_amqp_get_routing_key(struct p_amqp_host *);
 EXT int p_amqp_get_routing_key_rr(struct p_amqp_host *);
 EXT int p_amqp_get_sockfd(struct p_amqp_host *);
+EXT void p_amqp_get_version();
 
 EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
 
