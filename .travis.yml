@@ -20,7 +20,7 @@ install:
 
 script:
   - ./autogen.sh
-  - ./configure --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi
+  - ./configure --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq
   - make
   - sudo make install
   - make distcheck
