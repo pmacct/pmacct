@@ -17,6 +17,11 @@ DESC:	Following is the list of features, knobs and plugins that are being
 	* tmp_comms_same_field knob was allowing to revert to backward
 	  compatible behaviour of BGP communities (standard, extended) being
 	  writeen all in the same field.
+	* plugin_pipe_amqp and plugin_pipe_kafka features were meant as an
+	  alternative to the homegrown queue solution for internal messaging,
+	  ie. passing data from the Core Process to Plugins, and are being
+	  discontinued. They are being replaced by a new implementation,
+	  plugin_pipe_zmq, basing on ZeroMQ. 
 	* MongoDB plugin is being discontinued since the old Mongo API is
 	  not supported anymore and there has never been enough push from
 	  the community to transition to the new/current API (which would
