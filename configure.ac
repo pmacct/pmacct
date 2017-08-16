@@ -693,7 +693,7 @@ AC_ARG_ENABLE(rabbitmq,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old librabbitmq already support pkg-config
-    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq])
+    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq >= 0.8.0])
     PLUGINS="${PLUGINS} rabbitmq"
     USING_RABBITMQ="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $RABBITMQ_CFLAGS"

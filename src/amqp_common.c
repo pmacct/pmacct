@@ -188,13 +188,8 @@ int p_amqp_connect_to_publish(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
-#if AMQP_VERSION_MAJOR <= 0 && AMQP_VERSION_MINOR <= 5 && AMQP_VERSION_PATCH <= 2
-  amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
-                        amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, amqp_empty_table);
-#else
   amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
                         amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, 0, 0, amqp_empty_table);
-#endif
 
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
@@ -269,13 +264,9 @@ int p_amqp_connect_to_consume(struct p_amqp_host *amqp_host)
     return ERR;
   }
 
-#if AMQP_VERSION_MAJOR <= 0 && AMQP_VERSION_MINOR <= 5 && AMQP_VERSION_PATCH <= 2
-  amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
-			 amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, amqp_empty_table);
-#else
   amqp_exchange_declare(amqp_host->conn, 1, amqp_cstring_bytes(amqp_host->exchange),
 			 amqp_cstring_bytes(amqp_host->exchange_type), 0, 0, 0, 0, amqp_empty_table);
-#endif
+
   amqp_host->ret = amqp_get_rpc_reply(amqp_host->conn);
   if (amqp_host->ret.reply_type != AMQP_RESPONSE_NORMAL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to RabbitMQ: p_amqp_connect_to_consume(): amqp_exchange_declare()\n", config.name, config.type);
