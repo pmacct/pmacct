@@ -528,13 +528,15 @@ DEFAULT:	See amqp_exchange_type
 
 KEY:            amqp_persistent_msg
 VALUES:         [ true | false ]
-DESC:           Marks messages as persistent so that a queue content does not get lost if RabbitMQ restarts.
-                Note from RabbitMQ docs: "Marking messages as persistent doesn't fully guarantee that a
-                message won't be lost. Although it tells RabbitMQ to save message to the disk, there is
-                still a short time window when RabbitMQ has accepted a message and hasn't saved it yet.
-                Also, RabbitMQ doesn't do fsync(2) for every message -- it may be just saved to cache and
-                not really written to the disk. The persistence guarantees aren't strong, but it is more
-                than enough for our simple task queue."; see also amqp_host.
+DESC:           Marks messages as persistent and sets Exchange as durable so to prevent data loss
+		if a RabbitMQ server restarts (it will still be consumer responsibility to declare
+		the queue durable). Note from RabbitMQ docs: "Marking messages as persistent does
+		not fully guarantee that a message won't be lost. Although it tells RabbitMQ to
+		save message to the disk, there is still a short time window when RabbitMQ has
+		accepted a message and hasn't saved it yet. Also, RabbitMQ doesn't do fsync(2) for
+		every message -- it may be just saved to cache and not really written to the disk.
+		The persistence guarantees aren't strong, but it is more than enough for our simple
+		task queue."; see also amqp_host.
 DEFAULT:        false
 
 KEY:		[ bgp_daemon_msglog_amqp_persistent_msg  | bgp_table_dump_amqp_persistent_msg |
