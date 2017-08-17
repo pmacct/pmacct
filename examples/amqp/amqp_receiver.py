@@ -86,6 +86,16 @@ def post_to_url(http_req, value):
 		sys.stdout.flush()
 
 def callback(ch, method, properties, body):
+        global avro_schema
+        global http_url_post
+        global print_stdout
+        global print_stdout_num
+        global print_stdout_max
+        global convert_to_json_array
+        global stats_interval
+        global time_count
+        global elem_count
+
 	#
 	# XXX: data enrichments, manipulations, correlations, etc. go here
 	#
@@ -149,6 +159,16 @@ def callback(ch, method, properties, body):
 			elem_count = 0
 
 def main():
+        global avro_schema
+        global http_url_post
+        global print_stdout
+        global print_stdout_num
+        global print_stdout_max
+        global convert_to_json_array
+        global stats_interval
+        global time_count
+        global elem_count
+
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:pn:as:", ["help",
 				"exchange=", "routing_key=", "queue=", "host=", "url=",
@@ -204,8 +224,6 @@ def main():
                         if not os.path.isfile(a):
 				sys.stderr.write("ERROR: '%s' does not exist or is not a file\n" % (a,))
 				sys.exit(1)
-
-			global avro_schema
 
 			with open(a) as f:
 				avro_schema = avro.schema.parse(f.read())
