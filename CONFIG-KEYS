@@ -515,8 +515,10 @@ DESC:           See amqp_exchange
 DEFAULT:	See amqp_exchange; see also bgp_daemon_msglog_amqp_host.
 
 KEY:            amqp_exchange_type
-DESC:           Type of the AMQP exchange to publish data. Currently only 'direct' and 'fanout' types are
-                supported; see also amqp_host.
+DESC:           Type of the AMQP exchange to publish data to. 'direct', 'fanout' and 'topic'
+		types are supported; "rabbitmqctl list_exchanges" can be used to check the
+		exchange type. Upon mismatch of exchange type, ie. exchange type is 'direct'
+		but amqp_exchange_type is set to 'topic', an error will be returned. 
 DEFAULT:	direct
 
 KEY:		[ bgp_daemon_msglog_amqp_exchange_type | bgp_table_dump_amqp_exchange_type |
