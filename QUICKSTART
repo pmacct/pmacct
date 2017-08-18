@@ -2053,11 +2053,11 @@ file>".
 f) Buffering is often an element to tune. While buffering internal to pmacct, 
 configured with plugin_buffer_size and plugin_pipe_size, returns warning
 messages in case of data loss and brings solid queueing alterantives like
-RabbitMQ and Kafka, buffering between pmacct and the kernel, configured with
-nfacctd_pipe_size and its equivalents, is more tricky and issues with it can
-only be inferred by symptoms like sequence number checks failing (and only
-for protocols like NetFlow v9/IPFIX supporting this feature). Two commands
-useful to check this kind of buffering on Linux systems are:
+ZeroMQ (plugin_pipe_zmq), buffering between pmacct and the kernel, configured
+with nfacctd_pipe_size and its equivalents, is more tricky and issues with it
+can only be inferred by symptoms like sequence number checks failing (and
+only for protocols like NetFlow v9/IPFIX supporting this feature). Two
+commands useful to check this kind of buffering on Linux systems are:
 1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops" value
 is not increasing and 2) "netstat -s" ensuring, under the section UDP, that
 errors are not increasing (since this command returns system-wide counters,

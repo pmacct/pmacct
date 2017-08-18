@@ -328,6 +328,26 @@ A: Binding to a "::" address (ie. no [sn]facctd_ip specified should allow to rec
    default has been '0'. It appears over time some distributions have changed the
    default to be '1'. If you experience this issue on Linux, please check your kernel
    setting.
-   
+
+
+Q21: How can i count how much telemetry data (ie. NetFlow, sFlow, IPFIX, Streaming
+     Telemetry) i'm receiving on my collector? 
+
+A: If the interface where telemetry data is received is dedicated to the task then any
+   ifconfig, netstat or dstat tools or SNMP meaurement would do in order to verify
+   amount of telemetry packets and bytes (from which packets per second, bytes per
+   second can be easily inferred). If, instead, the interface is shared then pmacctd,
+   the libpcap-based daemon, can help to isolate and account for the telemetry traffic;
+   guess telemetry data is pointed to UDP port 2100 of the IP address configured on
+   eth0, pmacctd can be started as: "pmacctd -c none -i eth0 port 2100"; also, if a
+   breakdown per exporting node, the CL is "pmacctd -c src_host -i eth0 port 2100";
+   querying (and clearing up) the memory table every minute, for example from crontab,
+   with "pmacct -s -e" provides the required data. A related question that often
+   arises is: how many flows per second am i receiving? This can be similarly
+   addressed by using "nfacctd -c flows" for NetFlow/IPFIX and "sfacctd -c flows" for
+   sFlow. Then, querying with "pmacct -s -e", the column of interest is the FLOWS one
+   (whereas PACKETS and BYTES refer to the sum of flows packets and bytes; they do not
+   refer to the transport protocol).
+    
 
 /* EOF */
