@@ -101,7 +101,7 @@ void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
 
 void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 {
-  int ret, as_server = TRUE, only_one = 1;
+  int ret, as_server = TRUE, only_one = 1, no_hwm = 0;
   size_t bind_strlen;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
@@ -121,6 +121,20 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 
   zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_PUB);
 
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_SNDHWM, &no_hwm, sizeof(int));
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_SNDHWM failed for topic %u: %s\nExiting.\n",
+        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    exit(1);
+  }
+
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_BACKLOG, &only_one, sizeof(int));
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_BACKLOG failed for topic %u: %s\nExiting.\n",
+        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    exit(1);
+  }
+
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_PLAIN_SERVER, &as_server, sizeof(int));
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_PLAIN_SERVER failed for topic %u: %s\nExiting.\n",
@@ -135,13 +149,6 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
     exit(1);
   }
 
-  ret = zmq_setsockopt(zmq_host->sock, ZMQ_BACKLOG, &only_one, sizeof(int));
-  if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_BACKLOG failed for topic %u: %s\nExiting.\n",
-        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
-    exit(1);
-  }
-
   bind_strlen = sizeof(zmq_host->bind_str);
   ret = zmq_getsockopt(zmq_host->sock, ZMQ_LAST_ENDPOINT, zmq_host->bind_str, &bind_strlen);
   if (ret == ERR) {
@@ -153,11 +160,18 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 
 void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
 {
-  int ret;
+  int ret, no_hwm = 0;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
   zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_SUB);
+
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_RCVHWM, &no_hwm, sizeof(int));
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_RCVHWM failed for topic %u: %s\nExiting.\n",
+        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    exit(1);
+  }
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_PLAIN_USERNAME, zmq_host->zap.username, strlen(zmq_host->zap.username));
   if (ret == ERR) {
