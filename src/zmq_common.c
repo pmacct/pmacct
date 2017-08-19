@@ -101,7 +101,7 @@ void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
 
 void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 {
-  int ret, as_server = TRUE;
+  int ret, as_server = TRUE, only_one = 1;
   size_t bind_strlen;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
@@ -132,6 +132,13 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for topic %u: %s\nExiting.\n",
 	config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    exit(1);
+  }
+
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_BACKLOG, &only_one, sizeof(int));
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_BACKLOG failed for topic %u: %s\nExiting.\n",
+        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 
