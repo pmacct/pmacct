@@ -2129,6 +2129,32 @@ int cfg_key_plugin_pipe_zmq_retry(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_plugin_pipe_zmq_profile(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  lower_string(value_ptr);
+
+  if (!name) for (; list; list = list->next, changes++) {
+    value = p_zmq_plugin_pipe_set_profile(&list->cfg, value_ptr);
+    if (value < 0) return ERR;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+	value = p_zmq_plugin_pipe_set_profile(&list->cfg, value_ptr);
+	if (value < 0) return ERR;
+
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfacctd_pipe_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -97,6 +97,7 @@ struct configuration {
   int pipe_check_core_pid;
   int pipe_zmq;
   int pipe_zmq_retry;
+  int pipe_zmq_profile;
   int files_umask;
   int files_uid;
   int files_gid;

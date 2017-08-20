@@ -99,6 +99,33 @@ void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
   }
 }
 
+int p_zmq_plugin_pipe_set_profile(struct configuration *cfg, char *value)
+{
+  if (!strcmp("micro", value)) {
+    cfg->pipe_zmq_profile = PLUGIN_PIPE_ZMQ_MICRO;
+    cfg->buffer_size = PLUGIN_PIPE_ZMQ_MICRO_SIZE;
+  }
+  else if (!strcmp("small", value)) {
+    cfg->pipe_zmq_profile = PLUGIN_PIPE_ZMQ_SMALL;
+    cfg->buffer_size = PLUGIN_PIPE_ZMQ_SMALL_SIZE;
+  }
+  else if (!strcmp("medium", value)) {
+    cfg->pipe_zmq_profile = PLUGIN_PIPE_ZMQ_MEDIUM;
+    cfg->buffer_size = PLUGIN_PIPE_ZMQ_MEDIUM_SIZE;
+  }
+  else if (!strcmp("large", value)) {
+    cfg->pipe_zmq_profile = PLUGIN_PIPE_ZMQ_LARGE;
+    cfg->buffer_size = PLUGIN_PIPE_ZMQ_LARGE_SIZE;
+  }
+  else if (!strcmp("xlarge", value)) {
+    cfg->pipe_zmq_profile = PLUGIN_PIPE_ZMQ_XLARGE;
+    cfg->buffer_size = PLUGIN_PIPE_ZMQ_XLARGE_SIZE;
+  }
+  else return ERR;
+
+  return SUCCESS;
+}
+
 void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 {
   int ret, as_server = TRUE, only_one = 1, no_hwm = 0;
