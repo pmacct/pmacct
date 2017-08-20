@@ -339,15 +339,19 @@ A: If the interface where telemetry data is received is dedicated to the task th
    second can be easily inferred). If, instead, the interface is shared then pmacctd,
    the libpcap-based daemon, can help to isolate and account for the telemetry traffic;
    guess telemetry data is pointed to UDP port 2100 of the IP address configured on
-   eth0, pmacctd can be started as: "pmacctd -c none -i eth0 port 2100"; also, if a
-   breakdown per exporting node, the CL is "pmacctd -c src_host -i eth0 port 2100";
-   querying (and clearing up) the memory table every minute, for example from crontab,
-   with "pmacct -s -e" provides the required data. A related question that often
-   arises is: how many flows per second am i receiving? This can be similarly
-   addressed by using "nfacctd -c flows" for NetFlow/IPFIX and "sfacctd -c flows" for
-   sFlow. Then, querying with "pmacct -s -e", the column of interest is the FLOWS one
-   (whereas PACKETS and BYTES refer to the sum of flows packets and bytes; they do not
-   refer to the transport protocol).
+   eth0, pmacctd can be started as "pmacctd -i eth0 -P print -c none port 2100" to
+   account for the grand total of telemetry packets and bytes; if a breakdown per
+   telemetry exporting node is wanted, the following command-line can be used: "pmacctd
+   -i eth0 -P print -c src_host port 2100"; this example is suitable for manual reading
+   as it will print data every 60 secs on the screen and can, of course, be complicated
+   slightly to make it suitable for automation. A related question that often arises
+   is: how many flows per second am i receiving? This can be similarly addressed by
+   using "nfacctd -P print -c flows" for NetFlow/IPFIX and "sfacctd -P print -c flows"
+   for sFlow. Here FLOWS is the amount of flow records/samples processed in the period
+   of time, and is the measure of interest; for completeness, PACKETS and BYTES are the
+   sum of packets and bytes of all flow records/samples processed. Then changing the
+   aggregation argument in "-c peer_src_ip,flows" gives the amount of flows per
+   telemetry exporting node. 
     
 
 /* EOF */
