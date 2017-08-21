@@ -2111,6 +2111,7 @@ int cfg_key_plugin_pipe_zmq_profile(char *filename, char *name, char *value_ptr)
 
   lower_string(value_ptr);
 
+#ifdef WITH_ZMQ
   if (!name) for (; list; list = list->next, changes++) {
     value = p_zmq_plugin_pipe_set_profile(&list->cfg, value_ptr);
     if (value < 0) return ERR;
@@ -2126,6 +2127,7 @@ int cfg_key_plugin_pipe_zmq_profile(char *filename, char *name, char *value_ptr)
       }
     }
   }
+#endif
 
   return changes;
 }
