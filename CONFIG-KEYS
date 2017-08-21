@@ -264,15 +264,6 @@ DESC:		By defining the transfer buffer size, in bytes, this directive enables bu
 		is partitioned in chunks of plugin_buffer_size.
 DEFAULT:	Set to the size of the smallest element to buffer 
 
-KEY:            plugin_pipe_backlog
-VALUES:         [0 <= value < 100]
-DESC:           Expects the value to be a percentage. It creates a backlog of buffers on the pipe
-		before actually releasing them to the plugin. The strategy helps optimizing inter
-		process communications where plugins are quicker handling data than the Core process.
-		By default backlog is disabled; as with buffering in general, this feature should be
-		enabled with caution in lab and low-traffic environments.
-DEFAULT:	0
-
 KEY:		plugin_pipe_check_core_pid
 VALUES:		[ true | false ]
 DESC:		When enabled (default), validates the sender of data at the plugin side. The check

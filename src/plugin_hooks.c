@@ -474,17 +474,10 @@ reprocess:
 	}
 	else {
 	  if (channels_list[index].status->wakeup) {
-	    channels_list[index].status->backlog++;
-	  
-	    if (channels_list[index].status->backlog >
-		((channels_list[index].plugin->cfg.pipe_size/channels_list[index].plugin->cfg.buffer_size)
-		*channels_list[index].plugin->cfg.pipe_backlog)/100) {
-	      channels_list[index].status->wakeup = channels_list[index].request;
-              if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz) {
-	        struct plugins_list_entry *list = channels_list[index].plugin;
-	        Log(LOG_WARNING, "WARN ( %s/%s ): Failed during write: %s\n", list->name, list->type.string, strerror(errno));
-	      }
-	      channels_list[index].status->backlog = 0;
+	    channels_list[index].status->wakeup = channels_list[index].request;
+	    if (write(channels_list[index].pipe, &channels_list[index].rg.ptr, CharPtrSz) != CharPtrSz) {
+	      struct plugins_list_entry *list = channels_list[index].plugin;
+	      Log(LOG_WARNING, "WARN ( %s/%s ): Failed during write: %s\n", list->name, list->type.string, strerror(errno));
 	    }
 	  }
 	}

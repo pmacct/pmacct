@@ -51,7 +51,6 @@ struct ch_buf_hdr {
 
 struct ch_status {
   u_int8_t wakeup;		/* plugin is polling */ 
-  u_int32_t backlog;
   u_int64_t last_buf_off;	/* offset of last committed buffer */
 };
 
