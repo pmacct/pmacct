@@ -293,6 +293,24 @@ DESC:		Defines the interval of time, in seconds, after which a connection to the
 		detected.
 DEFAULT:        60
 
+KEY:		plugin_pipe_zmq_profile
+VALUES:		[ micro | small | medium | large | xlarge ]
+DESC:		Allows to select some standard buffering profiles. Following are the recommended
+		buckets in flows/samples/packets per second:
+
+			micro   : up to 1K
+			small   : from 1K to 10-15K
+			medium  : from 10-10K to 100-125K
+			large   : from 100-125K to 250K
+			xlarge  : from 250K 
+
+		A symptom the selected profile is undersized is missing data warnings appear in
+		the logs; a symptom it is oversized instead is latency in data being purged out.
+		The amount of flows/samples per second can be estimated as described in Q21 in
+		the FAQS document. Should no profile fit the sizing, the buffering value can be
+		customised using the plugin_buffer_size directive. 
+DEFAULT:	micro 
+
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.) and their related directory
 		structure. A mask less than "002" is not accepted due to security reasons.

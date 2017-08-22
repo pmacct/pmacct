@@ -809,14 +809,12 @@ Then "make; make install" as usual. Following a configuration snippet showing ho
 is to leverage ZeroMQ for queueing (see CONFIG-KEYS for all ZeroMQ-related options):
 
 plugins: print[blabla]
-plugin_buffer_size[blabla]: 102400
 plugin_pipe_zmq[blabla]: true 
+plugin_pipe_zmq_profile[blabla]: micro
 
-The value suggested here for plugin_buffer_size, 100KB, is pretty much standard for
-production environments (tested good up to 250K flows/sec). In this it is different
-from the homegrown queue solution, that is, it does not require guessing. Still for
-lab environments and low traffic scenarios (ie. less than 1K flows/sec), buffering
-setting can be safely skipped so to avoid originating internal latency.
+Please review the standard buffer profiles, plugin_pipe_zmq_profile, in CONFIG-KEYS;
+Q21 of FAQS describes how to estimate the amount of flows/samples per second of your
+deployment.
 
 
 XI. Quickstart guide to packet classification
