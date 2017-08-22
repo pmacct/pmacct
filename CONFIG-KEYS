@@ -1412,6 +1412,13 @@ DESC:           Defines whether IP addresses should be left numerical (in networ
 		IP addresses and prefixes into strings.
 DEFAULT:        false
 
+KEY:		sql_num_ipv4_inet6aton
+VALUES:		[ true | false ]
+DESC:		Defines whether to use INET6_ATON() RDBMS functions for mapping of IPv4 addresses to numerical
+		values when sql_num_hosts is true. Default is to use INET_ATON() for IPv4 and INET6_ATON() for IPv6.
+		Note that this is not backwards compatible with INET_NTOA().
+DEFAULT:	false
+
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons.
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 

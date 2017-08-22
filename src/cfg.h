@@ -110,6 +110,7 @@ struct configuration {
   int flow_tcp_lifetime;
   int num_protos;
   int num_hosts;
+  int num_ipv4_inet6aton;
   char *imt_plugin_path;
   char *imt_plugin_passwd;
   char *sql_db;
