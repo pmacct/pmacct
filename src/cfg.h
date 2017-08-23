@@ -546,7 +546,7 @@ EXT void sanitize_cfg(int, char *);
 EXT void set_default_values();
 
 /* global vars */
-EXT char *cfg[SRVBUFLEN], *cfg_cmdline[SRVBUFLEN];
+EXT char *cfg[LARGEBUFLEN], *cfg_cmdline[SRVBUFLEN];
 EXT struct custom_primitives custom_primitives_registry;
 EXT pm_cfgreg_t custom_primitives_type;
 EXT int rows;
