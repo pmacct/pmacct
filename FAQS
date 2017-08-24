@@ -347,11 +347,10 @@ A: If the interface where telemetry data is received is dedicated to the task th
    slightly to make it suitable for automation. A related question that often arises
    is: how many flows per second am i receiving? This can be similarly addressed by
    using "nfacctd -P print -c flows" for NetFlow/IPFIX and "sfacctd -P print -c flows"
-   for sFlow. Here FLOWS is the amount of flow records/samples processed in the period
-   of time, and is the measure of interest; for completeness, PACKETS and BYTES are the
-   sum of packets and bytes of all flow records/samples processed. Then changing the
-   aggregation argument in "-c peer_src_ip,flows" gives the amount of flows per
-   telemetry exporting node. 
+   for sFlow. Here FLOWS is the amount of flow records (NetFlow/IPFIX) or flow samples
+   (sFlow) processed in the period of time, and is the measure of interest. Changing
+   the aggregation argument in "-c peer_src_ip,flows" gives the amount of flows per
+   telemetry exporter (ie. router).
     
 
 /* EOF */

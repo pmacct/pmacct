@@ -523,7 +523,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_FLOWS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = flows_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_flows_handler;
-      else if (config.acct_type == ACCT_SF) primitives--; /* NO flows handling for sFlow */
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_flows_handler;
       primitives++;
     }
 
@@ -4782,6 +4782,14 @@ void SF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
   if (sample->dcd_ipProtocol == IPPROTO_TCP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
     pdata->tcp_flags = sample->dcd_tcpFlags; 
+}
+
+void SF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->flo_num = 1;
 }
 
 void SF_counters_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
