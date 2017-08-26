@@ -1004,8 +1004,9 @@ void bgp_md5_file_unload(struct bgp_md5_table *t)
 void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
 {
   struct pm_tcp_md5sig md5sig;
-  struct sockaddr_storage ss_md5sig;
-  int rc, keylen, idx = 0, ss_md5sig_len;
+  struct sockaddr_storage ss_md5sig, ss_server;
+  struct sockaddr *sa_md5sig = (struct sockaddr *)&ss_md5sig, *sa_server = (struct sockaddr *)&ss_server;
+  int rc, keylen, idx = 0, ss_md5sig_len, ss_server_len;
 
   if (!bgp_md5) return;
 
@@ -1014,8 +1015,19 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
     memset(&ss_md5sig, 0, sizeof(ss_md5sig));
 
     ss_md5sig_len = addr_to_sa((struct sockaddr *)&ss_md5sig, &bgp_md5->table[idx].addr, 0);
-    memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);
 
+    ss_server_len = sizeof(ss_server);
+    getsockname(sock, (struct sockaddr *)&ss_server, &ss_server_len);
+
+#if defined ENABLE_IPV6
+    if (sa_md5sig->sa_family == AF_INET6 && sa_server->sa_family == AF_INET)
+      ipv4_mapped_to_ipv4(&ss_md5sig);
+    else if (sa_md5sig->sa_family == AF_INET && sa_server->sa_family == AF_INET6) {
+      // XXX
+    }
+#endif
+
+    memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);
     keylen = strlen(bgp_md5->table[idx].key);
     if (keylen) {
       md5sig.tcpm_keylen = keylen;
