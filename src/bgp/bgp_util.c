@@ -1022,9 +1022,8 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
 #if defined ENABLE_IPV6
     if (sa_md5sig->sa_family == AF_INET6 && sa_server->sa_family == AF_INET)
       ipv4_mapped_to_ipv4(&ss_md5sig);
-    else if (sa_md5sig->sa_family == AF_INET && sa_server->sa_family == AF_INET6) {
-      // XXX
-    }
+    else if (sa_md5sig->sa_family == AF_INET && sa_server->sa_family == AF_INET6)
+      ipv4_to_ipv4_mapped(&ss_md5sig);
 #endif
 
     memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);

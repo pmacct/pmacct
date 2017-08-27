@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -59,6 +59,7 @@ EXT unsigned int label_to_addr(const char *, struct host_addr *, int);
 
 #if defined ENABLE_IPV6
 EXT void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
+EXT void ipv4_to_mapped_ipv4(struct sockaddr_storage *);
 #endif
 
 #undef EXT

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -633,5 +633,24 @@ void ipv4_mapped_to_ipv4(struct sockaddr_storage *sas)
   sa->sa_family = AF_INET;
   memcpy(&sa4->sin_addr, (u_int8_t *) &sa6->sin6_addr+12, 4);
   sa4->sin_port = sa6->sin6_port;
+}
+
+void ipv4_to_ipv4_mapped(struct sockaddr_storage *sas)
+{
+  struct sockaddr_storage sas_local;
+  struct sockaddr *sa = (struct sockaddr *) sas;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) sas;
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) sas;
+  static u_int16_t ffff = 0xFFFF;
+
+  if (sa->sa_family != AF_INET) return;
+
+  memcpy(&sas_local, sas, sizeof(struct sockaddr_storage));
+  memset(sas, 0, sizeof(struct sockaddr_storage));
+  sa4 = (struct sockaddr_in *) &sas_local;
+  sa->sa_family = AF_INET6;
+  memcpy((u_int8_t *) &sa6->sin6_addr+10, &ffff, 2);
+  memcpy((u_int8_t *) &sa6->sin6_addr+12, &sa4->sin_addr, 4);
+  sa6->sin6_port = sa4->sin_port;
 }
 #endif
