@@ -108,7 +108,6 @@ EXT void set_truefalse_nonzero(int *);
 
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
-EXT int write_and_free_json_amqp(void *, void *);
 EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
 
 #ifdef WITH_AVRO

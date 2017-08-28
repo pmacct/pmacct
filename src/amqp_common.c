@@ -315,6 +315,7 @@ int p_amqp_is_alive(struct p_amqp_host *amqp_host)
   else return ERR;
 }
 
+#if defined WITH_JANSSON
 int write_and_free_json_amqp(void *amqp_log, void *obj)
 {
   char *orig_amqp_routing_key = NULL, dyn_amqp_routing_key[SRVBUFLEN];
@@ -342,3 +343,9 @@ int write_and_free_json_amqp(void *amqp_log, void *obj)
 
   return ret;
 }
+#else
+int write_and_free_json_amqp(void *amqp_log, void *obj)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_amqp(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+}
+#endif

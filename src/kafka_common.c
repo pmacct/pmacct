@@ -451,6 +451,7 @@ int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
+#if defined WITH_JANSSON
 int write_and_free_json_kafka(void *kafka_log, void *obj)
 {
   char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
@@ -478,3 +479,9 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
 
   return ret;
 }
+#else
+int write_and_free_json_kafka(void *kafka_log, void *obj)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_kafka(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+}
+#endif
