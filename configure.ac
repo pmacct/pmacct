@@ -508,7 +508,7 @@ AC_ARG_ENABLE(mysql,
     AC_MSG_RESULT(yes)
 
 dnl Unfortunately, no pkg-config support for MySQL
-    AC_CHECK_PROG([MYSQL_CONFIG], [mysql_config], [mysql_config], [no],,)
+    AC_CHECK_PROG([MYSQL_CONFIG], [mysql_config], [mysql_config], [no])
     if test "x${MYSQL_CONFIG}" = "xno"; then
       AC_MSG_ERROR([ERROR: missing mysql_config program])
     fi
@@ -517,6 +517,9 @@ dnl Unfortunately, no pkg-config support for MySQL
                   MYSQL_LIBS=`$MYSQL_CONFIG --libs`],
                  [AC_MSG_ERROR([ERROR: missing MySQL client library])],
                  [`$MYSQL_CONFIG --libs`])
+    dnl version check not enforced with a AC_MSG_ERROR for now
+    AX_LIB_MYSQL(5.6.3)
+
     AC_SUBST(MYSQL_CFLAGS)
     AC_SUBST(MYSQL_LIBS)
 
@@ -716,7 +719,7 @@ AC_ARG_ENABLE(zmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.0.0])
+    PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.2.0])
     SUPPORTS="${SUPPORTS} zmq"
     USING_ZMQ="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $ZMQ_CFLAGS"
@@ -739,7 +742,7 @@ AC_ARG_ENABLE(kafka,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.8.5],, [
+    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.9.2],, [
 	AC_MSG_CHECKING([default locations for librdkafka])
 	if test -r /usr/lib/librdkafka.a -o -r /usr/lib/librdkafka.so; then
 		KAFKA_LIBS="-L/usr/lib -lrdkafka"
@@ -819,7 +822,7 @@ AC_ARG_ENABLE(geoipv2,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.0.0],, [
+    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.2.0],, [
 	AC_MSG_CHECKING([default locations for libmaxminddb])
 	if test -r /usr/lib/libmaxminddb.a -o -r /usr/lib/libmaxminddb.so; then
 		GEOIPV2_LIBS="-L/usr/lib -lmaxminddb"
@@ -951,7 +954,7 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi])
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.0])
     SUPPORTS="${SUPPORTS} ndpi"
     USING_NDPI="yes"
 
