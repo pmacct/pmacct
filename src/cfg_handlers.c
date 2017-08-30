@@ -462,6 +462,18 @@ int cfg_key_pcap_filter(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pcap_protocol(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = strtol(value_ptr, NULL, 0);
+  for (; list; list = list->next, changes++) list->cfg.pcap_protocol = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_protocol'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_interface(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

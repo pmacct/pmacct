@@ -447,7 +447,7 @@ if test x"$PFRING_LIB_FOUND" = x""; then
     ERROR: missing pcap library. Refer to: http://www.tcpdump.org/
   ])])
 
-  AC_CHECK_LIB([pcap], [pcap_setnonblock], [ AC_DEFINE(PCAP_7, 1) ], [])
+  AC_CHECK_LIB([pcap], [pcap_set_protocol], [ AC_DEFINE(PCAP_SET_PROTOCOL, 1) ], [])
   AC_CHECK_LIB([pcap], [bpf_filter], [ AC_DEFINE(PCAP_NOBPF, 1) ], [])
 else
   dnl Unable to test: we should check for these libs

@@ -320,6 +320,7 @@ static const struct _dictionary_line dictionary[] = {
   {"aggregate_filter", cfg_key_aggregate_filter},
   {"promisc", cfg_key_promisc},
   {"pcap_filter", cfg_key_pcap_filter},
+  {"pcap_protocol", cfg_key_pcap_protocol},
   {"core_proc_name", cfg_key_proc_name},
   {"proc_priority", cfg_key_proc_priority},
   {"pmacctd_as", cfg_key_nfacctd_as_new},

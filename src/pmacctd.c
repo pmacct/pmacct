@@ -91,6 +91,59 @@ void usage_daemon(char *prog_name)
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
+static pcap_t *do_pcap_open(const char *device, int snaplen, int promisc,
+			    int to_ms, int protocol, char *errbuf)
+{
+  pcap_t *p;
+  int ret;
+
+  p = pcap_create(device, errbuf);
+  if (p == NULL)
+    return NULL;
+
+  ret = pcap_set_snaplen(p, snaplen);
+  if (ret < 0)
+    goto err;
+
+  ret = pcap_set_promisc(p, promisc);
+  if (ret < 0)
+    goto err;
+
+  ret = pcap_set_timeout(p, to_ms);
+  if (ret < 0)
+    goto err;
+
+#ifdef PCAP_SET_PROTOCOL
+  ret = pcap_set_protocol(p, protocol);
+  if (ret < 0)
+    goto err;
+#else
+  if (protocol)
+    Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol.\n", config.name);
+#endif
+
+  ret = pcap_activate(p);
+  if (ret < 0)
+    goto err;
+
+  return p;
+
+err:
+  if (ret == PCAP_ERROR)
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", device, pcap_geterr(p));
+  else if (ret == PCAP_ERROR_NO_SUCH_DEVICE ||
+	   ret == PCAP_ERROR_PERM_DENIED ||
+	   ret == PCAP_ERROR_PROMISC_PERM_DENIED)
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", device,
+	     pcap_statustostr(ret), pcap_geterr(p));
+  else
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", device,
+	     pcap_statustostr(ret));
+
+  pcap_close(p);
+
+  return NULL;
+}
 
 int main(int argc,char **argv, char **envp)
 {
@@ -703,9 +756,9 @@ int main(int argc,char **argv, char **envp)
 
   throttle_startup:
   if (config.dev) {
-    if ((device.dev_desc = pcap_open_live(config.dev, psize, config.promisc, 1000, errbuf)) == NULL) {
+    if ((device.dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
       if (!config.if_wait) {
-        Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_live(): %s\n", config.name, errbuf);
+        Log(LOG_ERR, "ERROR ( %s/core ): do_pcap_open(): %s\n", config.name, errbuf);
         exit_all(1);
       }
       else {
@@ -912,7 +965,7 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_WARNING, "WARN ( %s/core ): %s has become unavailable; throttling ...\n", config.name, config.dev);
       throttle_loop:
       sleep(5); /* XXX: user defined ? */
-      if ((device.dev_desc = pcap_open_live(config.dev, psize, config.promisc, 1000, errbuf)) == NULL)
+      if ((device.dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL)
         goto throttle_loop;
       pcap_setfilter(device.dev_desc, &filter);
       device.active = TRUE;
