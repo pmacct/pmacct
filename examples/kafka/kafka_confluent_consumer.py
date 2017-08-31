@@ -65,6 +65,7 @@ def main():
 		usage(sys.argv[0])
 		sys.exit(2)
 
+	mypid = os.getpid()
 	kafka_topic = None
 	kafka_group_id = uuid.uuid1() 
 	kafka_host = "127.0.0.1:9092"
@@ -154,8 +155,8 @@ def main():
 				value = value.replace(',\n]', ']')
 
 			if print_stdout:
-				print("%s:%d:%d: key=%s value=%s" % (message.topic(), message.partition(),
-						message.offset(), str(message.key()), value))
+				print("%s:%d:%d: pid=%d key=%s value=%s" % (message.topic(), message.partition(),
+						message.offset(), mypid, str(message.key()), value))
 				sys.stdout.flush()
 				print_stdout_num += 1
 				if (print_stdout_max == print_stdout_num):
@@ -172,8 +173,8 @@ def main():
 
 		if stats_interval:
 			if time_now >= (time_count + stats_interval):
-				print("INFO: stats: [ time=%s interval=%d records=%d ]" %
-					(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time_now)), stats_interval, elem_count))
+				print("INFO: stats: [ time=%s interval=%d records=%d pid=%d ]" %
+					(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time_now)), stats_interval, elem_count), mypid)
 				sys.stdout.flush()
 				time_count = time_now
 				elem_count = 0
