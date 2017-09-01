@@ -154,6 +154,13 @@ DESC:		This filter is global and applied to all incoming packets. It's passed to
 		pmacctd.
 DEFAULT:	none
 
+KEY:		pcap_protocol [GLOBAL, PMACCTD_ONLY]
+DESC:		If set, specifies a specific packet socket protocol value to limit packet capture
+		to (for example, 0x0800 = IPv4). This option is only supported if pmacct was built
+		against a version of libpcap that supports pcap_set_protocol(), and it only applies
+		to pmacctd.
+DEFAULT:	none
+
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Specifies the maximum number of bytes to capture for each packet. This directive has
 		key importance to both classification and connection tracking engines. In fact, some
