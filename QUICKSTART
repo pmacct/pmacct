@@ -1368,7 +1368,9 @@ freely mix-and-matched with other primitives (ie. L2/L3/L4) when customizing
 the SQL table (sql_optimize_clauses: true). Environments making use of BGP
 Multi-Path should make use of ADD-PATH to advertise known paths in which case
 the correct BGP info is linked to traffic data using BGP next-hop (or IP next-
-hop if use_ip_next_hop is set to true) as selector among the paths available.
+hop if use_ip_next_hop is set to true) as selector among the paths available
+(on the assumption that ADD-PATH is used for route diversity; all checked
+implementations seem to tend to not advertise paths with the same next-hop).
 TCP MD5 signature for BGP messages is also supported. For a review of all knobs
 and features see the CONFIG-KEYS document. 
 
