@@ -740,9 +740,13 @@ void evaluate_packet_handlers()
 	}
       }
       else if (config.acct_type == ACCT_NF) {
-	if (config.nfacctd_time == NF_TIME_SECS) channels_list[index].phandler[primitives] = NF_counters_secs_handler;
-	else if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = NF_counters_new_handler;
-	else channels_list[index].phandler[primitives] = NF_counters_msecs_handler; /* default */
+	channels_list[index].phandler[primitives] = NF_counters_handler;
+	primitives++;
+
+	if (config.nfacctd_time == NF_TIME_SECS) channels_list[index].phandler[primitives] = NF_time_secs_handler;
+	else if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = NF_time_new_handler;
+	else channels_list[index].phandler[primitives] = NF_time_msecs_handler; /* default */
+
 	if (config.sfacctd_renormalize) {
 	  primitives++;
 	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
@@ -2370,8 +2374,7 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   }
 }
 
-/* times from the netflow engine are in msecs */
-void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -2448,7 +2451,49 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
         pdata->pkt_num = ntohl(t32);
       }
     }
+    break;
+  case 8:
+    switch(hdr->aggregation) {
+    case 6:
+      pdata->pkt_len = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dOctets);
+      pdata->pkt_num = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dPkts);
+      break;
+    case 7:
+      pdata->pkt_len = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dOctets);
+      pdata->pkt_num = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dPkts);
+      break;
+    case 8:
+      pdata->pkt_len = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dOctets);
+      pdata->pkt_num = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dPkts);
+      break;
+    default:
+      pdata->pkt_len = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dOctets);
+      pdata->pkt_num = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dPkts);
+      break;
+    }
+    break;
+  default:
+    pdata->pkt_len = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dOctets);
+    pdata->pkt_num = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dPkts);
+    break;
+  }
 
+  pdata->flow_type = pptrs->flow_type;
+}
+
+/* times from the netflow engine are in msecs */
+void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  time_t fstime = 0;
+  u_int32_t t32 = 0;
+  u_int64_t t64 = 0;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
     if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 9) {
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
@@ -2566,32 +2611,24 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
   case 8:
     switch(hdr->aggregation) {
     case 6:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->First))/1000);
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->Last))/1000);
       break;
     case 7:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->First))/1000);
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->Last))/1000);
       break;
     case 8:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->First))/1000);
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->Last))/1000);
       break;
     default:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->First))/1000);
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
@@ -2600,8 +2637,6 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
     }
     break;
   default:
-    pdata->pkt_len = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dOctets);
-    pdata->pkt_num = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dPkts);
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->First))/1000); 
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
@@ -2613,7 +2648,7 @@ void NF_counters_msecs_handler(struct channels_list_entry *chptr, struct packet_
 }
 
 /* times from the netflow engine are in secs */
-void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -2623,73 +2658,8 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
   u_int64_t t64 = 0;
   
   switch(hdr->version) {
+  case 10:
   case 9:
-    if (tpl->tpl[NF9_IN_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_IN_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_FLOW_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_INITIATOR_OCTETS].len == 4) {
-      if (config.tmp_asa_bi_flow) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_INITIATOR_OCTETS].off, 4);
-        pdata->pkt_len = ntohl(t32);
-      }
-    }
-
-    if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_RESPONDER_OCTETS].len == 4) {
-      if (config.tmp_asa_bi_flow) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 4);
-        pdata->pkt_num = ntohl(t32);
-      }
-    }
-
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
@@ -2700,32 +2670,24 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
   case 8:
     switch(hdr->aggregation) {
     case 6:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->First));
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->Last));
       break;
     case 7:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->First));
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->Last));
       break;
     case 8:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->First));
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->Last));
       break;
     default:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dPkts);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
        (ntohl(((struct struct_header_v8 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->First));
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v8 *) pptrs->f_header)->unix_secs)-
@@ -2734,8 +2696,6 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
     }
     break;
   default:
-    pdata->pkt_len = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dOctets);
-    pdata->pkt_num = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dPkts);
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->First));
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
@@ -2747,7 +2707,7 @@ void NF_counters_secs_handler(struct channels_list_entry *chptr, struct packet_p
 }
 
 /* ignore netflow engine times and generate new ones */
-void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_time_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
@@ -2755,113 +2715,10 @@ void NF_counters_new_handler(struct channels_list_entry *chptr, struct packet_pt
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
 
-  switch(hdr->version) {
-  case 10:
-  case 9:
-    if (tpl->tpl[NF9_IN_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_IN_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_FLOW_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_FLOW_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_OUT_BYTES].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 4);
-      pdata->pkt_len = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_OUT_BYTES].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_BYTES].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].off, 8);
-      pdata->pkt_len = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_INITIATOR_OCTETS].len == 4) {
-      if (config.tmp_asa_bi_flow) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_INITIATOR_OCTETS].off, 4);
-        pdata->pkt_len = ntohl(t32);
-      }
-    }
-
-    if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_FLOW_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FLOW_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_OUT_PACKETS].len == 4) {
-      memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 4);
-      pdata->pkt_num = ntohl(t32);
-    }
-    else if (tpl->tpl[NF9_OUT_PACKETS].len == 8) {
-      memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OUT_PACKETS].off, 8);
-      pdata->pkt_num = pm_ntohll(t64);
-    }
-    else if (tpl->tpl[NF9_RESPONDER_OCTETS].len == 4) {
-      if (config.tmp_asa_bi_flow) {
-        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 4);
-        pdata->pkt_num = ntohl(t32);
-      }
-    }
-
-    pdata->time_start.tv_sec = 0;
-    pdata->time_start.tv_usec = 0;
-    pdata->time_end.tv_sec = 0;
-    pdata->time_end.tv_usec = 0;
-    break;
-  case 8:
-    switch(hdr->aggregation) {
-    case 6:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_6 *) pptrs->f_data)->dPkts);
-      break;
-    case 7:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_7 *) pptrs->f_data)->dPkts);
-      break;
-    case 8:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_8 *) pptrs->f_data)->dPkts);
-      break;
-    default:
-      pdata->pkt_len = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dOctets);
-      pdata->pkt_num = ntohl(((struct struct_export_v8_1 *) pptrs->f_data)->dPkts);
-      break;
-    }
-    pdata->time_start.tv_sec = 0;
-    pdata->time_start.tv_usec = 0;
-    pdata->time_end.tv_sec = 0;
-    pdata->time_end.tv_usec = 0;
-    break;
-  default:
-    pdata->pkt_len = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dOctets);
-    pdata->pkt_num = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dPkts);
-    pdata->time_start.tv_sec = 0;
-    pdata->time_start.tv_usec = 0;
-    pdata->time_end.tv_sec = 0;
-    pdata->time_end.tv_usec = 0;
-    break;
-  }
+  pdata->time_start.tv_sec = 0;
+  pdata->time_start.tv_usec = 0;
+  pdata->time_end.tv_sec = 0;
+  pdata->time_end.tv_usec = 0;
 
   pdata->flow_type = pptrs->flow_type;
 }

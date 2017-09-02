@@ -88,9 +88,10 @@ EXT void NF_peer_dst_ip_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void NF_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_counters_msecs_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_counters_secs_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void NF_counters_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_time_msecs_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_time_secs_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_time_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

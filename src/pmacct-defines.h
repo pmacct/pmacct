@@ -28,7 +28,7 @@
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:"
 #define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:"
 #define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uDVUiI"
-#define N_PRIMITIVES 57
+#define N_PRIMITIVES 75
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
 #define PROTO_LEN 12
@@ -155,7 +155,6 @@
 #define MAP_CUSTOM_PRIMITIVES	108	/* aggregate_primitives */
 
 /* PRIMITIVES DEFINITION: START */
-/* 55 primitives currently defined */
 /* internal: first registry, ie. what_to_count, aggregation, etc. */
 #define COUNT_INT_SRC_HOST		0x0001000000000001ULL
 #define COUNT_INT_DST_HOST		0x0001000000000002ULL
