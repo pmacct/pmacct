@@ -39,6 +39,7 @@
 #include "bmp/bmp.h"
 #include "nfv8_handlers.h"
 #include "telemetry/telemetry.h"
+#include "intstats/intstats.h"
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -86,6 +87,46 @@ void usage_daemon(char *prog_name)
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
+void *nfacctd_generate_stats(void *ptr)
+{
+  int val, tpl_idx;
+  unsigned char buf[SRVBUFLEN];
+  struct metric *met = (struct metric *)ptr;
+
+  while (met) {
+    switch (met->type.id) {
+      case METRICS_INT_NFACCTD_RCV_PKT:
+        met->int_value = nf_metrics.rcv_pkt;
+        break;
+      case METRICS_INT_NFACCTD_TPL_CNT:
+        val = 0;
+
+	for (tpl_idx = 0; tpl_idx < tpl_cache.num; tpl_idx++) {
+	  if (tpl_cache.c[tpl_idx]) val++;
+	}
+
+        met->int_value = val;
+        break;
+      case METRICS_INT_NFACCTD_UDP_RX_QUEUE:
+        met->int_value = nf_metrics.udp_rcv_buf;
+        break;
+      case METRICS_INT_NFACCTD_UDP_TX_QUEUE:
+        //TODO
+        break;
+      case METRICS_INT_NFACCTD_UDP_SOCK_DROP_CNT:
+        met->int_value = get_udp_drops(config.sock);
+        break;
+      case METRICS_INT_NFACCTD_UDP_APP_DROP_CNT:
+        met->int_value = nf_metrics.udp_drop_cnt;
+        break;
+    }
+    met = met->next;
+  }
+  /* reset metrics for next run */
+  nf_metrics.rcv_pkt = 0;
+  nf_metrics.udp_drop_cnt = 0;
+  nf_metrics.udp_rcv_buf = 0;
+}
 
 int main(int argc,char **argv, char **envp)
 {
@@ -734,6 +775,11 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): 'telemetry_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
     exit(1);
   }
+
+  if (config.intstats_daemon) {
+    Log(LOG_ERR, "ERROR ( %s/core ): 'intstats_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
+    exit(1);
+  }
 #endif
 
 #if defined WITH_GEOIP
@@ -758,6 +804,12 @@ int main(int argc,char **argv, char **envp)
 
   init_classifiers(NULL);
 
+  if (config.intstats_daemon) {
+    /* Metrics memory is mapped before loading the plugins so that
+     * forked plugin processes have access to it */
+    init_metrics_mem();
+  }
+
   /* plugins glue: creation */
   load_plugins(&req);
   load_plugin_filters(1);
@@ -765,6 +817,19 @@ int main(int argc,char **argv, char **envp)
   pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
   if (config.pidfile) write_pid_file(config.pidfile);
   load_networks(config.networks_file, &nt, &nc);
+
+#if defined ENABLE_THREADS
+  /* starting the internal stats thread
+   * NB: this needs to be done once the plugins are loaded to properly gather
+   * metrics according to possibly named configs */
+  if (config.intstats_daemon) {
+    memset(&nf_metrics, 0, sizeof(nf_metrics));
+    intstats_wrapper(channels_list, nfacctd_generate_stats);
+
+    /* Let's give the internal stats thread some advantage to create its structures */
+    sleep(5);
+  }
+#endif
 
   /* signals to be handled only by the core process;
      we set proper handlers after plugin creation */
@@ -921,6 +986,16 @@ int main(int argc,char **argv, char **envp)
     ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
 
     if (ret < 2) continue; /* we don't have enough data to decode the version */ 
+    //XXX: should "not enough data" count as dropped packet?
+
+    increment_metric(&nf_metrics.rcv_pkt);
+    if (config.intstats_daemon) {
+      if (config.metrics_what_to_count & METRICS_INT_NFACCTD_UDP_RX_QUEUE) {
+        char buf[SRVBUFLEN];
+        memset(&buf, 0, SRVBUFLEN);
+        nf_metrics.udp_rcv_buf = recvfrom(config.sock, buf, SRVBUFLEN, MSG_PEEK, (struct sockaddr *) &client, &clen);
+      }
+    }
 
     pptrs.v4.f_len = ret;
 
@@ -985,6 +1060,7 @@ int main(int argc,char **argv, char **envp)
       default:
         if (!config.nfacctd_disable_checks) {
 	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
+          increment_metric(&nf_metrics.udp_drop_cnt);
 	  xflow_tot_bad_datagrams++;
         }
 	break;
@@ -1005,6 +1081,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (len < NfHdrV1Sz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1046,6 +1123,7 @@ void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   }
   else {
     notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1060,6 +1138,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (len < NfHdrV5Sz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1118,6 +1197,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   }
   else {
     notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1132,6 +1212,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (len < NfHdrV7Sz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1182,6 +1263,7 @@ void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   }
   else {
     notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1196,6 +1278,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (len < NfHdrV8Sz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1234,6 +1317,7 @@ void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   }
   else {
     notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1277,6 +1361,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (len < HdrSz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1292,6 +1377,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (off+NfDataHdrV9Sz >= len) { 
     notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1301,6 +1387,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (data_hdr->flow_len == 0) {
     notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1310,6 +1397,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (flowsetlen < NfDataHdrV9Sz) {
     notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet (flowsetlen < NfDataHdrV9Sz)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1327,6 +1415,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (off+flowsetlen > len) { 
         notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+        increment_metric(&nf_metrics.udp_drop_cnt);
         xflow_tot_bad_datagrams++;
         return;
       }
@@ -1354,6 +1443,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (off+flowsetlen > len) {
         notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+        increment_metric(&nf_metrics.udp_drop_cnt);
         xflow_tot_bad_datagrams++;
         return;
       }
@@ -1377,6 +1467,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     if (off+flowsetlen > len) { 
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
 		      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+      increment_metric(&nf_metrics.udp_drop_cnt);
       xflow_tot_bad_datagrams++;
       return;
     }
@@ -1394,6 +1485,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 		config.name, fid, debug_agent_addr, SourceId);
       pkt += (flowsetlen-NfDataHdrV9Sz);
       off += flowsetlen;
+      increment_metric(&nf_metrics.udp_drop_cnt);
     }
     else if (tpl->template_type == 1) { /* Options coming */
       struct xflow_status_entry *entry;
@@ -1536,6 +1628,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (flowoff > flowsetlen) {
         notify_malf_packet(LOG_INFO, "INFO: aborting malformed Options Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+        increment_metric(&nf_metrics.udp_drop_cnt);
         xflow_tot_bad_datagrams++;
         return;
       }
@@ -2110,6 +2203,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (flowoff > flowsetlen) {
         notify_malf_packet(LOG_INFO, "INFO: aborting malformed Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
+        increment_metric(&nf_metrics.udp_drop_cnt);
         xflow_tot_bad_datagrams++;
         return;
       }
@@ -2146,6 +2240,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   /* basic length check against longest NetFlow header */
   if (len < NfHdrV8Sz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
+    increment_metric(&nf_metrics.udp_drop_cnt);
     xflow_tot_bad_datagrams++;
     return;
   } 
@@ -2155,6 +2250,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   if (nfv != 1 && nfv != 5 && nfv != 7 && nfv != 8 && nfv != 9 && nfv != 10) {
     if (!config.nfacctd_disable_checks) {
       notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
+      increment_metric(&nf_metrics.udp_drop_cnt);
       xflow_tot_bad_datagrams++;
     }
     return;
@@ -2458,3 +2554,77 @@ pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_cl
 
   return 0;
 }
+
+void increment_metric(int *val_ptr)
+{
+    if (!config.intstats_daemon) return;
+
+    if (val_ptr == &nf_metrics.rcv_pkt && config.metrics_what_to_count & METRICS_INT_NFACCTD_RCV_PKT)
+      nf_metrics.rcv_pkt++;
+    else if (val_ptr == &nf_metrics.udp_drop_cnt && config.metrics_what_to_count & METRICS_INT_NFACCTD_UDP_APP_DROP_CNT)
+      nf_metrics.udp_drop_cnt++;
+}
+
+#if defined(__linux__)
+int get_udp_drops()
+{
+  FILE *f;
+  int size = LARGEBUFLEN, first_line = TRUE;
+  int index, drop_col=-1, nb_read_lines = 0;
+  char *path = "/proc/net/udp", *token, *saveptr, *row;
+  char buf[size], save_buf[size], addr_hex[SRVBUFLEN];
+  struct sockaddr_in local_addr;
+  socklen_t addr_len = sizeof(local_addr);
+
+  getsockname(config.sock, (struct sockaddr *)&local_addr, &addr_len);
+
+  sprintf(addr_hex, "%.8x:%.4x", local_addr.sin_addr.s_addr, config.nfacctd_port);
+  memset(buf, 0, size);
+  f = fopen(path, "r");
+  if (!f) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file does not exist.\n", config.name, config.type, path);
+    return -1;
+  }
+
+  while (fgets(buf, size, f)) {
+    if (first_line) {
+      memcpy(save_buf, buf, size);
+      row = &save_buf[0];
+      token = strtok_r(row, " ", &saveptr);
+
+      while (token) {
+        row = NULL;
+        if (!strstr("drops", token)) drop_col++;
+        else break;
+        token = strtok_r(row, " ", &saveptr);
+      }
+      drop_col--; /* rx_queue and tx_queue headers are separated by a ':' */
+
+      first_line = FALSE;
+      continue;
+    }
+
+    lower_string(buf);
+    if (strstr(buf, addr_hex)) {
+      memcpy(save_buf, buf, size);
+      row = &save_buf[0];
+      for (index = 0; index < drop_col; index++) {
+        token = strtok_r(row, " ", &saveptr);
+        if (!token) return -1;
+        row = NULL;
+      }
+      return atoi(strtok_r(row, " ", &saveptr));
+    }
+    nb_read_lines++;
+  }
+  fclose(f);
+
+  return -1;
+}
+#else
+int get_udp_drops()
+{
+  Log(LOG_INFO, "INFO ( %s/core ): UDP drops retrieval is only supported on Linux kernels.\n", config.name);
+  return -1;
+}
+#endif
