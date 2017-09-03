@@ -116,6 +116,8 @@ int main(int argc,char **argv, char **envp)
   int clen = sizeof(client), slen;
   struct ip_mreq multi_req4;
 
+  struct pcap_device device;
+  char errbuf[PCAP_ERRBUF_SIZE];
   unsigned char dummy_packet[64]; 
   unsigned char dummy_packet_vlan[64]; 
   unsigned char dummy_packet_mpls[128]; 
@@ -304,6 +306,15 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'R':
       strlcpy(cfg_cmdline[rows], "sfacctd_renormalize: true", SRVBUFLEN);
+      rows++;
+      break;
+    case 'I':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'W':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_wait: true", SRVBUFLEN);
       rows++;
       break;
     case 'h':
@@ -495,6 +506,11 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n", config.name);
     exit(1);
   }
+  
+  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): 'pcap_savefile' is mutual exclusive with live collection, ie. 'nfacctd_ip' and/or 'nfacctd_port' Exiting...\n\n", config.name);
+    exit(1);
+  }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
@@ -503,42 +519,25 @@ int main(int argc,char **argv, char **envp)
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
 
-  /* If no IP address is supplied, let's set our default
-     behaviour: IPv4 address, INADDR_ANY, port 2100 */
-  if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_NFACCTD_PORT;
-#if (defined ENABLE_IPV6)
-  if (!config.nfacctd_ip) {
-    struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
-
-    sa6->sin6_family = AF_INET6;
-    sa6->sin6_port = htons(config.nfacctd_port);
-    slen = sizeof(struct sockaddr_in6);
-  }
-#else
-  if (!config.nfacctd_ip) {
-    struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-    sa4->sin_family = AF_INET;
-    sa4->sin_addr.s_addr = htonl(0);
-    sa4->sin_port = htons(config.nfacctd_port);
-    slen = sizeof(struct sockaddr_in);
-  }
-#endif
-  else {
-    trim_spaces(config.nfacctd_ip);
-    ret = str_to_addr(config.nfacctd_ip, &addr);
-    if (!ret) {
-      Log(LOG_ERR, "ERROR ( %s/core ): 'nfacctd_ip' value is not valid. Exiting.\n", config.name);
+  if (config.pcap_savefile) {
+    if ((device.dev_desc = pcap_open_offline(config.pcap_savefile, errbuf)) == NULL) {
+      Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
       exit(1);
     }
-    slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_port);
   }
-
-  /* socket creation */
-  config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
-  if (config.sock < 0) {
+  else {
+    /* If no IP address is supplied, let's set our default
+       behaviour: IPv4 address, INADDR_ANY, port 2100 */
+    if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_NFACCTD_PORT;
 #if (defined ENABLE_IPV6)
-    /* retry with IPv4 */
+    if (!config.nfacctd_ip) {
+      struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
+
+      sa6->sin6_family = AF_INET6;
+      sa6->sin6_port = htons(config.nfacctd_port);
+      slen = sizeof(struct sockaddr_in6);
+    }
+#else
     if (!config.nfacctd_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
 
@@ -546,65 +545,90 @@ int main(int argc,char **argv, char **envp)
       sa4->sin_addr.s_addr = htonl(0);
       sa4->sin_port = htons(config.nfacctd_port);
       slen = sizeof(struct sockaddr_in);
-
-      config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
     }
 #endif
-
-    if (config.sock < 0) {
-      Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
-      exit(1);
+    else {
+      trim_spaces(config.nfacctd_ip);
+      ret = str_to_addr(config.nfacctd_ip, &addr);
+      if (!ret) {
+	Log(LOG_ERR, "ERROR ( %s/core ): 'nfacctd_ip' value is not valid. Exiting.\n", config.name);
+	exit(1);
+      }
+      slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_port);
     }
-  }
 
-  /* bind socket to port */
-  rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
+    /* socket creation */
+    config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
+    if (config.sock < 0) {
+#if (defined ENABLE_IPV6)
+      /* retry with IPv4 */
+      if (!config.nfacctd_ip) {
+	struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
+
+	sa4->sin_family = AF_INET;
+	sa4->sin_addr.s_addr = htonl(0);
+	sa4->sin_port = htons(config.nfacctd_port);
+	slen = sizeof(struct sockaddr_in);
+
+	config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
+      }
+#endif
+
+      if (config.sock < 0) {
+	Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
+	exit(1);
+      }
+    }
+
+    /* bind socket to port */
+    rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 
 #if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
-  rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
+    rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
 #endif
 
-  if (config.nfacctd_pipe_size) {
-    int l = sizeof(config.nfacctd_pipe_size);
-    int saved = 0, obtained = 0;
+    if (config.nfacctd_pipe_size) {
+      int l = sizeof(config.nfacctd_pipe_size);
+      int saved = 0, obtained = 0;
 
-    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, sizeof(config.nfacctd_pipe_size));
-    getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-
-    if (obtained < saved) {
-      Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+      Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, sizeof(config.nfacctd_pipe_size));
       getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-    }
-    Log(LOG_INFO, "INFO ( %s/core ): nfacctd_pipe_size: obtained=%d target=%d.\n", config.name, obtained, config.nfacctd_pipe_size);
-  }
 
-  /* Multicast: memberships handling */
-  for (idx = 0; mcast_groups[idx].family && idx < MAX_MCAST_GROUPS; idx++) {
-    if (mcast_groups[idx].family == AF_INET) { 
-      memset(&multi_req4, 0, sizeof(multi_req4));
-      multi_req4.imr_multiaddr.s_addr = mcast_groups[idx].address.ipv4.s_addr;
-      if (setsockopt(config.sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&multi_req4, sizeof(multi_req4)) < 0) {
-        Log(LOG_ERR, "ERROR ( %s/core ): IPv4 multicast address - ADD membership failed.\n", config.name);
-        exit(1);
+      if (obtained < saved) {
+	Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+	getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
       }
+      Log(LOG_INFO, "INFO ( %s/core ): nfacctd_pipe_size: obtained=%d target=%d.\n", config.name, obtained, config.nfacctd_pipe_size);
     }
+
+    /* Multicast: memberships handling */
+    for (idx = 0; mcast_groups[idx].family && idx < MAX_MCAST_GROUPS; idx++) {
+      if (mcast_groups[idx].family == AF_INET) { 
+	memset(&multi_req4, 0, sizeof(multi_req4));
+	multi_req4.imr_multiaddr.s_addr = mcast_groups[idx].address.ipv4.s_addr;
+	if (setsockopt(config.sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&multi_req4, sizeof(multi_req4)) < 0) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): IPv4 multicast address - ADD membership failed.\n", config.name);
+	  exit(1);
+	}
+      }
 #if defined ENABLE_IPV6
-    if (mcast_groups[idx].family == AF_INET6) {
-      memset(&multi_req6, 0, sizeof(multi_req6));
-      ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6); 
-      if (setsockopt(config.sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&multi_req6, sizeof(multi_req6)) < 0) {
-        Log(LOG_ERR, "ERROR ( %s/core ): IPv6 multicast address - ADD membership failed.\n", config.name);
-        exit(1);
+      if (mcast_groups[idx].family == AF_INET6) {
+	memset(&multi_req6, 0, sizeof(multi_req6));
+	ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6); 
+	if (setsockopt(config.sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&multi_req6, sizeof(multi_req6)) < 0) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): IPv6 multicast address - ADD membership failed.\n", config.name);
+	  exit(1);
+	}
       }
-    }
 #endif
-  }
+    }
 
-  if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
-  else memset(&allow, 0, sizeof(allow));
+    if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
+    else memset(&allow, 0, sizeof(allow));
+  }
 
   if (config.sampling_map) {
     load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
@@ -748,10 +772,12 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
-  rc = bind(config.sock, (struct sockaddr *) &server, slen);
-  if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
-    exit(1);
+  if (!config.pcap_savefile) {
+    rc = bind(config.sock, (struct sockaddr *) &server, slen);
+    if (rc < 0) {
+      Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
+      exit(1);
+    }
   }
 
   load_nfv8_handlers();
@@ -902,7 +928,7 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls6.l3_proto = ETHERTYPE_IPV6;
 #endif
 
-  {
+  if (!config.pcap_savefile) {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
     u_int16_t srv_port;
@@ -912,15 +938,22 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
   }
+  else {
+    // XXX: pcap_savefile Log()
+  }
 
   /* fixing NetFlow v9/IPFIX template func pointers */
   get_ext_db_ie_by_type = &ext_db_get_ie;
 
   /* Main loop */
-  for(;;) {
-    ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-
-    if (ret < 2) continue; /* we don't have enough data to decode the version */ 
+  for (;;) {
+    if (!config.pcap_savefile) {
+      ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+      if (ret < 2) continue; /* we don't have enough data to decode the version */ 
+    }
+    else {
+      // XXX: pcap_savefile handling
+    }
 
     pptrs.v4.f_len = ret;
 

@@ -318,6 +318,15 @@ int main(int argc,char **argv, char **envp)
       strlcpy(cfg_cmdline[rows], "sfacctd_renormalize: true", SRVBUFLEN);
       rows++;
       break;
+    case 'I':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'W':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_wait: true", SRVBUFLEN);
+      rows++;
+      break;
     case 'h':
       usage_daemon(argv[0]);
       exit(0);

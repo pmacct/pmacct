@@ -321,6 +321,8 @@ static const struct _dictionary_line dictionary[] = {
   {"promisc", cfg_key_promisc},
   {"pcap_filter", cfg_key_pcap_filter},
   {"pcap_protocol", cfg_key_pcap_protocol},
+  {"pcap_savefile", cfg_key_pcap_savefile},
+  {"pcap_savefile_wait", cfg_key_pcap_savefile_wait},
   {"core_proc_name", cfg_key_proc_name},
   {"proc_priority", cfg_key_proc_priority},
   {"pmacctd_as", cfg_key_nfacctd_as_new},
@@ -341,7 +343,7 @@ static const struct _dictionary_line dictionary[] = {
   {"files_umask", cfg_key_files_umask},
   {"files_uid", cfg_key_files_uid},
   {"files_gid", cfg_key_files_gid},
-  {"savefile_wait", cfg_key_savefile_wait},
+  {"savefile_wait", cfg_key_pcap_savefile_wait}, /* XXX: legacy; to be obsoleted */
   {"networks_mask", cfg_key_networks_mask},
   {"networks_file", cfg_key_networks_file},
   {"networks_file_filter", cfg_key_networks_file_filter},
@@ -573,7 +575,6 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_dump_kafka_partition", cfg_key_telemetry_dump_kafka_partition},
   {"telemetry_dump_kafka_partition_key", cfg_key_telemetry_dump_kafka_partition_key},
   {"telemetry_dump_kafka_config_file", cfg_key_telemetry_dump_kafka_config_file},
-  {"pcap_savefile", cfg_key_pcap_savefile},
   {"refresh_maps", cfg_key_maps_refresh}, // legacy
   {"maps_refresh", cfg_key_maps_refresh},
   {"maps_index", cfg_key_maps_index},

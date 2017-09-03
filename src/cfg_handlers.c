@@ -575,7 +575,7 @@ int cfg_key_interface_wait(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_savefile_wait(char *filename, char *name, char *value_ptr)
+int cfg_key_pcap_savefile_wait(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -584,7 +584,7 @@ int cfg_key_savefile_wait(char *filename, char *name, char *value_ptr)
   if (value < 0) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.sf_wait = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'savefile_wait'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_savefile_wait'. Globalized.\n", filename);
 
   return changes;
 }

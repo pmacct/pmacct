@@ -342,7 +342,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'W':
-      strlcpy(cfg_cmdline[rows], "savefile_wait: true", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_wait: true", SRVBUFLEN);
       rows++;
       break;
     case 'L':

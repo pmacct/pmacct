@@ -344,15 +344,6 @@ DESC:		Interface on which 'pmacctd' listens. If such directive isn't supplied, a
 		exclusive with 'pcap_savefile' (-I). 
 DEFAULT:	Interface is selected by by the Operating System
 
-KEY:		pcap_savefile (-I) [GLOBAL, PMACCTD_ONLY]
-DESC:		File in libpcap savefile format from which read data (this is in alternative to binding
-		to an intervace). The file has to be correctly finalized in order to be read. As soon
-		as 'pmacctd' is finished with the file, it exits (unless the 'savefile_wait' option is
-		in place). The directive doesn't apply to [ns]facctd; to replay original NetFlow/sFlow
-		streams, a tool like TCPreplay can be used instead. The directive is mutually exclusive
-		with 'interface' (-i). 
-DEFAULT:	none
-
 KEY:		interface_wait (-w) [GLOBAL, PMACCTD_ONLY]
 VALUES:		[ true | false ]
 DESC:		If set to true, this option causes 'pmacctd' to wait for the listening device to become
@@ -361,7 +352,15 @@ DESC:		If set to true, this option causes 'pmacctd' to wait for the listening de
 		detected.
 DEFAULT:	false
 
-KEY:            savefile_wait (-W) [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD]
+DESC:		File in libpcap savefile format from which read data (this is in alternative to binding
+		to an intervace). The file has to be correctly finalized in order to be read. As soon
+		as 'pmacctd' is finished with the file, it exits (unless the 'pcap_savefile_wait' config
+		directive is specified). The directive is mutually exclusive with 'interface' (-i) for
+		pmacctd (since the other daemons do not support it). 
+DEFAULT:	none
+
+KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD]
 VALUES:         [ true | false ]
 DESC:           If set to true, this option will cause 'pmacctd' to wait indefinitely for a signal (ie.
 		CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished with
