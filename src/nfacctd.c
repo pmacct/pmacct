@@ -152,7 +152,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   umask(077);
-  compute_once();
+  NF_compute_once();
 
   /* a bunch of default definitions */ 
   reload_map = FALSE;
@@ -2271,7 +2271,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   exec_plugins(pptrs, req);
 }
 
-void compute_once()
+void NF_compute_once()
 {
   struct pkt_data dummy;
 

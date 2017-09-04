@@ -157,7 +157,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   umask(077);
-  compute_once();
+  SF_compute_once();
 
   /* a bunch of default definitions */ 
   reload_map = FALSE;
@@ -1376,7 +1376,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   exec_plugins(pptrs, req);
 }
 
-void compute_once()
+void SF_compute_once()
 {
   struct pkt_data dummy;
 

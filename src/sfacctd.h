@@ -284,6 +284,7 @@ EXT void reset_ip4(struct packet_ptrs *);
 EXT void reset_ip6(struct packet_ptrs *);
 EXT void SF_notify_malf_packet(short int, char *, struct sockaddr *);
 EXT int SF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
+EXT void SF_compute_once();
 
 EXT char *getPointer(SFSample *);
 EXT u_int32_t getData32(SFSample *);

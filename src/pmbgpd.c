@@ -65,11 +65,6 @@ void usage_daemon(char *prog_name)
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
-void compute_once()
-{
-  /* popular sizeof()'s here */
-}
-
 int main(int argc,char **argv, char **envp)
 {
   struct plugins_list_entry *list;
@@ -86,7 +81,6 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   umask(077);
-  compute_once();
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
