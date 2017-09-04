@@ -118,6 +118,10 @@ int main(int argc,char **argv, char **envp)
 
   struct pcap_device device;
   char errbuf[PCAP_ERRBUF_SIZE];
+  const u_char *savefile_pkt;
+  struct pcap_pkthdr *savefile_pkthdr;
+  int savefile_errors = 0, savefile_lpr = 0;
+
   unsigned char dummy_packet[64]; 
   unsigned char dummy_packet_vlan[64]; 
   unsigned char dummy_packet_mpls[128]; 
@@ -524,6 +528,16 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
       exit(1);
     }
+
+/* XXX:
+    device.link_type = pcap_datalink(device.dev_desc);
+    for (idx = 0; _devices[idx].link_type != -1; idx++) {
+      if (device.link_type == _devices[idx].link_type)
+	device.data = &_devices[idx];
+    }
+*/
+
+    device.active = TRUE;
   }
   else {
     /* If no IP address is supplied, let's set our default
@@ -935,11 +949,13 @@ int main(int argc,char **argv, char **envp)
 
     sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port); 
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow data on %s:%u\n", config.name, srv_string, srv_port);
+    Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
   }
   else {
-    // XXX: pcap_savefile Log()
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
+    allowed = TRUE;
+    sleep(2);
   }
 
   /* fixing NetFlow v9/IPFIX template func pointers */
@@ -952,7 +968,39 @@ int main(int argc,char **argv, char **envp)
       if (ret < 2) continue; /* we don't have enough data to decode the version */ 
     }
     else {
+      ret = pcap_next_ex(device.dev_desc, &savefile_pkthdr, &savefile_pkt);
+
+      if (ret == 1 /* all good */) savefile_errors = FALSE;
+      else if (ret == -1 /* failed reading next packet */) {
+	savefile_errors++;
+	if (savefile_errors == PCAP_SAVEFILE_MAX_ERRORS) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): pcap_ext_ex() max errors reached (%u). Exiting.\n", config.name, PCAP_SAVEFILE_MAX_ERRORS);
+	  exit(1);
+	}
+	else {
+	  Log(LOG_WARNING, "WARN ( %s/core ): pcap_ext_ex() failed: %s. Skipping packet.\n", config.name, pcap_geterr(device.dev_desc));
+	  continue;
+	}
+      }
+      else if (ret == -2 /* last packet in a pcap_savefile */) {
+	if (savefile_lpr) {
+	  if (config.sf_wait) {
+	    fill_pipe_buffer();
+	    Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
+	    wait(NULL);
+	  }
+	  stop_all_childs();
+	}
+	else savefile_lpr = TRUE;
+      }
+      else {
+	Log(LOG_ERR, "ERROR ( %s/core ): unexpected return code from pcap_next_ex(). Exiting.\n", config.name);
+	exit(1);
+      }
+
       // XXX: pcap_savefile handling
+      printf("CI PASSO: %d : %u\n", ret, savefile_pkthdr->caplen); // XXX
+      continue; // XXX
     }
 
     pptrs.v4.f_len = ret;
