@@ -285,8 +285,7 @@ static const int cps_flen[] = {
   20
 };
 
-// XXX: #if defined __PMACCTD_C || defined __UACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C
-#if defined __PMACCTD_C || defined __UACCTD_C
+#if defined __PMACCTD_C || defined __UACCTD_C || defined __NFACCTD_C || defined __SFACCTD_C
 static struct _devices_struct _devices[] = {
 #if defined DLT_LOOP
   {null_handler, DLT_LOOP},

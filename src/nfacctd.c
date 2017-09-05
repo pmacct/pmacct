@@ -93,7 +93,7 @@ int main(int argc,char **argv, char **envp)
   struct plugin_requests req;
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
-  unsigned char netflow_packet[NETFLOW_MSG_SIZE];
+  unsigned char *netflow_packet;
   int logf, rc, yes=1, no=0, allowed;
   struct host_addr addr;
   struct hosts_table allow;
@@ -118,8 +118,7 @@ int main(int argc,char **argv, char **envp)
 
   struct pcap_device device;
   char errbuf[PCAP_ERRBUF_SIZE];
-  const u_char *savefile_pkt;
-  struct pcap_pkthdr *savefile_pkthdr;
+  struct packet_ptrs savefile_pptrs;
   int savefile_errors = 0, savefile_lpr = 0;
 
   unsigned char dummy_packet[64]; 
@@ -169,6 +168,7 @@ int main(int argc,char **argv, char **envp)
   sampling_map_caching = TRUE;
   find_id_func = NF_find_id;
   plugins_list = NULL;
+  netflow_packet = malloc(NETFLOW_MSG_SIZE);
 
   data_plugins = 0;
   tee_plugins = 0;
@@ -529,15 +529,20 @@ int main(int argc,char **argv, char **envp)
       exit(1);
     }
 
-/* XXX:
     device.link_type = pcap_datalink(device.dev_desc);
     for (idx = 0; _devices[idx].link_type != -1; idx++) {
       if (device.link_type == _devices[idx].link_type)
 	device.data = &_devices[idx];
     }
-*/
+
+    if (!device.data->handler) {
+      Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile: unsupported link layer.\n", config.name);
+      exit(1);
+    }
 
     device.active = TRUE;
+    config.handle_fragments = TRUE;
+    init_ip_fragment_handler();
   }
   else {
     /* If no IP address is supplied, let's set our default
@@ -965,10 +970,9 @@ int main(int argc,char **argv, char **envp)
   for (;;) {
     if (!config.pcap_savefile) {
       ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-      if (ret < 2) continue; /* we don't have enough data to decode the version */ 
     }
     else {
-      ret = pcap_next_ex(device.dev_desc, &savefile_pkthdr, &savefile_pkt);
+      ret = pcap_next_ex(device.dev_desc, &savefile_pptrs.pkthdr, (const u_char **)&savefile_pptrs.packet_ptr);
 
       if (ret == 1 /* all good */) savefile_errors = FALSE;
       else if (ret == -1 /* failed reading next packet */) {
@@ -998,11 +1002,20 @@ int main(int argc,char **argv, char **envp)
 	exit(1);
       }
 
-      // XXX: pcap_savefile handling
-      printf("CI PASSO: %d : %u\n", ret, savefile_pkthdr->caplen); // XXX
-      continue; // XXX
+      ret = FALSE;
+      (*device.data->handler)(savefile_pptrs.pkthdr, &savefile_pptrs);
+      if (savefile_pptrs.iph_ptr) {
+	(*savefile_pptrs.l3_handler)(&savefile_pptrs);
+	if (savefile_pptrs.payload_ptr) {
+	  netflow_packet = savefile_pptrs.payload_ptr;
+	  ret = savefile_pptrs.pkthdr->caplen - (savefile_pptrs.payload_ptr - savefile_pptrs.packet_ptr);
+	  // XXX: fill struct sockaddr_in client
+	}
+      }
     }
 
+    /* we have no data or not not enough data to decode the version */
+    if (!netflow_packet || ret < 2) continue;
     pptrs.v4.f_len = ret;
 
 #if defined ENABLE_IPV6
