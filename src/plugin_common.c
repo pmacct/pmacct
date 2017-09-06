@@ -812,7 +812,8 @@ void P_init_historical_acct(time_t now)
   basetime.tv_sec = now;
   basetime.tv_usec = 0;
 
-  if (config.sql_history == COUNT_MINUTELY) timeslot = config.sql_history_howmany*60;
+  if (config.sql_history == COUNT_SECONDLY) timeslot = config.sql_history_howmany;
+  else if (config.sql_history == COUNT_MINUTELY) timeslot = config.sql_history_howmany*60;
   else if (config.sql_history == COUNT_HOURLY) timeslot = config.sql_history_howmany*3600;
   else if (config.sql_history == COUNT_DAILY) timeslot = config.sql_history_howmany*86400;
   else if (config.sql_history == COUNT_WEEKLY) timeslot = config.sql_history_howmany*86400*7;

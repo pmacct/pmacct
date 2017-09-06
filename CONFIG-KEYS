@@ -1047,8 +1047,8 @@ DESC:		Enables historical accounting by placing accounted data into configurable
 		setting nfacctd_pro_rating to true. Note that this value is fully disjoint from the
 		*_refresh_time directives which set the time intervals at which data has to be written to
 		the backend instead. The final effect is close to time slots in a RRD file. Examples of
-		valid values are: '300' or '5m' - five minutes, '3600' or '1h' - one hour, '14400' or '4h'
-		- four hours, '86400' or '1d' - one day, '1w' - one week, '1M' - one month).
+		valid values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s' or
+		'4h' - four hours, '86400s' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
 
 KEY:            [ sql_history_offset | print_history_offset | amqp_history_offset | kafka_history_offset ]

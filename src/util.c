@@ -602,7 +602,8 @@ int sql_history_to_secs(int mu, int howmany)
 {
   int ret = 0;
 
-  if (mu == COUNT_MINUTELY) ret = howmany*60;
+  if (mu == COUNT_SECONDLY) ret = howmany;
+  else if (mu == COUNT_MINUTELY) ret = howmany*60;
   else if (mu == COUNT_HOURLY) ret = howmany*3600;
   else if (mu == COUNT_DAILY) ret = howmany*86400;
   else if (mu == COUNT_WEEKLY) ret = howmany*86400*7;

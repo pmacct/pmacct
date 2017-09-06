@@ -187,7 +187,8 @@ void sql_init_historical_acct(time_t now, struct insert_data *idata)
 
   if (config.sql_history) {
     idata->basetime = now;
-    if (config.sql_history == COUNT_MINUTELY) idata->timeslot = config.sql_history_howmany*60;
+    if (config.sql_history == COUNT_SECONDLY) idata->timeslot = config.sql_history_howmany;
+    else if (config.sql_history == COUNT_MINUTELY) idata->timeslot = config.sql_history_howmany*60;
     else if (config.sql_history == COUNT_HOURLY) idata->timeslot = config.sql_history_howmany*3600;
     else if (config.sql_history == COUNT_DAILY) idata->timeslot = config.sql_history_howmany*86400;
     else if (config.sql_history == COUNT_WEEKLY) idata->timeslot = config.sql_history_howmany*86400*7;
