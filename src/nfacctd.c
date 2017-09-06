@@ -178,6 +178,7 @@ int main(int argc,char **argv, char **envp)
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&server, 0, sizeof(server));
+  memset(&client, 0, sizeof(client));
   memset(&config, 0, sizeof(struct configuration));
   memset(&config_file, 0, sizeof(config_file));
   memset(&failed_plugins, 0, sizeof(failed_plugins));
@@ -644,10 +645,10 @@ int main(int argc,char **argv, char **envp)
       }
 #endif
     }
-
-    if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
-    else memset(&allow, 0, sizeof(allow));
   }
+
+  if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
+  else memset(&allow, 0, sizeof(allow));
 
   if (config.sampling_map) {
     load_id_file(MAP_SAMPLING, config.sampling_map, &sampling_table, &req, &sampling_map_allocated);
@@ -2227,7 +2228,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (version == 10) {
     struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrsv->v4.f_status;
 
-    entry->inc = FlowSeqInc;
+    if (entry) entry->inc = FlowSeqInc;
   }
 }
 

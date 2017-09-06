@@ -1268,6 +1268,8 @@ int check_allow(struct hosts_table *allow, struct sockaddr *sa)
 {
   int index;
 
+  if (!allow || !sa) return FALSE; 
+
   for (index = 0; index < allow->num; index++) {
     if (((struct sockaddr *)sa)->sa_family == allow->table[index].family) {
       if (allow->table[index].family == AF_INET) {
