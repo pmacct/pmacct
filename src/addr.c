@@ -304,7 +304,7 @@ int host_addr_mask_sa_cmp(struct host_addr *a1, struct host_mask *m1, struct soc
  * raw_to_sa() converts a supported family address into a sockaddr 
  * structure 
  */
-unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int8_t v4v6)
+unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int16_t port, u_int8_t v4v6)
 {
   struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
 #if defined ENABLE_IPV6
@@ -314,14 +314,14 @@ unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int8_t v4v6)
   if (v4v6 == AF_INET) {
     sa->sa_family = AF_INET;
     memcpy(&sa4->sin_addr.s_addr, src, 4);
-    sa4->sin_port = 0;
+    sa4->sin_port = port;
     return sizeof(struct sockaddr_in);
   }
 #if defined ENABLE_IPV6
   if (v4v6 == AF_INET6) {
     sa->sa_family = AF_INET6;
     ip6_addr_cpy(&sa6->sin6_addr, src);
-    sa6->sin6_port = 0;
+    sa6->sin6_port = port;
     return sizeof(struct sockaddr_in6);
   }
 #endif
@@ -654,3 +654,23 @@ void ipv4_to_ipv4_mapped(struct sockaddr_storage *sas)
   sa6->sin6_port = sa4->sin_port;
 }
 #endif
+
+u_int8_t etype_to_af(u_int16_t etype)
+{
+  if (etype == ETHERTYPE_IP) return AF_INET;
+#if defined ENABLE_IPV6
+  else if (etype == ETHERTYPE_IPV6) return AF_INET6;
+#endif
+
+  return FALSE;
+}
+
+u_int16_t af_to_etype(u_int8_t af)
+{
+  if (af == AF_INET) return ETHERTYPE_IP;
+#if defined ENABLE_IPV6
+  else if (af == AF_INET6) return ETHERTYPE_IPV6;
+#endif
+
+  return FALSE;
+}

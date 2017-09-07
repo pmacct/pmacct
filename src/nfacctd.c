@@ -1010,7 +1010,19 @@ int main(int argc,char **argv, char **envp)
 	if (savefile_pptrs.payload_ptr) {
 	  netflow_packet = savefile_pptrs.payload_ptr;
 	  ret = savefile_pptrs.pkthdr->caplen - (savefile_pptrs.payload_ptr - savefile_pptrs.packet_ptr);
-	  // XXX: fill struct sockaddr_in client
+
+	  if (savefile_pptrs.l4_proto == IPPROTO_UDP) {
+	    if (savefile_pptrs.l3_proto == ETHERTYPE_IP) {
+	      raw_to_sa((struct sockaddr *)&client, (char *) &((struct pm_iphdr *)savefile_pptrs.iph_ptr)->ip_src.s_addr,
+			(u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET);
+	    }
+#if defined ENABLE_IPV6
+	    else if (savefile_pptrs.l3_proto == ETHERTYPE_IPV6) {
+	      raw_to_sa((struct sockaddr *)&client, (char *) &((struct ip6_hdr *)savefile_pptrs.iph_ptr)->ip6_src,
+			(u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET6);
+	    }
+#endif
+	  }
 	}
       }
     }

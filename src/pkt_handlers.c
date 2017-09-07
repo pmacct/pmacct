@@ -5282,11 +5282,11 @@ void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   memset(&pptrs->geoipv2_src, 0, sizeof(pptrs->geoipv2_src));
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    raw_to_sa(sa, (char *) &((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr, AF_INET);
+    raw_to_sa(sa, (char *) &((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, 0, AF_INET);
   }
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-    raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, AF_INET6);
+    raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, 0, AF_INET6);
   }
 #endif
 
@@ -5308,11 +5308,11 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   memset(&pptrs->geoipv2_dst, 0, sizeof(pptrs->geoipv2_dst));
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    raw_to_sa(sa, (char *) &((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr, AF_INET);
+    raw_to_sa(sa, (char *) &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, 0, AF_INET);
   }
 #if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-    raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, AF_INET6);
+    raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, 0, AF_INET6);
   }
 #endif
 
