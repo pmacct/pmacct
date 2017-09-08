@@ -164,11 +164,18 @@ A: The portion of the packet accounted starts from the IPv4/IPv6 header (inclusi
    directly within pmacct via the 'adjb' action (sql_preprocess).
 
 
-Q11: How to get the historical accounting enabled ? SQL table have a 'stamp_inserted'
-   and 'stamp_updated' fields but they remain empty.
-A: Historical accounting is easily enabled by adding to the SQL plugin configuration a
-   'sql_history' directive. Associate to it a 'sql_history_roundoff'. For examples and
-   syntax, refer to CONFIG-KEYS and QUICKSTART documents. 
+Q11: What is historical accounting feature and how to get it configured?
+A: pmacct allows to optionally define arbitrary time-bins (ie. 5 mins, 1 hour, etc.)
+   and assign collected data to it basing on a timestamp. This is in brief called
+   historical accounting and is enabled via *history* directives (ie. print_history,
+   print_history_roundoff, sql_history, etc.). The time-bin to which data is allocated 
+   to is stored in the 'stamp_inserted' field (if supported by the plugin in use, ie.
+   all except 'print', where to avoid redundancy this is encoded as part of the file
+   name, and 'memory'). Flow data is by default assigned to a time-bin basing on its
+   start time or - not applying that or missing such info - the timestamp of the whole
+   datagram or - not applying that or missing such info - the time of arrival at the
+   collector. Where multiple choices are supported, ie. NetFlow/IPFIX, the directive
+   nfacctd_time_new allows to explicitely select the time source. 
 
 
 Q12: Counters via CLI are good for (email, web) reporting but not enough. What are the

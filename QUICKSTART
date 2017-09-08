@@ -713,9 +713,9 @@ can read on the following page how to get it installed:
 
 http://kafka-python.readthedocs.org/
 
-This is a pointer to the quick start guide to Kafka (0.10.0):
+This is a pointer to the quick start guide to Kafka:
 
-http://kafka.apache.org/0100/quickstart.html
+https://kafka.apache.org/quickstart
 
 When using Kafka over a dedicated node or VM, you will have to update the default
 Kafka server configuration. Edit with your favorite text editor the file named
