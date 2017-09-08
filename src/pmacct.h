@@ -259,6 +259,8 @@ struct pcap_device {
   pcap_t *dev_desc;
   int link_type;
   int active;
+  int errors; /* error count when reading from a savefile */
+  int lpr; /* flag: last packet read from savefile */
   struct _devices_struct *data; 
 };
 
@@ -363,6 +365,7 @@ EXT void pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
 EXT int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void compute_once();
 EXT void set_index_pkt_ptrs(struct packet_ptrs *);
+EXT ssize_t recvfrom_savefile(struct pcap_device *, void **, struct sockaddr *);
 #undef EXT
 
 #ifndef HAVE_STRLCPY

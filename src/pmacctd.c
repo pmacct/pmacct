@@ -767,12 +767,7 @@ int main(int argc,char **argv, char **envp)
       }
     }
   }
-  else if (config.pcap_savefile) {
-    if ((device.dev_desc = pcap_open_offline(config.pcap_savefile, errbuf)) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
-      exit_all(1);
-    }
-  }
+  else if (config.pcap_savefile) open_pcap_savefile(&device, config.pcap_savefile);
 
   device.active = TRUE;
   glob_pcapt = device.dev_desc; /* SIGINT/stats handling */

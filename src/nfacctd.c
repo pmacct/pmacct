@@ -117,9 +117,6 @@ int main(int argc,char **argv, char **envp)
   struct ip_mreq multi_req4;
 
   struct pcap_device device;
-  char errbuf[PCAP_ERRBUF_SIZE];
-  struct packet_ptrs savefile_pptrs;
-  int savefile_errors = 0, savefile_lpr = 0;
 
   unsigned char dummy_packet[64]; 
   unsigned char dummy_packet_vlan[64]; 
@@ -525,23 +522,7 @@ int main(int argc,char **argv, char **envp)
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
 
   if (config.pcap_savefile) {
-    if ((device.dev_desc = pcap_open_offline(config.pcap_savefile, errbuf)) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
-      exit(1);
-    }
-
-    device.link_type = pcap_datalink(device.dev_desc);
-    for (idx = 0; _devices[idx].link_type != -1; idx++) {
-      if (device.link_type == _devices[idx].link_type)
-	device.data = &_devices[idx];
-    }
-
-    if (!device.data->handler) {
-      Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile: unsupported link layer.\n", config.name);
-      exit(1);
-    }
-
-    device.active = TRUE;
+    open_pcap_savefile(&device, config.pcap_savefile);
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
   }
@@ -973,58 +954,7 @@ int main(int argc,char **argv, char **envp)
       ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
     else {
-      ret = pcap_next_ex(device.dev_desc, &savefile_pptrs.pkthdr, (const u_char **)&savefile_pptrs.packet_ptr);
-
-      if (ret == 1 /* all good */) savefile_errors = FALSE;
-      else if (ret == -1 /* failed reading next packet */) {
-	savefile_errors++;
-	if (savefile_errors == PCAP_SAVEFILE_MAX_ERRORS) {
-	  Log(LOG_ERR, "ERROR ( %s/core ): pcap_ext_ex() max errors reached (%u). Exiting.\n", config.name, PCAP_SAVEFILE_MAX_ERRORS);
-	  exit(1);
-	}
-	else {
-	  Log(LOG_WARNING, "WARN ( %s/core ): pcap_ext_ex() failed: %s. Skipping packet.\n", config.name, pcap_geterr(device.dev_desc));
-	  continue;
-	}
-      }
-      else if (ret == -2 /* last packet in a pcap_savefile */) {
-	if (savefile_lpr) {
-	  if (config.sf_wait) {
-	    fill_pipe_buffer();
-	    Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
-	    wait(NULL);
-	  }
-	  stop_all_childs();
-	}
-	else savefile_lpr = TRUE;
-      }
-      else {
-	Log(LOG_ERR, "ERROR ( %s/core ): unexpected return code from pcap_next_ex(). Exiting.\n", config.name);
-	exit(1);
-      }
-
-      ret = FALSE;
-      (*device.data->handler)(savefile_pptrs.pkthdr, &savefile_pptrs);
-      if (savefile_pptrs.iph_ptr) {
-	(*savefile_pptrs.l3_handler)(&savefile_pptrs);
-	if (savefile_pptrs.payload_ptr) {
-	  netflow_packet = savefile_pptrs.payload_ptr;
-	  ret = savefile_pptrs.pkthdr->caplen - (savefile_pptrs.payload_ptr - savefile_pptrs.packet_ptr);
-
-	  if (savefile_pptrs.l4_proto == IPPROTO_UDP) {
-	    if (savefile_pptrs.l3_proto == ETHERTYPE_IP) {
-	      raw_to_sa((struct sockaddr *)&client, (char *) &((struct pm_iphdr *)savefile_pptrs.iph_ptr)->ip_src.s_addr,
-			(u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET);
-	    }
-#if defined ENABLE_IPV6
-	    else if (savefile_pptrs.l3_proto == ETHERTYPE_IPV6) {
-	      raw_to_sa((struct sockaddr *)&client, (char *) &((struct ip6_hdr *)savefile_pptrs.iph_ptr)->ip6_src,
-			(u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET6);
-	    }
-#endif
-	  }
-	}
-      }
+      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client);
     }
 
     /* we have no data or not not enough data to decode the version */

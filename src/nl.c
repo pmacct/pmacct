@@ -574,3 +574,64 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L3_PTR] = pptrs->l3_proto;
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }
+
+ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr)
+{
+  struct packet_ptrs savefile_pptrs;
+  ssize_t ret = 0;
+  int pcap_ret;
+
+  pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs.pkthdr, (const u_char **)&savefile_pptrs.packet_ptr);
+
+  if (pcap_ret == 1 /* all good */) device->errors = FALSE;
+  else if (pcap_ret == -1 /* failed reading next packet */) {
+    device->errors++;
+    if (device->errors == PCAP_SAVEFILE_MAX_ERRORS) {
+      Log(LOG_ERR, "ERROR ( %s/core ): pcap_ext_ex() max errors reached (%u). Exiting.\n", config.name, PCAP_SAVEFILE_MAX_ERRORS);
+      exit(1);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/core ): pcap_ext_ex() failed: %s. Skipping packet.\n", config.name, pcap_geterr(device->dev_desc));
+      return 0;
+    }
+  }
+  else if (pcap_ret == -2 /* last packet in a pcap_savefile */) {
+    if (device->lpr) {
+      if (config.sf_wait) {
+	fill_pipe_buffer();
+	Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
+	wait(NULL);
+      }
+      stop_all_childs();
+    }
+    else device->lpr = TRUE;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/core ): unexpected return code from pcap_next_ex(). Exiting.\n", config.name);
+    exit(1);
+  }
+
+  (*device->data->handler)(savefile_pptrs.pkthdr, &savefile_pptrs);
+  if (savefile_pptrs.iph_ptr) {
+    (*savefile_pptrs.l3_handler)(&savefile_pptrs);
+    if (savefile_pptrs.payload_ptr) {
+      (*buf) = savefile_pptrs.payload_ptr;
+      ret = savefile_pptrs.pkthdr->caplen - (savefile_pptrs.payload_ptr - savefile_pptrs.packet_ptr);
+
+      if (savefile_pptrs.l4_proto == IPPROTO_UDP) {
+	if (savefile_pptrs.l3_proto == ETHERTYPE_IP) {
+	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)savefile_pptrs.iph_ptr)->ip_src.s_addr,
+		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET);
+	}
+#if defined ENABLE_IPV6
+	else if (savefile_pptrs.l3_proto == ETHERTYPE_IPV6) {
+	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)savefile_pptrs.iph_ptr)->ip6_src,
+		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET6);
+	}
+#endif
+      }
+    }
+  }
+
+  return ret;
+}
