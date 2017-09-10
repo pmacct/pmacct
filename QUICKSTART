@@ -2038,17 +2038,24 @@ NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs);
 you can confirm whether templates are being exported/replicated/received with a
 touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id". 
 
-e) A NetFlow/sFlow packet capture in libpcap format suitable for replay can
-be produced with tcpdump, ie. "tcpdump -i <interface> -n -s 0 -w <output file>
-port <sfacctd/nfacctd listening port>". The output file can be replayed in
-lab with tcpreplay. Before replaying, L2/L3 must be adjusted to reflect the
-lab environment; this can be done with the tcprewrite tool of the tcpreplay
-package, ie.: "tcprewrite --enet-smac=<src MAC address> --enet-dmac=<dst MAC
-address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
---infile=<input file, ie. output from tcpdump> --outfile=<output file>". Then
-the output file from tcprewrite can be supplied to tcpreplay for the actual
-replay, ie.: "tcpreplay -i <output interface> -x <speed multiplicator> <input
-file>". 
+e) Replay packets can be needed, for example, to troubleshoot the behaviour
+of one of the pmacct daemons. A capture in libpcap format, suitable for
+replay, can be produced with tcpdump, ie. for NetFlow/IPFIX/sFlow via the
+"tcpdump -i <interface> -n -s 0 -w <output file> port <sfacctd/nfacctd
+listening port>" command-line. The output file can be replayed by using the
+pcap_savefile (-I) and, optionally, the pcap_savefile_wait (-W) directives,
+ie.: "nfacctd -I <pcap savefile> <.. >". For more advanced use-cases, ie.
+loop indefinitely through the pcap file and run it with a speed multiplicator
+in order to stress test the daemon, the tcpreplay tool can be used for the
+purpose. In this case, before replaying NetFlow/IPFIX/sFlow, L2/L3 of
+captured packets must be adjusted to reflect the lab environment; this can
+be done with the tcprewrite tool of the tcpreplay package, ie.: "tcprewrite
+--enet-smac=<src MAC address> --enet-dmac= <dst MAC address> -S <src IP
+address rewrite> -D <dst IP address rewrite> --fixcsum --infile= <input
+file, ie. output from tcpdump> --outfile=<output file>". Then the output
+file from tcprewrite can be supplied to tcpreplay for the actual replay to
+the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output
+interface> <input file>". 
 
 f) Buffering is often an element to tune. While buffering internal to pmacct, 
 configured with plugin_buffer_size and plugin_pipe_size, returns warning

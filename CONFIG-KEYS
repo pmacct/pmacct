@@ -353,19 +353,20 @@ DESC:		If set to true, this option causes 'pmacctd' to wait for the listening de
 DEFAULT:	false
 
 KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD]
-DESC:		File in libpcap savefile format from which read data (this is in alternative to binding
-		to an intervace). The file has to be correctly finalized in order to be read. As soon
-		as 'pmacctd' is finished with the file, it exits (unless the 'pcap_savefile_wait' config
-		directive is specified). The directive is mutually exclusive with 'interface' (-i) for
-		pmacctd (since the other daemons do not support it). 
+DESC:		File in libpcap savefile format to read data from (as an alternative to live data
+		collection. The file has to be correctly finalized in order to be read. As soon as
+		the daemon finished processing the file, it exits (unless the 'pcap_savefile_wait'
+		config directive is specified). The directive is mutually exclusive with 'interface'
+		(-i) for pmacctd and with [ns]facctd_ip (-L) and [ns]facctd_port (-l) for nfacctd
+		and sfacctd respectively.
 DEFAULT:	none
 
 KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD]
 VALUES:         [ true | false ]
-DESC:           If set to true, this option will cause 'pmacctd' to wait indefinitely for a signal (ie.
-		CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished with
-		the supplied libpcap savefile (pcap_savefile). It's particularly useful when inserting
-		fixed amounts of data into memory tables by keeping the daemon alive.
+DESC:           If set to true, this option will cause the daemon to wait indefinitely for a signal
+		(ie. CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished
+		processing  the supplied libpcap savefile (pcap_savefile). This is particularly useful
+		when inserting fixed amounts of data into memory tables.
 DEFAULT:        false
 
 KEY:		promisc (-N) [GLOBAL, PMACCTD_ONLY]

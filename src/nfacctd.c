@@ -67,6 +67,8 @@ void usage_daemon(char *prog_name)
   printf("  -F  \tWrite Core Process PID into the specified file\n");
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -u  \tLeave IP protocols in numerical format\n");
+  printf("  -I  \tRead packets from the specified savefile\n");
+  printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
