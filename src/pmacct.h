@@ -260,7 +260,6 @@ struct pcap_device {
   int link_type;
   int active;
   int errors; /* error count when reading from a savefile */
-  int lpr; /* flag: last packet read from savefile */
   struct _devices_struct *data; 
 };
 

@@ -596,15 +596,12 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
     }
   }
   else if (pcap_ret == -2 /* last packet in a pcap_savefile */) {
-    if (device->lpr) {
-      if (config.sf_wait) {
-	fill_pipe_buffer();
-	Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
-	wait(NULL);
-      }
-      stop_all_childs();
+    if (config.sf_wait) {
+      fill_pipe_buffer();
+      Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
+      wait(NULL);
     }
-    else device->lpr = TRUE;
+    else stop_all_childs();
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/core ): unexpected return code from pcap_next_ex(). Exiting.\n", config.name);
