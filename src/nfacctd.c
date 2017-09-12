@@ -1288,7 +1288,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   struct template_cache_entry *tpl;
   struct data_hdr_v9 *data_hdr;
   struct packet_ptrs *pptrs = &pptrsv->v4;
-  u_int16_t fid, off = 0, flowoff, flowsetlen, direction, FlowSeqInc = 0; 
+  u_int16_t fid, off = 0, flowoff, flowsetlen, flowsetNo, flowsetCount, direction, FlowSeqInc = 0; 
   u_int32_t HdrSz = 0, SourceId = 0, FlowSeq = 0;
 
   if (version == 9) {
@@ -1296,6 +1296,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     if (len >= HdrSz) {
       SourceId = ntohl(hdr_v9->source_id);
       FlowSeq = ntohl(hdr_v9->flow_sequence);
+      flowsetNo = htons(hdr_v9->count);
+      flowsetCount = 0;
     }
   }
   else if (version == 10) {
@@ -1304,6 +1306,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       SourceId = ntohl(hdr_v10->source_id);
       FlowSeq = ntohl(hdr_v10->flow_sequence);
     }
+    flowsetNo = 0;
+    flowsetCount = 0;
   }
 
   if (config.debug) {
@@ -2166,7 +2170,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     off += flowsetlen;
   }
 
-  if (off < len) goto process_flowset;
+  if ((version == 9 && (flowsetCount + 1) < flowsetNo && off < len) ||
+      (version == 10 && off < len)) {
+    flowsetCount++;
+    goto process_flowset;
+  }
 
   /* Set IPFIX Sequence number increment */
   if (version == 10) {
