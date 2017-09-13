@@ -734,6 +734,11 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
       if (config.acct_type == ACCT_PM) {
 	channels_list[index].phandler[primitives] = counters_handler;
+
+	primitives++;
+	if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = time_new_handler;
+	else channels_list[index].phandler[primitives] = time_pcap_handler; /* default */
+
 	if (config.sfacctd_renormalize && config.ext_sampling_rate) {
 	  primitives++;
 	  channels_list[index].phandler[primitives] = counters_renormalize_handler;
@@ -741,8 +746,8 @@ void evaluate_packet_handlers()
       }
       else if (config.acct_type == ACCT_NF) {
 	channels_list[index].phandler[primitives] = NF_counters_handler;
-	primitives++;
 
+	primitives++;
 	if (config.nfacctd_time == NF_TIME_SECS) channels_list[index].phandler[primitives] = NF_time_secs_handler;
 	else if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = NF_time_new_handler;
 	else channels_list[index].phandler[primitives] = NF_time_msecs_handler; /* default */
@@ -1158,11 +1163,6 @@ void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     pptrs->frag_sum_pkts = 0;
   }
 
-  pdata->time_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
-  pdata->time_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
-  pdata->time_end.tv_sec = 0;
-  pdata->time_end.tv_usec = 0;
-
   pdata->flow_type = pptrs->flow_type;
 }
 
@@ -1176,6 +1176,26 @@ void counters_renormalize_handler(struct channels_list_entry *chptr, struct pack
   pdata->pkt_num = pdata->pkt_num*config.ext_sampling_rate; 
 
   pptrs->renormalized = TRUE;
+}
+
+void time_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->time_start.tv_sec = 0;
+  pdata->time_start.tv_usec = 0;
+  pdata->time_end.tv_sec = 0;
+  pdata->time_end.tv_usec = 0;
+}
+
+void time_pcap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  pdata->time_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
+  pdata->time_start.tv_usec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_usec;
+  pdata->time_end.tv_sec = 0;
+  pdata->time_end.tv_usec = 0;
 }
 
 void post_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

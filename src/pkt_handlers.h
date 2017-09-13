@@ -54,6 +54,8 @@ EXT void ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void time_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void time_pcap_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void post_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void post_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

@@ -429,9 +429,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
-    if (dyn_table &&
-	(!dyn_table_time_only ||
-	(config.acct_type == ACCT_NF && !config.nfacctd_time_new))) {
+    if (dyn_table && (!dyn_table_time_only || !config.nfacctd_time_new)) {
       time_t stamp = 0;
 
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?

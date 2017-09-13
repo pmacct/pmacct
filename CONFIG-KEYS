@@ -1461,12 +1461,12 @@ DESC:		Makes 'nfacctd' expect times included in NetFlow header to be in seconds 
 		for secs and msecs timestamps, increasing collector awareness.
 DEFAULT:        false
 
-KEY:		nfacctd_time_new [GLOBAL, NFACCTD_ONLY]
+KEY:		[ nfacctd_time_new | pmacctd_time_new ] [GLOBAL, NO_SFACCTD, NO_UACCTD]
 VALUES:		[ true | false ]
-DESC:		Makes 'nfacctd' to ignore timestamps included in NetFlow header and build new ones. This gets
-		particularly useful to assign flows to time-bins based on the flow arrival time at the collector
-		rather than the flow start time. An application for it is when historical accounting is enabled
-		('sql_history') and an INSERT-only mechanism is in use ('sql_dont_try_update', 'sql_use_copy').
+DESC:		Makes the daemon to ignore external timestamps associated to data, ie. included in NetFlow
+		header or pcap header, and generate new ones (reflecting data arrival time to the collector).
+		This gets particularly useful to assign flows to time-bins based on the flow arrival time at
+		the collector rather than the flow original (start) time.
 DEFAULT:        false
 
 KEY:		nfacctd_pro_rating [NFACCTD_ONLY]
