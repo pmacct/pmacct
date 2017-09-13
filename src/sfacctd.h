@@ -55,6 +55,7 @@ enum INMCounters_version {
 };
 
 typedef struct _SFSample {
+  struct timeval *ts;
   struct in_addr sourceIP;
   SFLAddress agent_addr;
   u_int32_t agentSubId;

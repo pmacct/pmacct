@@ -575,7 +575,7 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }
 
-ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr)
+ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts)
 {
   struct packet_ptrs savefile_pptrs;
   ssize_t ret = 0;
@@ -612,6 +612,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
   if (savefile_pptrs.iph_ptr) {
     (*savefile_pptrs.l3_handler)(&savefile_pptrs);
     if (savefile_pptrs.payload_ptr) {
+      if (ts) (*ts) = &savefile_pptrs.pkthdr->ts; 
       (*buf) = savefile_pptrs.payload_ptr;
       ret = savefile_pptrs.pkthdr->caplen - (savefile_pptrs.payload_ptr - savefile_pptrs.packet_ptr);
 

@@ -1021,7 +1021,7 @@ int main(int argc,char **argv, char **envp)
       ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
     else {
-      ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client);
+      ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client, &spp.ts);
     }
     spp.rawSample = pptrs.v4.f_header = sflow_packet;
     spp.rawSampleLen = pptrs.v4.f_len = ret;

@@ -956,7 +956,7 @@ int main(int argc,char **argv, char **envp)
       ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
     else {
-      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client);
+      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL);
     }
 
     /* we have no data or not not enough data to decode the version */
