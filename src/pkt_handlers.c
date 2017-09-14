@@ -766,7 +766,7 @@ void evaluate_packet_handlers()
 	}
       }
       else if (config.acct_type == ACCT_SF) {
-	channels_list[index].phandler[primitives] = SF_counters_new_handler;
+	channels_list[index].phandler[primitives] = SF_counters_handler;
 	if (config.sfacctd_renormalize) {
 	  primitives++;
 	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
@@ -4669,15 +4669,23 @@ void SF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   pdata->flo_num = 1;
 }
 
-void SF_counters_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void SF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->pkt_len = sample->sampledPacketSize;
   pdata->pkt_num = 1;
-  pdata->time_start.tv_sec = 0;
-  pdata->time_start.tv_usec = 0;
+
+  if (!config.nfacctd_time_new && sample->ts) { 
+    pdata->time_start.tv_sec = sample->ts->tv_sec;
+    pdata->time_start.tv_usec = sample->ts->tv_usec;
+  }
+  else {
+    pdata->time_start.tv_sec = 0;
+    pdata->time_start.tv_usec = 0;
+  }
+
   pdata->time_end.tv_sec = 0;
   pdata->time_end.tv_usec = 0;
 

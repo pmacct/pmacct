@@ -598,6 +598,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_as", cfg_key_nfacctd_as_new},
   {"sfacctd_net", cfg_key_nfacctd_net},
   {"sfacctd_peer_as", cfg_key_nfprobe_peer_as},
+  {"sfacctd_time_new", cfg_key_nfacctd_time_new},
   {"sfacctd_pipe_size", cfg_key_nfacctd_pipe_size},
   {"sfacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"sfacctd_disable_checks", cfg_key_nfacctd_disable_checks},

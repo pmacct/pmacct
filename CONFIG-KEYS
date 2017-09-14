@@ -1461,7 +1461,7 @@ DESC:		Makes 'nfacctd' expect times included in NetFlow header to be in seconds 
 		for secs and msecs timestamps, increasing collector awareness.
 DEFAULT:        false
 
-KEY:		[ nfacctd_time_new | pmacctd_time_new ] [GLOBAL, NO_SFACCTD, NO_UACCTD]
+KEY:		[ nfacctd_time_new | pmacctd_time_new | sfacctd_time_new ] [GLOBAL, NO_UACCTD]
 VALUES:		[ true | false ]
 DESC:		Makes the daemon to ignore external timestamps associated to data, ie. included in NetFlow
 		header or pcap header, and generate new ones (reflecting data arrival time to the collector).

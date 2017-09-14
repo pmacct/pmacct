@@ -154,7 +154,7 @@ EXT void SF_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, c
 EXT void SF_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-EXT void SF_counters_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
