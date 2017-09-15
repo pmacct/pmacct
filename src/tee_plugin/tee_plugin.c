@@ -81,12 +81,8 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  if (config.nfprobe_receiver && config.tee_receivers) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): tee_receiver and tee_receivers are mutually exclusive. Exiting ...\n", config.name, config.type);
-    exit_plugin(1);
-  }
-  else if (!config.nfprobe_receiver && !config.tee_receivers) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): No receivers specified: tee_receiver or tee_receivers is required. Exiting ...\n", config.name, config.type);
+  if (!config.tee_receivers) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): No receivers specified: tee_receivers is required. Exiting ...\n", config.name, config.type);
     exit_plugin(1);
   }
 
@@ -116,21 +112,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     else memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
   }
 
-  if (config.nfprobe_receiver) {
-    pool_idx = 0; recv_idx = 0;
-
-    target = &receivers.pools[pool_idx].receivers[recv_idx];
-    target->dest_len = sizeof(target->dest);
-    if (Tee_parse_hostport(config.nfprobe_receiver, (struct sockaddr *) &target->dest, &target->dest_len)) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid receiver %s . ", config.name, config.type, config.nfprobe_receiver);
-      exit_plugin(1);
-    }
-    else {
-      recv_idx++; receivers.pools[pool_idx].num = recv_idx;
-      pool_idx++; receivers.num = pool_idx;
-    }
-  }
-  else if (config.tee_receivers) {
+  if (config.tee_receivers) {
     int recvs_allocated = FALSE;
 
     req.key_value_table = (void *) &receivers;

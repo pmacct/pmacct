@@ -658,7 +658,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sfprobe_direction", cfg_key_nfprobe_direction},
   {"sfprobe_ifindex", cfg_key_nfprobe_ifindex},
   {"sfprobe_ifspeed", cfg_key_sfprobe_ifspeed},
-  {"tee_receiver", cfg_key_nfprobe_receiver},
   {"tee_receivers", cfg_key_tee_receivers},
   {"tee_source_ip", cfg_key_nfprobe_source_ip},
   {"tee_transparent", cfg_key_tee_transparent},
