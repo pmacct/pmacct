@@ -257,6 +257,8 @@ DESC:		Core Process and each of the plugin instances are run into different proc
 
 		In case of data loss messages containing the "missing data detected" string will be
 		logged - indicating the plugin affected and current settings.
+
+		Alternatively see at plugin_pipe_zmq and plugin_pipe_zmq_profile.
 DEFAULT:	4MB
 
 KEY:		plugin_buffer_size 
@@ -268,7 +270,9 @@ DESC:		By defining the transfer buffer size, in bytes, this directive enables bu
 		with the home-grown circular queue implemetation, the value has to be minor/equal to
 		the size defined by 'plugin_pipe_size' and keeping a ratio between 1:100 and 1:1000
 		among the two is considered good practice; the circular queue of plugin_pipe_size size
-		is partitioned in chunks of plugin_buffer_size.
+		is partitioned in chunks of plugin_buffer_size. 
+
+		Alternatively see at plugin_pipe_zmq and plugin_pipe_zmq_profile.
 DEFAULT:	Set to the size of the smallest element to buffer 
 
 KEY:		plugin_pipe_check_core_pid
@@ -1601,49 +1605,52 @@ DESC:		Full pathname to a file containing tag mappings. Tags can be internal-onl
 		sub-tree for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is
 		evaluated in the Core Process and each plugin can be defined a local pre_tag_map. Result of
 		evaluation of pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/
-		sfprobe plugin.  
+		sfprobe plugin. Number of map entries (by default 384) can be modified via maps_entries.
+		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2
+		nfacctd").  
 DEFAULT:	none
 
 KEY:		maps_entries
 DESC:		Defines the maximum number of entries a map (ie. pre_tag_map and all directives with the
-		'MAP' flag) can contain. The default value is suitable for most scenarios, though tuning it
-		could be required either to save on memory or to allow for more entries. Refer to the
-		specific map directives documentation in this file to see which are affected by this setting.
+		'MAP' flag in this document) can contain. The default value is suitable for most scenarios,
+		though tuning it could be required either to save on memory or to allow for more entries.
+		Refer to the specific map directives documentation in this file to see which are affected by
+		this setting.
 DEFAULT:	384
 
 KEY:            maps_row_len
-DESC:		Defines the maximum length of map (ie. pre_tag_map and all directives with the 'MAP' flag)
-		rows. The default value is suitable for most scenario, though tuning it could be required
-		either to save on memory or to allow for more entries.
+DESC:		Defines the maximum length of map (ie. pre_tag_map and all directives with the 'MAP' flag in
+		this document) rows. The default value is suitable for most scenario, though tuning it could
+		be required either to save on memory or to allow for more entries.
 DEFAULT:	256
 
 KEY:		maps_refresh [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		When enabled, this directive allows to reload map files (ie. pre_tag_map and all directives
-		with the 'MAP' flag) without restarting the daemon instance. For example, it may result
-		particularly useful to reload pre_tag_map or networks_file entries in order to reflect some
-		change in the network. After having modified the map files, a SIGUSR2 has to be sent (e.g.:
-		in the simplest case "killall -USR2 pmacctd") to the daemon to notify the change. If such
-		signal is sent to the daemon and this directive is not enabled, the signal is silently
-		discarded. The Core Process is in charge of processing the Pre-Tagging map; plugins are
-		devoted to Networks and Ports maps instead. Then, because signals can be sent either to the
-		whole daemon (killall) or to just a specific process (kill), this mechanism also offers the
-		advantage to elicit local reloads.
+		with the 'MAP' flag in this document) without restarting the daemon instance. For example,
+		it may result particularly useful to reload pre_tag_map or networks_file entries in order
+		to reflect some change in the network. After having modified the map files, a SIGUSR2 has
+		to be sent (e.g.: in the simplest case "killall -USR2 pmacctd") to the daemon to notify the
+		change. If such signal is sent to the daemon and this directive is not enabled, the signal
+		is silently discarded. The Core Process is in charge of processing the Pre-Tagging map;
+		plugins are devoted to Networks and Ports maps instead. Then, because signals can be sent
+		either to the whole daemon (killall) or to just a specific process (kill), this mechanism
+		also offers the advantage to elicit local reloads.
 DEFAULT:        true
 
 KEY:		maps_index [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Enables indexing of maps (ie. pre_tag_map and all directives with the 'MAP' flag) to
-		increase lookup speeds on large maps and/or sustained lookup rates. Indexes are automatically
-		defined basing on structure and content of the map, up to a maximum of 8. Indexing of
-		pre_tag_map, bgp_peer_src_as_map, flow_to_rd_map is supported. Only a sub-set of pre_tag_map
-		fields are supported, including: ip, bgp_nexthop, vlan, cvlan, src_mac, mpls_vpn_rd,
-		src_as, dst_as, peer_src_as, peer_dst_as, input, output. Only IP addresses, ie. no IP prefixes,
-		are supported as part of the 'ip' field. Also, negations are not supported (ie. 'in=-216' match
-		all but input interface 216). bgp_agent_map and sampling_map implement a separate caching
-		mechanism and hence do not leverage this feature. Duplicates in the key part of the map
-		entry, key being defined as all fields except set_* ones, are not supported and may result
-		in a "out of index space" message.
+DESC:		Enables indexing of maps (ie. pre_tag_map and all directives with the 'MAP' flag in this
+		document) to increase lookup speeds on large maps and/or sustained lookup rates. Indexes
+		are automatically defined basing on structure and content of the map, up to a maximum of
+		8. Indexing of pre_tag_map, bgp_peer_src_as_map, flow_to_rd_map is supported. Only a sub-
+		set of pre_tag_map fields are supported, including: ip, bgp_nexthop, vlan, cvlan, src_mac,
+		mpls_vpn_rd, src_as, dst_as, peer_src_as, peer_dst_as, input, output. Only IP addresses,
+		ie. no IP prefixes, are supported as part of the 'ip' field. Also, negations are not
+		supported (ie. 'in=-216' match all but input interface 216). bgp_agent_map and sampling_map
+		implement a separate caching mechanism and hence do not leverage this feature. Duplicates
+		in the key part of the map entry, key being defined as all fields except set_* ones, are
+		not supported and may result in a "out of index space" message.
 DEFAULT:        false
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
@@ -1695,7 +1702,9 @@ DESC:           Full pathname to a file containing traffic sampling mappings. It
 		enabled (nfacctd_renormalize or sfacctd_renormalize set to true) in order for the feature to
 		work. If a specific router is not defined in the map, the sampling rate advertised by the
 		router itself is applied. Take a look to the examples/ sub-tree 'sampling.map.example' for all
-		supported keys and detailed examples.
+		supported keys and detailed examples. Number of map entries (by default 384) can be modified
+		via maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal
+		(ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		[ pmacctd_force_frag_handling | uacctd_force_frag_handling ] [GLOBAL, NO_NFACCTD, NO_SFACCTD]
@@ -2063,8 +2072,8 @@ KEY:		bgp_peer_src_as_map [GLOBAL, MAP]
 DESC:		Full pathname to a file containing source peer AS mappings. The AS can be mapped to one or
 		a combination of: ifIndex, source MAC address and BGP next-hop (query against the BGP RIB
 		to look up the source IP prefix). This is sufficient to model popular tecniques for both
-		public and private BGP peerings. Number of map entries (by default 384) can be modified via 
-		maps_entries. Sample map in 'examples/peers.map.example'.
+		public and private BGP peerings. Sample map in 'examples/peers.map.example'. Content can
+		be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:            bgp_src_std_comm_type [GLOBAL]
@@ -2105,8 +2114,9 @@ DEFAULT:	none
 KEY:            bgp_src_local_pref_map [GLOBAL, MAP]
 DESC:           Full pathname to a file containing source local preference mappings. The LP value can be
 		mapped to one or a combination of: ifIndex, source MAC address and BGP next-hop (query
-		against the BGP RIB to look up the source IP prefix). Number of map entries (by default
-		384) can be modified via maps_entries. Sample map in 'examples/lpref.map.example'.
+		against the BGP RIB to look up the source IP prefix). Sample map in 'examples/
+		lpref.map.example'. Content can be reloaded at runtime by sending the daemon a SIGUSR2
+		signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:            bgp_src_med_type [GLOBAL]
@@ -2119,9 +2129,9 @@ DEFAULT:	none
 KEY:            bgp_src_med_map [GLOBAL, MAP]
 DESC:           Full pathname to a file containing source MED (Multi Exit Discriminator) mappings. The
 		MED value can be mapped to one or a combination of: ifIndex, source MAC address and BGP
-		next-hop (query against the BGP RIB to look up the source IP prefix). Number of map
-		entries (by default 384) can be modified via maps_entries. Sample map in 'examples/
-		med.map.example'.
+		next-hop (query against the BGP RIB to look up the source IP prefix). Sample map in
+		'examples/med.map.example'. Content can be reloaded at runtime by sending the daemon a
+		SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		bgp_agent_map [GLOBAL, MAP]
@@ -2132,7 +2142,8 @@ DESC:		Full pathname to a file to map source IP address of NetFlow agents and Ag
 		uacctd daemons are required to use a bgp_agent_map with up to two "catch-all" entries -
 		working in a primary/backup fashion (see agent_to_peer.map in the examples section):
 		this is because these daemons do not have a NetFlow/sFlow source address to match to.
-		Number of map entries (by default 384) can be modified via maps_entries.
+		Number of map entries (by default 384) can be modified via maps_entries. Content can be
+		reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		flow_to_rd_map [GLOBAL, MAP]
@@ -2140,7 +2151,8 @@ DESC:		Full pathname to a file to map flows (typically, a) ingress router, input
 		b) MPLS bottom label, BGP next-hop couples) to BGP/MPLS Virtual Private Network (VPN)
 		Route Distinguisher (RD), based upon rfc4659. See flow_to_rd.map file in the examples
 		section for further info. Number of map entries (by default 384) can be modified via
-		maps_entries. 
+		maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal
+		(ie. "killall -USR2 nfacctd"). 
 DEFAULT:	none
 
 KEY:		bgp_follow_default [GLOBAL]
