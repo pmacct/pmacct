@@ -1408,6 +1408,10 @@ id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
 ! id=1	ip=W.W.W.W:2100			tag=0
 ! id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
 
+Number of tee_receivers map entries (by default 384) can be modified via
+maps_entries. Content can be reloaded at runtime by sending the daemon a
+SIGUSR2 signal (ie. "killall -USR2 nfacctd").
+
 Selective teeing allows to filter which pool of receivers has to receive which
 datagrams. Tags are applied via a pre_tag_map, the one illustrated below applies
 tag 100 to packets exported from agents A.A.A.A, B.B.B.B and C.C.C.C; in case

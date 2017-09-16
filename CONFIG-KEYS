@@ -2388,7 +2388,9 @@ DEFAULT:	none
 KEY:            tee_receivers [MAP]
 DESC:           Defines full pathname to a list of remote IP addresses and ports to which NetFlow/sFlow
 		dagagrams are to be replicated to. Examples are available in "examples/tee_receivers.lst.
-		example" file.
+		example" file. Number of map entries (by default 384) can be modified via maps_entries.
+		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall
+		-USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		tee_source_ip
