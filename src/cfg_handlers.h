@@ -55,6 +55,7 @@ EXT int cfg_key_files_gid(char *, char *, char *);
 EXT int cfg_key_promisc(char *, char *, char *);
 EXT int cfg_key_num_protos(char *, char *, char *);
 EXT int cfg_key_num_hosts(char *, char *, char *);
+EXT int cfg_key_num_ipv4_inet6aton(char *, char *, char *);
 EXT int cfg_key_imt_path(char *, char *, char *);
 EXT int cfg_key_imt_passwd(char *, char *, char *);
 EXT int cfg_key_imt_buckets(char *, char *, char *);

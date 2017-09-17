@@ -2593,6 +2593,28 @@ int cfg_key_num_hosts(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_num_ipv4_inet6aton(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.num_ipv4_inet6aton = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.num_ipv4_inet6aton = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_post_tag(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
