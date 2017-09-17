@@ -138,7 +138,6 @@ struct configuration {
   char *sql_preprocess;
   int sql_preprocess_type;
   int sql_multi_values;
-  int sql_aggressive_classification;
   char *sql_locking_style;
   int sql_use_copy;
   char *sql_delimiter;

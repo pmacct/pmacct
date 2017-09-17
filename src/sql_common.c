@@ -134,11 +134,6 @@ void sql_init_default_values(struct extra_primitives *extras)
   dump_writers.list = malloc(config.dump_max_writers * sizeof(pid_t));
   dump_writers_init();
 
-  if (config.sql_aggressive_classification) {
-    if (config.acct_type == ACCT_PM && config.what_to_count & COUNT_CLASS);
-    else config.sql_aggressive_classification = FALSE;
-  }
-
   /* SQL table type parsing; basically mapping everything down to a SQL table version */
   /* ie. BGP == 1000 */
   if (config.sql_table_type) {
@@ -331,39 +326,17 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   }
   else idata->committed_basetime = idata->basetime;
 
-  /* If aggressive classification is enabled and there are still
-     chances for the stream to be classified - ie. tentatives is
-     non-zero - let's leave it in SQL_CACHE_INUSE state */
   if (!exiting) {
-    if (config.sql_aggressive_classification) {
-      for (j = 0, pqq_ptr = 0; j < index; j++) {
-        if (!queue[j]->primitives.class && queue[j]->tentatives && (queue[j]->start_tag > (idata->now - ((STALE_M-1) * config.sql_refresh_time))) ) {
-          pending_queries_queue[pqq_ptr] = queue[j];
-          pqq_ptr++;
-        }
-        else if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
-	  pending_queries_queue[pqq_ptr] = queue[j];
-	  pqq_ptr++;
-        }
-        else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
-          pending_queries_queue[pqq_ptr] = queue[j];
-          pqq_ptr++;
-        }
-        else queue[j]->valid = SQL_CACHE_COMMITTED;
+    for (j = 0, pqq_ptr = 0; j < index; j++) {
+      if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
+        pending_queries_queue[pqq_ptr] = queue[j];
+        pqq_ptr++;
       }
-    }
-    else {
-      for (j = 0, pqq_ptr = 0; j < index; j++) {
-        if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
-          pending_queries_queue[pqq_ptr] = queue[j];
-          pqq_ptr++;
-        }
-        else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
-          pending_queries_queue[pqq_ptr] = queue[j];
-          pqq_ptr++;
-        }
-        else queue[j]->valid = SQL_CACHE_COMMITTED;
+      else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
+        pending_queries_queue[pqq_ptr] = queue[j];
+        pqq_ptr++;
       }
+      else queue[j]->valid = SQL_CACHE_COMMITTED;
     }
   }
   /* If exiting instead .. */
@@ -1089,7 +1062,6 @@ void sql_exit_gracefully(int signum)
   idata.timeslot = glob_timeslot;
   idata.committed_basetime = glob_committed_basetime;
   if (config.sql_backup_host) idata.recover = TRUE;
-  if (config.what_to_count & COUNT_CLASS) config.sql_aggressive_classification = FALSE;
   if (config.sql_locking_style) idata.locks = sql_select_locking_style(config.sql_locking_style);
 
   sql_cache_flush(queries_queue, qq_ptr, &idata, TRUE);

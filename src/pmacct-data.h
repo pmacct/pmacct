@@ -385,7 +385,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_preprocess", cfg_key_sql_preprocess},
   {"sql_preprocess_type", cfg_key_sql_preprocess_type},
   {"sql_multi_values", cfg_key_sql_multi_values},
-  {"sql_aggressive_classification", cfg_key_sql_aggressive_classification},
   {"sql_locking_style", cfg_key_sql_locking_style},
   {"sql_use_copy", cfg_key_sql_use_copy},
   {"sql_num_protos", cfg_key_num_protos},

@@ -1905,28 +1905,6 @@ int cfg_key_kafka_config_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_sql_aggressive_classification(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_aggressive_classification = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.sql_aggressive_classification = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_sql_locking_style(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

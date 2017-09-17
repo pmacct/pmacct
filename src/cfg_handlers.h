@@ -83,7 +83,6 @@ EXT int cfg_key_sql_dont_try_update(char *, char *, char *);
 EXT int cfg_key_sql_preprocess(char *, char *, char *);
 EXT int cfg_key_sql_preprocess_type(char *, char *, char *);
 EXT int cfg_key_sql_multi_values(char *, char *, char *);
-EXT int cfg_key_sql_aggressive_classification(char *, char *, char *);
 EXT int cfg_key_sql_locking_style(char *, char *, char *);
 EXT int cfg_key_sql_use_copy(char *, char *, char *);
 EXT int cfg_key_sql_delimiter(char *, char *, char *);
