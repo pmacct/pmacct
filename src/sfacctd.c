@@ -652,8 +652,8 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
       }
-    }
 #endif
+    }
   }
 
   if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
