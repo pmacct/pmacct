@@ -1427,9 +1427,11 @@ VALUES:         [ true | false ]
 DESC:           Defines whether IP addresses should be left numerical (in network bytes ordering) or converted
 		into human-readable strings. Applies to MySQL and SQLite plugins only and assumes the INET_ATON()
 		and INET6_ATON() function are defined in the RDBMS. INET_ATON() is always defined in MySQL whereas
-		INET6_ATON() requires MySQL >= 5.6.3. Bothfunctions are not defined by default in SQLite instead.
-		The feature is not compatible with making use of IP prefix labels. Default setting is to convert
-		IP addresses and prefixes into strings.
+		INET6_ATON() requires MySQL >= 5.6.3. Both functions are not defined by default in SQLite instead
+		and are to be user-defined: if pmacct is compiled with --disable-ipv6, a INET_ATON() function is
+		invoked; if pmacct is compiled with --enable-ipv6 (default), a INET6_ATON() function is invoked.
+		The feature is not compatible with making use of IP prefix labels. Default setting, false, is to
+		convert IP addresses and prefixes into strings.
 DEFAULT:        false
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
