@@ -30,6 +30,20 @@ DESC:	Following is the list of features, knobs and plugins that are being
 	  discontinued (ie. 'classifiers' directive). This is being replaced
 	  by an implementation basing on the nDPI project. 
 
+TO:	>= 1.7.0
+FROM:	<= 1.6.2
+TOPIC:	change to sql_num_hosts
+DESC:	When sql_num_hosts is enabled and pmacct is not compiled with 
+	--disable-ipv6, INET6_ATON() is now used for both IPv4 and IPv6 with
+	MySQL and SQLite. Tables should be upgraded by changing columns from
+	INT(4) to VARBINARY(16) and then converting data - for MySQL:
+
+	ALTER TABLE table MODIFY COLUMN ip_src VARBINARY(16) NOT NULL;
+	UPDATE table SET ip_src = INET6_ATON(INET_NTOA(ip_src))
+	  WHERE INET_NTOA(ip_src) IS NOT NULL;
+
+	This has performance implications which are mentioned in README.IPv6.
+ 
 TO:	>= 1.6.2
 FROM:	<= 1.6.1
 TOPIC:	default plugin names
