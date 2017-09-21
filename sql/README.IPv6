@@ -10,6 +10,17 @@ the use of longer strings to people not interested (yet) to be IPv6-ready.
 To store IPv6 addresses into such fields, simply manually edit the SQL schema and
 define them as 45-bytes long CHAR strings (for example: 'ip_src CHAR(45) NOT NULL').
 
+When sql_num_hosts is enabled, INET6_ATON() will be used to convert IPv4 and IPv6
+addresses to a VARBINARY(16) string representing the numeric value of the address.
+Note that this is not backwards compatible with INET_ATON() functionality as exposed
+by --disable-ipv6.
+In order to avoid the performance penalty incurred by variable-length columns under
+MySQL, it is recommended that MyISAM tables are created with ROW_FORMAT=fixed; this
+gives fixed-size column performance at the expense of variable-length columns
+consuming their maximum size for every row (still only roughly one third the size
+of CHAR(45)).
+
+
 PostgreSQL.
 Typed tables. 'inet' network data type is able to store IPv6 addresses starting from
 PostgreSQL 7.4.x version. If you need to use IPv6 addresses, please upgrade to that 
