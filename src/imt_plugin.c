@@ -490,6 +490,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 void exit_now(int signum)
 {
   if (config.imt_plugin_path) unlink(config.imt_plugin_path);
+  if (config.pidfile) remove_pid_file(config.pidfile);
   exit_plugin(0);
 }
 

@@ -1075,6 +1075,8 @@ void sql_exit_gracefully(int signum)
   }
   else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
+  if (config.pidfile) remove_pid_file(config.pidfile);
+
   exit_plugin(0);
 }
 

@@ -691,6 +691,8 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
     goto exit_lane;
   }
 
+  return;
+
   exit_lane:
   config.pidfile = NULL;
   free(fname);
