@@ -253,9 +253,9 @@ A: pmacct tarball gets with so called 'default' tables (IP and BGP); they are bu
 
 Q16: What is the best way to kill a running instance of pmacct avoiding data loss ?
 A: Two ways. a) Simply kill a specific plugin that you don't need anymore: you will
-   have to identify it and use the 'kill -INT <process number> command; b) kill the
+   have to identify it and use the 'kill -INT <process number>' command; b) kill the
    whole pmacct instance: you can either use the 'killall -INT <daemon name>' command
-   or identify the Core Process and use the 'kill -INT <process number> command. All
+   or identify the Core Process and use the 'kill -INT <process number>' command. All
    of these, will do the job for you: will stop receiving new data from the network,
    clear the memory buffers, notify the running plugins to take th exit lane (which
    in turn will clear cached data as required).

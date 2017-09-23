@@ -5,7 +5,9 @@ SELinux, check for SELinux interferences.
 
 
 Core process:
-SIGCHLD:	used to handle gracefully his loved child processes;
+SIGCHLD:	used to handle gracefully his loved child processes. This is
+		internal, ie. should not be sent by users. To end gracefully
+		the daemon, look at SIGINT;
 SIGHUP:         reopens the logging infrastructure. Works with both syslog and
 		logfiles; it also works with streamed logging of BGP messages/
 		events (bgp_daemon_msglog_file), streamed logging of BMP data/
@@ -18,14 +20,12 @@ SIGUSR1:        returns various statistics via either console or syslog; the
 SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes maps
 		to be reloaded (ie. pre_tag_map, bgp_agent_map, etc.). If also
 		indexing is enabled, ie. maps_index, indexes are re-compited. 
-SIGINT:		if starting pmacct in foreground the signal is propagated to
-		each running plugin, which is in turn gracefully terminated;
-		if starting pmacct in background, this signal is ignored by
-		the Core process but not from the plugins: it is recommended
-		to send the signal to all plugins, ie. "killall -INT pmacctd"
-		so to let the whole pmacct instance exit gracefully. In case
-		the BDP daemon is enabled or pmbgpd, this signal triggers a
-		BGP NOTIFICATION message being sent out.
+SIGINT:		the signal is used by the Core Process itself and propagated
+		to each running plugin for graceful termination (ie. send BGP
+		NOTIFICATION message to established BGP sessions, close open
+		files, remove PID files, purge data, etc.). See Q16 of the
+		FAQS document for recommendations on how to best send SIGINT
+		signals to the daemon;
 SIGTERM:	not handled (which means it follows the default behaviour for
 		the OS) if the daemon is started in background; otherwise it 
 		orks like SIGINT;
