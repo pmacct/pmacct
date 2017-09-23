@@ -529,7 +529,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object(), *kv;
 
-    json_object_set_new_nocheck(obj, "timestamp", json_integer((json_int_t)bms->dump.tstamp_str));
+    json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
     if (bms->bgp_peer_logdump_initclose_extras)
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
