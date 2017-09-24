@@ -821,7 +821,7 @@ XI. Quickstart guide to packet classification
 Packet classification is a feature available for pmacctd (libpcap-based daemon) and
 uacctd (NFLOG-based daemon) (please get in touch if packet classification against
 the sFlow raw header sample is desired). The current approach is to leverage the
-popular free, open-source nDPI library. To enable the fature please follow these
+popular free, open-source nDPI library. To enable the feature please follow these
 steps:
 
 1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub

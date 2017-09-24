@@ -5,6 +5,21 @@ The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
 1.7.0 -- XX-10-2017
+  + ZeroMQ integration: by defining plugin_pipe_zmq to 'true', ZeroMQ is
+    used for queueing between the Core Process and plugins. This is in
+    alternative to the home-grown circular queue implementation (ie.
+    plugin_pipe_size). plugin_pipe_zmq_profile can be set to one value
+    of { micro, small, medium, large, xlarge } and allows to select
+    among a few standard buffering profiles without having to fiddle
+    with plugin_buffer_size. How to compile, install and operate ZeroMQ
+    is documented in the "Internal buffering and queueing" section of
+    the QUICKSTART document. 
+  + nDPI integration: enables packet classification, replacing existing
+    L7-layer project integration, and is available for pmacctd and
+    uacctd. The feature, once nDPI is compiled in, is simply enabled by
+    specifying 'class' as part of the aggregation method. How to compile
+    install and operate nDPI is documented in the "Quickstart guide to
+    packet classification" section of the QUICKSTART document.
   + nfacctd: introduced nfacctd_templates_file so that NetFlow v9/IPFIX
     templates can be cached to disk to limit the amount of lost packets
     due to unknown templates when nfacctd (re)starts. The implementation
@@ -15,6 +30,13 @@ The keys used are:
   + sfacctd: introduced new aggregation primitives (tunnel_src_host,
     tunnel_dst_host, tunnel_proto, tunnel_tos) to support inner L3
     layers. Thanks to Kaname Nishizuka ( @__kaname__ ) for his support.
+  + nfacctd, sfacctd: pcap_savefile and pcap_savefile_wait were ported
+    from pmacctd. They allow to process NetFlow/IPFIX and sFlow data
+    from previously captured packets; these also ease some debugging by
+    not having to resort anymore to tcpreplay for most cases.
+  + pmacctd, sfacctd: nfacctd_time_new feature has been ported so, when
+    historical accounting is enabled, to allow to choose among capture
+    time and time of receipt at the collector for time-binning.
   + nfacctd: added support for NetFlow v9/IPFIX field types #130/#131,
     respectively the IPv4/IPv6 address of the element exporter.
   + nfacctd: introduced nfacctd_disable_opt_scope_check: mainly a work
@@ -22,10 +44,9 @@ The keys used are:
     correctly, this knob allows to disable option scope checking. Thanks
     to Gilad Zamoshinski ( @zamog ) for his support.
   + pre_tag_map: added 'source_id' key for tagging on NetFlow v9/IPFIX
-    source_id field (in addition to existing NetFlow v5-v8 engine_type/
-    engine_id tagging). Added also 'fwdstatus' for tagging on NetFlow
-    v9/IPFIX information element #89: this is courtesy by Emil Palm
-    ( @mrevilme ).
+    source_id field. Added also 'fwdstatus' for tagging on NetFlow v9/
+    IPFIX information element #89: this implementation is courtesy by
+    Emil Palm ( @mrevilme ).
   + tee plugin: tagging is now possible on NetFlow v5-v8 engine_type/
     engine_id, NetFlow v9/IPFIX source_id and sFlow AgentId.
   + tee plugin: added support for 'src_port' in tee_receivers map. When
@@ -41,17 +62,18 @@ The keys used are:
     origin ASNs and (BGP) next-hop fields.
   + pmacctd: added support for calling pcap_set_protocol() if supported
     by libpcap. Patch is courtesy by Lennert Buytenhek ( @buytenh ).
-  + pmbgpd, pmbmpd, pmtelemetryd: added a few CL options for easy output
-    of BGP, BMP and Streaming Telemetry data, for example: -o supplies a
-    b[gm]p_daemon_msglog_file, -O supplies a b[gm]p_dump_file and -i
+  + pmbgpd, pmbmpd, pmtelemetryd: added a few CL options to ease output
+    of BGP, BMP and Streaming Telemetry data, for example: -o supplies
+    a b[gm]p_daemon_msglog_file, -O supplies a b[gm]p_dump_file and -i
     supplies b[gm]p_dump_refresh_time.
   + kafka plugin: in the examples section, added a Kafka consumer script
     using the performing confluent-kafka-python module. 
   ! fix, BGP daemon: segfault with add-path enabled peers as per issue
     #128. Patch is courtesy by Markus Weber ( @FvDxxx ).
-  ! fix, print plugin: link to latest file was not updated if cause of
-    purging was a safe action. Thanks to Camilo Cardona ( @jccardonar )
-    for reporting the issue.
+  ! fix, print plugin: do not update link to latest file if cause of
+    purging is a safe action (ie. cache space is finished. Thanks to
+    Camilo Cardona ( @jccardonar ) for reporting the issue. Also, for
+    the same reason, do not execute triggers (ie. print_trigger_exec). 
   ! fix, nfacctd: improved IP protocol check in NF_evaluate_flow_type()
     A missing length check was causing, under certain conditions, some
     flows to be marked as IPv6. Many thanks to Yann Belin for his
@@ -76,6 +98,9 @@ The keys used are:
   ! fix, nfacctd: added flowset count check to existing length checks 
     for NetFlow v9/IPFIX datagrams. This is to avoid logs flooding in
     case of padding. Thanks to Steffen Plotner for reporting the issue.
+  ! fix, BGP daemon: when dumping BGP data at regular time intervals,
+    dump_close message contained wrongly formatted timestamp. Thanks to
+    Yuri Lachin for reporting the issue.
   ! fix, MySQL plugin: if --enable-ipv6 and sql_num_hosts set to true,
     use INET6_ATON for both v4 and v6 addresses. Thanks to Guy Lowe
     ( @gunkaaa ) for reporting the issue and his support resolving it.
@@ -87,8 +112,10 @@ The keys used are:
   ! fix, aggregate_primitives: improved support of 'u_int' semantics for
     8 bytes integers. This is in addition to already supported 1, 2 and
     4 bytes integers.
+  ! fix, pidfile: pidfile created by plugin processes was not removed.
+    Thanks to Yuri Lachin for reporting the issue.
   ! fix, print plugin: checking non-null file descriptor before setvbuf
-    in order to prevent SEGV. Similar checks was added to prevent nulls
+    in order to prevent SEGV. Similar checks were added to prevent nulls
     be input to libavro calls when Apache Avro output is selected.
   ! fix, SQL plugins: MPLS aggregation primitives were not correctly
     activated in case sql_optimize_clauses was set to false.
@@ -97,8 +124,7 @@ The keys used are:
     supports (ie. JSON).
   ! fix, sql_history: it now correctly honors periods expressed is 's'
     seconds.
-  ! fix, BGP daemon: rewritten bgp_peer_print() to be thread safe. This
-    was found preventing pmacct to compile on OpenBSD 6.1. 
+  ! fix, BGP daemon: rewritten bgp_peer_print() to be thread safe.
   ! fix, pretag.h: addressed compiler warning on 32-bit architectures,
     integer constant is too large for "long" type. Thanks to Stephen
     Clark ( @sclark46 ) for reporting the issue.
@@ -108,17 +134,31 @@ The keys used are:
     a rewrite of most of the plugin). In this phase-1 the existing
     MongoDB plugin is still available using 'plugins: mongodb_legacy'
     in the configuration.
-  - plugin_pipe_amqp, plugin_pipe_kafka features have been discontinued
-    and were meant as an alternative to the homegrown queue solution for
-    internal messaging, that is, passing data from the Core Process to
-    Plugins. They are being replaced by a new implementation based on
-    ZeroMQ.
-  - tmp_net_own_field: the knob has been discontinued and was allowing to
-    revert to backward compatible behaviour of IP prefixes (ie. src_net)
-    being written in the same field as IP addresses (ie. src_host).
-  - tmp_comms_same_field: the knob has been discontinued and was allowing
-    to revert to backward compatible behaviour of BGP communities
-    (standard and extended) being writeen all in the same field.
+  - Packet classification basing on the L7-filter project is being
+    discontinued (ie. 'classifiers' directive). This is being replaced
+    by an implementation basing on the nDPI project. As part of this
+    also the sql_aggressive_classification knob has been discontinued.
+  - tee_receiver was part of the original implementation of the tee
+    plugin, allowing to forward to a single target and hence requiring
+    multiple plugins instantiated, one per target. Since 0.14.3 this
+    directive was effectively outdated by tee_receivers.
+  - tmp_net_own_field: the knob has been discontinued and was allowing
+    to revert to backward compatible behaviour of IP prefixes (ie.
+    src_net) being written in the same field as IP addresses (ie.
+    src_host).
+  - tmp_comms_same_field: the knob has been discontinued and was
+    allowing to revert to backward compatible behaviour of BGP
+    communities (standard and extended) being writeen all in the same
+    field.
+  - plugin_pipe_amqp and plugin_pipe_kafka features were meant as an
+    alternative to the homegrown queue solution for internal messaging,
+    ie. passing data from the Core Process to Plugins, and are being
+    discontinued. They are being replaced by a new implementation,
+    plugin_pipe_zmq, basing on ZeroMQ.
+  - plugin_pipe_backlog was allowing to keep an artificial backlog of
+    data in the Core Process so to maximise bypass poll() syscalls in
+    plugins. If home-grown queueing is found limiting, instead of
+    falling back to such strategies, ZeroMQ queueing should be used.
   - pmacctd: deprecated support for legacy link layers: FDDI, Token Ring
     and HDLC.
 

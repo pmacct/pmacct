@@ -11,24 +11,34 @@ FROM:	<= 1.6.2
 TOPIC:	Obsoleted features
 DESC:	Following is the list of features, knobs and plugins that are being
 	discontinued with release 1.7:
-	* tmp_net_own_field knob was allowing to revert to backward compatible
-	  behaviour of IP prefixes (ie. src_net) being written in the same
-	  field as IP addresses (ie. src_host)
-	* tmp_comms_same_field knob was allowing to revert to backward
-	  compatible behaviour of BGP communities (standard, extended) being
-	  writeen all in the same field.
-	* plugin_pipe_amqp and plugin_pipe_kafka features were meant as an
-	  alternative to the homegrown queue solution for internal messaging,
-	  ie. passing data from the Core Process to Plugins, and are being
-	  discontinued. They are being replaced by a new implementation,
-	  plugin_pipe_zmq, basing on ZeroMQ. 
 	* MongoDB plugin is being discontinued since the old Mongo API is
 	  not supported anymore and there has never been enough push from
 	  the community to transition to the new/current API (which would
 	  require a rewrite of most of the plugin)
 	* Packet classification basing on the L7-filter project is being
 	  discontinued (ie. 'classifiers' directive). This is being replaced
-	  by an implementation basing on the nDPI project. 
+	  by an implementation basing on the nDPI project. As part of this
+	  also the sql_aggressive_classification knob has been discontinued. 
+	* tee_receiver was part of the original implementation of the tee
+	  plugin, allowing to forward to a single target and hence requiring
+	  multiple plugins instantiated, one per target. Since 0.14.3 this
+	  directive was effectively outdated by tee_receivers. 
+        * tmp_net_own_field knob was allowing to revert to backward compatible
+          behaviour of IP prefixes (ie. src_net) being written in the same
+          field as IP addresses (ie. src_host)
+        * tmp_comms_same_field knob was allowing to revert to backward
+          compatible behaviour of BGP communities (standard, extended) being
+          writeen all in the same field.
+        * plugin_pipe_amqp and plugin_pipe_kafka features were meant as an
+          alternative to the homegrown queue solution for internal messaging,
+          ie. passing data from the Core Process to Plugins, and are being
+          discontinued. They are being replaced by a new implementation,
+          plugin_pipe_zmq, basing on ZeroMQ.
+	* plugin_pipe_backlog was allowing to keep an artificial backlog of
+	  data in the Core Process so for plugins to maximise bypass poll()
+	  syscalls in plugins. If home-grown queueing is found limiting,
+	  instead of falling back to such strategies, ZeroMQ queueing should
+	  be used. 
 
 TO:	>= 1.7.0
 FROM:	<= 1.6.2
