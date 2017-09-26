@@ -777,6 +777,12 @@ int cfg_key_sql_table(char *filename, char *name, char *value_ptr)
       case 's':
 	num++;
 	break;
+      case 'S':
+	num++;
+	break;
+      case 'z':
+	num++;
+	break;
       default:
 	Log(LOG_ERR, "ERROR: [%s] sql_table, %%%c not supported.\n", filename, *c);
 	exit(1);
@@ -845,6 +851,12 @@ int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
         num++;
         break;
       case 's':
+        num++;
+        break;
+      case 'S':
+	num++;
+	break;
+      case 'z':
         num++;
         break;
       default:
