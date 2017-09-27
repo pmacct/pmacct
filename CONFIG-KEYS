@@ -842,6 +842,8 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 
 		%z		The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400)
 
+		$tzone		The time zone in rfc3339 format (ie. -04:00 or 'Z' for +00:00)
+
 		$ref		Configured refresh time value for the plugin.
 
 		$hst		Configured sql_history value, in seconds, for the plugin.
@@ -2287,6 +2289,8 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
                 %Y              The year as a decimal number including the century.
 
 		%z		The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400)
+
+		$tzone		The time zone in rfc3339 format (ie. -04:00 or Z for +00:00)
 
                 $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
 DEFAULT:	none

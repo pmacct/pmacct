@@ -351,6 +351,7 @@ static const struct _dictionary_line dictionary[] = {
   {"networks_no_mask_if_zero", cfg_key_networks_no_mask_if_zero},
   {"networks_cache_entries", cfg_key_networks_cache_entries},
   {"ports_file", cfg_key_ports_file},
+  {"timestamps_rfc3339", cfg_key_timestamps_rfc3339},
   {"timestamps_secs", cfg_key_timestamps_secs},
   {"timestamps_since_epoch", cfg_key_timestamps_since_epoch},
   {"imt_path", cfg_key_imt_path},

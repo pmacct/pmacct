@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -52,7 +52,8 @@ void Log(short int level, char *msg, ...)
 
       now = time(NULL);
       tmnow = localtime(&now);
-      strftime(timebuf, SRVBUFLEN, "%b %d %H:%M:%S", tmnow);
+      strftime(timebuf, SRVBUFLEN, "%Y:%m:%dT%H:%M:%S", tmnow);
+      append_rfc3339_timezone(timebuf, SRVBUFLEN, tmnow);
 
       fprintf(config.logfile_fd, "%s %s", timebuf, syslog_string);
       fflush(config.logfile_fd);

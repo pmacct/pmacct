@@ -940,7 +940,59 @@ void strftime_same(char *s, int max, char *tmp, const time_t *now)
 
   nowtm = localtime(now);
   strftime(tmp, max, s, nowtm);
+  insert_rfc3339_timezone(tmp, max, nowtm);
   strlcpy(s, tmp, max);
+}
+
+void insert_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
+{
+  char buf[8], tzone_string[] = "$tzone";
+  char *ptr_start = strstr(s, tzone_string), *ptr_end;
+
+  if (ptr_start) {
+    ptr_end = ptr_start + 6 /* $tzone */;
+    strftime(buf, 8, "%z", nowtm);
+
+    if (!strcmp(buf, "+0000")) {
+      ptr_start[0] = 'Z';
+      ptr_start++;
+      strcpy(ptr_start, ptr_end);
+    }
+    else {
+      /* ie. '+0200', '-0100', etc. */
+      if (strlen(buf) == 5) {
+	ptr_start[0] = buf[0];
+	ptr_start[1] = buf[1];
+	ptr_start[2] = buf[2];
+	ptr_start[3] = ':';
+	ptr_start[4] = buf[3];
+	ptr_start[5] = buf[4];
+      }
+    }
+  }
+}
+
+void append_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
+{
+  int len = strlen(s), max = (slen - len);
+  char buf[8], zulu[] = "Z";
+
+  strftime(buf, 8, "%z", nowtm);
+
+  if (!strcmp(buf, "+0000")) {
+    if (max) strcat(s, zulu);
+  }
+  else {
+    if (max >= 7) {
+      s[len] = buf[0]; len++;
+      s[len] = buf[1]; len++;
+      s[len] = buf[2]; len++;
+      s[len] = ':'; len++;
+      s[len] = buf[3]; len++;
+      s[len] = buf[4]; len++;
+      s[len] = '\0';
+    }
+  }
 }
 
 int read_SQLquery_from_file(char *path, char *buf, int size)
