@@ -174,7 +174,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) {
       dyn_table = TRUE;
 
-      if (!strchr(config.sql_table, '$')) dyn_table_time_only = TRUE;
+      if (!have_dynname_nontime(config.sql_table)) dyn_table_time_only = TRUE;
       else dyn_table_time_only = FALSE;
     }
     else {

@@ -90,6 +90,7 @@ EXT void link_latest_output_file(char *, char *);
 EXT void close_output_file(FILE *);
 EXT void handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *);
 EXT void handle_dynname_internal_strings_same(char *, int, char *, struct primitives_ptrs *);
+EXT int have_dynname_nontime(char *);
 EXT void escape_ip_uscores(char *);
 EXT int sql_history_to_secs(int, int);
 EXT void *pm_malloc(size_t);

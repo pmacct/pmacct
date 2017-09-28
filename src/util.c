@@ -582,6 +582,18 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
   }
 }
 
+int have_dynname_nontime(char *str)
+{
+  char tzone_string[] = "$tzone", *ptr, *newptr;
+  int tzone_strlen = strlen(tzone_string);
+
+  for (newptr = ptr = str; newptr = strchr(ptr, '$'); ptr = newptr, ptr++) {
+    if (strncmp(newptr, tzone_string, tzone_strlen)) return TRUE; 
+  }
+
+  return FALSE;
+}
+
 void escape_ip_uscores(char *str)
 {
   int idx, len = 0;
