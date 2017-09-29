@@ -184,14 +184,11 @@ EXPIRY_GENERATE(EXPIRIES, EXPIRY, trp, expiry_compare);
 static const char *
 format_time(time_t t)
 {
-	struct tm *tm;
-	static char buf[20];
+	static char buf[32];
 
-	tm = localtime(&t);
-	strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", tm);
+	strftime_same(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S$tzone", &t);
 
 	return (buf);
-
 }
 
 /* Format a flow in a verbose and ugly way */

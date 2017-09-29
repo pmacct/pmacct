@@ -933,7 +933,8 @@ void compose_json_timestamp_start(json_t *obj, struct chained_cache *cc)
 {
   char tstamp_str[VERYSHORTBUFLEN];
 
-  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_start, TRUE, config.timestamps_since_epoch);
+  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_start, TRUE,
+		    config.timestamps_since_epoch, config.timestamps_rfc3339);
   json_object_set_new_nocheck(obj, "timestamp_start", json_string(tstamp_str));
 }
 
@@ -941,7 +942,8 @@ void compose_json_timestamp_end(json_t *obj, struct chained_cache *cc)
 {
   char tstamp_str[VERYSHORTBUFLEN];
 
-  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_end, TRUE, config.timestamps_since_epoch);
+  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_end, TRUE,
+		    config.timestamps_since_epoch, config.timestamps_rfc3339);
   json_object_set_new_nocheck(obj, "timestamp_end", json_string(tstamp_str));
 }
 
@@ -949,7 +951,8 @@ void compose_json_timestamp_arrival(json_t *obj, struct chained_cache *cc)
 {
   char tstamp_str[VERYSHORTBUFLEN];
 
-  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_arrival, TRUE, config.timestamps_since_epoch);
+  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_arrival, TRUE,
+		    config.timestamps_since_epoch, config.timestamps_rfc3339);
   json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(tstamp_str));
 }
 
@@ -957,10 +960,12 @@ void compose_json_timestamp_stitching(json_t *obj, struct chained_cache *cc)
 {
   char tstamp_str[VERYSHORTBUFLEN];
 
-  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->stitch->timestamp_min, TRUE, config.timestamps_since_epoch);
+  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->stitch->timestamp_min, TRUE,
+		    config.timestamps_since_epoch, config.timestamps_rfc3339);
   json_object_set_new_nocheck(obj, "timestamp_min", json_string(tstamp_str));
 
-  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->stitch->timestamp_max, TRUE, config.timestamps_since_epoch);
+  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->stitch->timestamp_max, TRUE,
+		    config.timestamps_since_epoch, config.timestamps_rfc3339);
   json_object_set_new_nocheck(obj, "timestamp_max", json_string(tstamp_str));
 }
 
@@ -1004,12 +1009,14 @@ void compose_json_history(json_t *obj, struct chained_cache *cc)
 
     tv.tv_sec = cc->basetime.tv_sec;
     tv.tv_usec = 0;
-    compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &tv, FALSE, config.timestamps_since_epoch);
+    compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &tv, FALSE,
+		      config.timestamps_since_epoch, config.timestamps_rfc3339);
     json_object_set_new_nocheck(obj, "stamp_inserted", json_string(tstamp_str));
 
     tv.tv_sec = time(NULL);
     tv.tv_usec = 0;
-    compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &tv, FALSE, config.timestamps_since_epoch);
+    compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &tv, FALSE,
+		      config.timestamps_since_epoch, config.timestamps_rfc3339);
     json_object_set_new_nocheck(obj, "stamp_updated", json_string(tstamp_str));
   }
 }

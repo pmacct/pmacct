@@ -1754,23 +1754,27 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
 }
 #endif
 
-void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch)
+void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc3339)
 {
-  char tmpbuf[SRVBUFLEN];
+  int slen;
   time_t time1;
   struct tm *time2;
 
-  if (config.timestamps_since_epoch) {
+  if (buflen < VERYSHORTBUFLEN) return; 
+
+  if (since_epoch) {
     if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
     else snprintf(buf, buflen, "%u", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
     time2 = localtime(&time1);
-    strftime(tmpbuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+    
+    if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
+    else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
-    if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
-    else snprintf(buf, buflen, "%s", tmpbuf);
+    if (usec) snprintf((buf + slen), (buflen - slen), ".%u", tv->tv_usec);
+    if (rfc3339) append_rfc3339_timezone(buf, buflen, time2);
   }
 }
 

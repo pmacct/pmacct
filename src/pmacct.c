@@ -52,6 +52,7 @@ char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_tunnel_primitives *, char *,
 			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
 			pm_counter_t, u_int32_t, struct timeval *);
+void pmc_append_rfc3339_timezone(char *, int, const struct tm *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
 void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
@@ -3757,23 +3758,46 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 }
 #endif
 
+void pmc_append_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
+{
+  int len = strlen(s), max = (slen - len);
+  char buf[8], zulu[] = "Z";
+
+  strftime(buf, 8, "%z", nowtm);
+
+  if (!strcmp(buf, "+0000")) {
+    if (max) strcat(s, zulu);
+  }
+  else {
+    if (max >= 7) {
+      s[len] = buf[0]; len++;
+      s[len] = buf[1]; len++;
+      s[len] = buf[2]; len++;
+      s[len] = ':'; len++;
+      s[len] = buf[3]; len++;
+      s[len] = buf[4]; len++;
+      s[len] = '\0';
+    }
+  }
+}
+
 void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch)
 {
-  char tmpbuf[SRVBUFLEN];
+  int slen;
   time_t time1;
   struct tm *time2;
 
   if (since_epoch) {
     if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
-    else snprintf(buf, buflen, "%u.0", tv->tv_sec);
+    else snprintf(buf, buflen, "%u", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
     time2 = localtime(&time1);
-    strftime(tmpbuf, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
+    slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
-    if (usec) snprintf(buf, buflen, "%s.%u", tmpbuf, tv->tv_usec);
-    else snprintf(buf, buflen, "%s.0", tmpbuf);
+    if (usec) snprintf((buf + slen), (buflen - slen), ".%u", tv->tv_usec);
+    pmc_append_rfc3339_timezone(buf, buflen, time2);
   }
 }
 

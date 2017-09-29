@@ -768,7 +768,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 	if (config.timestamps_since_epoch) {
 	  char tstamp_str[SRVBUFLEN];
 
-	  compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, config.timestamps_since_epoch);
+	  compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
 	  bson_append_string(bson_elem, "timestamp_start", tstamp_str);
 	}
 	else {
@@ -784,7 +785,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         if (config.timestamps_since_epoch) {
           char tstamp_str[SRVBUFLEN];
 
-          compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, config.timestamps_since_epoch);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
           bson_append_string(bson_elem, "timestamp_end", tstamp_str);
         }
         else {
@@ -800,7 +802,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         if (config.timestamps_since_epoch) {
           char tstamp_str[SRVBUFLEN];
 
-          compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, config.timestamps_since_epoch);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
           bson_append_string(bson_elem, "timestamp_arrival", tstamp_str);
         }
         else {
@@ -817,10 +820,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         if (config.timestamps_since_epoch) {
           char tstamp_str[SRVBUFLEN];
 
-          compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_min, TRUE, config.timestamps_since_epoch);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_min, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
           bson_append_string(bson_elem, "timestamp_min", tstamp_str);
 
-          compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_max, TRUE, config.timestamps_since_epoch);
+          compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_max, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
           bson_append_string(bson_elem, "timestamp_max", tstamp_str);
         }
 	else {

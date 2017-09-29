@@ -118,7 +118,7 @@ EXT void write_avro_schema_to_file(char *, avro_schema_t);
 EXT char *compose_avro_purge_schema(avro_schema_t, char *);
 #endif
 
-EXT void compose_timestamp(char *, int, struct timeval *, int, int);
+EXT void compose_timestamp(char *, int, struct timeval *, int, int, int);
 
 EXT void print_primitives(int, char *);
 EXT int mkdir_multilevel(const char *, int, uid_t, gid_t);
