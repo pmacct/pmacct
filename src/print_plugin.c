@@ -804,84 +804,44 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%-3u         ", ptun->tunnel_tos);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
-  
-          if (config.timestamps_since_epoch) {
-	    snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
-	  }
-	  else {
-            time1 = pnat->timestamp_start.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-	  }
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          fprintf(f, "%-30s ", buf2);
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_start, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+
+          fprintf(f, "%-30s ", tstamp_str);
         }
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
-        
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
-          }
-          else {
-            time1 = pnat->timestamp_end.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-	  }
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          fprintf(f, "%-30s ", buf2);
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_end, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+
+          fprintf(f, "%-30s ", tstamp_str);
         }
 
         if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
-          }
-          else {
-            time1 = pnat->timestamp_arrival.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_arrival.tv_usec);
-          }
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_arrival, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
 
-          fprintf(f, "%-30s ", buf2);
+          fprintf(f, "%-30s ", tstamp_str);
         }
 
         if (config.nfacctd_stitching && queue[j]->stitch) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
-            fprintf(f, "%-30s ", buf2);
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_min, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
 
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_max.tv_sec, queue[j]->stitch->timestamp_max.tv_usec);
-            fprintf(f, "%-30s ", buf2);
-          }
-          else {
-	    time1 = queue[j]->stitch->timestamp_min.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_min.tv_usec);
-            fprintf(f, "%-30s ", buf2);
+          fprintf(f, "%-30s ", tstamp_str);
 
-            time1 = queue[j]->stitch->timestamp_max.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_max.tv_usec);
-            fprintf(f, "%-30s ", buf2);
-	  }
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_max, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+
+          fprintf(f, "%-30s ", tstamp_str);
         }
 
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%-18u  ", data->export_proto_seqno);
@@ -1182,84 +1142,44 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_tos);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
- 
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_start.tv_sec, pnat->timestamp_start.tv_usec);
-          }
-          else {
-            time1 = pnat->timestamp_start.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_start.tv_usec);
-	  }
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_start, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
         }
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_END) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
-  
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_end.tv_sec, pnat->timestamp_end.tv_usec);
-          }
-          else {
-            time1 = pnat->timestamp_end.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_end.tv_usec);
-	  }
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_end, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
         }
 
         if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", pnat->timestamp_arrival.tv_sec, pnat->timestamp_arrival.tv_usec);
-          }
-          else {
-            time1 = pnat->timestamp_arrival.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, pnat->timestamp_arrival.tv_usec);
-          }
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_arrival, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
 
-          fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
         }
 
         if (config.nfacctd_stitching && queue[j]->stitch) {
-          char buf1[SRVBUFLEN], buf2[SRVBUFLEN];
-          time_t time1;
-          struct tm *time2;
+	  char tstamp_str[VERYSHORTBUFLEN];
 
-          if (config.timestamps_since_epoch) {
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_min.tv_sec, queue[j]->stitch->timestamp_min.tv_usec);
-	    fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_min, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
 
-            snprintf(buf2, SRVBUFLEN, "%u.%u", queue[j]->stitch->timestamp_max.tv_sec, queue[j]->stitch->timestamp_max.tv_usec);
-	    fprintf(f, "%s%s", write_sep(sep, &count), buf2);
-          }
-	  else {
-            time1 = queue[j]->stitch->timestamp_min.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_min.tv_usec);
-            fprintf(f, "%s%s", write_sep(sep, &count), buf2);
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
 
-            time1 = queue[j]->stitch->timestamp_max.tv_sec;
-            time2 = localtime(&time1);
-            strftime(buf1, SRVBUFLEN, "%Y-%m-%d %H:%M:%S", time2);
-            snprintf(buf2, SRVBUFLEN, "%s.%u", buf1, queue[j]->stitch->timestamp_max.tv_usec);
-            fprintf(f, "%s%s", write_sep(sep, &count), buf2);
-	  }
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_max, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
         }
 
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_seqno);
