@@ -1319,11 +1319,18 @@ DEFAULT:	any
 
 KEY:		timestamps_secs
 VALUES:		[ true | false ]
-DESC:		Sets timestamp (timestamp_start, timestamp_end, timestamp_arrival primitives) resolution to
-		seconds, ie. prevents residual time fields like timestamp_start_residual to be populated.
+DESC:		Sets timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival primitives) resolution
+		to seconds, ie. prevents residual time fields like timestamp_start_residual to be populated.
 		In nfprobe plugin, when exporting via NetFlow v9 (nfprobe_version: 9), allows to fallback
 		to first and last swithed times in seconds.
 DEFAULT:        false
+
+KEY:		timestamps_rfc3339
+VALUES:		[ true | false ]
+DESC:		Formats timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival primitives) in a
+		rfc3339 compliant way, ie. if UTC timezone yyyy-MM-ddTHH:mm:ss(.ss)Z. This is set to false
+		for backward compatibility.
+DEFAULT:	false
 
 KEY:            timestamps_since_epoch
 VALUES          [ true | false ]

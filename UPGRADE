@@ -6,6 +6,14 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.1
+FROM:	<= 1.7.0
+TOPIC:	pmacct IMT client and timestamps
+DESC:	Timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival
+	primitives) are now formatted in a rfc3339 compliant way, ie. if
+	UTC timezone yyyy-MM-ddTHH:mm:ss(.ss)Z. This break compatibility
+	as in previous releases timestamps had a more liberal formatting.
+ 
 TO:	>= 1.7.0
 FROM:	<= 1.6.2
 TOPIC:	Obsoleted features

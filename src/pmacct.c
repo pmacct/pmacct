@@ -1941,7 +1941,7 @@ int main(int argc,char **argv)
 	    residual = strtol(delim, NULL, 0); 
 	  }
 
-	  strptime(match_string_token, "%Y-%m-%d %H:%M:%S", &tmp);
+	  strptime(match_string_token, "%Y-%m-%dT%H:%M:%S", &tmp);
 	  request.pnat.timestamp_start.tv_sec = mktime(&tmp);
 	  request.pnat.timestamp_start.tv_usec = residual;
         }
@@ -1957,7 +1957,7 @@ int main(int argc,char **argv)
             residual = strtol(delim, NULL, 0);
           }
 
-	  strptime(match_string_token, "%Y-%m-%d %H:%M:%S", &tmp);
+	  strptime(match_string_token, "%Y-%m-%dT%H:%M:%S", &tmp);
 	  request.pnat.timestamp_end.tv_sec = mktime(&tmp);
 	  request.pnat.timestamp_end.tv_usec = residual;
         }
@@ -1973,7 +1973,7 @@ int main(int argc,char **argv)
             residual = strtol(delim, NULL, 0);
           }
 
-          strptime(match_string_token, "%Y-%m-%d %H:%M:%S", &tmp);
+          strptime(match_string_token, "%Y-%m-%dT%H:%M:%S", &tmp);
           request.pnat.timestamp_arrival.tv_sec = mktime(&tmp);
           request.pnat.timestamp_arrival.tv_usec = residual;
         }
