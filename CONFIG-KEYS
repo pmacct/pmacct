@@ -2092,6 +2092,9 @@ DESC:		Full pathname to a file containing source peer AS mappings. The AS can be
 		to look up the source IP prefix). This is sufficient to model popular tecniques for both
 		public and private BGP peerings. Sample map in 'examples/peers.map.example'. Content can
 		be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
+		To automate mapping of MAC addresses to ASNs please see https://github.com/pierky/mactopeer
+		Written by Pier Carlo Chiodi, it leverages the popular NAPALM framework and, for the case
+		of route-servers at IXPs, PeeringDB info.
 DEFAULT:	none
 
 KEY:            bgp_src_std_comm_type [GLOBAL]
