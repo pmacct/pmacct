@@ -87,6 +87,7 @@ EXT int cfg_key_sql_locking_style(char *, char *, char *);
 EXT int cfg_key_sql_use_copy(char *, char *, char *);
 EXT int cfg_key_sql_delimiter(char *, char *, char *);
 EXT int cfg_key_timestamps_rfc3339(char *, char *, char *);
+EXT int cfg_key_timestamps_utc(char *, char *, char *);
 EXT int cfg_key_timestamps_secs(char *, char *, char *);
 EXT int cfg_key_timestamps_since_epoch(char *, char *, char *);
 EXT int cfg_key_mongo_insert_batch(char *, char *, char *);

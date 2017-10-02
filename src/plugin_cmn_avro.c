@@ -750,21 +750,24 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE,
-		      config.timestamps_since_epoch, config.timestamps_rfc3339);
+		      config.timestamps_since_epoch, config.timestamps_rfc3339,
+		      config.timestamps_utc);
     check_i(avro_value_get_by_name(&value, "timestamp_start", &field, NULL));
     check_i(avro_value_set_string(&field, tstamp_str));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_END) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE,
-		      config.timestamps_since_epoch, config.timestamps_rfc3339);
+		      config.timestamps_since_epoch, config.timestamps_rfc3339,
+		      config.timestamps_utc);
     check_i(avro_value_get_by_name(&value, "timestamp_end", &field, NULL));
     check_i(avro_value_set_string(&field, tstamp_str));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE,
-		      config.timestamps_since_epoch, config.timestamps_rfc3339);
+		      config.timestamps_since_epoch, config.timestamps_rfc3339,
+		      config.timestamps_utc);
     check_i(avro_value_get_by_name(&value, "timestamp_arrival", &field, NULL));
     check_i(avro_value_set_string(&field, tstamp_str));
   }
@@ -772,13 +775,15 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (config.nfacctd_stitching) {
     if (stitch) {
       compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_min, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339);
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
       check_i(avro_value_get_by_name(&value, "timestamp_min", &field, NULL));
       check_i(avro_value_set_branch(&field, 1, &branch));
       check_i(avro_value_set_string(&branch, tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_max, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339);
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
       check_i(avro_value_get_by_name(&value, "timestamp_max", &field, NULL));
       check_i(avro_value_set_branch(&field, 1, &branch));
       check_i(avro_value_set_string(&branch, tstamp_str));
@@ -831,7 +836,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
       tv.tv_sec = basetime->tv_sec;
       tv.tv_usec = 0;
       compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339);
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
       check_i(avro_value_get_by_name(&value, "stamp_inserted", &field, NULL));
       check_i(avro_value_set_branch(&field, 1, &branch));
       check_i(avro_value_set_string(&branch, tstamp_str));
@@ -839,7 +845,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
       tv.tv_sec = time(NULL);
       tv.tv_usec = 0;
       compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339);
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
       check_i(avro_value_get_by_name(&value, "stamp_updated", &field, NULL));
       check_i(avro_value_set_branch(&field, 1, &branch));
       check_i(avro_value_set_string(&branch, tstamp_str));

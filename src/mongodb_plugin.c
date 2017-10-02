@@ -420,7 +420,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
     primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
 
     handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, current_table, &prim_ptrs);
-    strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+    strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
   }
 
@@ -439,7 +439,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
       handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table, &prim_ptrs);
-      strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp);
+      strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
         pending_queries_queue[pqq_ptr] = queue[j];
@@ -769,7 +769,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 	  char tstamp_str[SRVBUFLEN];
 
 	  compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
 	  bson_append_string(bson_elem, "timestamp_start", tstamp_str);
 	}
 	else {
@@ -786,7 +787,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
           char tstamp_str[SRVBUFLEN];
 
           compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
           bson_append_string(bson_elem, "timestamp_end", tstamp_str);
         }
         else {
@@ -803,7 +805,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
           char tstamp_str[SRVBUFLEN];
 
           compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
           bson_append_string(bson_elem, "timestamp_arrival", tstamp_str);
         }
         else {
@@ -821,11 +824,13 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
           char tstamp_str[SRVBUFLEN];
 
           compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_min, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
           bson_append_string(bson_elem, "timestamp_min", tstamp_str);
 
           compose_timestamp(tstamp_str, SRVBUFLEN, &queue[j]->stitch->timestamp_max, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
           bson_append_string(bson_elem, "timestamp_max", tstamp_str);
         }
 	else {

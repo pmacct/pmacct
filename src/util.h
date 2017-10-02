@@ -67,7 +67,7 @@ EXT void evaluate_sums(u_int64_t *, u_int64_t *, char *, char *);
 EXT void stop_all_childs();
 EXT int file_lock(int);
 EXT int file_unlock(int);
-EXT void strftime_same(char *, int, char *, const time_t *);
+EXT void strftime_same(char *, int, char *, const time_t *, int);
 EXT void insert_rfc3339_timezone(char *, int, const struct tm *);
 EXT void append_rfc3339_timezone(char *, int, const struct tm *);
 EXT int read_SQLquery_from_file(char *, char *, int);
@@ -118,7 +118,7 @@ EXT void write_avro_schema_to_file(char *, avro_schema_t);
 EXT char *compose_avro_purge_schema(avro_schema_t, char *);
 #endif
 
-EXT void compose_timestamp(char *, int, struct timeval *, int, int, int);
+EXT void compose_timestamp(char *, int, struct timeval *, int, int, int, int);
 
 EXT void print_primitives(int, char *);
 EXT int mkdir_multilevel(const char *, int, uid_t, gid_t);

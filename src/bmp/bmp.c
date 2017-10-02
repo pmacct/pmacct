@@ -396,14 +396,14 @@ void skinny_bmp_daemon()
     if (bmp_misc_db->msglog_backend_methods || bmp_misc_db->dump_backend_methods) {
       gettimeofday(&bmp_misc_db->log_tstamp, NULL);
       compose_timestamp(bmp_misc_db->log_tstamp_str, SRVBUFLEN, &bmp_misc_db->log_tstamp, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339);
+			config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 
       if (bmp_misc_db->dump_backend_methods) {
         while (bmp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
           bmp_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
           bmp_misc_db->dump.tstamp.tv_usec = 0;
           compose_timestamp(bmp_misc_db->dump.tstamp_str, SRVBUFLEN, &bmp_misc_db->dump.tstamp, FALSE,
-			    config.timestamps_since_epoch, config.timestamps_rfc3339);
+			    config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 	  bmp_misc_db->dump.period = config.bmp_dump_refresh_time;
 
           bmp_handle_dump_event();

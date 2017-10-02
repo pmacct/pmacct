@@ -142,6 +142,7 @@ struct configuration {
   int sql_use_copy;
   char *sql_delimiter;
   int timestamps_rfc3339;
+  int timestamps_utc;
   int timestamps_secs;
   int timestamps_since_epoch;
   int mongo_insert_batch;

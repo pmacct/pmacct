@@ -308,7 +308,6 @@ void string_add_newline(char *buf)
 
 time_t roundoff_time(time_t t, char *value)
 {
-  // char *value = config.sql_history_roundoff;
   struct tm *rounded;
   int len, j;
 
@@ -946,11 +945,13 @@ void stop_all_childs()
   my_sigint_handler(0); /* it does same thing */
 }
 
-void strftime_same(char *s, int max, char *tmp, const time_t *now)
+void strftime_same(char *s, int max, char *tmp, const time_t *now, int utc)
 {
   struct tm *nowtm;
 
-  nowtm = localtime(now);
+  if (!utc) nowtm = localtime(now);
+  else nowtm = gmtime(now);
+
   strftime(tmp, max, s, nowtm);
   insert_rfc3339_timezone(tmp, max, nowtm);
   strlcpy(s, tmp, max);
@@ -1754,7 +1755,7 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
 }
 #endif
 
-void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc3339)
+void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc3339, int utc)
 {
   int slen;
   time_t time1;
@@ -1768,7 +1769,8 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
   }
   else {
     time1 = tv->tv_sec;
-    time2 = localtime(&time1);
+    if (!utc) time2 = localtime(&time1);
+    else time2 = gmtime(&time1);
     
     if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
     else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);

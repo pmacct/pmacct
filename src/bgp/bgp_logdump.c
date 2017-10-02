@@ -637,7 +637,7 @@ void bgp_handle_dump_event()
 	if (config.bgp_table_dump_kafka_topic)
 	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
 
-	strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec);
+	strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
 
 	/*
 	   we close last_filename and open current_filename in case they differ;

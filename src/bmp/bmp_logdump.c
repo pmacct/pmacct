@@ -68,13 +68,17 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.timestamps_since_epoch, config.timestamps_rfc3339);
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "timestamp", json_string(tstamp_str));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
-      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE, config.timestamps_since_epoch, config.timestamps_rfc3339);
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "event_timestamp", json_string(tstamp_str));
     }
 
@@ -463,7 +467,7 @@ void bmp_handle_dump_event()
         if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
         if (config.bmp_dump_kafka_topic) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
 
-        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec);
+        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
 
         /*
 	  we close last_filename and open current_filename in case they differ;

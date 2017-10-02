@@ -295,7 +295,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
         if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
         if (config.telemetry_dump_kafka_topic) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_kafka_topic, peer);
 
-        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->dump.tstamp.tv_sec);
+        strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->dump.tstamp.tv_sec, config.timestamps_utc);
 
         /*
           we close last_filename and open current_filename in case they differ;
