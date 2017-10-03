@@ -310,12 +310,10 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
 
   if (idata->dyn_table) {
     u_char *tmpptr;
-    struct tm *nowtm;
 
-    nowtm = localtime(&idata->basetime);
     strncat(envbuf.ptr, "EFFECTIVE_SQL_TABLE=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
-    strftime(tmpptr, envbuf.end-tmpptr, config.sql_table, nowtm); 
+    pm_strftime(tmpptr, envbuf.end-tmpptr, config.sql_table, &idata->basetime, config.timestamps_utc);
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;

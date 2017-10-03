@@ -385,11 +385,9 @@ void count_tunnel_ip_tos_handler(const struct db_cache *cache_elem, struct inser
 
 void PG_copy_count_timestamp_start_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  static char time_str[LONGSRVBUFLEN];
-  struct tm *tme;
+  static char time_str[VERYSHORTBUFLEN];
 
-  tme = localtime(&cache_elem->pnat->timestamp_start.tv_sec);
-  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+  pm_strftime(time_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->pnat->timestamp_start.tv_sec, config.timestamps_utc);
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_start.tv_sec); // dummy
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
@@ -415,11 +413,9 @@ void count_timestamp_start_residual_handler(const struct db_cache *cache_elem, s
 
 void PG_copy_count_timestamp_end_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  static char time_str[LONGSRVBUFLEN];
-  struct tm *tme;
+  static char time_str[VERYSHORTBUFLEN];
 
-  tme = localtime(&cache_elem->pnat->timestamp_end.tv_sec);
-  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+  pm_strftime(time_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->pnat->timestamp_end.tv_sec, config.timestamps_utc);
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_end.tv_sec); // dummy
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
@@ -445,11 +441,9 @@ void count_timestamp_end_residual_handler(const struct db_cache *cache_elem, str
 
 void PG_copy_count_timestamp_arrival_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  static char time_str[LONGSRVBUFLEN];
-  struct tm *tme;
+  static char time_str[VERYSHORTBUFLEN];
 
-  tme = localtime(&cache_elem->pnat->timestamp_arrival.tv_sec);
-  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+  pm_strftime(time_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->pnat->timestamp_arrival.tv_sec, config.timestamps_utc);
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_arrival.tv_sec); // dummy
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
@@ -475,11 +469,9 @@ void count_timestamp_arrival_residual_handler(const struct db_cache *cache_elem,
 
 void PG_copy_count_timestamp_min_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  static char time_str[LONGSRVBUFLEN];
-  struct tm *tme;
+  static char time_str[VERYSHORTBUFLEN];
 
-  tme = localtime(&cache_elem->stitch->timestamp_min.tv_sec);
-  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+  pm_strftime(time_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->stitch->timestamp_min.tv_sec, config.timestamps_utc);
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->stitch->timestamp_min.tv_sec); // dummy
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
@@ -505,11 +497,9 @@ void count_timestamp_min_residual_handler(const struct db_cache *cache_elem, str
 
 void PG_copy_count_timestamp_max_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  static char time_str[LONGSRVBUFLEN];
-  struct tm *tme;
+  static char time_str[VERYSHORTBUFLEN];
 
-  tme = localtime(&cache_elem->stitch->timestamp_max.tv_sec);
-  strftime(time_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+  pm_strftime(time_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->stitch->timestamp_max.tv_sec, config.timestamps_utc);
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->stitch->timestamp_max.tv_sec); // dummy
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
@@ -822,14 +812,10 @@ void PG_count_ip_proto_handler(const struct db_cache *cache_elem, struct insert_
 
 void count_copy_timestamp_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  static char btime_str[LONGSRVBUFLEN], now_str[LONGSRVBUFLEN];
-  struct tm *tme;
+  static char btime_str[VERYSHORTBUFLEN], now_str[VERYSHORTBUFLEN];
 
-  tme = localtime(&cache_elem->basetime);
-  strftime(btime_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
-
-  tme = localtime(&idata->now);
-  strftime(now_str, LONGSRVBUFLEN, "%Y-%m-%d %H:%M:%S", tme);
+  pm_strftime(btime_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->basetime, config.timestamps_utc);
+  pm_strftime(now_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &idata->now, config.timestamps_utc);
   
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->basetime); // dummy
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, now_str, btime_str);

@@ -311,7 +311,9 @@ time_t roundoff_time(time_t t, char *value)
   struct tm *rounded;
   int len, j;
 
-  rounded = localtime(&t);
+  if (!config.timestamps_utc) rounded = localtime(&t);
+  else rounded = gmtime(&t);
+
   rounded->tm_sec = 0; /* default round off */
 
   if (value) {
@@ -355,7 +357,8 @@ time_t calc_monthly_timeslot(time_t t, int howmany, int op)
   time_t base = t, final;
   struct tm *tmt;
 
-  tmt = localtime(&t);
+  if (!config.timestamps_utc) tmt = localtime(&t);
+  else tmt = gmtime(&t);
 
   while (howmany) {
     tmt->tm_mday = 1;
@@ -945,15 +948,34 @@ void stop_all_childs()
   my_sigint_handler(0); /* it does same thing */
 }
 
-void strftime_same(char *s, int max, char *tmp, const time_t *now, int utc)
+void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc)
 {
-  struct tm *nowtm;
+  time_t time_loc;  
+  struct tm *tm_loc;
 
-  if (!utc) nowtm = localtime(now);
-  else nowtm = gmtime(now);
+  if (time_ref) time_loc = (*time_ref);
+  else time_loc = time(NULL);
 
-  strftime(tmp, max, s, nowtm);
-  insert_rfc3339_timezone(tmp, max, nowtm);
+  if (!utc) tm_loc = localtime(&time_loc);
+  else tm_loc = gmtime(&time_loc);
+
+  strftime(s, max, format, tm_loc);
+  insert_rfc3339_timezone(s, max, tm_loc);
+}
+
+void strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int utc)
+{
+  time_t time_loc;
+  struct tm *tm_loc;
+
+  if (time_ref) time_loc = (*time_ref);
+  else time_loc = time(NULL);
+
+  if (!utc) tm_loc = localtime(&time_loc);
+  else tm_loc = gmtime(&time_loc);
+
+  strftime(tmp, max, s, tm_loc);
+  insert_rfc3339_timezone(tmp, max, tm_loc);
   strlcpy(s, tmp, max);
 }
 

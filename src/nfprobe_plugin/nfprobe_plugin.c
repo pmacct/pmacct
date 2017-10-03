@@ -186,7 +186,7 @@ format_time(time_t t)
 {
 	static char buf[32];
 
-	strftime_same(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S$tzone", &t, config.timestamps_utc);
+	pm_strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S$tzone", &t, config.timestamps_utc);
 
 	return (buf);
 }
