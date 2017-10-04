@@ -51,9 +51,9 @@ char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_nat_primitives *, struct pkt_mpls_primitives *,
 			struct pkt_tunnel_primitives *, char *,
 			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
-			pm_counter_t, u_int32_t, struct timeval *);
+			pm_counter_t, u_int32_t, struct timeval *, int, int);
 void pmc_append_rfc3339_timezone(char *, int, const struct tm *);
-void pmc_compose_timestamp(char *, int, struct timeval *, int, int);
+void pmc_compose_timestamp(char *, int, struct timeval *, int, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
 void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
 void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
@@ -65,7 +65,7 @@ char *pmc_ndpi_get_proto_name(u_int16_t);
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
 char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
-int want_ipproto_num, want_tstamp_since_epoch, ct_idx, ct_num;
+int want_ipproto_num, ct_idx, ct_num;
 
 /* functions */
 int CHECK_Q_TYPE(int type)
@@ -106,6 +106,7 @@ void usage_client(char *prog)
   printf("  -I\tSet timestamps in 'since Epoch' format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
   printf("  -x\tPrint BGP communities (standard, extended) in the same field (temporary, 1.5 and 1.6.0 compatible)\n");
+  printf("  -0\tAlways set timestamps to UTC (even if the timezone configured on the system is different)\n"); 
   printf("  -V\tPrint version and exit\n");
   printf("\n");
   printf("  See QUICKSTART file in the distribution for examples\n");
@@ -714,7 +715,7 @@ int main(int argc,char **argv)
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
   int want_output, want_pkt_len_distrib_table, want_custom_primitives_table;
-  int want_erase_last_tstamp;
+  int want_erase_last_tstamp, want_tstamp_since_epoch, want_tstamp_utc;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   int topN_howmany, topN_printed;
   int datasize;
@@ -770,6 +771,7 @@ int main(int argc,char **argv)
   want_output = PRINT_OUTPUT_FORMATTED;
   is_event = FALSE;
   want_tstamp_since_epoch = FALSE;
+  want_tstamp_utc = FALSE;
 
   PvhdrSz = sizeof(struct pkt_vlen_hdr_primitives);
   PmLabelTSz = sizeof(pm_label_t);
@@ -1110,6 +1112,9 @@ int main(int argc,char **argv)
       break;
     case 'I':
       want_tstamp_since_epoch = TRUE;
+      break;
+    case '0':
+      want_tstamp_utc = TRUE;
       break;
     case 'l':
       q.type |= WANT_LOCK_OP;
@@ -2795,7 +2800,7 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
 	  char tstamp_str[SRVBUFLEN];
 
-	  pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, want_tstamp_since_epoch);
+	  pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, want_tstamp_since_epoch, want_tstamp_utc);
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
         }
@@ -2803,7 +2808,7 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_END)) {
           char tstamp_str[SRVBUFLEN];
 
-	  pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, want_tstamp_since_epoch);
+	  pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, want_tstamp_since_epoch, want_tstamp_utc);
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
         }
@@ -2811,7 +2816,7 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL)) {
           char tstamp_str[SRVBUFLEN];
 
-          pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, want_tstamp_since_epoch);
+          pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, want_tstamp_since_epoch, want_tstamp_utc);
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
         }
@@ -2872,7 +2877,7 @@ int main(int argc,char **argv)
 	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
 				      &acc_elem->primitives, pbgp, plbgp, pnat, pmpls, ptun, pcust, pvlen,
 				      acc_elem->pkt_len, acc_elem->pkt_num, acc_elem->flo_num,
-				      acc_elem->tcp_flags, NULL);
+				      acc_elem->tcp_flags, NULL, want_tstamp_since_epoch, want_tstamp_utc);
 
 	  if (json_str) {
 	    printf("%s\n", json_str);
@@ -3366,7 +3371,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  struct pkt_tunnel_primitives *ptun, char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime)
+		  u_int32_t tcp_flags, struct timeval *basetime, int tstamp_since_epoch, int tstamp_utc)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
@@ -3694,17 +3699,17 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
-    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, want_tstamp_since_epoch);
+    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, tstamp_since_epoch, tstamp_utc);
     json_object_set_new_nocheck(obj, "timestamp_start", json_string(tstamp_str));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_END) {
-    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, want_tstamp_since_epoch);
+    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE, tstamp_since_epoch, tstamp_utc);
     json_object_set_new_nocheck(obj, "timestamp_end", json_string(tstamp_str));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
-    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, want_tstamp_since_epoch);
+    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, tstamp_since_epoch, tstamp_utc);
     json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(tstamp_str));
   }
 
@@ -3752,7 +3757,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  struct pkt_tunnel_primitives *ptun, char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime)
+		  u_int32_t tcp_flags, struct timeval *basetime, int tstamp_since_epoch, int tstamp_utc)
 {
   return NULL;
 }
@@ -3781,19 +3786,21 @@ void pmc_append_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
   }
 }
 
-void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch)
+void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int tstamp_since_epoch, int tstamp_utc)
 {
   int slen;
   time_t time1;
   struct tm *time2;
 
-  if (since_epoch) {
+  if (tstamp_since_epoch) {
     if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
     else snprintf(buf, buflen, "%u", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
-    time2 = localtime(&time1);
+    if (!tstamp_utc) time2 = localtime(&time1);
+    else time2 = gmtime(&time1);
+
     slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
     if (usec) snprintf((buf + slen), (buflen - slen), ".%u", tv->tv_usec);
