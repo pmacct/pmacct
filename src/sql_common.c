@@ -2437,8 +2437,14 @@ int sql_evaluate_primitives(int primitive)
 	}
       }
       else if (!strcmp(config.type, "sqlite3")) {
-        strncat(where[primitive].string, "timestamp_start=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	if (!config.timestamps_utc) {
+          strncat(where[primitive].string, "timestamp_start=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_start=DATETIME(%u, 'unixepoch')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+	}
       }
     }
     if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_start_handler;
@@ -2489,8 +2495,14 @@ int sql_evaluate_primitives(int primitive)
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
-        strncat(where[primitive].string, "timestamp_end=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	if (!config.timestamps_utc) {
+          strncat(where[primitive].string, "timestamp_end=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_end=DATETIME(%u, 'unixepoch')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+	}
       }
     }
     if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_end_handler;
@@ -2541,8 +2553,14 @@ int sql_evaluate_primitives(int primitive)
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
-        strncat(where[primitive].string, "timestamp_arrival=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	if (!config.timestamps_utc) {
+          strncat(where[primitive].string, "timestamp_arrival=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_arrival=DATETIME(%u, 'unixepoch')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+	}
       }
     }
     if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_arrival_handler;
@@ -2594,8 +2612,14 @@ int sql_evaluate_primitives(int primitive)
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
-        strncat(where[primitive].string, "timestamp_min=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	if (!config.timestamps_utc) {
+          strncat(where[primitive].string, "timestamp_min=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_min=DATETIME(%u, 'unixepoch')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+	}
       }
     }
     if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_min_handler;
@@ -2643,8 +2667,14 @@ int sql_evaluate_primitives(int primitive)
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
-        strncat(where[primitive].string, "timestamp_max=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
-        strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	if (!config.timestamps_utc) {
+          strncat(where[primitive].string, "timestamp_max=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_max=DATETIME(%u, 'unixepoch')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+	}
       }
     }
 

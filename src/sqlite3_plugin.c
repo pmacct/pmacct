@@ -541,17 +541,29 @@ int SQLI_evaluate_history(int primitive)
       strncat(values[primitive].string, ", ", sizeof(values[primitive].string));
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
-    if (!config.timestamps_since_epoch)
-      strncat(where[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime') = ", SPACELEFT(where[primitive].string));
-    else
-      strncat(where[primitive].string, "%u = ", SPACELEFT(where[primitive].string));
-    strncat(where[primitive].string, "stamp_inserted", SPACELEFT(where[primitive].string));
 
+    if (!config.timestamps_since_epoch) {
+      if (!config.timestamps_utc)
+        strncat(where[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime') = ", SPACELEFT(where[primitive].string));
+      else
+        strncat(where[primitive].string, "DATETIME(%u, 'unixepoch') = ", SPACELEFT(where[primitive].string));
+    }
+    else strncat(where[primitive].string, "%u = ", SPACELEFT(where[primitive].string));
+
+    strncat(where[primitive].string, "stamp_inserted", SPACELEFT(where[primitive].string));
     strncat(insert_clause, "stamp_updated, stamp_inserted", SPACELEFT(insert_clause));
-    if (!config.timestamps_since_epoch)
-      strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime'), DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
-    else
+
+    if (!config.timestamps_since_epoch) {
+      if (!config.timestamps_utc) {
+        strncat(values[primitive].string,
+		"DATETIME(%u, 'unixepoch', 'localtime'), DATETIME(%u, 'unixepoch', 'localtime')",
+		SPACELEFT(values[primitive].string));
+      }
+      else strncat(values[primitive].string, "DATETIME(%u, 'unixepoch'), DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+    }
+    else {
       strncat(values[primitive].string, "%u, %u", SPACELEFT(values[primitive].string));
+    }
 
     where[primitive].type = values[primitive].type = TIMESTAMP;
     values[primitive].handler = where[primitive].handler = count_timestamp_handler;
@@ -603,14 +615,28 @@ int SQLI_compose_static_queries()
   if (config.sql_history) {
     if (!config.timestamps_since_epoch) {
       strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-      strncat(set[set_primitives].string, "stamp_updated=DATETIME('now', 'localtime')", SPACELEFT(set[set_primitives].string));
+
+      if (!config.timestamps_utc) {
+	strncat(set[set_primitives].string,
+		"stamp_updated=DATETIME('now', 'localtime')",
+		SPACELEFT(set[set_primitives].string));
+      }
+      else strncat(set[set_primitives].string, "stamp_updated=DATETIME('now')", SPACELEFT(set[set_primitives].string));
+
       set[set_primitives].type = TIMESTAMP;
       set[set_primitives].handler = count_noop_setclause_handler;
       set_primitives++;
 
       if (set_event_primitives) strncpy(set_event[set_event_primitives].string, ", ", SPACELEFT(set_event[set_event_primitives].string));
       else strncpy(set_event[set_event_primitives].string, "SET ", SPACELEFT(set_event[set_event_primitives].string));
-      strncat(set_event[set_event_primitives].string, "stamp_updated=DATETIME('now', 'localtime')", SPACELEFT(set_event[set_event_primitives].string));
+
+      if (!config.timestamps_utc) {
+	strncat(set_event[set_event_primitives].string,
+		"stamp_updated=DATETIME('now', 'localtime')",
+		SPACELEFT(set_event[set_event_primitives].string));
+      }
+      else strncat(set_event[set_event_primitives].string, "stamp_updated=DATETIME('now')", SPACELEFT(set_event[set_event_primitives].string)); 
+
       set_event[set_event_primitives].type = TIMESTAMP;
       set_event[set_event_primitives].handler = count_noop_setclause_event_handler;
       set_event_primitives++;
