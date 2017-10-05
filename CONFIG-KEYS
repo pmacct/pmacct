@@ -1332,6 +1332,14 @@ DESC:		Formats timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival
 		for backward compatibility.
 DEFAULT:	false
 
+KEY:		timestamps_utc
+VALUES:		[ true | false ]
+DESC:		When presenting timestamps, decode them to UTC even if the underlying operating system is
+		set to a different timezone. On the goodness of having a system set to UTC, please read
+		Q18 of the FAQS document.
+DEFAULT:	false
+
+
 KEY:            timestamps_since_epoch
 VALUES          [ true | false ]
 DESC:           All timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival primitives; sql_history-

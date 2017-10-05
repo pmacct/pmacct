@@ -304,12 +304,14 @@ A: Few hints are summed below in order to improve SQL database performances. The
 
 
 Q18: Does having the local timezone configured on servers, routers, etc. - which can
-     very well include DST (Daylight Saving Time) shifts, impact accounting?
+     very well include DST (Daylight Saving Time) shifts - impact accounting?
 A: It is good rule to run the infrastructure and the backend part of the accounting
    system as UTC; for example, accuracy can be negatively impacted if sampled flows
    are cached on a router while the DST shift takes place; plus, pmacct uses system
    clock to calculate time-bins and scanner deadlines among the others. In short,
-   the use of local timezones is not recommended. 
+   the use of local timezones is not recommended. timestamps_utc config directive
+   set to true can be used to present timestamps in UTC even if the system where
+   pmacct is running is set to some timezone different than that.
 
 
 Q19: I'm using the 'tee' plugin with transparent mode set to true and keep receiving
