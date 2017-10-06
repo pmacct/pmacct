@@ -68,7 +68,7 @@ EXT void stop_all_childs();
 EXT int file_lock(int);
 EXT int file_unlock(int);
 EXT void pm_strftime(char *, int, char *, const time_t *, int);
-EXT void strftime_same(char *, int, char *, const time_t *, int);
+EXT void pm_strftime_same(char *, int, char *, const time_t *, int);
 EXT void insert_rfc3339_timezone(char *, int, const struct tm *);
 EXT void append_rfc3339_timezone(char *, int, const struct tm *);
 EXT int read_SQLquery_from_file(char *, char *, int);

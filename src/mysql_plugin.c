@@ -476,15 +476,15 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
     prim_ptrs.data = &dummy_data;
     primptrs_set_all_from_db_cache(&prim_ptrs, queue[0]);
 
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, insert_clause, &prim_ptrs);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, update_clause, &prim_ptrs);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, lock_clause, &prim_ptrs);
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, idata->dyn_table_name, &prim_ptrs);
+    handle_dynname_internal_strings_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+    handle_dynname_internal_strings_same(update_clause, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+    handle_dynname_internal_strings_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+    handle_dynname_internal_strings_same(idata->dyn_table_name, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
 
-    strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
-    strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
-    strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
-    strftime_same(idata->dyn_table_name, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+    pm_strftime_same(insert_clause, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+    pm_strftime_same(update_clause, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+    pm_strftime_same(lock_clause, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+    pm_strftime_same(idata->dyn_table_name, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     if (config.sql_table_schema) sql_create_table(bed.p, &stamp, &prim_ptrs);
   }
 
@@ -502,8 +502,8 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_db_cache(&prim_ptrs, queue[idata->current_queue_elem]);
-      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, tmptable, &prim_ptrs);
-      strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+      handle_dynname_internal_strings_same(tmptable, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+      pm_strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
 	pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];

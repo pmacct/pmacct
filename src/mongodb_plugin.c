@@ -419,8 +419,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
     prim_ptrs.data = &dummy_data;
     primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
 
-    handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, current_table, &prim_ptrs);
-    strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+    handle_dynname_internal_strings_same(current_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+    pm_strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
   }
 
@@ -438,8 +438,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
-      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_table, &prim_ptrs);
-      strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+      handle_dynname_internal_strings_same(elem_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+      pm_strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
         pending_queries_queue[pqq_ptr] = queue[j];

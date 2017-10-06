@@ -606,10 +606,10 @@ void escape_ip_uscores(char *str)
   }
 }
 
-void handle_dynname_internal_strings_same(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs)
+void handle_dynname_internal_strings_same(char *s, int max, char *tmp, struct primitives_ptrs *prim_ptrs)
 {
-  handle_dynname_internal_strings(new, newlen, old, prim_ptrs);
-  strlcpy(old, new, newlen);
+  handle_dynname_internal_strings(tmp, max, s, prim_ptrs);
+  strlcpy(s, tmp, max);
 }
 
 int sql_history_to_secs(int mu, int howmany)
@@ -963,7 +963,9 @@ void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc
   insert_rfc3339_timezone(s, max, tm_loc);
 }
 
-void strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int utc)
+/* format is expected in s; tmp being just a temporary buffer;
+   both s and tmp are expected to be of at least max space */
+void pm_strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int utc)
 {
   time_t time_loc;
   struct tm *tm_loc;
