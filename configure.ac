@@ -671,12 +671,13 @@ AC_ARG_ENABLE(sqlite3,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old libsqlite3 already support pkg-config
-    PKG_CHECK_MODULES([SQLITE3], [sqlite3])
-    PLUGINS="${PLUGINS} sqlite3"
-    USING_SQL="yes"
-    USING_SQLITE3="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $SQLITE3_CFLAGS"
-    AC_DEFINE(WITH_SQLITE3, 1)
+    PKG_CHECK_MODULES([SQLITE3], [sqlite3], [
+      PLUGINS="${PLUGINS} sqlite3"
+      USING_SQL="yes"
+      USING_SQLITE3="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $SQLITE3_CFLAGS"
+      AC_DEFINE(WITH_SQLITE3, 1)
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -696,11 +697,12 @@ AC_ARG_ENABLE(rabbitmq,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old librabbitmq already support pkg-config
-    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq >= 0.8.0])
-    PLUGINS="${PLUGINS} rabbitmq"
-    USING_RABBITMQ="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $RABBITMQ_CFLAGS"
-    AC_DEFINE(WITH_RABBITMQ, 1)
+    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq >= 0.8.0], [
+      PLUGINS="${PLUGINS} rabbitmq"
+      USING_RABBITMQ="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $RABBITMQ_CFLAGS"
+      AC_DEFINE(WITH_RABBITMQ, 1)
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -719,11 +721,12 @@ AC_ARG_ENABLE(zmq,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.2.0])
-    SUPPORTS="${SUPPORTS} zmq"
-    USING_ZMQ="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $ZMQ_CFLAGS"
-    AC_DEFINE(WITH_ZMQ, 1)
+    PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.2.0], [
+      SUPPORTS="${SUPPORTS} zmq"
+      USING_ZMQ="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $ZMQ_CFLAGS"
+      AC_DEFINE(WITH_ZMQ, 1)
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -801,11 +804,12 @@ AC_ARG_ENABLE(geoip,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old Maxmind GeoIP v1 already support pkg-config
-    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0])
-    SUPPORTS="${SUPPORTS} geoip"
-    USING_MMGEOIP="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIP_CFLAGS"
-    AC_DEFINE(WITH_GEOIP, 1)
+    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0], [
+      SUPPORTS="${SUPPORTS} geoip"
+      USING_MMGEOIP="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIP_CFLAGS"
+      AC_DEFINE(WITH_GEOIP, 1)
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -881,16 +885,17 @@ AC_ARG_ENABLE(jansson,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old Jansson already support pkg-config
-    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.5])
-    SUPPORTS="${SUPPORTS} jansson"
-    USING_JANSSON="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $JANSSON_CFLAGS"
-    AC_DEFINE(WITH_JANSSON, 1)
-    _save_LIBS="$LIBS"
-    LIBS="$LIBS $JANSSON_LIBS"
-    AC_CHECK_LIB(jansson, json_object, [], [])
-    AC_CHECK_FUNCS([json_object_update_missing])
-    LIBS="$_save_LIBS"
+    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.5], [
+      SUPPORTS="${SUPPORTS} jansson"
+      USING_JANSSON="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $JANSSON_CFLAGS"
+      AC_DEFINE(WITH_JANSSON, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $JANSSON_LIBS"
+      AC_CHECK_LIB(jansson, json_object, [], [])
+      AC_CHECK_FUNCS([json_object_update_missing])
+      LIBS="$_save_LIBS"
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -909,15 +914,16 @@ AC_ARG_ENABLE(avro,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([AVRO], [avro-c >= 1.8])
-    SUPPORTS="${SUPPORTS} avro"
-    USING_AVRO="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $AVRO_CFLAGS"
-    AC_DEFINE(WITH_AVRO, 1)
-    _save_LIBS="$LIBS"
-    LIBS="$LIBS $AVRO_LIBS"
-    AC_CHECK_LIB(avro, avro_record_get, [], [])
-    LIBS="$_save_LIBS"
+    PKG_CHECK_MODULES([AVRO], [avro-c >= 1.8], [
+      SUPPORTS="${SUPPORTS} avro"
+      USING_AVRO="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $AVRO_CFLAGS"
+      AC_DEFINE(WITH_AVRO, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $AVRO_LIBS"
+      AC_CHECK_LIB(avro, avro_record_get, [], [])
+      LIBS="$_save_LIBS"
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -954,38 +960,39 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.0])
-    SUPPORTS="${SUPPORTS} ndpi"
-    USING_NDPI="yes"
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.0], [
+      SUPPORTS="${SUPPORTS} ndpi"
+      USING_NDPI="yes"
 
-    if test x"$NDPI_CFLAGS" != x""; then
-      NDPI_CFLAGS_INST=`echo $NDPI_CFLAGS | sed 's/ $//'`
-      NDPI_CFLAGS_INST="$NDPI_CFLAGS_INST/libndpi"
-    else
-      NDPI_CFLAGS_INST=""
-    fi
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS $NDPI_CFLAGS_INST"
+      if test x"$NDPI_CFLAGS" != x""; then
+        NDPI_CFLAGS_INST=`echo $NDPI_CFLAGS | sed 's/ $//'`
+        NDPI_CFLAGS_INST="$NDPI_CFLAGS_INST/libndpi"
+      else
+        NDPI_CFLAGS_INST=""
+      fi
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $NDPI_CFLAGS $NDPI_CFLAGS_INST"
 
-    AC_DEFINE(WITH_NDPI, 1)
-    _save_LIBS="$LIBS"
-    LIBS="$LIBS $NDPI_LIBS"
-    AC_CHECK_LIB(ndpi, ndpi_init_detection_module, [], [])
-    LIBS="$_save_LIBS"
+      AC_DEFINE(WITH_NDPI, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $NDPI_LIBS"
+      AC_CHECK_LIB(ndpi, ndpi_init_detection_module, [], [])
+      LIBS="$_save_LIBS"
 
-    dnl XXX: to be improved: avoid linking both static and dynamic libs
-    if test x"$NDPI_CUST_STATIC_LIB_FOUND" = x"yes"; then
-      NDPI_LIBS_STATIC="$NDPI_CUST_STATIC_LIB/libndpi.a"
-    elif test -r /usr/lib/libndpi.a; then
-      NDPI_LIBS_STATIC="/usr/lib/libndpi.a"
-    elif test -r /usr/local/lib/libndpi.a; then
-      NDPI_LIBS_STATIC="/usr/local/lib/libndpi.a"
-    elif test -r /usr/local/nDPI/lib/libndpi.a; then
-      NDPI_LIBS_STATIC="/usr/local/nDPI/lib/libndpi.a"
-    else
-      AC_MSG_ERROR([ERROR: missing nDPI static library])
-    fi
+      dnl XXX: to be improved: avoid linking both static and dynamic libs
+      if test x"$NDPI_CUST_STATIC_LIB_FOUND" = x"yes"; then
+        NDPI_LIBS_STATIC="$NDPI_CUST_STATIC_LIB/libndpi.a"
+      elif test -r /usr/lib/libndpi.a; then
+        NDPI_LIBS_STATIC="/usr/lib/libndpi.a"
+      elif test -r /usr/local/lib/libndpi.a; then
+        NDPI_LIBS_STATIC="/usr/local/lib/libndpi.a"
+      elif test -r /usr/local/nDPI/lib/libndpi.a; then
+        NDPI_LIBS_STATIC="/usr/local/nDPI/lib/libndpi.a"
+      else
+        AC_MSG_ERROR([ERROR: missing nDPI static library])
+      fi
 
-    AC_SUBST([NDPI_LIBS_STATIC])
+      AC_SUBST([NDPI_LIBS_STATIC])
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -1092,9 +1099,10 @@ AC_ARG_ENABLE(nflog,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NFLOG], [libnetfilter_log >= 1])
-    USING_NFLOG="yes"
-    AC_DEFINE(WITH_NFLOG, 1)
+    PKG_CHECK_MODULES([NFLOG], [libnetfilter_log >= 1], [
+      USING_NFLOG="yes"
+      AC_DEFINE(WITH_NFLOG, 1)
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)
