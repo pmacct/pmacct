@@ -87,6 +87,7 @@ void skinny_bmp_daemon()
 
 
   /* initial cleanups */
+  reload_map_bmp_thread = FALSE;
   reload_log_bmp_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
@@ -379,6 +380,12 @@ void skinny_bmp_daemon()
 
     select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
     if (select_num < 0) goto select_again;
+
+    if (reload_map_bmp_thread) {
+      if (config.nfacctd_bmp_allow_file) load_allow_file(config.nfacctd_bmp_allow_file, &allow);
+
+      reload_map_bmp_thread = FALSE;
+    }
 
     if (reload_log_bmp_thread) {
       for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {

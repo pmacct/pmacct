@@ -604,6 +604,7 @@ struct packet_ptrs_vector {
 
 struct hosts_table {
   int num;
+  time_t timestamp;
   struct host_addr table[MAX_MAP_ENTRIES];
 };
 

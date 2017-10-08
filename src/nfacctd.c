@@ -976,6 +976,8 @@ int main(int argc,char **argv, char **envp)
       sampling_map_caching = TRUE;
       req.key_value_table = NULL;
 
+      if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
+
       load_networks(config.networks_file, &nt, &nc);
 
       if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map) 

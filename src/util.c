@@ -1326,14 +1326,15 @@ void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 
 void load_allow_file(char *filename, struct hosts_table *t)
 {
+  struct stat st;
   FILE *file;
   char buf[SRVBUFLEN];
   int index = 0;
 
   if (filename) {
     if ((file = fopen(filename, "r")) == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
-      exit(1);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
+      goto handle_error;
     }
 
     memset(t->table, 0, sizeof(t->table));
@@ -1353,7 +1354,21 @@ void load_allow_file(char *filename, struct hosts_table *t)
     if (!t->num) t->num = -1;
 
     fclose(file);
+
+    stat(filename, &st);
+    t->timestamp = st.st_mtime;
   }
+
+  return;
+
+  handle_error:
+  if (t->timestamp) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back old map.\n", config.name, config.type, filename);
+
+    stat(filename, &st);
+    t->timestamp = st.st_mtime;
+  }
+  else exit_all(1);
 }
 
 int check_allow(struct hosts_table *allow, struct sockaddr *sa)

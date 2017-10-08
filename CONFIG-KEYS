@@ -1476,11 +1476,12 @@ DESC:		Redefines the process scheduling priority, equivalent to using the 'nice'
 		process, ie. core, plugins, etc., can define a different priority.
 DEFAULT:	0
 
-KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
+KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, MAP, NO_PMACCTD, NO_UACCTD]
 DESC:		Full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line) allowed
 		to send packets to the daemon. Current syntax does not implement network masks but individual
-		IP addresses only. The Allow List is intended to be small; firewall rules should be preferred
-		to long ACLs.
+		IP addresses only. The allow file is intended to be small; firewall rules should be preferred
+		to long ACLs. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie.
+		"killall -USR2 nfacctd").
 DEFAULT:	none (ie. allow all)
 
 KEY:		nfacctd_time_secs [GLOBAL, NFACCTD_ONLY]
@@ -2227,10 +2228,11 @@ DESC:		Writes a list of the BGP neighbors in the established state to the specif
 		devices to poll via SNMP).
 DEFAULT:	none
 
-KEY:            [ bgp_daemon_allow_file | bmp_daemon_allow_file ] [GLOBAL]
+KEY:            [ bgp_daemon_allow_file | bmp_daemon_allow_file ] [GLOBAL, MAP]
 DESC:           Full pathname to a file containing the list of IP addresses (one for each line) allowed
                 to establish a BGP/BMP session. Current syntax does not implement network masks but only
-		individual IP addresses.
+		individual IP addresses. Content can be reloaded at runtime by sending the daemon a
+		SIGUSR2 signal (ie. "killall -USR2 nfacctd"); changes are applied to new sessions only.
 DEFAULT:	none (ie. allow all)
 
 KEY:            bgp_daemon_md5_file [GLOBAL]
@@ -2526,11 +2528,13 @@ KEY:		telemetry_daemon_udp_timeout [GLOBAL]
 DESC:		Sets the timeout time, in seconds, to determine when a UDP session is to be expired.
 DEFAULT:	300
 
-KEY:		telemetry_daemon_allow_file [GLOBAL]
+KEY:		telemetry_daemon_allow_file [GLOBAL, MAP]
 DESC:           Full pathname to a file containing the list of IPv4/IPv6 addresses (one for each line)
 		allowed to send packets to the daemon. Current syntax does not implement network masks
-		but individual IP addresses only. The Allow List is intended to be small; firewall
-		rules should be preferred to long ACLs.
+		but individual IP addresses only. The allow file is intended to be small for
+		connectionless sessons; firewall rules should be preferred to long ACLs. Content can
+		be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2
+		nfacctd").
 DEFAULT:        none (ie. allow all)
 
 KEY:		telemetry_daemon_pipe_size [GLOBAL]

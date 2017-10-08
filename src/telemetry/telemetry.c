@@ -98,6 +98,7 @@ void telemetry_daemon(void *t_data_void)
   }
 
   /* initial cleanups */
+  reload_map_telemetry_thread = FALSE;
   reload_log_telemetry_thread = FALSE;
   memset(&server, 0, sizeof(server));
   memset(&client, 0, sizeof(client));
@@ -476,6 +477,12 @@ void telemetry_daemon(void *t_data_void)
 	  }
 	}
       }
+    }
+
+    if (reload_map_telemetry_thread) {
+      if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
+
+      reload_map_telemetry_thread = FALSE;
     }
 
     if (reload_log_telemetry_thread) {

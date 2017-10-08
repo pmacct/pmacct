@@ -386,6 +386,8 @@ void skinny_bgp_daemon_online()
 
     /* signals handling */
     if (reload_map_bgp_thread) {
+      if (config.nfacctd_bgp_allow_file) load_allow_file(config.nfacctd_bgp_allow_file, &allow);
+
       if (config.nfacctd_bgp_md5_file) {
 	bgp_md5_file_unload(&bgp_md5);
 	if (bgp_md5.num) bgp_md5_file_process(config.bgp_sock, &bgp_md5); // process unload
