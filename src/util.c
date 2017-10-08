@@ -1343,7 +1343,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
       memset(buf, 0, SRVBUFLEN);
       if (fgets(buf, SRVBUFLEN, file)) {
         if (!sanitize_buf(buf)) {
-          if (str_to_addr(buf, &t->table[index])) index++;
+          if (str_to_addr_mask(buf, &t->table[index].addr, &t->table[index].mask)) index++;
           else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad IP address '%s'. Ignored.\n", config.name, config.type, filename, buf);
         }
       }
@@ -1378,18 +1378,8 @@ int check_allow(struct hosts_table *allow, struct sockaddr *sa)
   if (!allow || !sa) return FALSE; 
 
   for (index = 0; index < allow->num; index++) {
-    if (((struct sockaddr *)sa)->sa_family == allow->table[index].family) {
-      if (allow->table[index].family == AF_INET) {
-        if (((struct sockaddr_in *)sa)->sin_addr.s_addr == allow->table[index].address.ipv4.s_addr)
-          return TRUE;
-      }
-#if defined ENABLE_IPV6
-      else if (allow->table[index].family == AF_INET6) {
-        if (!ip6_addr_cmp(&(((struct sockaddr_in6 *)sa)->sin6_addr), &allow->table[index].address.ipv6))
-          return TRUE;
-      }
-#endif
-    }
+    if (host_addr_mask_sa_cmp(&allow->table[index].addr, &allow->table[index].mask, sa) == 0)
+      return TRUE;
   }
 
   return FALSE;

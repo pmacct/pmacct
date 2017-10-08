@@ -602,10 +602,15 @@ struct packet_ptrs_vector {
 #endif
 };
 
+struct hosts_table_entry {
+  struct host_addr addr;
+  struct host_mask mask;
+};
+
 struct hosts_table {
   int num;
   time_t timestamp;
-  struct host_addr table[MAX_MAP_ENTRIES];
+  struct hosts_table_entry table[MAX_MAP_ENTRIES];
 };
 
 struct bgp_md5_table_entry {
