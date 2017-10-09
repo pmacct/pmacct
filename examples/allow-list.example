@@ -1,6 +1,0 @@
-!
-! Sample allow-list; enabled via 'nfacctd_allow_file' key.
-!
-192.168.0.1
-192.168.1.254
-

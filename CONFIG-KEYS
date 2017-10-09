@@ -1480,7 +1480,8 @@ KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, MAP, NO_PMACCTD, NO_U
 DESC:		Full pathname to a file containing the list of IPv4/IPv6 addresses/prefixes (one for each
 		line) allowed to send packets to the daemon. The allow file is intended to be small; for
 		longer ACLs, firewall rules should be preferred instead. Content can be reloaded at runtime
-		by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
+		by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd"). Sample map in
+		examples/allow.lst.example .
 DEFAULT:	none (ie. allow all)
 
 KEY:		nfacctd_time_secs [GLOBAL, NFACCTD_ONLY]
@@ -2231,7 +2232,7 @@ KEY:            [ bgp_daemon_allow_file | bmp_daemon_allow_file ] [GLOBAL, MAP]
 DESC:           Full pathname to a file containing the list of IP addresses/prefixes (one for each
 		line) allowed to establish a BGP/BMP session. Content can be reloaded at runtime by
 		sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd"); changes are
-		applied to new sessions only.
+		applied to new sessions only. Sample map in examples/allow.lst.example .
 DEFAULT:	none (ie. allow all)
 
 KEY:            bgp_daemon_md5_file [GLOBAL]
@@ -2532,7 +2533,7 @@ DESC:           Full pathname to a file containing the list of IPv4/IPv6 address
 		each line) allowed to send packets to the daemon. The allow file is intended to be
 		small for connectionless sessons; for longer ACLs, firewall rules should be preferred
 		instead. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie.
-		"killall -USR2 nfacctd").
+		"killall -USR2 nfacctd"). Sample map in examples/allow.lst.example .
 DEFAULT:        none (ie. allow all)
 
 KEY:		telemetry_daemon_pipe_size [GLOBAL]

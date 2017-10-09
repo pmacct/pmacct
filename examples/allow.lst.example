@@ -1,0 +1,15 @@
+!
+! Sample allow file; enabled via 'nfacctd_allow_file' and equivalent keys.
+!
+! * Allow individual IPv4/IPv6 addresses
+! 192.168.0.1
+! 192.168.1.254
+!
+! * Allow IPv4/IPv6 prefixes 
+! 192.168.2.0/24
+!
+! * Allow all
+! 0.0.0.0/0
+!
+! * Reject all with an empty allow file 
+!

@@ -8,6 +8,14 @@ upgrading your installation.
 
 TO:	>= 1.7.1
 FROM:	<= 1.7.0
+TOPIC:	allow file, ie. nfacctd_allow_file and equivalents.
+DESC:	Definition of IP prefixes is now supported and hence the 0.0.0.0/0
+	to allow all traffic in; whereas now an empty map rejects all input
+	traffic. In previous releases an empty map would allow all traffic
+	in instead and there was no way to simply reject all traffic. 
+
+TO:	>= 1.7.1
+FROM:	<= 1.7.0
 TOPIC:	pmacct IMT client and timestamps
 DESC:	Timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival
 	primitives) are now formatted in a rfc3339 compliant way, ie. if
