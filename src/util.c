@@ -473,6 +473,9 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
   int oldlen;
   char ref_string[] = "$ref", hst_string[] = "$hst", psi_string[] = "$peer_src_ip";
   char tag_string[] = "$tag", tag2_string[] = "$tag2";
+  char src_host_string[] = "$src_host", dst_host_string[] = "$dst_host";
+  char src_port_string[] = "$src_port", dst_port_string[] = "$dst_port";
+  char proto_string[] = "$proto";
   char *ptr_start, *ptr_end;
 
   if (!new || !old || !prim_ptrs) return;
@@ -575,6 +578,117 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 
     if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag2);
     else snprintf(buf, newlen, "%llu", zero_tag);
+
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, src_host_string);
+  if (ptr_start) {
+    char empty_src_host[] = "null";
+    char src_host[SRVBUFLEN];
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(src_host_string);
+    len -= strlen(src_host_string);
+
+    if (prim_ptrs && prim_ptrs->data) addr_to_str(src_host, &prim_ptrs->data->primitives.src_ip);
+    else strlcpy(src_host, empty_src_host, strlen(src_host));
+
+    escape_ip_uscores(src_host);
+    snprintf(buf, newlen, "%s", src_host);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, dst_host_string);
+  if (ptr_start) {
+    char empty_dst_host[] = "null";
+    char dst_host[SRVBUFLEN];
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(dst_host_string);
+    len -= strlen(dst_host_string);
+
+    if (prim_ptrs && prim_ptrs->data) addr_to_str(dst_host, &prim_ptrs->data->primitives.dst_ip);
+    else strlcpy(dst_host, empty_dst_host, strlen(dst_host));
+
+    escape_ip_uscores(dst_host);
+    snprintf(buf, newlen, "%s", dst_host);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, src_port_string);
+  if (ptr_start) {
+    pm_id_t zero_port = 0;
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(src_port_string);
+    len -= strlen(src_port_string);
+
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%hu", prim_ptrs->data->primitives.src_port);
+    else snprintf(buf, newlen, "%hu", zero_port);
+
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, dst_port_string);
+  if (ptr_start) {
+    pm_id_t zero_port = 0;
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(dst_port_string);
+    len -= strlen(dst_port_string);
+
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%hu", prim_ptrs->data->primitives.dst_port);
+    else snprintf(buf, newlen, "%hu", zero_port);
+
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, proto_string);
+  if (ptr_start) {
+    u_int8_t null_proto = -1;
+    char buf[newlen];
+    int len, howmany;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(proto_string);
+    len -= strlen(proto_string);
+
+    if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%d", prim_ptrs->data->primitives.proto);
+    else snprintf(buf, newlen, "%d", null_proto);
 
     strncat(buf, ptr_end, len);
 

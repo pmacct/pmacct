@@ -81,6 +81,11 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
       rd_kafka_conf_dump_free(res, res_len);
     }
 
+    /* This needs to be done here otherwise kafka_host->topic_cfg is null
+     * and the partitioner cannot be set */
+    if (config.kafka_partition_dynamic && kafka_host->topic_cfg)
+      p_kafka_set_dynamic_partitioner(kafka_host);
+
     /* destroy current allocation before making a new one */
     if (kafka_host->topic) p_kafka_unset_topic(kafka_host);
 
@@ -163,6 +168,11 @@ int p_kafka_get_partition(struct p_kafka_host *kafka_host)
   if (kafka_host) return kafka_host->partition;
 
   return FALSE;
+}
+
+void p_kafka_set_dynamic_partitioner(struct p_kafka_host *kafka_host)
+{
+  rd_kafka_topic_conf_set_partitioner_cb(kafka_host->topic_cfg, &rd_kafka_msg_partitioner_consistent_random);
 }
 
 void p_kafka_set_key(struct p_kafka_host *kafka_host, char *key, int key_len)
@@ -378,19 +388,19 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
-int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len)
+int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len, int part)
 {
   int ret = SUCCESS;
 
   kafkap_ret_err_cb = FALSE;
 
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
-    ret = rd_kafka_produce(kafka_host->topic, kafka_host->partition, RD_KAFKA_MSG_F_COPY,
+    ret = rd_kafka_produce(kafka_host->topic, part, RD_KAFKA_MSG_F_COPY,
 			   data, data_len, kafka_host->key, kafka_host->key_len, NULL);
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
-          rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
+          rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_errno2err(errno)));
       p_kafka_close(kafka_host, TRUE);
     }
   }
@@ -399,6 +409,11 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t 
   rd_kafka_poll(kafka_host->rk, 0);
 
   return ret; 
+}
+
+int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len)
+{
+  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition);
 }
 
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
