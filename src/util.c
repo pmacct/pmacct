@@ -466,7 +466,7 @@ void close_output_file(FILE *f)
 /*
    Notes:
    - we check for sufficient space: we do not (de)allocate anything
-   - as long as we have only a couple possible replacements, we test them all
+   - future: tokenization part to be moved away from runtime
 */
 void handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs)
 {
@@ -477,7 +477,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
   char src_port_string[] = "$src_port", dst_port_string[] = "$dst_port";
   char proto_string[] = "$proto";
 
-  char buf[newlen], *ptr_start, *ptr_end, *ptr_var, *ptr_substr;
+  char buf[newlen], *ptr_start, *ptr_end, *ptr_var, *ptr_substr, *last_char;
   int oldlen, var_num, var_len, rem_len, sub_len; 
 
   if (!new || !old || !prim_ptrs) return;
@@ -489,12 +489,15 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     rem_len = newlen - (ptr_var - new);
 
     /* tokenizing: valid charset: a-z, A-Z, 0-9, _ */
-    for (var_len = 1; var_len < rem_len; var_len++) {
+    for (var_len = 1, last_char = NULL; var_len < rem_len; var_len++) {
       if ((ptr_var[var_len] >= '\x30' && ptr_var[var_len] <= '\x39') ||
           (ptr_var[var_len] >= '\x41' && ptr_var[var_len] <= '\x5a') ||
           (ptr_var[var_len] >= '\x61' && ptr_var[var_len] <= '\x7a') ||
-          ptr_var[var_len] == '\x5f'); 
-      else break;
+          ptr_var[var_len] == '\x5f') last_char = &ptr_var[var_len]; 
+      else {
+	if ((*last_char) == '\x5f') var_len--;
+	break;
+      }
     }
 
     /* string tests */
