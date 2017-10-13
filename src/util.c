@@ -477,7 +477,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
   char src_port_string[] = "$src_port", dst_port_string[] = "$dst_port";
   char proto_string[] = "$proto";
 
-  char *ptr_start, *ptr_end, *ptr_var, *ptr_substr;
+  char buf[newlen], *ptr_start, *ptr_end, *ptr_var, *ptr_substr;
   int oldlen, var_num, var_len, rem_len, sub_len; 
 
   if (!new || !old || !prim_ptrs) return;
@@ -500,7 +500,6 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     /* string tests */
     sub_len = 0;
     if (!strncmp(ptr_var, ref_string, var_len)) {
-      char buf[newlen];
       int len;
 
       ptr_start = ptr_var;
@@ -518,7 +517,6 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, hst_string, var_len)) {
-      char buf[newlen];
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -538,8 +536,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     }
     else if (!strncmp(ptr_var, psi_string, var_len)) {
       char empty_peer_src_ip[] = "null";
-      char peer_src_ip[SRVBUFLEN];
-      char buf[newlen];
+      char peer_src_ip[INET6_ADDRSTRLEN];
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -562,7 +559,6 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     }
     else if (!strncmp(ptr_var, tag_string, var_len)) {
       pm_id_t zero_tag = 0;
-      char buf[newlen];
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -583,7 +579,6 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     }
     else if (!strncmp(ptr_var, tag2_string, var_len)) {
       pm_id_t zero_tag = 0;
-      char buf[newlen];
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -604,8 +599,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     }
     else if (!strncmp(ptr_var, src_host_string, var_len)) {
       char empty_src_host[] = "null";
-      char src_host[SRVBUFLEN];
-      char buf[newlen];
+      char src_host[INET6_ADDRSTRLEN];
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -615,7 +609,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       len -= strlen(src_host_string);
 
       if (prim_ptrs && prim_ptrs->data) addr_to_str(src_host, &prim_ptrs->data->primitives.src_ip);
-      else strlcpy(src_host, empty_src_host, strlen(src_host));
+      else strlcpy(src_host, empty_src_host, strlen(empty_src_host));
 
       escape_ip_uscores(src_host);
       snprintf(buf, newlen, "%s", src_host);
@@ -628,8 +622,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
     }
     else if (!strncmp(ptr_var, dst_host_string, var_len)) {
       char empty_dst_host[] = "null";
-      char dst_host[SRVBUFLEN];
-      char buf[newlen];
+      char dst_host[INET6_ADDRSTRLEN];
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -639,7 +632,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       len -= strlen(dst_host_string);
 
       if (prim_ptrs && prim_ptrs->data) addr_to_str(dst_host, &prim_ptrs->data->primitives.dst_ip);
-      else strlcpy(dst_host, empty_dst_host, strlen(dst_host));
+      else strlcpy(dst_host, empty_dst_host, strlen(empty_dst_host));
 
       escape_ip_uscores(dst_host);
       snprintf(buf, newlen, "%s", dst_host);
@@ -651,8 +644,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, src_port_string, var_len)) {
-      pm_id_t zero_port = 0;
-      char buf[newlen];
+      u_int16_t zero_port = 0;
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -672,8 +664,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, dst_port_string, var_len)) {
-      pm_id_t zero_port = 0;
-      char buf[newlen];
+      u_int16_t zero_port = 0;
       int len, howmany;
 
       ptr_start = ptr_var;
@@ -693,8 +684,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, proto_string, var_len)) {
-      u_int8_t null_proto = -1;
-      char buf[newlen];
+      int null_proto = -1;
       int len, howmany;
 
       ptr_start = ptr_var;
