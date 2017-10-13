@@ -221,7 +221,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     gettimeofday(&cycle_stamp, NULL);
 
     if (num <= 0) {
-      if (getppid() == 1) {
+      if (getppid() != core_pid) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
 	exit_plugin(1);
       } 
