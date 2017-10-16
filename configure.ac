@@ -745,46 +745,12 @@ AC_ARG_ENABLE(kafka,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.9.2],, [
-	AC_MSG_CHECKING([default locations for librdkafka])
-	if test -r /usr/lib/librdkafka.a -o -r /usr/lib/librdkafka.so; then
-		KAFKA_LIBS="-L/usr/lib -lrdkafka"
-		AC_MSG_RESULT([found in /usr/lib])
-	elif test -r /usr/lib64/librdkafka.a -o -r /usr/lib64/librdkafka.so; then
-		KAFKA_LIBS="-L/usr/lib64 -lrdkafka"
-		AC_MSG_RESULT([found in /usr/lib64])
-	elif test -r /usr/local/lib/librdkafka.a -o -r /usr/local/lib/librdkafka.so; then
-		KAFKA_LIBS="-L/usr/local/lib -lrdkafka"
-		AC_MSG_RESULT([found in /usr/local/lib])
-	else
-		AC_MSG_RESULT([not found])
-                _save_LIBS="$LIBS"
-                LIBS="$LIBS $KAFKA_LIBS"
-		AC_CHECK_LIB([rdkafka], [rd_kafka_new], [], [AC_MSG_ERROR([
-			ERROR: missing Kafka library. Refer to: https://github.com/edenhill/librdkafka/
-		])])
-                LIBS="$_save_LIBS"
-	fi
-
-	AC_MSG_CHECKING([default locations for rdkafka.h])
-	if test -r /usr/include/librdkafka/rdkafka.h; then
-		KAFKA_CFLAGS="-I/usr/include"
-		AC_MSG_RESULT([found in /usr/include])
-	elif test -r /usr/local/include/librdkafka/rdkafka.h; then
-		KAFKA_CFLAGS="-I/usr/local/include"
-		AC_MSG_RESULT([found in /usr/local/include])
-	else
-		AC_MSG_RESULT([not found])
-                _save_CFLAGS="$CFLAGS"
-                CFLAGS="$CFLAGS $KAFKA_CFLAGS"
-		AC_CHECK_HEADER([rdkafka.h], [], [AC_MSG_ERROR(ERROR: missing Kafka headers)])
-                CFLAGS="$_save_CFLAGS"
-	fi
+    PKG_CHECK_MODULES([KAFKA], [rdkafka >= 0.9.2], [
+      PLUGINS="${PLUGINS} kafka"
+      USING_KAFKA="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $KAFKA_CFLAGS"
+      AC_DEFINE(WITH_KAFKA, 1)
     ])
-    PLUGINS="${PLUGINS} kafka"
-    USING_KAFKA="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $KAFKA_CFLAGS"
-    AC_DEFINE(WITH_KAFKA, 1)
     ;;
   no)
     AC_MSG_RESULT(no)
