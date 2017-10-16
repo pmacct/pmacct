@@ -338,8 +338,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
-  char elem_part_key[SRVBUFLEN];
-  char tmpbuf[LONGLONGSRVBUFLEN];
+  char elem_part_key[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   int i, j, stop, batch_idx, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;
   int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
@@ -501,9 +500,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     if (dyn_partition_key) {
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
-      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
+      memset(tmpbuf, 0, SRVBUFLEN);
       strlcpy(elem_part_key, config.kafka_partition_key, SRVBUFLEN);
-      handle_dynname_internal_strings_same(tmpbuf, LONGSRVBUFLEN, elem_part_key, &prim_ptrs);
+      handle_dynname_internal_strings_same(tmpbuf, SRVBUFLEN, elem_part_key, &prim_ptrs);
       p_kafka_set_key(&kafkap_kafka_host, elem_part_key, strlen(elem_part_key));
     }
 

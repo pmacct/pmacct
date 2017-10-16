@@ -666,9 +666,8 @@ DEFAULT:	-1
 
 KEY:		kafka_partition_dynamic
 VALUES          [ true | false ]
-DESC:		Enables dynamic Kafka partitioning, ie data is partitioned according to the value
-                of the Kafka broker topic partition key.
-                See kafka_partition_key.
+DESC:		Enables dynamic Kafka partitioning, ie. data is partitioned according to the value
+                of the Kafka broker topic partition key. See also kafka_partition_key.
 DEFAULT:	false
 
 KEY:            kafka_partition_key
@@ -676,8 +675,9 @@ DESC:           Defines the Kafka broker topic partition key. A string of printa
 		expected as value. Dynamic names are supported through the use of variables, which
 		are computed at the moment data is purged to the backend. The list of supported
 		variables follows:
-		$peer_src_ip	Record value for peer_src_ip primitive (if primitive is not part of
-				the aggregation method then this will be set to a null value).
+
+		$peer_src_ip	Record value for peer_src_ip primitive (if primitive is not part
+				of the aggregation method then this will be set to a null value).
 
 		$tag		Record value for tag primitive (if primitive is not part of the
 				aggregation method then this will be set to a null value).
@@ -697,8 +697,8 @@ DESC:           Defines the Kafka broker topic partition key. A string of printa
 		$dst_port	Record value for dst_port primitive (if primitive is not part of
                                 the aggregation method then this will be set to a null value).
 
-		$proto		Record value for proto primitive (if primitive is not part of the
-				aggregation method then this will be set to a null value).
+		$proto		Record value for proto primitive (if primitive is not part of
+				the aggregation method then this will be set to a null value).
 DEFAULT:	none
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |
@@ -880,13 +880,13 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 
 		$hst		Configured sql_history value, in seconds, for the plugin.
 
-		$peer_src_ip	Record value for peer_src_ip primitive (if primitive is not part of
-				the aggregation method then this will be set to a null value).
+		$peer_src_ip	Record value for peer_src_ip primitive (if primitive is not part
+				of the aggregation method then this will be set to a null value).
 
-		$tag		Record value for tag primitive ((if primitive is not part of the
+		$tag		Record value for tag primitive (if primitive is not part of the
 				aggregation method then this will be set to a null value).
 
-		$tag2		Record value for tag2 primitive ((if primitive is not part of the
+		$tag2		Record value for tag2 primitive (if primitive is not part of the
 				aggregation method then this will be set to a null value).
 
 		SQL plugins notes:
