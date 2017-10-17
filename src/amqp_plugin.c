@@ -201,7 +201,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
 
     if (ret <= 0) {
-      if (getppid() == 1) {
+      if (getppid() != core_pid) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
         exit_plugin(1);
       }
