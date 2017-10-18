@@ -751,46 +751,14 @@ AC_ARG_ENABLE(geoipv2,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.2.0],, [
-	AC_MSG_CHECKING([default locations for libmaxminddb])
-	if test -r /usr/lib/libmaxminddb.a -o -r /usr/lib/libmaxminddb.so; then
-		GEOIPV2_LIBS="-L/usr/lib -lmaxminddb"
-		AC_MSG_RESULT([found in /usr/lib])
-	elif test -r /usr/lib64/libmaxminddb.a -o -r /usr/lib64/libmaxminddb.so; then
-		GEOIPV2_LIBS="-L/usr/lib64 -lmaxminddb"
-		AC_MSG_RESULT([found in /usr/lib64])
-	elif test -r /usr/local/lib/libmaxminddb.a -o -r /usr/local/lib/libmaxminddb.so; then
-		GEOIPV2_LIBS="-L/usr/local/lib -lmaxminddb"
-		AC_MSG_RESULT([found in /usr/local/lib])
-	else
-		AC_MSG_RESULT([not found])
-                _save_LIBS="$LIBS"
-                LIBS="$LIBS $GEOIPV2_LIBS"
-		AC_CHECK_LIB([maxminddb], [MMDB_open], [], [AC_MSG_ERROR([
-			ERROR: missing Maxmind libmaxminddb library. Refer to: http://www.maxmind.com/download/geoip/api/c/
-		])])
-                LIBS="$_save_LIBS"
-	fi
-
-	AC_MSG_CHECKING([default locations for maxminddb.h])
-	if test -r /usr/include/maxminddb.h; then
-		GEOIPV2_CFLAGS="-I/usr/include"
-		AC_MSG_RESULT([found in /usr/include])
-	elif test -r /usr/local/include/maxminddb.h; then
-		GEOIPV2_CFLAGS="-I/usr/local/include"
-		AC_MSG_RESULT([found in /usr/local/include])
-	else
-		AC_MSG_RESULT([not found])
-                _save_CFLAGS="$CFLAGS"
-                CFLAGS="$CFLAGS $GEOIPV2_CFLAGS"
-		AC_CHECK_HEADER([maxminddb.h], [], [AC_MSG_ERROR(ERROR: missing Maxmind libmaxminddb headers)])
-                CFLAGS="$_save_CFLAGS"
-	fi
+    PKG_CHECK_MODULES([GEOIPV2], [libmaxminddb >= 1.2], [
+      SUPPORTS="${SUPPORTS} geoipv2"
+      USING_MMGEOIPV2="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIPV2_CFLAGS"
+      AC_DEFINE(WITH_GEOIPV2, 1)
+    ], [
+      AC_MSG_ERROR([Missing Maxmind libmaxminddb library. Refer to: http://www.maxmind.com/download/geoip/api/c/])
     ])
-    SUPPORTS="${SUPPORTS} geoipv2"
-    USING_MMGEOIPV2="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIPV2_CFLAGS"
-    AC_DEFINE(WITH_GEOIPV2, 1)
     ;;
   no)
     AC_MSG_RESULT(no)
