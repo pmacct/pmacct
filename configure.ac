@@ -546,54 +546,13 @@ AC_ARG_ENABLE(pgsql,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([PGSQL], [libpq],, [
-	AC_MSG_CHECKING([default locations for libpq])
-	if test -r /usr/lib/libpq.a -o -r /usr/lib/libpq.so; then
-		PGSQL_LIBS="-L/usr/lib -lpq"
-		AC_MSG_RESULT([found in /usr/lib])
-	elif test -r /usr/lib64/libpq.a -o -r /usr/lib64/libpq.so; then
-		PGSQL_LIBS="-L/usr/lib64 -lpq"
-		AC_MSG_RESULT([found in /usr/lib64])
-	elif test -r /usr/local/lib/libpq.a -o -r /usr/local/lib/libpq.so; then
-		PGSQL_LIBS="-L/usr/local/lib -lpq"
-		AC_MSG_RESULT([found in /usr/local/lib])
-	elif test -r /usr/local/pgsql/lib/libpq.a -o -r /usr/local/pgsql/lib/libpq.so; then
-		PGSQL_LIBS="-L/usr/local/pgsql/lib -lpq"
-		AC_MSG_RESULT([found in /usr/local/pgsql/lib])
-	else
-		AC_MSG_RESULT([not found])
-		_save_LIBS="$LIBS"
-		LIBS="$LIBS $PGSQL_LIBS"
-		AC_CHECK_LIB([pq], [PQconnectdb], [], [AC_MSG_ERROR([ERROR: missing PQ library. Refer to: http://www.postgresql.org/])])
-		LIBS="$_save_LIBS"
-	fi
-
-	AC_MSG_CHECKING([default locations for libpq-fe.h])
-	if test -r /usr/include/libpq-fe.h; then
-		PGSQL_CFLAGS="-I/usr/include"
-		AC_MSG_RESULT([found in /usr/include])
-	elif test -r /usr/include/postgresql/libpq-fe.h; then
-		PGSQL_CFLAGS="-I/usr/include/postgresql"
-		AC_MSG_RESULT([found in /usr/include/postgresql])
-	elif test -r /usr/local/include/libpq-fe.h; then
-		PGSQL_CFLAGS="-I/usr/local/include"
-		AC_MSG_RESULT([found in /usr/local/include])
-	elif test -r /usr/local/pgsql/include/libpq-fe.h; then
-		PGSQL_CFLAGS="-I/usr/local/pgsql/include"
-		AC_MSG_RESULT([found in /usr/local/pgsql/include])
-	else
-		AC_MSG_RESULT([not found])
-		_save_CFLAGS="$CFLAGS"
-		CFLAGS="$CFLAGS $PGSQL_CFLAGS"
-		AC_CHECK_HEADER([libpq-fe.h], [], [AC_MSG_ERROR(ERROR: missing PostgreSQL headers)])
-		CFLAGS="$_save_CFLAGS"
-	fi
+    PKG_CHECK_MODULES([PGSQL], [libpq >= 9.3], [
+      PLUGINS="${PLUGINS} pgsql"
+      USING_SQL="yes"
+      USING_PGSQL="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $PGSQL_CFLAGS"
+      AC_DEFINE(WITH_PGSQL, 1)
     ])
-    PLUGINS="${PLUGINS} pgsql"
-    USING_SQL="yes"
-    USING_PGSQL="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $PGSQL_CFLAGS"
-    AC_DEFINE(WITH_PGSQL, 1)
     ;;
   no)
     AC_MSG_RESULT(no)
