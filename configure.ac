@@ -648,7 +648,7 @@ AC_ARG_ENABLE(sqlite3,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old libsqlite3 already support pkg-config
-    PKG_CHECK_MODULES([SQLITE3], [sqlite3], [
+    PKG_CHECK_MODULES([SQLITE3], [sqlite3 >= 3.7.13], [
       PLUGINS="${PLUGINS} sqlite3"
       USING_SQL="yes"
       USING_SQLITE3="yes"
