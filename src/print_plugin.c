@@ -406,7 +406,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
 
-      handle_dynname_internal_strings_same(current_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs);
+      handle_dynname_internal_strings_same(current_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs, DYN_STR_PRINT_FILE);
       pm_strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     }
 
@@ -510,7 +510,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
       elem_prim_ptrs.data = &elem_dummy_data;
       primptrs_set_all_from_chained_cache(&elem_prim_ptrs, queue[j]);
-      handle_dynname_internal_strings_same(elem_table, LONGSRVBUFLEN, tmpbuf, &elem_prim_ptrs);
+      handle_dynname_internal_strings_same(elem_table, LONGSRVBUFLEN, tmpbuf, &elem_prim_ptrs, DYN_STR_PRINT_FILE);
       pm_strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
@@ -1298,7 +1298,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     if (config.print_latest_file) {
       if (!safe_action) {
         memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
-        handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs);
+        handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs, DYN_STR_PRINT_FILE);
         link_latest_output_file(tmpbuf, current_table);
       }
     }

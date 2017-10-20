@@ -468,7 +468,7 @@ void close_output_file(FILE *f)
    - we check for sufficient space: we do not (de)allocate anything
    - future: tokenization part to be moved away from runtime
 */
-void handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs)
+void handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs, int type)
 {
   char ref_string[] = "$ref", hst_string[] = "$hst", psi_string[] = "$peer_src_ip";
   char tag_string[] = "$tag", tag2_string[] = "$tag2";
@@ -600,7 +600,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       *ptr_start = '\0';
       strncat(new, buf, len);
     }
-    else if (!strncmp(ptr_var, src_host_string, var_len)) {
+    else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_host_string, var_len)) {
       char empty_src_host[] = "null";
       char src_host[INET6_ADDRSTRLEN];
       int len, howmany;
@@ -623,7 +623,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       *ptr_start = '\0';
       strncat(new, buf, len);
     }
-    else if (!strncmp(ptr_var, dst_host_string, var_len)) {
+    else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_host_string, var_len)) {
       char empty_dst_host[] = "null";
       char dst_host[INET6_ADDRSTRLEN];
       int len, howmany;
@@ -646,7 +646,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       *ptr_start = '\0';
       strncat(new, buf, len);
     }
-    else if (!strncmp(ptr_var, src_port_string, var_len)) {
+    else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_port_string, var_len)) {
       u_int16_t zero_port = 0;
       int len, howmany;
 
@@ -666,7 +666,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       *ptr_start = '\0';
       strncat(new, buf, len);
     }
-    else if (!strncmp(ptr_var, dst_port_string, var_len)) {
+    else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_port_string, var_len)) {
       u_int16_t zero_port = 0;
       int len, howmany;
 
@@ -686,7 +686,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       *ptr_start = '\0';
       strncat(new, buf, len);
     }
-    else if (!strncmp(ptr_var, proto_string, var_len)) {
+    else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, proto_string, var_len)) {
       int null_proto = -1;
       int len, howmany;
 
@@ -736,9 +736,9 @@ void escape_ip_uscores(char *str)
   }
 }
 
-void handle_dynname_internal_strings_same(char *s, int max, char *tmp, struct primitives_ptrs *prim_ptrs)
+void handle_dynname_internal_strings_same(char *s, int max, char *tmp, struct primitives_ptrs *prim_ptrs, int type)
 {
-  handle_dynname_internal_strings(tmp, max, s, prim_ptrs);
+  handle_dynname_internal_strings(tmp, max, s, prim_ptrs, type);
   strlcpy(s, tmp, max);
 }
 

@@ -414,6 +414,14 @@
 #define PM_MSG_BIN_COPY			0
 #define PM_MSG_STR_COPY			1
 
+#define DYN_STR_UNKNOWN			0
+#define DYN_STR_KAFKA_TOPIC		1
+#define DYN_STR_KAFKA_PART		2
+#define DYN_STR_RABBITMQ_RK		3
+#define DYN_STR_MONGODB_TABLE		4
+#define DYN_STR_SQL_TABLE		5
+#define DYN_STR_PRINT_FILE		6
+
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;
 typedef u_int64_t pm_cfgreg_t;

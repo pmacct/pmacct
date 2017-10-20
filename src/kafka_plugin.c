@@ -502,7 +502,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
       memset(tmpbuf, 0, SRVBUFLEN);
       strlcpy(elem_part_key, config.kafka_partition_key, SRVBUFLEN);
-      handle_dynname_internal_strings_same(tmpbuf, SRVBUFLEN, elem_part_key, &prim_ptrs);
+      handle_dynname_internal_strings_same(tmpbuf, SRVBUFLEN, elem_part_key, &prim_ptrs, DYN_STR_KAFKA_PART);
       p_kafka_set_key(&kafkap_kafka_host, elem_part_key, strlen(elem_part_key));
     }
 
