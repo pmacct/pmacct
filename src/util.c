@@ -463,12 +463,8 @@ void close_output_file(FILE *f)
   if (f) fclose(f);
 }
 
-/*
-   Notes:
-   - we check for sufficient space: we do not (de)allocate anything
-   - future: tokenization part to be moved away from runtime
-*/
-void handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs, int type)
+/* Future: tokenization part to be moved away from runtime */
+int handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs, int type)
 {
   char ref_string[] = "$ref", hst_string[] = "$hst", psi_string[] = "$peer_src_ip";
   char tag_string[] = "$tag", tag2_string[] = "$tag2";
@@ -480,10 +476,11 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
   char buf[newlen], *ptr_start, *ptr_end, *ptr_var, *ptr_substr, *last_char;
   int oldlen, var_num, var_len, rem_len, sub_len; 
 
-  if (!new || !old || !prim_ptrs) return;
+  if (!new || !old || !prim_ptrs) return ERR;
 
   oldlen = strlen(old);
   if (oldlen <= newlen) strcpy(new, old);
+  else return ERR;
 
   for (var_num = 0, ptr_substr = new, ptr_var = strchr(ptr_substr, '$'); ptr_var; var_num++) {
     rem_len = newlen - (ptr_var - new);
@@ -506,35 +503,43 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += 4;
       len -= 4;
 
       snprintf(buf, newlen, "%u", config.sql_refresh_time);
+
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, hst_string, var_len)) {
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += 4;
       len -= 4;
 
       howmany = sql_history_to_secs(config.sql_history, config.sql_history_howmany);
       snprintf(buf, newlen, "%u", howmany);
+
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, psi_string, var_len)) {
@@ -543,7 +548,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(psi_string);
       len -= strlen(psi_string);
@@ -553,11 +558,15 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 
       escape_ip_uscores(peer_src_ip);
       snprintf(buf, newlen, "%s", peer_src_ip);
+
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, tag_string, var_len)) {
@@ -565,7 +574,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(tag_string);
       len -= strlen(tag_string);
@@ -574,10 +583,13 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       else snprintf(buf, newlen, "%llu", zero_tag);
 
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if (!strncmp(ptr_var, tag2_string, var_len)) {
@@ -585,7 +597,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(tag2_string);
       len -= strlen(tag2_string);
@@ -594,10 +606,13 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       else snprintf(buf, newlen, "%llu", zero_tag);
 
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_host_string, var_len)) {
@@ -606,7 +621,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(src_host_string);
       len -= strlen(src_host_string);
@@ -616,11 +631,15 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 
       escape_ip_uscores(src_host);
       snprintf(buf, newlen, "%s", src_host);
+
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_host_string, var_len)) {
@@ -629,7 +648,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(dst_host_string);
       len -= strlen(dst_host_string);
@@ -639,11 +658,15 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 
       escape_ip_uscores(dst_host);
       snprintf(buf, newlen, "%s", dst_host);
+
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_port_string, var_len)) {
@@ -651,7 +674,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(src_port_string);
       len -= strlen(src_port_string);
@@ -660,10 +683,13 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       else snprintf(buf, newlen, "%hu", zero_port);
 
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_port_string, var_len)) {
@@ -671,7 +697,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(dst_port_string);
       len -= strlen(dst_port_string);
@@ -680,10 +706,13 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       else snprintf(buf, newlen, "%hu", zero_port);
 
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, proto_string, var_len)) {
@@ -691,7 +720,7 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = strlen(ptr_start);
+      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(proto_string);
       len -= strlen(proto_string);
@@ -700,10 +729,13 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
       else snprintf(buf, newlen, "%d", null_proto);
 
       sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
       strncat(buf, ptr_end, len);
 
       len = strlen(buf);
       *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
       strncat(new, buf, len);
     }
 
@@ -712,6 +744,8 @@ void handle_dynname_internal_strings(char *new, int newlen, char *old, struct pr
 
     ptr_var = strchr(ptr_substr, '$');
   }
+
+  return SUCCESS;
 }
 
 int have_dynname_nontime(char *str)
@@ -736,10 +770,14 @@ void escape_ip_uscores(char *str)
   }
 }
 
-void handle_dynname_internal_strings_same(char *s, int max, char *tmp, struct primitives_ptrs *prim_ptrs, int type)
+int handle_dynname_internal_strings_same(char *s, int max, char *tmp, struct primitives_ptrs *prim_ptrs, int type)
 {
-  handle_dynname_internal_strings(tmp, max, s, prim_ptrs, type);
+  int ret;
+
+  ret = handle_dynname_internal_strings(tmp, max, s, prim_ptrs, type);
   strlcpy(s, tmp, max);
+
+  return ret;
 }
 
 int sql_history_to_secs(int mu, int howmany)
