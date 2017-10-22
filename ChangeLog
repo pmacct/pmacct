@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.0 -- XX-10-2017
+1.7.0 -- 21-10-2017
   + ZeroMQ integration: by defining plugin_pipe_zmq to 'true', ZeroMQ is
     used for queueing between the Core Process and plugins. This is in
     alternative to the home-grown circular queue implementation (ie.
