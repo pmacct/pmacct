@@ -2658,9 +2658,13 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
     break;
   default:
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
-      ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->First))/1000); 
+      ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime))/1000)+
+      ((ntohl(((struct struct_export_v5 *) pptrs->f_data)->First))/1000);
+
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
-      ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->Last))/1000); 
+      ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime))/1000)+
+      ((ntohl(((struct struct_export_v5 *) pptrs->f_data)->Last))/1000);
+
     break;
   }
 
