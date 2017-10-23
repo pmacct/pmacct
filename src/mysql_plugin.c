@@ -666,10 +666,11 @@ void MY_Unlock(struct BE_descs *bed)
 void MY_DB_Connect(struct DBdesc *db, char *host)
 {
   MYSQL *dbptr = db->desc;
+  my_bool reconnect = TRUE;
 
   if (!db->fail) {
     mysql_init(db->desc);
-    dbptr->reconnect = TRUE;
+    mysql_options(dbptr, MYSQL_OPT_RECONNECT, &reconnect);
     if (!mysql_real_connect(db->desc, host, config.sql_user, config.sql_passwd, config.sql_db, 0, NULL, 0)) {
       sql_db_fail(db);
       MY_get_errmsg(db);
@@ -768,5 +769,5 @@ void MY_init_default_values(struct insert_data *idata)
 
 void MY_mysql_get_version()
 {
-  printf("MySQL %s\n", MYSQL_SERVER_VERSION);
+  printf("MySQL %s\n", MYSQL_VERSION_ID);
 }
