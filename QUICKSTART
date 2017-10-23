@@ -36,8 +36,8 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 	   inject data into 3rd party tools like GNUplot, RRDtool or a Net-SNMP
 	   server. The plugin is good for prototype solutions and smaller-scale
 	   environments. This plugin is compiled in by default.
-'mysql':   a working MySQL installation can be used for data storage. This
-	   plugin can be compiled using the --enable-mysql switch. 
+'mysql':   a working MySQL/MariaDB installation can be used for data storage.
+	   This plugin can be compiled using the --enable-mysql switch. 
 'pgsql':   a working PostgreSQL installation can be used for data storage. This
 	   plugin can be compiled using the --enable-pgsql switch.
 'sqlite3': a working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite

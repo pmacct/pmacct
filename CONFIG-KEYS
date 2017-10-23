@@ -181,13 +181,13 @@ DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins ar
 		compiled.
 		memory plugin uses a memory table as backend; then, a client tool, 'pmacct', can fetch
 		the memory table content; the memory plugin is good for prototype solutions and/or
-		small environments. mysql, pgsql and sqlite3 plugins output respectively to MySQL,
-		PostgreSQL and SQLite 3.x (or BerkeleyDB 5.x with the SQLite API compiled-in) tables
-		to store data. print plugin prints output data to flat-files or stdout in JSON, CSV
-		or tab-spaced formats, or encodes it using the Apache Avro serialization system. amqp
-		and kafka plugins allow to output data to RabbitMQ and Kafka brokers respectively.
-		All these plugins, SQL, no-SQL and messaging are good for production solutions and/or
-		larger scenarios.
+		small environments. mysql, pgsql and sqlite3 plugins output respectively to MySQL (or
+		MariaDB with the MySQL-compatible C API), PostgreSQL and SQLite 3.x (or BerkeleyDB 5.x
+		with the SQLite API compiled-in) tables to store data. print plugin prints output data
+		to flat-files or stdout in JSON, CSV or tab-spaced formats, or encodes it using the
+		Apache Avro serialization system. amqp and kafka plugins allow to output data to
+		RabbitMQ and Kafka brokers respectively. All these plugins, SQL, no-SQL and messaging
+		are good for production solutions and/or larger scenarios.
 		nfprobe acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v1/v5/
 		v9 and IPFIX datagrams to a remote collector. sfprobe acts as a sFlow agent and 
 		exports collected data via sFlow v5 datagrams to a remote collector. Both nfprobe
@@ -1882,8 +1882,8 @@ DEFAULT:        table
 
 KEY:		nfprobe_timeouts
 DESC:		Allows to tune a set of timeouts to be applied over collected packets. The value is expected in
-		the following form: 'name=value:name=value:...'. The set of supported timeouts and their default
-		values are listed below:
+		the following form: 'name=value:name=value:...'. The set of supported timeouts, in seconds, and
+		their default values are listed below:
 
 		tcp	(generic tcp flow life)	3600
 		tcp.rst (TCP RST flow life)	120
@@ -1893,6 +1893,11 @@ DESC:		Allows to tune a set of timeouts to be applied over collected packets. Th
 		general	(generic flow life)	3600
 		maxlife	(maximum flow life)	604800
 		expint	(expiry interval)	60
+
+		expint is a passive timeout, ie. by default if a flow does not make any traffic in 60 secs it
+		gets evicted from the cache. tcp, tcp.rst, tcp.fin, udp, icmp and general are active timeouts,
+		ie. by default a tcp flow is evicted after 3600 secs even if still active, that is, it's still
+		making traffic.
 DEFAULT:	see above
 
 KEY:		nfprobe_hoplimit
