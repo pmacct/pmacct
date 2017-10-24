@@ -127,7 +127,6 @@ EXT void P_exit_now(int);
 EXT int P_trigger_exec(char *);
 EXT void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
 EXT void P_handle_table_dyn_rr(char *, int, char *, struct p_table_rr *);
-EXT void P_handle_table_dyn_strings(char *, int, char *, struct chained_cache *);
 
 EXT void P_broker_timers_set_last_fail(struct p_broker_timers *, time_t);
 EXT void P_broker_timers_set_retry_interval(struct p_broker_timers *, int);

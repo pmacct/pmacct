@@ -480,7 +480,9 @@ DESC:           Name of the AMQP routing key to attach to published data. Dynami
 
                 $peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
-                $pre_tag        Value of the tag primitive of the record being processed.
+		$tag		Value of the tag primitive of the record being processed.
+
+		$tag2		Value of the tag2 primitive of the record being processed.
 
                 $post_tag       Configured value of post_tag.
 
@@ -612,7 +614,9 @@ DESC:           Name of the Kafka topic to attach to published data. Dynamic nam
 
                 $peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
 
-                $pre_tag        Value of the tag primitive of the record being processed.
+		$tag		Value of the tag primitive of the record being processed.
+
+		$tag2		Value of the tagw primitive of the record being processed.
 
                 $post_tag       Configured value of post_tag.
 
@@ -888,6 +892,10 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 
 		$tag2		Record value for tag2 primitive (if primitive is not part of the
 				aggregation method then this will be set to a null value).
+
+		$post_tag	Configured value of post_tag.
+
+		$post_tag2	Configured value of post_tag2.
 
 		SQL plugins notes:
 		Time-related variables require 'sql_history' to be specified in order to work correctly

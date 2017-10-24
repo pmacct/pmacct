@@ -8,6 +8,13 @@ upgrading your installation.
 
 TO:	>= 1.7.1
 FROM:	<= 1.7.0
+TOPIC:	tag variables for dynamic Kafka topics and RabbitMQ routing keys.
+DESC:	In an effort to harmonise variable names - and variable replacement
+	functions - among the different plugins, $pre_tag has been renamed
+	as $tag and $pre_tag2 as $tag2.  
+
+TO:	>= 1.7.1
+FROM:	<= 1.7.0
 TOPIC:	allow file, ie. nfacctd_allow_file and equivalents.
 DESC:	Definition of IP prefixes is now supported and hence the 0.0.0.0/0
 	to allow all traffic in; whereas now an empty map rejects all input
