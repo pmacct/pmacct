@@ -347,7 +347,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   FILE *f = NULL, *lockf = NULL;
   int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index, file_to_be_created;
   time_t start, duration;
-  char tmpbuf[LONGLONGSRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
+  char tmpbuf[SRVBUFLEN], current_table[SRVBUFLEN], elem_table[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs, elem_prim_ptrs;
   struct pkt_data dummy_data, elem_dummy_data;
   pid_t writer_pid = getpid();
@@ -398,16 +398,13 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   if (config.sql_table) {
     time_t stamp = 0;
 
-    strlcpy(current_table, config.sql_table, SRVBUFLEN);
-
     if (dyn_table) {
       stamp = queue[0]->basetime.tv_sec;
-
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
 
-      handle_dynname_internal_strings_same(current_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs, DYN_STR_PRINT_FILE);
-      pm_strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+      handle_dynname_internal_strings(current_table, SRVBUFLEN, config.sql_table, &prim_ptrs, DYN_STR_PRINT_FILE);
+      pm_strftime_same(current_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     }
 
     if (config.print_output & PRINT_OUTPUT_AVRO) {
@@ -504,14 +501,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     if (dyn_table && (!dyn_table_time_only || !config.nfacctd_time_new)) {
       time_t stamp = 0;
 
-      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
       stamp = queue[j]->basetime.tv_sec;
-      strlcpy(elem_table, config.sql_table, SRVBUFLEN);
-
       elem_prim_ptrs.data = &elem_dummy_data;
       primptrs_set_all_from_chained_cache(&elem_prim_ptrs, queue[j]);
-      handle_dynname_internal_strings_same(elem_table, LONGSRVBUFLEN, tmpbuf, &elem_prim_ptrs, DYN_STR_PRINT_FILE);
-      pm_strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+
+      handle_dynname_internal_strings(elem_table, SRVBUFLEN, config.sql_table, &elem_prim_ptrs, DYN_STR_PRINT_FILE);
+      pm_strftime_same(elem_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
         pending_queries_queue[pqq_ptr] = queue[j];
@@ -1297,8 +1292,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (config.print_latest_file) {
       if (!safe_action) {
-        memset(tmpbuf, 0, LONGLONGSRVBUFLEN);
-        handle_dynname_internal_strings(tmpbuf, LONGSRVBUFLEN, config.print_latest_file, &prim_ptrs, DYN_STR_PRINT_FILE);
+        handle_dynname_internal_strings(tmpbuf, SRVBUFLEN, config.print_latest_file, &prim_ptrs, DYN_STR_PRINT_FILE);
         link_latest_output_file(tmpbuf, current_table);
       }
     }

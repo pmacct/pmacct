@@ -305,7 +305,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   struct pkt_tunnel_primitives empty_ptun;
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], mongo_database[SRVBUFLEN];
+  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[SRVBUFLEN], mongo_database[SRVBUFLEN];
   char *str_ptr, *as_path, *bgp_comm, default_table[] = "test.acct", ndpi_class[SUPERSHORTBUFLEN];
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int qn = 0, i, j, stop, db_status, batch_idx, go_to_pending, saved_index = index;
@@ -414,13 +414,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
   if (dyn_table) {
     stamp = queue[0]->basetime.tv_sec;
-    strlcpy(current_table, config.sql_table, SRVBUFLEN);
-
     prim_ptrs.data = &dummy_data;
     primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
 
-    handle_dynname_internal_strings_same(current_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs, DYN_STR_MONGODB_TABLE);
-    pm_strftime_same(current_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+    handle_dynname_internal_strings(current_table, SRVBUFLEN, config.sql_table, &prim_ptrs, DYN_STR_MONGODB_TABLE);
+    pm_strftime_same(current_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     if (config.sql_table_schema) MongoDB_create_indexes(&db_conn, tmpbuf);
   }
 
@@ -432,14 +430,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
     if (dyn_table && (!dyn_table_time_only || !config.nfacctd_time_new)) {
       time_t stamp = 0;
 
-      memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
       stamp = queue[j]->basetime.tv_sec;
-      strlcpy(elem_table, config.sql_table, SRVBUFLEN);
-
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
-      handle_dynname_internal_strings_same(elem_table, LONGSRVBUFLEN, tmpbuf, &prim_ptrs, DYN_STR_MONGODB_TABLE);
-      pm_strftime_same(elem_table, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
+
+      handle_dynname_internal_strings(elem_table, SRVBUFLEN, config.sql_table, &prim_ptrs, DYN_STR_MONGODB_TABLE);
+      pm_strftime_same(elem_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(current_table, elem_table, SRVBUFLEN)) {
         pending_queries_queue[pqq_ptr] = queue[j];

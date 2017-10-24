@@ -345,9 +345,12 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
+  char tmpbuf[SRVBUFLEN];
   int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
   int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
+  struct primitives_ptrs prim_ptrs;
+  struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
 
   char *json_buf = NULL;
@@ -566,7 +569,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
       if (json_str) {
         if (is_routing_key_dyn) {
-          P_handle_table_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
+	  prim_ptrs.data = &dummy_data;
+	  primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+
+	  handle_dynname_internal_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &prim_ptrs, DYN_STR_RABBITMQ_RK);
           p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
         }
 
@@ -603,7 +609,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #ifdef WITH_AVRO
       if (!config.sql_multi_values || (mv_num >= config.sql_multi_values) || avro_buffer_full) {
         if (is_routing_key_dyn) {
-          P_handle_table_dyn_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, queue[j]);
+          prim_ptrs.data = &dummy_data;
+          primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+
+          handle_dynname_internal_strings(dyn_amqp_routing_key, SRVBUFLEN, orig_amqp_routing_key, &prim_ptrs, DYN_STR_RABBITMQ_RK);
           p_amqp_set_routing_key(&amqpp_amqp_host, dyn_amqp_routing_key);
         }
 

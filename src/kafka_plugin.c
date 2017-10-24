@@ -500,9 +500,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     if (dyn_partition_key) {
       prim_ptrs.data = &dummy_data;
       primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
-      memset(tmpbuf, 0, SRVBUFLEN);
-      strlcpy(elem_part_key, config.kafka_partition_key, SRVBUFLEN);
-      handle_dynname_internal_strings_same(tmpbuf, SRVBUFLEN, elem_part_key, &prim_ptrs, DYN_STR_KAFKA_PART);
+
+      handle_dynname_internal_strings(elem_part_key, SRVBUFLEN, config.kafka_partition_key, &prim_ptrs, DYN_STR_KAFKA_PART);
       p_kafka_set_key(&kafkap_kafka_host, elem_part_key, strlen(elem_part_key));
     }
 
@@ -585,7 +584,10 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       if (json_str) {
         if (is_topic_dyn) {
-          P_handle_table_dyn_strings(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, queue[j]);
+          prim_ptrs.data = &dummy_data;
+          primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+
+	  handle_dynname_internal_strings(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &prim_ptrs, DYN_STR_KAFKA_TOPIC);
           p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
         }
 
@@ -622,7 +624,10 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 #ifdef WITH_AVRO
       if (!config.sql_multi_values || (mv_num >= config.sql_multi_values) || avro_buffer_full) {
         if (is_topic_dyn) {
-          P_handle_table_dyn_strings(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, queue[j]);
+	  prim_ptrs.data = &dummy_data;
+	  primptrs_set_all_from_chained_cache(&prim_ptrs, queue[j]);
+
+	  handle_dynname_internal_strings(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &prim_ptrs, DYN_STR_KAFKA_TOPIC);
           p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
         }
 
