@@ -1987,11 +1987,13 @@ runtime against shared libraries:
 
 b) In case of crashes of an any process, regardless if predictable or not, the
 advice is to run the daemon with "ulimit -c unlimited" so to generate a core
-dump. The file is placed in the directory where the daemon is started so it
-is good to take care of that. pmacct developers will then ask for one or both
-of the following: 1) the core file along with the crashing executable and its
-configuration be made available for further inspection and/or 2) a backtrace
-in GDB obtained via the following two steps:
+dump. The core dump file location, on Linux, is determined by the following
+file: /proc/sys/kernel/core_pattern : if the value is "core", then the file is
+placed in the directory where the daemon is started so it is good to take care
+of that. pmacct developers will then ask for one or both of the following: 1)
+the core file along with the crashing executable and its configuration be made
+available for further inspection and/or 2) a backtrace in GDB obtained via the
+following two steps:
 
 shell> gdb /path/to/executable /path/to/core
 
