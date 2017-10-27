@@ -769,5 +769,5 @@ void MY_init_default_values(struct insert_data *idata)
 
 void MY_mysql_get_version()
 {
-  printf("MySQL %s\n", MYSQL_VERSION_ID);
+  printf("MySQL %u\n", MYSQL_VERSION_ID);
 }
