@@ -103,6 +103,12 @@ shell> export PGSQL_LIBS="-L/usr/local/postgresql/lib -lpq"
 shell> export PGSQL_CFLAGS="-I/usr/local/postgresql/include"
 shell> ./configure --enable-pgsql
 
+If the library does actually support pkg-config but the .pc pkg-config file
+is in some non-standard location, this can be supplied as follows:
+
+shell> export PKG_CONFIG_PATH=/usr/local/postgresql/pkgconfig/
+shell> ./configure --enable-pgsql
+
 By default all tools - flow, BGP, BMP and Streaming Telemetry - are compiled.
 Specific tool sets can be disabled. For example, to compile only flow tools
 (ie. no pmbgpd, pmbmpd, pmtelemetryd) the following command-line can be used:
