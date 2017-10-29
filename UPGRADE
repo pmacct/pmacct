@@ -6,6 +6,15 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:     >= 1.7.1
+FROM:   <= 1.7.0
+TOPIC:  Obsoleted features
+DESC:   Following is the list of features, knobs and plugins that are being
+        discontinued with release 1.7.1:
+	* pkt_len_distrib primitive is discontinued due to apparent lack of
+	  interest; the primitive was meant to bucket packet/flow/sample
+	  lenghts in a distribution.
+
 TO:	>= 1.7.1
 FROM:	<= 1.7.0
 TOPIC:	tag variables for dynamic Kafka topics and RabbitMQ routing keys.

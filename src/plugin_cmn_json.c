@@ -298,11 +298,6 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
-  if (wtc_2 & COUNT_PKT_LEN_DISTRIB) {
-    cjhandler[idx] = compose_json_pkt_len_distrib;
-    idx++;
-  }
-
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {
     cjhandler[idx] = compose_json_post_nat_src_host;
     idx++;
@@ -845,11 +840,6 @@ void compose_json_tos(json_t *obj, struct chained_cache *cc)
 void compose_json_sampling_rate(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "sampling_rate", json_integer((json_int_t)cc->primitives.sampling_rate));
-}
-
-void compose_json_pkt_len_distrib(json_t *obj, struct chained_cache *cc)
-{
-  json_object_set_new_nocheck(obj, "pkt_len_distrib", json_string(config.pkt_len_distrib_bins[cc->primitives.pkt_len_distrib]));
 }
 
 void compose_json_post_nat_src_host(json_t *obj, struct chained_cache *cc)

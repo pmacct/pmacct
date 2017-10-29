@@ -66,13 +66,6 @@ void sql_init_maps(struct extra_primitives *extras, struct primitives_ptrs *prim
   set_net_funcs(nt);
 
   if (config.ports_file) load_ports(config.ports_file, pt);
-  if (config.pkt_len_distrib_bins_str) load_pkt_len_distrib_bins();
-  else {
-    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): 'aggregate' contains pkt_len_distrib but no 'pkt_len_distrib_bins' defined. Exiting.\n", config.name, config.type);
-      exit_plugin(1);
-    }
-  }
 }
 
 void sql_init_global_buffers()
@@ -1212,7 +1205,6 @@ int sql_evaluate_primitives(int primitive)
 #endif
 
     if (config.what_to_count_2 & COUNT_SAMPLING_RATE) what_to_count_2 |= COUNT_SAMPLING_RATE;
-    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) what_to_count_2 |= COUNT_PKT_LEN_DISTRIB;
 
     if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) what_to_count_2 |= COUNT_POST_NAT_SRC_HOST;
     if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) what_to_count_2 |= COUNT_POST_NAT_DST_HOST;
@@ -2176,20 +2168,6 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "sampling_rate=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_SAMPLING_RATE;
     values[primitive].handler = where[primitive].handler = count_sampling_rate_handler;
-    primitive++;
-  }
-
-  if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) {
-    if (primitive) {
-      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
-      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
-    }
-    strncat(insert_clause, "pkt_len_distrib", SPACELEFT(insert_clause));
-    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "pkt_len_distrib=\'%s\'", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_INT_PKT_LEN_DISTRIB;
-    values[primitive].handler = where[primitive].handler = count_pkt_len_distrib_handler;
     primitive++;
   }
 

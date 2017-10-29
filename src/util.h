@@ -104,8 +104,6 @@ EXT int load_tags(char *, struct pretag_filter *, char *);
 EXT int load_labels(char *, struct pretag_label_filter *, char *);
 EXT int evaluate_tags(struct pretag_filter *, pm_id_t);
 EXT int evaluate_labels(struct pretag_label_filter *, pt_label_t *);
-EXT void load_pkt_len_distrib_bins();
-EXT void evaluate_pkt_len_distrib(struct pkt_data *);
 EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
 EXT void set_truefalse_nonzero(int *);

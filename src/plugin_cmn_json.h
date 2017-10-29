@@ -91,7 +91,6 @@ EXT void compose_json_tcp_flags(json_t *, struct chained_cache *);
 EXT void compose_json_proto(json_t *, struct chained_cache *);
 EXT void compose_json_tos(json_t *, struct chained_cache *);
 EXT void compose_json_sampling_rate(json_t *, struct chained_cache *);
-EXT void compose_json_pkt_len_distrib(json_t *, struct chained_cache *);
 EXT void compose_json_post_nat_src_host(json_t *, struct chained_cache *);
 EXT void compose_json_post_nat_dst_host(json_t *, struct chained_cache *);
 EXT void compose_json_post_nat_src_port(json_t *, struct chained_cache *);

@@ -51,10 +51,10 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 med, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path, src_local_pref,
 		 src_med, mpls_vpn_rd, mpls_label_top, mpls_label_bottom, mpls_stack_depth,
 		 sampling_rate, src_host_country, dst_host_country, src_host_pocode,
-		 dst_host_pocode, pkt_len_distrib, nat_event, fw_event, post_nat_src_host,
-		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_host,
-		 tunnel_dst_host, tunnel_proto, tunnel_tos, timestamp_start, timestamp_end,
-		 timestamp_arrival, export_proto_seqno, export_proto_version ]
+		 dst_host_pocode, nat_event, fw_event, post_nat_src_host, post_nat_dst_host,
+		 post_nat_src_port, post_nat_dst_port, tunnel_src_host, tunnel_dst_host,
+		 tunnel_proto, tunnel_tos, timestamp_start, timestamp_end, timestamp_arrival,
+		 export_proto_seqno, export_proto_version ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -2506,14 +2506,6 @@ DESC:		When replicating and dissecting flow samples, send onto the tee plugin al
 		packet. This is useful in scenarios where, say, dissected flows are tagged while the
 		full packet is left untagged. By default this is left to false for security reasons. 
 DEFAULT:	false
-
-KEY:		pkt_len_distrib_bins
-DESC:		Defines a list of packet length distributions, comma-separated, which is then used to
-		populate values for the 'pkt_len_ditrib' aggregation primitive. Values can be ranges or
-		exact, ie. "0-499,500-999,1000-1499,1500-9000". The maximum amount of bins that can be
-		defined is 255; packet lengths must be in the range 0-9000; if a length is part of more
-		than a single bin the latest definition wins. 
-DEFAULT:        none
 
 KEY:		tmp_asa_bi_flow
 VALUES:		[ true | false ]

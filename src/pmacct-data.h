@@ -110,7 +110,6 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"in_iface", 0, 1, 1, 1, 0, 0, 0, "Input interface, SNMP ifIndex"}, 
   {"out_iface", 0, 1, 1, 1, 0, 0, 0, "Output interface, SNMP ifIndex"}, 
   {"peer_src_ip", 0, 0, 1, 1, 0, 0, 0, "IP address or identificator of telemetry exporting device"},
-  {"pkt_len_distrib", 1, 1, 1, 1, 0, 0, 0, "Packet length distribution"},
   {"sampling_rate", 1, 1, 1, 1, 0, 0, 0, "Sampling rate"},
   {"tag", 1, 1, 1, 1, 0, 0, 0, "Numeric tag, ie. as result of pre_tag_map evaluation"},
   {"tag2", 1, 1, 1, 1, 0, 0, 0, "Numeric tag, ie. as result of pre_tag_map evaluation"},
@@ -833,7 +832,6 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_nl_size", cfg_key_uacctd_nl_size},
   {"uacctd_threshold", cfg_key_uacctd_threshold},
   {"tunnel_0", cfg_key_tunnel_0},
-  {"pkt_len_distrib_bins", cfg_key_pkt_len_distrib_bins},
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
   {"", NULL},
 };

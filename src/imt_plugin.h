@@ -99,10 +99,6 @@ struct stripped_class {
   char protocol[MAX_PROTOCOL_LEN];
 };
 
-struct stripped_pkt_len_distrib {
-  char str[MAX_PKT_LEN_DISTRIB_LEN];
-};
-
 struct imt_custom_primitive_entry {
   /* compiled from map */
   u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];

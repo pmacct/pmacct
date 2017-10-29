@@ -250,14 +250,6 @@ void count_sampling_rate_handler(const struct db_cache *cache_elem, struct inser
   *ptr_values += strlen(*ptr_values);
 }
 
-void count_pkt_len_distrib_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
-{
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, idata->cfg->pkt_len_distrib_bins[cache_elem->primitives.pkt_len_distrib]);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, idata->cfg->pkt_len_distrib_bins[cache_elem->primitives.pkt_len_distrib]);
-  *ptr_where += strlen(*ptr_where);
-  *ptr_values += strlen(*ptr_values);
-}
-
 void count_post_nat_src_ip_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   char ptr[INET6_ADDRSTRLEN];

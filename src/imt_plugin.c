@@ -137,13 +137,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
-  if (config.pkt_len_distrib_bins_str) load_pkt_len_distrib_bins();
-  else {
-    if (config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): 'aggregate' contains pkt_len_distrib but no 'pkt_len_distrib_bins' defined. Exiting.\n", config.name, config.type);
-      exit_plugin(1); 
-    }
-  }
 
   if (!config.num_memory_pools) config.num_memory_pools = NUM_MEMORY_POOLS;
   if (!config.memory_pool_size) config.memory_pool_size = MEMORY_POOL_SIZE;  
@@ -305,11 +298,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. ERRNO: %d\n", config.name, config.type, num, errno);
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
       }
-      else if (request == WANT_PKT_LEN_DISTRIB_TABLE) {
-        if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
-        else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. ERRNO: %d\n", config.name, config.type, num, errno);
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
-      }
       else {
 	if (lock) {
 	  if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, FALSE);
@@ -454,10 +442,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	    if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
 	    if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	  }
-
-	  if (config.pkt_len_distrib_bins_str &&
-	      config.what_to_count_2 & COUNT_PKT_LEN_DISTRIB)
-	    evaluate_pkt_len_distrib(data);
 
 	  prim_ptrs.data = data; 
 	  prim_ptrs.pbgp = pbgp; 

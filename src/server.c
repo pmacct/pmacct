@@ -475,24 +475,6 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     }
     if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
   }
-  else if (q->type & WANT_PKT_LEN_DISTRIB_TABLE) {
-    struct stripped_pkt_len_distrib dummy, real;
-    u_int32_t idx = 0, max = 0;
-
-    for (idx = 0; idx < MAX_PKT_LEN_DISTRIB_BINS && config.pkt_len_distrib_bins[idx]; idx++);
-    max = q->num = idx;
-
-    for (idx = 0; idx < max; idx++) {
-      memset(&real, 0, sizeof(real));
-      strlcpy(real.str, config.pkt_len_distrib_bins[idx], MAX_PKT_LEN_DISTRIB_LEN); 
-      enQueue_elem(sd, &rb, &real, sizeof(struct stripped_pkt_len_distrib), sizeof(struct stripped_pkt_len_distrib));
-    }
-
-    send_pldt_dummy:
-    memset(&dummy, 0, sizeof(dummy));
-    enQueue_elem(sd, &rb, &dummy, sizeof(dummy), sizeof(dummy));
-    if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
-  }
   else if (q->type & WANT_ERASE_LAST_TSTAMP) {
     enQueue_elem(sd, &rb, &table_reset_stamp, sizeof(table_reset_stamp), sizeof(table_reset_stamp));
     if (rb.packed) send(sd, rb.buf, rb.packed, 0); /* send remainder data */
@@ -566,7 +548,6 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 #endif
 
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
-  if (w2 & COUNT_PKT_LEN_DISTRIB) d1->pkt_len_distrib = s1->pkt_len_distrib; 
 
   if (extras->off_pkt_bgp_primitives && s2) {
     if (w & COUNT_LOCAL_PREF) d2->local_pref = s2->local_pref;

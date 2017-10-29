@@ -235,7 +235,6 @@ EXT void count_out_iface_handler(const struct db_cache *, struct insert_data *, 
 EXT void count_src_nmask_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_dst_nmask_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_sampling_rate_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_pkt_len_distrib_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void MY_count_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_count_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

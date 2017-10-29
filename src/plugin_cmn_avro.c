@@ -198,9 +198,6 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_SAMPLING_RATE)
     avro_schema_record_field_append(schema, "sampling_rate", avro_schema_long());
 
-  if (wtc_2 & COUNT_PKT_LEN_DISTRIB)
-    avro_schema_record_field_append(schema, "pkt_len_distrib", avro_schema_string());
-
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST)
     avro_schema_record_field_append(schema, "post_nat_ip_src", avro_schema_string());
 
@@ -671,11 +668,6 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc_2 & COUNT_SAMPLING_RATE) {
     check_i(avro_value_get_by_name(&value, "sampling_rate", &field, NULL));
     check_i(avro_value_set_long(&field, pbase->sampling_rate));
-  }
-
-  if (wtc_2 & COUNT_PKT_LEN_DISTRIB) {
-    check_i(avro_value_get_by_name(&value, "pkt_len_distrib", &field, NULL));
-    check_i(avro_value_set_string(&field, config.pkt_len_distrib_bins[pbase->pkt_len_distrib]));
   }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {

@@ -35,7 +35,6 @@ void print_ex_options_error();
 void write_status_header_formatted();
 void write_status_header_csv();
 void write_class_table_header();
-void write_pkt_len_distrib_table_header();
 char *write_sep(char *, int *);
 int CHECK_Q_TYPE(int);
 int check_data_sizes(struct query_header *, struct pkt_data *);
@@ -64,7 +63,6 @@ char *pmc_ndpi_get_proto_name(u_int16_t);
 /* vars */
 struct imt_custom_primitives pmc_custom_primitives_registry;
 struct stripped_class *class_table = NULL;
-char *pkt_len_distrib_table[MAX_PKT_LEN_DISTRIB_BINS];
 int want_ipproto_num, ct_idx, ct_num;
 
 /* functions */
@@ -90,7 +88,7 @@ void usage_client(char *prog)
   printf("  -n\t<bytes | packets | flows | all> \n\tSelect the counters to print (applies to -N)\n");
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | lrg_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_lrg_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | pkt_len_distrib |\n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t tunnel_src_host | tunnel_dst_host | tunnel_protocol | tunnel_tos | \n\t timestamp_start | timestamp_end | timestamp_arrival | mpls_label_top | mpls_label_bottom | \n\t mpls_stack_depth | label | src_host_country | dst_host_country | export_proto_seqno | \n\t export_proto_version | src_host_pocode | dst_host_pocode> \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | lrg_comm | as_path | \n\t peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | src_med | \n\t src_ext_comm | src_lrg_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | \n\t post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event |\n\t tunnel_src_host | tunnel_dst_host | tunnel_protocol | tunnel_tos | \n\t timestamp_start | timestamp_end | timestamp_arrival | mpls_label_top | mpls_label_bottom | \n\t mpls_stack_depth | label | src_host_country | dst_host_country | export_proto_seqno | \n\t export_proto_version | src_host_pocode | dst_host_pocode> \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -i\tShow time (in seconds) since statistics were last cleared (ie. pmacct -e)\n");
@@ -99,7 +97,6 @@ void usage_client(char *prog)
   printf("  -t\tShow memory table status\n");
   printf("  -C\tShow classifiers table\n");
   printf("  -U\tShow custom primitives table\n");
-  printf("  -D\tShow packet length distribution table\n");
   printf("  -p\t<file> \n\tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -O\tSet output < formatted | csv | json | event_formatted | event_csv > (applies to -M and -s)\n");
   printf("  -E\tSet sparator for CSV format\n");
@@ -216,7 +213,6 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("DH_POCODE     "); 
 #endif
     printf("SAMPLING_RATE ");
-    printf("PKT_LEN_DISTRIB ");
 
 #if defined ENABLE_IPV6
     printf("POST_NAT_SRC_IP                                ");
@@ -341,7 +337,6 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_DST_HOST_POCODE) printf("DH_POCODE     "); 
 #endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
-    if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("PKT_LEN_DISTRIB ");
 
 #if defined ENABLE_IPV6
     if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("POST_NAT_SRC_IP                                ");
@@ -472,7 +467,6 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sDH_POCODE", write_sep(sep, &count));
 #endif
     printf("%sSAMPLING_RATE", write_sep(sep, &count));
-    printf("%sPKT_LEN_DISTRIB", write_sep(sep, &count));
     printf("%sPOST_NAT_SRC_IP", write_sep(sep, &count));
     printf("%sPOST_NAT_DST_IP", write_sep(sep, &count));
     printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
@@ -575,7 +569,6 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_DST_HOST_POCODE) printf("%sDH_POCODE", write_sep(sep, &count));
 #endif
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("%sSAMPLING_RATE", write_sep(sep, &count));
-    if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB) printf("%sPKT_LEN_DISTRIB", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("%sPOST_NAT_SRC_IP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_POST_NAT_DST_HOST) printf("%sPOST_NAT_DST_IP", write_sep(sep, &count));
@@ -635,12 +628,6 @@ void write_class_table_header()
   printf("CLASS_ID\tCLASS_NAME\n");
 }
 
-void write_pkt_len_distrib_table_header()
-{
-  printf("ID\tPKT_LEN_DISTRIB\n");
-}
-
-
 int build_query_client(char *path_ptr)
 {
   struct sockaddr_un cAddr;
@@ -696,7 +683,7 @@ int main(int argc,char **argv)
   unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN], ndpi_class[SUPERSHORTBUFLEN];
   char path[SRVBUFLEN], file[SRVBUFLEN], password[9], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm, unknown_pkt_len_distrib[] = "not_recv";
+  char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm;
   int sd, buflen, unpacked, printed;
   int counter=0, sep_len=0;
   int pldt_idx=0, pldt_num=0, is_event;
@@ -714,7 +701,7 @@ int main(int argc,char **argv)
   extern int optind, opterr, optopt;
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
   int want_status, want_mrtg, want_counter, want_match, want_all_fields;
-  int want_output, want_pkt_len_distrib_table, want_custom_primitives_table;
+  int want_output, want_custom_primitives_table;
   int want_erase_last_tstamp, want_tstamp_since_epoch, want_tstamp_utc;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   int topN_howmany, topN_printed;
@@ -738,7 +725,6 @@ int main(int argc,char **argv)
   memset(count, 0, sizeof(count));
   memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
-  memset(pkt_len_distrib_table, 0, sizeof(pkt_len_distrib_table));
   memset(&pmc_custom_primitives_registry, 0, sizeof(pmc_custom_primitives_registry));
   memset(&custom_primitives_input, 0, sizeof(custom_primitives_input));
 
@@ -757,7 +743,6 @@ int main(int argc,char **argv)
   want_reset = FALSE;
   want_class_table = FALSE;
   want_ipproto_num = FALSE;
-  want_pkt_len_distrib_table = FALSE;
   want_custom_primitives_table = FALSE;
   which_counter = FALSE;
   topN_counter = FALSE;
@@ -942,10 +927,6 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_INT_CLASS;
           what_to_count |= COUNT_CLASS;
         }
-        else if (!strcmp(count_token[count_index], "pkt_len_distrib")) {
-          count_token_int[count_index] = COUNT_INT_PKT_LEN_DISTRIB;
-          what_to_count_2 |= COUNT_PKT_LEN_DISTRIB;
-        }
         else if (!strcmp(count_token[count_index], "std_comm")) {
           count_token_int[count_index] = COUNT_INT_STD_COMM;
           what_to_count |= COUNT_STD_COMM;
@@ -1091,12 +1072,6 @@ int main(int argc,char **argv)
       q.num = 1;
       want_custom_primitives_table = TRUE;
       break;
-    case 'D':
-      if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
-      q.type |= WANT_PKT_LEN_DISTRIB_TABLE;
-      q.num = 1;
-      want_pkt_len_distrib_table = TRUE;
-      break;
     case 'e':
       q.type |= WANT_ERASE; 
       want_erase = TRUE;
@@ -1233,7 +1208,7 @@ int main(int argc,char **argv)
     clibuf[buflen] = '\x4'; /* EOT */
     buflen++;
 
-    // XXX: transfer entry by entry like class/pkt_distrib tables
+    // XXX: transfer entry by entry like class tables
     assert(sizeof(struct imt_custom_primitives)+sizeof(struct query_header) < LARGEBUFLEN);
     sd = build_query_client(path);
     send(sd, clibuf, buflen, 0);
@@ -1673,50 +1648,6 @@ int main(int argc,char **argv)
 	    }
 	  }
         }
-	else if (!strcmp(count_token[match_string_index], "pkt_len_distrib")) {
-          struct stripped_pkt_len_distrib *pldt_elem, req_elem;
-          struct query_header qhdr;
-          u_int16_t req_value = 0;
-
-          memset(&req_elem, 0, sizeof(req_elem));
-          strlcpy(req_elem.str, match_string_token, MAX_PKT_LEN_DISTRIB_LEN);
-          req_elem.str[MAX_PKT_LEN_DISTRIB_LEN-1] = '\0';
-
-	  memset(&qhdr, 0, sizeof(struct query_header));
-	  qhdr.type = WANT_PKT_LEN_DISTRIB_TABLE;
-	  qhdr.num = 1;
-
-	  memcpy(clibuf, &qhdr, sizeof(struct query_header));
-	  buflen = sizeof(struct query_header);
-	  buflen++;
-	  clibuf[buflen] = '\x4'; /* EOT */
-	  buflen++;
-
-	  sd = build_query_client(path);
-	  send(sd, clibuf, buflen, 0);
-	  unpacked = Recv(sd, &pldt);
-
-	  if (unpacked) {
-	    pldt_num = ((struct query_header *)pldt)->num;
-	    elem = pldt+sizeof(struct query_header);
-	    pldt_elem = (struct stripped_pkt_len_distrib *) elem;
-	    while (pldt_idx < pldt_num) {
-	      pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
-	      if (!strcmp(req_elem.str, pkt_len_distrib_table[pldt_idx])) req_value = pldt_idx;
-	      pldt_idx++; pldt_elem++;
-	    }
-
-            if (!pldt_num) {
-              printf("ERROR: Server has not loaded any packet length distributions.\n");
-              exit(1);
-            }
-	    else request.data.pkt_len_distrib = req_value;
-	  }
-	  else {
-	    printf("ERROR: missing EOF from server (3)\n");
-	    exit(1);
-          }
-	}
         else if (!strcmp(count_token[match_string_index], "std_comm")) {
 	  if (!strcmp(match_string_token, "0"))
 	    memset(request.plbgp.std_comms, 0, MAX_BGP_STD_COMMS);
@@ -2083,40 +2014,6 @@ int main(int argc,char **argv)
       }
       else {
 	printf("ERROR: missing EOF from server (5)\n");
-	exit(1);
-      }
-    }
-
-    if (what_to_count_2 & COUNT_PKT_LEN_DISTRIB && !pkt_len_distrib_table[0]) {
-      struct stripped_pkt_len_distrib *pldt_elem;
-      struct query_header qhdr;
-      int unpacked_pldt;
-
-      memset(&qhdr, 0, sizeof(struct query_header));
-      qhdr.type = WANT_PKT_LEN_DISTRIB_TABLE;
-      qhdr.num = 1;
-
-      memcpy(clibuf, &qhdr, sizeof(struct query_header));
-      buflen = sizeof(struct query_header);
-      buflen++;
-      clibuf[buflen] = '\x4'; /* EOT */
-      buflen++;
-
-      sd = build_query_client(path);
-      send(sd, clibuf, buflen, 0);
-      unpacked_pldt = Recv(sd, &pldt);
-
-      if (unpacked_pldt) {
-        pldt_num = ((struct query_header *)pldt)->num;
-        elem = pldt+sizeof(struct query_header);
-        pldt_elem = (struct stripped_pkt_len_distrib *) elem;
-        while (pldt_idx < pldt_num) {
-          pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
-          pldt_idx++; pldt_elem++;
-	}
-      }
-      else {
-	printf("ERROR: missing EOF from server (6)\n");
 	exit(1);
       }
     }
@@ -2643,18 +2540,6 @@ int main(int argc,char **argv)
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.sampling_rate); 
 	}
 
-        if (!have_wtc || (what_to_count_2 & COUNT_PKT_LEN_DISTRIB)) {
-          char *pkt_len_distrib_table_ptr = NULL;
-
-          if (pkt_len_distrib_table[0])
-	    pkt_len_distrib_table_ptr = pkt_len_distrib_table[acc_elem->primitives.pkt_len_distrib];
-	  else
-	    pkt_len_distrib_table_ptr = unknown_pkt_len_distrib;
-
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10s      ", pkt_len_distrib_table_ptr);
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pkt_len_distrib_table_ptr);
-        }
-
         if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_SRC_HOST)) {
           addr_to_str(ip_address, &pnat->post_nat_src_ip);
 
@@ -3014,29 +2899,6 @@ int main(int argc,char **argv)
       exit(1);
     }
   }
-  else if (want_pkt_len_distrib_table) {
-    struct stripped_pkt_len_distrib *pldt_elem;
-    int pldt_eff=0;
-
-    unpacked = Recv(sd, &pldt);
-
-    if (unpacked) {
-      write_pkt_len_distrib_table_header();
-      pldt_num = ((struct query_header *)pldt)->num;
-      elem = pldt+sizeof(struct query_header);
-      pldt_elem = (struct stripped_pkt_len_distrib *) elem;
-      while (pldt_idx < pldt_num) {
-        pkt_len_distrib_table[pldt_idx] = pldt_elem->str;
-        printf("%u\t%s\n", pldt_idx, pkt_len_distrib_table[pldt_idx]);
-        pldt_idx++; pldt_elem++;
-      }
-      printf("\nFor a total of: %d packet length distributions\n", pldt_idx);
-    }
-    else {
-      printf("ERROR: missing EOF from server (10)\n");
-      exit(1);
-    }
-  }
   else {
     usage_client(argv[0]);
     exit(1);
@@ -3375,7 +3237,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
-  char tstamp_str[SRVBUFLEN], ndpi_class[SUPERSHORTBUFLEN], unknown_pkt_len_distrib[] = "not_recv", *label_ptr;
+  char tstamp_str[SRVBUFLEN], ndpi_class[SUPERSHORTBUFLEN], *label_ptr;
   int ret = FALSE;
   json_t *obj = json_object();
   
@@ -3647,17 +3509,6 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc & COUNT_IP_TOS) json_object_set_new_nocheck(obj, "tos", json_integer((json_int_t)pbase->tos));
 
   if (wtc_2 & COUNT_SAMPLING_RATE) json_object_set_new_nocheck(obj, "sampling_rate", json_integer((json_int_t)pbase->sampling_rate));
-
-  if (wtc_2 & COUNT_PKT_LEN_DISTRIB) {
-    char *pkt_len_distrib_table_ptr = NULL;
-
-    if (pkt_len_distrib_table[0])
-      pkt_len_distrib_table_ptr = pkt_len_distrib_table[pbase->pkt_len_distrib];
-    else
-      pkt_len_distrib_table_ptr = unknown_pkt_len_distrib;
-
-    json_object_set_new_nocheck(obj, "pkt_len_distrib", json_string(pkt_len_distrib_table_ptr));
-  }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {
     addr_to_str(src_host, &pnat->post_nat_src_ip);

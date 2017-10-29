@@ -425,7 +425,6 @@ struct pkt_primitives {
   pm_id_t tag2;
   pm_class_t class;
   u_int32_t sampling_rate;
-  u_int16_t pkt_len_distrib;
   u_int32_t export_proto_seqno;
   u_int16_t export_proto_version;
 };

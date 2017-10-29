@@ -113,7 +113,6 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * src_host_pocode => pocode_ip_src (CHAR (12) NOT NULL DEFAULT ' ', see README.GeoIP)
   * dst_host_pocode => pocode_ip_dst (CHAR (12) NOT NULL DEFAULT ' ', see README.GeoIP)
   * sampling_rate => sampling_rate (BIGINT NOT NULL DEFAULT 0, see README.sampling_rate)
-  * pkt_len_distrib => pkt_len_distrib (CHAR(10) NOT NULL DEFAULT ' ', see README.pkt_len_distrib)
   * class => class_id (CHAR(16) NOT NOT NULL DEFAULT ' ')
   * src_mac => mac_src (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
   * dst_mac => mac_dst (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
