@@ -307,7 +307,7 @@ void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka topic configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
       return;
     }
-    else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading librdkafka topic configuration.\n", config.name, config.type, kafka_host->config_file);
+    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] Reading librdkafka topic configuration.\n", config.name, config.type, kafka_host->config_file);
 
     while (!feof(file)) {
       if (fgets(buf, SRVBUFLEN, file)) {
