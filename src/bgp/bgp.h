@@ -262,12 +262,8 @@ struct bgp_comm_range {
 EXT void nfacctd_bgp_wrapper();
 EXT void skinny_bgp_daemon();
 EXT void skinny_bgp_daemon_online();
-EXT void skinny_bgp_daemon_offline();
 EXT void bgp_prepare_thread();
 EXT void bgp_prepare_daemon();
-
-EXT void bgp_offline_read_file_spool(char *, time_t, void **);
-EXT int bgp_offline_read_json(char *, char *, int, void **);
 #undef EXT
 
 /* global variables */
@@ -277,7 +273,6 @@ EXT int bgp_offline_read_json(char *, char *, int, void **);
 #define EXT
 #endif
 EXT struct bgp_peer *peers;
-EXT void *offline_peers;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];
