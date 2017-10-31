@@ -324,9 +324,6 @@ struct configuration {
   int nfacctd_bgp_follow_nexthop_external;
   char *nfacctd_bgp_neighbors_file;
   char *nfacctd_bgp_md5_file;
-  int nfacctd_bgp_offline_input;
-  char *nfacctd_bgp_offline_file_spool;
-  int nfacctd_bgp_offline_file_refresh_time;
   int bgp_table_peer_buckets;
   int bgp_table_per_peer_buckets;
   int bgp_table_attr_hash_buckets;

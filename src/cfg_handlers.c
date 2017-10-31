@@ -2985,10 +2985,8 @@ int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
 
   if (!strcmp(value_ptr, "false"))
     value = BGP_DAEMON_NONE;
-  else if (!strcmp(value_ptr, "true") || !strcmp(value_ptr, "online"))
+  else if (!strcmp(value_ptr, "true"))
     value = BGP_DAEMON_ONLINE;
-  else if (!strcmp(value_ptr, "offline")) 
-    value = BGP_DAEMON_OFFLINE;
   else {
     Log(LOG_ERR, "WARN: [%s] Invalid 'bgp_daemon' value '%s'\n", filename, value_ptr);
     return ERR;
@@ -3492,59 +3490,6 @@ int cfg_key_nfacctd_bgp_batch(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_batch = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_batch'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_nfacctd_bgp_offline_input(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  lower_string(value_ptr);
-  if (!strcmp(value_ptr, "json")) {
-#ifdef WITH_JANSSON
-    value = PRINT_OUTPUT_JSON;
-#else
-    value = PRINT_OUTPUT_JSON;
-    Log(LOG_WARNING, "WARN: [%s] bgp_daemon_offline_input set to json but will consume no input (missing --enable-jansson).\n", filename);
-#endif
-  }
-  else {
-    Log(LOG_WARNING, "WARN: [%s] Invalid bgp_daemon_offline_input value '%s'\n", filename, value_ptr);
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_offline_input = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_offline_input'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_nfacctd_bgp_offline_file_spool(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_offline_file_spool = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_offline_file_spool'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_nfacctd_bgp_offline_file_refresh_time(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value < 0) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_offline_file_refresh_time' has to be >= 0.\n", filename);
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_offline_file_refresh_time = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_offline_file_refresh_time'. Globalized.\n", filename);
 
   return changes;
 }

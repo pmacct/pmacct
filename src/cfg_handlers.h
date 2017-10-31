@@ -355,9 +355,6 @@ EXT int cfg_key_nfacctd_bgp_table_dump_kafka_config_file(char *, char *, char *)
 EXT int cfg_key_nfacctd_bgp_batch(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_batch_interval(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_pipe_size(char *, char *, char *);
-EXT int cfg_key_nfacctd_bgp_offline_input(char *, char *, char *);
-EXT int cfg_key_nfacctd_bgp_offline_file_spool(char *, char *, char *);
-EXT int cfg_key_nfacctd_bgp_offline_file_refresh_time(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_ip(char *, char *, char *);
 EXT int cfg_key_nfacctd_bmp_port(char *, char *, char *);
