@@ -2222,12 +2222,12 @@ DESC:		Full pathname to a file to map source IP address of NetFlow agents and Ag
 DEFAULT:	none
 
 KEY:		flow_to_rd_map [GLOBAL, MAP]
-DESC:		Full pathname to a file to map flows (typically, a) ingress router, input interfaces or
-		b) MPLS bottom label, BGP next-hop couples) to BGP/MPLS Virtual Private Network (VPN)
-		Route Distinguisher (RD), based upon rfc4659. See flow_to_rd.map file in the examples
-		section for further info. Number of map entries (by default 384) can be modified via
-		maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal
-		(ie. "killall -USR2 nfacctd"). 
+DESC:		Full pathname to a file to map flows (typically, a) router or b) ingress router, input
+		interfaces or c) MPLS bottom label, BGP next-hop couples) to BGP/MPLS Virtual Private
+		Network (VPN) Route Distinguisher (RD), based upon rfc4659. See flow_to_rd.map file in
+		the examples section for further info. Number of map entries (by default 384) can be
+		modified via maps_entries. Content can be reloaded at runtime by sending the daemon a
+		SIGUSR2 signal (ie. "killall -USR2 nfacctd"). 
 DEFAULT:	none
 
 KEY:		bgp_follow_default [GLOBAL]

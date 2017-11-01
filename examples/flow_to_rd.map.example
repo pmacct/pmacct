@@ -36,6 +36,11 @@
 !
 id=0:65512:1		ip=192.168.1.1		in=100
 !
+! Maps the router 192.168.1.1, that is, all interfaces belonging to such
+! router to RD 0:65512:1
+!
+id=0:65512:1		ip=192.168.1.1
+!
 ! Maps input interface 100 of router 192.168.1.1 to RD 1:192.168.1.1:1
 ! ie. a BGP/MPLS VPN Route Distinguisher encoded as type #1 according 
 ! to rfc4659: <IPv4 Address>:<value>
