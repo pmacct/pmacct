@@ -72,6 +72,8 @@ EXT void p_zmq_plugin_pipe_consume(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_recv(struct p_zmq_host *, void *, u_int64_t);
 EXT int p_zmq_plugin_pipe_send(struct p_zmq_host *, void *, u_int64_t);
 
+EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);
+
 EXT char *p_zmq_recv_str(void *);
 EXT int p_zmq_send_str(void *, char *);
 EXT int p_zmq_sendmore_str(void *, char *);

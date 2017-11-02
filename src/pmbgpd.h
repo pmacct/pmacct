@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -22,6 +22,7 @@
 /* includes */
 
 /* defines */
+#define BGP_LG_TCP_PORT	17900
 
 /* prototypes */
 #if (!defined __PMBGPD_C)
@@ -30,6 +31,12 @@
 #define EXT
 EXT void usage_daemon(char *);
 EXT void compute_once();
+
+#if defined WITH_ZMQ
+EXT void bgp_lg_wrapper();
+EXT void bgp_lg_daemon();
+#endif
+
 #endif
 #undef EXT
 
@@ -38,5 +45,6 @@ EXT void compute_once();
 #define EXT extern
 #else
 #define EXT
+EXT char bgp_lg_default_ip[] = "127.0.0.1";
 #endif
 #undef EXT

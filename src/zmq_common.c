@@ -370,3 +370,22 @@ void p_zmq_zap_handler(void *zh)
 
   zmq_close(zmq_host->zap.sock);
 }
+
+void p_zmq_router_setup(struct p_zmq_host *zmq_host, char *host, int port)
+{
+  char server_str[SHORTBUFLEN];
+  int ret;
+
+  if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
+
+  zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_ROUTER);
+
+  snprintf(server_str, SHORTBUFLEN, "tcp://%s:%u", host, port);
+
+  ret = zmq_bind(zmq_host->sock, server_str);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for ZMQ_ROUTER: %s\nExiting.\n",
+        config.name, config.type, zmq_strerror(errno));
+    exit(1);
+  }
+}

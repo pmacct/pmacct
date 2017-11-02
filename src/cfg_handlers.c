@@ -3377,6 +3377,48 @@ int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_lg(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_lg = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_lg'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_lg_ip(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_lg_ip = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_lg_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_lg_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_lg_port' has to be in the range 0-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_lg_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_lg_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_ip_precedence(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

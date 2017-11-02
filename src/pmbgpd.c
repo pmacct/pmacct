@@ -33,9 +33,11 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
+#include "thread_pool.h"
 
 /* global var */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
+thread_pool_t *bgp_lg_pool;
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -145,6 +147,10 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
+    case 'g':
+      strlcpy(cfg_cmdline[rows], "bgp_daemon_lg: true", SRVBUFLEN);
+      rows++;
+      break;
     case 'h':
       usage_daemon(argv[0]);
       exit(0);
@@ -242,6 +248,45 @@ int main(int argc,char **argv, char **envp)
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 
+#if defined WITH_ZMQ
+  if (config.bgp_lg) bgp_lg_wrapper();
+#endif
+
   bgp_prepare_daemon();
   skinny_bgp_daemon();
 }
+
+#if defined WITH_ZMQ
+#if defined ENABLE_THREADS
+void bgp_lg_wrapper()
+{
+  /* initialize variables */
+  if (!config.bgp_lg_ip) config.bgp_lg_ip = bgp_lg_default_ip;
+  if (!config.bgp_lg_port) config.bgp_lg_port = BGP_LG_TCP_PORT;
+
+  /* initialize threads pool */
+  bgp_lg_pool = allocate_thread_pool(1);
+  assert(bgp_lg_pool);
+  Log(LOG_DEBUG, "DEBUG ( %s/core ): pmbgpd Looking Glass thread initialized\n", config.name, 1);
+
+  /* giving a kick to the BGP thread */
+  send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);
+}
+#else
+void bgp_lg_wrapper()
+{
+}
+#endif /* ENABLE_THREADS */
+
+void bgp_lg_daemon()
+{
+  struct p_zmq_host lg_host;
+
+  memset(&lg_host, 0, sizeof(lg_host));
+
+  p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
+  Log(LOG_INFO, "INFO ( %s/core ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
+
+  // XXX
+}
+#endif /* WITH_ZMQ */ 

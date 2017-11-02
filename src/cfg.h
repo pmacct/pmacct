@@ -351,6 +351,9 @@ struct configuration {
   int bgp_table_dump_kafka_partition_keylen;
   int bgp_table_dump_kafka_broker_port;
   char *bgp_table_dump_kafka_config_file;
+  int bgp_lg;
+  char *bgp_lg_ip;
+  int bgp_lg_port;
   int bmp_sock;
   int nfacctd_bmp;
   char *nfacctd_bmp_ip;
