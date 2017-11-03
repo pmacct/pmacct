@@ -395,6 +395,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       handle_dynname_internal_strings(current_table, SRVBUFLEN, config.sql_table, &prim_ptrs, DYN_STR_PRINT_FILE);
       pm_strftime_same(current_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     }
+    else strlcpy(current_table, config.sql_table, SRVBUFLEN);
 
     if (config.print_output & PRINT_OUTPUT_AVRO) {
       int file_is_empty, ret;
