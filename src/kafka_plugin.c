@@ -380,7 +380,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
   p_kafka_connect_to_produce(&kafkap_kafka_host);
   p_kafka_set_broker(&kafkap_kafka_host, config.sql_host, config.kafka_broker_port);
-  if (strchr(config.kafka_partition_key, '$')) dyn_partition_key = TRUE;
+
+  if (config.kafka_partition_key && strchr(config.kafka_partition_key, '$')) dyn_partition_key = TRUE;
   else dyn_partition_key = FALSE;
 
   if (!is_topic_dyn && !config.amqp_routing_key_rr) p_kafka_set_topic(&kafkap_kafka_host, config.sql_table);
