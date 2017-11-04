@@ -24,6 +24,11 @@
 /* defines */
 #define BGP_LG_TCP_PORT	17900
 
+struct pm_bgp_lg {
+  struct host_addr peer;
+  struct prefix prefix;
+};
+
 /* prototypes */
 #if (!defined __PMBGPD_C)
 #define EXT extern

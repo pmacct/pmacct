@@ -77,6 +77,8 @@ EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);
 EXT char *p_zmq_recv_str(void *);
 EXT int p_zmq_send_str(void *, char *);
 EXT int p_zmq_sendmore_str(void *, char *);
+EXT int p_zmq_recv_bin(void *, void *, int);
+EXT int p_zmq_send_bin(void *, void *, int);
 
 EXT void p_zmq_zap_handler(void *);
 

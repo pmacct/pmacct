@@ -267,7 +267,7 @@ void bgp_lg_wrapper()
   /* initialize threads pool */
   bgp_lg_pool = allocate_thread_pool(1);
   assert(bgp_lg_pool);
-  Log(LOG_DEBUG, "DEBUG ( %s/core ): pmbgpd Looking Glass thread initialized\n", config.name, 1);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/lg ): pmbgpd Looking Glass thread initialized\n", config.name, 1);
 
   /* giving a kick to the BGP thread */
   send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);
@@ -280,13 +280,27 @@ void bgp_lg_wrapper()
 
 void bgp_lg_daemon()
 {
+  char identity[SRVBUFLEN], delim[SUPERSHORTBUFLEN];
   struct p_zmq_host lg_host;
+  struct pm_bgp_lg msg;
+  int msg_len;
 
   memset(&lg_host, 0, sizeof(lg_host));
 
   p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
-  Log(LOG_INFO, "INFO ( %s/core ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
+  Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
-  // XXX
+  for (;;) {
+    p_zmq_recv_bin(lg_host.sock, identity, sizeof(identity));
+    p_zmq_recv_bin(lg_host.sock, delim, sizeof(delim));
+
+    msg_len = p_zmq_recv_bin(lg_host.sock, &msg, sizeof(msg));
+    if (msg_len != sizeof(msg)) {
+      Log(LOG_WARNING, "WARN ( %s/core/lg ): invalid message received %u != %u\n", config.name, msg_len, sizeof(msg));
+      continue;
+    }
+    
+    // XXX
+  }
 }
 #endif /* WITH_ZMQ */ 

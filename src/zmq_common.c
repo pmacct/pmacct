@@ -310,6 +310,24 @@ int p_zmq_sendmore_str(void *sock, char *buf)
   return len;
 }
 
+int p_zmq_recv_bin(void *sock, void *buf, int len)
+{
+  int rcvlen;
+
+  rcvlen = zmq_recv(sock, buf, len, 0);
+
+  return rcvlen;
+}
+
+int p_zmq_send_bin(void *sock, void *buf, int len)
+{
+  int sndlen;
+
+  sndlen = zmq_send(sock, buf, len, 0);
+
+  return sndlen;
+}
+
 void p_zmq_zap_handler(void *zh)
 {
   struct p_zmq_host *zmq_host = (struct p_zmq_host *) zh;
