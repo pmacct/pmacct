@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2012 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /*
@@ -48,12 +48,6 @@ struct prefix
 #ifdef ENABLE_IPV6
     struct in6_addr prefix6;
 #endif /* ENABLE_IPV6 */
-    struct 
-    {
-      struct in_addr id;
-      struct in_addr adv_router;
-    } lp;
-    u_char val[8];
   } u __attribute__ ((aligned (8)));
 };
 
@@ -74,22 +68,6 @@ struct prefix_ipv6
   struct in6_addr prefix __attribute__ ((aligned (8)));
 };
 #endif /* ENABLE_IPV6 */
-
-struct prefix_ls
-{
-  u_char family;
-  u_char prefixlen;
-  struct in_addr id __attribute__ ((aligned (8)));
-  struct in_addr adv_router;
-};
-
-/* Prefix for routing distinguisher. */
-struct prefix_rd
-{
-  u_char family;
-  u_char prefixlen;
-  u_char val[8] __attribute__ ((aligned (8)));
-};
 
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16

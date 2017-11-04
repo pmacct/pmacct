@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
 */
 
 /* 
@@ -107,17 +107,8 @@ prefix_copy (struct prefix *dest, const struct prefix *src)
   else if (src->family == AF_INET6)
     dest->u.prefix6 = src->u.prefix6;
 #endif /* ENABLE_IPV6 */
-  else if (src->family == AF_UNSPEC)
-    {
-      dest->u.lp.id = src->u.lp.id;
-      dest->u.lp.adv_router = src->u.lp.adv_router;
-    }
-  else
-    {
-      //zlog (NULL, LOG_ERR, "prefix_copy(): Unknown address family %d",
-	  //    src->family);
-      assert (0);
-    }
+  // XXX: "else if (src->family == AF_UNSPEC)" case
+  // XXX: "else" case
 }
 
 /* 
