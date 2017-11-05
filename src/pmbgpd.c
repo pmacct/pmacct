@@ -42,7 +42,7 @@ thread_pool_t *bgp_lg_pool;
 /* Functions */
 void usage_daemon(char *prog_name)
 {
-  printf("%s (%s)\n", PMBGPD_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s %s (%s)\n", PMBGPD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [ -D | -d ] [ -L IP address ] [ -l port ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);

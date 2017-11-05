@@ -56,7 +56,7 @@ struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channe
 /* Functions */
 void usage_daemon(char *prog_name)
 {
-  printf("%s (%s)\n", SFACCTD_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s %s (%s)\n", SFACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [ -D | -d ] [ -L IP address ] [ -l port ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
@@ -418,7 +418,7 @@ int main(int argc,char **argv, char **envp)
     else Log(LOG_INFO, "INFO ( %s/core ): proc_priority set to %d\n", config.name, getpriority(PRIO_PROCESS, 0));
   }
 
-  Log(LOG_INFO, "INFO ( %s/core ): %s (%s)\n", config.name, SFACCTD_USAGE_HEADER, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, SFACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
 
   if (strlen(config_file)) {

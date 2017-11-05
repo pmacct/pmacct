@@ -27,7 +27,7 @@
 #define ARGS_PMTELEMETRYD "hVL:l:f:dDS:F:o:O:i:"
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:g"
 #define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:"
-#define ARGS_PMACCT "Ssc:Cetm:p:P:M:arN:n:lT:O:E:uVUiI0"
+#define ARGS_PMACCT "hSsc:Cetm:p:P:M:arN:n:lT:O:E:uVUiI0"
 #define N_PRIMITIVES 75
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
@@ -88,16 +88,17 @@
 #define PRIMITIVE_LEN 		32
 #define PRIMITIVE_DESC_LEN	64
 
+#define PMACCT_VERSION "1.7.1-git"
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define GET_IN_TOUCH_MSG "If you see this message, please get in touch"
-#define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd 1.7.1-git"
-#define UACCTD_USAGE_HEADER "Linux NetFilter NFLOG Accounting Daemon, uacctd 1.7.1-git"
-#define PMACCT_USAGE_HEADER "pmacct, pmacct client 1.7.1-git"
-#define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd 1.7.1-git"
-#define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd 1.7.1-git"
-#define PMTELEMETRYD_USAGE_HEADER "Streaming Network Telemetry Daemon, pmtelemetryd 1.7.1-git"
-#define PMBGPD_USAGE_HEADER "pmacct BGP Collector Daemon, pmbgpd 1.7.1-git"
-#define PMBMPD_USAGE_HEADER "pmacct BMP Collector Daemon, pmbmpd 1.7.1-git"
+#define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd"
+#define UACCTD_USAGE_HEADER "Linux NetFilter NFLOG Accounting Daemon, uacctd"
+#define PMACCT_USAGE_HEADER "pmacct IMT plugin client, pmacct"
+#define NFACCTD_USAGE_HEADER "NetFlow Accounting Daemon, nfacctd"
+#define SFACCTD_USAGE_HEADER "sFlow Accounting Daemon, sfacctd"
+#define PMTELEMETRYD_USAGE_HEADER "Streaming Network Telemetry Daemon, pmtelemetryd"
+#define PMBGPD_USAGE_HEADER "pmacct BGP Collector Daemon, pmbgpd"
+#define PMBMPD_USAGE_HEADER "pmacct BMP Collector Daemon, pmbmpd"
 #define PMACCT_COMPILE_ARGS COMPILE_ARGS
 #ifndef TRUE
 #define TRUE 1

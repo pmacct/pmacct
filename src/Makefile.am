@@ -8,7 +8,8 @@ AM_CFLAGS = $(PMACCT_CFLAGS)
 
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
 libcommon_la_SOURCES = strlcpy.c addr.c jansson.c addr.h pmacct.h	\
-	pmacct-build.h pmacct-data.h pmacct-defines.h mpls.h network.h once.h
+	pmacct-build.h pmacct-data.h pmacct-defines.h mpls.h network.h  \
+	once.h
 libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         plugin_hooks.h server.c acct.c memory.c cfg.c cfg.h		\
         imt_plugin.c imt_plugin.h log.c log.h pkt_handlers.c		\
@@ -24,6 +25,10 @@ libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         sflow.h crc32.h base64.c base64.h plugin_cmn_json.c		\
 	plugin_cmn_json.h plugin_cmn_avro.c plugin_cmn_avro.h		\
 	pmsearch.c pmsearch.h
+
+libcommon_la_LIBADD  = 
+libcommon_la_CFLAGS  = $(AM_CFLAGS)
+
 # Builtin plugins
 libdaemons_la_LIBADD  = nfprobe_plugin/libnfprobe_plugin.la
 libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la
@@ -69,9 +74,9 @@ libdaemons_la_LIBADD  += @RABBITMQ_LIBS@
 libdaemons_la_CFLAGS  += @RABBITMQ_CFLAGS@
 endif
 if WITH_ZMQ
-libdaemons_la_SOURCES += zmq_common.c zmq_common.h
-libdaemons_la_LIBADD  += @ZMQ_LIBS@
-libdaemons_la_CFLAGS  += @ZMQ_CFLAGS@
+libcommon_la_SOURCES += zmq_common.c zmq_common.h
+libcommon_la_LIBADD  += @ZMQ_LIBS@
+libcommon_la_CFLAGS  += @ZMQ_CFLAGS@
 endif
 if WITH_KAFKA
 libdaemons_la_SOURCES += kafka_common.c kafka_common.h kafka_plugin.c kafka_plugin.h

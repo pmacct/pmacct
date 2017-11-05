@@ -46,7 +46,7 @@ struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channe
 /* Functions */
 void usage_daemon(char *prog_name)
 {
-  printf("%s (%s)\n", PMACCTD_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s %s (%s)\n", PMACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [ -D | -d ] [ -i interface ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ] [ filter ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
@@ -405,7 +405,7 @@ int main(int argc,char **argv, char **envp)
 
   if (!config.pcap_savefile) {
     if (getuid() != 0 && !config.pmacctd_nonroot) {
-      printf("%s (%s)\n\n", PMACCTD_USAGE_HEADER, PMACCT_BUILD);
+      printf("%s %s (%s)\n\n", PMACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
       printf("ERROR ( %s/core ): You need superuser privileges to run this command.\nExiting ...\n\n", config.name);
       exit(1);
     }
@@ -452,7 +452,7 @@ int main(int argc,char **argv, char **envp)
     else Log(LOG_INFO, "INFO ( %s/core ): proc_priority set to %d\n", config.name, getpriority(PRIO_PROCESS, 0));
   }
 
-  Log(LOG_INFO, "INFO ( %s/core ): %s (%s)\n", config.name, PMACCTD_USAGE_HEADER, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
 
   if (strlen(config_file)) {

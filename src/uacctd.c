@@ -112,7 +112,7 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
 
 void usage_daemon(char *prog_name)
 {
-  printf("%s (%s)\n", UACCTD_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s %s (%s)\n", UACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [ -D | -d ] [ -g NFLOG group ] [ -c primitive [ , ... ] ] [ -P plugin [ , ... ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
@@ -395,7 +395,7 @@ int main(int argc,char **argv, char **envp)
 
   /* Let's check whether we need superuser privileges */
   if (getuid() != 0) {
-    printf("%s (%s)\n\n", UACCTD_USAGE_HEADER, PMACCT_BUILD);
+    printf("%s %s (%s)\n\n", UACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
     printf("ERROR ( %s/core ): You need superuser privileges to run this command.\nExiting ...\n\n", config.name);
     exit(1);
   }

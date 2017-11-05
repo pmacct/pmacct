@@ -1770,7 +1770,7 @@ void version_daemon(char *header)
 {
   struct utsname utsbuf;
 
-  printf("%s (%s)\n\n", header, PMACCT_BUILD);
+  printf("%s %s (%s)\n\n", header, PMACCT_VERSION, PMACCT_BUILD);
 
   printf("Arguments:\n");
   printf("%s\n", PMACCT_COMPILE_ARGS);
@@ -1971,7 +1971,7 @@ void print_primitives(int acct_type, char *header)
 {
   int idx;
 
-  printf("%s (%s)\n", header, PMACCT_BUILD);
+  printf("%s %s (%s)\n", header, PMACCT_VERSION, PMACCT_BUILD);
 
   for (idx = 0; strcmp(_primitives_matrix[idx].name, ""); idx++) {
     if ((acct_type == ACCT_NF && _primitives_matrix[idx].nfacctd) ||

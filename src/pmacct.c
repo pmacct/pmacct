@@ -79,9 +79,10 @@ int CHECK_Q_TYPE(int type)
 
 void usage_client(char *prog)
 {
-  printf("%s (%s)\n", PMACCT_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s %s (%s)\n", PMACCT_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [query]\n\n", prog);
   printf("Queries:\n");
+  printf("  -h\tShow this page\n");
   printf("  -s\tShow statistics\n"); 
   printf("  -N\t<matching data>[';'<matching data>] | 'file:'<filename> \n\tMatch primitives; print counters only (requires -c)\n");
   printf("  -M\t<matching data>[';'<matching data>] | 'file:'<filename> \n\tMatch primitives; print formatted table (requires -c)\n");
@@ -113,7 +114,7 @@ void usage_client(char *prog)
 
 void version_client(char *prog)
 {
-  printf("%s (%s)\n", PMACCT_USAGE_HEADER, PMACCT_BUILD);
+  printf("%s %s (%s)\n", PMACCT_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("%s\n\n", PMACCT_COMPILE_ARGS);
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
@@ -1180,6 +1181,10 @@ int main(int argc,char **argv)
       break;
     case 'u':
       want_ipproto_num = TRUE;
+      break;
+    case 'h':
+      usage_client(argv[0]);
+      exit(0);
       break;
     case 'V':
       version_client(argv[0]);
