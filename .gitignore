@@ -35,3 +35,4 @@ Makefile
 /src/pmtelemetryd
 /src/pmbgpd
 /src/pmbmpd
+/examples/lg/pmbgp
