@@ -74,9 +74,9 @@ libdaemons_la_LIBADD  += @RABBITMQ_LIBS@
 libdaemons_la_CFLAGS  += @RABBITMQ_CFLAGS@
 endif
 if WITH_ZMQ
-libcommon_la_SOURCES += zmq_common.c zmq_common.h
-libcommon_la_LIBADD  += @ZMQ_LIBS@
-libcommon_la_CFLAGS  += @ZMQ_CFLAGS@
+libdaemons_la_SOURCES += zmq_common.c zmq_common.h
+libdaemons_la_LIBADD  += @ZMQ_LIBS@
+libdaemons_la_CFLAGS  += @ZMQ_CFLAGS@
 endif
 if WITH_KAFKA
 libdaemons_la_SOURCES += kafka_common.c kafka_common.h kafka_plugin.c kafka_plugin.h

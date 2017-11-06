@@ -79,6 +79,7 @@ EXT int p_zmq_send_str(void *, char *);
 EXT int p_zmq_sendmore_str(void *, char *);
 EXT int p_zmq_recv_bin(void *, void *, int);
 EXT int p_zmq_send_bin(void *, void *, int);
+EXT int p_zmq_sendmore_bin(void *, void *, int);
 
 EXT void p_zmq_zap_handler(void *);
 

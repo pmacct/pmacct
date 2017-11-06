@@ -282,8 +282,9 @@ void bgp_lg_daemon()
 {
   char identity[SRVBUFLEN], delim[SUPERSHORTBUFLEN];
   struct p_zmq_host lg_host;
-  struct pm_bgp_lg msg;
-  int msg_len;
+  struct pm_bgp_lg_req req;
+  struct pm_bgp_lg_rep rep;
+  int req_len, identity_len, delim_len;
 
   memset(&lg_host, 0, sizeof(lg_host));
 
@@ -291,16 +292,21 @@ void bgp_lg_daemon()
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
   for (;;) {
-    p_zmq_recv_bin(lg_host.sock, identity, sizeof(identity));
-    p_zmq_recv_bin(lg_host.sock, delim, sizeof(delim));
+    identity_len = p_zmq_recv_bin(lg_host.sock, identity, sizeof(identity));
+    delim_len = p_zmq_recv_bin(lg_host.sock, delim, sizeof(delim));
 
-    msg_len = p_zmq_recv_bin(lg_host.sock, &msg, sizeof(msg));
-    if (msg_len != sizeof(msg)) {
-      Log(LOG_WARNING, "WARN ( %s/core/lg ): invalid message received %u != %u\n", config.name, msg_len, sizeof(msg));
+    req_len = p_zmq_recv_bin(lg_host.sock, &req, sizeof(req));
+    if (req_len != sizeof(req)) {
+      Log(LOG_WARNING, "WARN ( %s/core/lg ): invalid message received %u != %u\n", config.name, req_len, sizeof(req));
       continue;
     }
     
-    // XXX
+    /* XXX
+    memcpy(&rep, &req, sizeof(rep));
+    p_zmq_sendmore_bin(lg_host.sock, identity, identity_len);
+    p_zmq_sendmore_bin(lg_host.sock, delim, delim_len);
+    p_zmq_send_bin(lg_host.sock, &rep, sizeof(rep));
+    */
   }
 }
 #endif /* WITH_ZMQ */ 

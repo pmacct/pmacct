@@ -328,6 +328,15 @@ int p_zmq_send_bin(void *sock, void *buf, int len)
   return sndlen;
 }
 
+int p_zmq_sendmore_bin(void *sock, void *buf, int len)
+{
+  int sndlen;
+
+  sndlen = zmq_send(sock, buf, len, ZMQ_SNDMORE);
+
+  return sndlen;
+}
+
 void p_zmq_zap_handler(void *zh)
 {
   struct p_zmq_host *zmq_host = (struct p_zmq_host *) zh;

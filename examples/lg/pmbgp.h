@@ -19,42 +19,24 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* includes */
+#define __PMBGP_H
+#ifdef WITH_ZMQ
 
 /* defines */
-#define BGP_LG_TCP_PORT	17900
-
-struct pm_bgp_lg_req {
-  struct host_addr peer;
-  struct prefix prefix;
-};
-
-struct pm_bgp_lg_rep {
-  u_char unused;
-  // XXX
-};
+#define ARGS_PMBGP "hVp:P:z:Z:"
+#define PMBGP_USAGE_HEADER "pmacct BGP Looking Glass client, pmbgp"
 
 /* prototypes */
-#if (!defined __PMBGPD_C)
+#if !defined(__PMBGP_C)
 #define EXT extern
 #else
 #define EXT
-EXT void usage_daemon(char *);
-EXT void compute_once();
+EXT void usage_pmbgp(char *);
+EXT void version_pmbgp(char *);
 
-#if defined WITH_ZMQ
-EXT void bgp_lg_wrapper();
-EXT void bgp_lg_daemon();
-#endif
-
+EXT void pmbgp_zmq_req_setup(struct p_zmq_host *, char *, int);
+EXT int pmbgp_zmq_recv_bin(void *, void *, int);
+EXT int pmbgp_zmq_send_bin(void *, void *, int);
 #endif
 #undef EXT
-
-/* global variables */
-#if (!defined __PMBGPD_C)
-#define EXT extern
-#else
-#define EXT
-EXT char bgp_lg_default_ip[] = "127.0.0.1";
-#endif
-#undef EXT
+#endif /* WITH_ZMQ */
