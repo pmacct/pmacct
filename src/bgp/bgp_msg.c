@@ -190,7 +190,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 	  opt_type = (u_int8_t) ptr[0];
 	  opt_len = (u_int8_t) ptr[1];
 
-	  if (opt_len > bopen->bgpo_optlen) {
+	  if (opt_len > len) {
             bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (option length).\n",
 		config.name, bms->log_str, bgp_peer_str);
@@ -202,14 +202,19 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
  	   * some we are forced to support (ie. MP-BGP or 4-bytes AS support)
  	   */
 	  if (opt_type == BGP_OPTION_CAPABILITY) {
-	    char *optcap_ptr;
+	    char *optcap_ptr, *bgp_open_cap_len_reply_ptr, *bgp_open_cap_base_reply_ptr;
 	    int optcap_len;
 
 	    bgp_open_cap_ptr = ptr;
+	    memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, 2);
+	    bgp_open_cap_len_reply_ptr = bgp_open_cap_reply_ptr + 1;
+	    bgp_open_cap_base_reply_ptr = bgp_open_cap_reply_ptr;
+	    bgp_open_cap_reply_ptr += 2;
+
 	    ptr += 2;
 	    len -= 2;
 	    optcap_ptr = ptr;
-	    optcap_len = len;
+	    optcap_len = opt_len;
 
 	    while (optcap_len > 0) {
 	      u_int8_t cap_len = optcap_ptr[1];
@@ -236,8 +241,8 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		peer->cap_mp = TRUE;
 
 		if (online) {
-		  memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
-		  bgp_open_cap_reply_ptr += opt_len+2;
+		  memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2);
+		  bgp_open_cap_reply_ptr += cap_len+2;
 		}
 	      }
 	      else if (cap_type == BGP_CAPABILITY_4_OCTET_AS_NUMBER) {
@@ -258,9 +263,9 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		  remote_as4 = ntohl(as4_ptr);
 
 		  if (online) {
-		    memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2); 
-		    peer->cap_4as = bgp_open_cap_reply_ptr+4;
-		    bgp_open_cap_reply_ptr += opt_len+2;
+		    memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2); 
+		    peer->cap_4as = bgp_open_cap_reply_ptr+2;
+		    bgp_open_cap_reply_ptr += cap_len+2;
 		  }
 		  else peer->cap_4as = bgp_open_cap_ptr+4;
 		}
@@ -287,15 +292,24 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		if (cap_data.sndrcv == 2 /* send */) {
 		  peer->cap_add_paths = TRUE; 
 		  if (online) {
-		    memcpy(bgp_open_cap_reply_ptr, bgp_open_cap_ptr, opt_len+2);
-		    *(bgp_open_cap_reply_ptr+((opt_len+2)-1)) = 1; /* receive */
-		    bgp_open_cap_reply_ptr += opt_len+2;
+		    memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2);
+		    *(bgp_open_cap_reply_ptr+((cap_len+2)-1)) = 1; /* receive */
+		    bgp_open_cap_reply_ptr += cap_len+2;
 		  }
 		}
 	      }
 
 	      optcap_ptr += cap_len+2;
 	      optcap_len -= cap_len+2;
+	    }
+
+	    /* writing the new capability length */
+	    if (bgp_open_cap_reply_ptr > bgp_open_cap_base_reply_ptr + 2) {
+	      (*bgp_open_cap_len_reply_ptr) = ((bgp_open_cap_reply_ptr - bgp_open_cap_base_reply_ptr) - 2);
+	    }
+	    /* otherwise rollback */
+	    else {
+	      bgp_open_cap_reply_ptr = bgp_open_cap_base_reply_ptr;
 	    }
 	  }
 	  else {
@@ -434,7 +448,7 @@ int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *
     }
   }
 
-  bopen_reply->bgpo_optlen = cp_msglen;
+  if (cp_msglen) bopen_reply->bgpo_optlen = cp_msglen;
   bopen_reply->bgpo_len = htons(BGP_MIN_OPEN_MSG_SIZE + bopen_reply->bgpo_optlen);
 
   if (config.nfacctd_bgp_ip) str_to_addr(config.nfacctd_bgp_ip, &bgp_ip);
