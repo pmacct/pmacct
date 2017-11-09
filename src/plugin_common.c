@@ -993,3 +993,21 @@ int P_broker_timers_get_retry_interval(struct p_broker_timers *btimers)
 
   return ERR;
 }
+
+void P_zmq_pipe_init(void *zh, int *pipe_fd, int *seq)
+{
+  plugin_pipe_zmq_compile_check();
+
+#ifdef WITH_ZMQ
+  if (zh) {
+    struct p_zmq_host *zmq_host = zh;
+
+    p_zmq_plugin_pipe_init_plugin(zmq_host);
+    p_zmq_plugin_pipe_consume(zmq_host);
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
+    p_zmq_set_hwm(zmq_host, config.pipe_zmq_hwm);
+    if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
+    if (seq) (*seq) = 0;
+  }
+#endif
+}

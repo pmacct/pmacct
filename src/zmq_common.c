@@ -56,6 +56,11 @@ void p_zmq_set_password(struct p_zmq_host *zmq_host)
   if (zmq_host) generate_random_string(zmq_host->zap.password, (sizeof(zmq_host->zap.password) - 1));
 }
 
+void p_zmq_set_hwm(struct p_zmq_host *zmq_host, int hwm)
+{
+  if (zmq_host) zmq_host->hwm = hwm;  
+}
+
 int p_zmq_get_fd(struct p_zmq_host *zmq_host)
 {
   int fd = ERR;
@@ -128,7 +133,7 @@ int p_zmq_plugin_pipe_set_profile(struct configuration *cfg, char *value)
 
 void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 {
-  int ret, as_server = TRUE, only_one = 1, no_hwm = 0;
+  int ret, as_server = TRUE, only_one = 1;
   size_t bind_strlen;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
@@ -148,7 +153,7 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 
   zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_PUB);
 
-  ret = zmq_setsockopt(zmq_host->sock, ZMQ_SNDHWM, &no_hwm, sizeof(int));
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_SNDHWM, &zmq_host->hwm, sizeof(int));
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_SNDHWM failed for topic %u: %s\nExiting.\n",
         config.name, config.type, zmq_host->topic, zmq_strerror(errno));
@@ -187,13 +192,13 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 
 void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
 {
-  int ret, no_hwm = 0;
+  int ret;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
   zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_SUB);
 
-  ret = zmq_setsockopt(zmq_host->sock, ZMQ_RCVHWM, &no_hwm, sizeof(int));
+  ret = zmq_setsockopt(zmq_host->sock, ZMQ_RCVHWM, &zmq_host->hwm, sizeof(int));
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_RCVHWM failed for topic %u: %s\nExiting.\n",
         config.name, config.type, zmq_host->topic, zmq_strerror(errno));

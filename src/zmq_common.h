@@ -49,6 +49,7 @@ struct p_zmq_host {
 
   char bind_str[SHORTBUFLEN];
   u_int8_t topic;
+  int hwm;
 };
 
 /* prototypes */
@@ -61,6 +62,7 @@ EXT void p_zmq_set_topic(struct p_zmq_host *, u_int8_t);
 EXT void p_zmq_set_retry_timeout(struct p_zmq_host *, int);
 EXT void p_zmq_set_username(struct p_zmq_host *);
 EXT void p_zmq_set_password(struct p_zmq_host *);
+EXT void p_zmq_set_hwm(struct p_zmq_host *, int);
 
 EXT int p_zmq_get_fd(struct p_zmq_host *);
 

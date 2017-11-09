@@ -69,6 +69,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
+#else
+  void *zmq_host = NULL;
 #endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -105,16 +107,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_plugin(1);
   }
 
-  if (config.pipe_zmq) {
-    plugin_pipe_zmq_compile_check();
-#ifdef WITH_ZMQ
-    p_zmq_plugin_pipe_init_plugin(zmq_host);
-    p_zmq_plugin_pipe_consume(zmq_host);
-    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
-    pipe_fd = p_zmq_get_fd(zmq_host);
-    seq = 0;
-#endif
-  }
+  if (config.pipe_zmq) P_zmq_pipe_init(zmq_host, &pipe_fd, &seq);
   else setnonblocking(pipe_fd);
 
   memset(pipebuf, 0, config.buffer_size);

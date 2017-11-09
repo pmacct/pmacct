@@ -141,6 +141,7 @@ EXT int P_cmp_historical_acct(struct timeval *, struct timeval *);
 EXT void P_update_time_reference(struct insert_data *);
 
 EXT int P_test_zero_elem(struct chained_cache *);
+EXT void P_zmq_pipe_init(void *, int *, int *);
 
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

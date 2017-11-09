@@ -324,6 +324,13 @@ DESC:		Allows to select some standard buffering profiles. Following are the reco
 		customised using the plugin_buffer_size directive. 
 DEFAULT:	micro 
 
+KEY:		plugin_pipe_zmq_hwm
+DESC:           Defines the messages high watermark, that is, "The high water mark is a hard
+		limit on the maximum number of outstanding messages ZeroMQ shall queue in
+		memory for any single peer that the specified socket is communicating with. A
+		value of zero means no limit.".
+DEFAULT:        0
+
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.) and their related directory
 		structure. A mask less than "002" is not accepted due to security reasons.
