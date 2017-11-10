@@ -289,7 +289,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			cap_data.sndrcv);
 		}
 
-		if (cap_data.sndrcv == 2 /* send */) {
+		if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
 		  peer->cap_add_paths = TRUE; 
 		  if (online) {
 		    memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2);
