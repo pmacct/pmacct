@@ -176,7 +176,7 @@
 !
 ! Examples:
 !
-! Some examples applicable to NetFlow.
+! Some basic examples applicable to NetFlow, IPFIX and sFlow.
 !
 set_tag=1	ip=192.168.2.1	in=4
 set_tag=10	ip=192.168.1.1 	in=5	out=3
@@ -185,21 +185,21 @@ set_tag=12	ip=192.168.1.1	in=3
 set_tag=13	ip=192.168.1.1  nexthop=10.0.0.254
 set_tag=14	ip=192.168.1.1  engine_type=1 engine_set_tag=0
 set_tag=15	ip=192.168.1.1  in=3 filter='src net 192.168.0.0/24' 
-
 !
-! The following rule applies to sFlow, for example, to prevent aggregation of samples
-! in conjunction with having 'timestamp_arrival' part of the aggregation method. In
-! this example "1" is the selected floor value and "++" instructs to increase the
-! value at every pre_tag_map iteration.
+! The following rule instructs to increase the tag value at every pre_tag_map run,
+! starting from a given floor value (in the example below, '1'). Since tags are
+! part of the aggregate key, this causes no two objects to be further aggregated
+! together. 
 !
 set_tag=1++	ip=0.0.0.0/0
-
 !
-! The following rule applies to 'pmacctd'; it will return an error if applied to either
-! 'nfacctd' or 'sfacctd'
+! The following rule sets labels on matching IP ranges non-aligned with subnets,
+! ie. issue 'labelA' for the IP range 192.168.0.1 - 192.168.0.100 and 'labelB'
+! for the IP range 192.168.0.101 - 192.168.0.200 (note: ip[12:4] is the source
+! IP address and ip[16:4] is the destination one.
 !
-set_tag=21	filter='src net 192.168.0.0/16'
-
+set_label=LabelA   filter='((ip[12:4] >= 0xC0A80001) and (ip[12:4] <= 0xC0A80064)) or ((ip[16:4] >= 0xC0A80001) and (ip[16:4] <= 0xC0A80064))'
+set_label=LabelB   filter='((ip[12:4] >= 0xC0A80065) and (ip[12:4] <= 0xC0A800C8)) or ((ip[16:4] >= 0xC0A80065) and (ip[16:4] <= 0xC0A800C8))'
 !
 ! A few examples sFlow-related. The format of the rules is the same of 'nfacctd' ones
 ! but some keys don't apply to it. 
