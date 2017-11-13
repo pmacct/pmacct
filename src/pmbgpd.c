@@ -262,7 +262,8 @@ void bgp_lg_wrapper()
 {
   /* initialize variables */
   if (!config.bgp_lg_ip) config.bgp_lg_ip = bgp_lg_default_ip;
-  if (!config.bgp_lg_port) config.bgp_lg_port = BGP_LG_TCP_PORT;
+  if (!config.bgp_lg_port) config.bgp_lg_port = BGP_LG_DEFAULT_TCP_PORT;
+  if (!config.bgp_lg_threads) config.bgp_lg_threads = BGP_LG_DEFAULT_THREADS;
 
   /* initialize threads pool */
   bgp_lg_pool = allocate_thread_pool(1);
@@ -280,33 +281,71 @@ void bgp_lg_wrapper()
 
 void bgp_lg_daemon()
 {
-  char identity[SRVBUFLEN], delim[SUPERSHORTBUFLEN];
   struct p_zmq_host lg_host;
-  struct pm_bgp_lg_req req;
-  struct pm_bgp_lg_rep rep;
-  int req_len, identity_len, delim_len;
+  int idx;
 
   memset(&lg_host, 0, sizeof(lg_host));
 
   p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
+  p_zmq_dealer_inproc_setup(&lg_host, "backend");
+
+  for (idx = 0; idx < config.bgp_lg_threads; idx++) { 
+    // XXX: we should save reference to the thread handler
+    void *thread = zmq_threadstart(&bgp_lg_daemon_worker, &lg_host);
+  }
+
+  zmq_proxy(lg_host.sock, lg_host.sock_inproc, NULL);
+}
+
+void bgp_lg_daemon_worker(void *zh)
+{
+  char identity[SRVBUFLEN], delim[SUPERSHORTBUFLEN], server_str[] = "inproc://backend";
+  struct p_zmq_host *lg_host = (struct p_zmq_host *) zh;
+  struct pm_bgp_lg_req req;
+  struct pm_bgp_lg_rep rep;
+  int req_len, identity_len, delim_len, ret;
+  void *worker;
+
+  if (!lg_host) {
+    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker no lg_host\nExiting.\n", config.name);
+    exit(1);
+  }
+
+  worker = zmq_socket(lg_host->ctx, ZMQ_REP);
+  if (!worker) {
+    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker zmq_socket() failed: %s (%s)\nExiting.\n",
+	config.name, server_str, zmq_strerror(errno));
+    exit(1);
+  }
+
+  ret = zmq_connect(worker, server_str);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker zmq_connect() failed: %s (%s)\nExiting.\n",
+        config.name, server_str, zmq_strerror(errno));
+    exit(1);
+  }
+
   for (;;) {
+/*
     identity_len = p_zmq_recv_bin(lg_host.sock, identity, sizeof(identity));
     delim_len = p_zmq_recv_bin(lg_host.sock, delim, sizeof(delim));
+*/
 
-    req_len = p_zmq_recv_bin(lg_host.sock, &req, sizeof(req));
+    req_len = p_zmq_recv_bin(worker, &req, sizeof(req));
     if (req_len != sizeof(req)) {
       Log(LOG_WARNING, "WARN ( %s/core/lg ): invalid message received %u != %u\n", config.name, req_len, sizeof(req));
       continue;
     }
     
-    /* XXX
+    // XXX
     memcpy(&rep, &req, sizeof(rep));
+/*
     p_zmq_sendmore_bin(lg_host.sock, identity, identity_len);
     p_zmq_sendmore_bin(lg_host.sock, delim, delim_len);
-    p_zmq_send_bin(lg_host.sock, &rep, sizeof(rep));
-    */
+*/
+    p_zmq_send_bin(worker, &rep, sizeof(rep));
   }
 }
 #endif /* WITH_ZMQ */ 

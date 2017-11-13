@@ -46,6 +46,7 @@ struct p_zmq_host {
   void *ctx;
   struct p_zmq_zap zap;
   void *sock;
+  void *sock_inproc;
 
   char bind_str[SHORTBUFLEN];
   u_int8_t topic;
@@ -75,6 +76,7 @@ EXT int p_zmq_plugin_pipe_recv(struct p_zmq_host *, void *, u_int64_t);
 EXT int p_zmq_plugin_pipe_send(struct p_zmq_host *, void *, u_int64_t);
 
 EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);
+EXT void p_zmq_dealer_inproc_setup(struct p_zmq_host *, char *);
 
 EXT char *p_zmq_recv_str(void *);
 EXT int p_zmq_send_str(void *, char *);

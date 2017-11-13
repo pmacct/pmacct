@@ -22,7 +22,8 @@
 /* includes */
 
 /* defines */
-#define BGP_LG_TCP_PORT	17900
+#define BGP_LG_DEFAULT_TCP_PORT	17900
+#define BGP_LG_DEFAULT_THREADS	8
 
 struct pm_bgp_lg_req {
   struct host_addr peer;
@@ -45,6 +46,7 @@ EXT void compute_once();
 #if defined WITH_ZMQ
 EXT void bgp_lg_wrapper();
 EXT void bgp_lg_daemon();
+EXT void bgp_lg_daemon_worker(void *);
 #endif
 
 #endif

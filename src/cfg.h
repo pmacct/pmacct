@@ -355,6 +355,7 @@ struct configuration {
   int bgp_lg;
   char *bgp_lg_ip;
   int bgp_lg_port;
+  int bgp_lg_threads;
   int bmp_sock;
   int nfacctd_bmp;
   char *nfacctd_bmp_ip;

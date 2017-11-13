@@ -411,12 +411,41 @@ void p_zmq_router_setup(struct p_zmq_host *zmq_host, char *host, int port)
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
   zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_ROUTER);
+  if (!zmq_host->sock) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_socket() failed for ZMQ_ROUTER: %s\nExiting.\n",
+        config.name, config.type, zmq_strerror(errno));
+    exit(1);
+  }
 
   snprintf(server_str, SHORTBUFLEN, "tcp://%s:%u", host, port);
 
   ret = zmq_bind(zmq_host->sock, server_str);
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for ZMQ_ROUTER: %s\nExiting.\n",
+        config.name, config.type, zmq_strerror(errno));
+    exit(1);
+  }
+}
+
+void p_zmq_dealer_inproc_setup(struct p_zmq_host *zmq_host, char *inproc_str)
+{
+  char server_str[SHORTBUFLEN];
+  int ret;
+
+  if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
+
+  zmq_host->sock_inproc = zmq_socket(zmq_host->ctx, ZMQ_DEALER);
+  if (!zmq_host->sock_inproc) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_socket() failed for ZMQ_DEALER: %s\nExiting.\n",
+        config.name, config.type, zmq_strerror(errno));
+    exit(1);
+  }
+
+  snprintf(server_str, SHORTBUFLEN, "inproc://%s", inproc_str);
+
+  ret = zmq_bind(zmq_host->sock_inproc, server_str);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for ZMQ_DEALER: %s\nExiting.\n",
         config.name, config.type, zmq_strerror(errno));
     exit(1);
   }

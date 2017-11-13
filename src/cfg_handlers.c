@@ -3444,6 +3444,23 @@ int cfg_key_bgp_lg_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_lg_threads(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_lg_threads' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_lg_threads = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_lg_threads'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_ip_precedence(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
