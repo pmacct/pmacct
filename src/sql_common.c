@@ -3199,7 +3199,7 @@ void sql_create_table(struct DBdesc *db, time_t *basetime, struct primitives_ptr
 
   ret = read_SQLquery_from_file(config.sql_table_schema, buf, LARGEBUFLEN);
   if (ret) {
-    handle_dynname_internal_strings_same(buf, LONGSRVBUFLEN, tmpbuf, prim_ptrs, DYN_STR_SQL_TABLE);
+    handle_dynname_internal_strings_same(buf, LARGEBUFLEN, tmpbuf, prim_ptrs, DYN_STR_SQL_TABLE);
     pm_strftime_same(buf, LARGEBUFLEN, tmpbuf, basetime, config.timestamps_utc);
     (*sqlfunc_cbr.create_table)(db, buf);
   }
