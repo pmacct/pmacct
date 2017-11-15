@@ -429,24 +429,77 @@ void p_zmq_router_setup(struct p_zmq_host *zmq_host, char *host, int port)
 
 void p_zmq_dealer_inproc_setup(struct p_zmq_host *zmq_host, char *inproc_str)
 {
-  char server_str[SHORTBUFLEN];
   int ret;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
-  zmq_host->sock_inproc = zmq_socket(zmq_host->ctx, ZMQ_DEALER);
-  if (!zmq_host->sock_inproc) {
+  zmq_host->inproc.sock = zmq_socket(zmq_host->ctx, ZMQ_DEALER);
+  if (!zmq_host->inproc.sock) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_socket() failed for ZMQ_DEALER: %s\nExiting.\n",
         config.name, config.type, zmq_strerror(errno));
     exit(1);
   }
 
-  snprintf(server_str, SHORTBUFLEN, "inproc://%s", inproc_str);
-
-  ret = zmq_bind(zmq_host->sock_inproc, server_str);
+  ret = zmq_bind(zmq_host->inproc.sock, inproc_str);
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for ZMQ_DEALER: %s\nExiting.\n",
         config.name, config.type, zmq_strerror(errno));
     exit(1);
   }
+  
+  zmq_host->inproc.str = inproc_str;
+}
+
+void p_zmq_proxy_setup(struct p_zmq_host *zmq_host)
+{
+  int ret;
+
+  ret = zmq_proxy(zmq_host->sock, zmq_host->inproc.sock, NULL);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_proxy() failed: %s\nExiting.\n",
+        config.name, config.type, zmq_strerror(errno));
+    exit(1);
+  }
+}
+
+void p_zmq_router_backend_setup(struct p_zmq_host *zmq_host, int threads, char *inproc_str)
+{
+  int idx;
+
+  p_zmq_dealer_inproc_setup(zmq_host, inproc_str);
+
+  for (idx = 0; idx < threads; idx++) {
+    // XXX: we should save reference to the thread handler
+    void *thread = zmq_threadstart(&p_zmq_router_worker, zmq_host);
+  }
+
+  p_zmq_proxy_setup(zmq_host);
+}
+
+void p_zmq_router_worker(void *zh)
+{
+  struct p_zmq_host *zmq_host = (struct p_zmq_host *) zh;
+  void *sock;
+  int ret;
+
+  if (!zmq_host) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): p_zmq_router_worker no zmq_host\nExiting.\n", config.name, config.type);
+    exit(1);
+  }
+
+  sock = zmq_socket(zmq_host->ctx, ZMQ_REP);
+  if (!sock) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): p_zmq_router_worker zmq_socket() failed: %s (%s)\nExiting.\n",
+        config.name, config.type, zmq_host->inproc.str, zmq_strerror(errno));
+    exit(1);
+  }
+
+  ret = zmq_connect(sock, zmq_host->inproc.str);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): p_zmq_router_worker zmq_connect() failed: %s (%s)\nExiting.\n",
+        config.name, config.type, zmq_host->inproc.str, zmq_strerror(errno));
+    exit(1);
+  }
+
+  zmq_host->router_worker_func(zmq_host, sock);
 }

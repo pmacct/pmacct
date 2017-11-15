@@ -281,6 +281,7 @@ void bgp_lg_wrapper()
 
 void bgp_lg_daemon()
 {
+  char inproc_str[] = "inproc://lg_host_backend";
   struct p_zmq_host lg_host;
   int idx;
 
@@ -289,63 +290,33 @@ void bgp_lg_daemon()
   p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
-  p_zmq_dealer_inproc_setup(&lg_host, "backend");
-
-  for (idx = 0; idx < config.bgp_lg_threads; idx++) { 
-    // XXX: we should save reference to the thread handler
-    void *thread = zmq_threadstart(&bgp_lg_daemon_worker, &lg_host);
-  }
-
-  zmq_proxy(lg_host.sock, lg_host.sock_inproc, NULL);
+  lg_host.router_worker_func = &bgp_lg_daemon_worker;
+  p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
 }
 
-void bgp_lg_daemon_worker(void *zh)
+void bgp_lg_daemon_worker(void *zh, void *sock)
 {
-  char identity[SRVBUFLEN], delim[SUPERSHORTBUFLEN], server_str[] = "inproc://backend";
   struct p_zmq_host *lg_host = (struct p_zmq_host *) zh;
   struct pm_bgp_lg_req req;
   struct pm_bgp_lg_rep rep;
-  int req_len, identity_len, delim_len, ret;
-  void *worker;
+  int req_len, ret;
 
-  if (!lg_host) {
-    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker no lg_host\nExiting.\n", config.name);
-    exit(1);
-  }
-
-  worker = zmq_socket(lg_host->ctx, ZMQ_REP);
-  if (!worker) {
-    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker zmq_socket() failed: %s (%s)\nExiting.\n",
-	config.name, server_str, zmq_strerror(errno));
-    exit(1);
-  }
-
-  ret = zmq_connect(worker, server_str);
-  if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker zmq_connect() failed: %s (%s)\nExiting.\n",
-        config.name, server_str, zmq_strerror(errno));
+  if (!lg_host || !sock) {
+    Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker no lg_host or sock\nExiting.\n", config.name);
     exit(1);
   }
 
   for (;;) {
-/*
-    identity_len = p_zmq_recv_bin(lg_host.sock, identity, sizeof(identity));
-    delim_len = p_zmq_recv_bin(lg_host.sock, delim, sizeof(delim));
-*/
-
-    req_len = p_zmq_recv_bin(worker, &req, sizeof(req));
+    req_len = p_zmq_recv_bin(sock, &req, sizeof(req));
     if (req_len != sizeof(req)) {
       Log(LOG_WARNING, "WARN ( %s/core/lg ): invalid message received %u != %u\n", config.name, req_len, sizeof(req));
       continue;
     }
     
-    // XXX
+/* XXX:
     memcpy(&rep, &req, sizeof(rep));
-/*
-    p_zmq_sendmore_bin(lg_host.sock, identity, identity_len);
-    p_zmq_sendmore_bin(lg_host.sock, delim, delim_len);
+    p_zmq_send_bin(sock, &rep, sizeof(rep));
 */
-    p_zmq_send_bin(worker, &rep, sizeof(rep));
   }
 }
 #endif /* WITH_ZMQ */ 

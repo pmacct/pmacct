@@ -46,7 +46,7 @@ EXT void compute_once();
 #if defined WITH_ZMQ
 EXT void bgp_lg_wrapper();
 EXT void bgp_lg_daemon();
-EXT void bgp_lg_daemon_worker(void *);
+EXT void bgp_lg_daemon_worker(void *, void *);
 #endif
 
 #endif
