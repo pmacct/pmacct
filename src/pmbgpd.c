@@ -281,11 +281,14 @@ void bgp_lg_wrapper()
 
 void bgp_lg_daemon()
 {
-  char inproc_str[] = "inproc://lg_host_backend";
+  char inproc_str[] = "inproc://lg_host_backend", log_id[SHORTBUFLEN];
   struct p_zmq_host lg_host;
   int idx;
 
   memset(&lg_host, 0, sizeof(lg_host));
+
+  snprintf(log_id, sizeof(log_id), "%s/core/lg", config.name);
+  p_zmq_set_log_id(&lg_host, log_id);
 
   p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);

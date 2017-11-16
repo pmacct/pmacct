@@ -50,6 +50,7 @@ struct p_zmq_inproc_sock {
 struct p_zmq_host {
   void *ctx;
   struct p_zmq_zap zap;
+  char log_id[SHORTBUFLEN];
 
   void *sock;
   struct p_zmq_inproc_sock inproc;
@@ -71,6 +72,7 @@ EXT void p_zmq_set_retry_timeout(struct p_zmq_host *, int);
 EXT void p_zmq_set_username(struct p_zmq_host *);
 EXT void p_zmq_set_password(struct p_zmq_host *);
 EXT void p_zmq_set_hwm(struct p_zmq_host *, int);
+EXT void p_zmq_set_log_id(struct p_zmq_host *, char *);
 
 EXT int p_zmq_get_fd(struct p_zmq_host *);
 

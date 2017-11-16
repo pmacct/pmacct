@@ -39,8 +39,8 @@ void p_zmq_set_retry_timeout(struct p_zmq_host *zmq_host, int tout)
   if (zmq_host) {
     zmq_setsockopt(zmq_host->sock, ZMQ_RECONNECT_IVL, &tout, sizeof(tout));
     if (ret != 0) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() RECONNECT_IVL failed for topic %u: %s\nExiting.\n",
-	config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+      Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() RECONNECT_IVL failed for topic %u: %s\nExiting.\n",
+	  zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
       exit_plugin(1);
     }
   }
@@ -59,6 +59,11 @@ void p_zmq_set_password(struct p_zmq_host *zmq_host)
 void p_zmq_set_hwm(struct p_zmq_host *zmq_host, int hwm)
 {
   if (zmq_host) zmq_host->hwm = hwm;  
+}
+
+void p_zmq_set_log_id(struct p_zmq_host *zmq_host, char *log_id)
+{
+  if (zmq_host) strlcpy(zmq_host->log_id, log_id, sizeof(zmq_host->log_id));
 }
 
 int p_zmq_get_fd(struct p_zmq_host *zmq_host)
@@ -143,8 +148,8 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 
     ret = zmq_bind(zmq_host->zap.sock, "inproc://zeromq.zap.01");
     if (ret == ERR) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed binding ZAP (%s)\nExiting.\n",
-	config.name, config.type, zmq_strerror(errno));
+      Log(LOG_ERR, "ERROR ( %s ): zmq_bind() failed binding ZAP (%s)\nExiting.\n",
+	  zmq_host->log_id, zmq_strerror(errno));
       exit(1);
     }
 
@@ -155,37 +160,37 @@ void p_zmq_plugin_pipe_publish(struct p_zmq_host *zmq_host)
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_SNDHWM, &zmq_host->hwm, sizeof(int));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_SNDHWM failed for topic %u: %s\nExiting.\n",
-        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_SNDHWM failed for topic %u: %s\nExiting.\n",
+	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_BACKLOG, &only_one, sizeof(int));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_BACKLOG failed for topic %u: %s\nExiting.\n",
-        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_BACKLOG failed for topic %u: %s\nExiting.\n",
+	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_PLAIN_SERVER, &as_server, sizeof(int));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_PLAIN_SERVER failed for topic %u: %s\nExiting.\n",
-	config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_SERVER failed for topic %u: %s\nExiting.\n",
+	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 
   ret = zmq_bind(zmq_host->sock, "tcp://127.0.0.1:*");
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for topic %u: %s\nExiting.\n",
-	config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_bind() failed for topic %u: %s\nExiting.\n",
+	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 
   bind_strlen = sizeof(zmq_host->bind_str);
   ret = zmq_getsockopt(zmq_host->sock, ZMQ_LAST_ENDPOINT, zmq_host->bind_str, &bind_strlen);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_getsockopt() ZMQ_LAST_ENDPOINT failed for topic %u: %s\nExiting.\n",
-        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_getsockopt() ZMQ_LAST_ENDPOINT failed for topic %u: %s\nExiting.\n",
+        zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 }
@@ -200,36 +205,36 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_RCVHWM, &zmq_host->hwm, sizeof(int));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_RCVHWM failed for topic %u: %s\nExiting.\n",
-        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_RCVHWM failed for topic %u: %s\nExiting.\n",
+        zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit(1);
   }
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_PLAIN_USERNAME, zmq_host->zap.username, strlen(zmq_host->zap.username));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_PLAIN_USERNAME failed: %s\nExiting.\n",
-	config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_USERNAME failed: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit_plugin(1);
   }
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_PLAIN_PASSWORD, zmq_host->zap.password, strlen(zmq_host->zap.password));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() ZMQ_PLAIN_PASSWORD failed: %s\nExiting.\n",
-	config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_PASSWORD failed: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit_plugin(1);
   }
 
   ret = zmq_connect(zmq_host->sock, zmq_host->bind_str);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_connect() failed: %s (%s)\nExiting.\n",
-	config.name, config.type, zmq_host->bind_str, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_connect() failed: %s (%s)\nExiting.\n",
+	zmq_host->log_id, zmq_host->bind_str, zmq_strerror(errno));
     exit_plugin(1);
   }
 
   ret = zmq_setsockopt(zmq_host->sock, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
-        config.name, config.type, zmq_host->topic, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
+	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit_plugin(1);
   }
 }
@@ -241,15 +246,15 @@ int p_zmq_plugin_pipe_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len
 
   ret = zmq_send(zmq_host->sock, &zmq_host->topic, sizeof(zmq_host->topic), ZMQ_SNDMORE);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): publishing topic to ZMQ: p_zmq_send(): %s [topic=%u]\n",
-		config.name, config.type, zmq_strerror(errno), zmq_host->topic);
+    Log(LOG_ERR, "ERROR ( %s ): publishing topic to ZMQ: p_zmq_send(): %s [topic=%u]\n",
+	zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
     return ret;
   }
 
   ret = zmq_send(zmq_host->sock, buf, len, 0);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): publishing data to ZMQ: p_zmq_send(): %s [topic=%u]\n",
-		config.name, config.type, zmq_strerror(errno), zmq_host->topic);
+    Log(LOG_ERR, "ERROR ( %s ): publishing data to ZMQ: p_zmq_send(): %s [topic=%u]\n",
+	zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
     return ret;
   }
 
@@ -267,18 +272,18 @@ int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len
   if (events & ZMQ_POLLIN) {
     ret = zmq_recv(zmq_host->sock, &topic, 1, 0); /* read topic first */
     if (ret == ERR) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): consuming topic from ZMQ: p_zmq_recv(): %s [topic=%u]\n",
-		config.name, config.type, zmq_strerror(errno), zmq_host->topic);
+      Log(LOG_ERR, "ERROR ( %s ): consuming topic from ZMQ: p_zmq_recv(): %s [topic=%u]\n",
+	  zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
       return ret;
     }
 
     ret = zmq_recv(zmq_host->sock, buf, len, 0); /* read actual data then */
     if (ret == ERR)
-      Log(LOG_ERR, "ERROR ( %s/%s ): consuming data from ZMQ: p_zmq_recv(): %s [topic=%u]\n",
-		config.name, config.type, zmq_strerror(errno), zmq_host->topic);
+      Log(LOG_ERR, "ERROR ( %s ): consuming data from ZMQ: p_zmq_recv(): %s [topic=%u]\n",
+	  zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
     else if (ret > len) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): consuming data from ZMQ: p_zmq_recv(): buffer overrun [topic=%u]\n",
-		config.name, config.type, zmq_host->topic);
+      Log(LOG_ERR, "ERROR ( %s ): consuming data from ZMQ: p_zmq_recv(): buffer overrun [topic=%u]\n",
+	  zmq_host->log_id, zmq_host->topic);
       ret = ERR;
     }
   }
@@ -412,8 +417,8 @@ void p_zmq_router_setup(struct p_zmq_host *zmq_host, char *host, int port)
 
   zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_ROUTER);
   if (!zmq_host->sock) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_socket() failed for ZMQ_ROUTER: %s\nExiting.\n",
-        config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_socket() failed for ZMQ_ROUTER: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit(1);
   }
 
@@ -421,8 +426,8 @@ void p_zmq_router_setup(struct p_zmq_host *zmq_host, char *host, int port)
 
   ret = zmq_bind(zmq_host->sock, server_str);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for ZMQ_ROUTER: %s\nExiting.\n",
-        config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_bind() failed for ZMQ_ROUTER: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit(1);
   }
 }
@@ -435,15 +440,15 @@ void p_zmq_dealer_inproc_setup(struct p_zmq_host *zmq_host, char *inproc_str)
 
   zmq_host->inproc.sock = zmq_socket(zmq_host->ctx, ZMQ_DEALER);
   if (!zmq_host->inproc.sock) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_socket() failed for ZMQ_DEALER: %s\nExiting.\n",
-        config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_socket() failed for ZMQ_DEALER: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit(1);
   }
 
   ret = zmq_bind(zmq_host->inproc.sock, inproc_str);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_bind() failed for ZMQ_DEALER: %s\nExiting.\n",
-        config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_bind() failed for ZMQ_DEALER: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit(1);
   }
   
@@ -456,8 +461,8 @@ void p_zmq_proxy_setup(struct p_zmq_host *zmq_host)
 
   ret = zmq_proxy(zmq_host->sock, zmq_host->inproc.sock, NULL);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): zmq_proxy() failed: %s\nExiting.\n",
-        config.name, config.type, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): zmq_proxy() failed: %s\nExiting.\n",
+	zmq_host->log_id, zmq_strerror(errno));
     exit(1);
   }
 }
@@ -482,22 +487,19 @@ void p_zmq_router_worker(void *zh)
   void *sock;
   int ret;
 
-  if (!zmq_host) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): p_zmq_router_worker no zmq_host\nExiting.\n", config.name, config.type);
-    exit(1);
-  }
+  assert(zmq_host);
 
   sock = zmq_socket(zmq_host->ctx, ZMQ_REP);
   if (!sock) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): p_zmq_router_worker zmq_socket() failed: %s (%s)\nExiting.\n",
-        config.name, config.type, zmq_host->inproc.str, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): p_zmq_router_worker zmq_socket() failed: %s (%s)\nExiting.\n",
+        zmq_host->log_id, zmq_host->inproc.str, zmq_strerror(errno));
     exit(1);
   }
 
   ret = zmq_connect(sock, zmq_host->inproc.str);
   if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): p_zmq_router_worker zmq_connect() failed: %s (%s)\nExiting.\n",
-        config.name, config.type, zmq_host->inproc.str, zmq_strerror(errno));
+    Log(LOG_ERR, "ERROR ( %s ): p_zmq_router_worker zmq_connect() failed: %s (%s)\nExiting.\n",
+        zmq_host->log_id, zmq_host->inproc.str, zmq_strerror(errno));
     exit(1);
   }
 
