@@ -297,9 +297,10 @@ void bgp_lg_daemon()
   p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
 }
 
-void bgp_lg_daemon_worker(void *zh, void *sock)
+void bgp_lg_daemon_worker(void *zh, void *zs)
 {
   struct p_zmq_host *lg_host = (struct p_zmq_host *) zh;
+  struct p_zmq_sock *sock = zs;
   struct pm_bgp_lg_req req;
   struct pm_bgp_lg_rep rep;
   int req_len, ret;

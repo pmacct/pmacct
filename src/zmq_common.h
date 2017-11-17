@@ -35,16 +35,16 @@
 
 
 /* structures */
+struct p_zmq_sock {
+  void *obj;
+  char str[SHORTBUFLEN];
+};
+
 struct p_zmq_zap {
-  void *sock;
+  struct p_zmq_sock sock;
   void *thread; 
   char username[SHORTBUFLEN];
   char password[SHORTBUFLEN];
-};
-
-struct p_zmq_inproc_sock {
-  void *sock;
-  char *str;
 };
 
 struct p_zmq_host {
@@ -52,11 +52,10 @@ struct p_zmq_host {
   struct p_zmq_zap zap;
   char log_id[SHORTBUFLEN];
 
-  void *sock;
-  struct p_zmq_inproc_sock inproc;
+  struct p_zmq_sock sock;
+  struct p_zmq_sock sock_inproc;
   void (*router_worker_func)(void *, void *);
 
-  char bind_str[SHORTBUFLEN];
   u_int8_t topic;
   int hwm;
 };
@@ -90,12 +89,12 @@ EXT void p_zmq_proxy_setup(struct p_zmq_host *);
 EXT void p_zmq_router_backend_setup(struct p_zmq_host *, int, char *);
 EXT void p_zmq_router_worker(void *);
 
-EXT char *p_zmq_recv_str(void *);
-EXT int p_zmq_send_str(void *, char *);
-EXT int p_zmq_sendmore_str(void *, char *);
-EXT int p_zmq_recv_bin(void *, void *, int);
-EXT int p_zmq_send_bin(void *, void *, int);
-EXT int p_zmq_sendmore_bin(void *, void *, int);
+EXT char *p_zmq_recv_str(struct p_zmq_sock *);
+EXT int p_zmq_send_str(struct p_zmq_sock *, char *);
+EXT int p_zmq_sendmore_str(struct p_zmq_sock *, char *);
+EXT int p_zmq_recv_bin(struct p_zmq_sock *, void *, int);
+EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, int);
+EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, int);
 
 EXT void p_zmq_zap_handler(void *);
 

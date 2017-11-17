@@ -132,35 +132,38 @@ int main(int argc,char **argv)
 
   pmbgp_zmq_req_setup(&zmq_host, zmq_host_str_ptr, zmq_port);
 
-  pmbgp_zmq_send_bin(zmq_host.sock, &req, sizeof(req)); 
-  pmbgp_zmq_recv_bin(zmq_host.sock, &rep, sizeof(rep)); 
+  pmbgp_zmq_send_bin(&zmq_host.sock, &req, sizeof(req)); 
+  pmbgp_zmq_recv_bin(&zmq_host.sock, &rep, sizeof(rep)); 
 
   // XXX
 }
 
 void pmbgp_zmq_req_setup(struct p_zmq_host *zmq_host, char *host, int port)
 {
-  char server_str[SRVBUFLEN];
   int ret;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
-  zmq_host->sock = zmq_socket(zmq_host->ctx, ZMQ_REQ);
+  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REQ);
+  if (!zmq_host->sock.obj) {
+    printf("ERROR: zmq_socket() failed for ZMQ_REQ: %s. Exiting.\n", zmq_strerror(errno));
+    exit(1);
+  }
 
-  snprintf(server_str, sizeof(server_str), "tcp://%s:%u", host, port);
+  snprintf(zmq_host->sock.str, sizeof(zmq_host->sock.str), "tcp://%s:%u", host, port);
 
-  ret = zmq_connect(zmq_host->sock, server_str);
+  ret = zmq_connect(zmq_host->sock.obj, zmq_host->sock.str);
   if (ret == ERR) {
     printf("ERROR: zmq_connect() failed for ZMQ_REQ: %s. Exiting.\n", zmq_strerror(errno));
     exit(1);
   }
 }
 
-int pmbgp_zmq_recv_bin(void *sock, void *buf, int len)
+int pmbgp_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, int len)
 {
   int rcvlen;
 
-  rcvlen = zmq_recv(sock, buf, len, 0);
+  rcvlen = zmq_recv(sock->obj, buf, len, 0);
   if (rcvlen == ERR) {
     printf("ERROR: zmq_recv() failed for ZMQ_REQ: %s. Exiting.\n", zmq_strerror(errno));
     exit(1);
@@ -169,11 +172,11 @@ int pmbgp_zmq_recv_bin(void *sock, void *buf, int len)
   return rcvlen;
 }
 
-int pmbgp_zmq_send_bin(void *sock, void *buf, int len)
+int pmbgp_zmq_send_bin(struct p_zmq_sock *sock, void *buf, int len)
 {
   int sndlen;
 
-  sndlen = zmq_send(sock, buf, len, 0);
+  sndlen = zmq_send(sock->obj, buf, len, 0);
   if (sndlen == ERR) {
     printf("ERROR: zmq_send() failed for ZMQ_REQ: %s. Exiting.\n", zmq_strerror(errno));
     exit(1);

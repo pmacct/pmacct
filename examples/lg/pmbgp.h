@@ -35,8 +35,8 @@ EXT void usage_pmbgp(char *);
 EXT void version_pmbgp(char *);
 
 EXT void pmbgp_zmq_req_setup(struct p_zmq_host *, char *, int);
-EXT int pmbgp_zmq_recv_bin(void *, void *, int);
-EXT int pmbgp_zmq_send_bin(void *, void *, int);
+EXT int pmbgp_zmq_recv_bin(struct p_zmq_sock *, void *, int);
+EXT int pmbgp_zmq_send_bin(struct p_zmq_sock *, void *, int);
 #endif
 #undef EXT
 #endif /* WITH_ZMQ */
