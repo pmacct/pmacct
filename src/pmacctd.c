@@ -830,6 +830,11 @@ int main(int argc,char **argv, char **envp)
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
 
 #if defined ENABLE_THREADS
+  if (config.nfacctd_bgp && config.nfacctd_bmp) {
+    Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
+    exit(1);
+  }
+
   /* starting the ISIS threa */
   if (config.nfacctd_isis) {
     req.bpf_filter = TRUE;
