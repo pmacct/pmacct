@@ -29,6 +29,7 @@
 #include "pkt_handlers.h"
 #include "addr.h"
 #include "bgp.h"
+#include "pmbgpd.h"
 
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 {
@@ -745,4 +746,88 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
   return (((peer->fd * per_peer_buckets) +
           ((local_path_id - 1) % per_peer_buckets)) %
           (bms->table_peer_buckets * per_peer_buckets));
+}
+
+void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *rep, int type)
+{
+  struct xflow_status_entry xs_entry; // XXX: fixme, costly alloc
+  struct bgp_misc_structs *bms;
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_peer *peer;
+  struct bgp_node *result;
+  struct bgp_info *info;
+  struct node_match_cmp_term2 nmct2;
+  safi_t safi;
+  u_int16_t l3_proto = 0;
+
+  bms = bgp_select_misc_db(type);
+  inter_domain_routing_db = bgp_select_routing_db(type);
+
+  if (!req || !rep || !bms || !inter_domain_routing_db) return;
+
+  memset(&rep, 0, sizeof(rep));
+  safi = SAFI_UNICAST;
+
+  if (req->pref.family == AF_INET) {
+    l3_proto = ETHERTYPE_IP;
+    xs_entry.peer_v4_idx = 0; // XXX: optimize
+  }
+  else if (req->pref.family == AF_INET6) {
+    l3_proto = ETHERTYPE_IPV6;
+    xs_entry.peer_v6_idx = 0; // XXX: optimize
+  }
+
+  peer = bms->bgp_lookup_find_peer(&req->peer, &xs_entry, l3_proto, FALSE /* XXX: compare_bgp_port option currently not supported */);
+
+  if (peer) {
+    // XXX: ADD-PATH code not currently supported
+
+    if (req->rd.type) safi = SAFI_MPLS_VPN;
+
+    start_again_mpls_label:
+
+    memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+    nmct2.peer = peer;
+    nmct2.rd = &req->rd;
+
+    if (l3_proto == ETHERTYPE_IP) {
+      bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
+			    &req->pref.u.prefix4, peer,
+		     	    bgp_route_info_modulo_pathid,
+			    bms->bgp_lookup_node_match_cmp, &nmct2,
+			    &result, &info);
+
+      if (result) {
+	// XXX
+      }
+    }
+#if defined ENABLE_IPV6
+    else if (l3_proto == ETHERTYPE_IPV6) {
+      bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+		            &req->pref.u.prefix6, peer,
+		            bgp_route_info_modulo_pathid,
+		            bms->bgp_lookup_node_match_cmp, &nmct2,
+		            &result, &info);
+
+      if (result) {
+	// XXX
+      }
+    }
+#endif
+
+    if (!result && safi != SAFI_MPLS_LABEL) {
+      if (l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
+        safi = SAFI_MPLS_LABEL;
+        goto start_again_mpls_label;
+      }
+#if defined ENABLE_IPV6
+      else if (l3_proto == ETHERTYPE_IPV6 && inter_domain_routing_db->rib[AFI_IP6][SAFI_MPLS_LABEL]) {
+        safi = SAFI_MPLS_LABEL;
+        goto start_again_mpls_label;
+      }
+#endif
+    }
+
+    // XXX: bgp_follow_default code not currently supported
+  }
 }

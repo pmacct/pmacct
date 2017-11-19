@@ -25,16 +25,6 @@
 #define BGP_LG_DEFAULT_TCP_PORT	17900
 #define BGP_LG_DEFAULT_THREADS	8
 
-struct pm_bgp_lg_req {
-  struct host_addr peer;
-  struct prefix prefix;
-};
-
-struct pm_bgp_lg_rep {
-  u_char unused;
-  // XXX
-};
-
 /* prototypes */
 #if (!defined __PMBGPD_C)
 #define EXT extern

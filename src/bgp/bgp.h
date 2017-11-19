@@ -248,6 +248,18 @@ struct bgp_comm_range {
   u_int32_t last;
 };
 
+// XXX
+struct pm_bgp_lg_req {
+  struct sockaddr peer;
+  struct prefix pref;
+  rd_t rd;
+};
+
+// XXX
+struct pm_bgp_lg_rep {
+  struct prefix pref;
+};
+
 #include "bgp_msg.h"
 #include "bgp_lookup.h"
 #include "bgp_util.h"

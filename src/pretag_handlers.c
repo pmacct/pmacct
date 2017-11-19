@@ -1499,7 +1499,6 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   int ret = -1;
 
@@ -1691,7 +1690,6 @@ int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
@@ -1771,7 +1769,6 @@ int pretag_bgp_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
@@ -1796,7 +1793,6 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
@@ -1822,7 +1818,6 @@ int pretag_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
@@ -1843,7 +1838,6 @@ int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void 
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   u_int32_t local_pref = 0;
 
@@ -1867,7 +1861,6 @@ int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   u_int32_t local_pref = 0;
 
@@ -1886,7 +1879,6 @@ int pretag_src_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
@@ -1907,7 +1899,6 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
@@ -1978,7 +1969,6 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   int ret = -1;
 
@@ -2144,7 +2134,6 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 
   if (!entry->id && entry->flags == BPAS_MAP_RCODE_BGP) {
     struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-    struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
     struct bgp_info *info;
 
     if (src_ret) {
@@ -2393,7 +2382,6 @@ int BPAS_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (src_ret) {
@@ -2425,7 +2413,6 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
   as_t asn = 0;
 
@@ -3120,7 +3107,6 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_BGP)) {
@@ -3205,7 +3191,6 @@ int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (src_ret && evaluate_lm_method(pptrs, FALSE, config.nfacctd_as, NF_AS_BGP)) {
@@ -3258,7 +3243,6 @@ int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (dst_ret && evaluate_lm_method(pptrs, FALSE, config.nfacctd_as, NF_AS_BGP)) {
@@ -3311,7 +3295,6 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t 
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
@@ -3365,7 +3348,6 @@ int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_t 
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   if (dst_ret && evaluate_lm_method(pptrs, FALSE, config.nfacctd_as, NF_AS_BGP)) {
@@ -3410,7 +3392,6 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_peer *peer = (struct bgp_peer *) pptrs->bgp_peer;
   struct bgp_info *info;
 
   /* if bitr is populate we infer non-zero config.nfacctd_flow_to_rd_map */

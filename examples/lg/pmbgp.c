@@ -26,6 +26,7 @@
 #include "pmacct-data.h"
 #include "addr.h"
 #include "zmq_common.h"
+#include "bgp/bgp.h"
 #include "pmbgpd.h"
 #include "pmbgp.h"
 
@@ -118,16 +119,22 @@ int main(int argc,char **argv)
   if (!zmq_port) zmq_port = default_zmq_port;
 
   /* craft query */
-  str_to_addr(peer_str, &req.peer);
+  {
+    struct host_addr peer_addr;
+
+    str_to_addr(peer_str, &peer_addr);
+    addr_to_sa(&req.peer, &peer_addr, FALSE /* XXX: support for BGP port to be added */);
+  }
+
   str_to_addr(prefix_str, &prefix_ha);  
-  req.prefix.family = prefix_ha.family;
+  req.pref.family = prefix_ha.family;
   if (prefix_ha.family == AF_INET) {
-    memcpy(&req.prefix.u.prefix4, &prefix_ha.address.ipv4, sizeof(struct in_addr));
-    req.prefix.prefixlen = 32; /* XXX: support for masks to be added */
+    memcpy(&req.pref.u.prefix4, &prefix_ha.address.ipv4, sizeof(struct in_addr));
+    req.pref.prefixlen = 32; /* XXX: support for masks to be added */
   }
   else if (prefix_ha.family == AF_INET6) {
-    memcpy(&req.prefix.u.prefix6, &prefix_ha.address.ipv6, sizeof(struct in6_addr));
-    req.prefix.prefixlen = 128; /* XXX: support for masks to be added */
+    memcpy(&req.pref.u.prefix6, &prefix_ha.address.ipv6, sizeof(struct in6_addr));
+    req.pref.prefixlen = 128; /* XXX: support for masks to be added */
   }
 
   pmbgp_zmq_req_setup(&zmq_host, zmq_host_str_ptr, zmq_port);
