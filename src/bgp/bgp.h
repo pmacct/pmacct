@@ -256,8 +256,15 @@ struct pm_bgp_lg_req {
 };
 
 // XXX
+struct pm_bgp_lg_rep_data {
+  struct prefix *pref;
+  struct bgp_info *info;
+  struct pm_bgp_lg_rep_data *next;
+};
+
 struct pm_bgp_lg_rep {
-  struct prefix pref;
+  u_int32_t results;
+  struct pm_bgp_lg_rep_data *data;
 };
 
 #include "bgp_msg.h"

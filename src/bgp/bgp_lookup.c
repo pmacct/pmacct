@@ -796,10 +796,6 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
 		     	    bgp_route_info_modulo_pathid,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
-
-      if (result) {
-	// XXX
-      }
     }
 #if defined ENABLE_IPV6
     else if (l3_proto == ETHERTYPE_IPV6) {
@@ -808,12 +804,10 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
 		            bgp_route_info_modulo_pathid,
 		            bms->bgp_lookup_node_match_cmp, &nmct2,
 		            &result, &info);
-
-      if (result) {
-	// XXX
-      }
     }
 #endif
+
+    if (result) bgp_lg_rep_data_add(rep, &result->p, info);
 
     if (!result && safi != SAFI_MPLS_LABEL) {
       if (l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
@@ -830,4 +824,47 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
 
     // XXX: bgp_follow_default code not currently supported
   }
+}
+
+void bgp_lg_rep_init(struct pm_bgp_lg_rep *rep)
+{
+  struct pm_bgp_lg_rep_data *data, *next;
+  u_int32_t idx;
+
+  assert(rep);
+
+  for (idx = 0, data = rep->data; idx < rep->results; idx++) { 
+    assert(data);
+
+    next = data->next;
+    free(data);
+    data = next;    
+  }
+
+  memset(rep, 0, sizeof(struct pm_bgp_lg_rep));
+}
+
+void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, struct prefix *pref, struct bgp_info *info)
+{
+  struct pm_bgp_lg_rep_data *data, *last;
+  u_int32_t idx;
+
+  assert(rep);
+
+  for (idx = 0, data = rep->data, last = NULL; idx < rep->results; idx++) {
+    last = data;
+    data = data->next;
+  }
+
+  data = malloc(sizeof(struct pm_bgp_lg_rep_data)); 
+
+  assert(data);
+
+  data->pref = pref;
+  data->info = info;
+  data->next = NULL;
+
+  if (last) last->next = data; 
+
+  rep->results++;
 }

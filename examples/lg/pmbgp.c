@@ -37,7 +37,7 @@ void usage_pmbgp(char *prog)
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [query]\n\n", prog);
   printf("Queries:\n");
-  printf("  -p\tIP prefix to look up\n");
+  printf("  -p\tIP address to look up\n");
   printf("  -P\tBGP peer routing table to look up\n");
   printf("  -z\tpmbgpd Looking Glass IP address [default: 127.0.0.1]\n");
   printf("  -Z\tpmbgpd Looking Glass port [default: 17900]\n");
@@ -57,26 +57,22 @@ void version_pmbgp(char *prog)
 
 int main(int argc,char **argv)
 {
-  char prefix_str[SRVBUFLEN], peer_str[SRVBUFLEN];
+  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL, *rep_str = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
   int ret, zmq_port = 0, default_zmq_port = 17900;
 
   struct p_zmq_host zmq_host;
-  struct pm_bgp_lg_req req;
-  struct pm_bgp_lg_rep rep;
-  struct host_addr prefix_ha;
+  struct host_addr address_ha;
 
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
   int errflag, cp;
 
-  memset(prefix_str, 0, sizeof(prefix_str));
+  memset(address_str, 0, sizeof(address_str));
   memset(peer_str, 0, sizeof(peer_str));
   memset(zmq_host_str, 0, sizeof(zmq_host_str));
   memset(&zmq_host, 0, sizeof(zmq_host));
-  memset(&req, 0, sizeof(req));
-  memset(&rep, 0, sizeof(rep));
 
   while (!errflag && ((cp = getopt(argc, argv, ARGS_PMBGP)) != -1)) {
     switch (cp) {
@@ -89,7 +85,7 @@ int main(int argc,char **argv)
       exit(0);
       break;
     case 'p':
-      strlcpy(prefix_str, optarg, sizeof(prefix_str));
+      strlcpy(address_str, optarg, sizeof(address_str));
       break;
     case 'P':
       strlcpy(peer_str, optarg, sizeof(peer_str));
@@ -108,7 +104,7 @@ int main(int argc,char **argv)
     }
   }
 
-  if (!strlen(prefix_str) || !strlen(peer_str)) {
+  if (!strlen(address_str) || !strlen(peer_str)) {
     printf("ERROR: mandatory options, -p and/or -P, are not specified. Exiting ..\n");
     exit(1);
   }
@@ -120,29 +116,37 @@ int main(int argc,char **argv)
 
   /* craft query */
   {
-    struct host_addr peer_addr;
+    json_t *req_obj = json_object();
 
-    str_to_addr(peer_str, &peer_addr);
-    addr_to_sa(&req.peer, &peer_addr, FALSE /* XXX: support for BGP port to be added */);
-  }
+    str_to_addr(peer_str, &address_ha);
+    if (address_ha.family) json_object_set_new_nocheck(req_obj, "peer_ip_src", json_string(peer_str));
+    else {
+      printf("ERROR: invalid -P value. Exiting ..\n");
+      exit(1);
+    }
 
-  str_to_addr(prefix_str, &prefix_ha);  
-  req.pref.family = prefix_ha.family;
-  if (prefix_ha.family == AF_INET) {
-    memcpy(&req.pref.u.prefix4, &prefix_ha.address.ipv4, sizeof(struct in_addr));
-    req.pref.prefixlen = 32; /* XXX: support for masks to be added */
-  }
-  else if (prefix_ha.family == AF_INET6) {
-    memcpy(&req.pref.u.prefix6, &prefix_ha.address.ipv6, sizeof(struct in6_addr));
-    req.pref.prefixlen = 128; /* XXX: support for masks to be added */
+    str_to_addr(address_str, &address_ha);
+    if (address_ha.family) json_object_set_new_nocheck(req_obj, "ip_address", json_string(address_str));
+    else {
+      printf("ERROR: invalid -p value. Exiting ..\n");
+      exit(1);
+    }
+
+    req_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
+    json_decref(req_obj);
   }
 
   pmbgp_zmq_req_setup(&zmq_host, zmq_host_str_ptr, zmq_port);
 
-  pmbgp_zmq_send_bin(&zmq_host.sock, &req, sizeof(req)); 
-  pmbgp_zmq_recv_bin(&zmq_host.sock, &rep, sizeof(rep)); 
+  pmbgp_zmq_send_str(&zmq_host.sock, req_str);
 
-  // XXX
+  rep_str = pmbgp_zmq_recv_str(&zmq_host.sock); /* results */
+  if (rep_str) {
+    printf("%s\n", rep_str);
+    free(rep_str);
+  } 
+
+  // XXX: decode results, if any
 }
 
 void pmbgp_zmq_req_setup(struct p_zmq_host *zmq_host, char *host, int port)
@@ -166,31 +170,26 @@ void pmbgp_zmq_req_setup(struct p_zmq_host *zmq_host, char *host, int port)
   }
 }
 
-int pmbgp_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, int len)
+char *pmbgp_zmq_recv_str(struct p_zmq_sock *sock)
 {
-  int rcvlen;
+  char buf[LARGEBUFLEN];
+  int len;
 
-  rcvlen = zmq_recv(sock->obj, buf, len, 0);
-  if (rcvlen == ERR) {
-    printf("ERROR: zmq_recv() failed for ZMQ_REQ: %s. Exiting.\n", zmq_strerror(errno));
-    exit(1);
-  }
-
-  return rcvlen;
+  memset(buf, 0, sizeof(buf));
+  len = zmq_recv(sock->obj, buf, (sizeof(buf) - 1), 0);
+  if (len == ERR) return NULL;
+  else return strndup(buf, sizeof(buf));
 }
 
-int pmbgp_zmq_send_bin(struct p_zmq_sock *sock, void *buf, int len)
+int pmbgp_zmq_send_str(struct p_zmq_sock *sock, char *buf)
 {
-  int sndlen;
+  int len;
 
-  sndlen = zmq_send(sock->obj, buf, len, 0);
-  if (sndlen == ERR) {
-    printf("ERROR: zmq_send() failed for ZMQ_REQ: %s. Exiting.\n", zmq_strerror(errno));
-    exit(1);
-  }
+  len = zmq_send(sock->obj, buf, strlen(buf), 0);
 
-  return sndlen;
+  return len;
 }
+
 #else
 int main(int argc,char **argv)
 {

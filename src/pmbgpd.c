@@ -25,10 +25,10 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp/bgp.h"
+#include "plugin_hooks.h"
 #include "pmbgpd.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
-#include "plugin_hooks.h"
 #include "pkt_handlers.h"
 #include "ip_flow.h"
 #include "classifier.h"
@@ -303,24 +303,114 @@ void bgp_lg_daemon_worker(void *zh, void *zs)
   struct p_zmq_sock *sock = zs;
   struct pm_bgp_lg_req req;
   struct pm_bgp_lg_rep rep;
-  int req_len, ret;
+  int ret;
 
   if (!lg_host || !sock) {
     Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker no lg_host or sock\nExiting.\n", config.name);
     exit(1);
   }
 
+  memset(&req, 0, sizeof(req));
+  memset(&rep, 0, sizeof(rep));
+
   for (;;) {
-    req_len = p_zmq_recv_bin(sock, &req, sizeof(req));
-    if (req_len != sizeof(req)) {
-      Log(LOG_WARNING, "WARN ( %s/core/lg ): invalid message received %u != %u\n", config.name, req_len, sizeof(req));
-      continue;
-    }
-    
-/* XXX:
-    memcpy(&rep, &req, sizeof(rep));
-    p_zmq_send_bin(sock, &rep, sizeof(rep));
-*/
+    ret = bgp_lg_daemon_decode_query(sock, &req);
+
+    bgp_lg_rep_init(&rep);
+    if (!ret) bgp_lg_daemon_ip_lookup(&req, &rep, FUNC_TYPE_BGP); 
+
+    bgp_lg_daemon_encode_reply(sock, &rep);
   }
+}
+
+int bgp_lg_daemon_decode_query(struct p_zmq_sock *sock, struct pm_bgp_lg_req *req) 
+{
+  json_error_t req_err;
+  json_t *req_obj, *peer_ip_src_json, *ip_address_json;
+  const char *peer_ip_src_str, *ip_address_str;
+  char *req_str;
+  int ret = SUCCESS;
+
+  if (!sock || !req) return ERR;
+
+  req_str = p_zmq_recv_str(sock);
+  req_obj = json_loads(req_str, 0, &req_err);
+  free(req_str);
+
+  if (req_obj) {
+    if (!json_is_object(req_obj)) {
+      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): json_is_object() failed.\n", config.name);
+      ret = ERR;
+      goto exit_lane;
+    }
+    else {
+      peer_ip_src_json = json_object_get(req_obj, "peer_ip_src");
+      if (peer_ip_src_json == NULL) {
+	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): no 'peer_ip_src' element.\n", config.name);
+	ret = ERR;
+	goto exit_lane;
+      }
+      else {
+	struct host_addr peer_ip_src_ha;
+
+	peer_ip_src_str = json_string_value(peer_ip_src_json);
+	str_to_addr(peer_ip_src_str, &peer_ip_src_ha);
+	addr_to_sa(&req->peer, &peer_ip_src_ha, FALSE);
+	if (!req->peer.sa_family) {
+	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'peer_ip_src' element.\n", config.name);
+	  ret = ERR;
+	  goto exit_lane;
+	}
+      }
+
+      ip_address_json = json_object_get(req_obj, "ip_address");
+      if (ip_address_json == NULL) {
+	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query: no 'ip_address' element.\n", config.name);
+	ret = ERR;
+	goto exit_lane;
+      }
+      else {
+	ip_address_str = json_string_value(ip_address_json);
+	str2prefix(ip_address_str, &req->pref);
+	if (!req->pref.family) {
+	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'ip_address' element.\n", config.name);
+	  ret = ERR;
+	  goto exit_lane;
+	}
+      }
+    }
+
+    exit_lane:
+    json_decref(req_obj);
+  }
+  else {
+    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): invalid request received: %s.\n", req_err.text);
+    ret = ERR;
+  }
+
+  return ret;
+}
+
+void bgp_lg_daemon_encode_reply(struct p_zmq_sock *sock, struct pm_bgp_lg_rep *rep) 
+{
+  json_t *rep_results_obj;
+  char *rep_results_str;
+
+  if (!sock || !rep) return;
+
+  rep_results_obj = json_object();
+  json_object_set_new_nocheck(rep_results_obj, "results", json_integer(rep->results));
+
+  rep_results_str = json_dumps(rep_results_obj, JSON_PRESERVE_ORDER);
+  json_decref(rep_results_obj);
+  
+  if (!rep->results) p_zmq_send_str(sock, rep_results_str);
+  else {
+    p_zmq_sendmore_str(sock, rep_results_str);
+
+    // XXX: encode results
+  }
+
+  if (rep_results_str) free(rep_results_str);
 }
 #endif /* WITH_ZMQ */ 
