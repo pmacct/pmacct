@@ -796,6 +796,8 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
 		     	    bgp_route_info_modulo_pathid,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
+
+      if (result) bgp_lg_rep_data_add(rep, AFI_IP, safi, &result->p, info);
     }
 #if defined ENABLE_IPV6
     else if (l3_proto == ETHERTYPE_IPV6) {
@@ -804,10 +806,10 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
 		            bgp_route_info_modulo_pathid,
 		            bms->bgp_lookup_node_match_cmp, &nmct2,
 		            &result, &info);
+
+      if (result) bgp_lg_rep_data_add(rep, AFI_IP6, safi, &result->p, info);
     }
 #endif
-
-    if (result) bgp_lg_rep_data_add(rep, &result->p, info);
 
     if (!result && safi != SAFI_MPLS_LABEL) {
       if (l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
@@ -844,7 +846,7 @@ void bgp_lg_rep_init(struct pm_bgp_lg_rep *rep)
   memset(rep, 0, sizeof(struct pm_bgp_lg_rep));
 }
 
-void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, struct prefix *pref, struct bgp_info *info)
+void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, afi_t afi, safi_t safi, struct prefix *pref, struct bgp_info *info)
 {
   struct pm_bgp_lg_rep_data *data, *last;
   u_int32_t idx;
@@ -860,6 +862,8 @@ void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, struct prefix *pref, struct 
 
   assert(data);
 
+  data->afi = afi;
+  data->safi = safi;
   data->pref = pref;
   data->info = info;
   data->next = NULL;

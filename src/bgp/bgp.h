@@ -257,6 +257,8 @@ struct pm_bgp_lg_req {
 
 // XXX
 struct pm_bgp_lg_rep_data {
+  afi_t afi;
+  safi_t safi;
   struct prefix *pref;
   struct bgp_info *info;
   struct pm_bgp_lg_rep_data *next;

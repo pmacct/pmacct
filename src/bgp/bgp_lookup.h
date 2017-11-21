@@ -39,6 +39,6 @@ EXT void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **)
 
 EXT void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *, struct pm_bgp_lg_rep *, int);
 EXT void bgp_lg_rep_init(struct pm_bgp_lg_rep *);
-EXT void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *, struct prefix *, struct bgp_info *);
+EXT void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *, afi_t, safi_t, struct prefix *, struct bgp_info *);
 #undef EXT
 #endif 

@@ -536,7 +536,7 @@ void bmp_handle_dump_event()
 
 		    ri->peer->log = peer->log;
 		    bms->peer_str = peer_str;
-                    bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bmp_dump_output, BGP_LOG_TYPE_MISC);
+                    bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bmp_dump_output, NULL, BGP_LOG_TYPE_MISC);
 		    bms->peer_str = saved_peer_str;
                     dump_elems++;
                   }

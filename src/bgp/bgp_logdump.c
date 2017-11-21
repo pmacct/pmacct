@@ -34,7 +34,8 @@
 #include "kafka_common.h"
 #endif
 
-int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi, char *event_type, int output, int log_type)
+int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
+		     char *event_type, int output, char **output_data, int log_type)
 {
   struct bgp_misc_structs *bms;
   char log_rk[SRVBUFLEN];
@@ -53,6 +54,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
+  else if (!strcmp(event_type, "lglass")) etype = BGP_LOGDUMP_ET_LG;
 
 #ifdef WITH_RABBITMQ
   if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
@@ -167,6 +169,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
+
+    if (output_data && (*output_data) && etype == BGP_LOGDUMP_ET_LG)
+      (*output_data) = compose_json_str(obj);
 
 #ifdef WITH_RABBITMQ
     if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
@@ -700,7 +705,7 @@ void bgp_handle_dump_event()
 	      for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		  if (ri->peer == peer) {
-	            bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, BGP_LOG_TYPE_MISC);
+	            bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	            dump_elems++;
 		  }
 		}

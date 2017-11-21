@@ -39,6 +39,7 @@ EXT void bgp_lg_daemon();
 EXT void bgp_lg_daemon_worker(void *, void *);
 EXT int bgp_lg_daemon_decode_query(struct p_zmq_sock *, struct pm_bgp_lg_req *);
 EXT void bgp_lg_daemon_encode_reply(struct p_zmq_sock *, struct pm_bgp_lg_rep *);
+EXT char *bgp_lg_daemon_encode_reply_data(struct pm_bgp_lg_rep_data *);
 #endif
 
 #endif

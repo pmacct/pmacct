@@ -406,11 +406,40 @@ void bgp_lg_daemon_encode_reply(struct p_zmq_sock *sock, struct pm_bgp_lg_rep *r
   
   if (!rep->results) p_zmq_send_str(sock, rep_results_str);
   else {
+    struct pm_bgp_lg_rep_data *data;
+    json_t *rep_data_obj;
+    char *rep_data_str;
+    u_int32_t idx;
+
     p_zmq_sendmore_str(sock, rep_results_str);
 
-    // XXX: encode results
+    for (idx = 0, data = rep->data; idx < rep->results; idx++) {
+      rep_data_str = bgp_lg_daemon_encode_reply_data(data);
+
+      if (rep_data_str) {
+	if (idx == (rep->results - 1)) p_zmq_send_str(sock, rep_data_str); 
+        else p_zmq_sendmore_str(sock, rep_data_str);
+
+	free(rep_data_str);
+      }
+
+      data = data->next;
+    }
   }
 
   if (rep_results_str) free(rep_results_str);
+}
+
+char *bgp_lg_daemon_encode_reply_data(struct pm_bgp_lg_rep_data *rep_data)
+{
+  struct bgp_node dummy_node;
+  char event_type[] = "lglass", *data_str = NULL;
+
+  memset(&dummy_node, 0, sizeof(dummy_node));
+  memcpy(&dummy_node.p, &rep_data->pref, sizeof(struct prefix)); 
+
+  bgp_peer_log_msg(&dummy_node, rep_data->info, rep_data->afi, rep_data->safi, event_type, PRINT_OUTPUT_JSON /* XXX*/, &data_str, BGP_LOG_TYPE_MISC);
+
+  return data_str;
 }
 #endif /* WITH_ZMQ */ 
