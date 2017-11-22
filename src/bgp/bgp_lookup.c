@@ -765,7 +765,7 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
 
   if (!req || !rep || !bms || !inter_domain_routing_db) return;
 
-  memset(&rep, 0, sizeof(rep));
+  memset(rep, 0, sizeof(rep));
   safi = SAFI_UNICAST;
 
   if (req->pref.family == AF_INET) {
@@ -869,6 +869,7 @@ void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, afi_t afi, safi_t safi, stru
   data->next = NULL;
 
   if (last) last->next = data; 
+  else rep->data = data;
 
   rep->results++;
 }

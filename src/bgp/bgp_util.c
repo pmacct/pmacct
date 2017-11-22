@@ -1167,7 +1167,8 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->bgp_lookup_find_peer = bgp_lookup_find_bgp_peer;
   bms->bgp_lookup_node_match_cmp = bgp_lookup_node_match_cmp_bgp;
 
-  if (!bms->is_thread && !bms->dump_backend_methods) bms->skip_rib = TRUE;
+  if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass)
+    bms->skip_rib = TRUE;
 }
 
 int bgp_peer_cmp(const void *a, const void *b)

@@ -44,7 +44,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
   pid_t writer_pid = getpid();
 
-  if (!ri || !ri->peer || !ri->peer->log || !event_type) return ERR;
+  if (!ri || !ri->peer || !event_type) return ERR; /* missing required parameters */
+  if (!ri->peer->log && !output_data) return ERR; /* missing any output method */
 
   peer = ri->peer;
   attr = ri->attr;
@@ -170,7 +171,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
 
-    if (output_data && (*output_data) && etype == BGP_LOGDUMP_ET_LG)
+    if (output_data && etype == BGP_LOGDUMP_ET_LG)
       (*output_data) = compose_json_str(obj);
 
 #ifdef WITH_RABBITMQ

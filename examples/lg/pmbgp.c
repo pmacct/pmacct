@@ -59,7 +59,7 @@ int main(int argc,char **argv)
 {
   char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL, *rep_str = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
-  int ret, zmq_port = 0, default_zmq_port = 17900;
+  int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, idx = 0;
 
   struct p_zmq_host zmq_host;
   struct host_addr address_ha;
@@ -140,13 +140,44 @@ int main(int argc,char **argv)
 
   pmbgp_zmq_send_str(&zmq_host.sock, req_str);
 
-  rep_str = pmbgp_zmq_recv_str(&zmq_host.sock); /* results */
+  /* results */
+  rep_str = pmbgp_zmq_recv_str(&zmq_host.sock);
   if (rep_str) {
+    json_error_t rep_err;
+    json_t *rep_results_obj, *results_json;
+
+    rep_results_obj = json_loads(rep_str, 0, &rep_err);
+
+    if (rep_results_obj) {
+      if (!json_is_object(rep_results_obj)) {
+        printf("WARN: json_is_object() failed for results: %s\n", rep_err.text);
+	exit(1);
+      }
+      else {
+        results_json = json_object_get(rep_results_obj, "results");
+        if (results_json == NULL) {
+          printf("WARN: no 'results' element.\n");
+	  exit(1);
+	}
+        else results = json_integer_value(results_json);
+      }
+
+      json_decref(results_json);
+      json_decref(rep_results_obj);
+    }
+
     printf("%s\n", rep_str);
     free(rep_str);
-  } 
-
-  // XXX: decode results, if any
+  }
+  
+  /* data */
+  for (idx = 0; idx < results; idx++) {
+    rep_str = pmbgp_zmq_recv_str(&zmq_host.sock);
+    if (rep_str) {
+      printf("%s\n", rep_str);
+      free(rep_str);
+    }
+  }
 }
 
 void pmbgp_zmq_req_setup(struct p_zmq_host *zmq_host, char *host, int port)

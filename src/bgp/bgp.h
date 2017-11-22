@@ -113,6 +113,7 @@ struct bgp_misc_structs {
   char *peer_port_str; /* "bmp_router_port", "peer_src_ip_port", etc. */
   char *log_str; /* BGP, BMP, thread, daemon, etc. */
   int is_thread;
+  int has_lglass;
   int skip_rib;
 
 #if defined WITH_RABBITMQ

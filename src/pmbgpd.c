@@ -384,7 +384,7 @@ int bgp_lg_daemon_decode_query(struct p_zmq_sock *sock, struct pm_bgp_lg_req *re
     json_decref(req_obj);
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): invalid request received: %s.\n", req_err.text);
+    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): invalid request received: %s.\n", config.name, req_err.text);
     ret = ERR;
   }
 
@@ -435,10 +435,12 @@ char *bgp_lg_daemon_encode_reply_data(struct pm_bgp_lg_rep_data *rep_data)
   struct bgp_node dummy_node;
   char event_type[] = "lglass", *data_str = NULL;
 
-  memset(&dummy_node, 0, sizeof(dummy_node));
-  memcpy(&dummy_node.p, &rep_data->pref, sizeof(struct prefix)); 
+  if (rep_data && rep_data->pref) {
+    memset(&dummy_node, 0, sizeof(dummy_node));
+    memcpy(&dummy_node.p, rep_data->pref, sizeof(struct prefix)); 
 
-  bgp_peer_log_msg(&dummy_node, rep_data->info, rep_data->afi, rep_data->safi, event_type, PRINT_OUTPUT_JSON /* XXX*/, &data_str, BGP_LOG_TYPE_MISC);
+    bgp_peer_log_msg(&dummy_node, rep_data->info, rep_data->afi, rep_data->safi, event_type, PRINT_OUTPUT_JSON /* XXX*/, &data_str, BGP_LOG_TYPE_MISC);
+  }
 
   return data_str;
 }

@@ -629,6 +629,8 @@ void bgp_prepare_thread()
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
   bgp_misc_db->is_thread = TRUE;
+  bgp_misc_db->has_lglass = FALSE;
+
   bgp_misc_db->log_str = malloc(strlen("core/BGP") + 1);
   strcpy(bgp_misc_db->log_str, "core/BGP");
 }
@@ -639,6 +641,8 @@ void bgp_prepare_daemon()
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
   bgp_misc_db->is_thread = FALSE;
+  if (config.bgp_lg) bgp_misc_db->has_lglass = TRUE;
+
   bgp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bgp_misc_db->log_str, "core");
 }
