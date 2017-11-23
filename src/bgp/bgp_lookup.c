@@ -748,7 +748,7 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
           (bms->table_peer_buckets * per_peer_buckets));
 }
 
-void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *rep, int type)
+void bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *rep, int type)
 {
   struct xflow_status_entry xs_entry; // XXX: fixme, costly alloc
   struct bgp_misc_structs *bms;
@@ -828,9 +828,9 @@ void bgp_lg_daemon_ip_lookup(struct pm_bgp_lg_req *req, struct pm_bgp_lg_rep *re
   }
 }
 
-void bgp_lg_rep_init(struct pm_bgp_lg_rep *rep)
+void bgp_lg_rep_init(struct bgp_lg_rep *rep)
 {
-  struct pm_bgp_lg_rep_data *data, *next;
+  struct bgp_lg_rep_ipl_data *data, *next;
   u_int32_t idx;
 
   assert(rep);
@@ -843,12 +843,12 @@ void bgp_lg_rep_init(struct pm_bgp_lg_rep *rep)
     data = next;    
   }
 
-  memset(rep, 0, sizeof(struct pm_bgp_lg_rep));
+  memset(rep, 0, sizeof(struct bgp_lg_rep));
 }
 
-void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, afi_t afi, safi_t safi, struct prefix *pref, struct bgp_info *info)
+void bgp_lg_rep_data_add(struct bgp_lg_rep *rep, afi_t afi, safi_t safi, struct prefix *pref, struct bgp_info *info)
 {
-  struct pm_bgp_lg_rep_data *data, *last;
+  struct bgp_lg_rep_ipl_data *data, *last;
   u_int32_t idx;
 
   assert(rep);
@@ -858,7 +858,7 @@ void bgp_lg_rep_data_add(struct pm_bgp_lg_rep *rep, afi_t afi, safi_t safi, stru
     data = data->next;
   }
 
-  data = malloc(sizeof(struct pm_bgp_lg_rep_data)); 
+  data = malloc(sizeof(struct bgp_lg_rep_ipl_data)); 
 
   assert(data);
 

@@ -249,25 +249,29 @@ struct bgp_comm_range {
   u_int32_t last;
 };
 
-// XXX
-struct pm_bgp_lg_req {
+struct bgp_lg_req {
+  u_int32_t type;
+  void *data;
+};
+
+struct bgp_lg_rep {
+  u_int32_t type;
+  u_int32_t results;
+  void *data;
+};
+
+struct bgp_lg_req_ipl_data {
   struct sockaddr peer;
   struct prefix pref;
   rd_t rd;
 };
 
-// XXX
-struct pm_bgp_lg_rep_data {
+struct bgp_lg_rep_ipl_data {
   afi_t afi;
   safi_t safi;
   struct prefix *pref;
   struct bgp_info *info;
-  struct pm_bgp_lg_rep_data *next;
-};
-
-struct pm_bgp_lg_rep {
-  u_int32_t results;
-  struct pm_bgp_lg_rep_data *data;
+  struct bgp_lg_rep_ipl_data *next;
 };
 
 #include "bgp_msg.h"

@@ -25,6 +25,9 @@
 #define BGP_LG_DEFAULT_TCP_PORT	17900
 #define BGP_LG_DEFAULT_THREADS	8
 
+#define BGP_LG_QT_UNKNOWN	0
+#define BGP_LG_QT_IP_LOOKUP	1
+
 /* prototypes */
 #if (!defined __PMBGPD_C)
 #define EXT extern
@@ -37,9 +40,11 @@ EXT void compute_once();
 EXT void bgp_lg_wrapper();
 EXT void bgp_lg_daemon();
 EXT void bgp_lg_daemon_worker(void *, void *);
-EXT int bgp_lg_daemon_decode_query(struct p_zmq_sock *, struct pm_bgp_lg_req *);
-EXT void bgp_lg_daemon_encode_reply(struct p_zmq_sock *, struct pm_bgp_lg_rep *);
-EXT char *bgp_lg_daemon_encode_reply_data(struct pm_bgp_lg_rep_data *);
+EXT int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *, struct bgp_lg_req *);
+EXT int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *, struct bgp_lg_req_ipl_data *);
+EXT void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *, struct bgp_lg_rep *);
+EXT char *bgp_lg_daemon_encode_reply_ip_lookup_data(struct bgp_lg_rep_ipl_data *);
+EXT void bgp_lg_daemon_encode_reply_unknown(struct p_zmq_sock *);
 #endif
 
 #endif

@@ -57,9 +57,10 @@ void version_pmbgp(char *prog)
 
 int main(int argc,char **argv)
 {
-  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL, *rep_str = NULL;
+  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL, *req_type_str = NULL;
+  char *rep_str = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
-  int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, idx = 0;
+  int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
 
   struct p_zmq_host zmq_host;
   struct host_addr address_ha;
@@ -118,6 +119,14 @@ int main(int argc,char **argv)
   {
     json_t *req_obj = json_object();
 
+    json_object_set_new_nocheck(req_obj, "query_type", json_integer(BGP_LG_QT_IP_LOOKUP));
+    req_type_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
+    json_decref(req_obj);
+  }
+
+  {
+    json_t *req_obj = json_object();
+
     str_to_addr(peer_str, &address_ha);
     if (address_ha.family) json_object_set_new_nocheck(req_obj, "peer_ip_src", json_string(peer_str));
     else {
@@ -132,19 +141,22 @@ int main(int argc,char **argv)
       exit(1);
     }
 
+    // XXX: encode Route Distinguisher, if any
+
     req_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
     json_decref(req_obj);
   }
 
   pmbgp_zmq_req_setup(&zmq_host, zmq_host_str_ptr, zmq_port);
 
+  pmbgp_zmq_sendmore_str(&zmq_host.sock, req_type_str);
   pmbgp_zmq_send_str(&zmq_host.sock, req_str);
 
-  /* results */
+  /* query type + results */
   rep_str = pmbgp_zmq_recv_str(&zmq_host.sock);
   if (rep_str) {
     json_error_t rep_err;
-    json_t *rep_results_obj, *results_json;
+    json_t *rep_results_obj, *results_json, *query_type_json;
 
     rep_results_obj = json_loads(rep_str, 0, &rep_err);
 
@@ -154,6 +166,13 @@ int main(int argc,char **argv)
 	exit(1);
       }
       else {
+        query_type_json = json_object_get(rep_results_obj, "query_type");
+        if (query_type_json == NULL) {
+          printf("WARN: no 'query_type' element.\n");
+          exit(1);
+        }
+        else query_type = json_integer_value(query_type_json);
+
         results_json = json_object_get(rep_results_obj, "results");
         if (results_json == NULL) {
           printf("WARN: no 'results' element.\n");
@@ -162,6 +181,7 @@ int main(int argc,char **argv)
         else results = json_integer_value(results_json);
       }
 
+      json_decref(query_type_json);
       json_decref(results_json);
       json_decref(rep_results_obj);
     }
@@ -174,7 +194,7 @@ int main(int argc,char **argv)
   for (idx = 0; idx < results; idx++) {
     rep_str = pmbgp_zmq_recv_str(&zmq_host.sock);
     if (rep_str) {
-      printf("%s\n", rep_str);
+      if (query_type == BGP_LG_QT_IP_LOOKUP) printf("%s\n", rep_str);
       free(rep_str);
     }
   }
@@ -221,6 +241,14 @@ int pmbgp_zmq_send_str(struct p_zmq_sock *sock, char *buf)
   return len;
 }
 
+int pmbgp_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
+{
+  int len;
+
+  len = zmq_send(sock->obj, buf, strlen(buf), ZMQ_SNDMORE);
+
+  return len;
+}
 #else
 int main(int argc,char **argv)
 {
