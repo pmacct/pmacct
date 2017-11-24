@@ -310,10 +310,10 @@ void bgp_lg_daemon_worker(void *zh, void *zs)
     exit(1);
   }
 
-  memset(&req, 0, sizeof(req));
   memset(&rep, 0, sizeof(rep));
 
   for (;;) {
+    memset(&req, 0, sizeof(req));
     ret = bgp_lg_daemon_decode_query_type(sock, &req);
 
     switch(req.type) {
@@ -349,8 +349,14 @@ int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *sock, struct bgp_lg_req *
   if (!sock || !req) return ERR;
 
   req_str = p_zmq_recv_str(sock);
-  req_obj = json_loads(req_str, 0, &req_err);
-  free(req_str);
+  if (req_str) {
+    req_obj = json_loads(req_str, 0, &req_err);
+    free(req_str);
+  }
+  else {
+    req_obj = NULL;
+    ret = ERR;
+  }
 
   if (req_obj) {
     if (!json_is_object(req_obj)) {
@@ -388,13 +394,20 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
   json_t *req_obj, *peer_ip_src_json, *ip_address_json;
   const char *peer_ip_src_str, *ip_address_str;
   char *req_str;
-  int ret = SUCCESS;
+  int ret = SUCCESS, default_timeout = -1, query_timeout = 0;
 
   if (!sock || !req) return ERR;
 
   req_str = p_zmq_recv_str(sock);
-  req_obj = json_loads(req_str, 0, &req_err);
-  free(req_str);
+
+  if (req_str) {
+    req_obj = json_loads(req_str, 0, &req_err);
+    free(req_str);
+  }
+  else {
+    req_obj = NULL;
+    ret = ERR;
+  }
 
   if (req_obj) {
     if (!json_is_object(req_obj)) {
@@ -506,8 +519,7 @@ char *bgp_lg_daemon_encode_reply_ip_lookup_data(struct bgp_lg_rep_ipl_data *rep_
     memcpy(&dummy_node.p, rep_data->pref, sizeof(struct prefix)); 
 
     bgp_peer_log_msg(&dummy_node, rep_data->info, rep_data->afi, rep_data->safi, event_type,
-		     PRINT_OUTPUT_JSON /* XXX: allow for different encodings */, &data_str,
-		     BGP_LOG_TYPE_MISC);
+		     PRINT_OUTPUT_JSON, &data_str, BGP_LOG_TYPE_MISC);
   }
 
   return data_str;
@@ -527,5 +539,7 @@ void bgp_lg_daemon_encode_reply_unknown(struct p_zmq_sock *sock)
 
   rep_results_str = json_dumps(rep_results_obj, JSON_PRESERVE_ORDER);
   json_decref(rep_results_obj);
+
+  p_zmq_send_str(sock, rep_results_str);
 }
 #endif /* WITH_ZMQ */ 
